@@ -1,0 +1,50 @@
+{
+  "request": {
+    "dt": "2021-12-21T23:30:00",
+    "tz": "Asia/Shanghai",
+    "lon": 116.4074,
+    "solar_time_enabled": false
+  },
+  "response": {
+    "api_version": "v1",
+    "rule_version": "v5.3",
+    "request_id": "5c1be9b7-8d02-4a6e-9654-1b8f5a5f5e33",
+    "mode_effective": "single",
+    "methods": {
+      "day_boundary_rule": "zi_initial",
+      "solar_time_rule": "longitude_only",
+      "dayun_method": "sxtwl_next_jieqi_div3"
+    },
+    "warnings": [
+      "day_boundary_crossed: window=23:00-00:59 rule=zi_initial action=trace_only"
+    ],
+    "pillars": {
+      "year": { "stem": "辛", "branch": "丑", "ganzhi": "辛丑" },
+      "month": { "stem": "壬", "branch": "子", "ganzhi": "壬子" },
+      "day": { "stem": "癸", "branch": "亥", "ganzhi": "癸亥" },
+      "hour": { "stem": "甲", "branch": "子", "ganzhi": "甲子" }
+    },
+    "dayun": {
+      "sequence_start": 8,
+      "items": [
+        { "index": 1, "ganzhi": "甲寅", "start_year": 2029, "end_year": 2038 },
+        { "index": 2, "ganzhi": "乙卯", "start_year": 2039, "end_year": 2048 }
+      ],
+      "raw": {
+        "day_boundary_crossed": true,
+        "birth_to_jieqi_days": 44,
+        "anchor_jieqi": "冬至",
+        "anchor_jieqi_dt": "2021-12-21T23:59:00+08:00",
+        "sequence_start": 8,
+        "direction": "forward"
+      }
+    },
+    "raw": {
+      "day_boundary_crossed": true,
+      "near_shichen_boundary": true,
+      "near_jieqi_boundary": true,
+      "birth_to_jieqi_days": 44,
+      "solar_time_offset_minutes": 0.0
+    }
+  }
+}

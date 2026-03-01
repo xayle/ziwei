@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>案例详情 · Case</title>
+  <style>
+    :root {
+      --bg: #f6f5f2;
+      --bg-ink: radial-gradient(1200px circle at 18% -6%, rgba(15,118,110,.08), transparent 42%),
+                 linear-gradient(180deg, #f8f7f3 0%, #eef1ed 100%);
+      --panel: #ffffff;
+      --panel-ink: #fdfbf7;
+      --text: #0f172a;
+      --muted: #667085;
+      --accent: #0f766e;
+      --accent-soft: #e0f4f3;
+      --line: #e5e7eb;
+      --amber: #f59e0b;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+      --radius: 14px;
+      --radius-pill: 999px;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--bg-ink);
+      font-family:"Manrope","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      color:var(--text); line-height:1.6; min-height:100vh;
+    }
+    a { color:var(--accent); text-decoration:none; }
+    header { position:sticky; top:0; background:rgba(247,248,245,.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding:14px 18px; display:flex; gap:10px; align-items:center; }
+    header h1 { margin:0; font-size:20px; }
+    .shell { max-width:1180px; margin:0 auto; padding:18px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); }
+    .card-title { margin:0 0 10px; font-size:13px; color:var(--muted); letter-spacing:0.04em; font-weight:700; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+    .card-title .dot { width:7px; height:7px; border-radius:50%; background:var(--accent); display:inline-block; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:#f8fafc; color:var(--muted); font-size:11px; }
+    .tag.ok { color:#166534; border-color:rgba(34,197,94,.3); background:#ecfdf3; }
+    .tag.warn { color:#92400e; border-color:rgba(245,158,11,.3); background:#fffbeb; }
+    .tag.bad { color:#991b1b; border-color:rgba(239,68,68,.3); background:#fef2f2; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:var(--radius-pill); border:1px solid var(--line); background:#f8fafc; color:var(--muted); font-size:12px; }
+    .pill.accent { border-color:rgba(15,118,110,.4); color:#0f766e; background:var(--accent-soft); }
+    .pill.amber { border-color:rgba(245,158,11,.35); color:#92400e; background:#fff7ed; }
+    .pill.red { border-color:rgba(239,68,68,.4); color:#991b1b; background:#fef2f2; }
+    .pill.gray { border-color:rgba(100,116,139,.35); color:#475569; background:#e2e8f0; }
+    .pill.ok { border-color:rgba(34,197,94,.35); color:#166534; background:#ecfdf3; }
+    .muted { color:var(--muted); font-size:12px; }
+    .grid { display:grid; gap:12px; }
+    @media (min-width:1000px){ .grid.main { grid-template-columns:0.9fr 1.1fr; } }
+    .empty { border:1px dashed var(--line); border-radius:14px; padding:14px; background:linear-gradient(135deg, rgba(15,118,110,.05), rgba(229,231,235,.3)); color:var(--muted); display:flex; align-items:center; gap:10px; }
+    .empty-icon { width:36px; height:36px; border-radius:12px; background:rgba(15,118,110,.12); display:grid; place-items:center; color:#0f766e; font-weight:800; }
+    pre { background:#0f172a; color:#e2e8f0; padding:10px; border-radius:12px; overflow:auto; font-size:12px; border:1px solid #1f2937; }
+    button { border:1px solid var(--line); background:#f8fafc; color:var(--text); padding:9px 13px; border-radius:10px; cursor:pointer; font-weight:700; transition:transform .08s, box-shadow .12s, border-color .12s; }
+    button:hover { border-color:var(--accent); box-shadow:0 8px 24px rgba(15,23,42,.08); }
+    button:active { transform:scale(.98); }
+    .copy { padding:6px 10px; font-weight:600; }
+    .banner { margin:12px 0; padding:12px; border-radius:var(--radius); border:1px solid rgba(239,68,68,.25); background:#fef2f2; color:#991b1b; display:flex; gap:10px; align-items:center; }
+    .banner.ok { border-color:rgba(34,197,94,.25); background:#ecfdf3; color:#166534; }
+    .meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px; margin-top:10px; }
+    .pill-ghost { border:1px dashed var(--line); background:var(--panel-ink); }
+  </style>
+</head>
+<body>
+<script>
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const embedded = params.get('embedded') === '1';
+    const standalone = params.get('standalone') === '1';
+    const id = params.get('id') || '';
+    if (!embedded && !standalone) {
+      const q = id ? `?case_id=${encodeURIComponent(id)}` : '';
+      location.replace(`/static/verify.html${q}`);
+    }
+  })();
+</script>
+<header>
+  <h1 id="title">案例详情</h1>
+  <span class="muted" id="caseId">—</span>
+  <div class="row" style="margin-left:auto;">
+    <a class="pill" href="/static/cases.html">返回列表</a>
+    <a class="pill" href="/static/verify.html">八字验证</a>
+    <button class="copy" data-copy="" data-label="Case ID" title="复制 Case ID" id="btn-copy-case">复制</button>
+    <button id="btn-refresh">刷新</button>
+  </div>
+</header>
+<div class="shell">
+  <div id="authBanner" class="banner" style="display:none;"></div>
+
+  <div class="card" id="caseCard">
+    <p class="card-title"><span class="dot"></span>基础信息</p>
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;" id="caseName">加载中…</div>
+        <div class="muted" id="caseMeta"></div>
+      </div>
+      <div class="row" id="caseTags"></div>
+    </div>
+    <div class="row" style="margin-top:8px;gap:8px;" id="caseSummary"></div>
+    <div class="meta-grid" id="caseMetaGrid"></div>
+    <div class="muted" style="margin-top:6px;" id="caseNotes"></div>
+  </div>
+
+  <section class="card" id="computeSection">
+    <p class="card-title"><span class="dot"></span>一键计算 /cases/{id}/compute</p>
+    <div class="muted" id="computeEffective" style="margin-bottom:8px;">使用案例保存的出生信息。</div>
+    <div class="row" style="gap:10px;flex-wrap:wrap;">
+      <label class="pill" style="gap:8px;">
+        <span style="font-weight:700;">模式</span>
+        <select id="computeMode" style="border:none;background:transparent;outline:none;">
+          <option value="dual">dual</option>
+          <option value="single">single</option>
+        </select>
+      </label>
+      <label class="pill" style="gap:8px;">
+        <input id="computeSolar" type="checkbox" /> 真太阳时
+      </label>
+      <label class="pill" style="gap:8px;">
+        <span>流年窗口</span>
+        <input id="liunianYears" placeholder="-2,2" style="width:90px;border:none;background:transparent;outline:none;" />
+      </label>
+      <label class="pill" style="gap:8px;">
+        <input id="computeBazi" type="checkbox" checked /> 计算 bazi
+      </label>
+      <label class="pill" style="gap:8px;">
+        <input id="computeVerify" type="checkbox" checked /> 计算 verify
+      </label>
+      <button id="btn-run-compute" class="primary">▶ 立即计算</button>
+    </div>
+    <div id="computeStatus" class="muted" style="margin-top:8px;">等待执行。</div>
+    <div id="computeResult" style="margin-top:10px;"></div>
+  </section>
+
+  <div class="grid main" style="margin-top:12px;">
+    <section class="card">
+      <p class="card-title"><span class="dot"></span>最新验证摘要</p>
+      <div id="latestBox" class="empty"><div class="empty-icon">◎</div><div><div style="font-weight:700;color:var(--text);">暂无快照</div><div class="muted">等待生成验证快照后显示摘要。</div></div></div>
+    </section>
+
+    <section class="card">
+      <p class="card-title"><span class="dot"></span>快照历史</p>
+      <div id="snapList"></div>
+      <div id="snapMore" style="margin-top:8px;"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const caseId=params.get('id');
+const queryToken=params.get('token');
+if(!caseId){ document.body.innerHTML='<div class="shell"><div class="empty"><div class="empty-icon">!</div><div><div style="font-weight:700;color:#991b1b;">缺少 case id</div><div class="muted">在 URL 中提供 ?id=case_id</div></div></div></div>'; throw new Error('missing id'); }
+
+let currentCase=null;
+let snapOffset=0, snapLimit=20, snapEnd=false, snapLoading=false;
+
+function getToken(){
+  return queryToken
+    || localStorage.getItem('access_token')
+    || localStorage.getItem('token')
+    || sessionStorage.getItem('access_token');
+}
+
+function withAuthHeaders(headers={}){
+  const token=getToken();
+  return token ? { ...headers, Authorization:`Bearer ${token}` } : headers;
+}
+
+function authFetch(url, options={}){
+  const opts={...options};
+  const baseHeaders=options && options.headers ? { ...options.headers } : {};
+  opts.headers=withAuthHeaders(baseHeaders);
+  return fetch(url, opts).then(async res=>{
+    if(res.status===401){ showAuthBanner('未检测到有效 Token，接口已返回 401。可在 URL 添加 ?token= 或本地设置 LOCAL_AUTH_BYPASS=1。', false); }
+    return res;
+  });
+}
+
+function fmtDate(str){ if(!str) return '—'; const d=new Date(str); if(Number.isNaN(d.getTime())) return str; return d.toLocaleString(); }
+function levelTag(level){ if(!level) return '<span class="tag">—</span>'; const cls=level==='L0'?'ok':level==='L1'?'warn':'bad'; return `<span class="tag ${cls}">${level}</span>`; }
+function pill(text, cls="") { return `<span class="pill ${cls}">${text}</span>`; }
+function truncated(obj, limit=1600){ const s=JSON.stringify(obj, null, 2)||''; return s.length>limit? s.slice(0,limit)+'\n...': s; }
+
+async function loadCase(){
+  $('title').textContent='案例详情';
+  $('caseId').textContent=caseId;
+  const copyBtn=$('btn-copy-case'); if(copyBtn) copyBtn.setAttribute('data-copy', caseId||'');
+  try{
+    const res=await authFetch(`/api/v1/cases/${encodeURIComponent(caseId)}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const c=await res.json();
+    currentCase=c;
+    $('title').textContent=c.name||'案例详情';
+    $('caseName').textContent=c.name||'—';
+    $('caseMeta').textContent=`创建 ${fmtDate(c.created_at)} · 更新 ${fmtDate(c.updated_at)} · TZ ${c.tz} · 经度 ${c.lon} · 真太阳时 ${c.solar_time_enabled?'开启':'关闭'}`;
+    $('caseNotes').textContent=c.notes||'无备注';
+    const tags=c.tags?c.tags.split(',').map(t=>t.trim()).filter(Boolean):[];
+    $('caseTags').innerHTML=tags.length?tags.map(t=>pill(t)).join(''):pill('无标签');
+    renderLatest(c.latest_verify_summary);
+    renderSummaryBadges(c);
+    renderMetaGrid(c);
+    $('computeMode').value='dual';
+    $('computeSolar').checked=!!c.solar_time_enabled;
+    $('computeEffective').textContent=`将使用保存的出生信息：${c.birth_dt_local || '-'} · ${c.tz} · 经度 ${c.lon}`;
+    refreshTokenStatus();
+  }catch(e){
+    $('caseCard').innerHTML=`<div class="empty"><div class="empty-icon">!</div><div><div style="font-weight:700;color:#991b1b;">加载失败</div><div class="muted">${e}</div></div></div>`;
+  }
+}
+
+function renderSummaryBadges(c){
+  const box=$('caseSummary'); if(!box) return;
+  box.innerHTML='';
+  box.innerHTML += pill(`schema ${c.schema_version||'-'}`);
+  box.innerHTML += pill(`api ${c.api_version_last||'-'}`);
+  box.innerHTML += pill(`rule ${c.rule_version_last||'-'}`);
+  if(c.birth_dt_local) box.innerHTML += pill(`出生: ${c.birth_dt_local}`,'amber');
+  if(c.city) box.innerHTML += pill(c.city,'accent');
+  box.innerHTML += pill(`case ${c.id||'-'}`,'gray');
+}
+
+function renderMetaGrid(c){
+  const box=$('caseMetaGrid'); if(!box) return;
+  box.innerHTML=`
+    <span class="pill gray">TZ ${c.tz||'-'}</span>
+    <span class="pill gray">经度 ${c.lon??'-'}</span>
+    <span class="pill ${c.solar_time_enabled?'accent':'gray'}">真太阳时 ${c.solar_time_enabled?'开启':'关闭'}</span>
+    <span class="pill gray">创建 ${fmtDate(c.created_at)}</span>
+    <span class="pill gray">更新 ${fmtDate(c.updated_at)}</span>
+  `;
+}
+
+function renderLatest(summary){
+  const box=$('latestBox');
+  if(!summary){ box.innerHTML='<div class="empty-icon">◎</div><div><div style="font-weight:700;color:var(--text);">暂无快照</div><div class="muted">生成验证后将展示级别/告警。</div></div>'; box.className='empty'; return; }
+  box.className='';
+  box.innerHTML=`<div class="row" style="flex-wrap:wrap;gap:8px;">
+    ${levelTag(summary.summary_level)}
+    <span class="tag">告警 ${summary.summary_warning_count??0}</span>
+    <span class="tag">差异 ${summary.summary_diff_count??0}</span>
+    <span class="tag">snapshot ${summary.snapshot_id||'-'}</span>
+  </div>`;
+}
+
+async function loadSnapshots(reset=false){
+  const box=$('snapList');
+  const emptyHtml=`<div class="empty"><div class="empty-icon">◎</div><div><div style="font-weight:700;color:var(--text);">暂无快照</div><div class="muted">执行验证并写入快照后，这里会显示历史。</div></div></div>`;
+  if(reset){ snapOffset=0; snapEnd=false; box.innerHTML=''; }
+  if(snapLoading || snapEnd) return;
+  snapLoading=true;
+  if(!box.innerHTML.trim()) box.innerHTML='<div class="muted">加载中…</div>';
+  try{
+    const res=await authFetch(`/api/v1/cases/${encodeURIComponent(caseId)}/snapshots?limit=${snapLimit}&offset=${snapOffset}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    const list=Array.isArray(data)?data:[];
+    if(snapOffset===0 && !list.length){ box.innerHTML=emptyHtml; snapEnd=true; updateLoadMore(); return; }
+    box.innerHTML = box.innerHTML.includes('加载中…') && snapOffset===0 ? '' : box.innerHTML;
+    renderSnapshots(list, true);
+    snapOffset += list.length;
+    if(list.length < snapLimit) snapEnd=true;
+    updateLoadMore();
+  }catch(e){
+    box.innerHTML=`<div class="empty"><div class="empty-icon">!</div><div><div style="font-weight:700;color:#991b1b;">加载失败</div><div class="muted">${e}</div></div></div>`;
+    snapEnd=true;
+    updateLoadMore();
+  }finally{
+    snapLoading=false;
+  }
+}
+
+function renderSnapshots(list, append=false){
+  const box=$('snapList');
+  if(!append) box.innerHTML='';
+  if(!list.length && !append){ box.innerHTML=''; return; }
+  const html=list.map(snapshotCard).join('');
+  box.insertAdjacentHTML('beforeend', html);
+}
+
+function snapshotCard(s){
+  const warn = s.summary_warning_count??0; const diff=s.summary_diff_count??0;
+  const level = levelTag(s.summary_level);
+  const parts=[`kind: ${s.kind||'-'}`, `创建: ${fmtDate(s.created_at)}`];
+  if(s.api_version) parts.push(`api ${s.api_version}`);
+  if(s.rule_version) parts.push(`rule ${s.rule_version}`);
+  const payload = s.output_json || s.input_json || s.backend_json;
+  const pre = payload ? `<details style="margin-top:8px;"><summary class="muted" style="cursor:pointer;">查看 JSON</summary><pre>${truncated(payload)}</pre></details>` : '';
+  return `<div class="card" style="margin-bottom:10px;">
+    <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-weight:800;">快照 ${s.id}</div>
+        <div class="muted">${parts.join(' · ')}</div>
+      </div>
+      <div class="row" style="gap:6px;">
+        ${level}
+        <span class="tag">告警 ${warn}</span>
+        <span class="tag">差异 ${diff}</span>
+        <button class="copy" data-copy="${s.id}" data-label="snapshot id" title="复制 snapshot id">复制</button>
+      </div>
+    </div>
+    ${pre}
+  </div>`;
+}
+
+function updateLoadMore(){
+  const more=$('snapMore'); if(!more) return;
+  more.innerHTML='';
+  if(snapEnd) return;
+  const btn=document.createElement('button');
+  btn.textContent='加载更多';
+  btn.addEventListener('click', ()=>loadSnapshots(false));
+  more.appendChild(btn);
+}
+
+function parseLiunian(str){
+  if(!str) return null;
+  try{
+    const parts=str.split(',').map(s=>s.trim()).filter(Boolean).map(Number).filter(n=>Number.isInteger(n));
+    if(!parts.length) return null;
+    return parts;
+  }catch{ return null; }
+}
+
+function statusPill(status){
+  if(status==='success') return '<span class="pill accent">成功</span>';
+  if(status==='failed') return '<span class="pill red">失败</span>';
+  return '<span class="pill gray">跳过</span>';
+}
+
+function renderComputeResult(data){
+  const box=$('computeResult'); if(!box) return;
+  if(!data){ box.innerHTML=''; return; }
+  const tasks=data.tasks||{};
+  const taskRows=Object.entries(tasks).map(([name,t])=>`<div class="row" style="gap:8px;align-items:center;"><span class="pill">${name}</span>${statusPill(t.status)}${t.snapshot_id?`<span class="pill">snapshot ${t.snapshot_id}</span>`:''}${t.message?`<span class="pill amber">${t.message}</span>`:''}</div>`).join('');
+  const snaps=Array.isArray(data.snapshots_created)?data.snapshots_created:[];
+  const snapList=snaps.map(s=>{
+    const warn=s.summary_warning_count??0; const diff=s.summary_diff_count??0;
+    const level=levelTag(s.summary_level);
+    return `<div class="card" style="margin-top:8px;">
+      <div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div>
+          <div style="font-weight:800;">${s.kind||'snapshot'} ${s.id}</div>
+          <div class="muted">创建 ${fmtDate(s.created_at)} · api ${s.api_version||'-'} · rule ${s.rule_version||'-'}</div>
+        </div>
+        <div class="row" style="gap:6px;">${level}<span class="tag">告警 ${warn}</span><span class="tag">差异 ${diff}</span><button class="copy" data-copy="${s.id}" data-label="snapshot id" title="复制 snapshot id">复制</button></div>
+      </div>
+    </div>`;
+  }).join('');
+  box.innerHTML=`<div class="row" style="gap:8px;align-items:center;" class="muted" style="margin-bottom:6px;"><span class="muted">compute_batch_id: ${data.compute_batch_id}</span><button class="copy" data-copy="${data.compute_batch_id||''}" data-label="compute_batch_id" title="复制 compute_batch_id">复制</button></div>${taskRows}<div style="margin-top:8px;">${snapList||'<div class="muted">暂无快照返回</div>'}</div>`;
+}
+
+async function runCompute(){
+  const btn=$('btn-run-compute');
+  const statusEl=$('computeStatus');
+  statusEl.textContent='请求中…';
+  btn.disabled=true;
+  try{
+    const payload={
+      compute_bazi:$('computeBazi').checked,
+      do_verify:$('computeVerify').checked,
+      mode:$('computeMode').value || 'dual',
+      solar_time_enabled:$('computeSolar').checked,
+      liunian_years:parseLiunian(($('liunianYears').value||'').trim()),
+    };
+    const res=await authFetch(`/api/v1/cases/${encodeURIComponent(caseId)}/compute`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    });
+    const text=await res.text();
+    if(!res.ok) throw new Error(text||`HTTP ${res.status}`);
+    const data=JSON.parse(text);
+    statusEl.textContent='✓ 计算完成';
+    renderComputeResult(data);
+    await loadCase();
+    await loadSnapshots(true);
+  }catch(e){
+    statusEl.textContent='计算失败';
+    alert('计算失败: '+e);
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+$('btn-refresh').addEventListener('click', ()=>{ loadCase(); loadSnapshots(true); });
+$('btn-run-compute').addEventListener('click', runCompute);
+document.addEventListener('click', async (e)=>{
+  const target=e.target.closest('[data-copy]');
+  if(!target) return;
+  e.preventDefault();
+  const text=target.getAttribute('data-copy')||'';
+  const label=(target.getAttribute('data-label')||'内容').trim();
+  const restore=`复制 ${label}`.trim();
+  if(!text){ alert('无可复制的 '+label); return; }
+  try{
+    await navigator.clipboard.writeText(text);
+    target.textContent='已复制';
+    target.title='已复制';
+    setTimeout(()=>{ target.textContent=restore; target.title=restore; },900);
+  }catch(err){
+    alert('复制失败: '+err);
+  }
+});
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  const ly=$('liunianYears'); if(ly && !ly.value) ly.value='-2,2';
+  loadCase();
+  loadSnapshots(true);
+});
+
+function showAuthBanner(msg, ok=false){
+  const el=$('authBanner'); if(!el) return;
+  el.style.display='flex';
+  el.className = ok ? 'banner ok' : 'banner';
+  el.textContent=msg;
+}
+
+function refreshTokenStatus(){
+  const t=getToken();
+  if(!t){ showAuthBanner('未检测到 Token。可在 URL 添加 ?token=，或设 LOCAL_AUTH_BYPASS=1。', false); }
+}
+</script>
+</body>
+</html>

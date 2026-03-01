@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>总览 · 验证 / 案例 / 指引</title>
+  <style>
+    :root {
+      --bg: #f6f5f2;
+      --bg-ink: radial-gradient(1200px circle at 18% -6%, rgba(15,118,110,.08), transparent 42%),
+                 linear-gradient(180deg, #f8f7f3 0%, #eef1ed 100%);
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #667085;
+      --line: #e5e7eb;
+      --accent: #0f766e;
+      --accent-soft: #e0f4f3;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --ok: #22c55e;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+      --radius: 14px;
+      --radius-pill: 999px;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg-ink); font-family:"Manrope","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; color:var(--text); line-height:1.6; min-height:100vh; }
+    a { color:var(--accent); text-decoration:none; }
+    header { position:sticky; top:0; z-index:10; backdrop-filter:blur(12px); background:rgba(247,248,245,.92); border-bottom:1px solid var(--line); padding:14px 18px; display:flex; align-items:center; gap:12px; }
+    header h1 { margin:0; font-size:20px; letter-spacing:0.3px; }
+    .shell { max-width:1180px; margin:0 auto; padding:18px; }
+    .hero { background:linear-gradient(120deg, rgba(15,118,110,.14), rgba(245,158,11,.10)); border:1px solid var(--line); border-radius:18px; padding:14px 16px; box-shadow:var(--shadow); display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); }
+    .card-title { margin:0 0 10px; font-size:13px; color:var(--muted); letter-spacing:0.04em; font-weight:700; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+    .card-title .dot { width:7px; height:7px; border-radius:50%; background:var(--accent); display:inline-block; }
+    .grid { display:grid; gap:12px; }
+    @media (min-width:900px){ .grid.columns-2 { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:var(--radius-pill); border:1px solid var(--line); background:#f8fafc; color:var(--muted); font-size:12px; }
+    .pill.accent { border-color:rgba(15,118,110,.4); color:#0f766e; background:var(--accent-soft); }
+    .pill.ok { border-color:rgba(34,197,94,.35); color:#166534; background:#ecfdf3; }
+    .pill.warn { border-color:rgba(245,158,11,.35); color:#92400e; background:#fff7ed; }
+    .pill.gray { border-color:rgba(148,163,184,.4); color:#475569; background:#e2e8f0; }
+    .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:8px; border:1px solid var(--line); color:var(--muted); font-size:11px; background:#f8fafc; }
+    button { border:1px solid var(--line); background:#f8fafc; color:var(--text); padding:9px 13px; border-radius:10px; cursor:pointer; font-weight:700; transition:transform .08s, box-shadow .12s, border-color .12s; }
+    button:hover { border-color:var(--accent); box-shadow:0 8px 24px rgba(15,23,42,.08); }
+    button:active { transform:scale(.98); }
+    button.primary { background:var(--accent); color:#ecfeff; border-color:#0f766e; }
+    details { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:#fff; }
+    summary { cursor:pointer; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:8px; }
+    summary::marker { display:none; }
+    .hint { color:var(--muted); font-size:12px; }
+    .section { margin-top:14px; }
+  </style>
+</head>
+<body>
+<script>
+  location.replace('/static/verify.html');
+</script>
+<header>
+  <h1>总览</h1>
+  <span class="muted">验证 · 案例 · 鉴权 · 指引，一页集中</span>
+  <div style="margin-left:auto;" class="row">
+    <a class="pill" href="/static/verify.html">进入验证</a>
+    <a class="pill" href="/static/cases.html">案例中心</a>
+    <a class="pill" href="/docs/api.html">API 文档</a>
+  </div>
+</header>
+<div class="shell">
+  <div class="hero">
+    <div style="font-weight:800;color:#0f172a;">主界面：快速入口 + 全局说明</div>
+    <div class="row" style="flex:1;min-width:260px;">
+      <span class="tag">1) 先看快速入口</span>
+      <span class="tag">2) 展开说明读规则</span>
+      <span class="tag">3) 直接跳转对应模块</span>
+    </div>
+    <div class="row" style="margin-left:auto;gap:8px;">
+      <span class="pill accent">单页汇总</span>
+      <span class="pill gray">中文注释到位</span>
+    </div>
+  </div>
+
+  <section class="section grid columns-2">
+    <div class="card">
+      <p class="card-title"><span class="dot"></span>快速入口</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px;">
+        <div class="card" style="padding:12px;">
+          <div style="font-weight:700;">八字验证</div>
+          <div class="hint">录入生日/时区/经度，返回排盘、风险、推荐时制。</div>
+          <div class="row" style="margin-top:10px;">
+            <a class="pill accent" href="/static/verify.html">去验证</a>
+            <span class="pill gray">返回推荐 / 告警</span>
+          </div>
+        </div>
+        <div class="card" style="padding:12px;">
+          <div style="font-weight:700;">案例中心</div>
+          <div class="hint">创建/筛选案例，查看最新验证快照（级别/告警/差异）。</div>
+          <div class="row" style="margin-top:10px;">
+            <a class="pill accent" href="/static/cases.html">去案例</a>
+            <span class="pill gray">列表+筛选+快照</span>
+          </div>
+        </div>
+        <div class="card" style="padding:12px;">
+          <div style="font-weight:700;">接口与鉴权</div>
+          <div class="hint">需要 Token 才能调用接口；本地可设置 LOCAL_AUTH_BYPASS=1 便于联调。</div>
+          <div class="row" style="margin-top:10px;">
+            <a class="pill" href="/docs/api.html">API 文档</a>
+            <span class="pill warn">先准备 Token</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><span class="dot"></span>本页怎么用</p>
+      <div class="hint">· 左侧卡片直接跳转核心功能；· 下方折叠说明提供一步步解释；· 先看鉴权，再操作验证/案例。</div>
+      <div class="hint" style="margin-top:6px;">· 推荐先完成“鉴权”再访问接口；· 验证页的“推荐”字段已做中文落地（无/北京时/真太阳时）。</div>
+    </div>
+  </section>
+
+  <section class="section grid columns-2">
+    <div class="card">
+      <p class="card-title"><span class="dot"></span>八字验证 · 使用说明</p>
+      <details open>
+        <summary>步骤</summary>
+        <div class="hint" style="margin-top:6px;">1) 填写日期时间（当地时间）、时区、经度；2) 提交后查看排盘、级别、推荐时制；3) 告警/边界提示会影响解读开启状态。</div>
+      </details>
+      <details style="margin-top:10px;" open>
+        <summary>字段解释</summary>
+        <ul class="hint" style="padding-left:18px; margin:6px 0 0;">
+          <li>推荐：none=无、beijing_time=北京时、solar_time=真太阳时。</li>
+          <li>级别：L0=无差异，L1=时柱差异，L2=月柱差异，L3=日/年柱差异。</li>
+          <li>风险：near_shichen_boundary / near_jieqi_boundary 为边界风险，解读可能关闭。</li>
+        </ul>
+      </details>
+      <details style="margin-top:10px;" open>
+        <summary>操作提示</summary>
+        <div class="hint" style="margin-top:6px;">· 若推荐为空，本页已显示“无”；· 真太阳时开关在验证页左侧表单；· 返回 JSON 可点“复制”按钮。</div>
+      </details>
+      <div class="row" style="margin-top:10px;">
+        <a class="pill accent" href="/static/verify.html">立即去验证</a>
+        <span class="pill gray">含结果解读与告警</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title"><span class="dot"></span>案例中心 · 使用说明</p>
+      <details open>
+        <summary>步骤</summary>
+        <div class="hint" style="margin-top:6px;">1) 左侧填写姓名/时间/经度等必填；2) 点击提交创建；3) 右侧列表可搜索、按标签过滤、排序。</div>
+      </details>
+      <details style="margin-top:10px;" open>
+        <summary>卡片标签解释</summary>
+        <ul class="hint" style="padding-left:18px; margin:6px 0 0;">
+          <li>右上三枚：级别 / 告警数 / 差异数。</li>
+          <li>真太阳时：开启/关闭仅影响时柱，建议经度 70–140。</li>
+          <li>标签：逗号分隔，如 VIP,回归。</li>
+        </ul>
+      </details>
+      <details style="margin-top:10px;" open>
+        <summary>鉴权提示</summary>
+        <div class="hint" style="margin-top:6px;">URL 可加 ?token=，或在浏览器 localStorage.sessionStorage 写入 access_token；本地联调可设环境变量 LOCAL_AUTH_BYPASS=1。</div>
+      </details>
+      <div class="row" style="margin-top:10px;">
+        <a class="pill accent" href="/static/cases.html">进入案例中心</a>
+        <span class="pill gray">创建 / 筛选 / 快照</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section card">
+    <p class="card-title"><span class="dot"></span>常见问题 / 注释</p>
+    <details open>
+      <summary>真太阳时 vs 北京时</summary>
+      <div class="hint" style="margin-top:6px;">真太阳时仅影响时柱；推荐=真太阳时时，优先解读 solar_time；推荐=北京时 或 无 时，按常规北京时间排盘。</div>
+    </details>
+    <details style="margin-top:8px;" open>
+      <summary>告警与解读</summary>
+      <div class="hint" style="margin-top:6px;">存在边界风险或 near_shichen_boundary 时，解读可能关闭，财运/婚姻/桃花/大运面板会隐藏。</div>
+    </details>
+    <details style="margin-top:8px;" open>
+      <summary>鉴权失败</summary>
+      <div class="hint" style="margin-top:6px;">接口返回 401 时，请检查 token 是否在 URL、localStorage.token/access_token 或 sessionStorage.access_token 中；本地可用 LOCAL_AUTH_BYPASS=1。</div>
+    </details>
+  </section>
+</div>
+</body>
+</html>

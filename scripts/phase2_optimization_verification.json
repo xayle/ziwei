@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-02-27T16:25:23.604207",
+  "tests": {
+    "members_pagination_cache": {
+      "status": "failed",
+      "first_request_time_ms": 0,
+      "cached_request_time_ms": 0,
+      "cache_speedup": 1.0,
+      "pagination_working": false
+    },
+    "events_pagination_cache": {
+      "status": "failed",
+      "first_request_time_ms": 0,
+      "cached_request_time_ms": 0,
+      "cache_speedup": 1.0
+    },
+    "cases_n_plus_one_elimination": {
+      "status": "failed",
+      "response_times_ms": [],
+      "average_time_ms": 0,
+      "cases_loaded": 0
+    },
+    "cache_efficiency": {
+      "cache_hit_count": 9,
+      "cache_miss_count": 1,
+      "hit_rate": 90.0
+    }
+  }
+}

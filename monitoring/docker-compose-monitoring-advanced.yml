@@ -1,0 +1,245 @@
+# Docker Compose 监控栈配置 - 包含 Grafana Email 和 AlertManager Slack 通知
+# 使用方法: docker-compose -f docker-compose-monitoring.yml up -d
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # BaZi API 应用
+  # ============================================================================
+  app:
+    image: baziservice:latest
+    container_name: baziservice_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # 应用配置
+      LOG_LEVEL: INFO
+      DATABASE_URL: sqlite:///./bazi.db
+      SECRET_KEY: "your-secret-key-change-this"
+      
+      # 监控配置
+      PROMETHEUS_ENABLED: "true"
+    volumes:
+      - ./bazi.db:/app/bazi.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+  # ============================================================================
+  # Prometheus - 指标收集和存储
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: baziservice_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'  # 允许动态重新加载配置
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - monitoring
+
+  # ============================================================================
+  # AlertManager - 告警管理和通知
+  # ============================================================================
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: baziservice_alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      # 使用以下配置文件以启用 Email 和 Slack 通知
+      # - ./alertmanager-email-slack.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - monitoring
+
+  # ============================================================================
+  # Grafana - 可视化和告警管理
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: baziservice_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      # 基本配置
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SERVER_ROOT_URL: http://localhost:3000
+      
+      # ========== SMTP 邮件配置 ==========
+      # Gmail 配置（需要 App Password）
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: "smtp.gmail.com:587"
+      GF_SMTP_USER: "your-email@gmail.com"              # 改为您的 Gmail
+      GF_SMTP_PASSWORD: "your-app-password"             # 改为您的 App Password (16位)
+      GF_SMTP_CERT_FILE: ""
+      GF_SMTP_KEY_FILE: ""
+      GF_SMTP_SKIP_VERIFY: "false"
+      GF_SMTP_FROM_ADDRESS: "alerts@baziservice.com"
+      GF_SMTP_FROM_NAME: "BaZi Service Alerts"
+      
+      # 备用：使用公司邮件服务器
+      # GF_SMTP_HOST: "mail.yourcompany.com:587"
+      # GF_SMTP_USER: "alerts@yourcompany.com"
+      # GF_SMTP_PASSWORD: "your-password"
+      
+      # AlertManager 配置
+      GF_ALERTMANAGER_ALERT_MANAGER_URLS: "http://alertmanager:9093"
+      GF_ALERTMANAGER_DASHBOARD_TITLE: "告警管理"
+      
+      # 数据源配置
+      GF_DATASOURCES_PROMETHEUS_URL: "http://prometheus:9090"
+      
+      # 其他配置
+      GF_INSTALL_PLUGINS: ""
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_LOG_LEVEL: "info"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # 将仪表板 JSON 文件挂载到 Grafana
+      - ./grafana-dashboard.json:/etc/grafana/provisioning/dashboards/baziservice.json
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - prometheus
+      - alertmanager
+    networks:
+      - monitoring
+
+  # ============================================================================
+  # 可选：Nginx - 反向代理（用于生产部署）
+  # ============================================================================
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: baziservice_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./certs:/etc/nginx/certs:ro
+  #   depends_on:
+  #     - app
+  #     - grafana
+  #   networks:
+  #     - monitoring
+
+# ============================================================================
+# 数据卷配置
+# ============================================================================
+
+volumes:
+  prometheus_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ============================================================================
+# 网络配置
+# ============================================================================
+
+networks:
+  monitoring:
+    driver: bridge
+
+# ============================================================================
+# 使用说明
+# ============================================================================
+#
+# 启动整个监控栈：
+#   docker-compose -f docker-compose-monitoring.yml up -d
+#
+# 查看运行状态：
+#   docker-compose -f docker-compose-monitoring.yml ps
+#
+# 查看日志：
+#   docker-compose -f docker-compose-monitoring.yml logs -f
+#
+# 查看特定服务日志：
+#   docker-compose -f docker-compose-monitoring.yml logs -f grafana
+#   docker-compose -f docker-compose-monitoring.yml logs -f prometheus
+#   docker-compose -f docker-compose-monitoring.yml logs -f alertmanager
+#
+# 访问服务：
+#   • Grafana: http://localhost:3000 (admin/admin)
+#   • Prometheus: http://localhost:9090
+#   • AlertManager: http://localhost:9093
+#   • BaZi API: http://localhost:8000
+#   • API 文档: http://localhost:8000/docs
+#   • Metrics: http://localhost:8000/metrics
+#
+# 编辑配置后重新加载（无需重启）：
+#   # Prometheus
+#   docker-compose -f docker-compose-monitoring.yml exec prometheus \
+#     wget -O- -q http://localhost:9090/-/reload
+#
+#   # AlertManager
+#   docker-compose -f docker-compose-monitoring.yml exec alertmanager \
+#     wget -O- -q http://localhost:9093/-/reload
+#
+# 停止监控栈：
+#   docker-compose -f docker-compose-monitoring.yml down
+#
+# 停止并删除所有数据：
+#   docker-compose -f docker-compose-monitoring.yml down -v
+#
+# 邮件配置测试：
+#   docker-compose -f docker-compose-monitoring.yml exec grafana \
+#     grafana-cli admin reset-admin-password admin
+#
+# 导入仪表板：
+#   1. 访问 http://localhost:3000
+#   2. 左侧菜单 → Dashboards → Import
+#   3. 上传 grafana-dashboard.json 文件
+#   4. 选择 Prometheus 数据源
+#   5. 点击 Import
+#
+# 配置告警通知：
+#   1. 修改 alertmanager.yml 中的邮件和 Slack 配置
+#   2. 或者使用 alertmanager-email-slack.yml (推荐)
+#      mv alertmanager.yml alertmanager-backup.yml
+#      cp alertmanager-email-slack.yml alertmanager.yml
+#   3. 重新加载 AlertManager 配置或重启容器

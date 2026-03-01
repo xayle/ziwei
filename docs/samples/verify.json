@@ -1,0 +1,59 @@
+{
+  "request": {
+    "dt": "2024-02-12T23:45:00",
+    "tz": "Asia/Shanghai",
+    "lon": 150.1234,
+    "mode": "dual",
+    "solar_time_enabled": false
+  },
+  "response": {
+    "api_version": "v1",
+    "rule_version": "v5.3",
+    "request_id": "a3f6e58f-7f4d-4f4e-9b8f-1b9b7c9b2c0c",
+    "backend": {
+      "primary": "sxtwl",
+      "secondary": "cnlunar",
+      "sxtwl_available": true,
+      "cnlunar_available": true
+    },
+    "mode_requested": "dual",
+    "mode_effective": "dual",
+    "dt_input": "2024-02-12T23:45:00+08:00",
+    "dt_effective_utc8": "2024-02-12T23:45:00+08:00",
+    "tz": "Asia/Shanghai",
+    "solar_time_offset_minutes": 0.0,
+    "pillars_primary": {
+      "year": { "stem": "甲", "branch": "辰", "ganzhi": "甲辰" },
+      "month": { "stem": "壬", "branch": "寅", "ganzhi": "壬寅" },
+      "day": { "stem": "癸", "branch": "丑", "ganzhi": "癸丑" },
+      "hour": { "stem": "癸", "branch": "亥", "ganzhi": "癸亥" }
+    },
+    "pillars_secondary": null,
+    "risk_flags": {
+      "near_shichen_boundary": false,
+      "near_jieqi_boundary": false,
+      "jieqi_boundary_status": "ok",
+      "minutes_to_shichen_boundary": 15.0,
+      "minutes_to_jieqi_boundary": 2260.0
+    },
+    "validation": {
+      "level": "L1",
+      "mode": "dual",
+      "recommended": "beijing_time",
+      "interpretation_enabled": false,
+      "reasons": ["lon_outside_cn_window"],
+      "diff_fields": [],
+      "risk_flags": {
+        "near_shichen_boundary": false,
+        "near_jieqi_boundary": false,
+        "jieqi_boundary_status": "ok",
+        "minutes_to_shichen_boundary": 15.0,
+        "minutes_to_jieqi_boundary": 2260.0
+      },
+      "warnings": [
+        "lon_outside_cn_window: lon=150.1234 cn_window=[70,140] action=accepted",
+        "tz_mismatch: dt_offset=+08:00 tz=Asia/Shanghai action=tz_applied"
+      ]
+    }
+  }
+}

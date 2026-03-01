@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>案例中心 · Cases</title>
+  <style>
+    :root {
+      --bg: #f6f5f2;
+      --bg-ink: radial-gradient(1200px circle at 18% -6%, rgba(15,118,110,.08), transparent 42%),
+                 linear-gradient(180deg, #f8f7f3 0%, #eef1ed 100%);
+      --panel: #ffffff;
+      --panel-ink: #fdfbf7;
+      --text: #0f172a;
+      --muted: #667085;
+      --line: #e5e7eb;
+      --accent: #0f766e;
+      --accent-soft: #e0f4f3;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+      --ok: #22c55e;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+      --radius: 14px;
+      --radius-pill: 999px;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--bg-ink);
+      font-family:"Manrope","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      color:var(--text); line-height:1.6; min-height:100vh;
+    }
+    a { color:var(--accent); text-decoration:none; }
+    header {
+      position:sticky; top:0; z-index:10;
+      backdrop-filter:blur(12px);
+      background:rgba(247,248,245,.92);
+      border-bottom:1px solid var(--line);
+      padding:14px 18px;
+      display:flex; align-items:center; gap:12px;
+    }
+    header h1 { margin:0; font-size:20px; letter-spacing:0.3px; }
+    .shell { max-width:1180px; margin:0 auto; padding:18px; }
+    .hero { background:linear-gradient(120deg, rgba(15,118,110,.14), rgba(245,158,11,.10)); border:1px solid var(--line); border-radius:18px; padding:14px 16px; box-shadow:var(--shadow); display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); }
+    .card-title { margin:0 0 10px; font-size:13px; color:var(--muted); letter-spacing:0.04em; font-weight:700; text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+    .card-title .dot { width:7px; height:7px; border-radius:50%; background:var(--accent); display:inline-block; }
+    .grid { display:grid; gap:12px; }
+    @media (min-width:900px){ .grid.cases { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+    input, select, textarea, button { font-family:inherit; font-size:13px; }
+    .field { display:flex; flex-direction:column; gap:4px; }
+    .lbl { font-size:12px; font-weight:700; color:var(--muted); }
+    input, select, textarea {
+      border:1px solid var(--line); border-radius:10px; padding:9px 11px;
+      background:#fff; color:var(--text);
+      transition:border-color .12s, box-shadow .12s;
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(15,118,110,.18); outline:none; }
+    textarea { resize:vertical; min-height:90px; }
+    button { border:1px solid var(--line); background:#f8fafc; color:var(--text); padding:9px 13px; border-radius:10px; cursor:pointer; font-weight:700; transition:transform .08s, box-shadow .12s, border-color .12s; }
+    button:hover { border-color:var(--accent); box-shadow:0 8px 24px rgba(15,23,42,.08); }
+    button:active { transform:scale(.98); }
+    button.primary { background:var(--accent); color:#ecfeff; border-color:#0f766e; }
+    button.ghost { background:#fff; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:var(--radius-pill); border:1px solid var(--line); background:#f8fafc; color:var(--muted); font-size:12px; }
+    .pill.accent { border-color:rgba(15,118,110,.4); color:#0f766e; background:var(--accent-soft); }
+    .pill.amber { border-color:rgba(245,158,11,.35); color:#92400e; background:#fff7ed; }
+    .pill.red { border-color:rgba(239,68,68,.4); color:#991b1b; background:#fef2f2; }
+    .pill.ok { border-color:rgba(34,197,94,.35); color:#166534; background:#ecfdf3; }
+    .pill.gray { border-color:rgba(148,163,184,.4); color:#475569; background:#e2e8f0; }
+    .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:8px; border:1px solid var(--line); color:var(--muted); font-size:11px; background:#f8fafc; }
+    .tag.ok { color:#166534; border-color:rgba(34,197,94,.3); background:#ecfdf3; }
+    .tag.warn { color:#92400e; border-color:rgba(245,158,11,.3); background:#fffbeb; }
+    .tag.bad { color:#991b1b; border-color:rgba(239,68,68,.3); background:#fef2f2; }
+    .empty { border:1px dashed var(--line); border-radius:var(--radius); padding:14px; background:linear-gradient(135deg, rgba(15,118,110,.05), rgba(229,231,235,.3)); color:var(--muted); display:flex; align-items:center; gap:10px; }
+    .empty-icon { width:36px; height:36px; border-radius:12px; background:rgba(15,118,110,.12); display:grid; place-items:center; color:#0f766e; font-weight:800; }
+    .muted { color:var(--muted); font-size:12px; }
+    .meta { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:12px; }
+    .toolbar { position:sticky; top:62px; z-index:8; background:rgba(247,248,245,.9); border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px; box-shadow:var(--shadow); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .input-chip { display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:#fff; padding:8px 10px; border-radius:var(--radius); min-width:180px; }
+    .input-chip input, .input-chip select { border:none; padding:0; background:transparent; width:100%; }
+    .banner { margin:12px 0; padding:12px; border-radius:var(--radius); border:1px solid rgba(239,68,68,.25); background:#fef2f2; color:#991b1b; display:flex; gap:10px; align-items:center; }
+    .banner.ok { border-color:rgba(34,197,94,.25); background:#ecfdf3; color:#166534; }
+    .skeleton { background:linear-gradient(90deg, rgba(226,232,240,.6) 25%, rgba(241,245,249,.95) 37%, rgba(226,232,240,.6) 63%); background-size:400% 100%; animation:shimmer 1.2s ease-in-out infinite; border-radius:var(--radius); height:76px; }
+    @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+    .auth-card { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .token-box { display:flex; gap:6px; align-items:center; padding:8px; border:1px solid var(--line); border-radius:var(--radius-pill); background:#fff; box-shadow:var(--shadow); }
+    .token-box input { border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:220px; font-size:12px; }
+    .case-card { position:relative; }
+    .select-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:var(--radius-pill); border:1px solid var(--line); background:#f8fafc; font-size:12px; }
+    .select-chip input { accent-color: var(--accent); }
+    .sel-badge { position:absolute; top:10px; right:10px; background:var(--accent); color:#ecfeff; padding:4px 8px; border-radius:var(--radius-pill); font-size:11px; display:none; }
+    .case-card.selected { border-color: rgba(15,118,110,.45); box-shadow:0 10px 28px rgba(15,118,110,.15); }
+    .case-card.selected .sel-badge { display:inline-flex; }
+    .result-box { border:1px solid var(--line); border-radius:var(--radius); padding:12px; background:#fff; }
+    .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+<script src="/static/js/relation-shared.js"></script>
+<script>
+  (function(){
+    const params = new URLSearchParams(location.search);
+    const embedded = params.get('embedded') === '1';
+    const standalone = params.get('standalone') === '1';
+    if (!embedded && !standalone) {
+      location.replace('/static/verify.html?tab=cases');
+    }
+  })();
+</script>
+<header>
+  <h1>案例中心</h1>
+  <span class="muted">案例库 / 验证快照，一页管理</span>
+  <div style="margin-left:auto;" class="row">
+    <a class="pill" href="/static/dashboard.html">总览</a>
+    <a class="pill" href="/static/verify.html">八字验证</a>
+    <button id="btn-refresh">刷新</button>
+  </div>
+</header>
+<div class="shell">
+  <div id="authBanner" class="banner" style="display:none;"></div>
+
+  <div class="hero">
+    <div style="font-weight:800;color:#0f172a;">一页完成：录入、筛选、查看快照</div>
+    <div class="row" style="flex:1;min-width:220px;">
+      <span class="tag">1. 填基本信息</span>
+      <span class="tag">2. 点击查看快照</span>
+      <span class="tag">3. 随时筛选/搜索</span>
+    </div>
+    <div class="row" style="margin-left:auto;gap:8px;">
+      <span class="pill gray" id="tokenStatus">鉴权: 未检测</span>
+      <span class="pill accent" id="loadStatus">等待加载</span>
+    </div>
+  </div>
+
+  <div class="card auth-card" aria-label="鉴权帮助">
+    <div class="pill gray" id="authMode">本地免登录已启用</div>
+    <div class="token-box">
+      <input id="tokenInput" placeholder="粘贴 token（可留空）" aria-label="token 输入" />
+      <button id="btn-save-token">保存</button>
+      <button id="btn-clear-token">清除</button>
+    </div>
+    <div class="muted">如需带 token，请粘贴后点击保存；否则保持空白即可（本机已免登录）。</div>
+  </div>
+
+  <div class="toolbar" aria-label="筛选工具">
+    <div class="input-chip" style="flex:1;min-width:200px;">
+      <span class="muted">搜索</span>
+      <input id="q" placeholder="输入姓名/标识即可模糊匹配" />
+    </div>
+    <div class="input-chip" style="flex:1;min-width:180px;">
+      <span class="muted">标签</span>
+      <input id="tag" placeholder="输入标签，例：付费 / 回归" />
+    </div>
+    <div class="input-chip" style="width:180px;">
+      <span class="muted">排序</span>
+      <select id="order">
+        <option value="updated_at">更新时间</option>
+        <option value="created_at">创建时间</option>
+        <option value="name">名称</option>
+      </select>
+    </div>
+    <div class="input-chip" style="width:140px;">
+      <span class="muted">方向</span>
+      <select id="dir">
+        <option value="desc">降序</option>
+        <option value="asc">升序</option>
+      </select>
+    </div>
+    <button id="btn-apply">应用筛选</button>
+    <button class="ghost" id="btn-clear">清空条件</button>
+    <span class="pill gray" id="loadedCount">已加载 0 条</span>
+  </div>
+
+  <div class="grid" style="margin-top:14px; grid-template-columns:1fr 1.05fr; gap:14px; align-items:start;">
+    <section class="card" aria-label="新建案例">
+      <p class="card-title"><span class="dot"></span>新建案例（必填项带 *）</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;">
+        <div class="field">
+          <label class="lbl" for="name">姓名/标识 *</label>
+          <input id="name" placeholder="示例：张三" />
+        </div>
+        <div class="field">
+          <label class="lbl" for="gender">性别</label>
+          <select id="gender">
+            <option value="">未指定</option>
+            <option value="female">女</option>
+            <option value="male">男</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="lbl" for="birth_dt_local">出生时间（本地时间） *</label>
+          <input id="birth_dt_local" placeholder="例：2002-03-13T14:36:00" />
+        </div>
+        <div class="field">
+          <label class="lbl" for="tz">时区 *</label>
+          <input id="tz" value="Asia/Shanghai" />
+        </div>
+        <div class="field">
+          <label class="lbl" for="lon">经度（70–140） *</label>
+          <input id="lon" type="number" value="121.4737" step="0.0001" />
+        </div>
+        <div class="field">
+          <label class="lbl" for="city">城市</label>
+          <input id="city" placeholder="上海" />
+        </div>
+        <div class="field">
+          <label class="lbl" for="tags">标签（逗号分隔）</label>
+          <input id="tags" placeholder="VIP,付费,复盘" />
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label class="lbl" for="notes">备注</label>
+          <textarea id="notes" placeholder="记录背景、需求或口径"></textarea>
+        </div>
+        <div class="row" style="grid-column:1/-1; justify-content:flex-end;">
+          <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;">
+            <input id="solar" type="checkbox" /> 启用真太阳时校正
+          </label>
+          <button class="ghost" id="btn-fill-demo">填入示例</button>
+          <button class="primary" id="btn-create">提交创建</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:8px;">出生时间填当地时间（不带时差）；时区用 IANA 名称（例 Asia/Shanghai）；经度 70–140 国内常见 73–135。</div>
+      <div id="createMsg" class="muted" style="margin-top:6px;color:#991b1b;"></div>
+    </section>
+
+    <section class="card" aria-label="筛选">
+      <p class="card-title"><span class="dot"></span>快速指引</p>
+      <div class="muted">· 用上方搜索/标签快速定位案例；· 卡片右上角三枚标签=验证级别、告警数、差异数；· 点“查看快照”即可打开详细验证记录。</div>
+      <div class="muted" style="margin-top:6px;">鉴权：URL 可加 ?token=；或在浏览器存储 token/access_token；本地联调可设 LOCAL_AUTH_BYPASS=1。</div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px;" aria-label="案例列表">
+    <p class="card-title"><span class="dot"></span>案例列表</p>
+    <div class="muted" style="margin:-4px 0 10px;">右上三枚标签：级别 / 告警数 / 差异数。点击“查看快照”查看最新验证记录。</div>
+    <div class="result-box" style="margin-bottom:10px;">
+      <div class="row" style="align-items:center; gap:10px;">
+        <div class="field" style="min-width:180px;">
+          <label class="lbl" for="relationType">关系类型</label>
+          <select id="relationType">
+            <option value="couple">情侣 / 夫妻</option>
+            <option value="parent_child">父母-子女</option>
+            <option value="colleague">同事</option>
+            <option value="supervisor_subordinate">上级-下级</option>
+            <option value="friend">朋友 / 合作</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;">
+          <label class="lbl">已选案例 (最多2个)</label>
+          <div id="selectedList" class="chips muted">未选择</div>
+        </div>
+        <button class="primary" id="btn-compute-relation">计算关系</button>
+        <span id="relationStatus" class="pill gray">等待选择案例</span>
+      </div>
+      <div id="relationResult" style="margin-top:10px;"></div>
+    </div>
+    <div id="casesBox" class="grid cases"></div>
+    <div id="casesMore" style="margin-top:10px;"></div>
+  </section>
+</div>
+
+<script>
+const state = { order:'updated_at', dir:'desc', q:'', tag:'', loading:false, offset:0, limit:20, end:false, selected:new Set() };
+const relationShared = window.RelationShared;
+const sharedInit = relationShared?.getState?.() || {};
+if (Array.isArray(sharedInit.selected)) {
+  state.selected = new Set(sharedInit.selected.slice(0, 2));
+}
+let initialRelationType = sharedInit.relationType || 'couple';
+const $ = id => document.getElementById(id);
+const queryParams = new URLSearchParams(window.location.search);
+const queryToken = queryParams.get('token');
+const banner = id => document.getElementById(id);
+
+function getToken(){
+  return queryToken
+    || localStorage.getItem('access_token')
+    || localStorage.getItem('token')
+    || sessionStorage.getItem('access_token');
+}
+
+function withAuthHeaders(headers={}){
+  const token=getToken();
+  return token ? { ...headers, Authorization:`Bearer ${token}` } : headers;
+}
+
+function authFetch(url, options={}){
+  const opts={...options};
+  const baseHeaders=options && options.headers ? { ...options.headers } : {};
+  opts.headers=withAuthHeaders(baseHeaders);
+  return fetch(url, opts).then(async res=>{
+    if(res.status===401){ showAuthBanner('未检测到有效 Token，接口已返回 401。可在 URL 添加 ?token= 或本地设置 LOCAL_AUTH_BYPASS=1。', false); }
+    return res;
+  });
+}
+
+function fmtDate(str){ if(!str) return '—'; const d=new Date(str); if(Number.isNaN(d.getTime())) return str; return d.toLocaleString(); }
+function levelTag(level){ if(!level) return '<span class="tag">无快照</span>'; const cls=level==='L0'?'ok':level==='L1'?'warn':'bad'; return `<span class="tag ${cls}">${level}</span>`; }
+function warnTag(n){ if(n==null) return ''; const cls=n===0?'ok':'warn'; return `<span class="tag ${cls}">告警 ${n}</span>`; }
+function diffTag(n){ if(n==null) return ''; const cls=n===0?'ok':'warn'; return `<span class="tag ${cls}">差异 ${n}</span>`; }
+function genderLabel(g){ if(g==='female') return '女'; if(g==='male') return '男'; return '未填'; }
+
+function renderCases(list, append=false){
+  const box=$('casesBox');
+  if(!box) return;
+  if(!append) box.innerHTML='';
+  if(!list.length && !append){ box.innerHTML=`<div class="empty"><div class="empty-icon">◎</div><div><div style="font-weight:700;color:var(--text);">暂无案例</div><div class="muted">先在左侧填写信息并提交，最新验证摘要会出现在这里。</div></div></div>`; return; }
+  const html=list.map(c=>{
+    const s=c.latest_verify_summary||null;
+    const tags=c.tags?c.tags.split(',').map(t=>t.trim()).filter(Boolean):[];
+    const checked = state.selected.has(c.id) ? 'checked' : '';
+    const selClass = state.selected.has(c.id) ? ' selected' : '';
+    return `<div class="card case-card${selClass}" data-case-id="${c.id}">
+      <div class="sel-badge">已选</div>
+      <div class="badge">${genderLabel(c.gender)}</div>
+      <div class="row" style="justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div>
+          <div style="font-weight:800;font-size:17px;">${c.name}</div>
+          <div class="meta">
+            <span>创建 ${fmtDate(c.created_at)}</span>
+            <span>更新 ${fmtDate(c.updated_at)}</span>
+            ${c.city?`<span>${c.city}</span>`:''}
+          </div>
+        </div>
+        <div class="row" style="gap:6px;">
+          ${levelTag(s?.summary_level)}
+          ${warnTag(s?.summary_warning_count)}
+          ${diffTag(s?.summary_diff_count)}
+        </div>
+      </div>
+      <div class="muted" style="margin:8px 0 6px;">TZ ${c.tz} · 经度 ${c.lon} · 真太阳时 ${c.solar_time_enabled?"开启":"关闭"}</div>
+      ${tags.length?`<div class="row">${tags.map(t=>`<span class="pill">${t}</span>`).join('')}</div>`:''}
+      <div class="row" style="margin-top:10px;">
+        <a class="pill accent" href="/static/case.html?id=${encodeURIComponent(c.id)}">查看快照</a>
+        <span class="pill" title="schema">${c.schema_version||'schema?'}</span>
+        <span class="pill" title="api">api ${c.api_version_last||'-'}</span>
+        <span class="pill" title="rule">rule ${c.rule_version_last||'-'}</span>
+        <span class="pill gray" title="case id">${c.id}</span>
+        <label class="select-chip"><input type="checkbox" data-case-id="${c.id}" ${checked}/> 选中关系计算</label>
+      </div>
+    </div>`;
+  }).join('');
+  box.insertAdjacentHTML('beforeend', html);
+  updateCardSelectionUI();
+}
+
+function updateMore(){
+  const more=$('casesMore'); if(!more) return;
+  more.innerHTML='';
+  if(state.end) return;
+  const btn=document.createElement('button');
+  btn.textContent=state.loading?'加载中…':'加载更多案例';
+  btn.disabled=state.loading;
+  btn.addEventListener('click', ()=>loadCases(false));
+  more.appendChild(btn);
+}
+
+async function loadCases(reset=false){
+  if(state.loading || (state.end && !reset)) return;
+  if(reset){ state.offset=0; state.end=false; $('casesBox').innerHTML=''; $('loadedCount').textContent='已加载 0 条'; }
+  state.loading=true; $('loadStatus').textContent='加载中…'; updateMore();
+  const params=new URLSearchParams({limit:String(state.limit), offset:String(state.offset), order:state.order, dir:state.dir});
+  if(state.q) params.set('q', state.q);
+  if(state.tag) params.set('tag', state.tag);
+  try{
+    const res=await authFetch(`/api/v1/cases?${params.toString()}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    const list=Array.isArray(data)?data:[];
+    renderCases(list, true);
+    state.offset += list.length;
+    if(list.length < state.limit) state.end=true;
+    $('loadStatus').textContent=`✓ 已加载 ${state.offset} 条${state.end?'（已到底）':''}`;
+    $('loadedCount').textContent=`已加载 ${state.offset} 条${state.end?' · 完成':''}`;
+    updateMore();
+  }catch(e){
+    $('casesBox').innerHTML=`<div class="empty"><div class="empty-icon">!</div><div><div style="font-weight:700;color:#991b1b;">加载失败</div><div class="muted">${e}</div></div></div>`;
+    $('loadStatus').textContent='加载失败';
+  }finally{ state.loading=false; updateMore(); }
+}
+
+function getInput(id){ return ($(id)?.value||'').trim(); }
+function fillDemo(){
+  $('name').value='示例用户';
+  $('gender').value='female';
+  $('birth_dt_local').value='2002-03-13T14:36:00';
+  $('tz').value='Asia/Shanghai';
+  $('lon').value='121.4737';
+  $('city').value='上海';
+  $('tags').value='演示,回归';
+  $('notes').value='示例记录，用于演示接口';
+  $('solar').checked=false;
+}
+
+async function createCase(){
+  const payload={
+    name:getInput('name'),
+    gender:getInput('gender')||null,
+    birth_dt_local:getInput('birth_dt_local'),
+    tz:getInput('tz')||'Asia/Shanghai',
+    birth_dt:getInput('birth_dt')||null,
+    city:getInput('city')||null,
+    lon:Number(getInput('lon')),
+    solar_time_enabled:$('solar').checked,
+    notes:getInput('notes')||null,
+    tags:getInput('tags')||null,
+  };
+  if(!payload.name||!payload.birth_dt_local||!payload.tz||!Number.isFinite(payload.lon)){
+    showCreateMsg('必填字段缺失或经度非法'); return;
+  }
+  try{
+    const res=await authFetch('/api/v1/cases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const text=await res.text();
+    if(!res.ok) throw new Error(text||res.status);
+    showCreateMsg('✓ 创建成功', true);
+    loadCases(true);
+  }catch(e){ showCreateMsg('创建失败: '+e); }
+}
+
+$('btn-create').addEventListener('click', createCase);
+$('btn-refresh').addEventListener('click', ()=>loadCases(true));
+$('btn-apply').addEventListener('click', ()=>{state.q=getInput('q');state.tag=getInput('tag');state.order=$('order').value;state.dir=$('dir').value;loadCases(true);});
+$('btn-clear').addEventListener('click', ()=>{ $('q').value=''; $('tag').value=''; state.q=''; state.tag=''; loadCases(true); });
+$('btn-fill-demo').addEventListener('click', fillDemo);
+$('btn-save-token').addEventListener('click', ()=>saveTokenFromInput());
+$('btn-clear-token').addEventListener('click', ()=>{ localStorage.removeItem('access_token'); $('tokenInput').value=''; showAuthBanner('已清除本地 token，当前依赖本地免登录。', true); refreshTokenStatus(); });
+
+// 关系选择：限制 2 个
+function syncSelectedChips(){
+  const list=$('selectedList'); if(!list) return;
+  if(!state.selected.size){ list.textContent='未选择'; return; }
+  list.innerHTML='';
+  state.selected.forEach(id=>{
+    const chip=document.createElement('span');
+    chip.className='pill accent';
+    chip.textContent=id;
+    list.appendChild(chip);
+  });
+  list.appendChild(document.createTextNode(`（${state.selected.size}/2）`));
+}
+
+function handleSelect(caseId, checked){
+  if(checked){
+    if(state.selected.size >=2 && !state.selected.has(caseId)) return false;
+    state.selected.add(caseId);
+  } else {
+    state.selected.delete(caseId);
+  }
+  syncSelectedChips();
+  updateCardSelectionUI();
+  updateRelationStatus();
+  if (relationShared?.setSelection) {
+    relationShared.setSelection(Array.from(state.selected), $('relationType')?.value || 'couple');
+  }
+  return true;
+}
+
+function updateCardSelectionUI(){
+  document.querySelectorAll('[data-case-id]').forEach(node=>{
+    const id=node.getAttribute('data-case-id');
+    if(state.selected.has(id)) node.classList.add('selected'); else node.classList.remove('selected');
+    const cb=node.querySelector('input[type="checkbox"][data-case-id]');
+    if(cb) cb.checked=state.selected.has(id);
+  });
+}
+
+document.addEventListener('change', (e)=>{
+  const target=e.target;
+  if(target && target.matches('input[type="checkbox"][data-case-id]')){
+    const cid=target.getAttribute('data-case-id');
+    const ok=handleSelect(cid, target.checked);
+    if(!ok){
+      target.checked=false;
+      showAuthBanner('最多选择 2 个案例进行关系计算。', false);
+    }
+  }
+});
+
+function updateRelationStatus(){
+  const el=$('relationStatus'); if(!el) return;
+  if(state.selected.size===2){
+    el.textContent='已选 2 个，准备计算';
+    el.className='pill ok';
+  } else {
+    el.textContent='等待选择案例';
+    el.className='pill gray';
+  }
+}
+
+function applyRelationStateFromShared(payload){
+  if(!payload) return;
+  if(Array.isArray(payload.selected)){
+    state.selected = new Set(payload.selected.slice(0, 2));
+    syncSelectedChips();
+    updateCardSelectionUI();
+    updateRelationStatus();
+  }
+  if(payload.relationType && $('relationType')){
+    $('relationType').value = payload.relationType;
+  }
+  if(payload.lastResult){
+    renderRelationResult(payload.lastResult);
+  }
+}
+
+if (relationShared?.subscribe) {
+  relationShared.subscribe((payload) => applyRelationStateFromShared(payload));
+}
+
+function renderRelationResult(payload){
+  const box=$('relationResult'); if(!box) return;
+  if(!payload){ box.innerHTML=''; return; }
+  const { case_a, case_b, result } = payload;
+  const support = (result.support_points||[]).map(p=>`<span class="pill ok">+ ${p.detail}</span>`).join('');
+  const conflict = (result.conflict_points||[]).map(p=>`<span class="pill red">- ${p.detail}</span>`).join('');
+  box.innerHTML = `
+    <div class="result-box" style="border-color:rgba(34,197,94,.35);">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <div><strong>匹配度</strong> ${result.compatibility_score.toFixed(1)} / 100 · ${result.summary}</div>
+        <span class="pill">关系类型: ${result.relation_type}</span>
+      </div>
+      <div class="muted" style="margin-top:6px;">${result.advice||''}</div>
+      <div class="row" style="margin-top:8px; gap:8px; align-items:flex-start;">
+        <div style="flex:1;">
+          <div class="lbl" style="margin-bottom:4px;">助力</div>
+          <div class="chips">${support || '<span class="muted">暂无</span>'}</div>
+        </div>
+        <div style="flex:1;">
+          <div class="lbl" style="margin-bottom:4px;">冲突</div>
+          <div class="chips">${conflict || '<span class="muted">暂无</span>'}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function computeRelation(){
+  if(state.selected.size!==2){ showAuthBanner('请选择 2 个案例再计算。', false); return; }
+  const [a,b]=Array.from(state.selected);
+  const relationType=$('relationType')?.value||'couple';
+  const status=$('relationStatus');
+  const btn=$('btn-compute-relation');
+  try{
+    if(status){ status.textContent='计算中…'; status.className='pill amber'; }
+    if(btn){ btn.disabled=true; btn.textContent='计算中…'; }
+    renderRelationResult(null);
+    const res=await authFetch('/api/v1/relations/compat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ case_a_id:a, case_b_id:b, relation_type:relationType })
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data?.message||res.status);
+    renderRelationResult(data);
+    relationShared?.setResult(data);
+    if(status){ status.textContent='计算完成'; status.className='pill ok'; }
+  }catch(e){
+    showAuthBanner('计算失败: '+e, false);
+    if(status){ status.textContent='计算失败'; status.className='pill red'; }
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='计算关系'; }
+  }
+}
+
+$('btn-compute-relation').addEventListener('click', computeRelation);
+
+const relationTypeSelect = $('relationType');
+if (relationTypeSelect) {
+  relationTypeSelect.addEventListener('change', () => {
+    relationShared?.setSelection(Array.from(state.selected), relationTypeSelect.value || 'couple');
+  });
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  fillDemo();
+  const saved=localStorage.getItem('access_token')||'';
+  const ti=$('tokenInput'); if(ti) ti.value=saved;
+  if ($('relationType')) $('relationType').value = initialRelationType;
+  applyRelationStateFromShared(sharedInit);
+  syncSelectedChips();
+  updateCardSelectionUI();
+  updateRelationStatus();
+  refreshTokenStatus();
+  loadCases(true);
+});
+
+// 处理来自 verify.html 的 postMessage
+window.addEventListener('message', (event) => {
+  if (event.type === 'message' && event.data?.type === 'search') {
+    const searchInput = $('q');
+    if (searchInput) {
+      searchInput.value = event.data.keyword || '';
+      state.q = event.data.keyword || '';
+      loadCases(true);
+    }
+  }
+});
+
+function showAuthBanner(msg, ok=false){
+  const el=banner('authBanner'); if(!el) return;
+  el.style.display='flex';
+  el.className = ok ? 'banner ok' : 'banner';
+  el.textContent=msg;
+}
+
+function refreshTokenStatus(){
+  const t=getToken();
+  const el=$('tokenStatus'); if(!el) return;
+  const ti=$('tokenInput'); if(ti && t) ti.value=t;
+  if(t){ el.textContent='鉴权: 已就绪'; el.className='pill ok'; }
+  else { el.textContent='鉴权: 未检测'; el.className='pill amber'; showAuthBanner('未检测到 Token。可在 URL 添加 ?token=，或设 LOCAL_AUTH_BYPASS=1 便于本地联调。', false); }
+}
+
+function saveTokenFromInput(){
+  const ti=$('tokenInput'); if(!ti) return;
+  const val=(ti.value||'').trim();
+  if(!val){ showAuthBanner('未填写 token，如需鉴权请粘贴后再点保存。', false); return; }
+  localStorage.setItem('access_token', val);
+  showAuthBanner('已保存 token，本页请求将自动携带。', true);
+  refreshTokenStatus();
+}
+
+function showCreateMsg(msg, ok=false){
+  const el=$('createMsg'); if(!el) return;
+  el.textContent=msg;
+  el.style.color= ok ? '#166534' : '#991b1b';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BaZi v5.3",
+    "version": "v1"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/verify": {
+      "post": {
+        "summary": "Api Verify",
+        "operationId": "api_verify_api_v1_verify_post",
+        "parameters": [
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Request-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BackendInfo": {
+        "properties": {
+          "primary": {
+            "type": "string",
+            "title": "Primary",
+            "description": "Primary backend requested"
+          },
+          "secondary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secondary",
+            "description": "Secondary backend when mode=dual"
+          },
+          "sxtwl_available": {
+            "type": "boolean",
+            "title": "Sxtwl Available",
+            "description": "sxtwl availability at request time"
+          },
+          "cnlunar_available": {
+            "type": "boolean",
+            "title": "Cnlunar Available",
+            "description": "cnlunar availability at request time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "primary",
+          "sxtwl_available",
+          "cnlunar_available"
+        ],
+        "title": "BackendInfo"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PillarModel": {
+        "properties": {
+          "stem": {
+            "type": "string",
+            "title": "Stem",
+            "description": "Heavenly stem"
+          },
+          "branch": {
+            "type": "string",
+            "title": "Branch",
+            "description": "Earthly branch"
+          },
+          "ganzhi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ganzhi",
+            "description": "Combined ganzhi, if available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stem",
+          "branch"
+        ],
+        "title": "PillarModel"
+      },
+      "PillarsModel": {
+        "properties": {
+          "year": {
+            "$ref": "#/components/schemas/PillarModel"
+          },
+          "month": {
+            "$ref": "#/components/schemas/PillarModel"
+          },
+          "day": {
+            "$ref": "#/components/schemas/PillarModel"
+          },
+          "hour": {
+            "$ref": "#/components/schemas/PillarModel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "month",
+          "day",
+          "hour"
+        ],
+        "title": "PillarsModel"
+      },
+      "RiskFlagsModel": {
+        "properties": {
+          "near_shichen_boundary": {
+            "type": "boolean",
+            "title": "Near Shichen Boundary",
+            "description": "True when within shichen boundary threshold"
+          },
+          "near_jieqi_boundary": {
+            "type": "boolean",
+            "title": "Near Jieqi Boundary",
+            "description": "True when within jieqi boundary threshold"
+          },
+          "jieqi_boundary_status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unavailable"
+            ],
+            "title": "Jieqi Boundary Status",
+            "description": "ok=jieqi context present; unavailable=jieqi context missing so near/offset may be null"
+          },
+          "minutes_to_shichen_boundary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes To Shichen Boundary",
+            "description": "Minutes to nearest shichen boundary"
+          },
+          "minutes_to_jieqi_boundary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes To Jieqi Boundary",
+            "description": "Minutes to nearest jieqi boundary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "near_shichen_boundary",
+          "near_jieqi_boundary",
+          "jieqi_boundary_status"
+        ],
+        "title": "RiskFlagsModel"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ValidationModel": {
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "L0",
+              "L1",
+              "L2",
+              "L3"
+            ],
+            "title": "Level",
+            "description": "Validation level gate"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "dual",
+              "single"
+            ],
+            "title": "Mode",
+            "description": "Effective validation mode"
+          },
+          "recommended": {
+            "type": "string",
+            "enum": [
+              "beijing_time",
+              "solar_time"
+            ],
+            "title": "Recommended",
+            "description": "Recommended interpretation basis; may expand in future"
+          },
+          "interpretation_enabled": {
+            "type": "boolean",
+            "title": "Interpretation Enabled",
+            "description": "Whether interpretation is allowed"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "description": "Reason codes contributing to validation result"
+          },
+          "diff_fields": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "year",
+                "month",
+                "day",
+                "hour"
+              ]
+            },
+            "type": "array",
+            "title": "Diff Fields",
+            "description": "Which pillars differ between primary and secondary"
+          },
+          "risk_flags": {
+            "$ref": "#/components/schemas/RiskFlagsModel"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Non-blocking warnings for client display"
+          }
+        },
+        "type": "object",
+        "required": [
+          "level",
+          "mode",
+          "recommended",
+          "interpretation_enabled",
+          "reasons",
+          "diff_fields",
+          "risk_flags"
+        ],
+        "title": "ValidationModel"
+      },
+      "VerifyRequest": {
+        "properties": {
+          "dt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Dt",
+            "description": "Input datetime; aware or naive ISO-8601"
+          },
+          "lon": {
+            "type": "number",
+            "title": "Lon",
+            "description": "Longitude in degrees within supported range"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "dual",
+              "single"
+            ],
+            "title": "Mode",
+            "description": "Requested mode",
+            "default": "dual"
+          },
+          "solar_time_enabled": {
+            "type": "boolean",
+            "title": "Solar Time Enabled",
+            "description": "Enable solar-time adjustment when true",
+            "default": false
+          },
+          "tz": {
+            "type": "string",
+            "title": "Tz",
+            "description": "Timezone used only when dt is naive",
+            "default": "Asia/Shanghai"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dt",
+          "lon"
+        ],
+        "title": "VerifyRequest"
+      },
+      "VerifyResponse": {
+        "properties": {
+          "api_version": {
+            "type": "string",
+            "title": "Api Version",
+            "description": "API semantic version"
+          },
+          "rule_version": {
+            "type": "string",
+            "title": "Rule Version",
+            "description": "Rule/data version"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "Request correlation id"
+          },
+          "backend": {
+            "$ref": "#/components/schemas/BackendInfo"
+          },
+          "mode_requested": {
+            "type": "string",
+            "enum": [
+              "dual",
+              "single"
+            ],
+            "title": "Mode Requested",
+            "description": "Echo of requested mode"
+          },
+          "mode_effective": {
+            "type": "string",
+            "enum": [
+              "dual",
+              "single"
+            ],
+            "title": "Mode Effective",
+            "description": "Actual mode after fallback"
+          },
+          "pillars_primary": {
+            "$ref": "#/components/schemas/PillarsModel"
+          },
+          "pillars_secondary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PillarsModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Secondary pillars when dual mode succeeds"
+          },
+          "risk_flags": {
+            "$ref": "#/components/schemas/RiskFlagsModel"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/ValidationModel"
+          },
+          "solar_time_offset_minutes": {
+            "type": "number",
+            "title": "Solar Time Offset Minutes",
+            "description": "Solar correction applied in minutes; 0.0 when solar_time_enabled is false"
+          },
+          "dt_input": {
+            "type": "string",
+            "title": "Dt Input",
+            "description": "Parsed input datetime re-serialized via isoformat()"
+          },
+          "dt_effective_utc8": {
+            "type": "string",
+            "title": "Dt Effective Utc8",
+            "description": "Datetime normalized to Asia/Shanghai"
+          },
+          "tz": {
+            "type": "string",
+            "title": "Tz",
+            "description": "Echo of requested timezone; only used when dt is naive"
+          }
+        },
+        "type": "object",
+        "required": [
+          "api_version",
+          "rule_version",
+          "request_id",
+          "backend",
+          "mode_requested",
+          "mode_effective",
+          "pillars_primary",
+          "risk_flags",
+          "validation",
+          "solar_time_offset_minutes",
+          "dt_input",
+          "dt_effective_utc8",
+          "tz"
+        ],
+        "title": "VerifyResponse"
+      }
+    }
+  }
+}

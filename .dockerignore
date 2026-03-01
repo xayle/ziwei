@@ -1,0 +1,58 @@
+# 环境变量 - 绝对不能进容器
+.env
+.env.*
+!.env.example
+
+# 数据库文件 - 容器使用 volume 挂载
+*.db
+data/*.db
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 测试
+tests/
+pytest.ini
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# 开发工具
+.git/
+.gitignore
+.venv/
+venv/
+.idea/
+.vscode/
+*.iml
+
+# 文档
+docs/
+*.md
+!README.md
+
+# 日志
+logs/
+*.log
+
+# 监控配置（单独部署）
+monitoring/
+
+# 脚本（非运行时需要）
+scripts/
+
+# 杂项
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+pyrightconfig.json

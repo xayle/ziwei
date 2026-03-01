@@ -1,0 +1,90 @@
+# Prometheus 配置文件
+# 用于采集 BaZi API 服务的监控指标
+
+global:
+  # 默认的指标采集间隔
+  scrape_interval: 15s
+  
+  # 规则评估间隔
+  evaluation_interval: 15s
+  
+  # 附加标签
+  external_labels:
+    monitor: 'bazi-service-monitor'
+    environment: 'production'
+
+# Alerting 配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# 告警规则文件
+rule_files:
+  - 'alerts.yml'
+
+# 采集配置
+scrape_configs:
+  # BaZi API 服务指标
+  - job_name: 'bazi-api'
+    
+    # 静态目标配置
+    static_configs:
+      - targets: ['localhost:8000']
+        labels:
+          service: 'bazi-api'
+          version: 'v5.1.0'
+    
+    # 指标路径
+    metrics_path: '/metrics'
+    
+    # 采集间隔 (覆盖全局设置)
+    scrape_interval: 5s
+    
+    # 超时时间
+    scrape_timeout: 10s
+    
+    # 重标记配置 (可选)
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}:8000'
+  
+  # Prometheus 自身指标
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+  
+  # 本地节点信息 (可选)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+    scrape_interval: 15s
+
+# 其他配置
+
+# 远程存储配置 (可选 - 用于长期数据存储)
+# remote_write:
+#   - url: "http://remote-storage:9009/api/v1/write"
+
+# 远程读取配置 (可选)
+# remote_read:
+#   - url: "http://remote-storage:9009/api/v1/read"
+
+# 配置管理接口
+# web:
+#   enable_lifecycle: true
+
+# 需要的 Docker Compose 环境变量或启动命令：
+#
+# docker run --name prometheus \
+#   -p 9090:9090 \
+#   -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+#   -v $(pwd)/alerts.yml:/etc/prometheus/alerts.yml \
+#   prom/prometheus:latest \
+#     --config.file=/etc/prometheus/prometheus.yml \
+#     --storage.tsdb.path=/prometheus

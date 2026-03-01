@@ -1,0 +1,3727 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>八字命理验证 · BaZi Verify</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- 外网受限环境下不加载 CDN 脚本；图表/Excel/PDF 功能自动降级 -->
+  <style>
+    /* ── 主题变量 ───────────────────────────────────── */
+    :root {
+      --bg:     #f4f6fb;
+      --bg-grad:#f7f8fb;
+      --panel:  #ffffff;
+      --text:   #0f172a;
+      --muted:  #5f6b86;
+      --ok:     #16a34a;
+      --warn:   #d97706;
+      --bad:    #dc2626;
+      --accent: #2563eb;
+      --line:   #e2e8f0;
+      --input:  #f8fafc;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+      /* 五行色系 */
+      --wx-wood:   #22c55e;
+      --wx-fire:   #ef4444;
+      --wx-earth:  #d97706;
+      --wx-metal:  #64748b;
+      --wx-water:  #2563eb;
+    }
+    
+    /* ── 深色模式 ───────────────────────────────────── */
+    :root.dark-mode {
+      --bg:     #0f172a;
+      --bg-grad:#1e293b;
+      --panel:  #1e293b;
+      --text:   #f1f5f9;
+      --muted:  #94a3b8;
+      --ok:     #22c55e;
+      --warn:   #f59e0b;
+      --bad:    #ef4444;
+      --accent: #3b82f6;
+      --line:   #334155;
+      --input:  #0f172a;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    }
+    :root.dark-mode body {
+      background:radial-gradient(1200px circle at 10% 10%, rgba(59,130,246,.15), transparent 40%),
+                 radial-gradient(900px circle at 80% 0%, rgba(14,165,233,.12), transparent 40%),
+                 linear-gradient(180deg, var(--bg) 0%, var(--bg-grad) 100%);
+    }
+    :root.dark-mode header {
+      background:rgba(15,23,42,.95);
+      border-bottom-color:#334155;
+    }
+    :root.dark-mode input, :root.dark-mode select {
+      background:var(--input);
+      border-color:var(--line);
+      color:var(--text);
+    }
+    :root.dark-mode input:focus, :root.dark-mode select:focus {
+      background:#1e293b;
+    }
+    :root.dark-mode pre {
+      background:#020617;
+      border-color:#1e293b;
+    }
+    :root.dark-mode .pillar-table th {
+      background:#1e293b;
+      color:#cbd5e1;
+    }
+    :root.dark-mode .pillar-table tr:hover td {
+      background:rgba(59,130,246,.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin:0; font-family: "DM Sans","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      background:radial-gradient(1200px circle at 10% 10%, rgba(37,99,235,.08), transparent 40%),
+                 radial-gradient(900px circle at 80% 0%, rgba(14,165,233,.08), transparent 40%),
+                 linear-gradient(180deg, var(--bg) 0%, var(--bg-grad) 100%);
+      color:var(--text); font-size:14px; line-height:1.6; min-height:100vh;
+    }
+    code { font-family:"Cascadia Code","Fira Code",Consolas,monospace; font-size:12px; }
+
+    /* ── 顶栏 ─────────────────────────────────────────── */
+    header {
+      padding:14px 20px; border-bottom:1px solid var(--line);
+      position:sticky; top:0; background:rgba(247,248,251,.92);
+      backdrop-filter:blur(14px); z-index:20;
+      display:flex; align-items:center; gap:14px;
+    }
+    header h1 { margin:0; font-size:20px; letter-spacing:0.3px; flex:1; }
+    #statusBar { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); transition:color .2s; }
+    #statusBar.ok   { color:#15803d; }
+    #statusBar.warn { color:#b45309; }
+    #statusBar.bad  { color:#b91c1c; }
+    .spinner {
+      width:13px; height:13px; border-radius:50%;
+      border:2px solid rgba(125,211,252,.2); border-top-color:var(--accent);
+      animation:spin .7s linear infinite; display:none;
+    }
+    .spinner.active { display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── 主体 ─────────────────────────────────────────── */
+    .shell { max-width:1240px; margin:0 auto; padding:18px 18px 28px; }
+    .hero { display:flex; flex-direction:column; gap:6px; background:linear-gradient(120deg, rgba(37,99,235,.08), rgba(14,165,233,.06)); }
+    main.layout { display:grid; gap:16px; grid-template-columns:1fr; align-items:start; }
+    .stack { display:flex; flex-direction:column; gap:14px; }
+    @media (min-width:1080px) { main.layout { grid-template-columns:0.95fr 1.05fr; } }
+
+    /* ── 卡片 ─────────────────────────────────────────── */
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:var(--shadow); }
+    details.card { padding:0; overflow:hidden; }
+    details.card[open] { box-shadow:var(--shadow); }
+    details.card summary { padding:14px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; list-style:none; background:linear-gradient(120deg, rgba(37,99,235,.05), rgba(14,165,233,.04)); border-bottom:1px solid var(--line); font-weight:700; color:var(--text); }
+    details.card summary::-webkit-details-marker { display:none; }
+    details.card .card-body { padding:14px 16px 16px; }
+    .card-title {
+      font-size:12px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.07em;
+      margin:0 0 14px; display:flex; align-items:center; gap:7px;
+    }
+    .card-title .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+
+    /* ── 网格 ─────────────────────────────────────────── */
+    .g2  { display:grid; gap:12px; }
+    .g2x { display:grid; gap:12px; }
+    @media (min-width:768px)  { .g2  { grid-template-columns:1fr 1fr; } }
+    @media (min-width:1024px) { .g2x { grid-template-columns:0.6fr 0.4fr; } }
+
+    /* ── 表单 ─────────────────────────────────────────── */
+    .field { display:flex; flex-direction:column; gap:4px; }
+    label.lbl { font-size:12px; font-weight:600; color:var(--muted); }
+    input[type="text"], input[type="number"], select {
+      width:100%; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line); background:var(--input);
+      color:var(--text); font-size:13px; outline:none;
+      transition:border-color .15s, box-shadow .15s, background .15s;
+    }
+    input:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.16); background:#fff; }
+    input:focus-visible, select:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    input.err { border-color:var(--bad); box-shadow:0 0 0 3px rgba(239,68,68,.13); }
+    input[type="checkbox"] { width:auto; accent-color:var(--accent); }
+    .hint { font-size:11px; color:var(--muted); line-height:1.45; }
+
+    /* ── 按钮 ─────────────────────────────────────────── */
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .chips { display:flex; gap:6px; flex-wrap:wrap; }
+    button {
+      border:1px solid var(--line); background:#eef2ff;
+      color:#1f2937; padding:9px 14px; border-radius:12px;
+      cursor:pointer; font-size:13px; font-weight:600;
+      transition:background .15s, border-color .15s, transform .08s, box-shadow .15s;
+      white-space:nowrap;
+    }
+    .result-box { border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--panel); }
+    button:hover  { background:#e0e7ff; border-color:#cbd5e1; }
+    button:active { transform:scale(.97); }
+    button.primary { background:#2563eb; border-color:#1d4ed8; color:#f8fafc; }
+    button.primary:hover { background:#1d4ed8; }
+    button:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    button.copied { border-color:rgba(34,197,94,.5); color:#86efac; }
+
+    /* ── Pills / Tags / Chips ────────────────────────── */
+    .pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); background:var(--input); font-size:11px; color:var(--muted); }
+    .pill.ok   { color:#15803d; border-color:rgba(34,197,94,.4);  background:rgba(34,197,94,.06); }
+    .pill.warn { color:#92400e; border-color:rgba(245,158,11,.4); background:rgba(245,158,11,.06); }
+    .pill.bad  { color:#991b1b; border-color:rgba(239,68,68,.4);  background:rgba(239,68,68,.06); }
+    .tag { display:inline-flex; align-items:center; padding:3px 8px; border-radius:6px; border:1px solid var(--line); background:var(--input); font-size:11px; color:var(--muted); }
+    .tag.ok   { color:#15803d; border-color:rgba(34,197,94,.35);  background:rgba(34,197,94,.07); }
+    .tag.warn { color:#92400e; border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.07); }
+    .tag.bad  { color:#991b1b; border-color:rgba(239,68,68,.35);  background:rgba(239,68,68,.07); }
+    .chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:13px; border:1px solid #e5e7eb; white-space:nowrap; }
+    .chip.ok { background:#ecfdf3; color:#166534; border-color:#bbf7d0; }
+    .chip.warn { background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+    .chip.bad { background:#fef2f2; color:#991b1b; border-color:#fecdd3; }
+    .pill-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:8px; }
+
+    /* ── KV行 ─────────────────────────────────────────── */
+    .kv { display:grid; grid-template-columns:160px 1fr; gap:6px 12px; font-size:13px; align-items:center; }
+    .kv .k { color:var(--muted); }
+
+    /* ── Level badge ──────────────────────────────────── */
+    .level-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:8px; font-size:13px; font-weight:700; border:1px solid; }
+    .level-badge.ok   { color:#15803d; border-color:rgba(34,197,94,.4);  background:rgba(34,197,94,.08); }
+    .level-badge.warn { color:#92400e; border-color:rgba(245,158,11,.4); background:rgba(245,158,11,.08); }
+    .level-badge.bad  { color:#991b1b; border-color:rgba(239,68,68,.4);  background:rgba(239,68,68,.08); }
+    .level-badge.info { color:#0369a1; border-color:rgba(125,211,252,.35); background:rgba(125,211,252,.07); }
+
+    /* ── 四柱表格 ─────────────────────────────────────── */
+    .pillar-table { width:100%; border-collapse:collapse; font-size:13px; border-radius:12px; overflow:hidden; }
+    .pillar-table th { background:#eef2ff; color:#475569; font-size:11px; font-weight:700; padding:8px 11px; text-align:left; border-bottom:1px solid var(--line); }
+    .pillar-table td { padding:8px 11px; border-bottom:1px solid #e5e7eb; vertical-align:top; }
+    .pillar-table tr:last-child td { border-bottom:none; }
+    .pillar-table tr:hover td { background:rgba(37,99,235,.02); }
+    .gan  { font-size:20px; font-weight:700; }
+    .zhi  { font-size:16px; color:#64748b; }
+    .sub2 { font-size:11px; color:var(--muted); margin-top:2px; }
+
+    /* ── 天干五行配色 ─────────────────────────────────── */
+    .wx-wood   { color: var(--wx-wood); }
+    .wx-fire   { color: var(--wx-fire); }
+    .wx-earth  { color: var(--wx-earth); }
+    .wx-metal  { color: var(--wx-metal); }
+    .wx-water  { color: var(--wx-water); }
+    .gan-mu   { color: #4ade80; }
+    .gan-huo  { color: #f87171; }
+    .gan-tu   { color: #fbbf24; }
+    .gan-jin  { color: #94a3b8; }
+    .gan-shui { color: #60a5fa; }
+
+    /* ── diff高亮 ─────────────────────────────────────── */
+    .diff-row td { background: rgba(245,158,11,.08) !important; }
+    .diff-row td:first-child::after { content:" △"; color:var(--warn); font-size:10px; }
+
+    /* ── 历史列表 ─────────────────────────────────────── */
+    .hist-list { display:flex; flex-direction:column; gap:5px; max-height:200px; overflow-y:auto; }
+    .hist-item { display:flex; gap:8px; align-items:center; padding:7px 10px; border-radius:9px; border:1px solid var(--line); background:var(--input); cursor:pointer; transition:background .12s, border-color .12s; }
+    .hist-item:hover { background:#e6edff; border-color:#c7d2fe; }
+    .hist-body { flex:1; min-width:0; }
+    .hist-dt { font-size:12px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .hist-rid { font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace; }
+    .hist-ts { font-size:11px; color:var(--muted); white-space:nowrap; }
+
+    /* ── Warnings ─────────────────────────────────────── */
+    .warnlist { display:flex; flex-direction:column; gap:7px; }
+    .warnitem { border-left:3px solid rgba(245,158,11,.65); padding:8px 11px; background:rgba(245,158,11,.05); border-radius:0 9px 9px 0; }
+    .warnitem .wcode { color:#92400e; font-size:11px; }
+    .warnitem .wmsg  { color:var(--muted); font-size:12px; margin-top:2px; }
+
+    /* ── 空状态 ─────────────────────────────────────── */
+    .empty-state { display:flex; align-items:center; gap:12px; padding:12px; border:1px dashed var(--line); border-radius:12px; background:linear-gradient(135deg, rgba(37,99,235,.05), rgba(148,163,184,.06)); color:var(--muted); margin-bottom:10px; }
+    .empty-icon { width:34px; height:34px; border-radius:10px; background:rgba(37,99,235,.12); display:grid; place-items:center; color:var(--accent); font-weight:700; }
+
+    /* ── 注释 ─────────────────────────────────────────── */
+    .note { border:1px solid var(--line); border-radius:12px; padding:12px; background:#f8fafc; display:grid; gap:10px; }
+    .note h4 { margin:0; font-size:13px; color:var(--text); }
+    .note ul { margin:0; padding-left:18px; color:var(--muted); font-size:12px; line-height:1.5; }
+    .note code { background:#e2e8f0; color:#111827; padding:1px 4px; border-radius:6px; }
+
+    /* ── 摘要 ─────────────────────────────────────────── */
+    .summary-grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); margin-bottom:10px; }
+    .summary-card { border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:linear-gradient(180deg, #ffffff, #f8fbff); display:flex; flex-direction:column; gap:4px; }
+    .summary-label { font-size:11px; color:var(--muted); letter-spacing:0.02em; text-transform:uppercase; }
+    .summary-value { font-size:18px; font-weight:800; color:var(--text); }
+    .summary-pill { display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:11px; }
+    .summary-pill.ok { background:rgba(34,197,94,.12); color:#166534; }
+    .summary-pill.warn { background:rgba(234,179,8,.16); color:#854d0e; }
+    .summary-pill.bad { background:rgba(239,68,68,.14); color:#991b1b; }
+
+    /* ── 信息卡 ───────────────────────────────────────── */
+    .info-card { border:1px solid var(--line); border-radius:14px; padding:14px; background:#fff; box-shadow:var(--shadow); }
+    .info-title { margin:0 0 10px; font-size:13px; font-weight:800; color:var(--text); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .info-title .badge { padding:2px 8px; border-radius:999px; background:#e2e8f0; color:#334155; font-size:11px; }
+    .info-list { list-style:none; padding:0; margin:0; display:grid; gap:8px; font-size:12px; color:var(--muted); }
+    .info-list li { display:flex; gap:8px; align-items:flex-start; }
+    .dot-icon { width:8px; height:8px; margin-top:5px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+    .badge-risk { padding:2px 6px; border-radius:999px; background:rgba(234,179,8,.16); color:#854d0e; font-size:11px; }
+    .badge-safe { padding:2px 6px; border-radius:999px; background:rgba(34,197,94,.12); color:#166534; font-size:11px; }
+    .badge-soft { padding:2px 6px; border-radius:999px; background:#e2e8f0; color:#475569; font-size:11px; }
+    .footer { margin-top:16px; padding:12px; border:1px solid var(--line); border-radius:14px; background:#f8fafc; color:#475569; font-size:12px; line-height:1.5; }
+
+    /* ── Tabs ─────────────────────────────────────────── */
+    .tabs { display:flex; gap:8px; margin:8px 0 12px; flex-wrap:wrap; }
+    .tab-btn { border:1px solid var(--line); background:#f8fafc; color:#1f2937; padding:7px 12px; border-radius:10px; font-size:12px; cursor:pointer; transition:all .12s; }
+    .tab-btn.active { background:#2563eb; color:#f8fafc; border-color:#1d4ed8; box-shadow:0 6px 20px rgba(37,99,235,.18); }
+    .tab-panel { display:none; font-size:13px; color:#0f172a; line-height:1.55; }
+    .tab-panel.active { display:block; }
+    .panel-list { margin:0; padding-left:18px; color:#5f6b86; }
+    .panel-list li { margin-bottom:4px; }
+
+    .decision-strip { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:6px 0 10px; }
+    .nav-tags { position:sticky; top:58px; z-index:12; display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 6px; padding:6px 8px; background:rgba(247,248,251,.9); backdrop-filter:blur(10px); border:1px solid var(--line); border-radius:999px; box-shadow:0 10px 24px rgba(15,23,42,.06); }
+    .nav-tags button { background:#fff; border:1px solid var(--line); color:var(--text); padding:7px 12px; border-radius:999px; font-size:12px; cursor:pointer; transition:all .12s; }
+    .nav-tags button:hover { border-color:var(--accent); color:var(--accent); box-shadow:0 6px 18px rgba(37,99,235,.12); }
+    .nav-tags button.active { border-color:var(--accent); color:#fff; background:var(--accent); box-shadow:0 8px 20px rgba(37,99,235,.22); }
+    .section-block { margin-top:12px; padding:12px; border:1px solid var(--line); border-radius:12px; background:linear-gradient(180deg,#fff,#f9fbff); box-shadow:var(--shadow); }
+    .section-title { display:flex; align-items:center; gap:6px; font-weight:800; font-size:13px; color:var(--text); margin:0 0 10px; }
+    .section-title .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); display:inline-block; }
+    .hub-frame { width:100%; min-height:760px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+    .hub-tools { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+    .hub-tools input { width:280px; max-width:100%; }
+    .workspace-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 12px; }
+    .workspace-tabs button { border-radius:999px; background:#fff; }
+    .workspace-tabs button.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* ── pre ──────────────────────────────────────────── */
+    pre { margin:0; padding:11px 13px; background:#0f172a; color:#e2e8f0; border:1px solid #1f2937; border-radius:12px; overflow:auto; font-size:11.5px; max-height:260px; font-family:"Cascadia Code","Fira Code",Consolas,monospace; }
+
+    /* ── details ──────────────────────────────────────── */
+    details > summary { cursor:pointer; color:var(--muted); font-size:12px; user-select:none; padding:4px 0; }
+    details > summary:hover { color:var(--text); }
+    .divider { border:none; border-top:1px solid var(--line); margin:14px 0; }
+    @media (max-width:500px) { .card { padding:12px; } .gan { font-size:16px; } }
+
+    /* ── 命盘概要 ─────────────────────────────────────── */
+    .profile-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap:12px; margin-top:10px;
+    }
+    .profile-item {
+      border:1px solid var(--line); border-radius:12px; padding:12px;
+      background:linear-gradient(180deg,#fff,#f8fbff);
+    }
+    .profile-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+    .profile-value { font-size:16px; font-weight:800; color:var(--text); }
+    .profile-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+
+    /* ── 五行条形图 ───────────────────────────────────── */
+    .wx-bar-wrap { margin-top:10px; }
+    .wx-bar-row { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:12px; }
+    .wx-bar-label { width:32px; text-align:right; font-weight:700; flex-shrink:0; }
+    .wx-bar-track { flex:1; height:18px; background:#f1f5f9; border-radius:9px; overflow:hidden; position:relative; }
+    .wx-bar-fill { height:100%; border-radius:9px; transition:width .5s ease; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; font-size:10px; font-weight:700; color:#fff; min-width:20px; }
+    .wx-bar-fill.wood  { background:linear-gradient(90deg,#16a34a,#4ade80); }
+    .wx-bar-fill.fire  { background:linear-gradient(90deg,#dc2626,#f87171); }
+    .wx-bar-fill.earth { background:linear-gradient(90deg,#b45309,#fbbf24); }
+    .wx-bar-fill.metal { background:linear-gradient(90deg,#475569,#94a3b8); }
+    .wx-bar-fill.water { background:linear-gradient(90deg,#1d4ed8,#60a5fa); }
+
+    /* ── 十神标签 ─────────────────────────────────────── */
+    .tengod-badge { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; border:1px solid var(--line); background:var(--input); color:var(--text); }
+    .tengod-badge.self     { background:#dbeafe; border-color:#93c5fd; color:#1e40af; }
+    .tengod-badge.resource { background:#dcfce7; border-color:#86efac; color:#166534; }
+    .tengod-badge.output   { background:#fef3c7; border-color:#fde68a; color:#92400e; }
+    .tengod-badge.wealth   { background:#fce7f3; border-color:#f9a8d4; color:#9d174d; }
+    .tengod-badge.power    { background:#ede9fe; border-color:#c4b5fd; color:#5b21b6; }
+
+    /* ── 解读区 / 参考区 ─────────────────────────────── */
+    .interpret-zone { margin-top:16px; padding:16px; border:1px solid var(--line); border-radius:16px; background:linear-gradient(180deg,#fff,#f9fbff); box-shadow:var(--shadow); }
+    .interpret-zone > .card, .interpret-zone > div { margin-top:12px; }
+    .interpret-zone > .section-title { margin-top:0; }
+    .ref-zone { margin-top:16px; padding:4px 0; }
+    .ref-zone > .info-card, .ref-zone > .card { margin-top:12px; }
+
+    /* ── 大运表增强 ─────────────────────────────────── */
+    .dayun-table { width:100%; border-collapse:collapse; font-size:12px; border-radius:12px; overflow:hidden; }
+    .dayun-table th { background:#eef2ff; color:#475569; font-size:11px; font-weight:700; padding:8px 10px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap; }
+    .dayun-table td { padding:8px 10px; border-bottom:1px solid #e5e7eb; text-align:center; vertical-align:top; }
+    .dayun-table tr:hover td { background:rgba(37,99,235,.02); }
+    .dayun-table .dayun-gz { font-size:16px; font-weight:700; }
+
+    /* ── 用神忌神配色 ─────────────────────────────────── */
+    .favor-chip { background:#ecfdf3; color:#166534; border-color:#86efac; }
+    .avoid-chip { background:#fef2f2; color:#991b1b; border-color:#fca5a5; }
+
+    /* ── 四柱大卡片 ─────────────────────────────────── */
+    .pillar-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .pillar-card { border:1px solid var(--line); border-radius:14px; padding:14px 10px; text-align:center; background:linear-gradient(180deg,#fff,#f8fbff); position:relative; }
+    .pillar-card.day-master { border-color:var(--accent); box-shadow:0 0 0 2px rgba(37,99,235,.12); }
+    .pillar-card .pc-label { font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.04em; }
+    .pillar-card .pc-stem { font-size:32px; font-weight:800; line-height:1.2; }
+    .pillar-card .pc-branch { font-size:22px; color:#64748b; margin-top:2px; }
+    .pillar-card .pc-gz { font-size:11px; color:var(--muted); margin-top:4px; }
+    @media (max-width:500px) { .pillar-cards { grid-template-columns:repeat(2,1fr); } .pillar-card .pc-stem { font-size:24px; } }
+
+    /* ── 工作区过渡动画 ──────────────────────────────── */
+    #verifyMain, #casesHub, #caseDetailHub, #verifyNavTags, #interpretSection, #referenceSection, #footerShell {
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    /* 工作区标签高亮 */
+    .workspace-tabs button { transition: background 0.2s ease, color 0.2s ease; }
+    .workspace-tabs button.active { animation: tabBounce 0.4s ease; }
+    @keyframes tabBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    
+    /* 快速返回按钮样式 */
+    .quick-back-btn { padding:8px 14px; background:var(--accent); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; transition:background 0.2s; }
+    .quick-back-btn:hover { background:var(--accent); opacity:0.9; }
+    
+    /* 工作区标签位置 */
+    .workspace-tabs { display:flex; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+    .workspace-tabs button { padding:8px 16px; border:1px solid var(--line); border-radius:8px; background:var(--input); color:var(--muted); cursor:pointer; font-weight:600; transition:all 0.2s; }
+    .workspace-tabs button:hover { background:var(--panel); border-color:var(--accent); }
+    .workspace-tabs button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    
+    /* 帮助面板 */
+    .help-panel { 
+      position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+      background:var(--panel); border:1px solid var(--line); border-radius:16px;
+      padding:24px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto;
+      box-shadow:0 20px 60px rgba(0,0,0,0.3); z-index:1000; display:none;
+    }
+    .help-panel.show { display:block; animation:slideDown 0.3s ease; }
+    @keyframes slideDown { from { opacity:0; transform:translate(-50%, -55%); } to { opacity:1; transform:translate(-50%, -50%); } }
+    .help-panel h2 { margin:0 0 16px; color:var(--accent); font-size:20px; }
+    .help-panel .help-section { margin-bottom:20px; }
+    .help-panel .help-section h3 { margin:8px 0 12px; font-size:14px; color:var(--text); }
+    .help-panel .help-item { display:flex; gap:12px; margin-bottom:8px; font-size:13px; line-height:1.5; }
+    .help-panel .help-key { background:var(--input); padding:4px 8px; border-radius:6px; font-family:monospace; font-weight:700; white-space:nowrap; color:var(--accent); }
+    .help-panel .help-close { position:absolute; top:16px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); }
+    .help-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3); z-index:999; display:none; }
+    .help-overlay.show { display:block; }
+
+    /* 模板下拉菜单及样式 */
+    .dropdown-menu { box-shadow:var(--shadow); }
+    .dropdown-item { 
+      padding:8px 12px; cursor:pointer; border-radius:6px; margin-bottom:4px;
+      display:flex; justify-content:space-between; align-items:center;
+      background:var(--input); transition:background 0.15s;
+    }
+    .dropdown-item:hover { background:rgba(37,99,235,.1); }
+    .dropdown-item-name { flex:1; font-weight:600; }
+    .dropdown-item-delete { font-size:12px; color:var(--muted); cursor:pointer; padding:2px 6px; }
+    .dropdown-item-delete:hover { color:var(--bad); }
+    .dropdown-empty { padding:12px; text-align:center; color:var(--muted); font-size:12px; }
+
+    /* 分析面板样式 */
+    .analytics-modal { max-width:1000px; max-height:85vh; overflow-y:auto; }
+    .analytics-container { padding:20px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:20px; }
+    .stat-card { background:linear-gradient(135deg, #f0f4ff 0%, #e8f1ff 100%); padding:16px; border-radius:10px; text-align:center; border-left:4px solid var(--accent); }
+    .stat-number { font-size:28px; font-weight:700; color:var(--accent); margin-bottom:4px; }
+    .stat-label { font-size:12px; color:var(--muted); font-weight:600; }
+    .analytics-table tbody tr:hover { background:var(--input); }
+    .analytics-table td, .analytics-table th { padding:10px 8px; }
+    
+    @media (max-width:768px) {
+      .stats-grid { grid-template-columns:repeat(2, 1fr); }
+      .stat-number { font-size:24px; }
+    }
+    
+    @media (max-width:500px) {
+      .analytics-modal { padding:12px; }
+      .stats-grid { grid-template-columns:1fr; gap:8px; }
+      .stat-card { padding:12px; }
+      .stat-number { font-size:20px; }
+      .charts-section { padding:8px; }
+    }
+
+    /* ── 响应式设计优化 ──────────────────────────── */
+    @media (max-width:768px) {
+      header { flex-wrap:wrap; gap:8px; padding:10px 14px; }
+      header h1 { font-size:16px; margin-bottom:4px; flex-basis:100%; }
+      header > span { font-size:11px; flex-basis:100%; }
+      header > div:nth-of-type(1) { flex-wrap:wrap; gap:6px; }
+      header > div:nth-of-type(1) > button, header > div:nth-of-type(1) > .pill { 
+        padding:6px 8px; font-size:11px; 
+      }
+      #statusBar { position:absolute; bottom:-20px; left:14px; font-size:11px; }
+      
+      .shell { padding:12px 12px 24px; }
+      main.layout { grid-template-columns:1fr; }
+      .g2, .g2x { grid-template-columns:1fr !important; }
+      
+      .card { padding:12px; border-radius:12px; }
+      .card-title { font-size:11px; margin-bottom:10px; }
+      
+      input[type="text"], input[type="number"], select { 
+        padding:8px 10px; font-size:12px; 
+      }
+      
+      button { 
+        padding:7px 11px; font-size:12px; 
+      }
+      button.primary { padding:8px 12px; }
+      
+      .row { gap:6px; }
+      .pill { padding:3px 8px; font-size:10px; }
+      
+      .workspace-tabs { gap:6px; padding:8px 0; }
+      .workspace-tabs button { padding:6px 12px; font-size:12px; }
+      
+      .summary-grid { grid-template-columns:1fr; gap:10px; }
+      .pillar-cards { grid-template-columns:repeat(2,1fr); gap:8px; }
+      .pillar-card .pc-stem { font-size:20px; }
+      .pillar-card .pc-branch { font-size:14px; }
+      
+      .nav-tags { flex-wrap:wrap; gap:6px; }
+      .nav-tags button { padding:5px 10px; font-size:11px; }
+      
+      .kv { grid-template-columns:80px 1fr; gap:4px 10px; }
+      .kv .k { font-size:12px; }
+      .kv .v { font-size:12px; }
+      
+      hr.divider { margin:10px 0; }
+      details summary { font-size:11px; }
+      
+      .help-panel { width:95%; max-width:90vw; padding:16px; }
+      .help-panel h2 { font-size:16px; margin-bottom:12px; }
+      .help-panel .help-section h3 { font-size:12px; }
+      .help-item { font-size:12px; gap:8px; }
+      .help-key { padding:3px 6px; font-size:10px; }
+      
+      #verifyNavTags { gap:4px; }
+      #verifyNavTags button { padding:4px 8px; font-size:10px; }
+    }
+    
+    @media (max-width:500px) {
+      header h1 { font-size:14px; }
+      header > span { display:none; }
+      
+      .shell { padding:10px 10px 20px; }
+      .card { padding:10px; border-radius:10px; }
+      
+      input[type="text"], input[type="number"], select { 
+        padding:6px 8px; font-size:11px; 
+      }
+      
+      button { padding:6px 10px; font-size:11px; }
+      .pill { padding:2px 6px; font-size:9px; }
+      
+      .summary-grid { display:flex; flex-direction:column; }
+      .summary-card { padding:10px; }
+      .summary-label { font-size:11px; }
+      .summary-value { font-size:14px; }
+      
+      .kv { grid-template-columns:70px 1fr; gap:2px 8px; font-size:11px; }
+      
+      .pillar-card { padding:10px 6px; }
+      .pillar-card .pc-stem { font-size:16px; }
+      .pillar-card .pc-branch { font-size:12px; }
+      .pc-label { font-size:9px; }
+      
+      #histDetails summary { font-size:10px; }
+      
+      .dropdown-item { padding:6px 10px; font-size:11px; }
+      .dropdown-item-name { font-size:12px; }
+      .dropdown-item-delete { font-size:10px; padding:2px 4px; }
+    }
+  </style>
+</head>
+<body>
+<script src="/static/js/relation-shared.js"></script>
+
+<header>
+  <h1>八字命理验证</h1>
+  <span style="color:var(--muted);font-size:12px;">一体化工作台：验证 + 案例 + 详情</span>
+  <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+    <button class="pill" id="btn-go-verify" aria-label="跳转验证区">验证区</button>
+    <button class="pill" id="btn-go-cases" aria-label="跳转案例中心">案例中心</button>
+    <button class="pill" id="btn-go-detail" aria-label="跳转案例详情">案例详情</button>
+    <button id="btn-favorite" title="收藏管理" style="padding:6px 10px;font-size:12px;border-radius:8px;">⭐ 收藏</button>
+    <button id="btn-compare" title="对比两个八字" style="padding:6px 10px;font-size:12px;border-radius:8px;">⚖️ 对比</button>
+    <button id="btn-analytics" title="历史数据统计分析" style="padding:6px 10px;font-size:12px;border-radius:8px;">📊 统计</button>
+    <button id="btn-export" title="导出结果" style="padding:6px 10px;font-size:12px;border-radius:8px;">📥 导出</button>
+    <button id="btn-help" title="快捷键帮助" style="padding:6px 10px;font-size:12px;border-radius:8px;">❓ 帮助</button>
+    <button id="btn-dark-toggle" title="切换深色/浅色模式" style="padding:6px 10px;font-size:12px;border-radius:8px;">🌙 深色</button>
+  </div>
+  <div id="statusBar">
+    <div class="spinner" id="spinner"></div>
+    <span id="statusText"></span>
+  </div>
+</header>
+
+<div id="helpOverlay" class="help-overlay"></div>
+<div id="helpPanel" class="help-panel">
+  <button class="help-close" onclick="closeHelpPanel()">✕</button>
+  <h2>快捷键 & 功能提示</h2>
+  
+  <div class="help-section">
+    <h3>🎯 工作区切换（键盘快捷键）</h3>
+    <div class="help-item">
+      <span class="help-key">1</span>
+      <span>切换到<strong>验证工作区</strong>（排盘计算）</span>
+    </div>
+    <div class="help-item">
+      <span class="help-key">2</span>
+      <span>切换到<strong>案例工作区</strong>（案例管理）</span>
+    </div>
+    <div class="help-item">
+      <span class="help-key">3</span>
+      <span>切换到<strong>详情工作区</strong>（单案例查看）</span>
+    </div>
+  </div>
+
+  <div class="help-section">
+    <h3>🔍 案例搜索 & 批量操作</h3>
+    <div class="help-item">搜索框：输入关键字快速筛选案例</div>
+    <div class="help-item">批量对比：选中 2+ 案例后点击"对比"按钮进行对标</div>
+  </div>
+
+  <div class="help-section">
+    <h3>💾 数据持久化</h3>
+    <div class="help-item">✓ 自动保存输入参数到本地</div>
+    <div class="help-item">✓ 排盘结果缓存到 IndexedDB（离线可用）</div>
+    <div class="help-item">✓ 记住最后使用的工作区（下次自动恢复）</div>
+  </div>
+
+  <div class="help-section">
+    <h3>📌 其他功能</h3>
+    <div class="help-item">⭐ 收藏：保存喜爱的八字案例</div>
+    <div class="help-item">⚖️ 对比：对比两个不同的八字</div>
+    <div class="help-item">📥 导出：导出排盘结果为 JSON</div>
+    <div class="help-item">🌙 深色：切换深色/浅色模式</div>
+  </div>
+
+  <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--muted);">
+    💡 提示：在输入框中时，键盘快捷键被禁用（防止冲突）
+  </div>
+</div>
+
+  <section class="card hero" aria-label="页面导览">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="padding:6px 10px;border-radius:10px;background:#e0e7ff;color:#1e3a8a;font-weight:700;">八字排盘</div>
+      <span style="color:var(--muted);">输入出生时间，自动排盘 · 五行分析 · 十神推算 · 大运排列</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;">
+      <span class="tag">四柱排盘</span>
+      <span class="tag">五行强弱</span>
+      <span class="tag">十神分析</span>
+      <span class="tag">用神忌神</span>
+      <span class="tag">大运推算</span>
+      <span class="tag">案例管理</span>
+      <span class="tag">案例详情</span>
+    </div>
+  </section>
+
+  <div class="nav-tags" id="verifyNavTags" aria-label="快速跳转">
+    <button data-target="reqCard">请求</button>
+    <button data-target="profileSection">命盘</button>
+    <button data-target="summarySection">摘要</button>
+    <button data-target="diagSection">诊断</button>
+    <button data-target="interpretSection">解读</button>
+    <button data-target="referenceSection">参考</button>
+    <button data-target="casesHub">案例</button>
+    <button data-target="caseDetailHub">详情</button>
+  </div>
+
+  <div class="workspace-tabs" id="workspaceTabs" aria-label="工作区切换">
+    <button data-mode="verify" class="active">验证工作区</button>
+    <button data-mode="cases">案例工作区</button>
+    <button data-mode="detail">详情工作区</button>
+  </div>
+
+<main class="layout" id="verifyMain">
+  <div class="stack">
+  <!-- ── 输入卡片 ─────────────────────────────────────── -->
+  <section class="card" id="reqCard" style="height:fit-content;">
+    <p class="card-title"><span class="dot"></span>请求参数</p>
+    
+    <!-- 个人基本信息 -->
+    <div class="g2" style="margin-bottom:16px;">
+      <div class="field">
+        <label class="lbl" for="userName">姓名</label>
+        <input id="userName" type="text" placeholder="例：张三" style="flex:1;" />
+        <span class="hint">可选，用于记录和显示</span>
+      </div>
+      <div class="field">
+        <label class="lbl" for="userGender">性别</label>
+        <select id="userGender">
+          <option value="">未指定</option>
+          <option value="male">男</option>
+          <option value="female">女</option>
+        </select>
+        <span class="hint">可选，部分分析参考</span>
+      </div>
+    </div>
+    
+    <div class="field" style="margin-bottom:16px;">
+      <label class="lbl" for="birthPlace">出生地点</label>
+      <input id="birthPlace" type="text" placeholder="例：上海市浦东新区" style="flex:1;" />
+      <span class="hint">可选，地理位置记录</span>
+    </div>
+    
+    <hr class="divider" style="margin:16px 0;" />
+    
+    <div class="g2x">
+      <div class="field">
+        <label class="lbl" for="dt">出生时间（阳历）&nbsp;<span style="color:var(--bad)">*</span></label>
+        <div class="row">
+          <input id="dt" type="datetime-local" style="flex:1;" />
+          <button id="btn-now" title="填入当前本地时间">现在</button>
+        </div>
+        <span class="hint">使用日期时间选择器，或点击"现在"按钮填入当前时间</span>
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label class="lbl" for="tz">时区</label>
+          <input id="tz" type="text" value="Asia/Shanghai" />
+          <span class="hint">IANA 时区名</span>
+        </div>
+        <div class="field">
+          <label class="lbl" for="lon">经度 (70–140) &nbsp;<span style="color:var(--bad)">*</span></label>
+          <input id="lon" type="number" step="0.0001" min="70" max="140" value="121.4737" />
+          <span class="hint">真太阳时校正用，默认上海</span>
+        </div>
+      </div>
+    </div>
+    <div class="g2" style="margin-top:12px;">
+      <div class="field">
+        <label class="lbl" for="mode">计算模式</label>
+        <select id="mode">
+          <option value="dual" selected>dual — 双引擎交叉校验</option>
+          <option value="single">single — 单引擎</option>
+        </select>
+        <span class="hint">dual 模式返回两套四柱并标注差异</span>
+      </div>
+      <div class="field" style="justify-content:center;">
+        <label class="lbl">选项</label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input id="solar_time_enabled" type="checkbox" />
+          <span>真太阳时校正</span>
+          <span class="tag">solar_time</span>
+        </label>
+      </div>
+    </div>
+    <hr class="divider" />
+    <div class="row">
+      <button class="primary" id="btn-run">▶ 开始排盘</button>
+      <button id="btn-demo">填入示例</button>
+      <button id="btn-save-template" title="保存当前参数为方案模板">💾 保存方案</button>
+      <div style="position:relative;display:inline-block;">
+        <button id="btn-load-template" title="加载已保存的方案">加载方案 ▼</button>
+        <div id="templateDropdown" class="dropdown-menu" style="display:none;position:absolute;top:100%;left:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:4px;min-width:200px;z-index:100;max-height:300px;overflow-y:auto;">
+          <div id="templateList" style="font-size:12px;"></div>
+        </div>
+      </div>
+      <button id="btn-curl">复制 curl</button>
+    </div>
+  </section>
+
+  <details id="histDetails" style="margin-top:12px;">
+    <summary style="cursor:pointer;color:var(--muted);font-size:12px;padding:8px 0;user-select:none;display:flex;align-items:center;gap:6px;">
+      <span>历史记录</span>
+      <span id="histCount" class="tag" style="font-weight:400;text-transform:none;letter-spacing:0;"></span>
+    </summary>
+    <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+        <p class="card-title" style="margin:0;"><span class="dot" style="background:var(--muted)"></span>最近请求 <span class="hint">（点击可反填参数）</span></p>
+        <button id="btn-clear-hist" style="font-size:11px;padding:4px 10px;">清空</button>
+      </div>
+      <div class="hist-list" id="histList"></div>
+
+      <!-- Analytics Panel - 合并在历史记录下方 -->
+      <div id="analyticsPanel" style="margin-top:20px; padding-top:20px; border-top:1px solid var(--line);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="margin:0; font-size:16px; color:var(--text);">📊 历史分析</h3>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary" onclick="exportAnalyticsData()" style="font-size:12px; padding:6px 10px;">📥 导出</button>
+            <button class="btn btn-secondary" onclick="clearAnalyticsData()" style="font-size:12px; padding:6px 10px;">🗑️ 清空</button>
+          </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="totalCount">0</div>
+            <div class="stat-label">总计算数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="avgLevel">—</div>
+            <div class="stat-label">平均强度</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="topElement">—</div>
+            <div class="stat-label">主导五行</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="recentCount">0</div>
+            <div class="stat-label">最近7天</div>
+          </div>
+        </div>
+
+        <div id="analyticsRecent" class="note" style="margin-top:12px;display:none;"></div>
+
+        <!-- Charts Section -->
+        <div style="margin-top:20px;">
+          <div style="margin-bottom:20px;">
+            <h4 style="margin-bottom:10px; font-size:14px;">五行分布趋势</h4>
+            <div id="analyticsWuxingChartContainer" style="height:200px;">
+              <canvas id="analyticsWuxingChart"></canvas>
+            </div>
+            <div id="analyticsTrendText" class="hint" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+          </div>
+          
+          <div style="margin-bottom:20px;">
+            <h4 style="margin-bottom:10px; font-size:14px;">等级分布</h4>
+            <div id="analyticsLevelChartContainer" style="height:200px;">
+              <canvas id="analyticsLevelChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Statistics Table -->
+        <div style="margin-top:20px;">
+          <h4 style="margin-bottom:10px; font-size:14px;">详细统计</h4>
+          <div style="overflow-x:auto;">
+            <table class="analytics-table" style="width:100%; border-collapse:collapse; font-size:12px;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--line);">
+                  <th style="padding:8px; text-align:left;">项目</th>
+                  <th style="padding:8px; text-align:right;">数值</th>
+                  <th style="padding:8px; text-align:right;">占比</th>
+                </tr>
+              </thead>
+              <tbody id="analyticsTableBody">
+                <tr><td colspan="3" style="padding:12px; text-align:center; color:var(--muted); font-size:11px;">暂无数据</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </details>
+  </div>
+
+  <div class="stack">
+  <!-- ── 右侧结果 ─────────────────────────────────────── -->
+  <section class="card" id="resultCard" style="display:block;">
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">☰</div>
+      <div>
+        <div style="font-weight:700;color:var(--text);">等待排盘</div>
+        <div style="font-size:12px;">输入出生时间后点击"开始排盘"，自动计算四柱、五行、十神、大运等。</div>
+      </div>
+    </div>
+
+    <div class="note" id="guideBox">
+      <h4>使用说明</h4>
+      <ul>
+        <li>输入阳历出生时间，格式如 <code>2002-03-13T14:36:00</code></li>
+        <li>经度用于真太阳时校正（仅影响时柱），勾选 solar_time 启用</li>
+        <li>dual 模式使用两个引擎交叉校验，提高准确性</li>
+      </ul>
+    </div>
+
+    <!-- ── 命盘概要 ──────────────────────────────────── -->
+    <div id="profileSection" class="section-block" style="display:none;">
+      <div class="section-title"><span class="dot"></span><span>命盘概要</span></div>
+      <div id="profileContent"></div>
+    </div>
+
+    <div id="summarySection" class="section-block">
+      <div class="section-title"><span class="dot"></span><span>摘要</span></div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">校验级别</div>
+          <div class="summary-value" id="sumLevel">—</div>
+          <span class="summary-pill" id="sumLevelPill">—</span>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">告警数</div>
+          <div class="summary-value" id="sumWarn">0</div>
+          <span class="summary-pill warn" id="sumWarnPill">待请求</span>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">耗时</div>
+          <div class="summary-value" id="sumElapsed">—</div>
+          <span class="summary-pill" style="background:#e2e8f0;color:#334155;" id="sumElapsedPill">ms</span>
+        </div>
+      </div>
+      <div id="decisionStrip" class="decision-strip"></div>
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div class="row" style="flex-wrap:wrap;">
+          <span class="pill" id="pillApi">api: -</span>
+          <span class="pill" id="pillRule">rule: -</span>
+          <span class="pill" id="pillMode">mode: -</span>
+          <span class="pill" id="pillBackend">backend: -</span>
+        </div>
+        <div class="row">
+          <button id="btn-copy-rid">复制 request_id</button>
+          <button id="btn-copy-json">复制 JSON</button>
+        </div>
+      </div>
+      <div id="validationSummary" style="margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;"></div>
+      <div id="summaryExtra" class="note" style="margin-top:10px;display:none;"></div>
+      <div id="summaryExplain" class="note" style="margin-top:10px;display:none;"></div>
+      <div id="personCard" class="note" style="margin-top:10px;display:none;"></div>
+      <div id="overallRating" class="note" style="margin-top:10px;display:none;"></div>
+    </div>
+
+    <div id="diagSection" class="section-block">
+      <div class="section-title"><span class="dot"></span><span>诊断</span></div>
+      <div class="g2" style="margin-top:6px;">
+        <div class="info-card" id="gateCard">
+          <div class="info-title"><span class="dot-icon"></span><span>解读状态</span><span class="badge">pending</span></div>
+          <div class="hint">等待请求</div>
+        </div>
+        <div class="info-card" id="riskCard">
+          <div class="info-title"><span class="dot-icon"></span><span>边界风险</span><span class="badge">pending</span></div>
+          <div class="hint">等待请求</div>
+        </div>
+      </div>
+
+      <div class="kv" style="margin-top:10px;">
+        <div class="k">request_id</div><div class="v"><code id="rid">—</code></div>
+        <div class="k">http_status</div><div class="v" id="httpStatus">—</div>
+        <div class="k">耗时</div><div class="v" id="elapsed">—</div>
+        <div class="k">输入时间</div><div class="v" id="dtInput">—</div>
+        <div class="k">有效时间 (UTC+8)</div><div class="v" id="dtEff">—</div>
+        <div class="k">时区</div><div class="v" id="tzVal">—</div>
+        <div class="k">太阳时校正</div><div class="v" id="solarOffset">—</div>
+      </div>
+
+      <div id="warningsBox"></div>
+      <hr class="divider" />
+
+      <div class="g2">
+        <div>
+          <p class="card-title" style="margin-bottom:10px;"><span class="dot"></span>主引擎四柱</p>
+          <div id="primaryTable"></div>
+        </div>
+        <div>
+          <p class="card-title" style="margin-bottom:10px;opacity:.65;"><span class="dot" style="background:var(--muted)"></span>校验引擎四柱</p>
+          <div id="secondaryTable"></div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+      <div class="g2">
+        <div>
+          <p class="card-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--warn)"></span>差异字段</p>
+          <div id="diffTags" class="row"></div>
+        </div>
+        <div>
+          <p class="card-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--bad)"></span>风险标记</p>
+          <div id="riskTags" class="row"></div>
+        </div>
+      </div>
+      <div class="g2" style="margin-top:8px;">
+        <div>
+          <p class="card-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--accent)"></span>引擎信息</p>
+          <div class="row" id="metaPills" style="flex-wrap:wrap;gap:6px;"></div>
+        </div>
+        <div>
+          <p class="card-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--accent)"></span>时区信息</p>
+          <div id="tzMeta" class="row" style="flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </div>
+
+      <div id="diagNarrative" class="note" style="margin-top:10px;display:none;"></div>
+    </div>
+
+    <details style="margin-top:4px;" id="rawAnchor">
+      <summary>Raw JSON（调试用）</summary>
+      <div class="row" style="margin:8px 0;gap:6px;">
+        <button id="btn-toggle-raw">折叠</button>
+        <button id="btn-copy-payload">复制请求</button>
+      </div>
+      <pre id="rawPre" style="margin-top:10px;max-height:320px;overflow:auto;">{}</pre>
+    </details>
+  </section>
+  </div>
+</main>
+
+  <!-- ── 解读区 ───────────────────────────────────────── -->
+  <section id="interpretSection" class="interpret-zone" aria-label="命理解读">
+    <div class="section-title"><span class="dot"></span><span>命理解读</span></div>
+
+    <div class="note" id="interpretSummary" style="margin-top:8px;display:none;"></div>
+
+    <div class="card" style="margin-top:12px;" id="yongshenBlock">
+      <p class="card-title"><span class="dot"></span>用神 / 忌神</p>
+      <div id="yongshenContent">
+        <div class="pill-grid"><span class="chip">等待排盘后自动显示</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <p class="card-title"><span class="dot"></span>财运 / 婚姻 / 社交</p>
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="tab-wealth">财运</button>
+        <button class="tab-btn" data-tab="tab-marriage">婚姻 / 子女</button>
+        <button class="tab-btn" data-tab="tab-taohua">桃花 / 社交</button>
+      </div>
+      <div id="tab-wealth" class="tab-panel active">
+        <div class="pill-grid" id="wealthChips" style="margin-bottom:8px;"><span class="chip">等待排盘</span></div>
+        <ul class="panel-list" id="wealthList"><li>提交请求后自动渲染。</li></ul>
+      </div>
+      <div id="tab-marriage" class="tab-panel">
+        <div class="pill-grid" id="marriageChips" style="margin-bottom:8px;"><span class="chip">等待排盘</span></div>
+        <ul class="panel-list" id="marriageList"><li>提交请求后自动渲染。</li></ul>
+      </div>
+      <div id="tab-taohua" class="tab-panel">
+        <div class="pill-grid" id="taohuaChips" style="margin-bottom:8px;"><span class="chip">等待排盘</span></div>
+        <ul class="panel-list" id="taohuaList"><li>提交请求后自动渲染。</li></ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <p class="card-title"><span class="dot"></span>周期节奏（每日 / 每周 / 每月 / 季度 / 年度 / 10 年）</p>
+      <div id="periodTimeline"><span class="hint">等待排盘后自动生成。</span></div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <p class="card-title"><span class="dot"></span>可视化分析</p>
+      <div class="g2" style="gap:16px;">
+        <div id="wuxingChartContainer" style="position:relative;height:300px;"><canvas></canvas></div>
+        <div id="dayunChartContainer" style="position:relative;height:300px;"><canvas></canvas></div>
+      </div>
+      <div id="vizNarrative" class="note" style="margin-top:10px;display:none;"></div>
+    </div>
+
+    <div style="margin-top:12px;">
+      <p class="card-title"><span class="dot"></span>大运总表</p>
+      <div id="dayunTable"><span class="hint">等待排盘后自动渲染。</span></div>
+    </div>
+  </section>
+
+  <!-- ── 参考文档 ─────────────────────────────────────── -->
+  <details id="referenceSection" class="ref-zone">
+    <summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;padding:10px 0;user-select:none;display:flex;align-items:center;gap:8px;">
+      <span>▸ 参考文档</span>
+      <span class="tag" style="font-weight:400;text-transform:none;letter-spacing:0;">口径 / 文献 / 术语</span>
+    </summary>
+    <div class="info-card" style="margin-top:12px;">
+      <p class="info-title"><span class="badge">口径</span>校验级别 / 边界 / 模式</p>
+      <ul class="info-list">
+        <li><span class="dot-icon"></span><span>L0 无差异；L1 时柱差异；L2 月柱；L3 日/年柱；L_SINGLE 单库无交叉校验。</span></li>
+        <li><span class="dot-icon"></span><span>时辰 ±15 分钟、节气 ±60 分钟 → boundary_risk，存在时禁止解读。</span></li>
+        <li><span class="dot-icon"></span><span>near_shichen_boundary → recommended=none；否则输出 beijing_time / solar_time。</span></li>
+      </ul>
+    </div>
+    <div class="info-card" style="margin-top:12px;">
+      <p class="info-title"><span class="badge">文献</span>数据来源</p>
+      <ul class="info-list">
+        <li><span class="dot-icon"></span><span>天干地支/十神/藏干/纳音：《渊海子平》《三命通会》《子平真诠》</span></li>
+        <li><span class="dot-icon"></span><span>节气算法：寿星天文历 VSOP87（sxtwl）/ 中国天文年历（cnlunar）</span></li>
+        <li><span class="dot-icon"></span><span>真太阳时：Spencer(1971) 均时差公式，仅影响时柱</span></li>
+        <li><span class="dot-icon"></span><span>五行评分：天干 + 地支 + 藏干加权法 v1；日主强弱：季节 + 根气 + 帮扶三因素</span></li>
+      </ul>
+    </div>
+    <div class="info-card" style="margin-top:12px;">
+      <p class="info-title"><span class="badge">术语</span>十神含义速查</p>
+      <ul class="info-list">
+        <li><span class="dot-icon"></span><span><strong>比肩 · 劫财</strong>（同类）— 兄弟、友人、竞争合作。比肩主稳健，劫财主争夺。</span></li>
+        <li><span class="dot-icon"></span><span><strong>食神 · 伤官</strong>（我生）— 才华、表达、子女缘。食神温和创意，伤官锐利聪明。</span></li>
+        <li><span class="dot-icon"></span><span><strong>偏财 · 正财</strong>（我克）— 财富、父亲、配偶。偏财投机大财，正财稳定收入。</span></li>
+        <li><span class="dot-icon"></span><span><strong>七杀 · 正官</strong>（克我）— 事业、权力、丈夫。七杀威权压力，正官正统规矩。</span></li>
+        <li><span class="dot-icon"></span><span><strong>偏印 · 正印</strong>（生我）— 学业、长辈、贵人。偏印偏学冷门，正印正统学业。</span></li>
+      </ul>
+    </div>
+  </details>
+
+  <section id="casesHub" class="section-block" style="margin-top:14px; display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="section-title"><span class="dot"></span><span>案例速览</span></div>
+      <button class="quick-back-btn" onclick="setWorkspaceMode('verify'); scrollToSection('reqCard');">← 返回验证</button>
+    </div>
+    <div class="hub-tools">
+      <input id="caseSearchBox" type="text" placeholder="🔍 搜索案例（关键字、地名等）" style="max-width:250px;" />
+      <button id="btn-reload-cases-hub">刷新案例区</button>
+      <button id="btn-batch-compare" disabled style="opacity:0.5;">对比选中</button>
+      <a class="pill" href="/static/cases.html?standalone=1" target="_blank" rel="noopener">新窗口打开</a>
+    </div>
+    <details class="card" id="relationHub" style="margin-top:12px;">
+      <summary>⚡ 关系匹配（可折叠）<span class="pill gray" id="relationStatusTop" style="margin-left:6px;">等待加载</span></summary>
+      <div class="card-body">
+        <div class="row" style="align-items:flex-end;gap:12px;flex-wrap:wrap;">
+          <div class="field" style="min-width:220px;">
+            <label class="lbl" for="relationCaseA">案例 A</label>
+            <select id="relationCaseA"><option value="">加载中…</option></select>
+          </div>
+          <div class="field" style="min-width:220px;">
+            <label class="lbl" for="relationCaseB">案例 B</label>
+            <select id="relationCaseB"><option value="">加载中…</option></select>
+          </div>
+          <div class="field" style="min-width:200px;">
+            <label class="lbl" for="relationTypeMain">关系类型</label>
+            <select id="relationTypeMain">
+              <option value="couple">情侣 / 夫妻</option>
+              <option value="parent_child">父母-子女</option>
+              <option value="colleague">同事</option>
+              <option value="supervisor_subordinate">上级-下级</option>
+              <option value="friend">朋友 / 合作</option>
+            </select>
+          </div>
+          <button class="primary" id="btnRelationCompute">计算关系</button>
+          <button id="btnRelationReload">刷新案例</button>
+        </div>
+        <div id="relationResultBox" class="result-box" style="margin-top:10px; display:none;"></div>
+        <div class="muted" style="margin-top:8px;">默认拉取最近更新的 50 条案例，需更多可打开案例中心或搜索。</div>
+      </div>
+    </details>
+    <iframe id="casesHubFrame" class="hub-frame" src="/static/cases.html?embedded=1" title="案例速览"></iframe>
+  </section>
+
+  <section id="caseDetailHub" class="section-block" style="margin-top:14px; display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="section-title"><span class="dot"></span><span>案例详情（同页）</span></div>
+      <button class="quick-back-btn" onclick="setWorkspaceMode('verify'); scrollToSection('reqCard');">← 返回验证</button>
+    </div>
+    <div class="hub-tools">
+      <input id="hubCaseId" type="text" placeholder="输入 case id，例如 123" />
+      <button id="btn-load-case-detail">加载详情</button>
+      <button id="btn-reload-case-detail">刷新详情区</button>
+      <a id="caseStandaloneLink" class="pill" href="/static/case.html?standalone=1" target="_blank" rel="noopener">新窗口打开</a>
+    </div>
+    <iframe id="caseDetailFrame" class="hub-frame" src="about:blank" title="案例详情"></iframe>
+  </section>
+</div>
+
+<div class="shell" id="footerShell">
+  <div class="footer">
+    <strong>免责声明 · 数据隐私</strong><br />
+    ① 生日数据通过URL传输（非加密）。分享链接时数据被浏览器历史/分析工具记录。② 仅供参考学习，不作为任何决策依据。<br />
+    ③ 数据来源：《三命通会》《渊海子平》《子平真诠》《协纪辨方书》；节气基于寿星天文历 VSOP87。<br />
+    ④ 算法版本：solar_time=v1.0, wuxing=weighted_v1, strength=season_root_help_v1。
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   工具函数 & 翻译映射
+   ═══════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+const pretty = x => JSON.stringify(x ?? null, null, 2);
+
+// P1 性能优化：防抖函数
+const debounce = (fn, delay) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+};
+
+// P1 性能优化：节流函数  
+const throttle = (fn, delay) => {
+  let last = 0;
+  return (...args) => {
+    const now = Date.now();
+    if (now - last >= delay) {
+      fn(...args);
+      last = now;
+    }
+  };
+};
+
+/* ── 十神中文翻译 ─────────────────────────────────────── */
+const TEN_GOD_CN = {
+  bi_jian:"比肩", jie_cai:"劫财",
+  shi_shen:"食神", shang_guan:"伤官",
+  pian_yin:"偏印", zheng_yin:"正印",
+  pian_cai:"偏财", zheng_cai:"正财",
+  qi_sha:"七杀", zheng_guan:"正官",
+};
+const TEN_GOD_DESC = {
+  bi_jian:"同类帮扶，主兄弟合作", jie_cai:"同类争夺，主竞争破财",
+  shi_shen:"我生之物，主才华温和", shang_guan:"我生之锐，主聪明叛逆",
+  pian_yin:"偏学冷门，主偏艺孤独", zheng_yin:"正统学业，主贵人庇护",
+  pian_cai:"投机大财，主偏财横财", zheng_cai:"稳定收入，主正财勤劳",
+  qi_sha:"威权压力，主魄力开拓", zheng_guan:"正统规矩，主事业声誉",
+};
+const TEN_GOD_TYPE = {
+  bi_jian:"self", jie_cai:"self",
+  shi_shen:"output", shang_guan:"output",
+  pian_yin:"resource", zheng_yin:"resource",
+  pian_cai:"wealth", zheng_cai:"wealth",
+  qi_sha:"power", zheng_guan:"power",
+};
+const tenGodCN   = code => TEN_GOD_CN[code] || code || "—";
+const tenGodDesc = code => TEN_GOD_DESC[code] || "";
+const tenGodType = code => TEN_GOD_TYPE[code] || "";
+
+/* ── 五行翻译 ─────────────────────────────────────────── */
+const WX_CN  = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+const WX_CSS = { wood:"wx-wood", fire:"wx-fire", earth:"wx-earth", metal:"wx-metal", water:"wx-water" };
+const wxCN   = k => WX_CN[k] || k;
+
+// 最近一次时区覆盖提示
+let lastTzOverrideNote = "";
+let lastBirthPlaceInput = "";
+
+/* ── 天干映射 ─────────────────────────────────────────── */
+const GAN_WUXING = { "甲":"wood","乙":"wood","丙":"fire","丁":"fire","戊":"earth","己":"earth","庚":"metal","辛":"metal","壬":"water","癸":"water" };
+const GAN_CSS = { "甲":"gan-mu","乙":"gan-mu","丙":"gan-huo","丁":"gan-huo","戊":"gan-tu","己":"gan-tu","庚":"gan-jin","辛":"gan-jin","壬":"gan-shui","癸":"gan-shui" };
+const ganClass = g => `gan ${GAN_CSS[g] || ""}`;
+const GAN_DESC = {
+  "甲":"阳木 · 参天大树，主仁慈正直",
+  "乙":"阴木 · 花草藤蔓，主柔韧灵活",
+  "丙":"阳火 · 太阳烈焰，主热情光明",
+  "丁":"阴火 · 烛光星火，主细腻温暖",
+  "戊":"阳土 · 高山大地，主厚重包容",
+  "己":"阴土 · 田园沃土，主谨慎务实",
+  "庚":"阳金 · 刀剑矿石，主刚毅果断",
+  "辛":"阴金 · 首饰珠玉，主精致内敛",
+  "壬":"阳水 · 江河大海，主智慧奔放",
+  "癸":"阴水 · 雨露溪流，主聪慧内秀",
+};
+
+/* ── 日主强弱 ─────────────────────────────────────────── */
+const TIER_CN  = { strong:"偏旺", weak:"偏弱", balanced:"中和", pending:"待定" };
+const tierCN   = t => TIER_CN[t] || t;
+const tierCls  = t => t==="strong"?"warn":t==="weak"?"bad":t==="balanced"?"ok":"";
+
+/* ── 文案辅助（英转中） ───────────────────────────────── */
+const WX_WORD_CN = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+const wxWordCN = w => WX_WORD_CN[String(w||"").toLowerCase()] || w;
+
+function translateFactorName(name) {
+  if (!name) return "";
+  const key = String(name).trim();
+  const map = {
+    same_element_support: "同五行扶助",
+    parent_element_support: "印星生扶",
+    season_effect: "月令季节影响",
+    root_support: "通根强度",
+    leak_and_drain: "泄耗影响",
+    control_pressure: "克制压力",
+  };
+  if (map[key]) return map[key];
+  return key.replace(/[_-]+/g, " ");
+}
+
+function translateFactorReason(text) {
+  if (!text) return "";
+  let t = String(text).trim();
+  t = t.replace(/metal count/gi, "金数量");
+  t = t.replace(/same element support/gi, "同五行扶助");
+  t = t.replace(/parent element support/gi, "印星生扶");
+  t = t.replace(/earth generates metal/gi, "土生金");
+  t = t.replace(/wood generates fire/gi, "木生火");
+  t = t.replace(/fire generates earth/gi, "火生土");
+  t = t.replace(/metal generates water/gi, "金生水");
+  t = t.replace(/water generates wood/gi, "水生木");
+  t = t.replace(/[()]/g, "");
+  t = t.replace(/\s{2,}/g, " ").trim();
+  return t;
+}
+
+function translateRationale(text) {
+  if (!text) return "";
+  let t = String(text).trim();
+
+  // 取用/忌用/强弱
+  t = t.replace(/Favor weakest elements?\s*\[([^\]]+)\][^;.]*?/i, (_, list) => {
+    const arr = String(list).split(",").map(s => s.replace(/[\s'"\[\]]/g, "")).filter(Boolean);
+    return `取用：补足偏弱五行${arr.map(wxWordCN).join("、")}`;
+  });
+  t = t.replace(/avoid strongest\s*\[([^\]]+)\][^;.]*?/i, (_, list) => {
+    const arr = String(list).split(",").map(s => s.replace(/[\s'"\[\]]/g, "")).filter(Boolean);
+    return `；回避偏强五行${arr.map(wxWordCN).join("、")}`;
+  });
+  t = t.replace(/strength tier\s*=\s*(\w+)/i, (_, tier) => `；日主强弱：${tierCN(tier.toLowerCase())}`);
+
+  // 行业倾向
+  t = t.replace(/industry (tilt|inclination)\s*:\s*([\w/\s,]+)/i, (_, __, tags) => {
+    const parts = tags.split(/[\s,/]+/).filter(Boolean);
+    return `行业倾向：${parts.map(p => wxWordCN(p)).join("、")}`;
+  });
+
+  // 清理残留英文与多余标点
+  t = t.replace(/to balance/gi, "");
+  t = t.replace(/[;；]\s*[;；]+/g, "；");
+  t = t.replace(/^[;；]\s*/, "");
+  t = t.replace(/\s{2,}/g, " ").trim();
+
+  return t;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   界面控制
+   ═══════════════════════════════════════════════════════════ */
+function toggleEmpty(on) { const el=$("emptyState"); if(el) el.style.display=on?"flex":"none"; }
+function toggleGuide(on) { const el=$("guideBox"); if(el) el.style.display=on?"grid":"none"; }
+
+function setSummary(level, warnCount, elapsedText) {
+  const lvl = level || "—";
+  $("sumLevel").textContent = lvl;
+  const pill = $("sumLevelPill");
+  pill.textContent = lvl;
+  pill.className = "summary-pill";
+  if (["L0","ok"].includes(lvl)) pill.classList.add("ok");
+  else if (["L1","warn"].includes(lvl)) pill.classList.add("warn");
+  else pill.classList.add("bad");
+  const wc = Number.isFinite(warnCount) ? warnCount : 0;
+  $("sumWarn").textContent = wc;
+  const wp = $("sumWarnPill");
+  wp.textContent = wc===0?"无告警":`${wc} 条告警`;
+  wp.className = "summary-pill"+(wc===0?" ok":" warn");
+  $("sumElapsed").textContent = elapsedText || "—";
+}
+
+function setStatus(text, kind="muted") { $("statusBar").className=kind; $("statusText").textContent=text||""; }
+function setLoading(on) { $("spinner").classList.toggle("active",on); $("btn-run").disabled=on; if(on) setStatus("计算中…"); }
+
+// 帮助面板
+function showHelpPanel() {
+  $('helpOverlay').classList.add('show');
+  $('helpPanel').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeHelpPanel() {
+  $('helpOverlay').classList.remove('show');
+  $('helpPanel').classList.remove('show');
+  document.body.style.overflow = '';
+}
+// 点击背景关闭帮助面板
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'helpOverlay') closeHelpPanel();
+});
+
+// 快速模板系统
+const TEMPLATE_KEY = 'BaZiTemplates';
+function getTemplates() {
+  try {
+    return JSON.parse(localStorage.getItem(TEMPLATE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+function saveTemplate() {
+  const name = prompt('输入模板名称（如"常用1"、"女性配置"）:');
+  if (!name) return;
+  const payload = {
+    name: name.trim(),
+    userName: $('userName').value,
+    userGender: $('userGender').value,
+    birthPlace: $('birthPlace').value,
+    dt: $('dt').value,
+    tz: $('tz').value,
+    lon: $('lon').value,
+    mode: $('mode').value,
+    solar_time_enabled: $('solar_time_enabled').checked,
+    timestamp: new Date().toLocaleString()
+  };
+  const templates = getTemplates();
+  templates.push(payload);
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
+  setStatus(`✓ 方案"${name}"已保存`, 'ok');
+  setTimeout(() => renderTemplateList(), 100);
+}
+function loadTemplate(index) {
+  const templates = getTemplates();
+  if (index < 0 || index >= templates.length) return;
+  const tpl = templates[index];
+  $('userName').value = tpl.userName || '';
+  $('userGender').value = tpl.userGender || '';
+  $('birthPlace').value = tpl.birthPlace || '';
+  $('dt').value = tpl.dt || '';
+  $('tz').value = tpl.tz || 'Asia/Shanghai';
+  $('lon').value = tpl.lon || '120';
+  $('mode').value = tpl.mode || 'dual';
+  $('solar_time_enabled').checked = tpl.solar_time_enabled || false;
+  saveInputs();
+  toggleTemplateDropdown(false);
+  setStatus(`✓ 已加载方案"${tpl.name}"`, 'ok');
+}
+function deleteTemplate(index) {
+  const templates = getTemplates();
+  if (index < 0 || index >= templates.length) return;
+  const name = templates[index].name;
+  if (!confirm(`确定删除方案"${name}"吗？`)) return;
+  templates.splice(index, 1);
+  localStorage.setItem(TEMPLATE_KEY, JSON.stringify(templates));
+  setStatus(`✓ 方案"${name}"已删除`, 'ok');
+  renderTemplateList();
+}
+function renderTemplateList() {
+  const templates = getTemplates();
+  const list = $('templateList');
+  if (!list) return;
+  if (templates.length === 0) {
+    list.innerHTML = '<div class="dropdown-empty">暂无保存的方案</div>';
+    return;
+  }
+  list.innerHTML = templates.map((tpl, i) => `
+    <div class="dropdown-item">
+      <div style="flex:1;" onclick="loadTemplate(${i})">
+        <div class="dropdown-item-name">${esc(tpl.name)}</div>
+        <div style="font-size:11px;color:var(--muted);">${tpl.dt} · ${tpl.tz}</div>
+      </div>
+      <span class="dropdown-item-delete" onclick="deleteTemplate(${i});">删除</span>
+    </div>
+  `).join('');
+}
+function toggleTemplateDropdown(show) {
+  const dropdown = $('templateDropdown');
+  if (dropdown) {
+    if (show === undefined) show = dropdown.style.display === 'none';
+    dropdown.style.display = show ? 'block' : 'none';
+    if (show) renderTemplateList();
+  }
+}
+document.addEventListener('click', (e) => {
+  const dropdown = $('templateDropdown');
+  const btn = $('btn-load-template');
+  if (!dropdown || !btn) return;
+  if (!dropdown.contains(e.target) && e.target !== btn) {
+    dropdown.style.display = 'none';
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   命盘概要 — 四柱可视卡 + 五行条形图 + 日主强弱 + 用神忌神
+   ═══════════════════════════════════════════════════════════ */
+function renderProfile(json) {
+  const sec=$("profileSection"), el=$("profileContent");
+  if(!sec||!el) return;
+  const pillars=json?.pillars_primary;
+  const wuxing=json?.wuxing_score;
+  const strength=json?.day_master_strength;
+  const yongshen=json?.yongshen;
+  const tenGods=json?.ten_gods;
+  if(!pillars) { sec.style.display="none"; return; }
+  sec.style.display="block";
+
+  const dayStem=pillars.day?.stem||"?";
+  const dayBranch=pillars.day?.branch||"?";
+  const dayWx=GAN_WUXING[dayStem]||"";
+  let wxInsightHTML="";
+
+  /* ── 四柱卡片 ── */
+  const PCOLS=[{key:"year",label:"年柱"},{key:"month",label:"月柱"},{key:"day",label:"日柱"},{key:"hour",label:"时柱"}];
+  const pillarCards = PCOLS.map(({key,label})=>{
+    const p=pillars[key]; if(!p) return "";
+    const s=p.stem||"?", b=p.branch||"?";
+    const tg=tenGods?.[key];
+    const tgHtml=tg?`<div class="tengod-badge ${tenGodType(tg)}" style="margin-top:6px;" title="${esc(tenGodDesc(tg))}">${tenGodCN(tg)}</div>`:"";
+    const wx=GAN_WUXING[s]; const wxLabel=wx?`<div style="font-size:10px;margin-top:2px;" class="${WX_CSS[wx]||""}">${wxCN(wx)}</div>`:"";
+    return `<div class="pillar-card${key==="day"?" day-master":""}">
+      <div class="pc-label">${label}${key==="day"?" ★":""}</div>
+      <div class="pc-stem ${GAN_CSS[s]||""}">${esc(s)}</div>
+      <div class="pc-branch">${esc(b)}</div>
+      <div class="pc-gz">${esc(p.ganzhi||(s+b))}</div>
+      ${wxLabel}
+      ${tgHtml}
+    </div>`;
+  }).join("");
+
+  /* ── 五行条形图 ── */
+  let wxBarHTML = "";
+  if(wuxing) {
+    const entries=[{key:"wood",cn:"木",cls:"wood"},{key:"fire",cn:"火",cls:"fire"},{key:"earth",cn:"土",cls:"earth"},{key:"metal",cn:"金",cls:"metal"},{key:"water",cn:"水",cls:"water"}];
+    const vals=entries.map(e=>wuxing[e.key]||0);
+    const maxVal=Math.max(...vals,1);
+    const total=vals.reduce((a,b)=>a+b,0)||1;
+    wxBarHTML=`<div class="wx-bar-wrap">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">五行力量分布（总分 ${total.toFixed(1)}）</div>
+      ${entries.map((e,i)=>{
+        const v=vals[i]; const pct=Math.round((v/maxVal)*100); const ratio=((v/total)*100).toFixed(0);
+        return `<div class="wx-bar-row">
+          <span class="wx-bar-label ${WX_CSS[e.key]}">${e.cn}</span>
+          <div class="wx-bar-track"><div class="wx-bar-fill ${e.cls}" style="width:${pct}%">${v.toFixed(1)}</div></div>
+          <span style="font-size:11px;color:var(--muted);width:36px;">${ratio}%</span>
+        </div>`;
+      }).join("")}
+    </div>`;
+
+    const sorted = entries.map((e,i)=>({key:e.key, cn:e.cn, val: vals[i]})).sort((a,b)=>b.val-a.val);
+    const strongest = sorted[0];
+    const weakest = sorted[sorted.length-1];
+    const gap = (strongest.val - weakest.val);
+    const balanceRatio = total ? 1 - (gap / Math.max(total, 1)) : 0;
+    const balanceTag = gap/Math.max(total,1) > 0.35 ? "偏颇" : gap/Math.max(total,1) > 0.2 ? "略偏" : "较平衡";
+    const favorTxt = yongshen?.favor?.map(wxCN).join("、") || "喜用待定";
+    const avoidTxt = yongshen?.avoid?.map(wxCN).join("、") || "忌用待定";
+    wxInsightHTML = `<div class="note" style="margin-top:8px;">
+      <strong>五行解读</strong>
+      <ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">
+        <li>最强 ${wxCN(strongest.key)}，最弱 ${wxCN(weakest.key)}，差值 ${gap.toFixed(1)}（${balanceTag}）。</li>
+        <li>均衡度 ${(balanceRatio*100).toFixed(0)}%，宜以 ${favorTxt} 补弱、避开 ${avoidTxt} 过强。</li>
+      </ul>
+    </div>`;
+  }
+
+  /* ── 日主信息 + 强弱 + 用神忌神 ── */
+  const dayDesc=GAN_DESC[dayStem]||"";
+  let infoHTML = `<div class="profile-grid">`;
+
+  // 日主
+  infoHTML += `<div class="profile-item">
+    <div class="profile-label">日主（命主）</div>
+    <div class="profile-value"><span class="${ganClass(dayStem)}" style="font-size:28px;">${esc(dayStem)}</span><span style="font-size:18px;color:#64748b;margin-left:6px;">${esc(dayBranch)}</span></div>
+    <div class="profile-sub">${esc(dayDesc)}</div>
+    ${dayWx?`<div class="profile-sub">五行属 <span class="${WX_CSS[dayWx]||""}" style="font-weight:700;">${wxCN(dayWx)}</span></div>`:""}
+  </div>`;
+
+  // 强弱
+  if(strength) {
+    const tier=strength.tier||"pending";
+    const score=typeof strength.score==="number"?strength.score.toFixed(1):"—";
+    const factors=Array.isArray(strength.factors)?strength.factors:[];
+    infoHTML += `<div class="profile-item">
+      <div class="profile-label">日主强弱</div>
+      <div class="profile-value">
+        <span class="chip ${tierCls(tier)}" style="font-size:16px;font-weight:800;">${tierCN(tier)}</span>
+        <span style="font-size:13px;color:var(--muted);margin-left:8px;">综合评分 ${score}</span>
+      </div>
+      ${factors.length?`<div class="profile-sub" style="margin-top:6px;">${factors.map(f=>`<div>· ${esc(translateFactorName(f.name))}：${typeof f.score==="number"?f.score>0?"+"+f.score.toFixed(1):f.score.toFixed(1):"—"}${f.reason?" （"+esc(translateFactorReason(f.reason))+"）":""}</div>`).join("")}</div>`:""}
+    </div>`;
+  }
+    infoHTML += `</div>`;
+    if(wxInsightHTML) infoHTML += wxInsightHTML;
+  // 用神忌神
+  if(yongshen) {
+    const favor=yongshen.favor||[]; const avoid=yongshen.avoid||[];
+    infoHTML += `<div class="profile-item">
+      <div class="profile-label">用神 / 忌神</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+        ${favor.map(f=>`<span class="chip favor-chip"><span class="${WX_CSS[f]||""}" style="font-weight:800;">${wxCN(f)}</span> 用神</span>`).join("")}
+        ${avoid.map(a=>`<span class="chip avoid-chip"><span class="${WX_CSS[a]||""}" style="font-weight:800;">${wxCN(a)}</span> 忌神</span>`).join("")}
+      </div>
+      ${yongshen.rationale?`<div class="profile-sub" style="margin-top:4px;">${esc(translateRationale(yongshen.rationale))}</div>`:""}
+      <div class="profile-sub" style="margin-top:4px;">用神 = 命局所需有利五行；忌神 = 不利应回避五行</div>
+    </div>`;
+  }
+
+  infoHTML += `</div>`;
+
+  el.innerHTML = `
+    <div class="pillar-cards">${pillarCards}</div>
+    ${wxBarHTML}
+    ${infoHTML}
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   用神忌神详细区块
+   ═══════════════════════════════════════════════════════════ */
+function renderYongshenBlock(json) {
+  const el=$("yongshenContent"); if(!el) return;
+  const ys=json?.yongshen; const strength=json?.day_master_strength;
+  if(!ys) { el.innerHTML=`<div class="pill-grid"><span class="chip">暂无用神数据</span></div>`; return; }
+  const favor=ys.favor||[]; const avoid=ys.avoid||[];
+  const tier=strength?.tier||"pending";
+  let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">`;
+  html+=favor.map(f=>`<span class="chip favor-chip" style="font-size:14px;padding:6px 14px;"><span class="${WX_CSS[f]||""}" style="font-weight:800;font-size:18px;">${wxCN(f)}</span> 用神（喜用）</span>`).join("");
+  html+=avoid.map(a=>`<span class="chip avoid-chip" style="font-size:14px;padding:6px 14px;"><span class="${WX_CSS[a]||""}" style="font-weight:800;font-size:18px;">${wxCN(a)}</span> 忌神（忌用）</span>`).join("");
+  html+=`</div>`;
+  html+=`<div style="font-size:12px;color:var(--muted);line-height:1.7;">`;
+  html+=`<div>· 日主强弱：<span class="chip ${tierCls(tier)}" style="font-size:11px;">${tierCN(tier)}</span>`;
+  if(strength?.score!=null) html+=`（评分 ${strength.score.toFixed(1)}）`;
+  html+=`</div>`;
+  if(ys.rationale) html+=`<div style="margin-top:4px;">· 取用依据：${esc(translateRationale(ys.rationale))}</div>`;
+  html+=`<div style="margin-top:4px;">· <strong>用神</strong>：命局所需、有利之五行，行运逢之则顺</div>`;
+  html+=`<div>· <strong>忌神</strong>：不利、应回避之五行，行运逢之须谨慎</div>`;
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   四柱诊断表格（修复乱码：stem/branch）
+   ═══════════════════════════════════════════════════════════ */
+const PILLARS=[{key:"year",label:"年柱"},{key:"month",label:"月柱"},{key:"day",label:"日柱"},{key:"hour",label:"时柱"}];
+
+function renderPillarsTable(data, diffSet=new Set(), tenGods=null) {
+  if(!data||typeof data!=="object"||!Object.keys(data).length) return `<span style="color:var(--muted);font-size:12px;">—（无数据）</span>`;
+  if(!PILLARS.some(p=>data[p.key])) return `<pre style="margin:0;max-height:160px;">${esc(pretty(data))}</pre>`;
+  const rows=PILLARS.map(({key,label})=>{
+    const p=data[key];
+    const hasDiff=[...diffSet].some(f=>f.toLowerCase().replace(/[._-]/g,"").includes(key));
+    const rowCls=hasDiff?' class="diff-row"':"";
+    if(!p) return `<tr${rowCls}><td>${label}</td><td colspan="4" style="color:var(--muted)">—</td></tr>`;
+    const stem   = p.stem ?? p.gan ?? p.heavenly_stem ?? "?";
+    const branch = p.branch ?? p.zhi ?? p.earthly_branch ?? "?";
+    const nayin  = p.nayin ?? p.na_yin ?? "";
+    const tgCode = tenGods?.[key];
+    const tgCN   = tgCode ? tenGodCN(tgCode) : "";
+    const tgType = tgCode ? tenGodType(tgCode) : "";
+    const tgBadge= tgCN ? `<span class="tengod-badge ${tgType}" title="${esc(tenGodDesc(tgCode))}">${tgCN}</span>` : "—";
+    const stemWx = GAN_WUXING[stem]; const stemWxCN=stemWx?wxCN(stemWx):"";
+    return `<tr${rowCls}>
+      <td style="color:var(--muted);font-size:12px;">${label}${key==="day"?" ★":""}</td>
+      <td><span class="${ganClass(stem)}" title="${esc(stemWxCN)}">${esc(stem)}</span></td>
+      <td><span class="zhi">${esc(branch)}</span></td>
+      <td>${tgBadge}</td>
+      <td><div class="sub2">${stemWxCN?`<span class="${WX_CSS[stemWx]||""}">${stemWxCN}</span>`:""} ${nayin?`· ${esc(nayin)}`:""}</div></td>
+    </tr>`;
+  }).join("");
+  return `<table class="pillar-table"><thead><tr><th>柱</th><th>天干</th><th>地支</th><th>十神</th><th>五行·纳音</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   诊断辅助
+   ═══════════════════════════════════════════════════════════ */
+function renderDiffTags(arr) {
+  if(!Array.isArray(arr)||!arr.length) return `<span class="tag ok">无差异 ✓</span>`;
+  return arr.map(f=>`<span class="tag warn">${esc(f)}</span>`).join("");
+}
+function renderRiskTags(obj) {
+  if(!obj||typeof obj!=="object") return `<span class="tag">—</span>`;
+  const items=[];
+  if(obj.near_shichen_boundary!==undefined) items.push(`<span class="tag ${obj.near_shichen_boundary?"bad":"ok"}">时辰边界: ${obj.near_shichen_boundary?"⚠":"✓"}</span>`);
+  if(obj.near_jieqi_boundary!==undefined) items.push(`<span class="tag ${obj.near_jieqi_boundary?"bad":"ok"}">节气边界: ${obj.near_jieqi_boundary?"⚠":"✓"}</span>`);
+  const mShi=obj.minutes_to_shichen_boundary??obj.shichen_minutes;
+  const mJie=obj.minutes_to_jieqi_boundary??obj.jieqi_minutes;
+  if(mShi!==undefined) items.push(`<span class="tag">距时辰界: ${esc(mShi)}分</span>`);
+  if(mJie!==undefined) items.push(`<span class="tag">距节气界: ${esc(mJie)}分</span>`);
+  return items.length?items.join(""):`<span class="tag ok">无风险 ✓</span>`;
+}
+function normalizeWarnings(arr) {
+  if(!Array.isArray(arr)) return [];
+  return arr.map(w=>{
+    if(w&&typeof w==="object") return {code:w.code??"",message:w.message??JSON.stringify(w)};
+    const s=String(w); return {code:s.split(" ")[0],message:s};
+  });
+}
+function renderWarnings(warnings) {
+  if(!Array.isArray(warnings)||!warnings.length) return "";
+  return `<hr class="divider"/><p class="card-title" style="margin-bottom:8px;"><span class="dot" style="background:var(--warn)"></span>告警 <span class="tag warn" style="font-weight:400;text-transform:none;letter-spacing:0;">${warnings.length}</span></p>
+  <div class="warnlist">${warnings.map(w=>`<div class="warnitem"><div class="wcode"><code>${esc(w.code)}</code></div><div class="wmsg">${esc(w.message)}</div></div>`).join("")}</div>`;
+}
+function levelBadge(level) {
+  if(!level) return "";
+  const cls=(level==="L0"||level==="ok")?"ok":(level==="L1"||level==="warn")?"warn":"bad";
+  const icon=cls==="ok"?"✓":cls==="warn"?"△":"✕";
+  return `<span class="level-badge ${cls}">${icon} ${esc(level)}</span>`;
+}
+function formatRecommended(rec) {
+  if(rec===undefined||rec===null) return "";
+  const raw=String(rec).trim();
+  if(!raw) return "无";
+  if(raw==="none") return "无";
+  if(raw==="beijing_time") return "北京时";
+  if(raw==="solar_time") return "真太阳时";
+  return raw;
+}
+function renderGatePanels(validation, riskFlags, diffFields=[]) {
+  const gate=$("gateCard"),risk=$("riskCard"); if(!gate||!risk) return;
+  if(!validation||typeof validation!=="object") {
+    gate.innerHTML=`<div class="info-title"><span class="dot-icon"></span><span>解读状态</span><span class="badge">pending</span></div><div class="hint">等待请求</div>`;
+    risk.innerHTML=`<div class="info-title"><span class="dot-icon"></span><span>边界风险</span><span class="badge">pending</span></div><div class="hint">等待请求</div>`; return;
+  }
+  const interp=validation.interpretation_enabled;
+  const recRaw=validation.recommended;
+  const recommended=formatRecommended(recRaw)||"—";
+  const bShi=validation.boundary_risk_shichen||riskFlags?.near_shichen_boundary;
+  const bJie=validation.boundary_risk_jieqi||riskFlags?.near_jieqi_boundary;
+  const diff=Array.isArray(diffFields)?diffFields:[];
+  gate.innerHTML=`<div class="info-title"><span class="dot-icon" style="background:${interp?'#22c55e':'#f97316'}"></span><span>解读状态</span>${interp?`<span class="badge-safe">解读开启</span>`:`<span class="badge-risk">解读关闭</span>`}${recRaw==="none"?`<span class="badge-risk">推荐:无</span>`:`<span class="badge-soft">推荐:${esc(recommended)}</span>`}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:6px 0;">${diff.length?`<span class="badge-risk">差异: ${esc(diff.join('/'))}</span>`:`<span class="badge-safe">差异: 无</span>`}<span class="tag">级别: ${esc(validation.level??"-")}</span></div>`;
+  const mShi=riskFlags?.minutes_to_shichen_boundary; const mJie=riskFlags?.minutes_to_jieqi_boundary;
+  risk.innerHTML=`<div class="info-title"><span class="dot-icon" style="background:${bShi||bJie?'#f97316':'#22c55e'}"></span><span>边界风险</span>${bShi?`<span class="badge-risk">⚠ 时辰边界</span>`:`<span class="badge-safe">时辰安全</span>`}${bJie?`<span class="badge-risk">⚠ 节气边界</span>`:`<span class="badge-safe">节气安全</span>`}</div>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:6px 0;"><span class="tag">距时辰界: ${mShi??'—'}分</span><span class="tag">距节气界: ${mJie??'—'}分</span></div>`;
+}
+function renderDecisionStrip(validation, diffFields=[], riskFlags={}) {
+  const bar=$("decisionStrip"); if(!bar) return;
+  if(!validation||typeof validation!=="object") { bar.innerHTML=`<span class="chip">等待请求</span>`; return; }
+  const recRaw=validation.recommended;
+  const rec=formatRecommended(recRaw)||"—";
+  const interp=validation.interpretation_enabled; const level=validation.level??"-";
+  const diff=Array.isArray(diffFields)?diffFields:[]; const bShi=validation.boundary_risk_shichen||riskFlags.near_shichen_boundary; const bJie=validation.boundary_risk_jieqi||riskFlags.near_jieqi_boundary;
+  bar.innerHTML=[
+    `<span class="chip ${recRaw==='none'?'warn':'ok'}">推荐: ${esc(rec)}</span>`,
+    `<span class="chip ${interp?'ok':'bad'}">解读: ${interp?'开启':'关闭'}</span>`,
+    `<span class="chip">级别: ${esc(level)}</span>`,
+    `<span class="chip ${diff.length?'warn':'ok'}">差异: ${diff.length?esc(diff.join('/')):'无'}</span>`,
+    `<span class="chip ${bShi?'warn':'ok'}">时辰: ${bShi?'⚠风险':'安全'}</span>`,
+    `<span class="chip ${bJie?'warn':'ok'}">节气: ${bJie?'⚠风险':'安全'}</span>`,
+  ].join(" ");
+}
+
+/* ── 整体评价面板 ── */
+function renderOverallRating(json) {
+  const box = $("overallRating");
+  if (!box) return;
+  if (!json) { box.style.display = "none"; return; }
+
+  const wx = json?.wuxing_score || {};
+  const strength = json?.day_master_strength;
+  const yong = json?.yongshen;
+  const dayunItems = json?.dayun?.items || [];
+  const validation = json?.validation || {};
+  const pillars = json?.pillars_primary;
+
+  // 1. 五行平衡分 (满分25)
+  const wxVals = Object.values(wx).filter(v => typeof v === 'number');
+  let balanceScore = 0;
+  if (wxVals.length >= 5) {
+    const avg = wxVals.reduce((a,b) => a+b, 0) / wxVals.length;
+    const variance = wxVals.reduce((s,v) => s + Math.pow(v - avg, 2), 0) / wxVals.length;
+    const cv = avg > 0 ? Math.sqrt(variance) / avg : 1;
+    balanceScore = Math.round(Math.max(0, Math.min(25, 25 * (1 - cv))));
+  }
+
+  // 2. 日主强弱分 (满分25) — 中和最好
+  let strengthScore = 15;
+  if (strength?.tier === 'balanced') strengthScore = 25;
+  else if (strength?.tier === 'slightly_strong' || strength?.tier === 'slightly_weak') strengthScore = 20;
+  else if (strength?.tier === 'strong' || strength?.tier === 'weak') strengthScore = 12;
+  else if (strength?.tier === 'very_strong' || strength?.tier === 'very_weak') strengthScore = 5;
+
+  // 3. 喜用得力分 (满分25)
+  let favorScore = 15;
+  if (yong?.favor?.length && yong?.avoid?.length) {
+    const favorWx = yong.favor;
+    const favorTotal = favorWx.reduce((s, k) => s + (wx[k] || 0), 0);
+    const avoidWx = yong.avoid;
+    const avoidTotal = avoidWx.reduce((s, k) => s + (wx[k] || 0), 0);
+    if (favorTotal > avoidTotal) favorScore = Math.min(25, 18 + Math.round((favorTotal - avoidTotal) / 2));
+    else favorScore = Math.max(5, 12 - Math.round((avoidTotal - favorTotal) / 2));
+  }
+
+  // 4. 大运走势分 (满分25)
+  let dayunScore = 15;
+  if (dayunItems.length > 0 && yong?.favor?.length) {
+    const favorSet = new Set(yong.favor);
+    let goodRuns = 0;
+    dayunItems.slice(0, 6).forEach(it => {
+      const stemWx = GAN_WUXING[it.stem];
+      if (stemWx && favorSet.has(stemWx)) goodRuns++;
+    });
+    dayunScore = Math.round(10 + goodRuns * 2.5);
+  }
+
+  const total = Math.min(100, balanceScore + strengthScore + favorScore + dayunScore);
+
+  // 评级
+  let grade, gradeColor, gradeEmoji;
+  if (total >= 85) { grade = '上上'; gradeColor = '#16a34a'; gradeEmoji = '★★★★★'; }
+  else if (total >= 70) { grade = '上'; gradeColor = '#059669'; gradeEmoji = '★★★★☆'; }
+  else if (total >= 55) { grade = '中上'; gradeColor = '#0284c7'; gradeEmoji = '★★★☆☆'; }
+  else if (total >= 40) { grade = '中'; gradeColor = '#d97706'; gradeEmoji = '★★☆☆☆'; }
+  else { grade = '偏弱'; gradeColor = '#dc2626'; gradeEmoji = '★☆☆☆☆'; }
+
+  // 综合建议
+  const tips = [];
+  if (balanceScore < 15) tips.push('五行偏枯明显，宜通过喜用补益平衡');
+  if (strengthScore >= 20) tips.push('日主力量适中，行事稳健顺遂');
+  else if (strength?.tier === 'strong' || strength?.tier === 'very_strong') tips.push('日主偏旺，宜泄耗制衡、避免刚愎自用');
+  else if (strength?.tier === 'weak' || strength?.tier === 'very_weak') tips.push('日主偏弱，宜扶助生旺、借助贵人');
+  if (favorScore >= 18) tips.push('喜用得力，先天格局较佳');
+  else tips.push('忌神力量偏强，需注意流年大运配合');
+  if (dayunScore >= 20) tips.push('早中期大运多合喜用，发展顺畅');
+  else tips.push('大运中忌神出现较多，需稳中求进');
+
+  // 四柱纳音评语
+  const dayStem = pillars?.day?.stem || '';
+  const dayWx = GAN_WUXING[dayStem] || '';
+  const dayDesc = GAN_DESC[dayStem] || '';
+  const personalityHint = dayDesc ? `日主${dayStem}（${wxCN(dayWx)}），${dayDesc}。` : '';
+
+  const barColor = total >= 70 ? '#16a34a' : total >= 50 ? '#0284c7' : '#d97706';
+
+  box.innerHTML = `
+    <strong style="font-size:15px;">整体评价</strong>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:10px;">
+      <div style="text-align:center;min-width:80px;">
+        <div style="font-size:36px;font-weight:800;color:${gradeColor};">${total}</div>
+        <div style="font-size:12px;color:var(--muted);">综合评分</div>
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="font-size:18px;font-weight:700;color:${gradeColor};">${gradeEmoji} ${grade}</span>
+        </div>
+        <div style="background:#e5e7eb;border-radius:6px;height:10px;overflow:hidden;">
+          <div style="width:${total}%;height:100%;background:${barColor};border-radius:6px;transition:width .6s;"></div>
+        </div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;">
+      <thead><tr style="border-bottom:1px solid var(--line);">
+        <th style="text-align:left;padding:4px 8px;">维度</th>
+        <th style="text-align:center;padding:4px 8px;">得分</th>
+        <th style="text-align:center;padding:4px 8px;">满分</th>
+        <th style="text-align:left;padding:4px 8px;">说明</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:4px 8px;">五行平衡</td><td style="text-align:center;padding:4px 8px;font-weight:700;">${balanceScore}</td><td style="text-align:center;padding:4px 8px;">25</td><td style="padding:4px 8px;color:var(--muted);">${balanceScore>=18?'五行均衡，气机流畅':balanceScore>=12?'轻微偏枯，需留意补益':'偏枯明显，重点补弱'}</td></tr>
+        <tr><td style="padding:4px 8px;">日主强弱</td><td style="text-align:center;padding:4px 8px;font-weight:700;">${strengthScore}</td><td style="text-align:center;padding:4px 8px;">25</td><td style="padding:4px 8px;color:var(--muted);">${tierCN(strength?.tier||'')} ${typeof strength?.score==='number'?strength.score.toFixed(1)+'分':''}</td></tr>
+        <tr><td style="padding:4px 8px;">喜用得力</td><td style="text-align:center;padding:4px 8px;font-weight:700;">${favorScore}</td><td style="text-align:center;padding:4px 8px;">25</td><td style="padding:4px 8px;color:var(--muted);">${yong?.favor?.length?'喜用:'+yong.favor.map(wxCN).join('、'):''} ${yong?.avoid?.length?'忌用:'+yong.avoid.map(wxCN).join('、'):''}</td></tr>
+        <tr><td style="padding:4px 8px;">大运走势</td><td style="text-align:center;padding:4px 8px;font-weight:700;">${dayunScore}</td><td style="text-align:center;padding:4px 8px;">25</td><td style="padding:4px 8px;color:var(--muted);">${dayunItems.length?'前'+(Math.min(6,dayunItems.length)*10)+'年大运评估':'暂无大运数据'}</td></tr>
+      </tbody>
+    </table>
+    ${personalityHint?'<div style="margin-top:10px;padding:8px 12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--fg);">'+esc(personalityHint)+'</div>':''}
+    <ul style="margin:10px 0 0 16px;padding:0;color:var(--muted);font-size:12px;">${tips.map(t=>'<li>'+esc(t)+'</li>').join('')}</ul>
+    <div style="margin-top:8px;font-size:11px;color:var(--muted);font-style:italic;">注：评分基于五行数据与大运走势综合计算，仅供参考。</div>`;
+  box.style.display = "block";
+}
+
+/* ── 个人信息卡（姓名、农历、四柱、五行、十神概览） ── */
+function renderPersonCard(json) {
+  const box = $("personCard");
+  if (!box) return;
+  if (!json) { box.style.display = "none"; return; }
+
+  const name = $("userName")?.value || "—";
+  const gender = $("userGender")?.value === "female" ? "女" : $("userGender")?.value === "male" ? "男" : "—";
+  const birthPlace = $("birthPlace")?.value || "—";
+
+  // 公历
+  const dtInput = json?.dt_input || $("dt")?.value || "—";
+
+  // 尝试从地支推算农历月日（简易映射）
+  const ZHI_MONTH = {"寅":1,"卯":2,"辰":3,"巳":4,"午":5,"未":6,"申":7,"酉":8,"戌":9,"亥":10,"子":11,"丑":12};
+  const MONTH_CN = ["","正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","腊月"];
+  const pillars = json?.pillars_primary;
+  const yearGZ = pillars?.year ? (pillars.year.stem||'')+(pillars.year.branch||'') : '—';
+  const monthGZ = pillars?.month ? (pillars.month.stem||'')+(pillars.month.branch||'') : '—';
+  const dayGZ = pillars?.day ? (pillars.day.stem||'')+(pillars.day.branch||'') : '—';
+  const hourGZ = pillars?.hour ? (pillars.hour.stem||'')+(pillars.hour.branch||'') : '—';
+  const monthBranch = pillars?.month?.branch || '';
+  const lunarMonth = ZHI_MONTH[monthBranch] ? MONTH_CN[ZHI_MONTH[monthBranch]] : '—';
+
+  // 五行得分
+  const wx = json?.wuxing_score || {};
+  const wxEntries = [{k:'wood',cn:'木'},{k:'fire',cn:'火'},{k:'earth',cn:'土'},{k:'metal',cn:'金'},{k:'water',cn:'水'}];
+  const wxText = wxEntries.map(e => `${e.cn}${(wx[e.k]||0).toFixed(1)}`).join(' | ');
+
+  // 日主
+  const dayStem = pillars?.day?.stem || '?';
+  const dayDesc = GAN_DESC[dayStem] || '';
+  const dayWx = GAN_WUXING[dayStem] || '';
+
+  // 日主强弱
+  const strength = json?.day_master_strength;
+  const tierText = strength?.tier ? tierCN(strength.tier) : '—';
+  const scoreText = typeof strength?.score === 'number' ? ` (${strength.score.toFixed(1)}分)` : '';
+
+  // 用神忌神
+  const yong = json?.yongshen;
+  const favorText = yong?.favor?.length ? yong.favor.map(wxCN).join('、') : '—';
+  const avoidText = yong?.avoid?.length ? yong.avoid.map(wxCN).join('、') : '—';
+
+  // 十神
+  const tg = json?.ten_gods || {};
+  const tgText = ['year','month','day','hour'].map(k => tg[k] ? tenGodCN(tg[k]) : '—').join(' / ');
+
+  // 纳音
+  const nayinText = ['year','month','day','hour'].map(k => pillars?.[k]?.nayin || pillars?.[k]?.na_yin || '').filter(Boolean).join('、') || '—';
+
+  box.innerHTML = `
+    <strong>个人命盘信息</strong>
+    <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;">
+      <tbody>
+        <tr><td style="padding:4px 8px;color:var(--muted);width:100px;">姓名</td><td style="padding:4px 8px;font-weight:700;">${esc(name)}</td>
+            <td style="padding:4px 8px;color:var(--muted);width:80px;">性别</td><td style="padding:4px 8px;">${esc(gender)}</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">出生地</td><td style="padding:4px 8px;" colspan="3">${esc(birthPlace)}</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">公历</td><td style="padding:4px 8px;" colspan="3">${esc(dtInput)}</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">农历月</td><td style="padding:4px 8px;">${esc(lunarMonth)}（${esc(monthGZ)}）</td>
+            <td style="padding:4px 8px;color:var(--muted);">日柱</td><td style="padding:4px 8px;">${esc(dayGZ)}</td></tr>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="padding:4px 8px;color:var(--muted);">四柱</td>
+          <td style="padding:4px 8px;font-family:serif;font-size:15px;letter-spacing:2px;" colspan="3">
+            <span title="年柱">${esc(yearGZ)}</span> · <span title="月柱">${esc(monthGZ)}</span> · <span title="日柱" style="font-weight:700;text-decoration:underline;">${esc(dayGZ)}</span> · <span title="时柱">${esc(hourGZ)}</span>
+          </td>
+        </tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">十神</td><td style="padding:4px 8px;" colspan="3">${esc(tgText)}</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">纳音</td><td style="padding:4px 8px;" colspan="3">${esc(nayinText)}</td></tr>
+        <tr style="border-top:1px solid var(--line);">
+          <td style="padding:4px 8px;color:var(--muted);">五行</td><td style="padding:4px 8px;" colspan="3">${esc(wxText)}</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">日主</td><td style="padding:4px 8px;">${esc(dayStem)}（${dayWx ? wxCN(dayWx) : '—'}）${dayDesc ? ' · '+esc(dayDesc) : ''}</td>
+            <td style="padding:4px 8px;color:var(--muted);">强弱</td><td style="padding:4px 8px;">${esc(tierText)}${esc(scoreText)}</td></tr>
+        <tr><td style="padding:4px 8px;color:var(--muted);">喜用</td><td style="padding:4px 8px;color:#16a34a;font-weight:600;">${esc(favorText)}</td>
+            <td style="padding:4px 8px;color:var(--muted);">忌用</td><td style="padding:4px 8px;color:#dc2626;font-weight:600;">${esc(avoidText)}</td></tr>
+      </tbody>
+    </table>`;
+  box.style.display = "block";
+}
+
+function renderSummaryExtra(json) {
+  const box = $("summaryExtra");
+  if (!box) return;
+  if (!json) { box.style.display = "none"; return; }
+  const wx = json?.wuxing_score || {};
+  const strength = json?.day_master_strength;
+  const yong = json?.yongshen;
+  const dayunFirst = json?.dayun?.items?.[0];
+  const sorted = Object.entries(wx).sort((a,b)=>(b[1]||0)-(a[1]||0));
+  const lines = [];
+  if (sorted.length) {
+    const top = sorted[0];
+    const weak = sorted[sorted.length-1];
+    lines.push(`五行最强 ${wxCN(top[0])}（${(top[1]||0).toFixed(1)}），最弱 ${wxCN(weak[0])}${weak[1]!==undefined?`（${(weak[1]||0).toFixed(1)}）`:''}`);
+  }
+  if (strength?.tier) {
+    const scoreText = typeof strength.score === "number" ? ` ${strength.score.toFixed(1)}分` : "";
+    const advise = strength.tier==='strong'?'→ 宜泄耗、制衡强势': strength.tier==='weak'?'→ 宜扶助生旺': '→ 阴阳平衡保持中庸';
+    lines.push(`日主强弱：${tierCN(strength.tier)}${scoreText} ${advise}`);
+  }
+  if (yong?.favor?.length || yong?.avoid?.length) {
+    const favorTxt = yong.favor?.length ? yong.favor.map(wxCN).join('、') : '—';
+    const avoidTxt = yong.avoid?.length ? yong.avoid.map(wxCN).join('、') : '—';
+    lines.push(`喜用：${favorTxt}；忌用：${avoidTxt}`);
+  }
+  if (dayunFirst) {
+    lines.push(`首轮大运 ${dayunFirst.start_age ?? '?'}岁起（${(dayunFirst.stem||'')+(dayunFirst.branch||'')}），可留意用神年份布局。`);
+  }
+  if (!lines.length) { box.style.display = "none"; return; }
+  box.innerHTML = `<strong>补充摘要（通俗版）</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`;
+  box.style.display = "block";
+}
+
+function renderSummaryExplain(validation, warnCount, elapsedText, payload, overrideNote) {
+  const box = $("summaryExplain");
+  if (!box) return;
+  if (!validation) { box.style.display = "none"; return; }
+  const lines = [];
+  if (validation.level) {
+    const meaning = {
+      L0: "主校验一致，可直接用",
+      L1: "时柱轻微差异，注意校对",
+      L2: "月柱差异，需交叉核实",
+      L3: "日/年柱差异，谨慎使用",
+      error: "请求异常，建议重试"
+    }[validation.level] || "保持谨慎使用";
+    lines.push(`级别 ${validation.level}: ${meaning}`);
+  }
+  lines.push(`告警 ${warnCount || 0} 条：>0 说明数据有边界/规则提示。`);
+  if (elapsedText) lines.push(`耗时 ${elapsedText}：包含后端计算与网络开销。`);
+  if (validation.recommended && validation.recommended !== 'none') {
+    lines.push(`推荐口径：${formatRecommended(validation.recommended)}（优先按此解读）。`);
+  }
+  if (Array.isArray(validation.diff_fields) && validation.diff_fields.length === 0) {
+    lines.push("差异：主/校验一致，无差异字段。");
+  }
+  if (Array.isArray(validation.diff_fields) && validation.diff_fields.length) {
+    lines.push(`差异字段：${validation.diff_fields.join('、')}（按推荐口径理解）。`);
+  }
+  if (payload?.mode) {
+    lines.push(`模式：dual=双引擎互校并标记差异；single=单引擎快算（无对照）。当前 ${payload.mode}。`);
+  }
+  if (overrideNote) lines.push(`${overrideNote}（根据出生地自动调整时区）`);
+  box.innerHTML = `<strong>摘要解读（通俗版）</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`;
+  box.style.display = lines.length ? "block" : "none";
+}
+
+function renderDiagNarrative(validation, riskFlags, warnings) {
+  const box = $("diagNarrative");
+  if (!box) return;
+  if (!validation) { box.style.display = "none"; return; }
+  const lines = [];
+  const levelMeaning = {
+    L0: "主校验一致，解读可直接参考",
+    L1: "时柱轻微差异，保持关注",
+    L2: "月柱差异，需交叉校对",
+    L3: "日/年柱差异，谨慎使用",
+    error: "请求异常，请重试"
+  };
+  if (validation.level) lines.push(`级别 ${validation.level}：${levelMeaning[validation.level] || "保持谨慎"}`);
+  const rec = formatRecommended(validation.recommended);
+  if (rec) lines.push(`推荐时间口径：${rec}`);
+  if (Array.isArray(validation.diff_fields) && !validation.diff_fields.length) {
+    lines.push("主/校验一致：未检测到差异字段。");
+  }
+  if (Array.isArray(validation.diff_fields) && validation.diff_fields.length) {
+    lines.push(`主/校验差异字段：${validation.diff_fields.join('、')}`);
+  }
+  if (riskFlags?.near_shichen_boundary || riskFlags?.near_jieqi_boundary) {
+    lines.push("处于时辰/节气边界，解读需保守并关注分钟差。");
+  }
+  if (validation?.recommended === 'none') {
+    lines.push("当前未给出推荐口径，建议补充出生地/经度或检查时区输入。");
+  }
+  if (lastTzOverrideNote) {
+    lines.push(`${lastTzOverrideNote}（出生地优先，防止时区与地点不符）`);
+  }
+  if (Array.isArray(warnings) && warnings.length) {
+    const topWarn = warnings.slice(0, 3).map(w => w.message || w.code || "告警").join("；");
+    lines.push(`后端告警：${topWarn}${warnings.length > 3 ? "…" : ""}`);
+  }
+  lines.push("耗时、http_status 反映后端响应速度；若耗时异常请重试或检查网络。");
+  box.innerHTML = `<strong>诊断解读</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">${lines.map(l=>`<li>${esc(l)}</li>`).join('') || '<li>暂无额外提示</li>'}</ul>`;
+  box.style.display = "block";
+}
+
+/* ═══════════════════════════════════════════════════════════
+   财运 / 婚姻 / 桃花面板
+   ═══════════════════════════════════════════════════════════ */
+const blockedInterpretation = v => v&&(v.recommended==="none"||v.boundary_risk_shichen||v.boundary_risk_jieqi);
+const fmtRange = r => { if(!r) return "—"; return `${r.min??r.low??"-"} ~ ${r.max??r.high??"-"}`; };
+
+function renderWealthPanel(data, validation, diffFields=[], yongshen=null, context=null) {
+  const chipsEl=$("wealthChips"),listEl=$("wealthList"); if(!chipsEl||!listEl) return;
+  if(blockedInterpretation(validation)) { chipsEl.innerHTML=`<span class="chip warn">因边界风险，财运暂不展示</span>`; listEl.innerHTML=`<li>待边界条件安全后展示。</li>`; return; }
+  const chips=[];
+  if(data?.wealth_range) chips.push(`<span class="chip warn">财富区间: ${esc(fmtRange(data.wealth_range))}</span>`);
+  if(Number.isFinite(data?.wealth_score)) chips.push(`<span class="chip ok">财富评分: ${data.wealth_score}</span>`);
+  if(data?.industry_tags?.length) {
+    const tagsCn = data.industry_tags.map(t => wxWordCN(t)).join(" / ");
+    chips.push(`<span class="chip">行业倾向: ${esc(tagsCn)}</span>`);
+  }
+  if(yongshen?.favor?.length) chips.push(`<span class="chip favor-chip">喜用: ${yongshen.favor.map(f=>wxCN(f)).join("、")}</span>`);
+  if(yongshen?.avoid?.length) chips.push(`<span class="chip avoid-chip">忌用: ${yongshen.avoid.map(a=>wxCN(a)).join("、")}</span>`);
+  const highRisk=diffFields?.some(f=>/day|year/i.test(f));
+  if(highRisk) chips.push(`<span class="chip bad">日/年柱差异 → 建议保守</span>`);
+  chipsEl.innerHTML=chips.length?chips.join(""):`<span class="chip">暂无详细财运数据</span>`;
+  const rows=[];
+  rows.push(`<li><strong>策略:</strong> ${highRisk?"保守为主（日/年柱差异）":"可积极布局（无重大差异）"}</li>`);
+  if (yongshen?.favor?.length) rows.push(`<li><strong>喜用驱动:</strong> ${yongshen.favor.map(wxCN).join('、')} 行业/资产偏向。</li>`);
+  if (yongshen?.avoid?.length) rows.push(`<li><strong>回避要点:</strong> 忌见 ${yongshen.avoid.map(wxCN).join('、')} 强势年份，宜控风险。</li>`);
+  if(data?.risk_hint) rows.push(`<li><strong>风险:</strong> ${esc(data.risk_hint)}</li>`);
+  if(data?.note) rows.push(`<li>${esc(data.note)}</li>`);
+   if(!data?.note) {
+    const strength = context?.day_master_strength?.tier ? tierCN(context.day_master_strength.tier) : '—';
+    rows.push(`<li>资金节奏：结合日主强弱（${strength}）与喜用五行，顺势加分、忌神减仓。</li>`);
+  }
+  const firstDayun = context?.dayun?.items?.[0];
+  if(firstDayun) rows.push(`<li>阶段布局：首轮大运 ${firstDayun.start_age ?? '?'}-${(firstDayun.start_age ?? 0)+9} 岁（${(firstDayun.stem||'')+(firstDayun.branch||'')}）可参考用神做资产节奏。</li>`);
+  if(!firstDayun) rows.push(`<li>阶段布局：等待大运数据生成后，结合喜用/忌用做资产分配节奏。</li>`);
+  rows.push(`<li class="hint">财运需结合大运流年综合判断，以上仅供参考。</li>`);
+  listEl.innerHTML=rows.join("");
+}
+
+function renderMarriagePanel(data, validation, context=null) {
+  const chipsEl=$("marriageChips"),listEl=$("marriageList"); if(!chipsEl||!listEl) return;
+  if(blockedInterpretation(validation)||data?.marriage_flags?.allow_interpret===false) { chipsEl.innerHTML=`<span class="chip warn">婚姻解读暂不展示</span>`; listEl.innerHTML=`<li>待条件满足后展示。</li>`; return; }
+  const flags=data?.marriage_flags||{}; const chips=[];
+  if(flags.guansha_mix) chips.push(`<span class="chip warn">官杀混杂：宜晚婚</span>`);
+  if(flags.spouse_palace_conflict) chips.push(`<span class="chip bad">夫妻宫冲合</span>`);
+  if(data?.child_hint?.first) chips.push(`<span class="chip">首胎: ${esc(data.child_hint.first)}</span>`);
+  if(data?.child_hint?.second) chips.push(`<span class="chip">二胎: ${esc(data.child_hint.second)}</span>`);
+  chipsEl.innerHTML=chips.length?chips.join(""):`<span class="chip">暂无详细婚姻数据</span>`;
+  const rows=[];
+  if(data?.love_window?.length) rows.push(`<li><strong>婚恋窗口:</strong> ${esc(data.love_window.map(w=>`${w.age_from??'?'}~${w.age_to??'?'}岁${w.label?'('+w.label+')':''}`).join("，"))}</li>`);
+  if(data?.risk_hint) rows.push(`<li><strong>提示:</strong> ${esc(data.risk_hint)}</li>`);
+  if(data?.note) rows.push(`<li>${esc(data.note)}</li>`);
+  if(!data?.note && !data?.love_window?.length) rows.push(`<li>结合日主喜忌：顺行用神年份宜促成，忌神年份放缓节奏。</li>`);
+  if(!data?.love_window?.length) {
+    const favor = context?.yongshen?.favor?.map(wxCN).join('、') || '喜用不明';
+    const avoid = context?.yongshen?.avoid?.map(wxCN).join('、') || '忌用不明';
+    rows.push(`<li>择偶/婚期参考：喜用(${favor})年份沟通顺畅；忌用(${avoid})年份宜避开冲突。</li>`);
+  }
+  rows.push(`<li>关系维护：保持沟通、界限和复盘，遇边界/差异时段宜降低冲突决策。</li>`);
+  rows.push(`<li class="hint">十神中正官/七杀代表配偶与婚姻态度。</li>`);
+  listEl.innerHTML=rows.join("");
+}
+
+function renderTaohuaPanel(data, validation, context=null) {
+  const chipsEl=$("taohuaChips"),listEl=$("taohuaList"); if(!chipsEl||!listEl) return;
+  if(blockedInterpretation(validation)) { chipsEl.innerHTML=`<span class="chip warn">社交解读暂不展示</span>`; listEl.innerHTML=`<li>待条件满足后展示。</li>`; return; }
+  const chips=[];
+  if(data?.taohua_hit) chips.push(`<span class="chip ok">命带桃花</span>`);
+  if(data?.relation_conflict) chips.push(`<span class="chip warn">冲合夫妻宫</span>`);
+  if(data?.taohua_year_hit?.length) chips.push(`<span class="chip">桃花流年: ${esc(data.taohua_year_hit.join("、"))}</span>`);
+  chipsEl.innerHTML=chips.length?chips.join(""):`<span class="chip">暂无详细社交数据</span>`;
+  const rows=[];
+  if(data?.social_hint) rows.push(`<li>${esc(data.social_hint)}</li>`);
+  if(!data?.social_hint) rows.push(`<li>社交策略：以日主五行喜用为主，逢忌神年份减少冲突型合作。</li>`);
+  if(!data?.social_hint) {
+    const favor = context?.yongshen?.favor?.map(wxCN).join('、') || '喜用未给';
+    rows.push(`<li>合作/拓展：优先与象征 ${favor} 的行业或伙伴合作，少碰忌用方向。</li>`);
+  }
+  rows.push(`<li>人脉维护：用神年份主动建立、忌神年份稳态维护，避免高冲突场景。</li>`);
+  rows.push(`<li class="hint">桃花星为子午卯酉，命中或流年逢之主人缘旺盛。</li>`);
+  listEl.innerHTML=rows.join("");
+}
+
+/* ═══════════════════════════════════════════════════════════
+   高级可视化：五行分布 & 大运走势
+   ═══════════════════════════════════════════════════════════ */
+function renderWuxingChart(wuxingScore) {
+  const container = $('wuxingChartContainer');
+  if (!container || !wuxingScore) return;
+  const labels = ['木', '火', '土', '金', '水'];
+  const data = [wuxingScore.wood||0, wuxingScore.fire||0, wuxingScore.earth||0, wuxingScore.metal||0, wuxingScore.water||0];
+  const bgColors = ['#22c55e', '#ef4444', '#d97706', '#64748b', '#2563eb'];
+  setTimeout(() => {
+    const ctx = container.querySelector('canvas');
+    if (ctx && window.Chart) {
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: bgColors, borderColor: 'var(--panel)', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 12 } } } }
+      });
+      return;
+    }
+    // Fallback：无 Chart.js 时使用简易条形图
+    const maxVal = Math.max(...data, 1);
+    container.innerHTML = `<div class="wx-bar-wrap">${labels.map((label, idx) => {
+      const v = data[idx] || 0;
+      const pct = Math.round((v / maxVal) * 100);
+      return `<div class="wx-bar-row"><span class="wx-bar-label">${label}</span><div class="wx-bar-track"><div class="wx-bar-fill" style="width:${pct}%;background:${bgColors[idx]};">${v.toFixed(1)}</div></div><span style="font-size:11px;color:var(--muted);width:36px;">${pct}%</span></div>`;
+    }).join('')}</div>`;
+  }, 60);
+}
+
+      function renderInterpretSummary(json) {
+        const box = $("interpretSummary");
+        if (!box) return;
+        if (!json) { box.style.display = "none"; return; }
+        const wx = json?.wuxing_score || {};
+        const sorted = Object.entries(wx).sort((a, b) => (b[1] || 0) - (a[1] || 0));
+        const strength = json?.day_master_strength;
+        const yong = json?.yongshen;
+        const dayunFirst = json?.dayun?.items?.[0];
+        const dayStem = json?.pillars_primary?.day?.stem;
+        const dayDesc = dayStem ? GAN_DESC[dayStem] : "";
+        const lines = [];
+        if (sorted.length) {
+          const top = sorted[0];
+          const weak = sorted[sorted.length - 1];
+          lines.push(`五行最强：${wxCN(top[0])}（${(top[1]||0).toFixed(1)}）；最弱：${wxCN(weak[0])}。`);
+        }
+        if (strength?.tier) {
+          const scoreText = typeof strength.score === "number" ? `（${strength.score.toFixed(1)}分）` : "";
+          lines.push(`日主强弱：${tierCN(strength.tier)}${scoreText}，${strength.tier==='strong'?'宜泄耗制衡':strength.tier==='weak'?'宜扶助生旺':'整体平衡' }。`);
+        }
+        if (dayDesc) {
+          lines.push(`日主气质：${dayDesc}`);
+        }
+        if (yong?.favor?.length || yong?.avoid?.length) {
+          const favorTxt = yong.favor?.length ? yong.favor.map(wxCN).join("、") : "—";
+          const avoidTxt = yong.avoid?.length ? yong.avoid.map(wxCN).join("、") : "—";
+          lines.push(`喜用：${favorTxt}；忌用：${avoidTxt}。`);
+        }
+        if (dayunFirst) {
+          lines.push(`首轮大运 ${dayunFirst.start_age ?? '?'}岁起运，干支 ${dayunFirst.stem || ''}${dayunFirst.branch || ''}。`);
+        }
+        if (!lines.length) {
+          box.innerHTML = `<strong>快速解读</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);"><li>等待排盘完成后显示摘要。</li></ul>`;
+          box.style.display = "block";
+          return;
+        }
+        box.innerHTML = `<strong>快速解读</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`;
+        box.style.display = "block";
+      }
+
+function renderDayunChart(items) {
+  const container = $('dayunChartContainer');
+  if (!container || !items || !items.length) return;
+  setTimeout(() => {
+    const ctx = container.querySelector('canvas');
+    const labels = items.slice(0, 8).map(it => `${it.start_age || '?'}岁`);
+    const tenGodScore = { self: 55, resource: 70, output: 62, wealth: 82, power: 68 };
+    const data = items.slice(0, 8).map(it => tenGodScore[tenGodType(it.ten_god)] || 50);
+    if (ctx && window.Chart) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: '运势指数',
+            data,
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 4,
+            pointBackgroundColor: '#2563eb'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: true, labels: { font: { size: 12 } } } },
+          scales: { y: { beginAtZero: true, max: 100, ticks: { font: { size: 11 } } } }
+        }
+      });
+      return;
+    }
+    // Fallback：用列表展示大运走向
+    container.innerHTML = `<div class="note" style="margin-top:6px;">
+      <strong>大运走势（简版）</strong>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">${items.slice(0,8).map(it=>{
+        const tg = tenGodCN(it.ten_god);
+        return `<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;">
+          <span style="min-width:60px;">${esc(it.start_age||'?')}岁</span>
+          <span style="min-width:80px;">${esc(it.start_year||'?')}</span>
+          <span style="min-width:70px;">${esc((it.stem||'')+(it.branch||''))}</span>
+          <span style="min-width:50px;">${esc(tg||'十神')}</span>
+          <span style="flex:1;color:var(--muted);">${esc(it.wealth_hint||it.health_hint||it.love_hint||'参考用神趋吉避凶')}</span>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }, 80);
+}
+
+function renderVizNarrative(json, dayunItems) {
+  const box = $('vizNarrative');
+  if (!box) return;
+  const lines = [];
+  const wx = json?.wuxing_score || {};
+  const wxSorted = Object.entries(wx).sort((a,b)=>(b[1]||0)-(a[1]||0));
+  if (wxSorted.length) {
+    const top = wxSorted[0];
+    const weak = wxSorted[wxSorted.length-1];
+    lines.push(`五行图：颜色对应木火土金水，数值为相对权重。最强 ${wxCN(top[0])}，最弱 ${wxCN(weak[0])}。`);
+  }
+  const first = dayunItems?.[0];
+  if (first) {
+    lines.push(`大运轴：每 10 年一运，当前首轮起运 ${first.start_age ?? '?'} 岁（${(first.stem||'')+(first.branch||'')}），右侧为顺延十神走向。`);
+  } else {
+    lines.push('大运轴：暂无数据，可重新请求后查看。');
+  }
+  box.innerHTML = `<strong>可视化解读</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`;
+  box.style.display = lines.length ? 'block' : 'none';
+}
+
+function renderPeriodTimeline(json, dayunItems) {
+  const box = $('periodTimeline');
+  if (!box) return;
+  if (!json) { box.innerHTML = '<span class="hint">等待排盘后生成周期提示。</span>'; return; }
+  const favor = json?.yongshen?.favor?.map(wxCN).join('、') || '—';
+  const avoid = json?.yongshen?.avoid?.map(wxCN).join('、') || '—';
+  const strength = json?.day_master_strength?.tier ? tierCN(json.day_master_strength.tier) : '—';
+  const monthGz = json?.pillars_primary?.month?.ganzhi || ((json?.pillars_primary?.month?.stem||'') + (json?.pillars_primary?.month?.branch||'')) || '—';
+  const firstDayun = dayunItems?.[0];
+  const rows = [
+    { label: '每日', tip: `以喜用 (${favor}) 行事，避开忌用 (${avoid})，强弱=${strength} 时保持节奏。` },
+    { label: '每周', tip: '回顾告警/差异，必要时复核出生时间与时区，保持数据一致。' },
+    { label: '每月', tip: `结合当月柱 ${monthGz} 的生克，月初审视计划，月中执行，月末复盘。` },
+    { label: '季度', tip: '设定资产/学习/健康里程碑，按喜用五行做加分项，忌用方向做减法。' },
+    { label: '年度', tip: '年度规划参考首运与用神，遇边界或告警年份采取保守策略。' },
+    { label: '每10年', tip: firstDayun ? `对应大运 ${firstDayun.start_age ?? '?'}-${(firstDayun.start_age ?? 0)+9} 岁：${(firstDayun.stem||'')+(firstDayun.branch||'')}（十神 ${tenGodCN(firstDayun.ten_god||'') || '—'}）。` : '大运待生成，完成排盘后显示。' }
+  ];
+  box.innerHTML = `<div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--line);">
+          <th style="padding:8px; text-align:left;">周期</th>
+          <th style="padding:8px; text-align:left;">提示</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r=>`<tr style="border-bottom:1px solid var(--line);">
+            <td style="padding:8px; font-weight:700;">${esc(r.label)}</td>
+            <td style="padding:8px; color:var(--muted);">${esc(r.tip)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   大运表（中文十神 + 五行配色）
+   ═══════════════════════════════════════════════════════════ */
+function renderDayunTable(items, validation, diffFields=[]) {
+  const el=$("dayunTable"); if(!el) return;
+  const blocked = blockedInterpretation(validation);
+  if(!Array.isArray(items)||!items.length) { el.innerHTML=`<span class="hint">暂无大运数据。</span>`; return; }
+  const rows=items.map(it=>{
+    const stem=it.stem||"?"; const branch=it.branch||"";
+    const tgCode=it.ten_god||""; const tgCN_=tenGodCN(tgCode); const tgType_=tenGodType(tgCode);
+    const stemWx=GAN_WUXING[stem]; const wxLabel_=stemWx?`<span class="${WX_CSS[stemWx]||""}">${wxCN(stemWx)}</span>`:it.flow_wuxing?wxCN(it.flow_wuxing):"—";
+    const wealth=it.wealth_range?fmtRange(it.wealth_range):(it.wealth_hint||"—");
+    const health=it.health_hint||"—"; const love=it.love_hint||"—";
+    return `<tr>
+      <td>${esc(it.start_age??'?')}岁</td>
+      <td>${esc(it.start_year??'?')}</td>
+      <td class="dayun-gz"><span class="${ganClass(stem)}">${esc(stem)}</span><span style="color:#64748b;">${esc(branch)}</span></td>
+      <td><span class="tengod-badge ${tgType_}" title="${esc(tenGodDesc(tgCode))}">${tgCN_}</span></td>
+      <td>${wxLabel_}</td>
+      <td style="font-size:11px;">${esc(wealth)}</td>
+      <td style="font-size:11px;">${esc(health)}</td>
+      <td style="font-size:11px;">${esc(love)}</td>
+    </tr>`;
+  }).join("");
+  el.innerHTML=`<div style="overflow-x:auto;"><table class="dayun-table">
+    <thead><tr><th>起运</th><th>年份</th><th>干支</th><th>十神</th><th>五行</th><th>财运</th><th>健康</th><th>感情</th></tr></thead>
+    <tbody>${rows}</tbody></table>
+    <div class="hint" style="margin-top:6px;">${blocked?"⚠ 边界/差异存在，以下为参考提示":"每步大运管十年，十神反映阶段走向"}</div></div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   复制 / localStorage / 历史
+   ═══════════════════════════════════════════════════════════ */
+async function copyText(text, btn) {
+  try { await navigator.clipboard.writeText(text);
+    if(btn){ const o=btn.textContent; btn.textContent="✓ 已复制"; btn.classList.add("copied"); setTimeout(()=>{btn.textContent=o;btn.classList.remove("copied");},1600); }
+  } catch{}
+}
+const LSK="bazi_verify_v1";
+function saveInputs() { 
+  try{
+    localStorage.setItem(LSK,JSON.stringify({
+      userName:$("userName").value,
+      userGender:$("userGender").value,
+      birthPlace:$("birthPlace").value,
+      dt:$("dt").value,
+      tz:$("tz").value,
+      lon:$("lon").value,
+      mode:$("mode").value,
+      solar:$("solar_time_enabled").checked
+    }));
+  }catch{} 
+}
+function loadInputs() { 
+  try{
+    const d=JSON.parse(localStorage.getItem(LSK)||"{}");
+    if(d.userName)$("userName").value=d.userName;
+    if(d.userGender)$("userGender").value=d.userGender;
+    if(d.birthPlace)$("birthPlace").value=d.birthPlace;
+    if(d.dt)$("dt").value=d.dt;
+    if(d.tz)$("tz").value=d.tz;
+    if(d.lon!==undefined)$("lon").value=d.lon;
+    if(d.mode)$("mode").value=d.mode;
+    if(d.solar!==undefined)$("solar_time_enabled").checked=d.solar;
+  }catch{} 
+}
+["userName","userGender","birthPlace","dt","tz","lon","mode"].forEach(id=>$(id).addEventListener("change",saveInputs));
+$("solar_time_enabled").addEventListener("change",saveInputs);
+const HIST_KEY="bazi_hist_v1";
+function histLoad(){try{return JSON.parse(localStorage.getItem(HIST_KEY)||"[]");}catch{return[];}}
+function histSave(entry){try{const a=histLoad();a.unshift(entry);localStorage.setItem(HIST_KEY,JSON.stringify(a.slice(0,20)));}catch{}}
+function histRender(){
+  const arr=histLoad(); const ce=$("histCount"); if(ce) ce.textContent=arr.length?String(arr.length):"";
+  const list=$("histList"); if(!list) return;
+  if(!arr.length){list.innerHTML=`<span style="color:var(--muted);font-size:12px;display:block;">暂无记录</span>`;return;}
+  list.innerHTML=arr.map((h,i)=>{
+    const cls=h.level==="L0"?"ok":h.level==="L1"?"warn":"bad";
+    const nameLabel = h.userName ? `<div class="hist-name" style="font-weight:600;color:var(--primary);margin-bottom:4px;">${esc(h.userName)}</div>` : '';
+    return `<div class="hist-item" data-idx="${i}"><div class="hist-body">${nameLabel}<div class="hist-dt">${esc(h.dt)}</div><div class="hist-rid">${esc(h.rid)}</div></div><span class="tag ${cls}">${esc(h.level||"?")}</span><span class="hist-ts">${esc(h.ts)}</span></div>`;
+  }).join("");
+  list.querySelectorAll(".hist-item").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const h=arr[+el.dataset.idx];
+      $("userName").value=h.userName||"";
+      $("userGender").value=h.userGender||"";
+      $("birthPlace").value=h.birthPlace||"";
+      $("dt").value=h.dt||"";
+      $("tz").value=h.tz||"Asia/Shanghai";
+      $("lon").value=h.lon??"";
+      $("mode").value=h.mode||"dual";
+      $("solar_time_enabled").checked=!!h.solar;
+      saveInputs();
+      const nameInfo = h.userName ? ` - ${h.userName}` : '';
+      setStatus(`已填入: ${h.dt}${nameInfo}`,"muted");
+    });
+  });
+}
+
+function clearErr(){["dt","lon"].forEach(id=>$(id).classList.remove("err"));}
+function normalizeTimezone(tz){
+  const raw=(tz||"").trim();
+  if(!raw) return "Asia/Shanghai";
+  try{ new Intl.DateTimeFormat("zh-CN",{timeZone:raw}); return raw; }
+  catch{ return "Asia/Shanghai"; }
+}
+
+// 基于出生地的简易时区匹配（覆盖用户输入优先出生地）
+function guessTimezoneFromPlace(place) {
+  if (!place) return null;
+  const p = place.toLowerCase();
+  const entries = [
+    { tz: "Asia/Shanghai", keys: ["中国", "大陆", "beijing", "北京", "shanghai", "上海", "广州", "guangzhou", "shenzhen", "深圳", "chengdu", "成都", "hangzhou", "杭州", "xian", "西安", "wuhan", "武汉", "nanjing", "南京", "hong kong", "hongkong", "香港", "macau", "澳门", "taipei", "台北", "taiwan", "台湾"] },
+    { tz: "Asia/Tokyo", keys: ["东京", "tokyo", "osaka", "大阪", "nagoya", "名古屋"] },
+    { tz: "Asia/Seoul", keys: ["首尔", "seoul", "韩国", "korea"] },
+    { tz: "Asia/Singapore", keys: ["新加坡", "singapore"] },
+    { tz: "Europe/London", keys: ["london", "伦敦", "uk", "英国"] },
+    { tz: "Europe/Paris", keys: ["paris", "巴黎"] },
+    { tz: "Europe/Berlin", keys: ["berlin", "柏林", "germany", "德国"] },
+    { tz: "America/New_York", keys: ["new york", "纽约", "nyc"] },
+    { tz: "America/Los_Angeles", keys: ["los angeles", "洛杉矶", "la"] },
+    { tz: "America/Chicago", keys: ["chicago", "芝加哥"] },
+    { tz: "Australia/Sydney", keys: ["sydney", "悉尼", "australia", "澳大利亚"] },
+    { tz: "Asia/Dubai", keys: ["dubai", "迪拜"] },
+  ];
+  for (const item of entries) {
+    if (item.keys.some(k => p.includes(k))) return item.tz;
+  }
+  return null;
+}
+function buildPayload(){
+  clearErr();const errs=[];
+  lastBirthPlaceInput = $("birthPlace").value.trim();
+  lastTzOverrideNote = "";
+  let dt=$("dt").value.trim();if(!dt){$("dt").classList.add("err");errs.push("出生时间不能为空");}
+  if(dt && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dt)) dt=`${dt}:00`;
+  const lonStr=$("lon").value.trim();const lon=Number(lonStr);
+  if(!lonStr){$("lon").classList.add("err");errs.push("经度不能为空");}
+  else if(!isFinite(lon)){$("lon").classList.add("err");errs.push("经度须为数字");}
+  else if(lon<70||lon>140){$("lon").classList.add("err");errs.push("经度须在 70–140");}
+  if(errs.length) throw new Error(errs.join("；"));
+  let tzVal=normalizeTimezone($("tz").value);
+  const guessedTz = guessTimezoneFromPlace(lastBirthPlaceInput);
+  if (guessedTz && guessedTz !== tzVal) {
+    tzVal = guessedTz;
+    $("tz").value = guessedTz;
+    lastTzOverrideNote = `已按出生地匹配时区：${guessedTz}`;
+    setStatus(lastTzOverrideNote, "warn");
+  } else if (tzVal !== ($("tz").value||"").trim()) {
+    $("tz").value=tzVal;
+    setStatus("时区无效，已自动回退为 Asia/Shanghai","warn");
+  }
+  return {dt,lon,tz:tzVal,mode:$("mode").value,solar_time_enabled:$("solar_time_enabled").checked};
+}
+function makeCurl(p){const j=JSON.stringify(p);const base=window.location.origin||"http://127.0.0.1:8000";return `curl -sS -X POST ${base}/api/v1/verify -H "Content-Type: application/json" -d '${j.replaceAll("'","'\\''")}'`;}
+function backendPill(b){if(!b)return{text:"backend: -",cls:"pill"};return{text:`引擎: ${b.primary??'?'} sxtwl=${b.sxtwl_available} cnlunar=${b.cnlunar_available}`,cls:b.sxtwl_available?"pill ok":"pill warn"};}
+
+function bindTabs(){
+  document.querySelectorAll(".tabs").forEach(tab=>{
+    const btns=Array.from(tab.querySelectorAll(".tab-btn"));const container=tab.parentElement;const panels=Array.from(container.querySelectorAll(".tab-panel"));
+    const activate=id=>{btns.forEach(b=>b.classList.toggle("active",b.dataset.tab===id));panels.forEach(p=>p.classList.toggle("active",p.id===id));};
+    const def=btns.find(b=>b.classList.contains("active"))?.dataset.tab||btns[0]?.dataset.tab;if(def)activate(def);
+    btns.forEach(b=>b.addEventListener("click",()=>activate(b.dataset.tab)));
+  });
+}
+function bindNavTags(){
+  document.querySelectorAll('.nav-tags [data-target]').forEach(btn=>{
+    btn.addEventListener('click',()=>{const el=document.getElementById(btn.getAttribute('data-target'));if(el) el.scrollIntoView({behavior:'smooth',block:'start'});});
+  });
+}
+function observeSections(){
+  const buttons=Array.from(document.querySelectorAll('.nav-tags [data-target]'));
+  const targets=buttons.map(b=>document.getElementById(b.getAttribute('data-target'))).filter(Boolean);
+  if(!targets.length)return;
+  const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;buttons.forEach(b=>b.classList.toggle('active',b.getAttribute('data-target')===id));}});},{threshold:0.35,rootMargin:'-20% 0px -40% 0px'});
+  targets.forEach(t=>io.observe(t));
+}
+
+function scrollToSection(id){
+  const el=document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function loadCaseDetailInHub(caseId){
+  const id=(caseId||'').trim();
+  if(!id){
+    setStatus('请先输入 case id（案例中心卡片里可复制）', 'warn');
+    const input=$('hubCaseId'); if(input) input.focus();
+    return;
+  }
+  const frame=$('caseDetailFrame');
+  const link=$('caseStandaloneLink');
+  const src=`/static/case.html?id=${encodeURIComponent(id)}&embedded=1`;
+  if(frame) frame.src=src;
+  if(link) link.href=`/static/case.html?id=${encodeURIComponent(id)}&standalone=1`;
+  setStatus(`已加载案例详情: ${id}`, 'muted');
+}
+
+function setWorkspaceMode(mode){
+  const m = ['verify','cases','detail'].includes(mode) ? mode : 'verify';
+  // 保存到 localStorage
+  localStorage.setItem('lastWorkspace', m);
+  
+  const show = (id, on, display='block') => {
+    const el = $(id); if(!el) return;
+    el.style.display = on ? display : 'none';
+  };
+
+  // 验证模式：显示所有验证相关元素
+  show('verifyNavTags', m==='verify', 'flex');
+  show('verifyMain', m==='verify', 'grid');
+  show('interpretSection', m==='verify', 'block');
+  show('referenceSection', m==='verify', 'block');
+  show('footerShell', m==='verify', 'block');
+
+  // 其他模式：隐藏验证导航以减少视觉干扰
+  if(m!=='verify'){
+    show('verifyNavTags', false);
+    show('interpretSection', false);
+    show('referenceSection', false);
+    show('footerShell', false);
+  }
+
+  show('casesHub', m==='cases', 'block');
+  show('caseDetailHub', m==='detail', 'block');
+
+  // 高亮工作区标签
+  document.querySelectorAll('#workspaceTabs [data-mode]').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-mode')===m);
+  });
+
+  // 加载 iFrame（第一次时，检查 data-lazy 属性是否存在）
+  if(m==='cases'){
+    const f=$('casesHubFrame');
+    if(f){
+      const badRoot = f.getAttribute('src')==='/' || /https?:\/\/[^/]+\/$/.test(f.src||'');
+      if(badRoot){
+        f.src='/static/cases.html?embedded=1';
+      }else if(f.hasAttribute('data-lazy')){
+        const lazy=f.getAttribute('data-lazy');
+        if(lazy) f.src=lazy;
+        f.removeAttribute('data-lazy');
+      }
+    }
+  }
+  if(m==='detail'){
+    const f=$('caseDetailFrame');
+    if(f){
+      const badRoot = f.getAttribute('src')==='/' || /https?:\/\/[^/]+\/$/.test(f.src||'');
+      if(badRoot){
+        f.src='about:blank';
+      }else if(f.hasAttribute('data-lazy')){
+        const lazy=f.getAttribute('data-lazy');
+        if(lazy) f.src=lazy;
+        f.removeAttribute('data-lazy');
+      }
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   关系匹配（案例 A/B 快速计算）
+   ═══════════════════════════════════════════════════════════ */
+const relationShared = window.RelationShared;
+const relationInitial = relationShared?.getState?.() || {};
+const relationPanelState = {
+  cases: [],
+  loading: false,
+  selection: Array.isArray(relationInitial.selected) ? relationInitial.selected.slice(0, 2) : [],
+  relationType: relationInitial.relationType || 'couple',
+};
+function relationToken(){
+  const qp=new URLSearchParams(location.search);
+  return qp.get('token') || localStorage.getItem('access_token') || localStorage.getItem('token') || sessionStorage.getItem('access_token');
+}
+function relationAuthFetch(url, options={}){
+  const headers={...(options.headers||{})};
+  const token=relationToken();
+  if(token) headers.Authorization=`Bearer ${token}`;
+  return fetch(url,{...options,headers});
+}
+function renderRelationOptions(){
+  const opts=relationPanelState.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.name||'未命名')} · ${esc(c.city||'') || '—'} · ${esc(c.id)}</option>`).join('');
+  ['relationCaseA','relationCaseB'].forEach(id=>{
+    const el=$(id);
+    if(!el) return;
+    el.innerHTML=`<option value="">选择案例</option>${opts}`;
+  });
+}
+function renderRelationResultBox(payload){
+  const box=$('relationResultBox'); if(!box) return;
+  if(!payload){ box.style.display='none'; box.innerHTML=''; return; }
+  const { case_a, case_b, result } = payload;
+  const support=(result?.support_points||[]).map(p=>`<span class="pill ok">+ ${esc(p.detail||p.point||'')}</span>`).join('');
+  const conflict=(result?.conflict_points||[]).map(p=>`<span class="pill red">- ${esc(p.detail||p.point||'')}</span>`).join('');
+  box.innerHTML=`
+    <div class="row" style="justify-content:space-between;align-items:center;">
+      <div><strong>匹配度</strong> ${result?.compatibility_score?.toFixed?result.compatibility_score.toFixed(1):'—'} / 100 · ${esc(result?.summary||'')}</div>
+      <span class="pill">关系类型: ${esc(result?.relation_type||'-')}</span>
+    </div>
+    <div class="muted" style="margin-top:6px;">${esc(result?.advice||'')}</div>
+    <div class="row" style="margin-top:8px; gap:8px; align-items:flex-start;">
+      <div style="flex:1;">
+        <div class="lbl" style="margin-bottom:4px;">助力</div>
+        <div class="chips">${support || '<span class="muted">暂无</span>'}</div>
+      </div>
+      <div style="flex:1;">
+        <div class="lbl" style="margin-bottom:4px;">冲突</div>
+        <div class="chips">${conflict || '<span class="muted">暂无</span>'}</div>
+      </div>
+    </div>
+    <div class="muted" style="margin-top:6px;">A: ${esc(case_a?.name||case_a?.id||'—')} · B: ${esc(case_b?.name||case_b?.id||'—')}</div>`;
+  box.style.display='block';
+}
+
+function updateRelationStatusTopDisplay(sel, type){
+  const status = $('relationStatusTop');
+  if(!status) return;
+  const count = Array.isArray(sel) ? sel.length : 0;
+  status.textContent = count===2 ? `已选 2 个 · ${type||'couple'}` : `已选 ${count}/2`;
+  status.className = count===2 ? 'pill ok' : 'pill gray';
+}
+
+function applyRelationStateFromShared(state){
+  if(!state) return;
+  const sel = Array.isArray(state.selected) ? state.selected.slice(0, 2) : [];
+  relationPanelState.selection = sel;
+  relationPanelState.relationType = state.relationType || relationPanelState.relationType;
+  const [a, b] = sel;
+  if($('relationCaseA')) $('relationCaseA').value = a || '';
+  if($('relationCaseB')) $('relationCaseB').value = b || '';
+  if($('relationTypeMain')) $('relationTypeMain').value = relationPanelState.relationType;
+  updateRelationStatusTopDisplay(sel, relationPanelState.relationType);
+  if(state.lastResult){ renderRelationResultBox(state.lastResult); }
+}
+async function loadRelationCases(){
+  const status=$('relationStatusTop');
+  if(status){ status.textContent='加载案例…'; status.className='pill amber'; }
+  relationPanelState.loading=true;
+  try{
+    const params=new URLSearchParams({limit:'50',offset:'0',order:'updated_at',dir:'desc'});
+    const res=await relationAuthFetch(`/api/v1/cases?${params.toString()}`);
+    const data=await res.json();
+    relationPanelState.cases=Array.isArray(data)?data:[];
+    renderRelationOptions();
+    applyRelationStateFromShared(relationShared?.getState?.() || relationPanelState);
+    if(status){ status.textContent=`已加载 ${relationPanelState.cases.length} 条`; status.className='pill ok'; }
+  }catch(e){
+    if(status){ status.textContent='案例加载失败'; status.className='pill red'; }
+    console.error('Relation cases load failed', e);
+  }finally{
+    relationPanelState.loading=false;
+  }
+}
+
+function syncRelationSelectionFromForm(){
+  const sel=[];
+  const a=$('relationCaseA')?.value||'';
+  const b=$('relationCaseB')?.value||'';
+  if(a) sel.push(a);
+  if(b && b!==a) sel.push(b);
+  relationPanelState.selection = sel.slice(0, 2);
+  relationPanelState.relationType = $('relationTypeMain')?.value || relationPanelState.relationType;
+  updateRelationStatusTopDisplay(relationPanelState.selection, relationPanelState.relationType);
+  relationShared?.setSelection?.(relationPanelState.selection, relationPanelState.relationType);
+}
+
+['relationCaseA','relationCaseB','relationTypeMain'].forEach(id=>{
+  const el=$(id);
+  if(el) el.addEventListener('change', syncRelationSelectionFromForm);
+});
+async function computeRelationQuick(){
+  const a=$('relationCaseA')?.value||'';
+  const b=$('relationCaseB')?.value||'';
+  const sharedState = relationShared?.getState?.() || {};
+  const picked = Array.isArray(sharedState.selected) && sharedState.selected.length === 2
+    ? sharedState.selected
+    : [a,b].filter(Boolean).slice(0,2);
+  const type=$('relationTypeMain')?.value||sharedState.relationType||'couple';
+  const status=$('relationStatusTop');
+  const btn=$('btnRelationCompute');
+  if(picked.length!==2){ setStatus('请选择案例 A/B', 'warn'); return; }
+  if(picked[0]===picked[1]){ setStatus('请选择不同的案例', 'warn'); return; }
+  try{
+    if(status){ status.textContent='计算中…'; status.className='pill amber'; }
+    if(btn){ btn.disabled=true; btn.textContent='计算中…'; }
+    renderRelationResultBox(null);
+    relationShared?.setSelection?.(picked, type);
+    const res=await relationAuthFetch('/api/v1/relations/compat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ case_a_id:picked[0], case_b_id:picked[1], relation_type:type })
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data?.message||res.status);
+    renderRelationResultBox(data);
+    relationShared?.setResult?.(data);
+    if(status){ status.textContent='计算完成'; status.className='pill ok'; }
+  }catch(e){
+    if(status){ status.textContent='计算失败'; status.className='pill red'; }
+    setStatus('关系计算失败: '+e, 'warn');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='计算关系'; }
+  }
+}
+
+if (relationShared?.subscribe) {
+  relationShared.subscribe((payload) => applyRelationStateFromShared(payload));
+}
+applyRelationStateFromShared(relationInitial);
+
+/* ═══════════════════════════════════════════════════════════
+   IndexedDB 缓存 & 键盘快捷键 & 搜索/批量操作
+   ═══════════════════════════════════════════════════════════ */
+const DB_NAME = 'BaZiVerify';
+const DB_VERSION = 1;
+
+// IndexedDB 初始化
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('results')) {
+        const store = db.createObjectStore('results', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('dt', 'dt', { unique: false });
+        store.createIndex('tz', 'tz', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('favorites')) {
+        db.createObjectStore('favorites', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('history')) {
+        const store = db.createObjectStore('history', { keyPath: 'timestamp', autoIncrement: false });
+        store.createIndex('dt', 'dt', { unique: false });
+      }
+    };
+  });
+}
+
+// 保存结果到 IndexedDB
+async function saveCacheResult(data) {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('results', 'readwrite');
+    const store = tx.objectStore('results');
+    store.add({ ...data, timestamp: Date.now() });
+  } catch(e) {
+    console.log('缓存写入失败:', e);
+  }
+}
+
+// 搜索历史结果
+async function searchCacheByDatetime(dt, tz) {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('results', 'readonly');
+    const store = tx.objectStore('results');
+    return new Promise((resolve) => {
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const results = req.result || [];
+        const filtered = results.filter(r => r.dt === dt && r.tz === tz);
+        resolve(filtered.length > 0 ? filtered[0] : null);
+      };
+    });
+  } catch(e) {
+    return null;
+  }
+}
+
+// 多选与批量对比状态
+let selectedCases = new Set();
+function toggleCaseSelection(caseId) {
+  if (selectedCases.has(caseId)) {
+    selectedCases.delete(caseId);
+  } else {
+    selectedCases.add(caseId);
+  }
+  updateBatchActionButtons();
+}
+function updateBatchActionButtons() {
+  const count = selectedCases.size;
+  const btn = $('btn-batch-compare');
+  if (btn) {
+    btn.textContent = count > 0 ? `对比 (${count})` : '对比选中';
+    btn.disabled = count < 2;
+    btn.style.opacity = count < 2 ? '0.5' : '1';
+  }
+}
+
+// 键盘快捷键支持
+document.addEventListener('keydown', (e) => {
+  // 数字键 1/2/3 切换工作区 (仅在非输入框时)
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+  if (e.key === '1' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+    e.preventDefault();
+    setWorkspaceMode('verify');
+    scrollToSection('reqCard');
+    setStatus('已切换到验证工作区 (快捷键:1)', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  } else if (e.key === '2' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+    e.preventDefault();
+    setWorkspaceMode('cases');
+    scrollToSection('casesHub');
+    setStatus('已切换到案例工作区 (快捷键:2)', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  } else if (e.key === '3' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+    e.preventDefault();
+    setWorkspaceMode('detail');
+    scrollToSection('caseDetailHub');
+    setStatus('已切换到详情工作区 (快捷键:3)', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  }
+});
+
+// ═══ 历史分析面板函数 ═══
+async function showAnalyticsPanel() {
+  const panel = $('analyticsPanel');
+  if (!panel) return;
+  try {
+    const db = await initDB();
+    const tx = db.transaction('results', 'readonly');
+    const store = tx.objectStore('results');
+    
+    const results = await new Promise((resolve) => {
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+    
+    if (!results.length) {
+      $('analyticsTableBody').innerHTML = `<tr><td colspan="3" style="padding:12px; text-align:center; color:var(--muted); font-size:11px;">暂无数据</td></tr>`;
+      $('analyticsRecent').style.display = 'none';
+      panel.style.display = 'block';
+      return;
+    }
+    
+    // 计算统计数据
+    const now = Date.now();
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const recentCount = results.filter(r => r.timestamp >= sevenDaysAgo).length;
+    
+    // 数据提取器（兼容嵌套 result 存储）
+    const pickWx = r => r.wuxing_score || r.result?.wuxing_score;
+    const pickLevel = r => r.level || r.validation_level || r.result?.validation?.level;
+    const pickTz = r => r.tz || r.result?.tz;
+    const pickMode = r => r.mode || r.mode_requested || r.result?.mode_requested || r.result?.mode_effective;
+    const pickWarningsCount = r => {
+      if (typeof r.warnings === 'number') return r.warnings;
+      const arr = r.result?.validation?.warnings;
+      return Array.isArray(arr) ? arr.length : 0;
+    };
+
+    const wuxingAgg = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+    const levelAgg = {};
+    const tzAgg = {};
+    const modeAgg = {};
+    let warnTotal = 0;
+    results.forEach(r => {
+      const wx = pickWx(r);
+      if (wx) {
+        Object.keys(wuxingAgg).forEach(k => wuxingAgg[k] += Number(wx[k] || 0));
+      }
+      const lvl = pickLevel(r);
+      if (lvl) levelAgg[lvl] = (levelAgg[lvl] || 0) + 1;
+      const tz = pickTz(r); if (tz) tzAgg[tz] = (tzAgg[tz] || 0) + 1;
+      const mode = pickMode(r); if (mode) modeAgg[mode] = (modeAgg[mode] || 0) + 1;
+      warnTotal += pickWarningsCount(r);
+    });
+    
+    const totalCountRaw = results.length;
+    const totalCount = Math.max(totalCountRaw, 1);
+    Object.keys(wuxingAgg).forEach(k => wuxingAgg[k] = Math.round(wuxingAgg[k] / totalCount));
+    const wuxingNames = { wood: '木', fire: '火', earth: '土', metal: '金', water: '水' };
+    const topElement = Object.entries(wuxingAgg).sort((a, b) => b[1] - a[1])[0];
+    const topElementDisplay = topElement ? wuxingNames[topElement[0]] : '—';
+    const topTz = Object.entries(tzAgg).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
+    const topMode = Object.entries(modeAgg).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—';
+    
+    // 计算平均强度与平均告警
+    const levelValues = { L0: 3, L1: 2, L2: 1, L3: 0 };
+    const avgLevelScore = results.length > 0 
+      ? Math.round(results.reduce((sum, r) => sum + (levelValues[pickLevel(r)] || 0), 0) / results.length * 100) / 100
+      : '?';
+    const avgWarnings = results.length > 0 ? (warnTotal / results.length).toFixed(2) : '—';
+    
+    // 更新统计卡片
+    $('totalCount').textContent = totalCountRaw;
+    $('avgLevel').textContent = avgLevelScore === '?' ? '?' : avgLevelScore;
+    $('topElement').textContent = topElementDisplay;
+    $('recentCount').textContent = recentCount;
+    
+    // 渲染详细统计表
+    const tableRows = Object.entries(levelAgg)
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+      .map(([level, count]) => {
+        const ratio = ((count / totalCount) * 100).toFixed(1);
+        const levelName = { L0: '极强', L1: '偏强', L2: '偏弱', L3: '极弱' }[level] || level;
+        return `<tr style="border-bottom:1px solid var(--line);">
+          <td style="padding:8px;">${levelName}</td>
+          <td style="padding:8px; text-align:right; font-weight:600;">${count}</td>
+          <td style="padding:8px; text-align:right; color:var(--muted);">${ratio}%</td>
+        </tr>`;
+      }).join('');
+    const extraRows = `
+      <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">最常用时区</td><td style="padding:8px; text-align:right;" colspan="2">${esc(topTz)}</td></tr>
+      <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">常用模式</td><td style="padding:8px; text-align:right;" colspan="2">${esc(topMode)}</td></tr>
+      <tr style="border-bottom:1px solid var(--line);"><td style="padding:8px;">平均告警</td><td style="padding:8px; text-align:right;" colspan="2">${avgWarnings}</td></tr>`;
+    
+    $('analyticsTableBody').innerHTML = (tableRows || '') + extraRows;
+    
+    const trendBox = $('analyticsTrendText');
+    const recentBox = $('analyticsRecent');
+    const recent = results.slice(-5).reverse();
+    if (trendBox) {
+      if (!recent.length) {
+        trendBox.textContent = '暂无趋势数据';
+      } else {
+        const lines = recent.map((r, idx) => {
+          const wx = pickWx(r) || {};
+          const sorted = Object.entries(wx).sort((a,b) => (b[1]||0)-(a[1]||0));
+          const top = sorted[0];
+          return `${idx+1}. ${r.dt || r.result?.dt_input || '—'} → 主导 ${top?wxCN(top[0]):'—'}`;
+        });
+        trendBox.innerHTML = lines.map(esc).join('<br/>');
+      }
+    }
+    if (recentBox) {
+      if (!recent.length) {
+        recentBox.style.display = 'none';
+      } else {
+        const items = recent.map(r => {
+          const name = r.result?.user_name || r.userName || '—';
+          const dt = r.dt || r.result?.dt_input || '—';
+          const tz = r.tz || r.result?.tz || '—';
+          const level = r.level || r.validation_level || r.result?.validation?.level || '-';
+          return `<li style="margin:4px 0;">${esc(name)} · ${esc(dt)} · ${esc(tz)} · 级别 ${esc(level)}</li>`;
+        }).join('');
+        recentBox.innerHTML = `<strong>最近 5 次</strong><ul style="margin:6px 0 0 16px;padding:0;color:var(--muted);">${items}</ul>`;
+        recentBox.style.display = 'block';
+      }
+    }
+
+    setTimeout(() => {
+      renderAnalyticsWuxingChart(wuxingAgg);
+      renderAnalyticsLevelChart(levelAgg);
+    }, 100);
+    
+    panel.style.display = 'block';
+  } catch (e) {
+    console.error('Analytics error:', e);
+    panel.style.display = 'block';
+  }
+}
+
+function closeAnalyticsPanel() {
+  const panel = $('analyticsPanel');
+  if (panel) panel.style.display = 'block';
+}
+
+function renderAnalyticsWuxingChart(wuxingData) {
+  const container = $('analyticsWuxingChartContainer');
+  if (!container) return;
+  if (!wuxingData || Object.values(wuxingData).every(v => !v)) {
+    container.innerHTML = `<div class="hint" style="padding:8px;">暂无五行统计</div>`;
+    return;
+  }
+  
+  setTimeout(() => {
+    const ctx = container.querySelector('canvas');
+    if (ctx && window.Chart) {
+      const labels = ['木', '火', '土', '金', '水'];
+      const data = [
+        wuxingData.wood || 0,
+        wuxingData.fire || 0,
+        wuxingData.earth || 0,
+        wuxingData.metal || 0,
+        wuxingData.water || 0
+      ];
+      const bgColors = ['#22c55e', '#ef4444', '#d97706', '#64748b', '#2563eb'];
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: bgColors, borderColor: 'var(--panel)', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 12 } } } }
+      });
+      return;
+    }
+    // Fallback：无 Chart.js 时使用简单条形表示
+    const labels = ['木','火','土','金','水'];
+    const data = [wuxingData.wood||0, wuxingData.fire||0, wuxingData.earth||0, wuxingData.metal||0, wuxingData.water||0];
+    const maxVal = Math.max(...data, 1);
+    container.innerHTML = `<div class="wx-bar-wrap">${labels.map((label, idx) => {
+      const v = data[idx] || 0;
+      const pct = Math.round((v / maxVal) * 100);
+      return `<div class="wx-bar-row"><span class="wx-bar-label">${label}</span><div class="wx-bar-track"><div class="wx-bar-fill" style="width:${pct}%;background:var(--accent);">${v}</div></div><span style="font-size:11px;color:var(--muted);width:36px;">${pct}%</span></div>`;
+    }).join('')}</div>`;
+  }, 50);
+}
+
+function renderAnalyticsLevelChart(levelData) {
+  const container = $('analyticsLevelChartContainer');
+  if (!container) return;
+  if (!levelData || !Object.keys(levelData).length) {
+    container.innerHTML = `<div class="hint" style="padding:8px;">暂无等级分布数据</div>`;
+    return;
+  }
+  
+  setTimeout(() => {
+    const ctx = container.querySelector('canvas');
+    const levelNames = { L0: '极强', L1: '偏强', L2: '偏弱', L3: '极弱' };
+    const labels = Object.keys(levelData).sort().map(k => levelNames[k] || k);
+    const data = Object.keys(levelData).sort().map(k => levelData[k]);
+    if (ctx && window.Chart) {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ label: '出现次数', data, backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444'], borderColor: 'var(--line)', borderWidth: 1 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          indexAxis: 'x',
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { font: { size: 11 } } } }
+        }
+      });
+      return;
+    }
+    // Fallback：用文本/条形描述等级分布
+    const maxVal = Math.max(...data, 1);
+    container.innerHTML = `<div class="wx-bar-wrap">${labels.map((label, idx) => {
+      const v = data[idx] || 0;
+      const pct = Math.round((v / maxVal) * 100);
+      return `<div class="wx-bar-row"><span class="wx-bar-label">${label}</span><div class="wx-bar-track"><div class="wx-bar-fill" style="width:${pct}%;background:var(--accent);">${v}</div></div></div>`;
+    }).join('')}</div>`;
+  }, 50);
+}
+
+async function clearAnalyticsData() {
+  if (!confirm('确定删除所有缓存的排盘数据吗？此操作不可撤销。')) return;
+  
+  try {
+    const db = await initDB();
+    const tx = db.transaction('results', 'readwrite');
+    const store = tx.objectStore('results');
+    store.clear();
+    
+    // 重新显示面板（清空状态）
+    $('analyticsTableBody').innerHTML = `<tr><td colspan="3" style="padding:20px; text-align:center; color:var(--muted);">已清空</td></tr>`;
+    $('totalCount').textContent = '0';
+    $('avgLevel').textContent = '—';
+    $('topElement').textContent = '—';
+    $('recentCount').textContent = '0';
+    
+    setTimeout(() => setStatus('已清空所有历史数据', 'ok'), 100);
+    setTimeout(() => closeAnalyticsPanel(), 1500);
+  } catch (e) {
+    console.error('Clear failed:', e);
+  }
+}
+
+function exportAnalyticsData() {
+  const data = {
+    exportTime: new Date().toLocaleString('zh-CN'),
+    stats: {
+      totalCount: $('totalCount').textContent,
+      avgLevel: $('avgLevel').textContent,
+      topElement: $('topElement').textContent,
+      recentCount: $('recentCount').textContent
+    }
+  };
+  
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bazi-analytics-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  setStatus('✓ 分析数据已导出', 'ok');
+  setTimeout(() => setStatus(''), 2000);
+}
+
+function initUnifiedWorkspace(){
+  const guardWorkspaceFrames = () => {
+    const cf = $('casesHubFrame');
+    if (cf) {
+      const badRoot = cf.getAttribute('src')==='/' || /https?:\/\/[^/]+\/$/.test(cf.src||'');
+      if (badRoot) {
+        console.warn('[GUARD] Blocked root path on casesHubFrame, redirecting...');
+        cf.src = '/static/cases.html?embedded=1';
+      }
+    }
+    const df = $('caseDetailFrame');
+    if (df) {
+      const badRoot = df.getAttribute('src')==='/' || /https?:\/\/[^/]+\/$/.test(df.src||'');
+      if (badRoot) {
+        console.warn('[GUARD] Blocked root path on caseDetailFrame, redirecting...');
+        df.src = 'about:blank';
+      }
+    }
+  };
+
+  // 监控 iframe src 变更，防止任何代码/缓存将其导航到根路径
+  const attachFrameWatch = (id, goodSrc) => {
+    const f = $(id);
+    if (!f) return;
+    const fix = () => {
+      const s = f.getAttribute('src') || '';
+      if (s==='/' || /https?:\/\/[^/]+\/$/.test(s)) {
+        console.warn(`[GUARD] MutationObserver corrected ${id} from root to`, goodSrc);
+        f.setAttribute('src', goodSrc);
+      }
+    };
+    fix();
+    const obs = new MutationObserver(fix);
+    obs.observe(f, { attributes: true, attributeFilter: ['src'] });
+    f.addEventListener('load', fix);
+    // 冗余安全网，防止极短时间窗口
+    setInterval(fix, 200);
+  };
+
+  // 页面加载后立即执行一次，并启动定期检查
+  guardWorkspaceFrames();
+  setInterval(guardWorkspaceFrames, 100);
+  attachFrameWatch('casesHubFrame', '/static/cases.html?embedded=1');
+  attachFrameWatch('caseDetailFrame', 'about:blank');
+
+  $('btn-go-verify')?.addEventListener('click',()=>{ setWorkspaceMode('verify'); scrollToSection('reqCard'); });
+  $('btn-go-cases')?.addEventListener('click',()=>{ setWorkspaceMode('cases'); guardWorkspaceFrames(); scrollToSection('casesHub'); });
+  $('btn-go-detail')?.addEventListener('click',()=>{ setWorkspaceMode('detail'); guardWorkspaceFrames(); scrollToSection('caseDetailHub'); });
+
+  document.querySelectorAll('#workspaceTabs [data-mode]').forEach(btn=>{
+    btn.addEventListener('click',()=>{ setWorkspaceMode(btn.getAttribute('data-mode')||'verify'); guardWorkspaceFrames(); });
+  });
+
+  $('btn-reload-cases-hub')?.addEventListener('click',()=>{
+    const f=$('casesHubFrame'); if(f) f.src='/static/cases.html?embedded=1';
+  });
+  $('btn-load-case-detail')?.addEventListener('click',()=>{ setWorkspaceMode('detail'); loadCaseDetailInHub($('hubCaseId')?.value||''); });
+  $('btn-reload-case-detail')?.addEventListener('click',()=>{
+    const f=$('caseDetailFrame'); if(f && f.src && !f.src.startsWith('about:blank')) f.src=f.src;
+  });
+
+  // 案例搜索框事件
+  const searchBox = $('caseSearchBox');
+  if (searchBox) {
+    const debouncedSearch = debounce((keyword) => {
+      const frame = $('casesHubFrame');
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage(
+          { type: 'search', keyword: keyword },
+          '*'
+        );
+      }
+    }, 300);
+    searchBox.addEventListener('input', (e) => {
+      debouncedSearch(e.target.value);
+    });
+  }
+
+  // 关系匹配卡片
+  $('btnRelationReload')?.addEventListener('click', loadRelationCases);
+  $('btnRelationCompute')?.addEventListener('click', computeRelationQuick);
+  loadRelationCases();
+
+  // 批量对比按钮事件
+  $('btn-batch-compare')?.addEventListener('click', () => {
+    if (selectedCases.size < 2) {
+      setStatus('请选择至少 2 个案例进行对比', 'warn');
+      return;
+    }
+    const caseIds = Array.from(selectedCases);
+    const frame = $('caseDetailFrame');
+    if (frame && frame.contentWindow) {
+      frame.contentWindow.postMessage(
+        { type: 'batch-compare', caseIds: caseIds },
+        '*'
+      );
+    }
+    setWorkspaceMode('detail');
+    setTimeout(() => scrollToSection('caseDetailHub'), 60);
+    setStatus(`已加载 ${caseIds.length} 个案例进行对比`, 'ok');
+  });
+
+  const qp=new URLSearchParams(location.search);
+  const tab=qp.get('tab');
+  const caseId=qp.get('case_id')||qp.get('id')||'';
+  
+  // 优先级1：URL 参数（case_id 或 tab）
+  if(caseId){
+    const input=$('hubCaseId'); if(input) input.value=caseId;
+    setWorkspaceMode('detail');
+    loadCaseDetailInHub(caseId);
+    setTimeout(()=>scrollToSection('caseDetailHub'), 60);
+    return;
+  }
+  if(tab==='cases') {
+    setWorkspaceMode('cases');
+    setTimeout(()=>scrollToSection('casesHub'), 60);
+    return;
+  }
+  if(tab==='detail') {
+    setWorkspaceMode('detail');
+    setTimeout(()=>scrollToSection('caseDetailHub'), 60);
+    return;
+  }
+  
+  // 优先级2：恢复用户上次选择的工作区
+  const lastWorkspace = localStorage.getItem('lastWorkspace') || 'verify';
+  setWorkspaceMode(lastWorkspace);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   主流程
+   ═══════════════════════════════════════════════════════════ */
+async function runVerify() {
+  $("resultCard").style.display="block";
+  toggleEmpty(false);toggleGuide(false);setLoading(true);
+  let payload;
+  try{payload=buildPayload();}catch(e){setStatus(e.message,"warn");setLoading(false);return;}
+  let res,text;const t0=performance.now();
+  try{
+    res=await fetch("/api/v1/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    text=await res.text();
+  }catch(e){setStatus(`网络错误: ${e}`,"bad");setLoading(false);$("httpStatus").textContent="network error";$("rawPre").textContent=String(e);setSummary("error",0,"-");return;}
+  const elapsed=Math.round(performance.now()-t0);
+  setLoading(false);
+  let json=null;try{json=JSON.parse(text);}catch{}
+
+  const clear=statusVal=>{
+    ["primaryTable","secondaryTable","warningsBox","validationSummary","diffTags","riskTags"].forEach(id=>$(id).innerHTML="");
+    $("rid").textContent="—";$("httpStatus").textContent=statusVal??"—";$("elapsed").textContent=`${elapsed} ms`;
+    $("dtInput").textContent="—";$("dtEff").textContent="—";$("tzVal").textContent="—";$("solarOffset").textContent="—";
+    $("rawPre").textContent=json?pretty(json):text;$("profileSection").style.display="none";
+    renderGatePanels(null,null,[]);renderDecisionStrip(null,[],{});renderDiagNarrative(null,null,null);renderInterpretSummary(null);renderSummaryExtra(null);renderPersonCard(null);renderOverallRating(null);renderSummaryExplain(null,0,null,null,null);setSummary("error",0,`${elapsed} ms`);
+  };
+
+  if(!res.ok){setStatus(`HTTP ${res.status}`,"bad");clear(res.status);return;}
+  if(!json||typeof json!=="object"){setStatus("响应不是 JSON","bad");clear(res.status);return;}
+
+  const validation=json?.validation??{};
+  const level=validation?.level;
+  const diffFields=validation?.diff_fields??[];
+  const riskFlags=validation?.risk_flags??{};
+  const warnings=normalizeWarnings(validation?.warnings??[]);
+  const rid=json?.request_id??"(missing)";
+
+  /* 命盘概要 */
+  renderProfile(json);
+  renderYongshenBlock(json);
+  renderInterpretSummary(json);
+  renderSummaryExtra(json);
+  renderPersonCard(json);
+  renderOverallRating(json);
+
+  /* 元信息 */
+  $("pillApi").textContent=`api: ${json?.api_version??"-"}`;
+  $("pillRule").textContent=`rule: ${json?.rule_version??"-"}`;
+  $("pillMode").textContent=`模式: ${json?.mode_requested??"?"} → ${json?.mode_effective??"?"}`;
+  const bp=backendPill(json?.backend);$("pillBackend").textContent=bp.text;$("pillBackend").className=bp.cls;
+  const recLabel=formatRecommended(validation?.recommended);
+  let sumHTML=levelBadge(level);
+  if(recLabel) sumHTML+=`<span class="tag" style="font-size:13px;">推荐: <strong>${esc(recLabel)}</strong></span>`;
+  $("validationSummary").innerHTML=sumHTML;
+
+  $("rid").textContent=rid;
+  $("httpStatus").textContent=res.status;
+  $("elapsed").textContent=`${elapsed} ms`;
+  $("dtInput").textContent=json?.dt_input??"—";
+  $("dtEff").textContent=json?.dt_effective_utc8??"—";
+  $("tzVal").textContent=json?.tz??"—";
+  $("solarOffset").textContent=(json?.solar_time_offset_minutes??0)===0?"0（未启用）":`${json.solar_time_offset_minutes} 分钟`;
+  $("warningsBox").innerHTML=renderWarnings(warnings);
+
+  $("primaryTable").innerHTML=renderPillarsTable(json?.pillars_primary,new Set(diffFields),json?.ten_gods);
+  $("secondaryTable").innerHTML=renderPillarsTable(json?.pillars_secondary,new Set(diffFields),null);
+  $("diffTags").innerHTML=renderDiffTags(diffFields);
+  $("riskTags").innerHTML=renderRiskTags(riskFlags);
+  renderGatePanels(validation,riskFlags,diffFields);
+  renderDecisionStrip(validation,diffFields,riskFlags);
+  renderDiagNarrative(validation,riskFlags,warnings);
+
+  $("metaPills").innerHTML=`
+    <span class="pill">模式: ${esc(json?.mode_requested??'?')} → ${esc(json?.mode_effective??'?')}</span>
+    <span class="pill">主引擎: ${esc(json?.backend?.primary??'-')}</span>
+    <span class="pill ${json?.backend?.sxtwl_available?'ok':'warn'}">sxtwl: ${esc(json?.backend?.sxtwl_available)}</span>
+    <span class="pill ${json?.backend?.cnlunar_available?'ok':'warn'}">cnlunar: ${esc(json?.backend?.cnlunar_available)}</span>`;
+  $("tzMeta").innerHTML=`
+    <span class="tag">时区: ${esc(json?.tz??'-')}</span>
+    <span class="tag">有效时间: ${esc(json?.dt_effective_utc8??'-')}</span>
+    <span class="tag">太阳时偏移: ${esc(json?.solar_time_offset_minutes??'-')}分</span>`;
+  $("rawPre").textContent=pretty(json);
+
+  renderWealthPanel(json?.wealth,validation,diffFields,json?.yongshen,json);
+  renderMarriagePanel(json?.marriage,validation,json);
+  renderTaohuaPanel(json?.social,validation,json);
+  
+  // 渲染图表
+  if (typeof renderWuxingChart === 'function') renderWuxingChart(json?.wuxing_score);
+  if (typeof renderDayunChart === 'function') renderDayunChart(json?.dayun?.items);
+  
+  renderDayunTable(json?.dayun?.items,validation,diffFields);
+
+  setStatus(`✓ 排盘完成 · ${elapsed}ms · 告警${warnings.length}条`,warnings.length?"warn":"ok");
+  setSummary(level,warnings.length,`${elapsed} ms`);
+  renderSummaryExplain(validation, warnings.length, `${elapsed} ms`, payload, lastTzOverrideNote);
+
+  // 保存结果到 IndexedDB 缓存
+  saveCacheResult({
+    dt: payload.dt,
+    tz: payload.tz,
+    lon: payload.lon,
+    mode: payload.mode,
+    userName: $("userName").value,
+    result: json,
+    level: level,
+    validation_level: level,
+    warnings: warnings.length,
+    wuxing_score: json?.wuxing_score,
+    strength: json?.day_master_strength,
+    dayun: json?.dayun?.items || []
+  });
+
+  histSave({
+    userName:$("userName").value,
+    userGender:$("userGender").value,
+    birthPlace:$("birthPlace").value,
+    dt:payload.dt,
+    tz:payload.tz,
+    lon:payload.lon,
+    mode:payload.mode,
+    solar:payload.solar_time_enabled,
+    rid,
+    level,
+    ts:new Date().toLocaleTimeString()
+  });
+  histRender();
+
+  // 刷新历史分析面板
+  setTimeout(() => showAnalyticsPanel(), 300);
+
+  $("btn-copy-rid").onclick=()=>copyText(String(rid),$("btn-copy-rid"));
+  $("btn-copy-json").onclick=()=>copyText(pretty(json),$("btn-copy-json"));
+  $("btn-copy-payload")?.addEventListener("click",()=>{try{copyText(JSON.stringify(payload,null,2),$("btn-copy-payload"));}catch{}});
+  $("btn-toggle-raw")?.addEventListener("click",()=>{const pre=$("rawPre");if(!pre)return;pre.style.display=pre.style.display==="none"?"block":"none";});
+
+  // 如果启用了对比模式，显示对比结果
+  if (compareData) {
+    setTimeout(() => {
+      showCompareResult(json);
+      // 自动解除对比模式（可选，如果想继续对比可以注释掉下面几行）
+      // compareData = null;
+      // $('btn-compare').textContent = '⚖️ 对比';
+      // $('btn-compare').style.background = '';
+      // $('btn-compare').style.borderColor = '';
+    }, 500);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   新功能：深色模式、收藏、对比、导出
+   ═══════════════════════════════════════════════════════════ */
+
+// ── 深色模式切换 ───────────────────────────────────────
+function toggleDarkMode() {
+  const html = document.documentElement;
+  const isDark = html.classList.toggle('dark-mode');
+  localStorage.setItem('darkMode', isDark ? '1' : '0');
+  const btn = $('btn-dark-toggle');
+  if (btn) {
+    btn.textContent = isDark ? '☀️ 浅色' : '🌙 深色';
+    btn.title = isDark ? '切换到浅色模式' : '切换到深色模式';
+  }
+}
+
+// 初始化深色模式（检测系统偏好和用户设置）
+function initDarkMode() {
+  const saved = localStorage.getItem('darkMode');
+  const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const shouldDark = saved === '1' || (saved === null && systemDark);
+  
+  if (shouldDark) {
+    document.documentElement.classList.add('dark-mode');
+    const btn = $('btn-dark-toggle');
+    if (btn) {
+      btn.textContent = '☀️ 浅色';
+      btn.title = '切换到浅色模式';
+    }
+  }
+}
+
+// ── 收藏功能 ─────────────────────────────────────────
+const FAV_KEY = 'bazi_favorites_v1';
+function loadFavorites() {
+  try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch { return []; }
+}
+function saveFavorite(name, params, result) {
+  try {
+    const favs = loadFavorites();
+    const item = {
+      id: Date.now(),
+      name: name || `${params.dt}`,
+      dt: params.dt,
+      tz: params.tz,
+      lon: params.lon,
+      mode: params.mode,
+      solar: params.solar_time_enabled,
+      level: result?.validation?.level || '-',
+      saved_at: new Date().toISOString()
+    };
+    favs.unshift(item);
+    localStorage.setItem(FAV_KEY, JSON.stringify(favs.slice(0, 50))); // 最多50个
+    alert('✓ 已添加到收藏');
+  } catch (e) {
+    alert('收藏失败：' + e.message);
+  }
+}
+function showFavorites() {
+  const favs = loadFavorites();
+  if (!favs.length) {
+    alert('暂无收藏，排盘后点击"收藏"按钮保存');
+    return;
+  }
+  const html = favs.map((f, i) => 
+    `${i + 1}. ${esc(f.name)} (${esc(f.level)}) - ${esc(new Date(f.saved_at).toLocaleDateString())}`
+  ).join('\n');
+  const choice = prompt('收藏列表（输入序号加载，输入0清空）:\n\n' + html);
+  if (choice === '0') {
+    if (confirm('确定清空所有收藏吗？')) {
+      localStorage.removeItem(FAV_KEY);
+      alert('✓ 已清空收藏');
+    }
+  } else if (choice) {
+    const idx = parseInt(choice) - 1;
+    if (idx >= 0 && idx < favs.length) {
+      const f = favs[idx];
+      $('dt').value = f.dt || '';
+      $('tz').value = f.tz || 'Asia/Shanghai';
+      $('lon').value = f.lon ?? '';
+      $('mode').value = f.mode || 'dual';
+      $('solar_time_enabled').checked = !!f.solar;
+      saveInputs();
+      setStatus(`已加载收藏: ${f.name}`, 'muted');
+    }
+  }
+}
+
+// ── 对比功能 ─────────────────────────────────────────
+let compareData = null;
+function toggleCompare() {
+  if (!compareData) {
+    // 保存当前数据为对比基准
+    try {
+      const payload = buildPayload();
+      compareData = { params: payload, timestamp: Date.now() };
+      alert('✓ 已保存当前八字为对比基准\n请输入另一个八字后点击"开始排盘"，结果将自动对比');
+      $('btn-compare').textContent = '⚖️ 取消对比';
+      $('btn-compare').style.background = '#fef3c7';
+      $('btn-compare').style.borderColor = '#fcd34d';
+    } catch (e) {
+      alert('请先填写有效的八字数据');
+    }
+  } else {
+    // 取消对比
+    compareData = null;
+    $('btn-compare').textContent = '⚖️ 对比';
+    $('btn-compare').style.background = '';
+    $('btn-compare').style.borderColor = '';
+    alert('✓ 已取消对比模式');
+  }
+}
+function showCompareResult(currentResult) {
+  if (!compareData) return;
+  
+  const diff = [];
+  // 对比基本信息
+  diff.push('━━━ 八字对比结果 ━━━\n');
+  diff.push(`基准: ${compareData.params.dt}`);
+  diff.push(`当前: ${currentResult?.dt_input || '-'}\n`);
+  
+  // 对比级别
+  diff.push(`验证级别: 基准[${compareData.result?.validation?.level || '-'}] vs 当前[${currentResult?.validation?.level || '-'}]`);
+  
+  // 提示用户
+  alert(diff.join('\n') + '\n\n详细对比请查看控制台(F12)');
+  console.log('=== 八字对比 ===');
+  console.log('基准数据:', compareData);
+  console.log('当前数据:', currentResult);
+}
+
+// ── 导出功能 ─────────────────────────────────────────
+function exportResult() {
+  const raw = $('rawPre')?.textContent;
+  if (!raw || raw === '{}') {
+    alert('暂无结果可导出，请先进行排盘');
+    return;
+  }
+  
+  const choice = prompt('选择导出格式:\n1 - JSON文件\n2 - CSV表格\n3 - Excel文件\n4 - 复制剪贴板\n5 - 打印(PDF)\n\n请输入序号:');
+  
+  if (choice === '1') {
+    exportJSON(raw);
+  } else if (choice === '2') {
+    exportCSV(raw);
+  } else if (choice === '3') {
+    exportExcel(raw);
+  } else if (choice === '4') {
+    copyText(raw, null);
+    setStatus('✓ 已复制到剪贴板', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  } else if (choice === '5') {
+    exportPDF();
+  }
+}
+
+function exportJSON(data) {
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const jsonUserName = $('userName')?.value;
+  const jsonNamePart = jsonUserName ? `-${jsonUserName}` : '';
+  a.download = `bazi${jsonNamePart}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  setStatus('✓ JSON文件已下载', 'ok');
+  setTimeout(() => setStatus(''), 2000);
+}
+
+function exportCSV(jsonStr) {
+  try {
+    const data = JSON.parse(jsonStr);
+    const rows = [];
+    
+    // 标题行
+    rows.push(['项目', '值']);
+    
+    // 个人基本信息
+    const csvUserName = $('userName')?.value;
+    const csvUserGender = $('userGender')?.value;
+    const csvBirthPlace = $('birthPlace')?.value;
+    if (csvUserName) rows.push(['姓名', csvUserName]);
+    if (csvUserGender) rows.push(['性别', csvUserGender === 'male' ? '男' : csvUserGender === 'female' ? '女' : csvUserGender]);
+    if (csvBirthPlace) rows.push(['出生地点', csvBirthPlace]);
+    if (csvUserName || csvUserGender || csvBirthPlace) rows.push(['', '']);
+    
+    // 基本信息 (使用真实 VerifyResponse 字段名)
+    if (data.dt_input || data.tz) {
+      rows.push(['出生日期', data.dt_input || '—']);
+      rows.push(['时区', data.tz || '—']);
+      rows.push(['排盘模式', data.mode_effective || '—']);
+    }
+    
+    // 五行信息
+    if (data.wuxing_score) {
+      rows.push(['', '']);
+      rows.push(['五行', '分值']);
+      rows.push(['木', data.wuxing_score.wood || 0]);
+      rows.push(['火', data.wuxing_score.fire || 0]);
+      rows.push(['土', data.wuxing_score.earth || 0]);
+      rows.push(['金', data.wuxing_score.metal || 0]);
+      rows.push(['水', data.wuxing_score.water || 0]);
+    }
+    
+    // 四柱信息 (使用真实 VerifyResponse 字段名 pillars_primary)
+    if (data.pillars_primary) {
+      rows.push(['', '']);
+      rows.push(['四柱', '天干', '地支']);
+      const pillars = ['year', 'month', 'day', 'hour'];
+      const names = ['年', '月', '日', '时'];
+      pillars.forEach((p, i) => {
+        const fc = data.pillars_primary[p];
+        if (fc) rows.push([names[i], fc.stem || '—', fc.branch || '—']);
+      });
+    }
+    
+    // 转换为CSV
+    const csv = rows.map(r => 
+      r.map(cell => {
+        const s = String(cell || '');
+        return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+      }).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const namePart = csvUserName ? `-${csvUserName}` : '';
+    a.download = `bazi${namePart}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    setStatus('✓ CSV文件已下载', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  } catch (e) {
+    alert('CSV导出失败: ' + e.message);
+  }
+}
+
+function exportExcel(jsonStr) {
+  try {
+    const data = JSON.parse(jsonStr);
+    if (!window.XLSX) {
+      alert('Excel库加载中，请稍候再试...');
+      return;
+    }
+    
+    // 创建工作簿
+    const wb = XLSX.utils.book_new();
+    
+    // 第一个工作表：基本信息
+    const basicData = [
+      ['字段', '值']
+    ];
+    
+    // 个人基本信息
+    const xlsUserName = $('userName')?.value;
+    const xlsUserGender = $('userGender')?.value;
+    const xlsBirthPlace = $('birthPlace')?.value;
+    if (xlsUserName) basicData.push(['姓名', xlsUserName]);
+    if (xlsUserGender) basicData.push(['性别', xlsUserGender === 'male' ? '男' : xlsUserGender === 'female' ? '女' : xlsUserGender]);
+    if (xlsBirthPlace) basicData.push(['出生地点', xlsBirthPlace]);
+    if (xlsUserName || xlsUserGender || xlsBirthPlace) basicData.push(['', '']);
+    
+    // 出生信息 (使用真实 VerifyResponse 字段名)
+    basicData.push(['出生日期', data.dt_input || '—']);
+    basicData.push(['时区', data.tz || '—']);
+    basicData.push(['排盘模式', data.mode_effective || '—']);
+    
+    if (data.wuxing_score) {
+      basicData.push(['', '']);
+      basicData.push(['五行', '分值']);
+      basicData.push(['木(water)', data.wuxing_score.wood || 0]);
+      basicData.push(['火(fire)', data.wuxing_score.fire || 0]);
+      basicData.push(['土(earth)', data.wuxing_score.earth || 0]);
+      basicData.push(['金(metal)', data.wuxing_score.metal || 0]);
+      basicData.push(['水(water)', data.wuxing_score.water || 0]);
+    }
+    
+    const ws1 = XLSX.utils.aoa_to_sheet(basicData);
+    ws1['!cols'] = [{ wch: 15 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, ws1, '基本信息');
+    
+    // 第二个工作表：四柱 (使用真实 VerifyResponse 字段名 pillars_primary)
+    if (data.pillars_primary) {
+      const pillarsData = [
+        ['柱', '天干', '地支', '五行'],
+        ['年', data.pillars_primary.year?.stem || '—', data.pillars_primary.year?.branch || '—', data.pillars_primary.year?.wuxing || '—'],
+        ['月', data.pillars_primary.month?.stem || '—', data.pillars_primary.month?.branch || '—', data.pillars_primary.month?.wuxing || '—'],
+        ['日', data.pillars_primary.day?.stem || '—', data.pillars_primary.day?.branch || '—', data.pillars_primary.day?.wuxing || '—'],
+        ['时', data.pillars_primary.hour?.stem || '—', data.pillars_primary.hour?.branch || '—', data.pillars_primary.hour?.wuxing || '—']
+      ];
+      const ws2 = XLSX.utils.aoa_to_sheet(pillarsData);
+      ws2['!cols'] = [{ wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, ws2, '四柱');
+    }
+    
+    // 第三个工作表：大运
+    if (data.dayun && data.dayun.items) {
+      const dayunData = [['起运年', '年份', '干支', '十神', '五行', '财运', '健康', '感情']];
+      data.dayun.items.forEach(item => {
+        dayunData.push([
+          item.start_age || '—',
+          item.start_year || '—',
+          (item.stem || '—') + (item.branch || ''),
+          item.ten_god || '—',
+          item.flow_wuxing || '—',
+          item.wealth_range || item.wealth_hint || '—',
+          item.health_hint || '—',
+          item.love_hint || '—'
+        ]);
+      });
+      const ws3 = XLSX.utils.aoa_to_sheet(dayunData);
+      ws3['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(wb, ws3, '大运');
+    }
+    
+    // 生成文件
+    const xlsNamePart = xlsUserName ? `-${xlsUserName}` : '';
+    XLSX.writeFile(wb, `bazi${xlsNamePart}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`);
+    setStatus('✓ Excel文件已下载', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  } catch (e) {
+    alert('Excel导出失败: ' + e.message);
+  }
+}
+
+function exportPDF() {
+  try {
+    if (!window.html2pdf) {
+      alert('PDF库加载中，请稍候再试...');
+      return;
+    }
+    
+    const pdfUserName = $('userName')?.value;
+    const pdfNamePart = pdfUserName ? `-${pdfUserName}` : '';
+    const element = document.body;
+    const opt = {
+      margin: 10,
+      filename: `bazi${pdfNamePart}-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+    setStatus('✓ PDF文件已生成', 'ok');
+    setTimeout(() => setStatus(''), 2000);
+  } catch (e) {
+    alert('PDF导出失败，请使用浏览器内置打印功能: ' + e.message);
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   事件绑定
+   ═══════════════════════════════════════════════════════════ */
+$("btn-run").addEventListener("click", runVerify);
+$("btn-now").addEventListener("click", ()=>{
+  const n=new Date(),z=n=>String(n).padStart(2,"0");
+  $("dt").value=`${n.getFullYear()}-${z(n.getMonth()+1)}-${z(n.getDate())}T${z(n.getHours())}:${z(n.getMinutes())}:${z(n.getSeconds())}`;
+  saveInputs();
+});
+$("btn-demo").addEventListener("click", ()=>{
+  $("userName").value="张三";
+  $("userGender").value="male";
+  $("birthPlace").value="上海市浦东新区";
+  $("dt").value="2002-03-13T14:36:00";
+  $("tz").value="Asia/Shanghai";
+  $("lon").value="121.4737";
+  $("mode").value="dual";
+  $("solar_time_enabled").checked=false;
+  saveInputs();
+  setStatus('示例已填入，点击"开始排盘"',"muted");
+});
+$("btn-save-template")?.addEventListener("click", saveTemplate);
+$("btn-load-template")?.addEventListener("click", () => toggleTemplateDropdown());
+$("btn-curl").addEventListener("click", async()=>{
+  let p;try{p=buildPayload();}catch(e){setStatus(e.message,"warn");return;}
+  copyText(makeCurl(p),$("btn-curl"));
+});
+
+// 新功能按钮事件绑定
+$("btn-favorite")?.addEventListener("click", () => {
+  const rawText = $("rawPre")?.textContent;
+  if (!rawText || rawText === '{}') {
+    showFavorites(); // 没有结果时显示收藏列表
+  } else {
+    try {
+      const result = JSON.parse(rawText);
+      const name = prompt('请输入收藏名称（可选）:', result.dt_input || '');
+      if (name !== null) { // 用户没有取消
+        const params = buildPayload();
+        saveFavorite(name || result.dt_input, params, result);
+      }
+    } catch (e) {
+      alert('保存失败：无法解析结果数据');
+    }
+  }
+});
+
+$("btn-compare")?.addEventListener("click", toggleCompare);
+
+$("btn-export")?.addEventListener("click", exportResult);
+
+$("btn-analytics")?.addEventListener("click", showAnalyticsPanel);
+
+$("btn-help")?.addEventListener("click", showHelpPanel);
+
+$("btn-dark-toggle")?.addEventListener("click", toggleDarkMode);
+
+// P1 性能优化：为输入事件添加防抖自动保存
+const debouncedSave = debounce(saveInputs, 400);
+["dt","tz","lon","mode"].forEach(id=>{
+  $(id)?.addEventListener("change", debouncedSave);
+  $(id)?.addEventListener("input", debouncedSave);
+});
+$("solar_time_enabled")?.addEventListener("change", debouncedSave);
+
+// 初始化：加载保存的输入和深色模式设置
+loadInputs();
+initDarkMode();
+initUnifiedWorkspace();
+
+// 页面加载自动显示历史分析
+setTimeout(() => showAnalyticsPanel(), 200);
+
+// P1 PWA：注册 Service Worker（含一次性旧缓存清理兜底）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    const SW_CLEANUP_KEY = 'sw_cleanup_done_20260301_v3';
+    try {
+      if (!localStorage.getItem(SW_CLEANUP_KEY)) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        localStorage.setItem(SW_CLEANUP_KEY, '1');
+        console.log('✓ Legacy SW/cache cleaned (v3 强制刷新根路径缓存)');
+      }
+    } catch (cleanupErr) {
+      console.warn('⚠ SW cleanup skipped:', cleanupErr);
+    }
+
+    navigator.serviceWorker.register('/static/sw.js', { updateViaCache: 'none' })
+      .then(reg => {
+        reg.update();
+        console.log('✓ Service Worker registered:', reg.scope);
+      })
+      .catch(err => console.warn('✗ Service Worker registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

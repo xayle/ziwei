@@ -1,0 +1,140 @@
+Dev start checklist (v5.3)
+
+Env & deps
+- Create venv: python -m venv .venv && activate
+- Install deps: pip install -r requirements.txt (lock exact sxtwl/cnlunar versions)
+- If sxtwl install fails -> switch to single mode immediately (cnlunar primary)
+- Record versions: pip freeze > requirements-lock.txt (for repro only); keep requirements.txt to direct deps only (sxtwl, cnlunar, fastapi, uvicorn, jinja2, python-multipart, pytest)
+- Pin Python version (e.g., 3.11.x) in docs; avoid mixing system/global interpreters
+- Windows: ensure VC build tools present; otherwise prefer prebuilt sxtwl wheel or single mode
+
+Immediate validation
+- Minimal sxtwl smoke test: import sxtwl; compute one gan-zhi to confirm install
+- If fail: run single-lib path and log warning
+- Parse inputs as UTC+8 and attach ZoneInfo("Asia/Shanghai"); internally reject mixing naive/aware (do not 400 on naive form strings)
+- Confirm rule_version is set (v5.3) and emitted by backends/UI/logs
+- Probe SUPPORTED_YEAR_RANGE: hit 1900/1901/2099/2100/2101; set range and friendly error when out of range
+- Freeze api_version alongside rule_version;模板和接口返回字段变更需显式 bump
+
+File/dir layout (keep flat, <=15 files)
+- run.py, config.py, constants.py, solar_time.py, backends.py, ganzhi.py, relations.py, bazi.py, verify.py, boundary.py, interpret.py, run_cases.py, test_core.py
+- templates/, static/, optional data/ (for tables only)
+- config.yaml (optional) for defaults (lon, lat placeholder, primary_backend, rule_version)
+
+Build order
+- Day1: freeze schemas first (TypedDict/Pydantic for Pillars, RiskFlags, Validation, BaziResult), then constants, solar_time, backends (pillars + optional jieqi_context), ganzhi, relations, bazi, verify wired
+- Day2: run_cases 10+ samples green (incl. early-zi 6+2), test_core covers verify/boundary/solar_time
+- Day3: templates/static; apply tags, warnings, source labels
+- Keep jieqi threshold fixed (±60m) and shichen threshold (±15m); no dynamic thresholds in code
+- No L1R/L2R paths; only L0/L1/L2/L3
+
+Quality gates
+- 格式/检查: ruff 或 flake8+isort，formatter 选 black 或 ruff format，全员统一
+- 类型: mypy/pyright 至少覆盖核心模块（solar_time/boundary/backends/verify）
+- CI: lint + type + tests 三件套跑通再推送
+
+Single source of truth
+- near_shichen/jieqi, L-level, recommended all via one function (boundary.py single implementation)
+- Use timezone-aware datetime (UTC+8) everywhere; no naive/aware mix
+- Backends API: get_pillars + optional get_jieqi_context (sxtwl only); single-lib returns None for context
+- Longitude fallback default 120E lives in one place (config/constants); warn when used
+- near_jieqi uses dt_utc8 vs sxtwl jieqi timestamps; single-lib marks jieqi boundary as unavailable/unknown with reason
+- near_jieqi 提示集合写死：默认仅针对用于月界/年界的 12 节（如改用 24 节需写死并同步 UI/tests）
+- near_shichen uses dt_utc8 against shichen boundaries; solar_time only affects hour pillar, not risk thresholds
+- boundary.py as sole entry: compute_risk_flags(...), compute_validation(...); no duplicated logic elsewhere
+- boundary.py 签名锁定：compute_risk_flags(dt_utc8: datetime, lon: float, solar_time_enabled: bool, jieqi_ctx: JieqiContext|None) -> RiskFlags；compute_validation(pillars_primary: Pillars, pillars_secondary: Pillars|None, risk_flags: RiskFlags, mode: Literal["dual","single"]) -> Validation
+- reasons 仅允许固定枚举：sxtwl_unavailable_single_mode, jieqi_unavailable_single_mode, near_shichen_boundary, near_jieqi_boundary, diff_hour, diff_month, diff_day, diff_year, longitude_fallback_120e, input_out_of_range_year, invalid_lon_format, input_out_of_range_lon, invalid_datetime_format（UI 按枚举映射，不展示 raw reason）
+- reasons 仅允许固定枚举：sxtwl_unavailable_single_mode, jieqi_unavailable_single_mode, near_shichen_boundary, near_jieqi_boundary, diff_hour, diff_month, diff_day, diff_year, longitude_fallback_120e, input_out_of_range_year, invalid_lon_format, input_out_of_range_lon, input_out_of_range_lat, invalid_datetime_format（UI 按枚举映射，不展示 raw reason）
+- recommended 枚举锁定："beijing_time" | "solar_time"；规则：solar_time_enabled 且 risk_flags.near_shichen_boundary=false 时推荐 solar_time，否则 beijing_time；有边界风险或 mode=single 时禁用解读；near_jieqi_boundary 不影响 recommended，只影响 interpretation 禁用与提示；mode=single 仍可 recommended=solar_time（仅展示，不解读）
+- 输入规范化：所有字段 strip，全角符号转半角；经度先正则校验 ^-?\d+(\.\d+)?$ 再转 Decimal/float
+- 经纬度范围：中国限定 lon 73-135；如保留 lat 仅展示/未来扩展则校验 3-54 并说明“不参与计算”
+- Pillars 表示法：stem、branch 字段，ganzhi 作为冗余展示字段；UI 展示用 ganzhi，算法用 stem/branch
+- solar_time only affects hour pillar：同时算 pillars_beijing 与 pillars_solar，recommended 选择展示；verify diff 需标注“来自时柱切换策略”
+- pillars_secondary 在 single mode 下字段保留但为 null；diff_fields 在 single mode 固定 []，reasons 说明未校验
+- minutes_to_jieqi_boundary 在 single mode 下为 null（类型稳定，UI 不展示分钟，只提示不可用）
+
+Logging (info level)
+- Input datetime, lon source, solar_time switch
+- Equation of time E, longitude delta, solar correction minutes
+- Minutes to nearest shichen/jieqi boundary (minutes_to_shichen_boundary / minutes_to_jieqi_boundary)
+- Backend used, rule_version
+- Include primary_backend, single-lib flag, risk_flags.near_shichen_boundary, risk_flags.near_jieqi_boundary
+- run_cases 输出头部即当前构建的“事实版本”（api_version/rule_version/thresholds/year range/库版本）；反馈时请附此头部截图，便于对齐口径
+- Testing markers：core suite = tests without backend markers（must always pass）；backend-specific tests显式标记（sxtwl, cnlunar）。CI 永远跑 core，sxtwl 仅在可用时跑。
+- Use one-line structured logs; include request id/correlation id if available; redact secrets (none expected)
+- Add input_hash = sha1(f"{dt_utc8}|{lon}|{solar_switch}|{backend_mode}")[:10] for quick repro
+- lib_versions 运行时读取（importlib.metadata.version），禁止手写字符串
+
+Run/Deploy defaults
+- uvicorn run:app --host 0.0.0.0 --port 8000 --workers 2 (可调)；禁用 debug/auto-reload 在线上
+- 设置请求体/并发/超时上限（先做 elapsed_ms 监控 + 代理超时；强制中断不作为 v5.3 验收）
+- 日志落盘或轮转（size/time-based），保留 input_hash 便于溯源
+ - 若有反向代理: client_max_body_size 1m；后端仍需字段长度校验（经度串 <=16，日期串限长并 strip）
+ - 服务器开启 NTP 同步（chrony/systemd-timesyncd），避免系统时间漂移
+ - 页面错误卡片只展示 input_hash/api_version/rule_version + 枚举原因；日志留栈追踪；前端不展示 traceback
+
+Operational extras
+- 快速本地跑通: 激活 venv -> pip install -r requirements.txt -> python run_cases.py -> python run.py (或 uvicorn run:app --reload)
+- 示例输入/输出快照: 记录双库与单库各一例（含经度、UTC+8 时间、solar_time on/off、返回片段），用于回归对比
+- boundary.py 简短文档: 列出返回字段/单位/阈值来源，注明 near_jieqi 单库缺失的标记方式
+- 监控/告警: 错误率、超时率、单库降级次数；收敛到同一日志或指标端点
+- pre-commit 钩子: 自动跑 lint/type/test，避免漏跑
+- data/ 表格（若用）注明来源/更新时间/校验方式，防数据漂移
+- 部署环境禁止/限制手动改系统时区/时间，确保 UTC+8 偏移固定
+- templates/static 缓存策略: etag/缓存头 + 版本戳，防止旧资源
+- 错误态卡片：提示截图 + input_hash + api_version + rule_version 作为反馈信息
+- 命名规范: 日志/返回统一 snake_case，避免混入 camelCase
+- GET/POST 输入模型统一: InputParams 一套；分享 GET 默认关闭解释或二次确认，防隐私泄露
+- risk_flags 统一命名: risk_flags.near_shichen_boundary, risk_flags.near_jieqi_boundary
+- 单库节气状态: risk_flags.near_jieqi_boundary 为 bool；risk_flags.jieqi_boundary_status 为 "ok"|"unavailable"，unavailable 时 near_jieqi_boundary 固定 false，reasons 加 jieqi_unavailable_single_mode
+- boundary.compute_validation 仅产出 level/recommended/reasons/diff_fields/risk_flags，不做四柱/十神/关系
+- 早子时 6+2 验收断言: hour_pillar 行为以 sxtwl 为准；day_pillar 是否跨日；可选 early_zi_hour 提示存在性
+- 经度 fallback 防静默: 用户填空/非法应报错；仅在未填或城市缺经度时 fallback 120E 并告警
+- 单位写死: minutes_to_boundary/E/solar_correction 用分钟，longitude_delta 用度（写进 boundary.py 说明）
+- run_cases 期望值说明：基于 sxtwl <version> 输出固化（标注生成日期），作为黄金样例基线
+- run_cases 期望值说明：基于 sxtwl 2.0.x 输出固化（标注生成日期），作为黄金样例基线
+- api_version 仅字段结构/类型变更时 bump；rule_version 仅算法/阈值/表/口径变更时 bump
+
+UI/state cues
+- Boundary risk (risk_flags.near_shichen_boundary / risk_flags.near_jieqi_boundary) -> disable interpretation, show orange tag
+- Single-lib -> top yellow bar, primary_backend displayed
+- Show primary_backend + rule_version on result header; minute-level inputs
+- When boundary risk: surface reason text (shichen/jieqi) and thresholds used
+- Inputs: ask for longitude; if missing, warn fallback to 120E
+- Display solar_time applied minutes and longitude correction
+- Validate longitude range (73.0-135.0) and require decimal degrees text; reject degrees-minutes-seconds strings
+- Add error state card/page for input range errors, backend failures, and single-lib warnings (suggest retry/switch)
+- 统一日期时间输入/错误提示文案，前后端共用同一解析/格式约定（ISO-8601 + UTC+8 提示）
+
+Tests must cover
+- Early-zi 6+2 cases
+- Jieqi boundary cases
+- Single-lib mode behavior
+- Boundary risk disabling interpretation
+- Input parsing attaches Asia/Shanghai for naive form strings; internal functions reject mixed naive/aware datetimes
+- Fixed thresholds (±15m shichen, ±60m jieqi) and no dynamic behavior
+- Logging fields presence (rule_version, backend, risk_flags.near_shichen_boundary, risk_flags.near_jieqi_boundary)
+- Longitude fallback warning presence
+- Year range guardrails and messaging
+- risk_flags.jieqi_boundary_status="unavailable" path in single-lib
+- single mode 下 pillars_secondary 应为 null 且 diff_fields=[]，由 reasons 说明未校验
+- Longitude validation (range and format)
+- 故障演练：sxtwl 不可用切换单库、年份越界、经度越界、计算超时的错误态展示
+- 若 jieqi_boundary_status="unavailable" 时，UI 不显示 minutes_to_jieqi_boundary，只显示“节气边界提示不可用（单库模式）”
+- run_cases 输出报告：总数/通过数；按 level 统计（L0/L1/L2/L3）并按 mode=dual/single 分桶；diff_fields 频次；Top N 失败（input_hash/case_id/reasons 枚举）
+- 经度与真太阳时符号约束：例 lon=121 时 solar_correction 应为 +4 分钟（在代码与测试写死方向/符号）
+- 节气集合写死：near_jieqi 提示仅针对用于月界/年界的 12 节（或如选 24 节则写死并测试，推荐 12 节）
+- 早子时提示仅为解释，不修改 hour pillar（除非新 rule_version 另行声明）
+- data/ 表（若有）含 data_version/来源/校验日期，启动校验键完整性（如 12 支/60 甲子全覆盖）
+- 上线前 grep 审计：120E、±15、±60、L1R、boundary_risk、main:app 等旧术语；grep datetime/tzinfo/ZoneInfo 确认无 naive 运算
+- 输入错误枚举回归：lon/lat 越界、经度格式错误、时间格式错误均触发对应 reasons（invalid_lon_format/input_out_of_range_lon/input_out_of_range_lat/invalid_datetime_format）
+- single mode 断言 minutes_to_jieqi_boundary 必为 null，UI 不展示分钟
+
+Threshold constants
+- constants.py 定义 SHICHEN_THRESHOLD_MIN=15, JIEQI_THRESHOLD_MIN=60；所有调用/展示统一引用，UI 可提示“阈值：±15m/±60m”
+
+diff_fields 约束
+- diff_fields 仅允许 ["year","month","day","hour"]；优先级 day/year > month > hour；level 由 diff_fields + risk_flags 决定（写清 if/else，避免随意扩展）
+
+Timeout handling
+- 先做耗时监控与告警：日志记录 elapsed_ms，超过 2000ms 记 warning；反向代理层设超时（如 proxy_read_timeout）；强制中断作为后续优化，不阻塞 v5.3

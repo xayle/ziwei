@@ -1,0 +1,122 @@
+"""Shared authentication and dependency injection."""
+from __future__ import annotations
+
+import os
+from datetime import datetime, timezone
+from typing import Optional, Annotated
+
+from fastapi import Depends, Request
+from sqlmodel import Session, select
+
+from db import get_session
+from app.models import User
+from services.auth_service import verify_token
+from app.exceptions import AuthenticationException, ErrorCode
+
+
+def _auth_bypass_enabled() -> bool:
+    """本地开发模式下跳过认证。
+
+    由环境变量 AUTH_BYPASS 控制，默认关闭。
+    开发测试时可在 .env 中设置 AUTH_BYPASS=true。
+    生产环境严禁设为 true。
+    """
+    return os.getenv("AUTH_BYPASS", "false").lower() == "true"
+
+
+def _local_dummy_user() -> User:
+    """提供本地绕过认证时的占位用户。"""
+    now = datetime.now(timezone.utc)
+    return User(
+        id=0,
+        username="local",
+        email="local@example.com",
+        password_hash="",
+        is_active=True,
+        role="owner",
+        is_admin=True,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def get_current_user(
+    request: Request,
+    session: Session = Depends(get_session)
+) -> Optional[User]:
+    """
+    从Bearer token获取当前用户（可选认证）
+    
+    如果token无效或不存在，返回None。
+    需要强制认证的端点应该使用 require_user 装饰器。
+    
+    Args:
+        request: FastAPI Request
+        session: 数据库连接
+    
+    Returns:
+        User 对象或 None（如果未认证）
+    """
+    if _auth_bypass_enabled():
+        return _local_dummy_user()
+
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+    
+    try:
+        scheme, token = auth_header.split()
+        if scheme.lower() != "bearer":
+            return None
+    except ValueError:
+        return None
+    
+    # 验证token
+    payload = verify_token(token)
+    if not payload:
+        return None
+    
+    # 从数据库获取完整用户对象
+    user = session.exec(
+        select(User).where(
+            User.id == payload.user_id,
+            User.deleted_at.is_(None)  # type: ignore
+        )
+    ).first()
+    
+    if not user or not user.is_active:
+        return None
+    
+    return user
+
+
+def require_user(
+    user: Optional[User] = Depends(get_current_user)
+) -> User:
+    """
+    强制认证的依赖函数。如果user为None，抛出401错误。
+    
+    用于需要认证的endpoint。
+    
+    Args:
+        user: 从 get_current_user 获取
+    
+    Returns:
+        User 对象
+    
+    Raises:
+        AuthenticationException: 如果未认证
+    """
+    if _auth_bypass_enabled():
+        return _local_dummy_user()
+    if user is None:
+        raise AuthenticationException(
+            code=ErrorCode.AUTH_MISSING_TOKEN,
+            message="Authentication required",
+        )
+    return user
+
+
+# 类型注解快捷方式
+CurrentUser = Annotated[Optional[User], Depends(get_current_user)]
+RequiredUser = Annotated[User, Depends(require_user)]

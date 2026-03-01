@@ -1,0 +1,85 @@
+{
+  "request": {
+    "dt": "1994-07-08T14:20:00",
+    "tz": "Asia/Shanghai",
+    "lon": 121.4737,
+    "solar_time_enabled": false
+  },
+  "response": {
+    "api_version": "v1",
+    "rule_version": "v5.3",
+    "request_id": "c0425f7c-0c1a-4f2d-8c2c-57e6b5084b19",
+    "mode_effective": "single",
+    "methods": {
+      "day_boundary_rule": "zi_initial",
+      "solar_time_rule": "longitude_only",
+      "dayun_method": "sxtwl_next_jieqi_div3"
+    },
+    "warnings": [],
+    "pillars": {
+      "year": { "stem": "甲", "branch": "戌", "ganzhi": "甲戌" },
+      "month": { "stem": "癸", "branch": "未", "ganzhi": "癸未" },
+      "day": { "stem": "壬", "branch": "午", "ganzhi": "壬午" },
+      "hour": { "stem": "癸", "branch": "未", "ganzhi": "癸未" }
+    },
+    "ten_gods": {
+      "year": "sha",
+      "month": "bijian",
+      "day": "riyuan",
+      "hour": "bijian"
+    },
+    "liunian": [
+      { "year": 2023, "ganzhi": "癸卯", "ten_god": "bijian" },
+      { "year": 2024, "ganzhi": "甲辰", "ten_god": "jie" },
+      { "year": 2025, "ganzhi": "乙巳", "ten_god": "shishen" }
+    ],
+    "dayun": {
+      "sequence_start": 7,
+      "items": [
+        { "index": 1, "ganzhi": "壬午", "start_year": 2001, "end_year": 2010 },
+        { "index": 2, "ganzhi": "辛巳", "start_year": 2011, "end_year": 2020 },
+        { "index": 3, "ganzhi": "庚辰", "start_year": 2021, "end_year": 2030 }
+      ],
+      "raw": {
+        "birth_to_jieqi_days": 56,
+        "anchor_jieqi": "小暑",
+        "anchor_jieqi_dt": "1994-07-07T23:14:00+08:00",
+        "day_boundary_crossed": false
+      }
+    },
+    "wuxing": {
+      "score": {
+        "jin": 12,
+        "mu": 14,
+        "shui": 18,
+        "huo": 10,
+        "tu": 11
+      },
+      "breakdown": {
+        "stem": { "jin": 4, "mu": 4, "shui": 6, "huo": 3, "tu": 3 },
+        "branch": { "jin": 4, "mu": 6, "shui": 6, "huo": 4, "tu": 4 },
+        "hidden": { "jin": 4, "mu": 4, "shui": 6, "huo": 3, "tu": 4 }
+      }
+    },
+    "strength": {
+      "score": 65,
+      "tier": "strong",
+      "details": {
+        "support": 35,
+        "control": 15,
+        "resource": 15
+      }
+    },
+    "yongshen": {
+      "preferred": ["jin", "huo"],
+      "avoid": ["shui"]
+    },
+    "raw": {
+      "day_boundary_crossed": false,
+      "near_shichen_boundary": false,
+      "near_jieqi_boundary": false,
+      "birth_to_jieqi_days": 56,
+      "solar_time_offset_minutes": 0.0
+    }
+  }
+}

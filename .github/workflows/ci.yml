@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pyright
+
+      - name: Type check
+        run: pyright
+
+      - name: Tests
+        run: python -m pytest -q -m "not sxtwl"
+
+      - name: Sxtwl tests (best effort)
+        run: |
+          python - <<'PY'
+    import importlib.util, sys, subprocess
+    mod_spec = importlib.util.find_spec("sxtwl")
+    if mod_spec is None:
+      print("sxtwl: not available; skipping sxtwl-marked tests")
+      sys.exit(0)
+    import importlib.metadata
+    version = "unknown"
+    try:
+      version = importlib.metadata.version("sxtwl")
+    except importlib.metadata.PackageNotFoundError:
+      pass
+    print(f"sxtwl: ok (version={version}); running sxtwl-marked tests")
+    subprocess.check_call([sys.executable, "-m", "pytest", "-q", "-m", "sxtwl"])
+    PY
+
+      - name: Golden runner (non-blocking)
+        run: |
+          python run_cases.py
+        continue-on-error: true

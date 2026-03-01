@@ -1,0 +1,189 @@
+# Prometheus 告警规则
+# 用于定义 BaZi API 服务的监控告警
+
+groups:
+  # 应用级别告警
+  - name: bazi_service_alerts
+    interval: 30s
+    rules:
+      # 高请求延迟告警
+      - alert: HighRequestLatency
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: bazi-api
+        annotations:
+          summary: "高请求延迟检测"
+          description: "{{ $value }}秒的95分位数请求延迟已超过1秒"
+          dashboard: "http://grafana:3000/d/bazi-api"
+
+      # 严重延迟告警
+      - alert: CriticalRequestLatency
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[1m])) > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: bazi-api
+        annotations:
+          summary: "严重请求延迟"
+          description: "{{ $value }}秒的99分位数请求延迟已超过5秒，可能存在性能问题"
+          action: "立即检查应用日志和数据库性能"
+
+      # 高错误率告警
+      - alert: HighErrorRate
+        expr: |
+          rate(errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: bazi-api
+        annotations:
+          summary: "错误率过高"
+          description: "过去5分钟的错误率为 {{ $value | humanizePercentage }}（阈值：5%）"
+          dashboard: "http://grafana:3000/d/bazi-api"
+
+      # 严重错误率告警
+      - alert: CriticalErrorRate
+        expr: |
+          rate(errors_total[1m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: bazi-api
+        annotations:
+          summary: "严重错误率"
+          description: "过去1分钟的错误率为 {{ $value | humanizePercentage }}（阈值：10%），系统可能存在故障"
+          action: "立即检查应用状态和日志"
+
+      # 高数据库操作延迟
+      - alert: HighDatabaseLatency
+        expr: |
+          histogram_quantile(0.99, rate(db_operation_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: bazi-api
+          component: database
+        annotations:
+          summary: "数据库操作延迟过高"
+          description: "{{ $value }}秒的99分位数数据库操作延迟已超过0.5秒"
+          action: "检查数据库性能和查询优化"
+
+      # 认证失败率过高
+      - alert: HighAuthFailureRate
+        expr: |
+          rate(auth_attempts_total{status="failure"}[5m]) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          service: bazi-api
+          component: auth
+        annotations:
+          summary: "认证失败率过高"
+          description: "过去5分钟的认证失败率为 {{ $value | humanizePercentage }}（阈值：20%），可能存在安全问题"
+          action: "检查登录日志，可能存在暴力破解攻击"
+
+      # 缓存命中率过低
+      - alert: LowCacheHitRate
+        expr: |
+          rate(cache_hits_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) < 0.6
+        for: 10m
+        labels:
+          severity: info
+          service: bazi-api
+          component: cache
+        annotations:
+          summary: "缓存命中率低"
+          description: "缓存命中率为 {{ $value | humanizePercentage }}（目标：>60%）"
+          action: "调查缓存策略或增加缓存容量"
+
+  # 基础设施告警
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # 应用不可达
+      - alert: ServiceDown
+        expr: |
+          up{job="bazi-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: bazi-api
+        annotations:
+          summary: "BaZi API 服务不可达"
+          description: "{{ $labels.instance }} 的 BaZi API 服务已离线"
+          action: "立即启动服务或检查容器状态"
+
+      # 高内存使用率
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes / (1024 * 1024 * 1024) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: bazi-api
+        annotations:
+          summary: "内存使用率过高"
+          description: "BaZi API 进程使用内存超过2GB（当前：{{ $value | humanize }}GB）"
+          action: "检查内存泄漏或增加可用内存"
+
+  # 业务逻辑告警
+  - name: business_alerts
+    interval: 30s
+    rules:
+      # 八字计算失败率过高
+      - alert: HighBaziCalculationFailure
+        expr: |
+          rate(business_operations_total{operation="bazi_calculation",status="error"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: bazi-api
+          operation: bazi-calculation
+        annotations:
+          summary: "八字计算失败率过高"
+          description: "过去5分钟的八字计算失败率为 {{ $value | humanizePercentage }}"
+          action: "检查输入数据和计算逻辑"
+
+      # 场景模拟失败
+      - alert: ScenarioSimulationFailure
+        expr: |
+          increase(business_operations_total{operation="scenario_simulation",status="error"}[1m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: bazi-api
+          operation: scenario-simulation
+        annotations:
+          summary: "场景模拟频繁失败"
+          description: "过去1分钟内发生 {{ $value }} 次场景模拟失败"
+          action: "检查场景配置和输入参数"
+
+# 告警路由配置示例
+# 注意：路由配置在 alertmanager.yml 中，而不是这里
+
+# AlertManager 接收器配置示例：
+# 可以配置：
+#   - Email 通知
+#   - Slack 通知
+#   - PagerDuty 集成
+#   - Webhook 回调
+
+# 使用说明：
+#
+# 1. 将此文件放在 /etc/prometheus/alerts.yml
+#
+# 2. 在 prometheus.yml 中引用：
+#    rule_files:
+#      - 'alerts.yml'
+#
+# 3. 重启 Prometheus 服务
+#
+# 4. 在 Prometheus Web UI 中查看告警：
+#    http://localhost:9090/alerts
+#
+# 5. 在 AlertManager 中配置告警接收器
+#    http://localhost:9093/#/alerts

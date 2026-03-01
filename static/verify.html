@@ -1,0 +1,243 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#B22222" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; connect-src 'self';" />
+  <title>八字命理验证工作台 v4 — 双引擎 · 20维</title>
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/verify.css?v=20260301" />
+</head>
+<body>
+
+<header id="appHeader" role="banner">
+  <div class="header-left">
+    <span class="header-title">八字命理</span>
+    <span class="header-sub">双引擎 · 20维分析</span>
+  </div>
+  <div class="header-actions" role="toolbar" aria-label="操作栏">
+    <div id="exportMenuWrapper" style="position:relative;display:inline-flex">
+      <button id="btn-export-menu" aria-haspopup="true" aria-controls="exportDropdown" aria-label="导出">📥 导出</button>
+      <div id="exportDropdown" class="dropdown-menu" role="menu" aria-labelledby="btn-export-menu">
+        <button onclick="exportResult('json')" role="menuitem">JSON 导出</button>
+        <button onclick="exportResult('csv')"  role="menuitem">CSV 导出</button>
+        <button onclick="exportResult('excel')" role="menuitem">Excel 导出（6表）</button>
+        <button onclick="exportResult('print')" role="menuitem">打印 / PDF</button>
+      </div>
+    </div>
+    <button id="btn-fav"     aria-label="收藏夹" onclick="showFavoritesModal()">⭐ 收藏</button>
+    <button id="btn-compare" aria-label="对比"   onclick="toggleCompare()">⚖️ 对比</button>
+    <button id="btn-share"   aria-label="分享"   onclick="showShareModal()">🔗 分享</button>
+    <button id="btn-dark"    aria-label="切换深色模式" onclick="toggleDarkMode()">🌙</button>
+    <button id="btn-hist-drawer" aria-label="历史命盘">🕑</button>
+  </div>
+  <div id="statusBar" role="status" aria-live="polite">
+    <div class="spinner" id="spinner" aria-hidden="true"></div>
+    <span id="statusText"></span>
+  </div>
+</header>
+
+<div id="compareNotifyBar" style="display:none;background:var(--accent-gold);color:#fff;padding:8px 16px;font-size:12px;text-align:center;" role="alert"></div>
+
+<nav class="tab-nav" id="tabNav" role="tablist" aria-label="功能面板导航">
+  <button class="tab-nav-item" role="tab" data-idx="0"  aria-selected="true"  aria-controls="panel-0"  id="tab-btn-0" >总览</button>
+  <button class="tab-nav-item" role="tab" data-idx="1"  aria-selected="false" aria-controls="panel-1"  id="tab-btn-1" >请求</button>
+  <button class="tab-nav-item" role="tab" data-idx="2"  aria-selected="false" aria-controls="panel-2"  id="tab-btn-2" >命盘</button>
+  <button class="tab-nav-item" role="tab" data-idx="3"  aria-selected="false" aria-controls="panel-3"  id="tab-btn-3" >格局</button>
+  <button class="tab-nav-item" role="tab" data-idx="4"  aria-selected="false" aria-controls="panel-4"  id="tab-btn-4" >命宫</button>
+  <button class="tab-nav-item" role="tab" data-idx="5"  aria-selected="false" aria-controls="panel-5"  id="tab-btn-5" >摘要</button>
+  <button class="tab-nav-item" role="tab" data-idx="6"  aria-selected="false" aria-controls="panel-6"  id="tab-btn-6" >诊断</button>
+  <button class="tab-nav-item" role="tab" data-idx="7"  aria-selected="false" aria-controls="panel-7"  id="tab-btn-7" >财运</button>
+  <button class="tab-nav-item" role="tab" data-idx="8"  aria-selected="false" aria-controls="panel-8"  id="tab-btn-8" >事业</button>
+  <button class="tab-nav-item" role="tab" data-idx="9"  aria-selected="false" aria-controls="panel-9"  id="tab-btn-9" >姻缘</button>
+  <button class="tab-nav-item" role="tab" data-idx="10" aria-selected="false" aria-controls="panel-10" id="tab-btn-10">健康</button>
+  <button class="tab-nav-item" role="tab" data-idx="11" aria-selected="false" aria-controls="panel-11" id="tab-btn-11">人际</button>
+  <button class="tab-nav-item" role="tab" data-idx="12" aria-selected="false" aria-controls="panel-12" id="tab-btn-12">性格</button>
+  <button class="tab-nav-item" role="tab" data-idx="13" aria-selected="false" aria-controls="panel-13" id="tab-btn-13">风水</button>
+  <button class="tab-nav-item" role="tab" data-idx="14" aria-selected="false" aria-controls="panel-14" id="tab-btn-14">饰品</button>
+  <button class="tab-nav-item" role="tab" data-idx="15" aria-selected="false" aria-controls="panel-15" id="tab-btn-15">开运</button>
+  <button class="tab-nav-item" role="tab" data-idx="16" aria-selected="false" aria-controls="panel-16" id="tab-btn-16">大运</button>
+  <button class="tab-nav-item" role="tab" data-idx="17" aria-selected="false" aria-controls="panel-17" id="tab-btn-17">流年</button>
+  <button class="tab-nav-item" role="tab" data-idx="18" aria-selected="false" aria-controls="panel-18" id="tab-btn-18">月运</button>
+  <button class="tab-nav-item" role="tab" data-idx="19" aria-selected="false" aria-controls="panel-19" id="tab-btn-19">案例</button>
+</nav>
+
+<main id="tabPanels" role="main">
+
+  <div id="panel-0" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-0" data-panel="0">
+    <div class="panel-content">
+      <div class="empty-state" id="emptyState0">
+        <div class="empty-icon">🔮</div>
+        <div>
+          <div style="font-weight:700">等待排盘</div>
+          <div>前往「请求」Tab 填写出生时间，点击「开始排盘」</div>
+        </div>
+        <button onclick="switchTab(1)" style="margin-top:12px">前往请求 →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-1" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-1" data-panel="1" aria-hidden="true">
+    <div class="panel-content">
+      <div class="card" style="margin-bottom:12px">
+        <p class="card-title"><span class="dot"></span>出生信息</p>
+        <div class="field">
+          <label class="lbl" for="dt">出生时间（阳历）<span style="color:var(--bad)">*</span></label>
+          <div class="row">
+            <input id="dt" type="datetime-local" required style="flex:1" autocomplete="off" />
+            <button id="btn-now" type="button">现在</button>
+          </div>
+          <span class="hint">格式: 2002-03-13T14:36</span>
+        </div>
+        <div class="g2" style="margin-top:10px">
+          <div class="field">
+            <label class="lbl" for="citySelect">城市选择</label>
+            <select id="citySelect" aria-label="选择城市快速填入经度">
+              <option value="">— 手动输入经度 —</option>
+            </select>
+            <span class="hint">选择城市自动填入经度</span>
+          </div>
+          <div class="field" id="lonManualSection">
+            <label class="lbl" for="lon">经度 (东经 70–140) <span style="color:var(--bad)">*</span></label>
+            <input id="lon" type="number" step="0.0001" min="70" max="140" value="116.4074" autocomplete="off" />
+            <span class="hint">北京默认 116.4074</span>
+          </div>
+        </div>
+        <div class="g2" style="margin-top:10px">
+          <div class="field">
+            <label class="lbl" for="tz">时区</label>
+            <input id="tz" type="text" value="Asia/Shanghai" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label class="lbl" for="sex">性别</label>
+            <select id="sex">
+              <option value="M">男</option>
+              <option value="F">女</option>
+            </select>
+          </div>
+        </div>
+        <div class="g2" style="margin-top:10px">
+          <div class="field">
+            <label class="lbl" for="mode">计算模式</label>
+            <select id="mode">
+              <option value="dual" selected>dual — 双引擎交叉校验</option>
+              <option value="single">single — 单引擎</option>
+            </select>
+          </div>
+          <div class="field" style="justify-content:center">
+            <label class="lbl">选项</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input id="solar_time_enabled" type="checkbox" />
+              <span>启用真太阳时校正</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <details id="histSection" style="margin-bottom:12px">
+        <summary style="cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0">
+          历史记录 <span id="histCount" class="tag"></span>
+        </summary>
+        <div class="hist-list" id="histList" style="margin-top:8px"></div>
+      </details>
+      <div class="row">
+        <button id="btn-run"  class="primary" type="button">▶ 开始排盘</button>
+        <button id="btn-demo" type="button">示例</button>
+        <button id="btn-add-fav" type="button">⭐ 收藏本次</button>
+        <button id="btn-curl" type="button">复制 curl</button>
+      </div>
+      <div id="reqResult" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div id="panel-2"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-2"  data-panel="2"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-3"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-3"  data-panel="3"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-4"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-4"  data-panel="4"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-5"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-5"  data-panel="5"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-6"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-6"  data-panel="6"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-7"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-7"  data-panel="7"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-8"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-8"  data-panel="8"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-9"  class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-9"  data-panel="9"  aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-10" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-10" data-panel="10" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-11" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-11" data-panel="11" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-12" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-12" data-panel="12" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-13" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-13" data-panel="13" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-14" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-14" data-panel="14" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-15" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-15" data-panel="15" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-16" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-16" data-panel="16" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-17" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-17" data-panel="17" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-18" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-18" data-panel="18" aria-hidden="true"><div class="panel-content"></div></div>
+  <div id="panel-19" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-19" data-panel="19" aria-hidden="true"><div class="panel-content"></div></div>
+
+</main>
+
+<nav class="bottom-nav" id="bottomNav" role="navigation" aria-label="快捷导航"></nav>
+
+<div class="modal-overlay" id="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="shareModalTitle">分享命盘</h3>
+      <button class="modal-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:8px">分享此链接可直接显示当前命盘结果：</p>
+      <div class="row">
+        <input id="shareUrlInput" type="text" readonly style="flex:1;font-size:11px" aria-label="分享链接" />
+        <button id="btn-copy-share" type="button">复制</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="compareFavModal" role="dialog" aria-modal="true" aria-labelledby="favModalTitle">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="favModalTitle">收藏夹</h3>
+      <button class="modal-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="compareModal" role="dialog" aria-modal="true" aria-labelledby="compareModalTitle">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="compareModalTitle">命盘对比</h3>
+      <button class="modal-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body"></div>
+  </div>
+</div>
+
+<aside class="history-drawer" id="historyDrawer" role="complementary" aria-label="历史命盘">
+  <div class="history-drawer-title">
+    历史命盘（最近5次）
+    <button class="drawer-close" aria-label="关闭历史抽屉">✕</button>
+  </div>
+  <div class="history-drawer-content" id="histDrawerContent">
+    <div class="hint" style="padding:8px">载入中…</div>
+  </div>
+</aside>
+
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="新手引导" style="display:none">
+  <div class="onboarding-box">
+    <h2>欢迎使用八字命理工作台 v4</h2>
+    <ul style="text-align:left;line-height:2">
+      <li>共 <strong>20 个面板</strong>，涵盖命盘、格局、大运、流年等维度</li>
+      <li>前往「请求」Tab 填入出生时间后点击开始排盘</li>
+      <li>支持城市快速选择、真太阳时校正、分享链接</li>
+    </ul>
+    <button id="btn-onboarding-close" style="margin-top:16px">我知道了，开始使用</button>
+  </div>
+</div>
+
+<script src="/static/js/relation-shared.js?v=20260301"></script>
+<script src="/static/js/verify-chart.js?v=20260301"></script>
+<script src="/static/js/verify-render.js?v=20260301"></script>
+<script src="/static/js/verify-compare.js?v=20260301"></script>
+<script src="/static/js/verify-export.js?v=20260301"></script>
+<script src="/static/js/verify-core.js?v=20260301"></script>
+
+</body>
+</html>
