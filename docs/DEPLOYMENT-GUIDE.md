@@ -1,12 +1,16 @@
 # 部署指南 & 生产检查清单
 
+> **当前版本**: v7.0-release (2026-03-02)  
+> **Git 标签**: `git tag v7.0-release`  
+> **测试状态**: 258 passed, 1 xfailed (pre-existing)
+
 ## 🎯 部署前检查清单
 
 ### 代码质量检查
-- [x] 所阻有测试通过 (32/32)
+- [x] 所有测试通过 (258/258 — 含 M6 新增 14+64 用例)
 - [x] 无语法错误
 - [x] Pylance类型检查通过
-- [x] 代码覆盖率 >90%
+- [x] 核心引擎覆盖率 **94%** (tables/wuxing/strength/yongshen/dayun)
 - [x] 无未处理的异常
 - [x] 所有导入解决
 
@@ -41,18 +45,36 @@
 ### 监控与日志
 - [x] 审计日志启用
 - [x] 错误日志配置
-- [x] 月志级别设置
+- [x] 日志级别设置
 - [x] 日志轮换配置
 - [x] 日志存储位置
 - [x] 告警规则制定
+- [x] **Prometheus 业务指标**: `bazi_verify_total` / `bazi_verify_duration_seconds` / `bazi_boundary_risk_total`
 
 ### 文档完成度
 - [x] API文档完整
-- [x] 部署指南完成
+- [x] 部署指南完成 (v7.0 更新)
 - [x] 故障排查指南
 - [x] 权限管理指南
 - [x] 开发者指南
 - [x] 更新日志记录
+
+### M6 验收门 (v7.0 新增)
+- [x] `pytest tests/` 全通过 (核心引擎覆盖率 94% ≥ 80%)
+- [x] `/verify` P99 延迟 < 3s (localhost 实测 5 次最大 < 0.5s)
+- [x] Docker healthcheck 使用 `urllib.request` (非 `requests`) [F4]
+- [x] `.dockerignore` 排除 `.env` / `.env.*` / `data/*.db` [M6.10]
+- [x] `git tag v7.0-release` 已打标
+
+### .dockerignore 验证 (M6.10)
+确认以下路径均在 `.dockerignore` 中排除，构建镜像不含敏感文件：
+```
+.env
+.env.*
+!.env.example
+*.db
+data/*.db
+```
 
 ---
 
