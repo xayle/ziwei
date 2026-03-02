@@ -679,6 +679,8 @@ def _enrich_v2_analysis(
             verify_response.pillars_primary.hour.branch,
         ) if verify_response.pillars_primary else ("", "", "", "")
         _dizhi_rels = _get_branch_rels(*_rp_branches)
+        # 写入响应（P0-10: 地支关系 status 含全合/半合/拱合）
+        verify_response.dizhi_relations = _dizhi_rels
         # P0-11: 天干相克 scope=day_related
         try:
             verify_response.tiangan_clashes = _get_stem_clashes(

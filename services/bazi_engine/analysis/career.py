@@ -135,8 +135,9 @@ def compute_career(
     optimal_timing = "用神旺运期间为最佳跳槽/创业时机"
 
     # ─── career_score ─────────────────────────────────────────────────
+    # base ∈ [0, 40]（当 guan_sha_pct=1.0 时最大）；×2.5 归一化到 [0, 100]
     base = guan_sha_pct * 40 + cai_pct * 30 + yin_pct * 20 + shi_shang_pct * 10
-    career_score = int(min(100, max(0, round(base * 100))))
+    career_score = int(min(100, max(0, round(base * 2.5))))
 
     # ─── inference_tags ─────────────────────────────────────────────
     tags = []
