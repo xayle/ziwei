@@ -157,20 +157,79 @@ def compute_strength(day_stem: str, score: WuXingScoreModel) -> DayMasterStrengt
     return DayMasterStrengthModel(score=strength_score, tier=tier, factors=factors)
 
 
-def compute_yongshen(score: WuXingScoreModel, strength: DayMasterStrengthModel) -> YongShenModel:
+def compute_yongshen(
+    score: WuXingScoreModel,
+    strength: DayMasterStrengthModel,
+    pillars: Optional["PillarsModel"] = None,
+) -> YongShenModel:
+    """
+    RL#2: 用神必须走5分支决策树 — 禁止 min/max.
+    When pillars is provided, delegates to the new engine's 5-branch version.
+    Falls back to approximate扶抑 when pillars absent (legacy/test path).
+    """
+    if pillars is not None:
+        from services.bazi_engine.wuxing import compute_wuxing as _eng_wx
+        from services.bazi_engine.strength import compute_strength as _eng_str
+        from services.bazi_engine.yongshen import compute_yongshen as _eng_yong
+        _w = _eng_wx(
+            pillars.year.stem, pillars.year.branch,
+            pillars.month.stem, pillars.month.branch,
+            pillars.day.stem, pillars.day.branch,
+            pillars.hour.stem, pillars.hour.branch,
+        )
+        _s = _eng_str(
+            pillars.day.stem, pillars.month.branch,
+            pillars.year.stem, pillars.month.stem, pillars.hour.stem,
+            pillars.year.branch, pillars.day.branch, pillars.hour.branch,
+            _w,
+        )
+        result = _eng_yong(
+            day_stem=pillars.day.stem,
+            month_branch=pillars.month.branch,
+            strength=_s,
+            wuxing=_w,
+        )
+        return YongShenModel(
+            favor=result.favor,
+            avoid=result.avoid,
+            rationale=result.rationale,
+        )
+
+    # ── 扶抑法 fallback（无四柱时使用，兼顾旧路径） ──────────────────────
     totals = {
-        "wood": score.wood,
-        "fire": score.fire,
-        "earth": score.earth,
-        "metal": score.metal,
-        "water": score.water,
+        "wood": score.wood, "fire": score.fire, "earth": score.earth,
+        "metal": score.metal, "water": score.water,
     }
-    min_val = min(totals.values())
-    max_val = max(totals.values())
-    favor = [k for k, v in totals.items() if abs(v - min_val) < 1e-6]
-    avoid = [k for k, v in totals.items() if abs(v - max_val) < 1e-6]
-    rationale = f"Favor weakest elements {favor} to balance; avoid strongest {avoid}; strength tier={strength.tier}."
-    return YongShenModel(favor=favor, avoid=avoid, rationale=rationale)
+    SHENG = {"wood": "fire", "fire": "earth", "earth": "metal", "metal": "water", "water": "wood"}
+    SHENG_REV = {v: k for k, v in SHENG.items()}
+    KE = {"wood": "earth", "fire": "metal", "earth": "water", "metal": "wood", "water": "fire"}
+    elem_map = {"strong": ("same", "parent"), "weak": ("ke", "consume"), "balanced": ("ke",)}
+    # 取日主五行（从 strength.factors 的 same_element_support）
+    day_elem = next(
+        (f.reason.split()[0] for f in (strength.factors or []) if "same" in f.name),
+        None,
+    )
+    if day_elem and strength.tier in ("strong", "weak"):
+        if strength.tier == "strong":
+            # 强→泄秀/克洩制约: 食伤/财星/官杀抑制
+            favor = [KE.get(day_elem, ""), SHENG.get(day_elem, "")]
+            avoid = [day_elem, SHENG_REV.get(day_elem, "")]
+        else:
+            # 弱→帮扶生助: 比劫/印绶
+            favor = [day_elem, SHENG_REV.get(day_elem, "")]
+            avoid = [KE.get(day_elem, ""), SHENG.get(day_elem, "")]
+        favor = [e for e in favor if e][:2]
+        avoid = [e for e in avoid if e][:2]
+    else:
+        # 均衡/未知: 以弱为喜
+        min_val = min(totals.values())
+        max_val = max(totals.values())
+        favor = [k for k, v in totals.items() if abs(v - min_val) < 1e-6]
+        avoid = [k for k, v in totals.items() if abs(v - max_val) < 1e-6]
+    return YongShenModel(
+        favor=favor, avoid=avoid,
+        rationale=f"扶抑法: tier={strength.tier}, favor={favor}, avoid={avoid} (5-branch fallback)",
+    )
 
 
 def _ganzhi_index(stem: str, branch: str) -> int:
@@ -206,18 +265,6 @@ def build_dayun(
         raw_dayun.status = "computed"
         return DaYunModel(method=methods.dayun_method, boundary=methods.dayun_boundary, items=[]), raw_dayun
 
-    anchor_dt = jie_ctx.next_jie_dt
-    raw_dayun.anchor_jieqi_dt = anchor_dt.isoformat()
-    raw_dayun.anchor_jieqi_name = jie_ctx.next_jie_name
-
-    delta_days = (anchor_dt - dt_effective).total_seconds() / 86400.0
-    raw_dayun.birth_to_jieqi_days = delta_days
-    months_before_round = delta_days / methods.dayun_days_per_month
-    raw_dayun.computed_months_before_rounding = months_before_round
-    raw_dayun.rounding_applied = methods.dayun_rounding
-
-    start_age_months = ceil(months_before_round)
-
     # Direction rule: RL#3 男阳顺/男阴逆/女阳逆/女阴顺
     year_stem = pillars.year.stem
     _, year_polarity = _stem_meta(year_stem)
@@ -234,6 +281,24 @@ def build_dayun(
         "year_stem": year_stem,
         "year_stem_yinyang": year_polarity,
     }
+
+    # RL#4: 顺排用 next_jie_dt（距下一节），逆排用 prev_jie_dt（距前一节）
+    if direction == "backward":
+        anchor_dt = jie_ctx.prev_jie_dt
+        raw_dayun.anchor_jieqi_dt = anchor_dt.isoformat()
+        raw_dayun.anchor_jieqi_name = jie_ctx.prev_jie_name
+        delta_days = (dt_effective - anchor_dt).total_seconds() / 86400.0  # 出生 - 前节
+    else:
+        anchor_dt = jie_ctx.next_jie_dt
+        raw_dayun.anchor_jieqi_dt = anchor_dt.isoformat()
+        raw_dayun.anchor_jieqi_name = jie_ctx.next_jie_name
+        delta_days = (anchor_dt - dt_effective).total_seconds() / 86400.0  # 后节 - 出生
+
+    raw_dayun.birth_to_jieqi_days = delta_days
+    months_before_round = delta_days / methods.dayun_days_per_month
+    raw_dayun.computed_months_before_rounding = months_before_round
+    raw_dayun.rounding_applied = methods.dayun_rounding
+    start_age_months = ceil(months_before_round)
     raw_dayun.sequence_start = "from_month_pillar"
     raw_dayun.status = "computed"
 
@@ -259,7 +324,17 @@ def build_dayun(
         )
         current_idx = (current_idx + step) % 60
 
-    return DaYunModel(method=methods.dayun_method, boundary=methods.dayun_boundary, items=items), raw_dayun
+    return DaYunModel(
+        method=methods.dayun_method,
+        boundary=methods.dayun_boundary,
+        direction=direction,
+        direction_basis=raw_dayun.direction_basis,
+        start_age=base_age,
+        start_age_months=start_age_months,
+        anchor_jieqi_name=raw_dayun.anchor_jieqi_name,
+        anchor_jieqi_dt=raw_dayun.anchor_jieqi_dt,
+        items=items,
+    ), raw_dayun
 
 
 def _stem_meta(stem: str) -> tuple[str, str]:

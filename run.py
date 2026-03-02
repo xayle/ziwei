@@ -583,7 +583,7 @@ def api_verify(
 	# lightweight derived info for UI templates
 	wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1: 保留 breakdown
 	strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
-	yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw)
+	yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw, rp)  # RL#2: 5分支
 	ten_gods_map = build_ten_gods(rp.day.stem, rp)
 	ten_gods = TenGodsModel(**ten_gods_map)
 

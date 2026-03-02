@@ -147,7 +147,7 @@ def _calculate_v1(
 
     wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1: 保留 breakdown
     strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
-    yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw)
+    yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw, rp)  # RL#2: 5分支
     ten_gods_map = build_ten_gods(rp.day.stem, rp)
     ten_gods = TenGodsModel(**ten_gods_map)
 
@@ -799,10 +799,10 @@ def _enrich_v2_analysis(
         from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
         from services.bazi_engine.liunian import _liunian_day_relation  # 红线10 犯太岁
         from app.schemas.analysis import LiuNianDetailModel
+        import datetime as _dt_now_mod
 
-        # 取近5年流年构建 liunian_detail
-        current_year = dt.year
-        birth_year   = dt.year
+        # 取当前年前后2年共5年（而非出生年）
+        current_year = _dt_now_mod.datetime.now().year
         _detail_list: list[LiuNianDetailModel] = []
 
         # 从大运列表生成流年信息
@@ -816,8 +816,8 @@ def _enrich_v2_analysis(
         # 生成当前年份前后2年共5年
         for yr in range(current_year - 2, current_year + 3):
             ystem, ybranch = _year_ganzhi(yr)
-            # 红线10: 计算犯太岁关系
-            taisui_rel = _liunian_day_relation(ybranch, ds_br)
+            # 红线10: 计算犯太岁关系（流年支 vs 命局年支）
+            taisui_rel = _liunian_day_relation(ybranch, ys_br)
             taisui_list = [taisui_rel] if taisui_rel else []
             domain = compute_liunian_domain_forecasts(
                 year=yr, year_stem=ystem, year_branch=ybranch,

@@ -110,11 +110,6 @@ class TestGolden01:
             f"tier={tier!r} 不在预期强弱层级中"
         )
 
-    @pytest.mark.xfail(
-        reason="旧引擎(ENGINE_V2=false)用神推断精度有限，M2后修复",
-        strict=False,
-    )
-
     def test_yongshen_favor_metal_water(self, client):
         """用神应含 metal 或 water"""
         data = _verify(client, self.DT, self.LON)
