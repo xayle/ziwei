@@ -37,6 +37,7 @@ from schemas import (
     YongShenModel,
 )
 from services.normalize_input import validate_lon_strict, warn_lon_cn_range
+from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS as _BRANCH_HIDDEN_STEMS  # RL#1 藏干
 from verify import verify_full
 
 
@@ -119,6 +120,11 @@ def compute_wuxing(pillars: PillarsModel) -> tuple[WuXingScoreModel, WuXingBreak
         elem = BRANCH_ELEMENT.get(branch)
         if elem:
             branch_contrib[elem] += 1.0
+        # RL#1: 藏干贡献（按中文支查表）
+        for hidden_stem, weight in _BRANCH_HIDDEN_STEMS.get(branch, []):
+            h_elem, _ = _stem_meta(hidden_stem) if hidden_stem in STEM_META else (None, None)
+            if h_elem:
+                hidden_contrib[h_elem] += weight * 0.3
 
     total = {k: stem_contrib[k] + branch_contrib[k] + hidden_contrib[k] for k in stem_contrib.keys()}
     score = WuXingScoreModel(**total)

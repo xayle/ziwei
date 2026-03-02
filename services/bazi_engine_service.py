@@ -43,6 +43,7 @@ from app.schemas import (
     VerifyResponse,
     WarningModel,
     WealthModel,
+    WuXingBreakdownModel,
     WuXingScoreModel,
     YongShenModel,
 )
@@ -144,7 +145,7 @@ def _calculate_v1(
         cnlunar_available=cnlunar_ok,
     )
 
-    wuxing_score_raw, _ = compute_wuxing(rp)
+    wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1: 保留 breakdown
     strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
     yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw)
     ten_gods_map = build_ten_gods(rp.day.stem, rp)
@@ -153,6 +154,10 @@ def _calculate_v1(
     wuxing_score = WuXingScoreModel.model_validate(
         wuxing_score_raw.model_dump() if hasattr(wuxing_score_raw, "model_dump")
         else getattr(wuxing_score_raw, "__dict__", wuxing_score_raw)
+    )
+    wuxing_breakdown = WuXingBreakdownModel.model_validate(
+        wuxing_breakdown_raw.model_dump() if hasattr(wuxing_breakdown_raw, "model_dump")
+        else getattr(wuxing_breakdown_raw, "__dict__", wuxing_breakdown_raw)
     )
     strength = DayMasterStrengthModel.model_validate(
         strength_raw.model_dump() if hasattr(strength_raw, "model_dump")
@@ -255,6 +260,7 @@ def _calculate_v1(
         dt_effective_utc8=dt_effective.isoformat(),
         tz=tz,
         wuxing_score=wuxing_score,
+        wuxing_breakdown=wuxing_breakdown,
         day_master_strength=strength,
         yongshen=yongshen,
         ten_gods=ten_gods,
@@ -519,6 +525,10 @@ def _enrich_v2_analysis(
             )
             for s in shensha_items_raw
         ]
+        # RL#9: 桃花星 → 回写 social.taohua_hit
+        has_taohua = any(s.get("name") == "桃花" for s in shensha_items_raw)
+        if verify_response.social is not None:
+            verify_response.social.taohua_hit = has_taohua
     except Exception as exc:
         logger.debug("[M2 shensha] %s", exc)
 

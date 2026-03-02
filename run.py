@@ -66,6 +66,7 @@ from app.schemas import (
 	WealthModel,
 	WarningModel,
 	DayMasterStrengthModel,
+	WuXingBreakdownModel,
 	WuXingScoreModel,
 	YongShenModel,
 	DaYunModel,
@@ -101,6 +102,7 @@ from services.bazi_engine_service import _enrich_v2_analysis  # M2 分析引擎�
 from services.bazi_engine.classic_refs import get_refs_by_tag  # 大运古籍引用
 from services.bazi_engine.relations import get_branch_relations, get_stem_clashes  # 红线14 地支关系 / P0-11 天干相克
 from services.bazi_engine.dayun import _ELEM_LOVE_HINT as _LOVE_HINTS, _ELEM_CHILD_HINT as _CHILD_HINTS  # 红线5 感情/子女提示
+from services.bazi_engine.shensha import compute_shensha as _compute_shensha  # RL#9 桃花
 from services.auth_service import verify_token, TokenPayload
 from services.rate_limit import limiter
 from zoneinfo import ZoneInfoNotFoundError
@@ -579,7 +581,7 @@ def api_verify(
 	)
 
 	# lightweight derived info for UI templates
-	wuxing_score_raw, _ = compute_wuxing(rp)
+	wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1: 保留 breakdown
 	strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
 	yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw)
 	ten_gods_map = build_ten_gods(rp.day.stem, rp)
@@ -588,6 +590,9 @@ def api_verify(
 	# 将内部模型转换为 Pydantic 模型，避免类型不匹配
 	wuxing_score = WuXingScoreModel.model_validate(
 		wuxing_score_raw.model_dump() if hasattr(wuxing_score_raw, "model_dump") else getattr(wuxing_score_raw, "__dict__", wuxing_score_raw)
+	)
+	wuxing_breakdown = WuXingBreakdownModel.model_validate(
+		wuxing_breakdown_raw.model_dump() if hasattr(wuxing_breakdown_raw, "model_dump") else getattr(wuxing_breakdown_raw, "__dict__", wuxing_breakdown_raw)
 	)
 	strength = DayMasterStrengthModel.model_validate(
 		strength_raw.model_dump() if hasattr(strength_raw, "model_dump") else getattr(strength_raw, "__dict__", strength_raw)
@@ -613,8 +618,16 @@ def api_verify(
 		marriage_flags=MarriageFlagsModel(allow_interpret=v.interpretation_enabled),
 		risk_hint=("差异/边界存在，婚姻解读需折叠" if v.boundary_risk_shichen or v.boundary_risk_jieqi or v.diff_fields else None),
 	)
+	# RL#9: 计算桃花神煞
+	_shensha_result = _compute_shensha(
+		year_stem=rp.year.stem, year_branch=rp.year.branch,
+		month_stem=rp.month.stem, month_branch=rp.month.branch,
+		day_stem=rp.day.stem, day_branch=rp.day.branch,
+		hour_stem=rp.hour.stem, hour_branch=rp.hour.branch,
+	)
+	_taohua_hit = any(s.get("name") == "桃花" for s in _shensha_result.get("items", []))
 	social = SocialModel(
-		taohua_hit=None,
+		taohua_hit=_taohua_hit,
 		relation_conflict=None,
 		social_hint=f"用神:{'/'.join(yongshen.favor)} 忌神:{'/'.join(yongshen.avoid)}" if yongshen.favor or yongshen.avoid else None,
 	)
@@ -677,6 +690,7 @@ def api_verify(
 		dt_effective_utc8=dt_effective.isoformat(),
 		tz=body.tz,
 		wuxing_score=wuxing_score,
+		wuxing_breakdown=wuxing_breakdown,
 		day_master_strength=strength,
 		yongshen=yongshen,
 		ten_gods=ten_gods,

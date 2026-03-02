@@ -317,6 +317,7 @@ class VerifyResponse(BaseModel):
     dt_effective_utc8: str = Field(..., description="Datetime normalized to Asia/Shanghai")
     tz: str = Field(..., description="Echo of requested timezone; only used when dt is naive")
     wuxing_score: Optional[WuXingScoreModel] = None
+    wuxing_breakdown: Optional[WuXingBreakdownModel] = Field(None, description="五行分解（藏干贡献 RL#1）")
     day_master_strength: Optional[DayMasterStrengthModel] = None
     yongshen: Optional[YongShenModel] = None
     ten_gods: Optional[TenGodsModel] = None
