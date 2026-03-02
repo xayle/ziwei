@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from backends import BackendUnavailable, CnlunarBackend, SxtwlBackend
 from boundary import Pillars, RiskFlags, Validation, compute_risk_flags, compute_validation
 from constants import MAX_LON, MIN_LON
-from solar_time import compute_solar_correction_minutes
+from services.bazi_engine.solar_time_v2 import compute_solar_correction_minutes
 
 
 def _ensure_tz(dt_utc8):
@@ -58,7 +58,7 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
     dt_local = _ensure_tz(dt_utc8)
     _validate_lon(lon)
 
-    _, correction_minutes = compute_solar_correction_minutes(lon)
+    correction_minutes = compute_solar_correction_minutes(dt_local, lon)
     dt_effective = dt_local + timedelta(minutes=correction_minutes) if use_solar else dt_local
 
     _, secondary_name = _pick_backends(mode)
