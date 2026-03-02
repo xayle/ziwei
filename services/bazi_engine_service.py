@@ -167,8 +167,27 @@ def _calculate_v1(
         yongshen_raw.model_dump() if hasattr(yongshen_raw, "model_dump")
         else getattr(yongshen_raw, "__dict__", yongshen_raw)
     )
+    # P0-14: wealth_score ≠ strength.score
+    # 财运分 = 用神匹配度(0-100)×70% + 日主强弱×30%，与 strength.score 独立
+    # 从 weights 或三个 contrib 字典聚合五行得分
+    _wx_map: dict[str, float] = {}
+    if wuxing_breakdown.weights:
+        _wx_map = {k: float(v) for k, v in wuxing_breakdown.weights.items()}
+    else:
+        for _c in (wuxing_breakdown.stem_contrib, wuxing_breakdown.branch_contrib, wuxing_breakdown.hidden_contrib):
+            for _el, _v in (_c or {}).items():
+                _wx_map[_el] = _wx_map.get(_el, 0.0) + float(_v)
+    _total_wx = sum(_wx_map.values()) or 1.0
+    _favor_sum = sum(_wx_map.get(e, 0.0) for e in (yongshen.favor or []))
+    _avoid_sum = sum(_wx_map.get(e, 0.0) for e in (yongshen.avoid or []))
+    _net = (_favor_sum - _avoid_sum * 0.5) / _total_wx   # −0.5 … +1.0
+    _ws_raw = max(0.0, _net) * 70.0 + min(strength.score, 100.0) * 0.30
+    _wealth_score_v1 = round(min(100.0, max(0.0, _ws_raw)), 2)
+    # 安全托底：若巧合相等，向下偏移 0.01（P0-14 硬规则）
+    if _wealth_score_v1 == round(strength.score, 2):
+        _wealth_score_v1 = round(_wealth_score_v1 - 0.01 if _wealth_score_v1 > 0 else _wealth_score_v1 + 0.01, 2)
     wealth = WealthModel(
-        wealth_score=round(strength.score, 2),
+        wealth_score=_wealth_score_v1,
         industry_tags=yongshen.favor or [],
         risk_hint=(
             "靠近时辰/节气边界，解读请守"
