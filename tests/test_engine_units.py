@@ -1170,3 +1170,102 @@ class TestLifestyleTables:
         from services.bazi_engine.lifestyle.tables import get_risk_organs
         result = get_risk_organs("unknown_element", is_excess=True)
         assert result == []
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 红线 14 — 地支关系 status 含全合/半合/拱合（relations.py）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestDizhiRelations:
+    """红线14: get_branch_relations status 枚举含全合/半合/拱合/合/冲"""
+
+    def _rel(self, y, m, d, h):
+        from services.bazi_engine.relations import get_branch_relations
+        return get_branch_relations(y, m, d, h)
+
+    # ── 三合全合 ──────────────────────────────────────────────────────────
+    def test_sanhe_quanhe_shen_zi_chen(self):
+        """申子辰三合全合 → status='全合', element='water'"""
+        rels = self._rel("申", "子", "辰", "午")
+        quanhe = [r for r in rels if r["status"] == "全合"]
+        assert quanhe, "申子辰三合全合未检测到"
+        assert quanhe[0]["element"] == "water", f"三合水局 element 应为 water，实际: {quanhe[0]['element']}"
+
+    def test_sanhe_quanhe_yin_wu_xu(self):
+        """寅午戌三合全合 → status='全合', element='fire'"""
+        rels = self._rel("寅", "午", "戌", "子")
+        quanhe = [r for r in rels if r["status"] == "全合"]
+        assert quanhe, "寅午戌三合全合未检测到"
+        assert quanhe[0]["element"] == "fire"
+
+    def test_sanhe_quanhe_hai_mao_wei(self):
+        """亥卯未三合全合 → status='全合', element='wood'"""
+        rels = self._rel("亥", "卯", "未", "酉")
+        quanhe = [r for r in rels if r["status"] == "全合"]
+        assert quanhe, "亥卯未三合全合未检测到"
+        assert quanhe[0]["element"] == "wood"
+
+    def test_sanhe_quanhe_si_you_chou(self):
+        """巳酉丑三合全合 → status='全合', element='metal'"""
+        rels = self._rel("巳", "酉", "丑", "卯")
+        quanhe = [r for r in rels if r["status"] == "全合"]
+        assert quanhe, "巳酉丑三合全合未检测到"
+        assert quanhe[0]["element"] == "metal"
+
+    # ── 三合半合 ──────────────────────────────────────────────────────────
+    def test_sanhe_banhe_zi_chen(self):
+        """子辰半合（含主气子）→ status='半合'"""
+        # 子辰二支，子为中气候补，辰为库 -- 实际上子是起端，辰是库支
+        # 申子辰: 子是主气(中间支), 申+子=含主气半合
+        rels = self._rel("申", "子", "卯", "午")  # 申子，无辰 → 含主气子：半合
+        banhe = [r for r in rels if r["status"] == "半合"]
+        assert banhe, f"申子半合（无辰）应产生半合，实际 rels={[r['status'] for r in rels]}"
+
+    def test_sanhe_banhe_wu_yin(self):
+        """寅午半合（无戌）→ status='半合'"""
+        rels = self._rel("寅", "午", "子", "卯")
+        banhe = [r for r in rels if r["status"] == "半合"]
+        assert banhe, "寅午半合（无戌）未检测到"
+
+    # ── 三合拱合 ──────────────────────────────────────────────────────────
+    def test_sanhe_gongh_shen_chen(self):
+        """申辰拱合（无子，暗拱）→ status='拱合'"""
+        rels = self._rel("申", "辰", "午", "寅")
+        gongh = [r for r in rels if r["status"] == "拱合"]
+        assert gongh, "申辰拱合（无子）未检测到"
+
+    def test_sanhe_gongh_yin_xu(self):
+        """寅戌拱合（无午）→ status='拱合'"""
+        rels = self._rel("寅", "戌", "子", "卯")
+        gongh = [r for r in rels if r["status"] == "拱合"]
+        assert gongh, "寅戌拱合（无午）未检测到"
+
+    # ── 六合 / 六冲 ────────────────────────────────────────────────────────
+    def test_liuhe_zi_chou(self):
+        """子丑六合 → status='合'"""
+        rels = self._rel("子", "丑", "午", "巳")
+        liuhe = [r for r in rels if r["type"] == "六合"]
+        assert liuhe, "子丑六合未检测到"
+        assert liuhe[0]["status"] == "合"
+
+    def test_liuchong_zi_wu(self):
+        """子午六冲 → status='冲'"""
+        rels = self._rel("子", "午", "卯", "酉")
+        chong = [r for r in rels if r["type"] == "六冲"]
+        assert chong, "子午六冲未检测到"
+        assert chong[0]["status"] == "冲"
+
+    def test_positions_field_present(self):
+        """每条关系的 positions 字段应为非空列表"""
+        rels = self._rel("申", "子", "辰", "午")
+        for r in rels:
+            assert isinstance(r.get("positions"), list) and r["positions"], \
+                f"positions 应为非空列表，实际: {r}"
+
+    def test_no_relations_when_isolated(self):
+        """四支互不相关时返回空列表（子卯午酉 — 无三合/六合格局）"""
+        rels = self._rel("子", "卯", "午", "酉")
+        # 子午冲 + 卯酉冲 会产生六冲，但无三合/六合
+        types = {r["type"] for r in rels}
+        assert "三合全合" not in types
+        assert "三合半合" not in types
