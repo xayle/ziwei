@@ -735,6 +735,7 @@ def _enrich_v2_analysis(
     # ────────────────────────────────────────────────────────────────────────
     try:
         from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
+        from services.bazi_engine.liunian import _liunian_day_relation  # 红线10 犯太岁
         from app.schemas.analysis import LiuNianDetailModel
 
         # 取近5年流年构建 liunian_detail
@@ -753,6 +754,9 @@ def _enrich_v2_analysis(
         # 生成当前年份前后2年共5年
         for yr in range(current_year - 2, current_year + 3):
             ystem, ybranch = _year_ganzhi(yr)
+            # 红线10: 计算犯太岁关系
+            taisui_rel = _liunian_day_relation(ybranch, ds_br)
+            taisui_list = [taisui_rel] if taisui_rel else []
             domain = compute_liunian_domain_forecasts(
                 year=yr, year_stem=ystem, year_branch=ybranch,
                 day_stem=ds_st, day_branch=ds_br,
@@ -764,7 +768,7 @@ def _enrich_v2_analysis(
             _detail_list.append(LiuNianDetailModel(
                 year=yr,
                 ganzhi=f"{ystem}{ybranch}",
-                tai_sui_relations=[],
+                tai_sui_relations=taisui_list,  # 红线10: 犯太岁关系
                 clash_pillars=[],
                 notable_months=[],
                 annual_score=_domain_to_score(domain, favor, ystem),

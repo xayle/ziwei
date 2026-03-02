@@ -659,13 +659,15 @@ function renderTab17(json, el) {
   <div class="liunian-timeline">
     ${liunian.map(item => {
       const isCurrentYear = item.year === thisYear;
-      const isFanTaisui = item.fan_taisui||item.clash_type||false;
+      const isFanTaisui = (item.tai_sui_relations?.length > 0) || item.fan_taisui || item.clash_type || false;
+      const taisuiLabel = item.tai_sui_relations?.[0] || '';
       return `
       <div class="liunian-item${isFanTaisui?' fan-taisui':''}${isCurrentYear?' dayun-current':''}">
         <div>
           <div class="liunian-year">${item.year||'—'}</div>
           <div class="liunian-gz">${esc(item.ganzhi||(item.stem||'')+(item.branch||''))}</div>
           ${item.ten_god?`<div style="margin-top:4px"><span class="tengod-badge ${tenGodType(item.ten_god_code||item.ten_god)}">${tenGodCN(item.ten_god_code||item.ten_god)}</span></div>`:''}
+          ${taisuiLabel?`<div style="font-size:10px;color:var(--bad);margin-top:3px">⚡ ${esc(taisuiLabel)}</div>`:''}
           ${item.clash_note?`<div style="font-size:10px;color:var(--bad);margin-top:3px">${esc(item.clash_note)}</div>`:''}
         </div>
         <div>
