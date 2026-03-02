@@ -124,7 +124,7 @@ def _build_ten_god_table() -> None:
                         # 克我
                         ten_god = "正官" if same_polarity else "七杀"
                     else:
-                        continue
+                        continue  # pragma: no cover
                     TEN_GOD_TABLE[(day_elem, day_yin_yang, obj_elem, obj_yin_yang)] = ten_god
 
 _build_ten_god_table()

@@ -1269,3 +1269,165 @@ class TestDizhiRelations:
         types = {r["type"] for r in rels}
         assert "三合全合" not in types
         assert "三合半合" not in types
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 覆盖率补丁：lifestyle / scoring / shensha / solar_time_v2 / strength / tables
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestLifestyleDefaults:
+    """fengshui/lucky/jewelry 空用神默认值分支 (fengshui:91,93 / lucky:74,76,78 / jewelry:78)"""
+
+    def test_fengshui_empty_yongshen_fallback(self):
+        """yongshen_favor=[] → auspicious_directions/lucky_colors 触发默认值"""
+        from services.bazi_engine.lifestyle.fengshui import compute_fengshui
+        result = compute_fengshui(yongshen_favor=[], yongshen_avoid=["fire"])
+        assert result.auspicious_directions, "默认 auspicious_directions 不应为空"
+        assert result.lucky_colors, "默认 lucky_colors 不应为空"
+
+    def test_lucky_empty_yongshen_fallback(self):
+        """yongshen_favor=[] → lucky_colors/lucky_numbers/lucky_direction 触发默认值"""
+        from services.bazi_engine.lifestyle.lucky import compute_lucky
+        result = compute_lucky(yongshen_favor=[], yongshen_avoid=[])
+        assert result.lucky_colors, "默认 lucky_colors 不应为空"
+        assert result.lucky_numbers, "默认 lucky_numbers 不应为空"
+        assert result.lucky_direction, "默认 lucky_direction 不应为空"
+
+    def test_jewelry_empty_yongshen_fallback(self):
+        """yongshen_favor=[] → primary 字段触发默认黄金黄水晶"""
+        from services.bazi_engine.lifestyle.jewelry import compute_jewelry
+        result = compute_jewelry(yongshen_favor=[], yongshen_avoid=[])
+        assert result.primary.material == "黄金", f"默认 primary.material 应为黄金，实际 {result.primary.material}"
+
+
+class TestScoringExtra:
+    """scoring.py 未覆盖分支: empty_yongshen(L88) + 中格格局(L109)"""
+
+    def test_yongshen_score_empty_favor(self):
+        """yongshen_favor=[] → 返回 10.0（中性基础分）"""
+        from services.bazi_engine.scoring import _score_yongshen_power
+        result = _score_yongshen_power(
+            yongshen_favor=[],
+            wuxing_scores={"wood": 20, "fire": 20, "earth": 20, "metal": 20, "water": 20},
+        )
+        assert result == 10.0, f"空用神应返回 10.0，实际 {result}"
+
+    def test_geju_mid_tier_score(self):
+        """中格格局（七杀格/偏印格等）→ 返回 9.0"""
+        from services.bazi_engine.scoring import _score_geju_level
+        for geju in ("七杀格", "偏印格", "正财格", "偏财格", "伤官格", "羊刃格"):
+            result = _score_geju_level(geju, is_broken=False)
+            assert result == 9.0, f"{geju} 应返回 9.0，实际 {result}"
+
+
+class TestShenshaExtra:
+    """shensha.py 孤辰(L310) + 三奇(L343-344)"""
+
+    def _shensha(self, ys, yb, ms, mb, ds, db, hs, hb):
+        from services.bazi_engine.shensha import compute_shensha
+        return compute_shensha(ys, yb, ms, mb, ds, db, hs, hb)
+
+    def test_gu_chen_detected(self):
+        """年支寅 → 孤辰支为巳，当其他柱有巳时检测孤辰"""
+        # GU_CHEN["寅"] = "巳"，月支巳 → 激活孤辰
+        result = self._shensha("甲", "寅", "丙", "巳", "庚", "子", "壬", "午")
+        names = [item["name"] for item in result["items"]]
+        assert "孤辰" in names, f"未检测到孤辰，实际神煞: {names}"
+
+    def test_sanqi_tian_detected(self):
+        """四柱天干含甲戊庚（天三奇）→ 检测到三奇"""
+        # SANQI_GROUPS[0] = frozenset({"甲","戊","庚"})
+        result = self._shensha("甲", "子", "戊", "午", "庚", "申", "壬", "辰")
+        names = [item["name"] for item in result["items"]]
+        assert "三奇" in names, f"未检测到三奇（天三奇），实际神煞: {names}"
+
+    def test_sanqi_di_detected(self):
+        """四柱天干含乙丙丁（地三奇）→ 检测到三奇"""
+        result = self._shensha("乙", "子", "丙", "午", "丁", "申", "甲", "辰")
+        names = [item["name"] for item in result["items"]]
+        assert "三奇" in names, f"未检测到三奇（地三奇），实际神煞: {names}"
+
+
+class TestSolarTimeV2Extra:
+    """solar_time_v2.py apply_solar_correction (L83-94)"""
+
+    def test_apply_solar_correction_returns_datetime(self):
+        """apply_solar_correction 返回经过修正的 datetime"""
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        from services.bazi_engine.solar_time_v2 import apply_solar_correction
+        dt = datetime(1990, 7, 17, 12, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        result = apply_solar_correction(dt, longitude=116.4)
+        # 北京经度 116.4 → 修正量约 -(120-116.4)*4 = -14.4 分钟
+        assert result.tzinfo == dt.tzinfo
+        assert result != dt, "修正后时间应与原时间不同"
+
+    def test_apply_solar_correction_zero_lon(self):
+        """经度 120.0（正好对应东 8 区中央经线）→ 修正量接近 0"""
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        from services.bazi_engine.solar_time_v2 import apply_solar_correction, compute_solar_correction_minutes
+        dt = datetime(2000, 6, 21, 12, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        minutes = compute_solar_correction_minutes(dt, longitude=120.0)
+        # 标准时区修正 + EoT，总修正量接近 EoT 值（约 ±2 分钟范围内）
+        assert -5 < minutes < 5, f"120°经度修正量应接近0，实际 {minutes:.2f} 分钟"
+
+
+class TestStrengthExtra:
+    """strength.py 调候得分 + 六合得令分支 (L124 / L147 / L155)"""
+
+    def test_liuhe_month_day_bonus(self):
+        """月支与日支六合 → 合化得分+50"""
+        from services.bazi_engine.strength import _get_hehua_score
+        # 子丑六合 (LIU_HE["子"]="丑")
+        # branches=[year, month=子, day=丑, hour], day_elem=water(壬)
+        result = _get_hehua_score(
+            day_stem="壬",
+            day_elem="water",
+            stems=["甲", "壬", "壬", "甲"],
+            branches=["午", "子", "丑", "辰"],
+        )
+        assert result >= 50.0, f"月日六合应触发+50，实际 {result}"
+
+    def test_tiaohou_cold_month_wood(self):
+        """严寒月份 + 日主木 → 调候得分 50（木得寒月中分）"""
+        from services.bazi_engine.strength import _get_tiaohou_score
+        result = _get_tiaohou_score(day_elem="wood", month_branch="子")
+        assert result == 50.0, f"寒月木日主应返回 50.0，实际 {result}"
+
+    def test_tiaohou_hot_month_earth(self):
+        """炎热月份 + 日主土 → 调候得分 50（土得炎月中分）"""
+        from services.bazi_engine.strength import _get_tiaohou_score
+        result = _get_tiaohou_score(day_elem="earth", month_branch="午")
+        assert result == 50.0, f"热月土日主应返回 50.0，实际 {result}"
+
+
+class TestPalaceExtra:
+    """palace.py 未知日干 → compute_twelve_palaces 返回 {} (L99)"""
+
+    def test_unknown_day_stem_returns_empty(self):
+        """未知日干（不在阳干/阴干表中）→ compute_twelve_palaces 返回空 dict"""
+        from services.bazi_engine.palace import compute_twelve_palaces
+        result = compute_twelve_palaces("X")  # 不存在的日干 → start_branch=None → return {}
+        assert result == {}, f"未知日干应返回空 dict，实际 {result}"
+
+
+class TestMilestonesExtra:
+    """milestones.py 岁运并临条件 (L121-122)"""
+
+    def test_suiyun_bingling_detected(self):
+        """流年天干与当前大运干支相同 → 触发岁运并临里程碑"""
+        from services.bazi_engine.milestones import compute_milestones
+        # 生年1980，大运5-15岁为"甲子"
+        # 流年1990(age=10)，天干"甲" in "甲子" → 岁运并临
+        result = compute_milestones(
+            birth_year=1980,
+            day_branch="子",
+            year_branch="申",
+            dayun_list=[{"ganzhi": "甲子", "start_age": 5, "end_age": 15, "branch": "子"}],
+            liunian_list=[{"year": 1990, "ganzhi": "甲午", "branch": "午", "stem": "甲"}],
+            yongshen_favor=["wood"],
+            yongshen_avoid=["metal"],
+        )
+        types = [m.milestone_type for m in result]
+        assert "岁运并临" in types, f"未检测到岁运并临，实际里程碑类型: {types}"
