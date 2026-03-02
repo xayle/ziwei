@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -62,6 +62,18 @@ class GejuModel(BaseModel):
     interpretation_text: str
     classic_ref:         str
     disclaimer:          str = "仅供学术研究参考"
+    fact_data:           Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "GejuModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "geju_name": self.geju_name,
+                "geju_level": self.geju_level,
+                "month_stem_shishen": self.month_stem_shishen,
+                "is_broken": self.is_broken,
+            }
+        return self
 
 
 class PalaceItemModel(BaseModel):
@@ -82,6 +94,17 @@ class PalaceModel(BaseModel):
     inference_tags:  list[str]
     interpretation_text: str
     disclaimer:      str = "仅供学术研究参考"
+    fact_data:       Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "PalaceModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "ming_gong": self.ming_gong.model_dump(),
+                "shen_gong": self.shen_gong.model_dump(),
+                "twelve_palaces_count": len(self.twelve_palaces),
+            }
+        return self
 
 
 class ShenshaModel(BaseModel):
@@ -110,6 +133,20 @@ class WealthAnalysisModel(BaseModel):
     inference_tags:      list[str]
     interpretation_text: str
     disclaimer:          str = "仅供学术研究参考"
+    fact_data:           Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "WealthAnalysisModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "wealth_score": self.wealth_score,
+                "wealth_tier": self.wealth_tier,
+                "annual_range": self.annual_range,
+                "industries": self.industries,
+                "strategy": self.strategy,
+                "dayun_forecast": self.dayun_forecast,
+            }
+        return self
 
 
 class CareerAnalysisModel(BaseModel):
@@ -123,6 +160,20 @@ class CareerAnalysisModel(BaseModel):
     inference_tags:       list[str]
     interpretation_text:  str
     disclaimer:           str = "仅供学术研究参考"
+    fact_data:            Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "CareerAnalysisModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "career_score": self.career_score,
+                "career_directions": self.career_directions,
+                "suitable_industries": self.suitable_industries,
+                "leadership_potential": self.leadership_potential,
+                "development_advice": self.development_advice,
+                "optimal_move_timing": self.optimal_move_timing,
+            }
+        return self
 
 
 class MarriageAnalysisModel(BaseModel):
@@ -139,6 +190,22 @@ class MarriageAnalysisModel(BaseModel):
     inference_tags:       list[str]
     interpretation_text:  str
     disclaimer:           str = "仅供学术研究参考"
+    fact_data:            Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "MarriageAnalysisModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "marriage_score": self.marriage_score,
+                "peach_blossom": self.peach_blossom,
+                "partner_wuxing": self.partner_wuxing,
+                "partner_direction": self.partner_direction,
+                "optimal_marriage_age": self.optimal_marriage_age,
+                "marriage_windows": self.marriage_windows,
+                "children_outlook": self.children_outlook,
+                "children_timing": self.children_timing,
+            }
+        return self
 
 
 class HealthAnalysisModel(BaseModel):
@@ -153,6 +220,21 @@ class HealthAnalysisModel(BaseModel):
     inference_tags:  list[str]
     interpretation_text: str
     disclaimer:      str = "仅供学术研究参考"
+    fact_data:       Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "HealthAnalysisModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "health_score": self.health_score,
+                "risk_organs": self.risk_organs,
+                "risk_level": self.risk_level,
+                "health_advice": self.health_advice,
+                "exercise": self.exercise,
+                "diet": self.diet,
+                "peak_period": self.peak_period,
+            }
+        return self
 
 
 class RelationshipAnalysisModel(BaseModel):
@@ -165,7 +247,19 @@ class RelationshipAnalysisModel(BaseModel):
     inference_tags:  list[str]
     interpretation_text: str
     disclaimer:      str = "仅供学术研究参考"
+    fact_data:       Optional[dict] = None
 
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "RelationshipAnalysisModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "relationship_score": self.relationship_score,
+                "liu_qin": self.liu_qin,
+                "noble_people": self.noble_people,
+                "petty_people": self.petty_people,
+                "social_strategy": self.social_strategy,
+            }
+        return self
 
 class PersonalityModel(BaseModel):
     """性格分析 §4.11-F"""
@@ -178,6 +272,20 @@ class PersonalityModel(BaseModel):
     inference_tags:    list[str]
     interpretation_text: str
     disclaimer:        str = "仅供学术研究参考"
+    fact_data:         Optional[dict] = None
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "PersonalityModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "day_stem": self.day_stem,
+                "day_stem_trait": self.day_stem_trait,
+                "strength_modifier": self.strength_modifier,
+                "advantages": self.advantages,
+                "disadvantages": self.disadvantages,
+                "growth_advice": self.growth_advice,
+            }
+        return self
 
 
 class MonthlyFortuneModel(BaseModel):

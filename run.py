@@ -98,6 +98,8 @@ from services.bazi_full_service import (
 # [M1 任务1.23] ENGINE_V2 路由开关
 import services.bazi_engine_service as _bazi_engine_service
 from services.bazi_engine_service import _enrich_v2_analysis  # M2 分析引擎集成
+from services.bazi_engine.classic_refs import get_refs_by_tag  # 大运古籍引用
+from services.bazi_engine.relations import get_branch_relations  # 红线14 地支关系
 from services.auth_service import verify_token, TokenPayload
 from services.rate_limit import limiter
 from zoneinfo import ZoneInfoNotFoundError
@@ -613,6 +615,7 @@ def api_verify(
 		dayun_model_raw.model_dump() if hasattr(dayun_model_raw, "model_dump") else getattr(dayun_model_raw, "__dict__", dayun_model_raw)
 	)
 	_WX_CN_MAP = {'wood':'木','fire':'火','earth':'土','metal':'金','water':'水'}
+	_dayun_base_refs = get_refs_by_tag("大运")[:2]
 	for item in dayun_model.items:
 		if item.stem:
 			item.ten_god = ten_god(rp.day.stem, item.stem)
@@ -620,6 +623,12 @@ def api_verify(
 			item.wealth_hint = f"用神倾向: {', '.join(_WX_CN_MAP.get(f,f) for f in yongshen.favor)}"
 		if yongshen.avoid:
 			item.health_hint = f"忌神: {', '.join(_WX_CN_MAP.get(a,a) for a in yongshen.avoid)}"
+		# 红线6: 填充大运古籍引用
+		if item.refs is None:
+			_item_refs = (
+				get_refs_by_tag(item.ten_god) if item.ten_god else []
+			)
+			item.refs = (_dayun_base_refs + _item_refs)[:3]
 
 	verify_response = VerifyResponse(
 		api_version=API_VERSION,
@@ -645,6 +654,13 @@ def api_verify(
 		social=social,
 		dayun=dayun_model,
 	)
+	# 红线14: 填充地支关系（全合/半合/拱合/六合/六冲）
+	try:
+		verify_response.dizhi_relations = get_branch_relations(
+			rp.year.branch, rp.month.branch, rp.day.branch, rp.hour.branch
+		)
+	except Exception as _rel_exc:
+		logger.debug("[dizhi_relations] %s", _rel_exc)
 	# ── M2 分析引擎集成 ─────────────────────────────────────────────────
 	try:
 		verify_response = _enrich_v2_analysis(

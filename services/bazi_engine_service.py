@@ -663,6 +663,14 @@ def _enrich_v2_analysis(
     # ────────────────────────────────────────────────────────────────────────
     try:
         from services.bazi_engine.interpret import interpret_bazi, InterpretInput
+        from services.bazi_engine.relations import get_branch_relations as _get_branch_rels
+        _rp_branches = (
+            verify_response.pillars_primary.year.branch,
+            verify_response.pillars_primary.month.branch,
+            verify_response.pillars_primary.day.branch,
+            verify_response.pillars_primary.hour.branch,
+        ) if verify_response.pillars_primary else ("", "", "", "")
+        _dizhi_rels = _get_branch_rels(*_rp_branches)
         interp_inp = InterpretInput(
             day_stem=ds_st,
             wuxing_scores=wx_scores,
@@ -671,7 +679,7 @@ def _enrich_v2_analysis(
             strength_tier=strength_tier,
             geju_name=geju_name,
             shensha_items=shensha_items_raw,
-            dizhi_relations=[],   # 地支关系（简化，后续接）
+            dizhi_relations=_dizhi_rels,
             dayun_trend=_infer_dayun_trend(dayun_list),
             gender=gender or "male",
         )

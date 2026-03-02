@@ -310,6 +310,9 @@ class VerifyResponse(BaseModel):
     rule_version_detail: Optional[Dict[str, str]] = Field(
         None, description="各模块规则版本字典（M2新增，per-module versions）"
     )
+    dizhi_relations: Optional[list[dict]] = Field(
+        None, description="地支关系（全合/半合/拱合/六合/六冲）列表，见红线14"
+    )
 
 
 class BaziFullRequest(BaseModel):
