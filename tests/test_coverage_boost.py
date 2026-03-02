@@ -232,3 +232,66 @@ class TestLifestyleTables:
             assert "wood" in WUXING_TO_NUMBER
         except ImportError:
             pytest.skip("WUXING_TO_NUMBER 不在此模块")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# M6.08 Prometheus 自定义业务指标 (P50/GAP-15)
+# bazi_verify_total / bazi_verify_duration / bazi_boundary_risk
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestPrometheusMetrics:
+    """M6.08: 三项自定义 Prometheus 业务指标验证"""
+
+    def test_metrics_importable(self):
+        from services.prometheus_monitoring import (
+            BAZI_VERIFY_TOTAL,
+            BAZI_VERIFY_DURATION,
+            BAZI_BOUNDARY_RISK,
+        )
+        assert BAZI_VERIFY_TOTAL is not None
+        assert BAZI_VERIFY_DURATION is not None
+        assert BAZI_BOUNDARY_RISK is not None
+
+    def test_record_verify_metrics_success(self):
+        """record_verify_metrics 成功路径不抛异常"""
+        from services.prometheus_monitoring import record_verify_metrics
+        # 不应抛任何异常
+        record_verify_metrics(
+            mode="dual",
+            boundary_level="L0",
+            duration_secs=0.8,
+            success=True,
+        )
+
+    def test_record_verify_metrics_error(self):
+        """record_verify_metrics 错误路径"""
+        from services.prometheus_monitoring import record_verify_metrics
+        record_verify_metrics(
+            mode="single",
+            boundary_level="L2",
+            duration_secs=1.2,
+            success=False,
+        )
+
+    def test_bazi_verify_total_metric_name(self):
+        """bazi_verify_total Counter 名称符合规格"""
+        from services.prometheus_monitoring import BAZI_VERIFY_TOTAL
+        # prometheus_client stores name without _total suffix in _name
+        assert "bazi_verify" in BAZI_VERIFY_TOTAL._name
+
+    def test_bazi_boundary_risk_metric_name(self):
+        """bazi_boundary_risk_total Counter 名称符合规格"""
+        from services.prometheus_monitoring import BAZI_BOUNDARY_RISK
+        assert "bazi_boundary_risk" in BAZI_BOUNDARY_RISK._name
+
+    def test_bazi_verify_duration_buckets(self):
+        """bazi_verify_duration_seconds Histogram 包含 3.0s bucket"""
+        from services.prometheus_monitoring import BAZI_VERIFY_DURATION
+        buckets = BAZI_VERIFY_DURATION._kwargs.get("buckets", ()) or ()
+        # 也可从 _upper_bounds 读取
+        try:
+            bounds = list(BAZI_VERIFY_DURATION._upper_bounds)
+        except AttributeError:
+            bounds = list(buckets)
+        assert any(abs(b - 3.0) < 0.01 for b in bounds), \
+            "BAZI_VERIFY_DURATION 应包含 3.0s bucket（M6.07 基线）"
