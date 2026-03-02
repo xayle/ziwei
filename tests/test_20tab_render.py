@@ -229,3 +229,20 @@ class TestTabSchema:
         tc = verify_data.get("tiangan_clashes")
         # 可能为空列表（无克），但字段应存在
         assert tc is not None, "tiangan_clashes 字段不应为 None（应为列表）"
+
+    def test_three_layer_model_fact_data(self, verify_data):
+        """红线#33: 每个分析维度输出 fact_data / inference_tags / interpretation_text"""
+        dims = ["geju", "wealth", "career", "marriage", "health", "relationship", "personality"]
+        missing = []
+        for dim in dims:
+            obj = verify_data.get(dim)
+            if not isinstance(obj, dict):
+                missing.append(f"{dim}(not-dict)")
+                continue
+            if not obj.get("fact_data"):
+                missing.append(f"{dim}.fact_data")
+            if "inference_tags" not in obj:
+                missing.append(f"{dim}.inference_tags")
+            if "interpretation_text" not in obj:
+                missing.append(f"{dim}.interpretation_text")
+        assert not missing, f"红线#33 三层模型字段缺失: {missing}"

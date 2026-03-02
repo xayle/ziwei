@@ -99,8 +99,23 @@ class MarriageModel(BaseModel):
     child_hint: Optional[ChildHintModel] = None
     risk_hint: Optional[str] = None
     note: Optional[str] = None
+    # 红线#33: 三层模型字段
+    inference_tags: list[str] = Field(default_factory=list)
+    interpretation_text: str = ""
+    fact_data: Optional[dict] = None
 
     model_config = ConfigDict(extra="allow")
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "MarriageModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "marriage_flags": self.marriage_flags.model_dump() if self.marriage_flags else None,
+                "love_window": [lw.model_dump() for lw in self.love_window] if self.love_window else [],
+                "child_hint": self.child_hint.model_dump() if self.child_hint else None,
+                "risk_hint": self.risk_hint,
+            }
+        return self
 
 
 class WealthModel(BaseModel):
@@ -109,8 +124,23 @@ class WealthModel(BaseModel):
     industry_tags: list[str] = Field(default_factory=list)
     risk_hint: Optional[str] = None
     note: Optional[str] = None
+    # 红线#33: 三层模型字段
+    inference_tags: list[str] = Field(default_factory=list)
+    interpretation_text: str = ""
+    fact_data: Optional[dict] = None
 
     model_config = ConfigDict(extra="allow")
+
+    @model_validator(mode="after")
+    def _fill_fact_data(self) -> "WealthModel":
+        if self.fact_data is None:
+            self.fact_data = {
+                "wealth_score": self.wealth_score,
+                "industry_tags": self.industry_tags,
+                "wealth_range": self.wealth_range.model_dump() if self.wealth_range else None,
+                "risk_hint": self.risk_hint,
+            }
+        return self
 
 
 class SocialModel(BaseModel):
