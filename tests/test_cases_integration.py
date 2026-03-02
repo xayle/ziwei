@@ -299,3 +299,56 @@ class TestCasePerformance:
         # Case retrieval should be very fast
         if benchmark_timer.elapsed_ms > 0:
             assert benchmark_timer.elapsed_ms < 1000  # 5 retrievals in < 1 second
+
+
+@pytest.mark.api
+class TestCaseTagSearch:
+    """P0-23: 案例搜索返回关系匹配 — 搜索'七杀格'返回相关案例"""
+
+    def test_tag_search_returns_matching_cases(self, client_with_auth: TestClient):
+        """P0-23: 按tag搜索能返回含该tag的案例"""
+        # Step 1: 创建含七杀格 tag 的案例
+        payload = {
+            "name": "七杀格测试案例",
+            "gender": "male",
+            "birth_dt_local": "1985-07-15T10:00:00",
+            "tz": "Asia/Shanghai",
+            "lon": 121.47,
+            "solar_time_enabled": False,
+            "tags": "七杀格,阳刃格",
+        }
+        create_resp = client_with_auth.post("/api/v1/cases", json=payload)
+        if create_resp.status_code != 201:
+            pytest.skip("案例创建端点不可用，跳过P0-23集成测试")
+
+        # Step 2: 按 tag=七杀格 搜索
+        search_resp = client_with_auth.get("/api/v1/cases", params={"tag": "七杀格"})
+        assert search_resp.status_code == 200, f"搜索应返回200，实际: {search_resp.status_code}"
+
+        data = search_resp.json()
+        assert isinstance(data, list), "响应应为列表"
+        assert len(data) >= 1, "搜索'七杀格'应至少返回1条案例"
+
+        # Step 3: 验证返回的案例确实包含该 tag
+        ids_with_tag = [c["id"] for c in data if "七杀格" in (c.get("tags") or "")]
+        assert len(ids_with_tag) >= 1, "返回的案例中应有至少1条包含'七杀格' tag"
+
+    def test_name_search_returns_matching_cases(self, client_with_auth: TestClient):
+        """P0-23 补充: 按名称可搜索到案例"""
+        payload = {
+            "name": "七杀格命盘示例",
+            "gender": "female",
+            "birth_dt_local": "1990-03-20T08:00:00",
+            "tz": "Asia/Shanghai",
+            "lon": 116.40,
+            "solar_time_enabled": False,
+        }
+        create_resp = client_with_auth.post("/api/v1/cases", json=payload)
+        if create_resp.status_code != 201:
+            pytest.skip("案例创建端点不可用")
+
+        search_resp = client_with_auth.get("/api/v1/cases", params={"q": "七杀格命盘"})
+        assert search_resp.status_code == 200
+        data = search_resp.json()
+        assert any("七杀格命盘" in (c.get("name") or "") for c in data), \
+            "按名称搜索'七杀格命盘'应返回相关案例"
