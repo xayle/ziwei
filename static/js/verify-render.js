@@ -609,8 +609,18 @@ function renderTab16(json, el) {
   const items = dy.items||[];
   const thisYear = new Date().getFullYear();
   const isCurrent = item => item.start_year <= thisYear && (item.start_year||0)+10 > thisYear;
+  // M4.18: 单库模式提示
+  const isSingleMode = json.mode_effective === 'single' || json.mode_requested === 'single';
+  const singleModeNotice = isSingleMode
+    ? `<div class="card" style="margin-bottom:12px;border-left:3px solid var(--warn,#e6a817)">
+        <div style="display:flex;align-items:center;gap:8px;color:var(--warn,#b87a0a)">
+          <span style="font-size:16px">⚠️</span>
+          <span style="font-weight:600">单库模式 — 无节气数据</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">当前使用单节气库推算，大运起止年份精度受限，仅供学术参考。</div>
+       </div>` : '';
 
-  el.innerHTML = `
+  el.innerHTML = singleModeNotice + `
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>大运推算方法</p>
     <div class="kv">
