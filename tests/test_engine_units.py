@@ -696,3 +696,181 @@ class TestP012P014:
             f"P0-12 违规: reasons 含非法 key: {invalid}\n"
             f"合法集合: {sorted(VALID_REASON_CODES)}"
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑬ M6.09: wealth_estimate.py 覆盖率补充（多路径参数化测试）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestWealthEstimate:
+    """M6.09: 财富估算模块 estimate_wealth / wealth_estimate_to_dict 分支全覆盖"""
+
+    def _est(self, **kwargs):
+        from services.bazi_engine.analysis.wealth_estimate import estimate_wealth
+        return estimate_wealth(**kwargs)
+
+    # ── 基础路径 ──────────────────────────────────────────────────
+
+    def test_basic_zhonge_pingwen(self):
+        """中格+平稳（默认路径）→ 估算额应为 40.0 万"""
+        result = self._est(wealth_tier="中格", dayun_trend="平稳")
+        assert result.estimated_amount == 40.0
+        assert result.wealth_tier == "中格"
+        assert result.base_amount == 40.0
+        assert result.dayun_coeff == 1.0
+
+    def test_gaoge_shangsheng(self):
+        """高格+上升 → 估算额应为 80×1.2=96.0 万"""
+        result = self._est(wealth_tier="高格", dayun_trend="上升")
+        assert abs(result.estimated_amount - 96.0) < 0.01
+        assert result.dayun_coeff == 1.2
+
+    def test_dige_xiajiang(self):
+        """低格+下降 → 估算额应为 15×0.8=12.0 万"""
+        result = self._est(wealth_tier="低格", dayun_trend="下降")
+        assert abs(result.estimated_amount - 12.0) < 0.01
+        assert result.dayun_coeff == 0.8
+
+    # ── city_tier 直接传入路径 ────────────────────────────────────
+
+    def test_city_tier_yixian(self):
+        """city_tier='一线' 直接传入 → cc=1.8"""
+        result = self._est(wealth_tier="中格", city_tier="\u4e00\u7ebf")
+        assert result.city_coeff == 1.8
+        assert result.estimated_amount == 40.0 * 1.8
+
+    def test_city_tier_xin_yixian(self):
+        """city_tier='新一线' 直接传入 → cc=1.2"""
+        result = self._est(wealth_tier="中格", city_tier="\u65b0\u4e00\u7ebf")
+        assert result.city_coeff == 1.2
+
+    def test_city_tier_qita(self):
+        """city_tier='其余' 直接传入 → cc=1.0"""
+        result = self._est(wealth_tier="中格", city_tier="\u5176\u4f59")
+        assert result.city_coeff == 1.0
+
+    # ── city 名称自动判断路径 ─────────────────────────────────────
+
+    def test_city_tier1_beijing(self):
+        """city='北京'（一线城市）→ cc=1.8"""
+        result = self._est(wealth_tier="中格", city="\u5317\u4eac")
+        assert result.city_coeff == 1.8
+
+    def test_city_tier1_shanghai(self):
+        """city='上海'（一线城市）→ cc=1.8"""
+        result = self._est(wealth_tier="高格", city="\u4e0a\u6d77")
+        assert result.city_coeff == 1.8
+
+    def test_city_new_tier1_chengdu(self):
+        """city='成都'（新一线城市）→ cc=1.2"""
+        result = self._est(wealth_tier="中格", city="\u6210\u90fd")
+        assert result.city_coeff == 1.2
+
+    def test_city_new_tier1_hangzhou(self):
+        """city='杭州'（新一线城市）→ cc=1.2"""
+        result = self._est(wealth_tier="中格", city="\u676d\u5dde")
+        assert result.city_coeff == 1.2
+
+    def test_city_unknown_falls_to_qita(self):
+        """city='无锡'（非一/新一线）→ cc=1.0"""
+        result = self._est(wealth_tier="中格", city="\u65e0\u9521")
+        assert result.city_coeff == 1.0
+
+    # ── city_tier 优先于 city ─────────────────────────────────────
+
+    def test_city_tier_overrides_city(self):
+        """city_tier='一线' 优先：即使 city='无锡' 也应取 cc=1.8"""
+        result = self._est(wealth_tier="中格", city_tier="\u4e00\u7ebf", city="\u65e0\u9521")
+        assert result.city_coeff == 1.8
+
+    # ── industry 行业系数路径 ──────────────────────────────────────
+
+    def test_industry_jinrong(self):
+        """industry 含'金融' → ic=1.5"""
+        result = self._est(wealth_tier="中格", industry="\u91d1\u878d\u884c\u4e1a")
+        assert result.industry_coeff == 1.5
+
+    def test_industry_IT(self):
+        """industry 含'IT' → ic=1.5"""
+        result = self._est(wealth_tier="中格", industry="IT\u5f00\u53d1")
+        assert result.industry_coeff == 1.5
+
+    def test_industry_hulianwang(self):
+        """industry 含'互联网' → ic=1.5"""
+        result = self._est(wealth_tier="中格", industry="\u4e92\u8054\u7f51\u4ea7\u54c1")
+        assert result.industry_coeff == 1.5
+
+    def test_industry_jiaoyu(self):
+        """industry 含'教育' → ic=0.8"""
+        result = self._est(wealth_tier="中格", industry="\u6559\u80b2\u57f9\u8bad")
+        assert result.industry_coeff == 0.8
+
+    def test_industry_gongwuyuan(self):
+        """industry 含'公务员' → ic=0.8"""
+        result = self._est(wealth_tier="中格", industry="\u516c\u52a1\u5458\u8003\u8bd5")
+        assert result.industry_coeff == 0.8
+
+    def test_industry_unknown(self):
+        """industry 未匹配任何键 → ic=1.0"""
+        result = self._est(wealth_tier="中格", industry="\u5f88\u7279\u522b\u7684\u884c\u4e1a")
+        assert result.industry_coeff == 1.0
+
+    # ── 范围、注解结构 ────────────────────────────────────────────
+
+    def test_low_high_bounds(self):
+        """low_bound = estimated×0.7, high_bound = estimated×1.5"""
+        result = self._est(wealth_tier="中格")
+        assert abs(result.low_bound  - round(result.estimated_amount * 0.7, 2)) < 0.01
+        assert abs(result.high_bound - round(result.estimated_amount * 1.5, 2)) < 0.01
+
+    def test_note_contains_tier(self):
+        """note 字段包含 wealth_tier 关键词"""
+        result = self._est(wealth_tier="高格", dayun_trend="上升")
+        assert "高格" in result.note
+        assert "上升" in result.note
+
+    def test_disclaimer_present(self):
+        """disclaimer 非空"""
+        result = self._est(wealth_tier="中格")
+        assert result.disclaimer
+
+    # ── wealth_estimate_to_dict ───────────────────────────────────
+
+    def test_to_dict_structure(self):
+        """wealth_estimate_to_dict 返回预期键集合"""
+        from services.bazi_engine.analysis.wealth_estimate import (
+            estimate_wealth, wealth_estimate_to_dict
+        )
+        est = estimate_wealth(
+            wealth_tier="\u9ad8\u683c",
+            dayun_trend="\u4e0a\u5347",
+            city="\u5317\u4eac",
+            industry="\u91d1\u878d",
+        )
+        d = wealth_estimate_to_dict(est)
+        assert "estimated_amount_wan" in d
+        assert "range_wan" in d
+        assert "coefficients" in d
+        assert d["range_wan"]["low"] < d["estimated_amount_wan"] < d["range_wan"]["high"]
+        assert d["coefficients"]["city"] == 1.8
+        assert d["coefficients"]["industry"] == 1.5
+
+    def test_full_path_high_beijing_finance(self):
+        """高格 + 上升 + 北京 + 金融 → 80×1.2×1.8×1.5 = 259.2 万"""
+        result = self._est(
+            wealth_tier="\u9ad8\u683c",
+            dayun_trend="\u4e0a\u5347",
+            city="\u5317\u4eac",
+            industry="\u91d1\u878d",
+        )
+        assert abs(result.estimated_amount - 259.2) < 0.1
+
+    @pytest.mark.parametrize("tier,trend,expected_base", [
+        ("\u9ad8\u683c", "\u5e73\u7a33", 80.0),
+        ("\u4e2d\u683c", "\u5e73\u7a33", 40.0),
+        ("\u4f4e\u683c", "\u5e73\u7a33", 15.0),
+    ])
+    def test_parametrized_base_amounts(self, tier, trend, expected_base):
+        """参数化：三种格局基准值正确"""
+        result = self._est(wealth_tier=tier, dayun_trend=trend)
+        assert result.base_amount == expected_base
