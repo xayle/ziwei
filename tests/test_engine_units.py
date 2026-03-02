@@ -874,3 +874,195 @@ class TestWealthEstimate:
         """参数化：三种格局基准值正确"""
         result = self._est(wealth_tier=tier, dayun_trend=trend)
         assert result.base_amount == expected_base
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑭ geju.py 外格 + 边界路径覆盖
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestGejuEdgePaths:
+    """geju.py 未覆盖分支: 空藏干路径 / 从旺格 / 专旺格 / _check_outer_geju"""
+
+    def test_no_hidden_stem_fallback(self):
+        """月支藏干为空时应返回普通格（line 103 path）"""
+        from services.bazi_engine.geju import compute_geju
+        # 传入 '？' 这个在 BRANCH_HIDDEN_STEMS 中不存在的月支
+        result = compute_geju(
+            year_stem="\u5e9a", month_stem="\u664f", day_stem="\u5e9a",
+            hour_stem="\u5e9a", month_branch="\uff1f",  # '？' 不在表中
+            wuxing_scores=None,
+        )
+        assert result["name"] == "\u666e\u901a\u683c"
+
+    def test_cong_wang_ge_detected(self):
+        """从旺格：日主五行占比≥70% → 返回'从旺格'"""
+        from services.bazi_engine.geju import _check_outer_geju
+        # wood(日主甲=wood)占75%，英文键与 STEM_ELEMENT 一致
+        result = _check_outer_geju(
+            wuxing_scores={"wood": 75.0, "metal": 5.0, "water": 5.0, "fire": 5.0, "earth": 10.0},
+            day_stem="\u7532",
+            month_stem="\u7532",
+            month_branch="\u5bc5",
+        )
+        assert result == "\u4ece\u65fa\u683c", f"got {result!r}"
+
+    def test_zhuan_wang_ge_detected(self):
+        """专旺格：非日主五行占比≥70% → 返回'专旺格'"""
+        from services.bazi_engine.geju import _check_outer_geju
+        # fire占72%，日主为甲(wood)，fire != wood → 专旺格
+        result = _check_outer_geju(
+            wuxing_scores={"fire": 72.0, "wood": 5.0, "water": 5.0, "metal": 8.0, "earth": 10.0},
+            day_stem="\u7532",
+            month_stem="\u5c71",
+            month_branch="\u5348",
+        )
+        assert result == "\u4e13\u65fa\u683c", f"got {result!r}"
+
+    def test_check_outer_none_when_no_dominant(self):
+        """无主导五行（<70%）时 _check_outer_geju 应返回 None"""
+        from services.bazi_engine.geju import _check_outer_geju
+        result = _check_outer_geju(
+            wuxing_scores={"wood": 30.0, "fire": 25.0, "earth": 20.0, "metal": 15.0, "water": 10.0},
+            day_stem="\u7532", month_stem="\u5c71", month_branch="\u5348",
+        )
+        assert result is None
+
+    def test_compute_geju_outer_overrides_putong(self):
+        """当格局为普通格且外格触发时，geju_name 被外格覆盖（line 132 path）"""
+        from services.bazi_engine.geju import compute_geju
+        # wood占75%，日主甲(wood) → 从旺格
+        result = compute_geju(
+            year_stem="\u7532", month_stem="\u7532", day_stem="\u7532",
+            hour_stem="\u7532", month_branch="\u5bc5",
+            wuxing_scores={"wood": 75.0, "metal": 5.0, "water": 5.0, "fire": 5.0, "earth": 10.0},
+        )
+        assert result["name"] == "\u4ece\u65fa\u683c"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑮ life_arc.py 边界路径覆盖（M6.09）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestLifeArcEdgePaths:
+    """life_arc.py 未覆盖分支: 空大运/极端等级/谨慎期/to_dict"""
+
+    _BASE_DAYUN = [
+        {"ganzhi": "\u7532\u5b50", "start_age": 5,  "end_age": 15, "is_favorable": True,  "trend": "\u4e0a\u5347",  "ten_god": "\u6bd4\u80a9"},
+        {"ganzhi": "\u4e59\u4e11", "start_age": 15, "end_age": 25, "is_favorable": True,  "trend": "\u5e73\u7a33",  "ten_god": "\u52ab\u8d22"},
+        {"ganzhi": "\u4e19\u5bc5", "start_age": 25, "end_age": 35, "is_favorable": False, "trend": "\u4e0b\u964d",  "ten_god": "\u5b98\u6740"},
+        {"ganzhi": "\u4e01\u536f", "start_age": 35, "end_age": 45, "is_favorable": True,  "trend": "\u4e0a\u5347",  "ten_god": "\u6b63\u8d22"},
+        {"ganzhi": "\u620a\u8fb0", "start_age": 45, "end_age": 55, "is_favorable": False, "trend": "\u4e0b\u964d",  "ten_god": "\u504f\u5370"},
+        {"ganzhi": "\u5df1\u5df3", "start_age": 55, "end_age": 65, "is_favorable": False, "trend": "\u4e0b\u964d",  "ten_god": "\u6b63\u5370"},
+    ]
+
+    def _base_dayun(self):
+        return [
+            {"ganzhi": "\u7532\u5b50", "start_age": 5,  "end_age": 15, "is_favorable": True,  "trend": "\u4e0a\u5347",  "ten_god": "\u6bd4\u80a9"},
+            {"ganzhi": "\u4e59\u4e11", "start_age": 15, "end_age": 25, "is_favorable": True,  "trend": "\u5e73\u7a33",  "ten_god": "\u52ab\u8d22"},
+            {"ganzhi": "\u4e19\u5bc5", "start_age": 25, "end_age": 35, "is_favorable": False, "trend": "\u4e0b\u964d",  "ten_god": "\u5b98\u6740"},
+            {"ganzhi": "\u4e01\u536f", "start_age": 35, "end_age": 45, "is_favorable": True,  "trend": "\u4e0a\u5347",  "ten_god": "\u6b63\u8d22"},
+            {"ganzhi": "\u620a\u8fb0", "start_age": 45, "end_age": 55, "is_favorable": False, "trend": "\u4e0b\u964d",  "ten_god": "\u504f\u5370"},
+            {"ganzhi": "\u5df1\u5df3", "start_age": 55, "end_age": 65, "is_favorable": False, "trend": "\u4e0b\u964d",  "ten_god": "\u6b63\u5370"},
+        ]
+
+    def _compute(self, dayun_list=None, geju_name="\u4e03\u6740\u683c",
+                 strength_tier="\u5c45\u4e2d", strength_score=60.0,
+                 yongshen_favor=None, wuxing_scores=None):
+        from services.bazi_engine.life_arc import compute_life_arc
+        return compute_life_arc(
+            dayun_list=dayun_list if dayun_list is not None else self._base_dayun(),
+            geju_name=geju_name,
+            is_broken=False,
+            strength_tier=strength_tier,
+            strength_score=strength_score,
+            yongshen_favor=yongshen_favor or ["\u91d1", "\u6c34"],
+            wuxing_scores=wuxing_scores or {"\u6728": 20.0, "\u706b": 15.0, "\u571f": 30.0, "\u91d1": 20.0, "\u6c34": 15.0},
+        )
+
+    def test_empty_dayun_list(self):
+        """大运列表为空时应正常返回，不崩溃（line 75 path）"""
+        result = self._compute(dayun_list=[])
+        assert result is not None
+        assert result.overall_tier in {"\u5c40\u9ad8", "\u5c40\u4e2d", "\u5c40\u5c0f"}
+
+    def test_tier_ju_gao_when_high_score(self):
+        """大运全顺+强格→总分≥70→局高（line 225-226 path）"""
+        all_favorable = [
+            {"ganzhi": f"\u7532{b}", "start_age": i*10, "end_age": i*10+10,
+             "is_favorable": True, "trend": "\u4e0a\u5347", "ten_god": "\u6bd4\u80a9"}
+            for i, b in enumerate(["\u5b50", "\u5bc5", "\u5348", "\u7533", "\u4ea5", "\u8fb0"])
+        ]
+        result = self._compute(
+            dayun_list=all_favorable,
+            geju_name="\u6b63\u5370\u683c",
+            strength_tier="\u5c45\u4e2d",
+            yongshen_favor=["\u91d1", "\u6c34"],
+            wuxing_scores={"\u6728": 10.0, "\u706b": 10.0, "\u571f": 10.0, "\u91d1": 40.0, "\u6c34": 30.0},
+        )
+        assert result.overall_tier == "\u5c40\u9ad8", f"score={result.total_score}, tier={result.overall_tier}"
+
+    def test_tier_ju_xiao_when_low_score(self):
+        """大运全逆+破格+极弱+用神无力 → 总分≈40.875 < 45 → 局小（else path）
+
+        验算: f_dayun=42.5, f_geju=40.0(破格), f_strength=50.0(极弱),
+             f_yongshen=30.0(用神占比0%) → total=40.875
+        """
+        from services.bazi_engine.life_arc import compute_life_arc
+        all_unfavorable = [
+            {"ganzhi": f"\u7532{b}", "start_age": i * 10, "end_age": i * 10 + 10,
+             "is_favorable": False, "trend": "\u4e0b\u964d", "ten_god": "\u5b98\u6740"}
+            for i, b in enumerate(["\u5b50", "\u5bc5", "\u5348", "\u7533", "\u4ea5", "\u8fb0"])
+        ]
+        result = compute_life_arc(
+            dayun_list=all_unfavorable,
+            geju_name="\u666e\u901a\u683c",
+            is_broken=True,           # f_geju = 40.0
+            strength_tier="\u6781\u5f31",  # f_strength = 50.0
+            strength_score=30.0,
+            yongshen_favor=["metal"],
+            wuxing_scores={"wood": 100.0, "fire": 0.0, "water": 0.0, "earth": 0.0, "metal": 0.0},
+            # metal=0 → favor_total=0 → ratio=0 → f_yongshen=30.0
+        )
+        assert result.overall_tier == "\u5c40\u5c0f", f"score={result.total_score:.2f}, tier={result.overall_tier}"
+
+    def test_caution_periods_populated(self):
+        """逆运+下降的大运步应出现在 caution_periods 中（lines 167-170 path）"""
+        dayun = [
+            {"ganzhi": "\u620a\u8fb0", "start_age": 25, "end_age": 35,
+             "is_favorable": False, "trend": "\u4e0b\u964d", "ten_god": "\u5b98\u6740"},
+        ]
+        result = self._compute(dayun_list=dayun)
+        assert any("25" in p for p in result.caution_periods), (
+            f"caution_periods={result.caution_periods}"
+        )
+
+    def test_no_relevant_dayun_for_phase(self):
+        """某人生阶段无对应大运时，输出"大运信息不足"（line 131 path）"""
+        # 只有晚年(>55)大运，早/中年阶段无数据
+        late_only = [
+            {"ganzhi": "\u7532\u5b50", "start_age": 60, "end_age": 70,
+             "is_favorable": True, "trend": "\u4e0a\u5347", "ten_god": "\u6bd4\u80a9"},
+        ]
+        result = self._compute(dayun_list=late_only)
+        # 早年（0-25岁）应无数据
+        assert "\u4e0d\u8db3" in result.early_fortune or "\u4fe1\u606f\u4e0d\u8db3" in result.early_fortune or "\u5927\u8fd0" in result.early_fortune
+
+    def test_life_arc_to_dict_structure(self):
+        """life_arc_to_dict 返回预期键（line 248 path via dict function coverage）"""
+        from services.bazi_engine.life_arc import life_arc_to_dict
+        result = self._compute()
+        d = life_arc_to_dict(result)
+        for key in ("overall_tier", "total_score", "early_fortune",
+                    "mid_fortune", "late_fortune", "peak_periods",
+                    "caution_periods", "factor_scores", "summary", "disclaimer"):
+            assert key in d, f"life_arc_to_dict 缺少键 '{key}'"
+        assert isinstance(d["factor_scores"], dict)
+
+    def test_yongshen_empty_factor(self):
+        """用神列表为空时 yongshen factor 应返回 60.0（line 109 path）"""
+        from services.bazi_engine.life_arc import _compute_yongshen_factor
+        score = _compute_yongshen_factor(
+            yongshen_favor=[],
+            wuxing_scores={"\u6728": 20.0, "\u706b": 20.0, "\u571f": 20.0, "\u91d1": 20.0, "\u6c34": 20.0},
+        )
+        assert score == 60.0
