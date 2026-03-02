@@ -103,10 +103,13 @@ def compute_career(
     elif yin_pct >= 0.6:
         directions = ["学术", "文职", "教育"]
     else:
-        directions = _GEJU_CAREER.get(geju_name, ["实业", "综合管理"])
+        # 注意：用切片复制，避免与 industries 共享同一个列表对象
+        directions = list(_GEJU_CAREER.get(geju_name, ["实业", "综合管理"]))
+    directions = list(dict.fromkeys(directions))[:5]
 
     # ─── 行业推荐 ─────────────────────────────────────────────────────
-    industries = _GEJU_CAREER.get(geju_name, ["综合行业"])
+    # 同样用切片复制，避免 extend 污染 directions
+    industries = list(_GEJU_CAREER.get(geju_name, ["综合行业"]))
     for el in yongshen_favor:
         if el == "metal":
             industries.extend(["金融", "法律", "机械"])

@@ -195,7 +195,19 @@ def _calculate_v1(
         dayun_model_raw.model_dump() if hasattr(dayun_model_raw, "model_dump")
         else getattr(dayun_model_raw, "__dict__", dayun_model_raw)
     )
+    from services.bazi_engine.dayun import _build_hints as _dayun_build_hints, _ELEM_LOVE_HINT, _ELEM_CHILD_HINT
+    from services.bazi_engine.classic_refs import get_refs_by_tag as _get_refs_by_tag
+    from app.schemas.common import RangeModel
+    # 按五行粗估财富区间（万元/年）
+    _WX_WEALTH_RANGE = {
+        "wood": (8, 30),
+        "fire": (10, 40),
+        "earth": (6, 25),
+        "metal": (12, 50),
+        "water": (10, 35),
+    }
     _WX_CN_MAP = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+    _dayun_refs_common = _get_refs_by_tag("大运")[:2]
     for item in dayun_model.items:
         if item.stem:
             item.ten_god = ten_god(rp.day.stem, item.stem)
@@ -203,6 +215,19 @@ def _calculate_v1(
             item.wealth_hint = f"用神倾向: {', '.join(_WX_CN_MAP.get(f, f) for f in yongshen.favor)}"
         if yongshen.avoid:
             item.health_hint = f"忌神: {', '.join(_WX_CN_MAP.get(a, a) for a in yongshen.avoid)}"
+        # 填充 love_hint / child_hint（按干支五行）
+        if item.stem and not item.love_hint:
+            hints = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
+            item.love_hint = hints.get("love_hint", "")
+            item.child_hint = hints.get("child_hint", "")
+        # wealth_range 按流运五行粗估
+        if item.flow_wuxing and item.wealth_range is None:
+            lo, hi = _WX_WEALTH_RANGE.get(item.flow_wuxing, (6, 30))
+            item.wealth_range = RangeModel(min=lo, max=hi, currency="万元/年")
+        # refs（古籍引用）
+        if item.refs is None:
+            refs_tg = _get_refs_by_tag(item.ten_god) if item.ten_god else []
+            item.refs = (_dayun_refs_common + refs_tg)[:3]
 
     verify_response = VerifyResponse(
         api_version=API_VERSION,
