@@ -100,6 +100,7 @@ import services.bazi_engine_service as _bazi_engine_service
 from services.bazi_engine_service import _enrich_v2_analysis  # M2 分析引擎集成
 from services.bazi_engine.classic_refs import get_refs_by_tag  # 大运古籍引用
 from services.bazi_engine.relations import get_branch_relations  # 红线14 地支关系
+from services.bazi_engine.dayun import _ELEM_LOVE_HINT as _LOVE_HINTS, _ELEM_CHILD_HINT as _CHILD_HINTS  # 红线5 感情/子女提示
 from services.auth_service import verify_token, TokenPayload
 from services.rate_limit import limiter
 from zoneinfo import ZoneInfoNotFoundError
@@ -623,6 +624,11 @@ def api_verify(
 			item.wealth_hint = f"用神倾向: {', '.join(_WX_CN_MAP.get(f,f) for f in yongshen.favor)}"
 		if yongshen.avoid:
 			item.health_hint = f"忌神: {', '.join(_WX_CN_MAP.get(a,a) for a in yongshen.avoid)}"
+		# 红线5: 填充感情/子女提示
+		if item.flow_wuxing and not item.love_hint:
+			item.love_hint = _LOVE_HINTS.get(item.flow_wuxing, "")
+		if item.flow_wuxing and not item.child_hint:
+			item.child_hint = _CHILD_HINTS.get(item.flow_wuxing, "")
 		# 红线6: 填充大运古籍引用
 		if item.refs is None:
 			_item_refs = (

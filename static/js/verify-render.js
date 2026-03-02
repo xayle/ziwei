@@ -44,8 +44,8 @@ function renderTab0(json, el) {
   };
 
   const formatDayun = (d) => d?`${d.stem||''}${d.branch||''} 起于${d.start_age||'?'}岁`:'';
-  const peakDayun = arc?.peak_dayun_gz ? `${arc.peak_dayun_gz}（${arc.peak_dayun_age||'?'}岁–${(arc.peak_dayun_age||0)+10}岁）` : '尚未推算';
-  const cautionDayuns = arc?.caution_dayun_list ? arc.caution_dayun_list.map(d=>`<span class="chip warn">${esc(d)}</span>`).join(' ') : '—';
+  const peakDayun = arc?.peak_periods?.[0] || '尚未推算';
+  const cautionDayuns = arc?.caution_periods?.length ? arc.caution_periods.map(d=>`<span class="chip warn">${esc(d)}</span>`).join(' ') : '—';
 
   el.innerHTML = `
   <div class="life-arc-card" style="margin-bottom:16px">
@@ -55,14 +55,14 @@ function renderTab0(json, el) {
         <div class="life-arc-tier">${tierBadge(arc?.overall_tier||'—')}</div>
       </div>
       <div>
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">格局评分</div>
-        <div style="font-size:22px;font-weight:800;color:var(--text)">${arc?.score !== undefined ? arc.score.toFixed(1) : '—'}</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">命局总述</div>
+        <div style="font-size:13px;color:var(--text)">${arc?.life_motto?esc(arc.life_motto):'—'}</div>
       </div>
     </div>
     <div class="life-arc-segments">
-      ${arc?.early_life  ?`<div class="life-arc-seg"><div class="life-arc-seg-label">早年（0-30）</div><div class="life-arc-seg-text">${esc(arc.early_life)}</div></div>`:''}
-      ${arc?.middle_life ?`<div class="life-arc-seg"><div class="life-arc-seg-label">中年（30-60）</div><div class="life-arc-seg-text">${esc(arc.middle_life)}</div></div>`:''}
-      ${arc?.late_life   ?`<div class="life-arc-seg"><div class="life-arc-seg-label">晚年（60+）</div><div class="life-arc-seg-text">${esc(arc.late_life)}</div></div>`:''}
+      ${arc?.early_fortune?`<div class="life-arc-seg"><div class="life-arc-seg-label">早年（0-30）</div><div class="life-arc-seg-text">${esc(arc.early_fortune)}</div></div>`:''}
+      ${arc?.mid_fortune  ?`<div class="life-arc-seg"><div class="life-arc-seg-label">中年（30-60）</div><div class="life-arc-seg-text">${esc(arc.mid_fortune)}</div></div>`:''}
+      ${arc?.late_fortune ?`<div class="life-arc-seg"><div class="life-arc-seg-label">晚年（60+）</div><div class="life-arc-seg-text">${esc(arc.late_fortune)}</div></div>`:''}
     </div>
     <div class="kv" style="margin-top:12px">
       <div class="k">顶峰大运</div><div>${esc(peakDayun)}</div>
@@ -363,37 +363,36 @@ function renderTab7(json, el) {
     <div class="card">
       <p class="card-title"><span class="dot"></span>财运评分</p>
       ${makeBar(w.wealth_score, '财运')}
-      ${w.three_layer?.fact?`<div style="margin-top:8px;font-size:12px;color:var(--muted)"><strong>实证层：</strong>${esc(w.three_layer.fact)}</div>`:''}
-      ${w.three_layer?.inference?`<div style="font-size:12px;color:var(--muted)"><strong>推断层：</strong>${esc(w.three_layer.inference)}</div>`:''}
-      ${w.three_layer?.interpretation?`<div style="font-size:12px;color:var(--text)"><strong>解读层：</strong>${esc(w.three_layer.interpretation)}</div>`:''}
+      ${w.fact_data?`<div style="margin-top:8px;font-size:12px;color:var(--muted)"><strong>实证层：</strong>${esc(w.fact_data.wealth_tier||'')} ${esc(w.fact_data.annual_range||'')}</div>`:''}
+      ${w.inference_tags?.length?`<div style="font-size:12px;color:var(--muted)"><strong>推断层：</strong>${w.inference_tags.map(t=>esc(t)).join('、')}</div>`:''}
+      ${w.interpretation_text?`<div style="font-size:12px;color:var(--text)"><strong>解读层：</strong>${esc(w.interpretation_text)}</div>`:''}
     </div>
     <div class="card">
       <p class="card-title"><span class="dot"></span>财富区间估算</p>
       <div class="kv">
-        <div class="k">财富估值</div><div style="font-size:18px;font-weight:800;color:var(--accent-gold)">${wo.wealth_range?.label||w.wealth_range?.label||'暂无'}</div>
-        <div class="k">低估（万）</div><div>${nn(wo.wealth_range?.low||w.wealth_range?.low)}</div>
-        <div class="k">高估（万）</div><div>${nn(wo.wealth_range?.high||w.wealth_range?.high)}</div>
+        <div class="k">财富年估值</div><div style="font-size:18px;font-weight:800;color:var(--accent-gold)">${esc(w.annual_range||wo.wealth_range?.label||'—')}</div>
+        <div class="k">财运评级</div><div>${esc(w.wealth_tier||'—')}</div>
+        <div class="k">财运评分</div><div>${w.wealth_score!==undefined?w.wealth_score:'—'}</div>
       </div>
       ${wo.risk_hint?`<div class="note" style="margin-top:8px"><div style="font-size:12px">${esc(wo.risk_hint)}</div></div>`:''}
     </div>
   </div>
-  ${(w.industry_tags||wo.industry_tags||[]).length?`
+  ${(w.industries||wo.industry_tags||[]).length?`
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>适合行业</p>
-    <div class="row">${[...(w.industry_tags||[]),(wo.industry_tags||[])].flat().map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
+    <div class="row">${[...(w.industries||[]),(wo.industry_tags||[])].flat().map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
   </div>`:''}
-  ${w.strategies?.length?`
+  ${w.strategy?`
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>财运策略</p>
-    <ul class="panel-list">${w.strategies.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
+    <div style="font-size:13px;line-height:1.7">${esc(w.strategy)}</div>
   </div>`:''}
-  ${w.dayun_cycles?.length?`
+  ${w.dayun_forecast?.length?`
   <div class="card">
     <p class="card-title"><span class="dot"></span>大运财运周期</p>
-    <div style="display:grid;gap:8px">${w.dayun_cycles.map(c=>`
+    <div style="display:grid;gap:8px">${w.dayun_forecast.map(c=>`
       <div style="border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px">
-        <div style="font-weight:700">${esc(c.ganzhi||'')} (${c.start_age||'?'}岁)</div>
-        <div style="color:var(--muted);margin-top:3px">${esc(c.note||c.description||'')}</div>
+        <div style="font-weight:700">${esc(c.ganzhi||'')} — ${esc(c.trend||'')}</div>
       </div>`).join('')}
     </div>
   </div>`:''}
@@ -410,19 +409,19 @@ function renderTab8(json, el) {
     <div class="card">
       <p class="card-title"><span class="dot"></span>职业方向</p>
       <div class="row" style="flex-wrap:wrap">${(c.career_directions||[]).map(d=>`<span class="chip">${esc(d)}</span>`).join('')||'<span class="hint">暂无</span>'}</div>
-      ${c.three_layer?.interpretation?`<div style="margin-top:10px;font-size:13px;line-height:1.6">${esc(c.three_layer.interpretation)}</div>`:''}
+      ${c.interpretation_text?`<div style="margin-top:10px;font-size:13px;line-height:1.6">${esc(c.interpretation_text)}</div>`:''}
     </div>
     <div class="card">
       <p class="card-title"><span class="dot"></span>事业评分</p>
       <div class="kv">
         <div class="k">事业分</div><div style="font-size:22px;font-weight:800">${c.career_score?.toFixed(1)||'—'}</div>
-        <div class="k">发展期</div><div>${esc(c.peak_period||'—')}</div>
+        <div class="k">最佳时机</div><div>${esc(c.optimal_move_timing||'—')}</div>
       </div>
     </div>
   </div>
-  ${c.development_advice?.length?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>发展建议</p><ul class="panel-list">${c.development_advice.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}
-  ${c.industry_match?.length?`<div class="card"><p class="card-title"><span class="dot"></span>行业匹配</p><div class="row">${c.industry_match.map(i=>`<span class="chip">${esc(i)}</span>`).join('')}</div></div>`:''}
-  ${c.three_layer?.fact?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>三层模型</p><div class="kv"><div class="k">实证层</div><div>${esc(c.three_layer.fact)}</div><div class="k">推断层</div><div>${esc(c.three_layer.inference||'—')}</div></div></div>`:''}
+  ${c.development_advice?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>发展建议</p><div style="font-size:13px;line-height:1.7">${esc(c.development_advice)}</div></div>`:''}
+  ${c.suitable_industries?.length?`<div class="card"><p class="card-title"><span class="dot"></span>适合行业</p><div class="row">${c.suitable_industries.map(i=>`<span class="chip">${esc(i)}</span>`).join('')}</div></div>`:''}
+  ${c.inference_tags?.length?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${c.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
   `;
 }
 
@@ -438,12 +437,12 @@ function renderTab9(json, el) {
   <div class="g2" style="margin-bottom:12px">
     <div class="card">
       <p class="card-title"><span class="dot"></span>婚姻分析</p>
-      ${ma.spouse_portrait?`<div style="font-size:13px;line-height:1.7;margin-bottom:8px">${esc(ma.spouse_portrait)}</div>`:''}
+      ${ma.partner_profile?`<div style="font-size:13px;line-height:1.7;margin-bottom:8px">${esc(ma.partner_profile)}</div>`:''}
       <div class="kv">
         <div class="k">婚姻分</div><div style="font-size:18px;font-weight:800">${ma.marriage_score?.toFixed(1)||'—'}</div>
         <div class="k">婚期窗口</div><div>${(mo.love_window||[]).map(w=>`${w.age_from||'?'}–${w.age_to||'?'}岁`).join('，')||'—'}</div>
       </div>
-      ${ma.three_layer?.interpretation?`<div class="note" style="margin-top:10px"><div style="font-size:12px">${esc(ma.three_layer.interpretation)}</div></div>`:''}
+      ${ma.interpretation_text?`<div class="note" style="margin-top:10px"><div style="font-size:12px">${esc(ma.interpretation_text)}</div></div>`:''}
     </div>
     <div class="card">
       <p class="card-title"><span class="dot"></span>桃花 / 社交</p>
@@ -495,13 +494,13 @@ function renderTab11(json, el) {
   <div class="g2" style="margin-bottom:12px">
     <div class="card">
       <p class="card-title"><span class="dot"></span>六亲关系</p>
-      ${r.liuqin_analysis?`<div style="font-size:13px;line-height:1.7">${esc(r.liuqin_analysis)}</div>`:'<div class="hint">暂无数据</div>'}
-      ${r.three_layer?.interpretation?`<div class="note" style="margin-top:8px"><div style="font-size:12px">${esc(r.three_layer.interpretation)}</div></div>`:''}
+      ${r.interpretation_text?`<div style="font-size:13px;line-height:1.7">${esc(r.interpretation_text)}</div>`:(r.liu_qin?`<div style="font-size:12px;line-height:1.6">${Object.entries(r.liu_qin).map(([k,v])=>`<div><strong>${esc(k)}：</strong>${esc(v)}</div>`).join('')}</div>`:'')}
     </div>
     <div class="card">
       <p class="card-title"><span class="dot"></span>贵人 & 小人</p>
-      ${r.guiren_analysis?`<div style="font-size:13px;line-height:1.6;margin-bottom:8px">${esc(r.guiren_analysis)}</div>`:''}
-      ${r.social_strategy?.length?`<ul class="panel-list">${r.social_strategy.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}
+      ${r.noble_people?.length?`<div style="font-size:12px;color:var(--ok);margin-bottom:4px">贵人：${r.noble_people.map(p=>esc(p)).join('、')}</div>`:''}
+      ${r.petty_people?.length?`<div style="font-size:12px;color:var(--bad);margin-bottom:4px">小人：${r.petty_people.map(p=>esc(p)).join('、')}</div>`:''}
+      ${r.social_strategy?`<div style="font-size:12px;line-height:1.6">${esc(r.social_strategy)}</div>`:''}
     </div>
   </div>
   `;
@@ -515,15 +514,15 @@ function renderTab12(json, el) {
   el.innerHTML = `
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>性格特征（日主: ${esc(json.pillars_primary?.day?.stem||'—')}）</p>
-    ${p.core_traits?.length?`<div class="row" style="margin-bottom:10px">${p.core_traits.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}
-    ${p.description?`<div style="font-size:13px;line-height:1.7">${esc(p.description)}</div>`:'<div class="hint">暂无数据</div>'}
+    ${p.inference_tags?.length?`<div class="row" style="margin-bottom:10px">${p.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>`:''}
+    ${p.interpretation_text||p.day_stem_trait?`<div style="font-size:13px;line-height:1.7">${esc(p.interpretation_text||p.day_stem_trait)}</div>`:`<div style="font-size:12px;color:var(--muted);padding:8px 0">${esc((p.day_stem||'')||'待排盘')}</div>`}
   </div>
   <div class="g2">
-    ${p.strengths?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--ok)"></span>优势</p><ul class="panel-list">${p.strengths.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
-    ${p.weaknesses?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>劣势</p><ul class="panel-list">${p.weaknesses.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
+    ${p.advantages?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--ok)"></span>优势</p><ul class="panel-list">${p.advantages.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
+    ${p.disadvantages?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>劣势</p><ul class="panel-list">${p.disadvantages.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
   </div>
-  ${p.growth_advice?.length?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>成长建议</p><ul class="panel-list">${p.growth_advice.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}
-  ${p.three_layer?.interpretation?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>深度解读</p><div style="font-size:13px;line-height:1.7">${esc(p.three_layer.interpretation)}</div></div>`:''}
+  ${p.growth_advice?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>成长建议</p><div style="font-size:13px;line-height:1.7">${esc(p.growth_advice)}</div></div>`:''}
+  ${p.day_stem_trait?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>日主特质</p><div style="font-size:13px;line-height:1.7">${esc(p.day_stem_trait)} ${p.strength_modifier?esc('（'+p.strength_modifier+'）'):''}</div></div>`:''}
   `;
 }
 
@@ -596,8 +595,8 @@ function renderTab15(json, el) {
     </div>
   </div>
   <div class="g2">
-    ${ls.travel_advice?.length?`<div class="card"><p class="card-title"><span class="dot"></span>出行建议</p><ul class="panel-list">${ls.travel_advice.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}
-    ${ls.work_style?.length||ls.rest_pattern?`<div class="card"><p class="card-title"><span class="dot"></span>作息建议</p>${ls.rest_pattern?`<div class="hint" style="margin-bottom:8px">${esc(ls.rest_pattern)}</div>`:''}${ls.work_style?.length?`<ul class="panel-list">${ls.work_style.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}</div>`:''}
+    ${ls.travel_direction?`<div class="card"><p class="card-title"><span class="dot"></span>出行建议</p><div style="font-size:13px">${esc(ls.travel_direction)}</div></div>`:''}
+    ${ls.sleep_advice?`<div class="card"><p class="card-title"><span class="dot"></span>作息建议</p><div style="font-size:13px">${esc(ls.sleep_advice)}</div>${ls.best_times?`<div style="font-size:11px;color:var(--muted);margin-top:4px">最佳时段：${esc(ls.best_times)}</div>`:''}</div>`:''}
   </div>
   `;
 }
