@@ -47,13 +47,17 @@ _MONTH_BRANCH_IDX: dict[str, int] = {
 # 时支序（子=0...亥=11）
 _HOUR_BRANCH_IDX: dict[str, int] = {b: i for i, b in enumerate(BRANCHES)}
 
-# 命宫公式（寅起逆布）
+# 命宫公式（寅起顺布时辰）
+# 《三命通会》: 寅月子时起寅，顺数时辰 → 子时+0, 丑时+1, ...
+# 公式: branch_idx = (2 - (m-1) + h) % 12 = (3 - m + h) % 12
+# 验证: 寅月(m=1)子时(h=0)→(3-1+0)%12=2→寅 ✓
+#       卯月(m=2)子时(h=0)→(3-2+0)%12=1→丑 ✓
+#       未月(m=6)午时(h=6)→(3-6+6)%12=3→卯 ✓
 def _ming_gong_branch(month_branch: str, hour_branch: str) -> str:
     m = _MONTH_BRANCH_IDX.get(month_branch, 1)
     h = _HOUR_BRANCH_IDX.get(hour_branch, 0)
-    # 命宫支: 14 - m - h  (寅起, 寅=2在BRANCHES)
-    # 地支序: 子=0,丑=1,寅=2...
-    branch_idx = (14 - m - h) % 12
+    # 顺布: 时支加，月份(寅起)减
+    branch_idx = (3 - m + h) % 12
     return BRANCHES[branch_idx]
 
 
@@ -111,12 +115,12 @@ def compute_twelve_palaces(day_stem: str) -> dict[str, str]:
 def _shen_gong_branch(year_branch: str, hour_branch: str) -> str:
     """
     身宫（以年支起）:
-    身宫支 = (14 - 年支月序 - 时支序号) mod 12
-    即与命宫法相同，但以年支替换月支。
+    身宫支 = (3 - 年支月序 + 时支序号) mod 12
+    即与命宫法相同，但以年支替换月支（顺数时辰）。
     """
     y = _MONTH_BRANCH_IDX.get(year_branch, 1)  # 年支当月序
     h = _HOUR_BRANCH_IDX.get(hour_branch, 0)
-    branch_idx = (14 - y - h) % 12
+    branch_idx = (3 - y + h) % 12
     return BRANCHES[branch_idx]
 
 

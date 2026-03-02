@@ -412,6 +412,42 @@ def pytest_configure(config):
     )
 
 
+# ============================================================================
+# SHARED VERIFY API FIXTURE（session级，多测试类复用，减少 /verify 调用次数）
+# ============================================================================
+
+@pytest.fixture(scope="session")
+def verify_data_1990():
+    """
+    Session-scoped fixture: POST /api/v1/verify 1990-07-17 case.
+    共享给 TestP012P014 / TestP007Geju / TestP018VerifyResponseFields，
+    一次调用即可，避免多次调用触发 rate limit。
+    """
+    _prev = os.environ.get("AUTH_BYPASS")
+    os.environ["AUTH_BYPASS"] = "true"
+    try:
+        from fastapi.testclient import TestClient as _TC
+        from run import app as _app
+        _client = _TC(_app)
+        resp = _client.post("/api/v1/verify", json={
+            "dt": "1990-07-17T12:20:00",
+            "tz": "Asia/Shanghai",
+            "lon": 116.4,
+            "gender": "female",
+            "mode": "dual",
+            "solar_time_enabled": True,
+        })
+        assert resp.status_code == 200, (
+            f"verify_data_1990 fixture 调用失败: {resp.status_code} {resp.text[:200]}"
+        )
+        return resp.json()
+    finally:
+        if _prev is None:
+            os.environ.pop("AUTH_BYPASS", None)
+        else:
+            os.environ["AUTH_BYPASS"] = _prev
+
+
 @pytest.fixture(scope="function", autouse=True)
 def reset_request_state(client: TestClient):
     """Reset client state between tests"""

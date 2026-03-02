@@ -437,6 +437,199 @@ class TestShensha:
             f"神煞种类 {len(SHENSHA_META)} < 20，不满足 P0-06"
         )
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑨ P0-07: 格局只判成格，不判破格
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestP007Geju:
+    """P0-07: 格局只判成格不判破格 — is_broken 恒为 False"""
+
+    @pytest.fixture(scope="class")
+    def api_data(self, verify_data_1990):
+        """委托给 conftest session 级共享 fixture，避免重复 API 调用触发限速"""
+        return verify_data_1990
+
+    def test_geju_name_not_empty(self, api_data):
+        """P0-07: geju_name 非空（已成格）"""
+        geju = api_data.get("geju") or {}
+        assert geju.get("geju_name"), "P0-07: geju_name 为空"
+
+    def test_is_broken_always_false(self, api_data):
+        """P0-07: is_broken 恒为 False（本版本只判成格，不判破格）"""
+        geju = api_data.get("geju") or {}
+        assert geju.get("is_broken") is False, (
+            f"P0-07 违规: is_broken={geju.get('is_broken')!r}，"
+            "v7.0 不判破格，该字段必须为 False"
+        )
+
+    def test_geju_level_valid(self, api_data):
+        """P0-07: geju_level 必须在有效等级 {上格,中格,下格,无格} 中"""
+        geju = api_data.get("geju") or {}
+        level = geju.get("geju_level")
+        valid = {"上格", "中格", "下格", "无格"}
+        assert level in valid, (
+            f"P0-07: geju_level={level!r} 不在有效值 {valid} 中"
+        )
+
+    def test_geju_comment_in_source(self):
+        """P0-07: geju.py 源码有「只判成格，不判破格」注释"""
+        import pathlib
+        src = pathlib.Path(__file__).parents[1] / "services" / "bazi_engine" / "geju.py"
+        assert "只判成格，不判破格" in src.read_text(encoding="utf-8"), (
+            "P0-07: geju.py 源码缺少「只判成格，不判破格」注释"
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑩ P0-08: 命宫算法遵《三命通会》寅起顺数法
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestP008MingGong:
+    """P0-08: 命宫算法遵《三命通会》— 寅月子时=寅，顺数时辰"""
+
+    def test_ming_gong_sanming_tonghui_cases(self):
+        """P0-08: 《三命通会》寅起顺数命宫表 10 个核心案例全部正确"""
+        from services.bazi_engine.palace import _ming_gong_branch
+        # 传统命宫表：寅月子时起寅，顺数时辰，逆数月份
+        # (月支, 时支, 期望命宫支)
+        EXPECTED = [
+            ("\u5bc5", "\u5b50", "\u5bc5"),  # 寅月子时 = 寅
+            ("\u5bc5", "\u4e11", "\u536f"),  # 寅月丑时 = 卯
+            ("\u536f", "\u5b50", "\u4e11"),  # 卯月子时 = 丑
+            ("\u8fb0", "\u5b50", "\u5b50"),  # 辰月子时 = 子
+            ("\u5df3", "\u5b50", "\u4ea5"),  # 巳月子时 = 亥
+            ("\u5348", "\u5b50", "\u620c"),  # 午月子时 = 戌
+            ("\u672a", "\u5b50", "\u9149"),  # 未月子时 = 酉
+            ("\u7533", "\u5b50", "\u7533"),  # 申月子时 = 申
+            ("\u672a", "\u5348", "\u536f"),  # 未月午时 = 卯
+            ("\u5b50", "\u5b50", "\u8fb0"),  # 子月子时 = 辰
+        ]
+        errors = []
+        for month_b, hour_b, expected in EXPECTED:
+            actual = _ming_gong_branch(month_b, hour_b)
+            if actual != expected:
+                errors.append(
+                    f"{month_b}\u6708{hour_b}\u65f6: "
+                    f"\u671f\u671b={expected}, \u5b9e\u9645={actual}"
+                )
+        assert not errors, (
+            "P0-08 \u547d\u5bab\u8ba1\u7b97\u4e0e\u300a\u4e09\u547d\u901a\u4f1a"
+            "\u300b\u4e0d\u7b26:\n" + "\n".join(errors)
+        )
+
+    def test_ming_gong_formula_comment_present(self):
+        """P0-08: palace.py 注释标注《三命通会》来源"""
+        import pathlib
+        src = pathlib.Path(__file__).parents[1] / "services" / "bazi_engine" / "palace.py"
+        text = src.read_text(encoding="utf-8")
+        assert "\u4e09\u547d\u901a\u4f1a" in text, (
+            "P0-08: palace.py \u7f3a\u5c11\u300a\u4e09\u547d\u901a\u4f1a\u300b\u51fa\u5904\u6ce8\u91ca"
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑪ P0-17: 19 个新 Schema 字段完整定义（无 Optional[Any]）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestP017SchemaModels:
+    """P0-17: 19 个新 Pydantic 模型全部可导入，无 Optional[Any] 裸字段"""
+
+    _MODEL_NAMES = [
+        "GejuModel", "PalaceItemModel", "PalaceModel", "ShenshaModel",
+        "WealthAnalysisModel", "CareerAnalysisModel", "MarriageAnalysisModel",
+        "HealthAnalysisModel", "RelationshipAnalysisModel", "PersonalityModel",
+        "JewelryItemModel", "JewelryModel", "FengshuiModel", "LifestyleModel",
+        "LuckyModel", "MilestoneModel", "LiuNianDetailModel", "MonthlyFortuneModel",
+        "LifeArcModel",
+    ]
+
+    def test_all_19_models_importable(self):
+        """P0-17: 19 个新 Schema 模型全部可从 app.schemas.analysis 导入"""
+        import importlib
+        mod = importlib.import_module("app.schemas.analysis")
+        missing = [name for name in self._MODEL_NAMES if not hasattr(mod, name)]
+        assert not missing, (
+            f"P0-17: 以下模型缺失: {missing}"
+        )
+
+    def test_no_optional_any_in_analysis_schema(self):
+        """P0-17: app/schemas/analysis.py 无裸 Optional[Any] 字段定义"""
+        import re
+        import pathlib
+        src = (pathlib.Path(__file__).parents[1] / "app" / "schemas" / "analysis.py")
+        text = src.read_text(encoding="utf-8")
+        # 查找 Optional[Any] 出现（注释行除外）
+        matches = [
+            line.strip() for line in text.splitlines()
+            if re.search(r"Optional\[Any\]", line) and not line.lstrip().startswith("#")
+        ]
+        assert not matches, (
+            f"P0-17: analysis.py 含未定义 Optional[Any] 字段:\n"
+            + "\n".join(matches)
+        )
+
+    def test_19_models_count(self):
+        """P0-17: 导入的新模型恰好 19 个"""
+        import importlib
+        mod = importlib.import_module("app.schemas.analysis")
+        assert len(self._MODEL_NAMES) == 19
+        found = [name for name in self._MODEL_NAMES if hasattr(mod, name)]
+        assert len(found) == 19, f"P0-17: 期望 19 个模型，实际找到 {len(found)} 个"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑫ P0-18: VerifyResponseModel 新增字段全部存在（≥21 个 M2 字段）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestP018VerifyResponseFields:
+    """P0-18: VerifyResponseModel 所有 M2 新增字段全部存在于 Schema 和 API 响应"""
+
+    # 根据 app/schemas/bazi.py「# ── M2 新增字段 ──」注释块确认的字段列表
+    M2_FIELDS = [
+        "geju", "palace", "shensha",
+        "wealth_analysis", "career", "marriage_analysis",
+        "health", "relationship", "personality", "monthly_fortune",
+        "jewelry", "fengshui", "lucky", "lifestyle",
+        "milestones", "liunian_detail", "life_arc",
+        "current_fortune_summary", "rule_version_detail",
+        "dizhi_relations", "tiangan_clashes",
+    ]
+
+    def test_m2_fields_in_schema_model(self):
+        """P0-18: VerifyResponse Schema 包含所有 M2 新增字段"""
+        from app.schemas.bazi import VerifyResponse
+        model_fields = set(VerifyResponse.model_fields.keys())
+        missing = [f for f in self.M2_FIELDS if f not in model_fields]
+        assert not missing, (
+            f"P0-18: VerifyResponse Schema 缺少 M2 字段: {missing}"
+        )
+
+    @pytest.fixture(scope="class")
+    def api_data(self, verify_data_1990):
+        """委托给 conftest session 级共享 fixture，避免重复 API 调用触发限速"""
+        return verify_data_1990
+
+    def test_m2_fields_in_api_response(self, api_data):
+        """P0-18: API /verify 实际响应包含所有 M2 新增字段（非缺失）"""
+        missing = [f for f in self.M2_FIELDS if f not in api_data]
+        assert not missing, (
+            f"P0-18: API 响应缺少 M2 字段: {missing}"
+        )
+
+    def test_m2_fields_not_null_in_response(self, api_data):
+        """P0-18: M2 核心字段在 API 响应中非 null"""
+        core_fields = [
+            "geju", "palace", "shensha",
+            "wealth_analysis", "career", "marriage_analysis",
+            "health", "relationship", "personality",
+            "life_arc", "current_fortune_summary",
+        ]
+        null_fields = [f for f in core_fields if api_data.get(f) is None]
+        assert not null_fields, (
+            f"P0-18: 以下 M2 核心字段值为 null: {null_fields}"
+        )
+
     def test_tianyi_guiren_present_in_meta(self):
         """天乙贵人必须在 SHENSHA_META 中 [P0-06]"""
         from services.bazi_engine.shensha import SHENSHA_META
@@ -481,30 +674,9 @@ class TestP012P014:
     """P0-12: reason codes 合法; P0-14: wealth_score ≠ strength.score"""
 
     @pytest.fixture(scope="class")
-    def api_data(self):
-        import os
-        from fastapi.testclient import TestClient
-        _prev = os.environ.get("AUTH_BYPASS")
-        os.environ["AUTH_BYPASS"] = "true"
-        try:
-            from run import app
-            client = TestClient(app)
-            resp = client.post("/api/v1/verify", json={
-                "dt": "1990-07-17T12:20:00",
-                "tz": "Asia/Shanghai",
-                "lon": 116.4,
-                "gender": "female",
-                "mode": "dual",
-                "solar_time_enabled": True,
-            })
-            assert resp.status_code == 200
-            return resp.json()
-        finally:
-            if _prev is None:
-                os.environ.pop("AUTH_BYPASS", None)
-            else:
-                os.environ["AUTH_BYPASS"] = _prev
-
+    def api_data(self, verify_data_1990):
+        """委托给 conftest session 级共享 fixture，避免重复 API 调用触发限速"""
+        return verify_data_1990
     def test_p014_wealth_score_not_equal_strength(self, api_data):
         """P0-14: wealth_score ≠ strength.score — 两值不得相等 [P0-14]"""
         wealth_score = api_data.get("wealth", {}).get("wealth_score")
