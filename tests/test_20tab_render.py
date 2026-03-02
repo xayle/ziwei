@@ -209,6 +209,15 @@ class TestTabSchema:
         rv = verify_data.get("rule_version")
         assert rv, "rule_version 不应为空"
 
+    def test_rule_version_detail_dict(self, verify_data):
+        """红线#32: rule_version dict 必须附在每次计算输出中（§3.4）"""
+        rvd = verify_data.get("rule_version_detail")
+        assert isinstance(rvd, dict) and len(rvd) >= 5, (
+            "rule_version_detail 应为含≥5个模块版本的 dict"
+        )
+        for key in ("wuxing", "strength", "yongshen", "dayun", "geju"):
+            assert key in rvd, f"rule_version_detail 缺少 '{key}' 模块版本"
+
     def test_disclaimer_present(self, verify_data):
         """P0-20: 免责声明存在"""
         # 检查任意一个分析模型带 disclaimer

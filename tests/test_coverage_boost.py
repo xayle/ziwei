@@ -295,3 +295,119 @@ class TestPrometheusMetrics:
             bounds = list(buckets)
         assert any(abs(b - 3.0) < 0.01 for b in bounds), \
             "BAZI_VERIFY_DURATION 应包含 3.0s bucket（M6.07 基线）"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# liunian.py — 流年犯太岁完整路径 (红线10)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLiunianRelations:
+    """liunian.py 未覆盖分支补充测试"""
+
+    def _rel(self, lb: str, db: str):
+        from services.bazi_engine.liunian import _liunian_day_relation
+        return _liunian_day_relation(lb, db)
+
+    def test_zhi_taisui(self):
+        """值太岁: 流年支 == 日支"""
+        assert self._rel("子", "子") == "值太岁"
+
+    def test_chong_taisui(self):
+        """冲太岁: 流年支与日支相冲"""
+        assert self._rel("子", "午") == "冲太岁"
+
+    def test_xing_taisui(self):
+        """刑太岁: 子卯相刑"""
+        assert self._rel("子", "卯") == "刑太岁"
+
+    def test_hai_taisui(self):
+        """害太岁: 子未相害"""
+        assert self._rel("子", "未") == "害太岁"
+
+    def test_po_taisui(self):
+        """破太岁: 子酉相破"""
+        assert self._rel("子", "酉") == "破太岁"
+
+    def test_he_taisui(self):
+        """合太岁: 子丑六合"""
+        assert self._rel("子", "丑") == "合太岁"
+
+    def test_no_relation(self):
+        """无关系返回 None"""
+        result = self._rel("子", "申")  # 无冲合刑害破
+        assert result is None
+
+    def test_compute_liunian_basic(self):
+        """compute_liunian 返回正确年数"""
+        from services.bazi_engine.liunian import compute_liunian
+        rows = compute_liunian("甲", "子", 2020, 2025)
+        assert len(rows) == 6
+        assert rows[0]["year"] == 2020
+        assert rows[0]["stem"] and rows[0]["branch"]
+
+    def test_compute_liunian_for_dayun(self):
+        """compute_liunian_for_dayun 默认 10 年"""
+        from services.bazi_engine.liunian import compute_liunian_for_dayun
+        rows = compute_liunian_for_dayun("甲", "子", 30, 2024)
+        assert len(rows) == 10
+        assert rows[0]["year"] == 2024
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# analysis/personality.py — 性格引擎分支覆盖 (§4.11-F)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestPersonalityBranches:
+    """personality.py 旺衰修正路径 + 格局叠加分支"""
+
+    def test_pianwang_modifier(self):
+        """偏旺路径: advantages 带旺势前缀"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("甲", "偏旺", 75.0, "")
+        assert m.advantages, "advantages 不应为空"
+        assert all("旺" in a for a in m.advantages), "偏旺 advantages 应含旺势标注"
+        assert "偏旺" in m.strength_modifier
+
+    def test_jiwang_modifier(self):
+        """极旺路径: disadvantages 带旺势前缀"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("庚", "极旺", 90.0, "")
+        assert all("旺势" in d for d in m.disadvantages)
+
+    def test_pian_ruo_modifier(self):
+        """偏弱路径: disadvantages 带身弱标注"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("癸", "偏弱", 30.0, "")
+        assert all("身弱" in d for d in m.disadvantages)
+        assert "偏弱" in m.strength_modifier
+
+    def test_geju_guan_branch(self):
+        """格局含'官'时 advantages 追加官格条目"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("丙", "中和", 50.0, "正官格")
+        assert any("正官格" in a for a in m.advantages)
+
+    def test_geju_cai_branch(self):
+        """格局含'财'时 advantages 追加财格条目"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("戊", "中和", 50.0, "偏财格")
+        assert any("偏财格" in a for a in m.advantages)
+
+    def test_geju_yin_branch(self):
+        """格局含'印'时 advantages 追加印格条目"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("壬", "中和", 50.0, "正印格")
+        assert any("正印格" in a for a in m.advantages)
+
+    def test_geju_shishang_branch(self):
+        """格局含'食'时 advantages 追加食伤格条目"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("丁", "中和", 50.0, "食神格")
+        assert any("食神格" in a for a in m.advantages)
+
+    def test_advantages_len_limit(self):
+        """advantages 上限5条"""
+        from services.bazi_engine.analysis.personality import compute_personality
+        m = compute_personality("甲", "极旺", 95.0, "七杀格")
+        assert len(m.advantages) <= 5
+        assert len(m.disadvantages) <= 5

@@ -2,15 +2,15 @@
 
 > **当前版本**: v7.0-release (2026-03-02)  
 > **Git 标签**: `git tag v7.0-release`  
-> **测试状态**: 289 passed, 1 xfailed (pre-existing)
+> **测试状态**: 348 passed, 1 xfailed (pre-existing)
 
 ## 🎯 部署前检查清单
 
 ### 代码质量检查
-- [x] 所有测试通过 (289/289 — 含 M6 新增 P0-11/P0-21/P0-23/M6.08/M6.09 用例)
+- [x] 所有测试通过 (348/348 — 含 M6 新增 P0-11/P0-21/P0-23/M6.06/M6.08/M6.09/§4.13/红线#32 用例)
 - [x] 无语法错误
 - [x] Pylance类型检查通过
-- [x] 核心引擎覆盖率 **94%** (tables/wuxing/strength/yongshen/dayun)
+- [x] 核心引擎覆盖率 **89%** (bazi_engine 包整体)，五大核心模块 ≥94%，liunian/personality 均100%
 - [x] 无未处理的异常
 - [x] 所有导入解决
 
@@ -60,7 +60,7 @@
 - [x] 更新日志记录
 
 ### M6 验收门 (v7.0 新增)
-- [x] `pytest tests/` 全通过 (核心引擎覆盖率 94% ≥ 80%)
+- [x] `pytest tests/` 全通过 (核心引擎覆盖率 89% ≥ 80%)
 - [x] `/verify` P99 延迟 < 3s (localhost 实测 5 次最大 < 0.5s)
 - [x] Docker healthcheck 使用 `urllib.request` (非 `requests`) [F4]
 - [x] `.dockerignore` 排除 `.env` / `.env.*` / `data/*.db` [M6.10]
