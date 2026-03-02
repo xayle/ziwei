@@ -548,6 +548,20 @@ details > summary:hover { color:var(--text); }
   .print-only { display:block!important; }
   .footer { border:1px solid #ccc!important; background:#f9f9f9!important; }
 }
+/* ── Tab 状态指示器 (.tab-dot) — M4.15 ───────── */
+.tab-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: .45;
+  margin-left: 4px;
+  vertical-align: middle;
+  transition: background .2s, opacity .2s;
+}
+.tab-nav-item.has-data .tab-dot { background: var(--accent); opacity: 1; }
+.tab-nav-item.has-error .tab-dot { background: var(--bad,#c0212c); opacity: 1; }
 /* CSP安全: 无 unsafe-inline → 所有样式外部化 ✓ */
 
 /* ══════════════════════════════════════════════

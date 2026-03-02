@@ -1,0 +1,104 @@
+/**
+ * verify-print.css  — M4.13 / M5.01 打印专用样式
+ * 技术方案: window.print() + CSS @media print (无服务端渲染)
+ * 内容: 四柱卡 + 五行图 + 大运列表 + 用神 + 格局 + 免责声明
+ */
+
+@media print {
+  /* ── 基础重置 ─────────────────────────────── */
+  *,*::before,*::after { box-sizing: border-box; }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    padding-bottom: 0 !important;
+    font-size: 11pt;
+    font-family: "Source Han Serif SC", "SimSun", serif;
+    line-height: 1.6;
+  }
+
+  /* ── 隐藏交互元素 ─────────────────────────── */
+  header, .tab-nav, .bottom-nav,
+  .modal-overlay, .history-drawer,
+  #formSection, .form-section,
+  .btn-group, .action-bar, .no-print,
+  .header-actions, .onboarding-overlay,
+  .skeleton-wrapper, .empty-state,
+  button:not(.print-btn), nav { display: none !important; }
+
+  /* ── 显示打印专用元素 ─────────────────────── */
+  .print-only { display: block !important; }
+
+  /* ── 标题 ─────────────────────────────────── */
+  .print-header {
+    text-align: center;
+    margin-bottom: 16pt;
+    padding-bottom: 6pt;
+    border-bottom: 1px solid #ccc;
+  }
+  .print-header h1 { font-size: 16pt; color: #8B0000; }
+  .print-header .print-meta { font-size: 9pt; color: #555; }
+
+  /* ── 面板展示 ─────────────────────────────── */
+  .tab-panel {
+    display: block !important;
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  .tab-panel + .tab-panel { page-break-before: auto; }
+
+  /* ── 卡片/区块 ────────────────────────────── */
+  .card, .info-card, .section-block, .pillar-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    page-break-inside: avoid;
+  }
+
+  /* ── 四柱网格 ─────────────────────────────── */
+  .pillar-cards { grid-template-columns: repeat(4, 1fr) !important; }
+  .pillar-card  { min-height: 80pt; }
+
+  /* ── 五行图降级 ───────────────────────────── */
+  .wuxing-chart, .chart-container { page-break-inside: avoid; }
+
+  /* ── 代码/JSON区块 ────────────────────────── */
+  pre {
+    max-height: none !important;
+    white-space: pre-wrap !important;
+    background: #f5f5f5 !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+    font-size: 8pt;
+    page-break-inside: avoid;
+  }
+
+  /* ── 链接 ─────────────────────────────────── */
+  a { color: #000; text-decoration: none; }
+  a[href]::after { content: " (" attr(href) ")"; font-size: 8pt; color: #555; }
+
+  /* ── 页脚 ─────────────────────────────────── */
+  .footer {
+    border: 1px solid #ccc !important;
+    background: #f9f9f9 !important;
+    font-size: 9pt;
+    margin-top: 12pt;
+    page-break-inside: avoid;
+  }
+
+  /* ── 免责声明（必须打印出来）──────────────── */
+  .disclaimer, .disclaimer-box {
+    display: block !important;
+    border: 1px solid #ccc;
+    padding: 6pt 8pt;
+    margin-top: 8pt;
+    font-size: 8pt;
+    color: #555;
+    page-break-inside: avoid;
+  }
+
+  /* ── 页眉/页脚（浏览器原生）─────────────── */
+  @page {
+    margin: 15mm;
+    size: A4;
+  }
+}

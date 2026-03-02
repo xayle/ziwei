@@ -9,6 +9,7 @@
   <title>八字命理验证工作台 v4 — 双引擎 · 20维</title>
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="stylesheet" href="/static/css/verify.css?v=20260301" />
+  <link rel="stylesheet" href="/static/css/verify-print.css?v=20260301" media="print" />
 </head>
 <body>
 
@@ -42,26 +43,26 @@
 <div id="compareNotifyBar" style="display:none;background:var(--accent-gold);color:#fff;padding:8px 16px;font-size:12px;text-align:center;" role="alert"></div>
 
 <nav class="tab-nav" id="tabNav" role="tablist" aria-label="功能面板导航">
-  <button class="tab-nav-item" role="tab" data-idx="0"  aria-selected="true"  aria-controls="panel-0"  id="tab-btn-0" >总览</button>
-  <button class="tab-nav-item" role="tab" data-idx="1"  aria-selected="false" aria-controls="panel-1"  id="tab-btn-1" >请求</button>
-  <button class="tab-nav-item" role="tab" data-idx="2"  aria-selected="false" aria-controls="panel-2"  id="tab-btn-2" >命盘</button>
-  <button class="tab-nav-item" role="tab" data-idx="3"  aria-selected="false" aria-controls="panel-3"  id="tab-btn-3" >格局</button>
-  <button class="tab-nav-item" role="tab" data-idx="4"  aria-selected="false" aria-controls="panel-4"  id="tab-btn-4" >命宫</button>
-  <button class="tab-nav-item" role="tab" data-idx="5"  aria-selected="false" aria-controls="panel-5"  id="tab-btn-5" >摘要</button>
-  <button class="tab-nav-item" role="tab" data-idx="6"  aria-selected="false" aria-controls="panel-6"  id="tab-btn-6" >诊断</button>
-  <button class="tab-nav-item" role="tab" data-idx="7"  aria-selected="false" aria-controls="panel-7"  id="tab-btn-7" >财运</button>
-  <button class="tab-nav-item" role="tab" data-idx="8"  aria-selected="false" aria-controls="panel-8"  id="tab-btn-8" >事业</button>
-  <button class="tab-nav-item" role="tab" data-idx="9"  aria-selected="false" aria-controls="panel-9"  id="tab-btn-9" >姻缘</button>
-  <button class="tab-nav-item" role="tab" data-idx="10" aria-selected="false" aria-controls="panel-10" id="tab-btn-10">健康</button>
-  <button class="tab-nav-item" role="tab" data-idx="11" aria-selected="false" aria-controls="panel-11" id="tab-btn-11">人际</button>
-  <button class="tab-nav-item" role="tab" data-idx="12" aria-selected="false" aria-controls="panel-12" id="tab-btn-12">性格</button>
-  <button class="tab-nav-item" role="tab" data-idx="13" aria-selected="false" aria-controls="panel-13" id="tab-btn-13">风水</button>
-  <button class="tab-nav-item" role="tab" data-idx="14" aria-selected="false" aria-controls="panel-14" id="tab-btn-14">饰品</button>
-  <button class="tab-nav-item" role="tab" data-idx="15" aria-selected="false" aria-controls="panel-15" id="tab-btn-15">开运</button>
-  <button class="tab-nav-item" role="tab" data-idx="16" aria-selected="false" aria-controls="panel-16" id="tab-btn-16">大运</button>
-  <button class="tab-nav-item" role="tab" data-idx="17" aria-selected="false" aria-controls="panel-17" id="tab-btn-17">流年</button>
-  <button class="tab-nav-item" role="tab" data-idx="18" aria-selected="false" aria-controls="panel-18" id="tab-btn-18">月运</button>
-  <button class="tab-nav-item" role="tab" data-idx="19" aria-selected="false" aria-controls="panel-19" id="tab-btn-19">案例</button>
+  <button class="tab-nav-item" role="tab" data-idx="0"  aria-selected="true"  aria-controls="panel-0"  id="tab-btn-0" >总览<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="1"  aria-selected="false" aria-controls="panel-1"  id="tab-btn-1" >请求<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="2"  aria-selected="false" aria-controls="panel-2"  id="tab-btn-2" >命盘<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="3"  aria-selected="false" aria-controls="panel-3"  id="tab-btn-3" >格局<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="4"  aria-selected="false" aria-controls="panel-4"  id="tab-btn-4" >命宫<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="5"  aria-selected="false" aria-controls="panel-5"  id="tab-btn-5" >摘要<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="6"  aria-selected="false" aria-controls="panel-6"  id="tab-btn-6" >诊断<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="7"  aria-selected="false" aria-controls="panel-7"  id="tab-btn-7" >财运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="8"  aria-selected="false" aria-controls="panel-8"  id="tab-btn-8" >事业<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="9"  aria-selected="false" aria-controls="panel-9"  id="tab-btn-9" >姻缘<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="10" aria-selected="false" aria-controls="panel-10" id="tab-btn-10">健康<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="11" aria-selected="false" aria-controls="panel-11" id="tab-btn-11">人际<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="12" aria-selected="false" aria-controls="panel-12" id="tab-btn-12">性格<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="13" aria-selected="false" aria-controls="panel-13" id="tab-btn-13">风水<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="14" aria-selected="false" aria-controls="panel-14" id="tab-btn-14">饰品<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="15" aria-selected="false" aria-controls="panel-15" id="tab-btn-15">开运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="16" aria-selected="false" aria-controls="panel-16" id="tab-btn-16">大运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="17" aria-selected="false" aria-controls="panel-17" id="tab-btn-17">流年<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="18" aria-selected="false" aria-controls="panel-18" id="tab-btn-18">月运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="19" aria-selected="false" aria-controls="panel-19" id="tab-btn-19">案例<span class="tab-dot"></span></button>
 </nav>
 
 <main id="tabPanels" role="main">

@@ -185,7 +185,7 @@ function setLonHint() {
    7. 表单保存/加载 & 输入历史 (M4.33)
 ═══════════════════════════════════════════════════ */
 const INPUTS_KEY = 'bazi_inputs_v4';
-const HIST_KEY   = 'bazi_hist_v4';
+const HIST_KEY   = 'bazi_history';   // M4.33: spec requires key='bazi_history'
 const HIST_MAX   = 10;
 
 window.saveInputs = function() {
