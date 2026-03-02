@@ -61,8 +61,9 @@ class TestAuthenticationAPI:
         assert "error" in data
         assert data["error"]["code"] == "AUTH_001"
     
-    def test_access_protected_endpoint_without_token(self, client: TestClient):
+    def test_access_protected_endpoint_without_token(self, client: TestClient, monkeypatch):
         """Test accessing protected endpoint without authorization"""
+        monkeypatch.setenv("AUTH_BYPASS", "false")
         response = client.get("/api/v1/auth/me")
         assert response.status_code == 401
     

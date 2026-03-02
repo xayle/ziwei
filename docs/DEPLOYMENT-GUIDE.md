@@ -2,12 +2,12 @@
 
 > **当前版本**: v7.0-release (2026-03-02)  
 > **Git 标签**: `git tag v7.0-release`  
-> **测试状态**: 258 passed, 1 xfailed (pre-existing)
+> **测试状态**: 289 passed, 1 xfailed (pre-existing)
 
 ## 🎯 部署前检查清单
 
 ### 代码质量检查
-- [x] 所有测试通过 (258/258 — 含 M6 新增 14+64 用例)
+- [x] 所有测试通过 (289/289 — 含 M6 新增 P0-11/P0-21/P0-23/M6.08/M6.09 用例)
 - [x] 无语法错误
 - [x] Pylance类型检查通过
 - [x] 核心引擎覆盖率 **94%** (tables/wuxing/strength/yongshen/dayun)
