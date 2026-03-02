@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v7.0.0] - 2026-03-02
+
+### Milestone 6 — 测试与质量收尾
+
+#### 关键 Bug 修复
+- **ENGINE_V2=true 路径修复**：`_to_pillars_model()` (services/bazi_engine_service.py) 现可正确将
+  `boundary.Pillar` dataclass 对象转换为 Pydantic 兼容的 dict，解决了所有 `/api/v1/verify`
+  请求在 `ENGINE_V2=true` 时返回 HTTP 400 的问题。
+
+#### 性能基线 (M6.07)
+- `/api/v1/verify` 端点本地压测 (8 次连续调用)：avg **11ms**，max **14ms**
+- 远低于 P99 < 3 000ms 目标
+
+#### 测试覆盖率 (M6.09)
+- 新增 `TestYongshenExtraEdge`、`TestLifestyleTables`、`TestWealthBranches`、`TestInterpretBranches` 等测试类
+- 覆盖率从 96% 提升至 **98%**（1876 条语句，41条未覆盖）
+- 最终测试结果：**499 passed, 1 xfailed**
+
+#### 部署 (M6.11)
+- Dockerfile 新增 `HEALTHCHECK`（urllib 模式，`/api/v1/health`，30s 间隔 / 10s 超时 / 3 次重试）
+- 注：本机无 Docker 环境，构建步骤记录在 docs/DEPLOYMENT-GUIDE.md 中，由 CI 执行
+
+#### 标记
+- 打标 `git tag v7.0-release`（M6.13）
+
+---
+
 ## [Unreleased]
 
 

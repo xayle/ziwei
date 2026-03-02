@@ -210,20 +210,26 @@ class TestCareerBranches:
             "比肩": 0.1, "劫财": 0.1,
         }
 
-    def _compute(self, shishen_scores=None, **kw):
+    def _compute(
+        self,
+        shishen_scores: dict | None = None,
+        geju_name: str = "正官格",
+        yongshen_favor: list[str] | None = None,
+        yongshen_avoid: list[str] | None = None,
+        strength_score: float = 55.0,
+        dayun_list: list | None = None,
+        day_branch: str = "午",
+    ):
         from services.bazi_engine.analysis.career import compute_career
-        scores = shishen_scores or self._base_scores()
-        defaults = dict(
-            geju_name="正官格",
-            yongshen_favor=["wood"],
-            yongshen_avoid=["metal"],
-            shishen_scores=scores,
-            strength_score=55.0,
-            dayun_list=[],
-            day_branch="午",
+        return compute_career(
+            geju_name=geju_name,
+            yongshen_favor=yongshen_favor if yongshen_favor is not None else ["wood"],
+            yongshen_avoid=yongshen_avoid if yongshen_avoid is not None else ["metal"],
+            shishen_scores=shishen_scores if shishen_scores is not None else self._base_scores(),
+            strength_score=strength_score,
+            dayun_list=dayun_list if dayun_list is not None else [],
+            day_branch=day_branch,
         )
-        defaults.update(kw)
-        return compute_career(**defaults)
 
     def test_direction_guan_sha_dominant(self):
         """官杀≥60% → directions=['管理','仕途','行政']"""
@@ -292,27 +298,36 @@ class TestCareerBranches:
 class TestMarriageBranches:
     """compute_marriage 性别/桃花/子女等边界路径"""
 
-    def _compute(self, gender="male", shishen_scores=None, all_branches=None,
-                 dayun_list=None, **kw):
+    _DEFAULT_SHISHEN = {
+        "正官": 0.1, "七杀": 0.1, "正财": 0.2, "偏财": 0.1,
+        "食神": 0.1, "伤官": 0.1, "正印": 0.1, "偏印": 0.1,
+        "比肩": 0.05, "劫财": 0.05,
+    }
+
+    def _compute(
+        self,
+        gender: str = "male",
+        shishen_scores: dict | None = None,
+        all_branches: list | None = None,
+        dayun_list: list | None = None,
+        day_branch: str = "午",
+        shensha_items: list | None = None,
+        yongshen_favor: list[str] | None = None,
+        yongshen_avoid: list[str] | None = None,
+        strength_score: float = 55.0,
+    ):
         from services.bazi_engine.analysis.marriage import compute_marriage
-        base_scores = shishen_scores or {
-            "正官": 0.1, "七杀": 0.1, "正财": 0.2, "偏财": 0.1,
-            "食神": 0.1, "伤官": 0.1, "正印": 0.1, "偏印": 0.1,
-            "比肩": 0.05, "劫财": 0.05,
-        }
-        defaults = dict(
-            all_branches=all_branches or ["子", "午", "卯", "酉"],
-            day_branch="午",
-            shishen_scores=base_scores,
-            shensha_items=[],
+        return compute_marriage(
+            all_branches=all_branches if all_branches is not None else ["子", "午", "卯", "酉"],
+            day_branch=day_branch,
+            shishen_scores=shishen_scores if shishen_scores is not None else self._DEFAULT_SHISHEN,
+            shensha_items=shensha_items if shensha_items is not None else [],
             gender=gender,
-            yongshen_favor=["wood"],
-            yongshen_avoid=["metal"],
-            dayun_list=dayun_list or [],
-            strength_score=55.0,
+            yongshen_favor=yongshen_favor if yongshen_favor is not None else ["wood"],
+            yongshen_avoid=yongshen_avoid if yongshen_avoid is not None else ["metal"],
+            dayun_list=dayun_list if dayun_list is not None else [],
+            strength_score=strength_score,
         )
-        defaults.update(kw)
-        return compute_marriage(**defaults)
 
     def test_female_guan_sha_gender_bonus(self):
         """女命官杀≥30%且不混杂 → gender_delta+10 → marriage_score提升"""
@@ -606,3 +621,180 @@ class TestRelationshipBranches:
                   "比肩": 0.05, "劫财": 0.05}
         result = self._compute(shishen_scores=scores)
         assert "食神旺" in result.social_strategy
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 财运引擎  wealth.py  未覆盖分支
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestWealthBranches:
+    """补充 services/bazi_engine/analysis/wealth.py 中 tier中/下、空行业、策略字段的覆盖"""
+
+    _DEFAULT_SHISHEN = {
+        "正财": 5.0, "偏财": 3.0, "正官": 2.0, "食神": 1.0,
+        "伤官": 0.5, "七杀": 0.5, "正印": 0.5, "偏印": 0.5,
+        "比肩": 0.5, "劫财": 0.5,
+    }
+
+    def _compute(self, **kw):
+        from services.bazi_engine.analysis.wealth import compute_wealth
+        defaults = dict(
+            yongshen_favor=["wood", "water"],
+            yongshen_avoid=["metal", "earth"],
+            wuxing_scores={"wood": 30.0, "fire": 20.0, "earth": 15.0,
+                           "metal": 20.0, "water": 15.0},
+            shishen_scores=dict(self._DEFAULT_SHISHEN),
+            strength_score=60.0,
+            dayun_list=[],
+            day_branch="午",
+        )
+        defaults.update(kw)
+        return compute_wealth(**defaults)
+
+    def test_tier_xia_low_caipower(self):
+        """财星得分极低 + 身弱修正 → wealth_score<40 → tier=下，annual_range含10-30万"""
+        result = self._compute(
+            shishen_scores={"正财": 0.0, "偏财": 0.0, "正官": 0.2, "食神": 0.2,
+                            "伤官": 0.1, "七杀": 0.1, "正印": 0.1, "偏印": 0.1,
+                            "比肩": 0.1, "劫财": 0.1},
+            yongshen_favor=["metal"],
+            wuxing_scores={"wood": 2.0, "fire": 2.0, "earth": 2.0,
+                           "metal": 2.0, "water": 92.0},
+            strength_score=15.0,
+        )
+        assert result.wealth_tier == "下"
+        assert "10-30万" in result.annual_range
+
+    def test_tier_zhong_strategy(self):
+        """中等财星力量 → tier=中，strategy含'稳中求进'"""
+        result = self._compute(
+            shishen_scores={"正财": 20.0, "偏财": 15.0, "正官": 1.0, "食神": 1.0,
+                            "伤官": 1.0, "七杀": 1.0, "正印": 1.0, "偏印": 1.0,
+                            "比肩": 1.0, "劫财": 1.0},
+            yongshen_favor=["wood", "fire"],
+            wuxing_scores={"wood": 40.0, "fire": 30.0, "earth": 10.0,
+                           "metal": 10.0, "water": 10.0},
+            strength_score=50.0,
+        )
+        assert result.wealth_tier == "中"
+        assert "稳中求进" in result.strategy
+        assert "20-80万" in result.annual_range
+
+    def test_tier_shang_strategy(self):
+        """财星高占比 + 用神充足 → tier=上，strategy含'财运旺盛'"""
+        result = self._compute(
+            shishen_scores={"正财": 50.0, "偏财": 30.0, "正官": 5.0, "食神": 3.0,
+                            "伤官": 2.0, "七杀": 2.0, "正印": 2.0, "偏印": 2.0,
+                            "比肩": 2.0, "劫财": 2.0},
+            yongshen_favor=["wood", "fire", "water"],
+            wuxing_scores={"wood": 55.0, "fire": 20.0, "earth": 5.0,
+                           "metal": 10.0, "water": 10.0},
+            strength_score=75.0,
+        )
+        assert result.wealth_tier == "上"
+        assert "财运旺盛" in result.strategy
+        assert "80-200万" in result.annual_range
+
+    def test_empty_yongshen_favor_industry_fallback(self):
+        """yongshen_favor=[] → industries 默认含贸易或实业"""
+        result = self._compute(yongshen_favor=[], yongshen_avoid=[])
+        assert any(ind in result.industries for ind in ["贸易", "实业"])
+
+    def test_weak_daymaster_penalty(self):
+        """strength_score<30 → 施行弱主惩罚，分数低于身强时"""
+        r_strong = self._compute(strength_score=80.0)
+        r_weak   = self._compute(strength_score=12.0)
+        assert r_weak.wealth_score <= r_strong.wealth_score
+
+    def test_strategy_lower_tier_default(self):
+        """tier=下 → strategy含'守成为主'"""
+        result = self._compute(
+            shishen_scores={"正财": 0.0, "偏财": 0.0, "正官": 0.1, "食神": 0.1,
+                            "伤官": 0.1, "七杀": 0.1, "正印": 0.1, "偏印": 0.1,
+                            "比肩": 0.25, "劫财": 0.25},
+            strength_score=10.0,
+            yongshen_favor=["metal"],
+            wuxing_scores={"wood": 1.0, "fire": 1.0, "earth": 1.0,
+                           "metal": 1.0, "water": 96.0},
+        )
+        assert result.wealth_tier == "下"
+        assert "守成" in result.strategy
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 解读引擎  interpret.py  未覆盖分支
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestInterpretBranches:
+    """补充 services/bazi_engine/interpret.py 强/弱日主通论、大运趋势及偏旺五行分支的覆盖"""
+
+    def _interpret(self, **kw):
+        from services.bazi_engine.interpret import interpret_bazi, InterpretInput
+        defaults = dict(
+            day_stem="甲",
+            wuxing_scores={"wood": 20.0, "fire": 20.0, "earth": 20.0,
+                           "metal": 20.0, "water": 20.0},
+            yongshen_favor=["water", "metal"],
+            yongshen_avoid=["fire", "earth"],
+            strength_tier="中和",
+            geju_name="正官格",
+            shensha_items=[],
+            dizhi_relations=[],
+            dayun_trend="平稳",
+        )
+        defaults.update(kw)
+        return interpret_bazi(InterpretInput(**defaults))
+
+    def test_strong_day_master_general_text(self):
+        """strength_tier=极旺 → general_text 走 strong_day_master 模板"""
+        result = self._interpret(strength_tier="极旺")
+        assert len(result.general_text) > 0
+
+    def test_pianwang_day_master_general_text(self):
+        """strength_tier=偏旺 → general_text 走 strong_day_master 模板"""
+        result = self._interpret(strength_tier="偏旺")
+        assert len(result.general_text) > 0
+
+    def test_weak_day_master_general_text(self):
+        """strength_tier=极弱 → general_text 走 weak_day_master 模板"""
+        result = self._interpret(strength_tier="极弱")
+        assert len(result.general_text) > 0
+
+    def test_pianruo_day_master_general_text(self):
+        """strength_tier=偏弱 → general_text 走 weak_day_master 模板"""
+        result = self._interpret(strength_tier="偏弱")
+        assert len(result.general_text) > 0
+
+    def test_favorable_dayun_appended(self):
+        """dayun_trend=上升 → general_text 包含大运上升相关内容"""
+        result = self._interpret(dayun_trend="上升")
+        assert len(result.general_text) > 0
+        # 内容应比平稳长（追加了favorable_dayun模板）
+        result_stable = self._interpret(dayun_trend="平稳")
+        assert len(result.general_text) >= len(result_stable.general_text)
+
+    def test_unfavorable_dayun_appended(self):
+        """dayun_trend=下降 → general_text 包含大运下降相关内容"""
+        result = self._interpret(dayun_trend="下降")
+        result_stable = self._interpret(dayun_trend="平稳")
+        assert len(result.general_text) >= len(result_stable.general_text)
+
+    def test_dominant_wuxing_over_50pct(self):
+        """某五行占比>50% → dominant_wuxing_texts 非空，full_summary 含偏旺描述"""
+        result = self._interpret(
+            wuxing_scores={"wood": 80.0, "fire": 5.0, "earth": 5.0,
+                           "metal": 5.0, "water": 5.0},
+        )
+        assert len(result.dominant_wuxing_texts) > 0
+        assert len(result.full_summary) > 0
+
+    def test_dominant_wuxing_in_full_summary(self):
+        """偏旺文字应在 full_summary 中有所体现（前50字片段）"""
+        result = self._interpret(
+            wuxing_scores={"wood": 0.0, "fire": 90.0, "earth": 5.0,
+                           "metal": 3.0, "water": 2.0},
+        )
+        assert len(result.dominant_wuxing_texts) > 0
+        # full_summary 应包含 dominant_wuxing_texts 片段
+        snippet = result.dominant_wuxing_texts[0][:30]
+        assert snippet in result.full_summary or len(result.full_summary) > 50

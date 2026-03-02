@@ -93,6 +93,25 @@ class TestTables:
         for b, c in BRANCH_CHONG.items():
             assert BRANCH_CHONG.get(c) == b, f"{b}↔{c} 不对称"
 
+    def test_get_kongwang_jiazi(self):
+        """get_kongwang：甲子旬 → 空亡戌亥"""
+        from services.bazi_engine.tables import get_kongwang
+        k1, k2 = get_kongwang("甲", "子")
+        assert (k1, k2) == ("戌", "亥")
+
+    def test_get_kongwang_gengwu(self):
+        """get_kongwang：庚午（属甲午旬）→ 空亡辰巳"""
+        from services.bazi_engine.tables import get_kongwang
+        k1, k2 = get_kongwang("庚", "午")
+        assert (k1, k2) == ("辰", "巳")
+
+    def test_get_kongwang_returns_tuple(self):
+        """get_kongwang 对任意合法干支返回长度为2的元组"""
+        from services.bazi_engine.tables import get_kongwang
+        result = get_kongwang("壬", "午")
+        assert len(result) == 2
+        assert all(isinstance(x, str) for x in result)
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ② 五行得分引擎  wuxing.py
@@ -1066,3 +1085,88 @@ class TestLifeArcEdgePaths:
             wuxing_scores={"\u6728": 20.0, "\u706b": 20.0, "\u571f": 20.0, "\u91d1": 20.0, "\u6c34": 20.0},
         )
         assert score == 60.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 从弱格 / 调候温和月 额外分支  yongshen.py
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestYongshenExtraEdge:
+    """补充 yongshen.py 中 _get_congruo_yongshen / _get_tiaohou_yongshen 温和月分支的覆盖"""
+
+    def test_congruo_extremely_weak_full_metal(self):
+        """极弱+四柱几乎全金 → 从弱格，喜用金"""
+        from services.bazi_engine.yongshen import compute_yongshen
+        from services.bazi_engine.strength import StrengthResult
+        from services.bazi_engine.wuxing import WuxingResult
+        st = StrengthResult(
+            score=8.0, tier="极弱", day_stem="甲", day_elem="wood",
+            is_strong=False, is_weak=True, is_balanced=False,
+        )
+        # 极弱：同类(wood)+生我(water) = 2+2 = 4 < 15 → 走从弱分支
+        wx = WuxingResult(
+            scores_weighted={"wood": 2.0, "fire": 0.0, "earth": 2.0, "metal": 92.0, "water": 2.0}
+        )
+        result = compute_yongshen("甲", "酉", st, wx)
+        assert result.branch == "从弱"
+        assert "metal" in result.favor
+
+    def test_congruo_helper_direct(self):
+        """直接调用 _get_congruo_yongshen，验证返回字段完整"""
+        from services.bazi_engine.yongshen import _get_congruo_yongshen
+        result = _get_congruo_yongshen("wood", "metal")
+        assert result.branch == "从弱"
+        assert "metal" in result.favor
+        assert len(result.rationale) > 0
+        assert result.inference_tags[0].startswith("极弱从弱格")
+
+    def test_tiaohou_neutral_spring_month(self):
+        """卯月（温和春月，非寒非热）→ 调候退回扶抑"""
+        from services.bazi_engine.yongshen import _get_tiaohou_yongshen
+        result = _get_tiaohou_yongshen("wood", "卯")
+        assert result.branch == "调候"
+        assert result.inference_tags[0] == "温和月令调候退回扶抑"
+
+    def test_tiaohou_neutral_autumn_month(self):
+        """酉月（温和秋月，非寒非热）→ 调候退回扶抑"""
+        from services.bazi_engine.yongshen import _get_tiaohou_yongshen
+        result = _get_tiaohou_yongshen("fire", "酉")
+        assert result.branch == "调候"
+        assert result.inference_tags[0] == "温和月令调候退回扶抑"
+        assert len(result.favor) > 0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# lifestyle/tables.py  get_risk_organs
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestLifestyleTables:
+    """cover services/bazi_engine/lifestyle/tables.py get_risk_organs (lines 61-64)"""
+
+    def test_get_risk_organs_excess_wood(self):
+        """木偏旺时，返回含肝胆的脏腑+症状列表"""
+        from services.bazi_engine.lifestyle.tables import get_risk_organs
+        result = get_risk_organs("wood", is_excess=True)
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_get_risk_organs_deficient_metal(self):
+        """金偏弱时，返回含肺大肠的脏腑+症状列表"""
+        from services.bazi_engine.lifestyle.tables import get_risk_organs
+        result = get_risk_organs("metal", is_excess=False)
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_get_risk_organs_fire_both_modes(self):
+        """火元素 excess/deficient 均返回非空列表"""
+        from services.bazi_engine.lifestyle.tables import get_risk_organs
+        r_excess = get_risk_organs("fire", is_excess=True)
+        r_def    = get_risk_organs("fire", is_excess=False)
+        assert len(r_excess) > 0
+        assert len(r_def) > 0
+
+    def test_get_risk_organs_unknown_returns_empty(self):
+        """未知五行名返回空列表（不报错）"""
+        from services.bazi_engine.lifestyle.tables import get_risk_organs
+        result = get_risk_organs("unknown_element", is_excess=True)
+        assert result == []

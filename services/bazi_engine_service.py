@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 try:
-    from cachetools import TTLCache
+    from cachetools import TTLCache  # type: ignore[import-untyped]
     _RESULT_CACHE: TTLCache = TTLCache(maxsize=500, ttl=3600)
     _CACHETOOLS_AVAILABLE = True
 except ImportError:
@@ -271,7 +271,15 @@ def _to_pillars_model(p) -> PillarsModel:
         return p
     if hasattr(p, "model_dump"):
         return PillarsModel.model_validate(p.model_dump())
-    return PillarsModel.model_validate(p.__dict__)
+    # p is boundary.Pillars (dataclass) — its fields are Pillar dataclass objects
+    def _pillar_to_dict(pl) -> dict:
+        if hasattr(pl, "model_dump"):
+            return pl.model_dump()
+        if isinstance(pl, dict):
+            return pl
+        return {"stem": pl.stem, "branch": pl.branch, "ganzhi": getattr(pl, "ganzhi", f"{pl.stem}{pl.branch}")}
+    raw = p.__dict__
+    return PillarsModel.model_validate({k: _pillar_to_dict(v) for k, v in raw.items()})
 
 
 # ──────────────────────────────────────────────────────────────────────────────

@@ -181,7 +181,7 @@ def compute_liunian_domain_forecasts(
     is_克day = (克day == day_wuxing) if 克day else False
 
     # 某五行>50%
-    dominant_el = max(wuxing_scores, key=wuxing_scores.get) if wuxing_scores else ""
+    dominant_el = max(wuxing_scores, key=lambda k: wuxing_scores.get(k, 0.0)) if wuxing_scores else ""
     dominant_ratio = wuxing_scores.get(dominant_el, 0) / total_wx if dominant_el else 0
 
     # 与用神合

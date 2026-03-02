@@ -82,17 +82,33 @@ class TestSolarTimeV2:
 class TestScoringEngine:
     """八字6维评分引擎单元测试"""
 
-    def _default_inputs(self):
-        return dict(
-            wuxing_scores={"wood": 3.0, "fire": 2.0, "earth": 2.0, "metal": 1.5, "water": 1.5},
-            strength_score=62.0,
-            strength_tier="中和",
-            yongshen_favor=["fire", "earth"],
-            geju_name="正官格",
-            is_broken=False,
-            dayun_trend="上升",
-            is_favorable_dayun=True,
-            shensha_items=[{"name": "天乙贵人", "is_beneficial": True}],
+    # 将通用参数提取为常量避免重复
+    _WX = {"wood": 3.0, "fire": 2.0, "earth": 2.0, "metal": 1.5, "water": 1.5}
+    _SHENSHA = [{"name": "天乙贵人", "is_beneficial": True}]
+
+    def _score(
+        self,
+        wuxing_scores: dict | None = None,
+        strength_score: float = 62.0,
+        strength_tier: str = "中和",
+        yongshen_favor: list | None = None,
+        geju_name: str = "正官格",
+        is_broken: bool = False,
+        dayun_trend: str = "上升",
+        is_favorable_dayun: bool = True,
+        shensha_items: list | None = None,
+    ):
+        from services.bazi_engine.scoring import compute_bazi_score
+        return compute_bazi_score(
+            wuxing_scores=wuxing_scores if wuxing_scores is not None else self._WX,
+            strength_score=strength_score,
+            strength_tier=strength_tier,
+            yongshen_favor=yongshen_favor if yongshen_favor is not None else ["fire", "earth"],
+            geju_name=geju_name,
+            is_broken=is_broken,
+            dayun_trend=dayun_trend,
+            is_favorable_dayun=is_favorable_dayun,
+            shensha_items=shensha_items if shensha_items is not None else self._SHENSHA,
         )
 
     def test_import(self):
@@ -100,64 +116,43 @@ class TestScoringEngine:
         assert callable(compute_bazi_score)
 
     def test_basic_score_returns_detail(self):
-        from services.bazi_engine.scoring import compute_bazi_score
-        result = compute_bazi_score(**self._default_inputs())
+        result = self._score()
         assert result.total_score > 0
         assert result.tier in ("上命", "中命", "下命")
 
     def test_zhonghe_tier_gets_15(self):
         """中和日主强弱 → strength维度=15"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        inp["strength_tier"] = "中和"
-        result = compute_bazi_score(**inp)
+        result = self._score(strength_tier="中和")
         assert result.daymaster_strength == pytest.approx(15.0)
 
     def test_jiwang_tier_gets_5(self):
         """极旺 → 5分"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        inp["strength_tier"] = "极旺"
-        result = compute_bazi_score(**inp)
+        result = self._score(strength_tier="极旺")
         assert result.daymaster_strength == pytest.approx(5.0)
 
     def test_upper_tier_positive_dayun(self):
         """上等格局+顺用神上升 → 总分高"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        result = compute_bazi_score(**self._default_inputs())
+        result = self._score()
         assert result.total_score >= 50
 
     def test_broken_geju_low_score(self):
         """破格 → geju_level维度=3"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        inp["is_broken"] = True
-        result = compute_bazi_score(**inp)
+        result = self._score(is_broken=True)
         assert result.geju_level == pytest.approx(3.0)
 
     def test_unfavorable_downtrend(self):
         """逆用神下降"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        inp["dayun_trend"] = "下降"
-        inp["is_favorable_dayun"] = False
-        result = compute_bazi_score(**inp)
+        result = self._score(dayun_trend="下降", is_favorable_dayun=False)
         assert result.dayun_trend == pytest.approx(3.0)
 
     def test_empty_wuxing_fallback(self):
         """空五行不崩溃"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        inp["wuxing_scores"] = {}
-        result = compute_bazi_score(**inp)
+        result = self._score(wuxing_scores={})
         assert 0 <= result.total_score <= 100
 
     def test_shensha_penalty(self):
         """大量凶星 → shensha_luck 降低"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        inp["shensha_items"] = [{"name": "羊刃", "is_beneficial": False}] * 6
-        result = compute_bazi_score(**inp)
+        result = self._score(shensha_items=[{"name": "羊刃", "is_beneficial": False}] * 6)
         assert result.shensha_luck == pytest.approx(2.0)  # 下限2
 
     def test_dimension_weights_sum(self):
@@ -166,8 +161,8 @@ class TestScoringEngine:
         assert sum(DIMENSION_WEIGHTS.values()) == 100
 
     def test_scoring_to_dict(self):
-        from services.bazi_engine.scoring import compute_bazi_score, scoring_to_dict
-        result = compute_bazi_score(**self._default_inputs())
+        from services.bazi_engine.scoring import scoring_to_dict
+        result = self._score()
         d = scoring_to_dict(result)
         assert isinstance(d, dict)
         assert "total_score" in d
@@ -175,15 +170,13 @@ class TestScoringEngine:
 
     def test_upper_min_command(self):
         """总分≥75 → 上命"""
-        from services.bazi_engine.scoring import compute_bazi_score
-        inp = self._default_inputs()
-        # 设置所有维度最高: 极旺不行，用中和; 正印格; 顺走; 大量贵人
-        inp["strength_tier"] = "中和"
-        inp["geju_name"] = "正印格"
-        inp["dayun_trend"] = "上升"
-        inp["is_favorable_dayun"] = True
-        inp["shensha_items"] = [{"is_beneficial": True}] * 5
-        result = compute_bazi_score(**inp)
+        result = self._score(
+            strength_tier="中和",
+            geju_name="正印格",
+            dayun_trend="上升",
+            is_favorable_dayun=True,
+            shensha_items=[{"is_beneficial": True}] * 5,
+        )
         assert result.tier in ("上命", "中命")
 
 
