@@ -683,6 +683,30 @@ def _enrich_v2_analysis(
     except Exception as exc:
         logger.debug("[M2.5 milestones] %s", exc)
 
+    # ── RL#10: 流年 items 填充（当前年份前后2年）────────────────────
+    try:
+        import datetime as _dt_mod
+        from services.bazi_engine.liunian import compute_liunian as _compute_liunian
+        from app.schemas.bazi import LiuNianItemModel as _LiuNianItemModel, LiuNianResultModel as _LiuNianResultModel
+        _cur_yr = _dt_mod.date.today().year
+        _ln_rows = _compute_liunian(
+            day_stem=ds_st, day_branch=ds_br,
+            start_year=_cur_yr - 2, end_year=_cur_yr + 2,
+        )
+        _ln_items = [
+            _LiuNianItemModel(
+                year=r["year"], stem=r["stem"], branch=r["branch"],
+                ten_god=r.get("ten_god"), clash=r.get("clash"),
+            )
+            for r in _ln_rows
+        ]
+        verify_response.liunian = _LiuNianResultModel(
+            years_used=list(range(_cur_yr - 2, _cur_yr + 3)),
+            items=_ln_items,
+        )
+    except Exception as exc:
+        logger.debug("[RL#10 liunian] %s", exc)
+
     # ── 任务 2.10: rule_version_detail dict ──────────────────────────
     verify_response.rule_version_detail = {
         "wuxing":       "v1.0",
@@ -755,6 +779,29 @@ def _enrich_v2_analysis(
             verify_response.health.interpretation_text = interp_result.lifestyle_text[80:160]
     except Exception as exc:
         logger.debug("[M3 interpret] %s", exc)
+
+    # ── RL#33: 三层模型 — wealth 同步 interpretation_text + inference_tags ──
+    try:
+        _wa = verify_response.wealth_analysis
+        _w  = verify_response.wealth
+        if _w is not None:
+            if not _w.interpretation_text:
+                if _wa and _wa.interpretation_text:
+                    _w.interpretation_text = _wa.interpretation_text
+                else:
+                    # fallback: 结合财富得分生成简要解读
+                    _score = _w.wealth_score or 50.0
+                    _tags  = "、".join(_w.industry_tags[:2]) if _w.industry_tags else "综合"
+                    _w.interpretation_text = (
+                        f"综合财富评分 {_score:.1f}，推荐关注 {_tags} 等领域。"
+                    )
+            if not _w.inference_tags:
+                if _wa and getattr(_wa, "inference_tags", None):
+                    _w.inference_tags = list(_wa.inference_tags)[:3]
+                else:
+                    _w.inference_tags = [f"用神{f}" for f in favor[:2]] + ["wealth_v2"]
+    except Exception as exc:
+        logger.debug("[RL#33 wealth three-layer] %s", exc)
 
     # ────────────────────────────────────────────────────────────────────────
     # M3 新增: life_arc 人生弧线

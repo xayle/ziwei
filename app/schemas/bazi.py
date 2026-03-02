@@ -341,6 +341,7 @@ class VerifyResponse(BaseModel):
     lucky: Optional[LuckyModel] = Field(None, description="开运数字/颜色/方位")
     lifestyle: Optional[LifestyleModel] = Field(None, description="生活方式建议")
     milestones: Optional[list[MilestoneModel]] = Field(None, description="人生里程碑")
+    liunian: Optional[LiuNianResultModel] = Field(None, description="流年排盘（当前年份前后）")
     liunian_detail: Optional[list[LiuNianDetailModel]] = Field(None, description="流年四维分解")
     life_arc: Optional[LifeArcModel] = Field(None, description="人生格局弧线")
     current_fortune_summary: Optional[CurrentFortuneSummaryModel] = Field(None, description="当前运势摘要")
