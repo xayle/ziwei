@@ -99,7 +99,7 @@ from services.bazi_full_service import (
 import services.bazi_engine_service as _bazi_engine_service
 from services.bazi_engine_service import _enrich_v2_analysis  # M2 分析引擎集成
 from services.bazi_engine.classic_refs import get_refs_by_tag  # 大运古籍引用
-from services.bazi_engine.relations import get_branch_relations  # 红线14 地支关系
+from services.bazi_engine.relations import get_branch_relations, get_stem_clashes  # 红线14 地支关系 / P0-11 天干相克
 from services.bazi_engine.dayun import _ELEM_LOVE_HINT as _LOVE_HINTS, _ELEM_CHILD_HINT as _CHILD_HINTS  # 红线5 感情/子女提示
 from services.auth_service import verify_token, TokenPayload
 from services.rate_limit import limiter
@@ -667,6 +667,13 @@ def api_verify(
 		)
 	except Exception as _rel_exc:
 		logger.debug("[dizhi_relations] %s", _rel_exc)
+	# P0-11: 天干相克 scope=day_related
+	try:
+		verify_response.tiangan_clashes = get_stem_clashes(
+			rp.year.stem, rp.month.stem, rp.day.stem, rp.hour.stem
+		)
+	except Exception as _tc_exc:
+		logger.debug("[tiangan_clashes] %s", _tc_exc)
 	# ── M2 分析引擎集成 ─────────────────────────────────────────────────
 	try:
 		verify_response = _enrich_v2_analysis(

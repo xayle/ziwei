@@ -313,6 +313,9 @@ class VerifyResponse(BaseModel):
     dizhi_relations: Optional[list[dict]] = Field(
         None, description="地支关系（全合/半合/拱合/六合/六冲）列表，见红线14"
     )
+    tiangan_clashes: Optional[list[dict]] = Field(
+        None, description="天干相克关系，scope=day_related，见P0-11"
+    )
 
 
 class BaziFullRequest(BaseModel):

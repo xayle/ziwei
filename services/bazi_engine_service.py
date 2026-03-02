@@ -663,7 +663,7 @@ def _enrich_v2_analysis(
     # ────────────────────────────────────────────────────────────────────────
     try:
         from services.bazi_engine.interpret import interpret_bazi, InterpretInput
-        from services.bazi_engine.relations import get_branch_relations as _get_branch_rels
+        from services.bazi_engine.relations import get_branch_relations as _get_branch_rels, get_stem_clashes as _get_stem_clashes  # P0-11
         _rp_branches = (
             verify_response.pillars_primary.year.branch,
             verify_response.pillars_primary.month.branch,
@@ -671,6 +671,13 @@ def _enrich_v2_analysis(
             verify_response.pillars_primary.hour.branch,
         ) if verify_response.pillars_primary else ("", "", "", "")
         _dizhi_rels = _get_branch_rels(*_rp_branches)
+        # P0-11: 天干相克 scope=day_related
+        try:
+            verify_response.tiangan_clashes = _get_stem_clashes(
+                ys_st, ms_st, ds_st, hs_st, scope="day_related"
+            )
+        except Exception as _tc_exc:
+            logger.debug("[P0-11 tiangan_clashes] %s", _tc_exc)
         interp_inp = InterpretInput(
             day_stem=ds_st,
             wuxing_scores=wx_scores,

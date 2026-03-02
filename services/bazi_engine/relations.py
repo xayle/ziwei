@@ -89,6 +89,7 @@ def get_stem_clashes(
                 "stem_a": sa, "stem_b": sb,
                 "direction": "a_ke_b",
                 "pillar_a": pa, "pillar_b": pb,
+                "scope": scope,          # P0-11 scope字段存在且非null
                 "note": f"{sa}[{ea}]克{sb}[{eb}]",
             })
         elif _STEM_KE.get(eb) == ea:
@@ -96,6 +97,7 @@ def get_stem_clashes(
                 "stem_a": sa, "stem_b": sb,
                 "direction": "b_ke_a",
                 "pillar_a": pa, "pillar_b": pb,
+                "scope": scope,          # P0-11 scope字段存在且非null
                 "note": f"{sb}[{eb}]克{sa}[{ea}]",
             })
     return results
