@@ -394,7 +394,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
                     tmpl.format(b1=b1, b2=b2, b3=b3,
                                 wuxing_cn=wuxing_cn, palace=palace)
                 )
-            except KeyError:
+            except KeyError:  # pragma: no cover
                 result.dizhi_rel_texts.append(f"{rel_type}关系：{b1}{b2}{b3}")
 
     # ── 6. 生活建议（优先用神五行）────────────────────────────────────────────

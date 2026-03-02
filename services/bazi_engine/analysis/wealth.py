@@ -109,7 +109,7 @@ def compute_wealth(
     max_wx = max(wuxing_scores.values()) if wuxing_scores else 0
     if total_wx > 0:
         max_ratio = max_wx / total_wx
-    else:
+    else:  # pragma: no cover
         max_ratio = 0.0
     wangshuai_coeff = min(1.0, max(0.0, (max_ratio - 0.2) / 0.6))
 

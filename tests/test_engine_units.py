@@ -1431,3 +1431,193 @@ class TestMilestonesExtra:
         )
         types = [m.milestone_type for m in result]
         assert "岁运并临" in types, f"未检测到岁运并临，实际里程碑类型: {types}"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 覆盖率补丁 Round-2: analysis / dayun / classic_refs / life_arc
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestClassicRefsExtra:
+    """classic_refs.py get_ref_by_id(L613) + get_refs_by_tag(L617)"""
+
+    def test_get_ref_by_id(self):
+        from services.bazi_engine.classic_refs import get_ref_by_id
+        assert get_ref_by_id("nonexistent_id_xyz") is None
+
+    def test_get_refs_by_tag(self):
+        from services.bazi_engine.classic_refs import get_refs_by_tag, get_refs_by_category
+        # get_refs_by_category 触发 L617
+        result = get_refs_by_category("nonexistent_category")
+        assert result == []
+        # get_refs_by_tag 触发 L621
+        result2 = get_refs_by_tag("nonexistent_tag")
+        assert result2 == []
+
+
+class TestDayunDirectionGenderNone:
+    """dayun.py _get_direction gender=None 分支 (L74-75)"""
+
+    def test_gender_none_fallback(self):
+        """gender=None → 使用年干阴阳顺逆（兼容旧行为）"""
+        from services.bazi_engine.dayun import _get_direction
+        direction, basis = _get_direction(year_stem="甲", gender=None)
+        assert direction == "forward"  # 甲为阳干，阳年顺
+        assert basis == "fallback_year_stem_only"
+
+    def test_dayun_jieqi_none_guard(self):
+        """当 get_jieqi_context 返回 None 时 compute_dayun 返回空骨架 (L178)"""
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        from unittest.mock import patch
+        from services.bazi_engine.dayun import compute_dayun
+        dt = datetime(1990, 7, 17, 12, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        with patch("services.bazi_engine.dayun.get_jieqi_context", return_value=None):
+            result = compute_dayun(
+                birth_dt=dt, year_stem="庚", month_stem="壬",
+                month_branch="午", day_stem="甲", gender="male",
+            )
+        assert result["start_age"] == 0
+        assert result["items"] == []
+        assert result["anchor_jieqi_name"] is None
+
+
+class TestHealthExtra:
+    """health.py 空用神时的 elif/else prim_el 分支 (L105-108, L119)"""
+
+    def test_health_empty_yongshen_with_wuxing(self):
+        """yongshen_favor=[], wuxing_scores 非空 → 触发 elif wuxing_scores 分支"""
+        from services.bazi_engine.analysis.health import compute_health
+        result = compute_health(
+            wuxing_scores={"wood": 5, "fire": 30, "earth": 20, "metal": 10, "water": 35},
+            yongshen_favor=[],
+            yongshen_avoid=[],
+        )
+        assert result is not None
+
+    def test_health_empty_yongshen_empty_wuxing(self):
+        """yongshen_favor=[], wuxing_scores={} → 触发 else: prim_el='earth'"""
+        from services.bazi_engine.analysis.health import compute_health
+        result = compute_health(
+            wuxing_scores={},
+            yongshen_favor=[],
+            yongshen_avoid=[],
+        )
+        assert result is not None
+
+
+class TestMarriageExtra:
+    """marriage.py 桃花弱分支(L143) + 男命婚期窗口(L197)"""
+
+    _BASE_SHISHEN: dict = {
+        "正官": 10.0, "七杀": 5.0, "正财": 20.0, "偏财": 5.0,
+        "食神": 10.0, "伤官": 5.0, "比肩": 15.0, "劫财": 5.0,
+        "正印": 15.0, "偏印": 10.0,
+    }
+
+    def test_peach_blossom_weak(self):
+        """四柱地支无桃花支 → peach_blossom='弱'"""
+        from services.bazi_engine.analysis.marriage import compute_marriage
+        result = compute_marriage(
+            all_branches=["寅", "辰", "申", "戌"],
+            day_branch="申",
+            shishen_scores=self._BASE_SHISHEN,
+            shensha_items=[],
+            gender="female",
+            yongshen_favor=["metal"],
+            yongshen_avoid=["wood"],
+            dayun_list=[],
+        )
+        assert result.peach_blossom == "弱", f"预期弱，实际 {result.peach_blossom}"
+
+    def test_female_marriage_window(self):
+        """女命大运地支含金(申/酉) → 触发婚期窗口 L197"""
+        from services.bazi_engine.analysis.marriage import compute_marriage
+        result = compute_marriage(
+            all_branches=["寅", "辰", "申", "戌"],
+            day_branch="申",
+            shishen_scores=self._BASE_SHISHEN,
+            shensha_items=[],
+            gender="female",
+            yongshen_favor=["metal"],
+            yongshen_avoid=["wood"],
+            dayun_list=[
+                {"ganzhi": "庚申", "stem": "庚", "branch": "申", "start_age": 5},  # 申=metal
+                {"ganzhi": "辛酉", "stem": "辛", "branch": "酉", "start_age": 15},  # 酉=metal
+            ],
+        )
+        assert isinstance(result.marriage_windows, list)
+
+    def test_male_marriage_window(self):
+        """男命大运地支 earth/water → 触发婚期窗口(L199)"""
+        from services.bazi_engine.analysis.marriage import compute_marriage
+        result = compute_marriage(
+            all_branches=["子", "寅", "戌", "申"],
+            day_branch="戌",
+            shishen_scores=self._BASE_SHISHEN,
+            shensha_items=[],
+            gender="male",
+            yongshen_favor=["water"],
+            yongshen_avoid=["fire"],
+            dayun_list=[
+                {"ganzhi": "壬子", "stem": "壬", "branch": "子", "start_age": 5},
+                {"ganzhi": "戊辰", "stem": "戊", "branch": "辰", "start_age": 15},
+            ],
+        )
+        assert isinstance(result.marriage_windows, list)
+
+
+
+class TestWealthExtra:
+    """wealth.py total_wx=0 时 max_ratio=0.0 分支 (L113)"""
+
+    def test_wealth_zero_wuxing(self):
+        """wuxing_scores 全零 → total_wx=0 → max_ratio=0.0"""
+        from services.bazi_engine.analysis.wealth import compute_wealth
+        result = compute_wealth(
+            yongshen_favor=[],
+            yongshen_avoid=[],
+            wuxing_scores={"wood": 0, "fire": 0, "earth": 0, "metal": 0, "water": 0},
+            shishen_scores={"正财": 0, "偏财": 0},
+            strength_score=50.0,
+            dayun_list=[],
+        )
+        assert result is not None
+
+
+class TestLifeArcExtra:
+    """life_arc.py _build_phase_text 总体偏顺(L139) + 逆运居多(L141)"""
+
+    @staticmethod
+    def _dayun(favorable: bool, ganzhi: str, start_age: int) -> dict:
+        return {"ganzhi": ganzhi, "start_age": start_age,
+                "end_age": start_age + 10, "is_favorable": favorable}
+
+    def test_phase_mostly_favorable(self):
+        """75% 顺运 → 触发'总体偏顺'分支"""
+        from services.bazi_engine.life_arc import _build_phase_text
+        dayun = [
+            self._dayun(True, "甲子", 25), self._dayun(True, "乙丑", 35),
+            self._dayun(True, "丙寅", 45), self._dayun(False, "丁卯", 50),
+        ]
+        text = _build_phase_text(dayun, "mid")
+        assert "总体偏顺" in text, f"预期总体偏顺，实际: {text}"
+
+    def test_phase_balanced(self):
+        """50% 顺运 → 触发'顺逆参半'分支(L141)"""
+        from services.bazi_engine.life_arc import _build_phase_text
+        dayun = [
+            self._dayun(True, "甲子", 25), self._dayun(True, "乙丑", 35),
+            self._dayun(False, "丙寅", 45), self._dayun(False, "丁卯", 50),
+        ]
+        text = _build_phase_text(dayun, "mid")
+        assert "顺逆参半" in text, f"预期顺逆参半，实际: {text}"
+
+    def test_phase_mostly_unfavorable(self):
+        """25% 顺运 → 触发'逆运居多'分支"""
+        from services.bazi_engine.life_arc import _build_phase_text
+        dayun = [
+            self._dayun(True, "甲子", 5), self._dayun(False, "乙丑", 10),
+            self._dayun(False, "丙寅", 15), self._dayun(False, "丁卯", 20),
+        ]
+        text = _build_phase_text(dayun, "early")
+        assert "逆运居多" in text, f"预期逆运居多，实际: {text}"

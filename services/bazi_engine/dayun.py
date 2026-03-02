@@ -46,7 +46,7 @@ def _ganzhi_index(stem: str, branch: str) -> int:
     for i in range(60):
         if i % 10 == si and i % 12 == bi:
             return i
-    return 0  # 不可达
+    return 0  # 不可达  # pragma: no cover
 
 
 def _ganzhi_from_index(idx: int) -> tuple[str, str]:
