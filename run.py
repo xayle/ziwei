@@ -619,10 +619,21 @@ def api_verify(
 		social_hint=f"用神:{'/'.join(yongshen.favor)} 忌神:{'/'.join(yongshen.avoid)}" if yongshen.favor or yongshen.avoid else None,
 	)
 	methods = BaziMethodsModel()
-	dayun_model_raw, _ = build_dayun(dt_effective, rp, methods)
+	_gender_for_dayun = getattr(body, "gender", None)
+	dayun_model_raw, _raw_dayun = build_dayun(dt_effective, rp, methods, gender=_gender_for_dayun)
 	dayun_model = DaYunModel.model_validate(
 		dayun_model_raw.model_dump() if hasattr(dayun_model_raw, "model_dump") else getattr(dayun_model_raw, "__dict__", dayun_model_raw)
 	)
+	# RL#3: 转移大运元数据（方向/锚点节气/起运年龄）
+	dayun_model.direction = _raw_dayun.direction
+	dayun_model.direction_basis = _raw_dayun.direction_basis
+	dayun_model.anchor_jieqi_name = _raw_dayun.anchor_jieqi_name
+	dayun_model.anchor_jieqi_dt = _raw_dayun.anchor_jieqi_dt
+	if _raw_dayun.computed_months_before_rounding is not None:
+		from math import ceil as _ceil
+		_sam = _ceil(_raw_dayun.computed_months_before_rounding)
+		dayun_model.start_age_months = _sam
+		dayun_model.start_age = _sam // 12
 	_WX_CN_MAP = {'wood':'木','fire':'火','earth':'土','metal':'金','water':'水'}
 	_dayun_base_refs = get_refs_by_tag("大运")[:2]
 	for item in dayun_model.items:
@@ -643,6 +654,12 @@ def api_verify(
 				get_refs_by_tag(item.ten_god) if item.ten_god else []
 			)
 			item.refs = (_dayun_base_refs + _item_refs)[:3]
+		# RL#5: wealth_range 按五行粗估
+		if item.wealth_range is None and item.flow_wuxing:
+			from app.schemas.common import RangeModel as _RM
+			_WX_WR = {"wood":(8,30),"fire":(10,40),"earth":(6,25),"metal":(12,50),"water":(10,35)}
+			_lo, _hi = _WX_WR.get(item.flow_wuxing, (6, 30))
+			item.wealth_range = _RM(min=_lo, max=_hi, currency="万元/年")
 
 	verify_response = VerifyResponse(
 		api_version=API_VERSION,

@@ -190,6 +190,7 @@ def build_dayun(
     dt_effective: datetime,
     pillars: PillarsModel,
     methods: BaziMethodsModel,
+    gender: Optional[str] = None,
 ) -> tuple[DaYunModel, BaziRawDayunModel]:
     raw_dayun = BaziRawDayunModel()
 
@@ -211,13 +212,19 @@ def build_dayun(
 
     start_age_months = ceil(months_before_round)
 
-    # Direction rule: gender not provided in request; use year stem polarity as fallback.
+    # Direction rule: RL#3 男阳顺/男阴逆/女阳逆/女阴顺
     year_stem = pillars.year.stem
     _, year_polarity = _stem_meta(year_stem)
-    direction = "forward" if year_polarity == "yang" else "backward"
+    if gender == "male":
+        direction = "forward" if year_polarity == "yang" else "backward"
+    elif gender == "female":
+        direction = "backward" if year_polarity == "yang" else "forward"
+    else:
+        # 无性别信息时 fallback：年干阴阳（保持旧行为，存在误差）
+        direction = "forward" if year_polarity == "yang" else "backward"
     raw_dayun.direction = direction
     raw_dayun.direction_basis = {
-        "gender": None,
+        "gender": gender,
         "year_stem": year_stem,
         "year_stem_yinyang": year_polarity,
     }

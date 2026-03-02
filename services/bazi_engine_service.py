@@ -190,11 +190,21 @@ def _calculate_v1(
         ),
     )
     methods = BaziMethodsModel()
-    dayun_model_raw, _ = build_dayun(dt_effective, rp, methods)
+    dayun_model_raw, raw_dayun = build_dayun(dt_effective, rp, methods, gender=gender)
     dayun_model = DaYunModel.model_validate(
         dayun_model_raw.model_dump() if hasattr(dayun_model_raw, "model_dump")
         else getattr(dayun_model_raw, "__dict__", dayun_model_raw)
     )
+    # 从 BaziRawDayunModel 转移大运元数据
+    dayun_model.direction = raw_dayun.direction
+    dayun_model.direction_basis = raw_dayun.direction_basis
+    dayun_model.anchor_jieqi_name = raw_dayun.anchor_jieqi_name
+    dayun_model.anchor_jieqi_dt = raw_dayun.anchor_jieqi_dt
+    if raw_dayun.computed_months_before_rounding is not None:
+        from math import ceil as _ceil
+        _sam = _ceil(raw_dayun.computed_months_before_rounding)
+        dayun_model.start_age_months = _sam
+        dayun_model.start_age = _sam // 12
     from services.bazi_engine.dayun import _build_hints as _dayun_build_hints, _ELEM_LOVE_HINT, _ELEM_CHILD_HINT
     from services.bazi_engine.classic_refs import get_refs_by_tag as _get_refs_by_tag
     from app.schemas.common import RangeModel

@@ -211,6 +211,12 @@ class DaYunItemModel(BaseModel):
 class DaYunModel(BaseModel):
     method: str = "pending"
     boundary: str = "pending"
+    direction: Optional[str] = None
+    direction_basis: Optional[dict] = None
+    start_age: Optional[int] = None
+    start_age_months: Optional[int] = None
+    anchor_jieqi_name: Optional[str] = None
+    anchor_jieqi_dt: Optional[str] = None
     items: list[DaYunItemModel] = Field(default_factory=list)
 
 
@@ -283,6 +289,7 @@ class VerifyRequest(BaseModel):
     mode: Literal["dual", "single"] = Field("dual", description="Requested mode")
     solar_time_enabled: bool = Field(False, description="Enable solar-time adjustment when true")
     tz: str = Field("Asia/Shanghai", description="Timezone used only when dt is naive")
+    gender: Optional[Literal["male", "female"]] = Field(None, description="Gender for dayun direction: male/female")
 
     @model_validator(mode="after")
     def validate_lon(self):  # type: ignore[override]

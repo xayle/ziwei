@@ -17,17 +17,20 @@ from fastapi.testclient import TestClient
 # 使用 conftest.py 中已有的 client fixture（自动注入，不需要重新定义）
 
 
-def _verify(client: TestClient, dt_str: str, lon: float, mode: str = "single") -> dict:
+def _verify(client: TestClient, dt_str: str, lon: float, mode: str = "single", gender: str | None = None) -> dict:
     """调用 /api/v1/verify 并断言 200，返回 JSON 字典"""
+    body: dict = {
+        "dt": dt_str,
+        "lon": lon,
+        "mode": mode,
+        "solar_time_enabled": False,
+        "tz": "Asia/Shanghai",
+    }
+    if gender is not None:
+        body["gender"] = gender
     resp = client.post(
         "/api/v1/verify",
-        json={
-            "dt": dt_str,
-            "lon": lon,
-            "mode": mode,
-            "solar_time_enabled": False,
-            "tz": "Asia/Shanghai",
-        },
+        json=body,
     )
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text[:200]}"
     return resp.json()
@@ -187,6 +190,14 @@ class TestGolden03:
         for pillar in ("year", "month", "day", "hour"):
             assert p[pillar]["stem"] and p[pillar]["branch"], f"{pillar} 含空字段"
 
+    def test_dayun_direction_backward(self, client):
+        """RL#3: 男+乙(阴年) → 逆排(backward)"""
+        data = _verify(client, self.DT, self.LON, gender="male")
+        dayun = data.get("dayun", {})
+        assert dayun.get("direction") == "backward", (
+            f"GT#3 male+乙(阴): direction应为backward, got {dayun.get('direction')!r}"
+        )
+
 
 # ---------------------------------------------------------------------------
 # 案例 #4  1988-03-20 14:00 男 经度120.2
@@ -239,6 +250,14 @@ class TestGolden04:
         for item in items[:3]:  # 验证前3条
             assert item.get("stem") is not None, f"大运 item 缺少 stem: {item}"
             assert item.get("branch") is not None, f"大运 item 缺少 branch: {item}"
+
+    def test_dayun_direction_forward(self, client):
+        """RL#3: 男+戊(阳年) → 顺排(forward)"""
+        data = _verify(client, self.DT, self.LON, gender="male")
+        dayun = data.get("dayun", {})
+        assert dayun.get("direction") == "forward", (
+            f"GT#4 male+戊(阳): direction应为forward, got {dayun.get('direction')!r}"
+        )
 
 
 # ---------------------------------------------------------------------------
