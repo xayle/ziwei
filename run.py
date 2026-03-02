@@ -97,6 +97,7 @@ from services.bazi_full_service import (
 )
 # [M1 任务1.23] ENGINE_V2 路由开关
 import services.bazi_engine_service as _bazi_engine_service
+from services.bazi_engine_service import _enrich_v2_analysis  # M2 分析引擎集成
 from services.auth_service import verify_token, TokenPayload
 from services.rate_limit import limiter
 from zoneinfo import ZoneInfoNotFoundError
@@ -644,6 +645,21 @@ def api_verify(
 		social=social,
 		dayun=dayun_model,
 	)
+	# ── M2 分析引擎集成 ─────────────────────────────────────────────────
+	try:
+		verify_response = _enrich_v2_analysis(
+			verify_response=verify_response,
+			rp=rp,
+			yongshen=yongshen,
+			strength=strength,
+			wuxing_score=wuxing_score,
+			dayun_model=dayun_model,
+			dt=dt_effective,
+			gender=getattr(body, "gender", None),
+			mode=body.mode,
+		)
+	except Exception as _enrich_exc:
+		logger.warning("M2 enrichment failed in legacy path: %s", _enrich_exc, exc_info=True)
 	# 使用自定义 UnescapedJSONResponse 以正确处理中文字符
 	response_data = verify_response.model_dump(mode="json")
 	_bl_legacy = v.level if hasattr(v, "level") else ""

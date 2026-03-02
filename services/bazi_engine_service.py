@@ -771,6 +771,54 @@ def _enrich_v2_analysis(
     except Exception as exc:
         logger.debug("[M3 liunian_detail] %s", exc)
 
+    # ────────────────────────────────────────────────────────────────────────
+    # M3/M4: current_fortune_summary (Tab 0 精简卡片)
+    # ────────────────────────────────────────────────────────────────────────
+    try:
+        from app.schemas.analysis import CurrentFortuneSummaryModel as _CFS
+        import datetime as _dt_mod
+
+        def _year_ganzhi_cfs(y: int) -> str:
+            _STEMS10   = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+            _BRANCHES12= ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+            return _STEMS10[(y - 4) % 10] + _BRANCHES12[(y - 4) % 12]
+
+        current_year = dt.year
+        liunian_gz = _year_ganzhi_cfs(current_year)
+        liunian_stem = liunian_gz[0]
+        liunian_branch = liunian_gz[1]
+
+        # 当前大运
+        current_dy = dayun_list[0] if dayun_list else {}
+        dayun_gz = f"{current_dy.get('stem','?')}{current_dy.get('branch','?')}" if current_dy else "??"
+        start_age = current_dy.get("start_age", 0) if current_dy else 0
+        start_yr  = current_dy.get("start_year", 0) if current_dy else 0
+        age_now   = current_year - dt.year if dt else 0
+        years_remaining = max(0, 10 - (current_year - start_yr)) if start_yr else 5
+
+        # 今年四维
+        from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts as _clf
+        domains = _clf(
+            year=current_year, year_stem=liunian_stem, year_branch=liunian_branch,
+            day_stem=ds_st, day_branch=ds_br,
+            shishen_scores=shishen_scores,
+            yongshen_favor=favor, wuxing_scores=wx_scores,
+            gender=gender or "male",
+        )
+        top3 = [
+            f"流年{liunian_gz}：{v[:25]}" for v in domains.values()
+        ][:3]
+
+        verify_response.current_fortune_summary = _CFS(
+            current_dayun=dayun_gz,
+            dayun_years_remaining=years_remaining,
+            current_liunian=liunian_gz,
+            this_year_domains=domains,
+            top3_actions=top3,
+        )
+    except Exception as exc:
+        logger.debug("[M4 current_fortune_summary] %s", exc)
+
     return verify_response
 
 

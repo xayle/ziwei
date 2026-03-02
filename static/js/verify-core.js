@@ -630,4 +630,56 @@ document.addEventListener('DOMContentLoaded', () => {
   switchTab(0);
 });
 
+/* ══════════════════════════════════════════════════
+   通用 Toast 提示  [红线16: 禁止 alert/prompt]
+   用法: showToast('消息', 'info'|'success'|'warn'|'error', 毫秒)
+═══════════════════════════════════════════════════ */
+window.showToast = function(msg, type, duration) {
+  type = type || 'info';
+  duration = duration || 2500;
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none';
+    document.body.appendChild(container);
+  }
+  const t = document.createElement('div');
+  const colors = {info:'#555',success:'#2E8B57',warn:'#B8860B',error:'#B22222'};
+  t.style.cssText = `background:${colors[type]||colors.info};color:#fff;padding:9px 20px;border-radius:6px;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.3);pointer-events:none;opacity:0;transition:opacity .25s`;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; });
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(), 280); }, duration);
+};
+
+/* 输入弹窗替代 prompt()  [红线16] */
+window.showInputModal = function(title, placeholder, callback) {
+  let overlay = document.getElementById('inputModalOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'inputModalOverlay';
+    overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center';
+    overlay.innerHTML = `<div style="background:#fff;border-radius:8px;padding:24px;min-width:280px;max-width:90vw">
+      <p id="inputModalTitle" style="margin:0 0 12px;font-weight:600"></p>
+      <input id="inputModalField" type="text" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ccc;border-radius:4px;font-size:14px">
+      <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px">
+        <button id="inputModalCancel" style="padding:6px 16px;border:1px solid #ccc;border-radius:4px;cursor:pointer;background:#f5f5f5">取消</button>
+        <button id="inputModalOk" style="padding:6px 16px;background:var(--accent-red,#B22222);color:#fff;border:none;border-radius:4px;cursor:pointer">确定</button>
+      </div></div>`;
+    document.body.appendChild(overlay);
+  }
+  overlay.querySelector('#inputModalTitle').textContent = title || '';
+  const field = overlay.querySelector('#inputModalField');
+  field.placeholder = placeholder || '';
+  field.value = '';
+  overlay.style.display = 'flex';
+  field.focus();
+  const finish = (val) => { overlay.style.display='none'; callback && callback(val); };
+  overlay.querySelector('#inputModalOk').onclick = () => finish(field.value.trim());
+  overlay.querySelector('#inputModalCancel').onclick = () => finish(null);
+  overlay.onclick = (e) => { if(e.target===overlay) finish(null); };
+  field.onkeydown = (e) => { if(e.key==='Enter') finish(field.value.trim()); if(e.key==='Escape') finish(null); };
+};
+
 })();

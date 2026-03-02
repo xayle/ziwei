@@ -26,7 +26,7 @@ function getFileName(ext) {
 ═══════════════════════════════════════════════════ */
 window.exportResult = function(format) {
   const json = getResult();
-  if (!json) { alert('请先排盘'); return; }
+  if (!json) { showToast('请先排盘','warn'); return; }
   switch(format||'json') {
     case 'json':  return exportJSON(json);
     case 'csv':   return exportCSV(json);

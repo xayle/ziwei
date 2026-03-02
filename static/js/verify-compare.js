@@ -23,14 +23,18 @@ function saveFavorites(list) {
 
 window.addFavorite = function(label) {
   const json = window.__BAZI_STATE?.result;
-  if (!json) { alert('请先排盘'); return; }
+  if (!json) { showToast('请先排盘','warn'); return; }
   const list = loadFavorites();
   const key  = json.request_id || Date.now().toString(36);
-  if (list.some(f=>f.id===key)) { alert('已收藏'); return; }
-  const title = label || prompt('请输入收藏名称（可留空）','') || `命盘_${new Date().toLocaleDateString()}`;
-  list.unshift({ id:key, title, ts:Date.now(), payload: window.__BAZI_STATE.payload, json });
-  saveFavorites(list);
-  alert('收藏成功！');
+  if (list.some(f=>f.id===key)) { showToast('该命盘已收藏','info'); return; }
+  const doSave = (title) => {
+    const name = title || `命盘_${new Date().toLocaleDateString()}`;
+    list.unshift({ id:key, title:name, ts:Date.now(), payload: window.__BAZI_STATE.payload, json });
+    saveFavorites(list);
+    showToast('收藏成功！','success');
+  };
+  if (label) { doSave(label); return; }
+  showInputModal('请输入收藏名称（可留空）', '可留空，默认按日期命名', (val) => { doSave(val || ''); });
 };
 
 window.showFavoritesModal = function() {
@@ -87,7 +91,7 @@ let _compareData = null;
 
 window.toggleCompare = function() {
   const json = window.__BAZI_STATE?.result;
-  if (!json) { alert('请先排盘一次命盘再进行对比'); return; }
+  if (!json) { showToast('请先排盘一次命盘再进行对比','warn'); return; }
   if (!_compareData) {
     // 第一次：保存当前命盘到对比槽
     _compareData = { a: { json, payload: window.__BAZI_STATE.payload }, b: null };
