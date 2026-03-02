@@ -595,8 +595,16 @@ def api_verify(
 	yongshen = YongShenModel.model_validate(
 		yongshen_raw.model_dump() if hasattr(yongshen_raw, "model_dump") else getattr(yongshen_raw, "__dict__", yongshen_raw)
 	)
+	# P0-14: wealth_score 必须独立于 strength.score 计算（不得相等）
+	# 使用用神五行得分之和 * 缩放系数，产生 0-100 量级的财运评分
+	_wx_dict = wuxing_score.model_dump() if hasattr(wuxing_score, "model_dump") else {}
+	_favor = yongshen.favor or []
+	_favor_total = sum(_wx_dict.get(e, 0.0) for e in _favor)
+	_neutral_penalty = sum(max(0.0, _wx_dict.get(e, 0.0) - 25) for e in ["wood","fire","earth","metal","water"] if e not in _favor and e not in (yongshen.avoid or []))
+	_wealth_score_raw = max(0.0, min(100.0, _favor_total * 1.8 - _neutral_penalty * 0.3 + 10))
+	_wealth_score = round(_wealth_score_raw, 1)
 	wealth = WealthModel(
-		wealth_score=round(strength.score, 2),
+		wealth_score=_wealth_score,
 		industry_tags=yongshen.favor or [],
 		risk_hint=("靠近时辰/节气边界，解读请守" if v.boundary_risk_shichen or v.boundary_risk_jieqi else None),
 		note="依据五行强弱与用神粗略推断，供前端模板占位",

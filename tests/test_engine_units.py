@@ -421,3 +421,106 @@ def test_early_zi_shi_regression(dt_str: str, expected_branch: str):
     assert hour_branch == expected_branch, (
         f"[{dt_str}] 期望时支={expected_branch}，实际={hour_branch}"
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑦ 神煞引擎  P0-06
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestShensha:
+    """P0-06: 神煞 ≥20 种含★多关系标记"""
+
+    def test_shensha_meta_at_least_20(self):
+        """SHENSHA_META 应含 ≥20 种神煞 [P0-06 红线9]"""
+        from services.bazi_engine.shensha import SHENSHA_META
+        assert len(SHENSHA_META) >= 20, (
+            f"神煞种类 {len(SHENSHA_META)} < 20，不满足 P0-06"
+        )
+
+    def test_tianyi_guiren_present_in_meta(self):
+        """天乙贵人必须在 SHENSHA_META 中 [P0-06]"""
+        from services.bazi_engine.shensha import SHENSHA_META
+        assert "天乙贵人" in SHENSHA_META
+
+    def test_new_shensha_in_meta(self):
+        """v7.0 新增 4 种神煞均在 SHENSHA_META [P0-06]"""
+        from services.bazi_engine.shensha import SHENSHA_META
+        for name in ("太极贵人", "金舆", "魁罡", "三奇"):
+            assert name in SHENSHA_META, f"{name} 未在 SHENSHA_META 中"
+
+    def test_kuigang_detected(self):
+        """魁罡日柱（壬辰）应被正确识别 [P0-06]"""
+        from services.bazi_engine.shensha import compute_shensha
+        result = compute_shensha("壬","辰","戊","午","壬","辰","丙","午")
+        names = [x["name"] for x in result["items"]]
+        assert "魁罡" in names, f"壬辰日柱未检测到魁罡，got {names}"
+
+    def test_star_flag_when_3_or_more(self):
+        """≥3 条神煞时 star=True [P0-06]"""
+        from services.bazi_engine.shensha import compute_shensha
+        # 庚辰日柱 → 魁罡；年支子 → 相关神煞多
+        result = compute_shensha("甲","子","丙","午","庚","辰","壬","子")
+        if len(result["items"]) >= 3:
+            assert result["star"] is True
+
+    def test_polarity_structure(self):
+        """每条神煞 polarity 必须是 +/-/~ 之一"""
+        from services.bazi_engine.shensha import SHENSHA_META
+        valid = {"+", "-", "~"}
+        for name, meta in SHENSHA_META.items():
+            assert meta.get("polarity") in valid, (
+                f"{name}.polarity={meta.get('polarity')!r} 不合法"
+            )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ⑧ P0-12 / P0-14 集成验证（需要 API 调用）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestP012P014:
+    """P0-12: reason codes 合法; P0-14: wealth_score ≠ strength.score"""
+
+    @pytest.fixture(scope="class")
+    def api_data(self):
+        import os
+        from fastapi.testclient import TestClient
+        _prev = os.environ.get("AUTH_BYPASS")
+        os.environ["AUTH_BYPASS"] = "true"
+        try:
+            from run import app
+            client = TestClient(app)
+            resp = client.post("/api/v1/verify", json={
+                "dt": "1990-07-17T12:20:00",
+                "tz": "Asia/Shanghai",
+                "lon": 116.4,
+                "gender": "female",
+                "mode": "dual",
+                "solar_time_enabled": True,
+            })
+            assert resp.status_code == 200
+            return resp.json()
+        finally:
+            if _prev is None:
+                os.environ.pop("AUTH_BYPASS", None)
+            else:
+                os.environ["AUTH_BYPASS"] = _prev
+
+    def test_p014_wealth_score_not_equal_strength(self, api_data):
+        """P0-14: wealth_score ≠ strength.score — 两值不得相等 [P0-14]"""
+        wealth_score = api_data.get("wealth", {}).get("wealth_score")
+        strength_score = api_data.get("day_master_strength", {}).get("score")
+        assert wealth_score is not None, "wealth.wealth_score 为空"
+        assert strength_score is not None, "day_master_strength.score 为空"
+        assert wealth_score != strength_score, (
+            f"P0-14 违规: wealth_score={wealth_score} == strength.score={strength_score}"
+        )
+
+    def test_p012_reason_codes_valid(self, api_data):
+        """P0-12: validation.reasons 只能包含 VALID_REASON_CODES 中的 11 个合法 key"""
+        from constants import VALID_REASON_CODES
+        reasons = api_data.get("validation", {}).get("reasons", [])
+        invalid = [r for r in reasons if r not in VALID_REASON_CODES]
+        assert not invalid, (
+            f"P0-12 违规: reasons 含非法 key: {invalid}\n"
+            f"合法集合: {sorted(VALID_REASON_CODES)}"
+        )

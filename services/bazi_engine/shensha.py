@@ -99,6 +99,32 @@ YUEYAN: dict[str, str] = {
 # 白虎: {年支三合首: 白虎支}
 BAI_HU: dict[str, str] = JIESHA.copy()   # 白虎与劫煞同位（粗略近似，某些流派略有差异）
 
+# 太极贵人: {日/年干: [可命中地支]} — 临子午/寅申/亥巳/辰戌/卯酉
+TAIJI_GUIREN: dict[str, list[str]] = {
+    "甲": ["子", "午"], "戊": ["子", "午"], "庚": ["子", "午"],
+    "乙": ["寅", "申"], "己": ["寅", "申"],
+    "丙": ["亥", "巳"], "丁": ["亥", "巳"],
+    "辛": ["辰", "戌"],
+    "壬": ["卯", "酉"], "癸": ["卯", "酉"],
+}
+
+# 金舆: {日干: 金舆支} — 乘坐金舆，主富贵
+JIN_YU: dict[str, str] = {
+    "甲": "辰", "乙": "巳", "丙": "未", "丁": "申",
+    "戊": "戌", "己": "亥", "庚": "丑", "辛": "寅",
+    "壬": "辰", "癸": "巳",
+}
+
+# 魁罡: 日柱干支组合为以下4种之一
+KUIGANG_PILLARS: frozenset[str] = frozenset({"庚辰", "庚戌", "壬辰", "戊戌"})
+
+# 三奇: 四柱天干含三组特殊组合之一（天三奇/地三奇/人三奇）
+SANQI_GROUPS: list[frozenset[str]] = [
+    frozenset({"甲", "戊", "庚"}),   # 天三奇
+    frozenset({"乙", "丙", "丁"}),   # 地三奇
+    frozenset({"壬", "癸", "辛"}),   # 人三奇（部分流派）
+]
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 神煞元数据
@@ -121,6 +147,11 @@ SHENSHA_META: dict[str, dict] = {
     "孤辰":     {"priority": "C", "polarity": "-", "topic": "孤寡", "note": "男命孤独，宜积极社交"},
     "寡宿":     {"priority": "C", "polarity": "-", "topic": "孤寡", "note": "女命孤寡，婚姻宜晚"},
     "月刃":     {"priority": "B", "polarity": "-", "topic": "刚烈", "note": "性格刚烈，防意外血光"},
+    # v7.0 新增 4 种（P0-06 ≥20）
+    "太极贵人": {"priority": "A", "polarity": "+", "topic": "智慧", "note": "主聪慧有谋，临机决断力强"},
+    "金舆":     {"priority": "B", "polarity": "+", "topic": "财富", "note": "主富贵，金钱财帛有余"},
+    "魁罡":     {"priority": "A", "polarity": "~", "topic": "权威", "note": "刚毅果断，逢岁运生旺则权威大，遇冲则凶"},
+    "三奇":     {"priority": "A", "polarity": "+", "topic": "奇特", "note": "天地人三奇，主出奇制胜，运势奇特不凡"},
 }
 
 
@@ -284,6 +315,33 @@ def compute_shensha(
         for br_key, br in branches.items():
             if br == gs and br_key != "year":
                 _add("寡宿", br_key)
+
+    # ── 太极贵人（按日干/年干查四柱地支）────────────────────────────────────
+    for stem_key in ("day", "year"):
+        s = stems[stem_key]
+        taiji_list = TAIJI_GUIREN.get(s, [])
+        for br_key, br in branches.items():
+            if br in taiji_list:
+                _add("太极贵人", br_key)
+
+    # ── 金舆（按日干查四柱地支）──────────────────────────────────────────────
+    jy = JIN_YU.get(day_stem)
+    if jy:
+        for br_key, br in branches.items():
+            if br == jy and br_key != "day":
+                _add("金舆", br_key)
+
+    # ── 魁罡（日柱干支组合）──────────────────────────────────────────────────
+    day_ganzhi = day_stem + day_branch
+    if day_ganzhi in KUIGANG_PILLARS:
+        _add("魁罡", "day")
+
+    # ── 三奇（四柱天干含三奇组合）────────────────────────────────────────────
+    all_stems_set = {year_stem, month_stem, day_stem, hour_stem}
+    for group in SANQI_GROUPS:
+        if group <= all_stems_set:
+            _add("三奇", "year")  # 以年柱为代表位
+            break
 
     # ── 去重 + 排序 ───────────────────────────────────────────────────────────
     seen: set[str] = set()
