@@ -194,6 +194,8 @@ def _no_geju(reason: str = "") -> dict:
         "ten_god": "",
         "note": reason or GEJU_META["普通格"]["note"],
         "confident": False,
+        "confidence": 0.0,
+        "po_geju": {"broken": False, "reason": "", "severity": "none"},
     }
 
 
