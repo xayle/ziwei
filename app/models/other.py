@@ -5,7 +5,9 @@ from datetime import datetime, timezone
 from typing import ClassVar, Optional
 
 from sqlalchemy import Index
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+from .base import User
 
 
 class Scenario(SQLModel, table=True):
@@ -65,3 +67,6 @@ class AuditLog(SQLModel, table=True):
     error_message: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     deleted_at: Optional[datetime] = None
+
+    # ORM Relationship (S3)
+    user: User = Relationship()

@@ -5,7 +5,9 @@ from datetime import datetime, date, timezone
 from typing import ClassVar, Optional
 
 from sqlalchemy import CheckConstraint, Index
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+from .base import User
 
 
 class Member(SQLModel, table=True):
@@ -34,3 +36,6 @@ class Member(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     deleted_at: Optional[datetime] = None
+
+    # ORM Relationship (S3)
+    owner: User = Relationship()

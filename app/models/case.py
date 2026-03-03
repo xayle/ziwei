@@ -6,7 +6,7 @@ from typing import ClassVar, Optional
 from uuid import uuid4
 
 from sqlalchemy import Column, Index, JSON
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class Case(SQLModel, table=True):
@@ -57,3 +57,6 @@ class Snapshot(SQLModel, table=True):
     note: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     deleted_at: Optional[datetime] = None
+
+    # ORM Relationship (S3)
+    case: Case = Relationship()

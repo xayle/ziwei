@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import ClassVar, Optional
 
 from sqlalchemy import Index
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class User(SQLModel, table=True):
@@ -48,3 +48,6 @@ class RefreshToken(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     refreshed_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
+
+    # ORM Relationship (S3)
+    user: User = Relationship()
