@@ -206,6 +206,7 @@ class DaYunItemModel(BaseModel):
     love_hint: Optional[str] = None
     child_hint: Optional[str] = None
     refs: Optional[list[dict]] = None
+    narrative: Optional[str] = None   # M3.02: 大运叙事400-600字
 
 
 class DaYunModel(BaseModel):

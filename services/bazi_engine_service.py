@@ -764,6 +764,43 @@ def _enrich_v2_analysis(
     }
 
     # ────────────────────────────────────────────────────────────────────────
+    # M3.02: 大运叙事生成器 (400-600字/步)
+    # ────────────────────────────────────────────────────────────────────────
+    try:
+        from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
+        _wealth_tier_for_narrative = "中格"
+        if verify_response.wealth_analysis:
+            _wt = getattr(verify_response.wealth_analysis, "wealth_tier", None)
+            _wealth_tier_for_narrative = {"上": "高格", "中": "中格", "下": "低格"}.get(_wt or "", "中格")
+        _geju_for_nar = geju_name if geju_name else "普通格"
+        if hasattr(verify_response, "dayun") and verify_response.dayun:
+            _nar_items = list(verify_response.dayun.items or [])
+            for _i, _it in enumerate(_nar_items):
+                if _it.narrative:
+                    continue
+                _dy_ganzhi = (_it.stem or "?") + (_it.branch or "?")
+                _end_age = int((_nar_items[_i + 1].start_age or 0) - 1) if _i + 1 < len(_nar_items) else int((_it.start_age or 0) + 9)
+                _is_fav = (_it.flow_wuxing or "") in favor
+                try:
+                    _it.narrative = generate_dayun_narrative(
+                        stem=_it.stem or "",
+                        branch=_it.branch or "",
+                        ganzhi=_dy_ganzhi,
+                        ten_god=_it.ten_god or "",
+                        start_age=int(_it.start_age or 0),
+                        end_age=_end_age,
+                        yongshen_favor=favor,
+                        geju_name=_geju_for_nar,
+                        strength_tier=strength_tier,
+                        wealth_tier=_wealth_tier_for_narrative,
+                        is_favorable=_is_fav,
+                    )
+                except Exception as _ne:
+                    logger.debug("[M3.02 narrative step %d] %s", _i, _ne)
+    except Exception as exc:
+        logger.debug("[M3.02 dayun_narrative] %s", exc)
+
+    # ────────────────────────────────────────────────────────────────────────
     # M3 新增: interpret.py 解读文本
     # ────────────────────────────────────────────────────────────────────────
     try:
