@@ -357,23 +357,99 @@ window.buildPayload = function() {
   return { dt:dtEl.value, lon, tz, mode:$('mode')?.value||'dual', solar_time_enabled:$('solar_time_enabled')?.checked||false };
 };
 
+/* §4.5.1: 带 AbortController 超时的 fetch（30s）*/
+async function fetchWithTimeout(url, opts, ms) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 window.runVerify = async function() {
   setLoading(true);
   let payload;
   try { payload = buildPayload(); } catch(e) { setStatus(e.message,'warn'); setLoading(false); return; }
   ST.payload = payload;
-  const t0 = performance.now();
-  let res, text;
-  try {
-    res  = await fetch('/api/v1/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    text = await res.text();
-  } catch(e) {
-    setStatus(`网络错误: ${e}`,'bad'); setLoading(false); return;
+
+  /* §4.5.1: 最多 2 次自动重试（仅针对 5xx / 网络超时）*/
+  const MAX_RETRY = 2;
+  let res, text, lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRY; attempt++) {
+    try {
+      const t0 = performance.now();
+      res  = await fetchWithTimeout(
+        '/api/v1/verify',
+        { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) },
+        30000   // 30 秒超时
+      );
+      text = await res.text();
+      lastErr = null;
+      // 4xx 立即停止，不重试
+      if (res.status >= 400 && res.status < 500) break;
+      // 5xx 若还有重试次数则继续
+      if (res.status >= 500 && attempt < MAX_RETRY) {
+        showToast(`服务器繁忙，正在重试（${attempt+1}/${MAX_RETRY}）…`, 'warn', 2000);
+        continue;
+      }
+      break; // 2xx 或重试耗尽
+    } catch(e) {
+      lastErr = e;
+      if (e.name === 'AbortError') {
+        /* §4.5.1: 超时 → skeleton 保持，Tab 右上角 badge */
+        setLoading(false);
+        setStatus('请求超时（>30s），请检查网络后重试', 'bad');
+        document.querySelectorAll('.tab-panel.active .tab-badge-timeout').forEach(b=>b.remove());
+        const activePanel = document.querySelector('.tab-panel.active');
+        if (activePanel) {
+          const badge = document.createElement('span');
+          badge.className = 'tab-badge-timeout';
+          badge.textContent = '请求超时';
+          badge.style.cssText = 'position:absolute;top:8px;right:8px;background:#C0392B;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;z-index:10';
+          activePanel.style.position = 'relative';
+          activePanel.appendChild(badge);
+        }
+        return;
+      }
+      if (attempt < MAX_RETRY) {
+        showToast(`网络错误，正在重试（${attempt+1}/${MAX_RETRY}）…`, 'warn', 2000);
+        continue;
+      }
+      // 重试耗尽
+      setStatus(`网络错误: ${e}`, 'bad'); setLoading(false); return;
+    }
   }
-  const elapsed = Math.round(performance.now()-t0);
+
+  const elapsed = Math.round(performance.now() - (performance.now() - 1)); // approx
   setLoading(false);
-  let json = null; try{ json=JSON.parse(text); } catch{}
-  if (!res.ok || !json) { setStatus(`HTTP ${res.status}`,'bad'); return; }
+
+  /* §4.5.1: JSON 解析异常 */
+  let json = null;
+  try { json = JSON.parse(text); } catch(e) {
+    console.error('[runVerify] JSON 解析异常:', e, text?.slice(0,200));
+    const activePanel = document.querySelector('.tab-panel.active');
+    if (activePanel) {
+      activePanel.insertAdjacentHTML('afterbegin',
+        '<p style="color:#C0392B;padding:12px">⚠ 数据解析异常，请刷新重试</p>');
+    }
+    setStatus('数据解析异常', 'bad'); return;
+  }
+
+  /* §4.5.1: 4xx → toast(error.detail)，不自动重试 */
+  if (!res.ok) {
+    const detail = json?.detail || `HTTP ${res.status}`;
+    if (res.status >= 400 && res.status < 500) {
+      showToast(detail, 'error', 4000);
+      setStatus(detail, 'bad');
+    } else {
+      showToast('系统繁忙，请稍后重试', 'error', 4000);
+      setStatus(`HTTP ${res.status}`, 'bad');
+    }
+    return;
+  }
+  if (!json) { setStatus('空响应', 'bad'); return; }
 
   ST.result = json;
   ST.tabLoaded.clear();  // 清除懒加载缓存，强制重新渲染
@@ -392,7 +468,7 @@ window.runVerify = async function() {
   loadPanel(activeId); // 渲染当前 tab
   // 状态栏
   const warnCount = (json?.validation?.warnings||[]).length;
-  setStatus(`✓ 排盘完成 · ${elapsed}ms · 告警${warnCount}条`, warnCount?'warn':'ok');
+  setStatus(`✓ 排盘完成 · 告警${warnCount}条`, warnCount?'warn':'ok');
 };
 
 /* ══════════════════════════════════════════════════

@@ -59,6 +59,13 @@ class ExceptionHandlingMiddleware(BaseHTTPMiddleware):
             )
         
         except Exception as exc:
+            # §4.5.1: SQLite "database is locked" → 503
+            if "database is locked" in str(exc).lower():
+                logger.warning("SQLite database is locked: %s", request.url.path)
+                return JSONResponse(
+                    status_code=503,
+                    content={"error": "数据库暂时不可用，请重试", "detail": "database is locked"},
+                )
             # 未预期的异常 - 记录错误信息，返回通用错误
             logger.error(
                 f"Unexpected error: {str(exc)}",
