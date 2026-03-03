@@ -515,6 +515,14 @@ details > summary:hover { color:var(--text); }
 .footer { margin-top:16px; padding:14px; border:1px solid var(--line); border-radius:14px; background:var(--input); color:#475569; font-size:12px; line-height:1.5; }
 .footer-brand { font-family:var(--font-title); color:var(--accent-gold); font-weight:700; }
 
+/* ── 术语 Tooltip（task 4.14）──────────────── */
+.glossary-term {
+  border-bottom: 1px dotted var(--accent-gold, #B8860B);
+  cursor: help;
+  display: inline;
+}
+.glossary-inline-host { display: contents; }
+
 /* ── 响应式 ─────────────────────────────────── */
 @media (max-width:768px) {
   header { flex-wrap:wrap; gap:8px; padding:10px 14px; }

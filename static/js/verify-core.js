@@ -125,6 +125,9 @@ window.loadPanel = function(id) {
   requestAnimationFrame(() => {
     if (wrapper) wrapper.classList.remove('active');
     if (typeof renderTabById === 'function') renderTabById(id, ST.result);
+    // 术语 tooltip（task 4.14）
+    const panelEl = document.querySelector(`[data-panel="${id}"]`);
+    if (panelEl && window.__Glossary) window.__Glossary.apply(panelEl);
     // 更新 tab dot 状态
     const btn = document.querySelector(`.tab-nav-item[data-idx="${id}"]`);
     if (btn) {

@@ -202,13 +202,13 @@ async def add_security_headers(request: Request, call_next):
 	response = await call_next(request)
 	
 	# 内容安全策略 (CSP) - 防止XSS
-	# 注意：verify.html 使用内联脚本，因此添加 'unsafe-inline'
-	# 生产环境建议：将脚本移到外部文件或使用 nonce
+	# verify.html 无内联脚本，script-src 不需要 'unsafe-inline' 或 cdn.jsdelivr.net
+	# style-src 保留 'unsafe-inline'：模板中存在 23 处内联 style="" 属性
 	response.headers["Content-Security-Policy"] = (
 		"default-src 'self'; "
-		"connect-src 'self' https://cdn.jsdelivr.net; "  # 0.18: 移除 data: 防信息泄露
+		"connect-src 'self'; "
 		"style-src 'self' 'unsafe-inline'; "
-		"script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+		"script-src 'self'; "
 		"img-src 'self' data:; "
 		"font-src 'self'; "
 		"object-src 'none'; "
