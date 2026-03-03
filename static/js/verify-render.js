@@ -207,21 +207,30 @@ function renderTab3(json, el) {
   if (!g) { el.innerHTML = '<div class="hint" style="padding:16px">格局数据尚未计算，请先排盘。</div>'; return; }
   const tierMap = {high:'high',mid:'mid',低:'low'};
   const tierCls = g.tier==='高'?'high':g.tier==='中'?'mid':'low';
-  const refs = (g.classic_refs||[]).map(r=>`<li><span class="dot-icon"></span><span><strong>${esc(r.title||'')}</strong>: ${esc(r.text||r.quote||'')}</span></li>`).join('');
+  // classic_ref 是字符串（格局古籍引用，"\n"分隔多条）
+  const classicRefText = g.classic_ref || '';
+  const classicRefHtml = classicRefText
+    ? `<div class="card" style="margin-bottom:12px">
+         <details>
+           <summary style="cursor:pointer;font-size:12px;color:var(--accent-gold);font-weight:600;padding:4px 0">查看古籍引用</summary>
+           <div style="margin-top:8px;font-size:12px;line-height:1.8;color:var(--text);font-family:var(--font-title);font-style:italic;white-space:pre-wrap">${esc(classicRefText)}</div>
+         </details>
+       </div>`
+    : '';
   el.innerHTML = `
   <div class="card" style="margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div>
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:6px">格局名称</div>
-        <div style="font-size:28px;font-weight:800;color:var(--text);font-family:var(--font-title)">${esc(g.name||'未知格局')}</div>
-        ${g.tier?`<div class="geju-tier-badge ${tierCls}" style="margin-top:8px;font-size:14px">${g.tier==='高'||g.tier==='high'?'▲ 上格':g.tier==='中'||g.tier==='mid'?'◆ 中格':'▽ 下格'}</div>`:''}
+        <div style="font-size:28px;font-weight:800;color:var(--text);font-family:var(--font-title)">${esc(g.geju_name||g.name||'未知格局')}</div>
+        ${g.geju_level?`<div class="geju-tier-badge ${tierCls}" style="margin-top:8px;font-size:14px">${g.geju_level==='上格'?'▲ 上格':g.geju_level==='中格'?'◆ 中格':g.geju_level==='下格'?'▽ 下格':g.geju_level}</div>`:''}
       </div>
       ${g.score!==undefined?`<div style="text-align:center"><div style="font-size:11px;color:var(--muted);font-weight:700">格局评分</div><div style="font-size:36px;font-weight:800;color:var(--accent-gold)">${g.score.toFixed(0)}</div></div>`:''}
     </div>
   </div>
   ${g.description?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>格局释义</p><div style="font-size:13px;line-height:1.7;color:var(--text)">${esc(g.description)}</div></div>`:''}
   ${g.interpretation_text?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>深度解读</p><div style="font-size:13px;line-height:1.7;color:var(--text)">${esc(g.interpretation_text)}</div></div>`:''}
-  ${refs?`<div class="card"><p class="card-title"><span class="dot"></span>古籍佐证</p><ul class="info-list">${refs}</ul></div>`:''}
+  ${classicRefHtml}
   `;
 }
 
@@ -631,7 +640,7 @@ function renderTab16(json, el) {
   <div id="dayunChartContainer" style="margin-bottom:16px"></div>
   <div class="dayun-table-wrapper" style="overflow-x:auto">
     <table class="dayun-table">
-      <thead><tr><th>干支</th><th>起年</th><th>起岁</th><th>十神</th><th>财运</th><th>健康</th><th>感情</th><th>叙事</th></tr></thead>
+      <thead><tr><th>干支</th><th>起年</th><th>起岁</th><th>十神</th><th>财运</th><th>健康</th><th>感情</th><th>叙事/古籍</th></tr></thead>
       <tbody>
         ${items.map(d=>`
           <tr class="${isCurrent(d)?'dayun-current':''}">
@@ -642,10 +651,11 @@ function renderTab16(json, el) {
             <td>${d.wealth_hint?`<div style="font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(d.wealth_hint)}">${esc(d.wealth_hint)}</div>`:'—'}</td>
             <td>${d.health_hint?`<div style="font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(d.health_hint)}">${esc(d.health_hint)}</div>`:'—'}</td>
             <td>${d.love_hint?`<div style="font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(d.love_hint)}">${esc(d.love_hint)}</div>`:'—'}</td>
-            <td>${d.narrative_text?`
-              <details><summary style="cursor:pointer;font-size:11px;color:var(--accent)">查看叙事</summary>
-                <div style="font-size:12px;line-height:1.6;padding:8px;max-width:300px;white-space:pre-wrap">${esc(d.narrative_text)}</div>
-              </details>`:'—'}</td>
+            <td>
+              ${d.narrative_text?`<details><summary style="cursor:pointer;font-size:11px;color:var(--accent)">查看叙事</summary><div style="font-size:12px;line-height:1.6;padding:8px;max-width:300px;white-space:pre-wrap">${esc(d.narrative_text)}</div></details>`:''}
+              ${(d.refs&&d.refs.length)?`<details style="margin-top:4px"><summary style="cursor:pointer;font-size:11px;color:var(--accent-gold)">查看古籍引用</summary><div style="font-size:11px;line-height:1.7;padding:6px 8px;max-width:320px;font-style:italic;font-family:var(--font-title)">${d.refs.map(r=>`<div style="margin-bottom:4px"><span style="color:var(--accent-gold)">【${esc(r.source||'')}】</span>${esc(r.text||'')}</div>`).join('')}</div></details>`:''}
+              ${!d.narrative_text&&!(d.refs&&d.refs.length)?'—':''}
+            </td>
           </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">暂无数据</td></tr>'}
       </tbody>
     </table>

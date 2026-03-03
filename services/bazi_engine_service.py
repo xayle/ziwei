@@ -509,6 +509,12 @@ def _enrich_v2_analysis(
         geju_name = geju_raw.get("name", "普通格")
         is_broken = not geju_raw.get("confident", True)
         from typing import cast as _cast
+        from services.bazi_engine.classic_refs import get_refs_by_tag as _geju_get_refs
+        _geju_refs_text = "\n".join(
+            f"【{r.get('source','')}】{r.get('text','')}"
+            for r in _geju_get_refs("格局")[:2]
+            if r.get("text")
+        )
         verify_response.geju = GejuModel(
             geju_name=geju_name,
             geju_level=_geju_level(geju_name),  # type: ignore[arg-type]
@@ -516,7 +522,7 @@ def _enrich_v2_analysis(
             is_broken=is_broken,
             inference_tags=[geju_name],
             interpretation_text=geju_raw.get("note", ""),
-            classic_ref="",
+            classic_ref=_geju_refs_text,
         )
     except Exception as exc:
         logger.debug("[M2 geju] %s", exc)
