@@ -17,6 +17,10 @@ from services.permission_service import Permission, has_permission, Role
 from services.delegation_service import log_action
 from services.json_validators import EventJsonValidator
 from services.optimization_tools import QueryCache
+
+# [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
+_events_cache = QueryCache(cache_seconds=300)
+
 from app.exceptions import (
     AuthorizationException,
     BusinessException,
@@ -246,7 +250,7 @@ def list_events(
         )
     
     # ✅ 第一步：尝试从缓存获取
-    cache = QueryCache(cache_seconds=300)
+    cache = _events_cache
     cache_key = f"events:{current_user.id}:{member_id}:{event_type}:{last_id}:{limit}"
     
     cached_result = cache.get(cache_key)

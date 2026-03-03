@@ -16,6 +16,10 @@ from services.permission_service import (
 )
 from services.delegation_service import log_action
 from services.optimization_tools import QueryCache, PaginationOptimizer
+
+# [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
+_members_cache = QueryCache(cache_seconds=600)
+
 from app.exceptions import (
     AuthorizationException,
     BusinessException,
@@ -147,7 +151,7 @@ def list_members(
     - last_id: 上一次响应中最后一条记录的 ID（用于游标分页）
     """
     # ✅ 第一步：尝试从缓存获取结果
-    cache = QueryCache(cache_seconds=600)
+    cache = _members_cache
     cache_key = f"members:{current_user.id}:{last_id}:{limit}"
     
     cached_result = cache.get(cache_key)
