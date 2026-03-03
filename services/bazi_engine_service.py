@@ -548,7 +548,7 @@ def _enrich_v2_analysis(
                 # ★ 当整体符合 ≥3 条神煞且本项为 A 级吉神时标记 [P69]
                 is_star=_shensha_star_chart and s.get("priority", "") == "A",
                 meaning=s.get("note", ""),
-                classic_source="",
+                classic_source=s.get("classic", ""),
             )
             for s in shensha_items_raw
         ]

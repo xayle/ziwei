@@ -131,27 +131,27 @@ SANQI_GROUPS: list[frozenset[str]] = [
 # ──────────────────────────────────────────────────────────────────────────────
 
 SHENSHA_META: dict[str, dict] = {
-    "天乙贵人": {"priority": "A", "polarity": "+", "topic": "命运", "note": "逢之遇贵人相助，化险为夷"},
-    "文昌贵人": {"priority": "A", "polarity": "+", "topic": "才学", "note": "主聪明才学，利读书考试"},
-    "将星":     {"priority": "A", "polarity": "+", "topic": "领导", "note": "主权威领导，职场掌权"},
-    "驿马":     {"priority": "B", "polarity": "+", "topic": "奔波", "note": "主奔波迁动，利出行贸易"},
-    "桃花":     {"priority": "B", "polarity": "+", "topic": "感情", "note": "主感情缘分，人缘旺"},
-    "红鸾":     {"priority": "B", "polarity": "+", "topic": "婚恋", "note": "主婚姻喜事，感情之象"},
-    "天喜":     {"priority": "B", "polarity": "+", "topic": "喜事", "note": "主喜庆之事，婚庆生育"},
-    "华盖":     {"priority": "C", "polarity": "~", "topic": "宗教", "note": "主孤独、宗教艺术，有仙缘"},
-    "天德贵人": {"priority": "A", "polarity": "+", "topic": "庇护", "note": "主官非化解，贵人庇护"},
-    "月德贵人": {"priority": "A", "polarity": "+", "topic": "庇护", "note": "主疾厄化解，逢凶化吉"},
-    "劫煞":     {"priority": "A", "polarity": "-", "topic": "破财", "note": "主劫夺破财，防小人"},
-    "亡神":     {"priority": "A", "polarity": "-", "topic": "暗耗", "note": "主暗耗损失，宜积阴德"},
-    "白虎":     {"priority": "B", "polarity": "-", "topic": "血光", "note": "主血光意外，手术之象"},
-    "孤辰":     {"priority": "C", "polarity": "-", "topic": "孤寡", "note": "男命孤独，宜积极社交"},
-    "寡宿":     {"priority": "C", "polarity": "-", "topic": "孤寡", "note": "女命孤寡，婚姻宜晚"},
-    "月刃":     {"priority": "B", "polarity": "-", "topic": "刚烈", "note": "性格刚烈，防意外血光"},
+    "天乙贵人": {"priority": "A", "polarity": "+", "topic": "命运", "note": "逢之遇贵人相助，化险为夷",        "classic": "《三命通会》"},
+    "文昌贵人": {"priority": "A", "polarity": "+", "topic": "才学", "note": "主聪明才学，利读书考试",          "classic": "《渊海子平》"},
+    "将星":     {"priority": "A", "polarity": "+", "topic": "领导", "note": "主权威领导，职场掌权",            "classic": "《三命通会》"},
+    "驿马":     {"priority": "B", "polarity": "+", "topic": "奔波", "note": "主奔波迁动，利出行贸易",          "classic": "《三命通会》"},
+    "桃花":     {"priority": "B", "polarity": "+", "topic": "感情", "note": "主感情缘分，人缘旺",              "classic": "《三命通会》"},
+    "红鸾":     {"priority": "B", "polarity": "+", "topic": "婚恋", "note": "主婚姻喜事，感情之象",            "classic": "《三命通会》"},
+    "天喜":     {"priority": "B", "polarity": "+", "topic": "喜事", "note": "主喜庆之事，婚庆生育",            "classic": "《三命通会》"},
+    "华盖":     {"priority": "C", "polarity": "~", "topic": "宗教", "note": "主孤独、宗教艺术，有仙缘",        "classic": "《三命通会》"},
+    "天德贵人": {"priority": "A", "polarity": "+", "topic": "庇护", "note": "主官非化解，贵人庇护",            "classic": "《三命通会》"},
+    "月德贵人": {"priority": "A", "polarity": "+", "topic": "庇护", "note": "主疾厄化解，逢凶化吉",            "classic": "《三命通会》"},
+    "劫煞":     {"priority": "A", "polarity": "-", "topic": "破财", "note": "主劫夺破财，防小人",              "classic": "《三命通会》"},
+    "亡神":     {"priority": "A", "polarity": "-", "topic": "暗耗", "note": "主暗耗损失，宜积阴德",            "classic": "《神峰通考》"},
+    "白虎":     {"priority": "B", "polarity": "-", "topic": "血光", "note": "主血光意外，手术之象",            "classic": "《神峰通考》"},
+    "孤辰":     {"priority": "C", "polarity": "-", "topic": "孤寡", "note": "男命孤独，宜积极社交",            "classic": "《三命通会》"},
+    "寡宿":     {"priority": "C", "polarity": "-", "topic": "孤寡", "note": "女命孤寡，婚姻宜晚",              "classic": "《三命通会》"},
+    "月刃":     {"priority": "B", "polarity": "-", "topic": "刚烈", "note": "性格刚烈，防意外血光",            "classic": "《子平真诠》"},
     # v7.0 新增 4 种（P0-06 ≥20）
-    "太极贵人": {"priority": "A", "polarity": "+", "topic": "智慧", "note": "主聪慧有谋，临机决断力强"},
-    "金舆":     {"priority": "B", "polarity": "+", "topic": "财富", "note": "主富贵，金钱财帛有余"},
-    "魁罡":     {"priority": "A", "polarity": "~", "topic": "权威", "note": "刚毅果断，逢岁运生旺则权威大，遇冲则凶"},
-    "三奇":     {"priority": "A", "polarity": "+", "topic": "奇特", "note": "天地人三奇，主出奇制胜，运势奇特不凡"},
+    "太极贵人": {"priority": "A", "polarity": "+", "topic": "智慧", "note": "主聪慧有谋，临机决断力强",        "classic": "《三命通会》"},
+    "金舆":     {"priority": "B", "polarity": "+", "topic": "财富", "note": "主富贵，金钱财帛有余",            "classic": "《三命通会》"},
+    "魁罡":     {"priority": "A", "polarity": "~", "topic": "权威", "note": "刚毅果断，逢岁运生旺则权威大，遇冲则凶", "classic": "《三命通会》"},
+    "三奇":     {"priority": "A", "polarity": "+", "topic": "奇特", "note": "天地人三奇，主出奇制胜，运势奇特不凡", "classic": "《三命通会》"},
 }
 
 
@@ -200,6 +200,7 @@ def compute_shensha(
                 "pillar": pillar,
                 "topic": meta["topic"],
                 "note": meta["note"],
+                "classic": meta.get("classic", ""),
             })
 
     # ── 天乙贵人（按日干/年干查四柱地支）────────────────────────────────────
