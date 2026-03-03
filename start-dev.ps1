@@ -15,8 +15,8 @@ $env:AUTH_BYPASS  = "true"
 $env:ENGINE_V2    = "true"
 $env:PYTHONIOENCODING = "utf-8"
 
-# 2. 清理已占用端口
-$occupied = (Get-NetTCPConnection -LocalPort $Port -EA SilentlyContinue).OwningProcess | Select-Object -Unique
+# 2. 清理已占用端口（只检查 LISTEN 状态，忽略 TIME_WAIT 等连接）
+$occupied = (Get-NetTCPConnection -LocalPort $Port -State Listen -EA SilentlyContinue).OwningProcess | Select-Object -Unique
 if ($occupied) {
     foreach ($pid_ in $occupied) {
         Write-Host "[start-dev] 杀掉占用 $Port 的进程 PID=$pid_" -ForegroundColor Yellow
@@ -25,8 +25,8 @@ if ($occupied) {
     Start-Sleep -Seconds 1
 }
 
-# 3. 确认端口已释放
-$check = Get-NetTCPConnection -LocalPort $Port -EA SilentlyContinue
+# 3. 确认端口已释放（只检查 LISTEN 状态）
+$check = Get-NetTCPConnection -LocalPort $Port -State Listen -EA SilentlyContinue
 if ($check) {
     Write-Error "[start-dev] 端口 $Port 仍被占用，请手动处理"
     exit 1
