@@ -79,7 +79,8 @@ def _engine_v2_enabled() -> bool:
 class CalculateResult:
     """calculate() 的统一返回值"""
     verify_response: VerifyResponse
-    # 以下供内部调试/日志使用
+    # v1: 四柱用 sxtwl/cnlunar（高精度）+ 全部 bazi_engine/ 分析模块
+    # v2: 同 v1（ENGINE_V2 flag 保留用于未来四柱层彻底替换时的切换）
     engine_version: str = "v1"
     warnings: list[str] = field(default_factory=list)
 
@@ -357,7 +358,12 @@ def _to_pillars_model(p) -> PillarsModel:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 新引擎路径（ENGINE_V2=true）— M1 完成后启用
+# ENGINE_V2=true 路径
+# ──────────────────────────────────────────────────────────────────────────────
+# 架构说明：_calculate_v1 已集成全部 services/bazi_engine/ 新模块
+#   （wuxing/strength/yongshen/dayun/shensha/geju/palace + M2 7维分析引擎 + M2.5 生活模块）。
+# 四柱计算继续使用 sxtwl/cnlunar（精度最高来源），属于有意设计，非临时措施。
+# ENGINE_V2 flag 保留用于未来完全替换四柱计算后的平滑切换。
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _calculate_v2(
@@ -373,16 +379,21 @@ def _calculate_v2(
     industry: Optional[str] = None,
 ) -> CalculateResult:
     """
-    新引擎路径（M1 完成后激活）.
-    目前 fallback 到 v1，等待各子模块集成完成后替换。
+    ENGINE_V2=true 入口.
+
+    当前实现：委托 _calculate_v1，后者已集成全部 services/bazi_engine/ 新引擎模块。
+    四柱仍使用 sxtwl/cnlunar（精度优先，有意设计）。
+    如需彻底替换四柱层，在此函数添加新实现并切换路由。
     """
-    logger.info("[BaziEngineService] ENGINE_V2=true path called (stub→v1 for now)")
-    return _calculate_v1(
+    logger.debug("[BaziEngineService] ENGINE_V2=true")
+    result = _calculate_v1(
         dt=dt, lon=lon, tz=tz, use_solar=use_solar,
         mode=mode, gender=gender, request_id=request_id,
         extra_warnings=extra_warnings,
         city_tier=city_tier, industry=industry,
     )
+    result.engine_version = "v2"
+    return result
 
 
 # ──────────────────────────────────────────────────────────────────────────────
