@@ -31,7 +31,7 @@ router = APIRouter(prefix="/api/v1", tags=["delegation"])
 class DelegationCreateRequest(BaseModel):
     """创建权限委托请求"""
     to_user_id: int
-    permission_type: str  # "view", "edit", "share", "manage"
+    permission_type: str  # 委托级别: "view"/"edit"/"share"/"manage" 或精细权限如 "read_member"
     member_id: Optional[int] = None  # 可选：限制到特定成员
     expires_days: int = 30
 

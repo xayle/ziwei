@@ -32,6 +32,13 @@ class Permission(str, Enum):
     MANAGE_USERS = "manage_users"
     VIEW_AUDIT_LOG = "view_audit_log"
 
+    # 委托级别权限 (高级聚合权限，供用户间委托使用)
+    # 对应: view=只读 / edit=读写 / share=可再委托 / manage=完整管理
+    VIEW = "view"
+    EDIT = "edit"
+    SHARE = "share"
+    MANAGE = "manage"
+
 
 class Role(str, Enum):
     """系统角色定义"""
@@ -60,6 +67,11 @@ ROLE_PERMISSIONS = {
         Permission.REVOKE_PERMISSIONS,
         Permission.MANAGE_USERS,
         Permission.VIEW_AUDIT_LOG,
+        # 委托级别权限：OWNER 可委托全部级别
+        Permission.VIEW,
+        Permission.EDIT,
+        Permission.SHARE,
+        Permission.MANAGE,
     ],
     Role.EDITOR: [
         Permission.READ_MEMBER,
@@ -72,11 +84,16 @@ ROLE_PERMISSIONS = {
         Permission.READ_SCENARIO,
         Permission.UPDATE_SCENARIO,
         Permission.DELETE_SCENARIO,
+        # 委托级别权限：EDITOR 可委托只读和编辑
+        Permission.VIEW,
+        Permission.EDIT,
     ],
     Role.VIEWER: [
         Permission.READ_MEMBER,
         Permission.READ_EVENT,
         Permission.READ_SCENARIO,
+        # 委托级别权限：VIEWER 只能委托只读
+        Permission.VIEW,
     ],
     Role.GUEST: [
         Permission.READ_MEMBER,
