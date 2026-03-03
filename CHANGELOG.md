@@ -2,30 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v7.0.0] - 2026-03-02
+## [v7.0.0] - 2026-03-03
 
-### Milestone 6 — 测试与质量收尾
+### Milestone 6 完成 — 558 tests · 99% coverage · v7.0-release
 
-#### 关键 Bug 修复
-- **ENGINE_V2=true 路径修复**：`_to_pillars_model()` (services/bazi_engine_service.py) 现可正确将
-  `boundary.Pillar` dataclass 对象转换为 Pydantic 兼容的 dict，解决了所有 `/api/v1/verify`
-  请求在 `ENGINE_V2=true` 时返回 HTTP 400 的问题。
+#### 前端关键修复
+- **verify-core.js 补入 HTML**：`verify-core.js` 缺失引用导致前端整体无法运行；已正确加入并附版本标识 `?v=20260303`
+- **CSP 内联脚本违规修复**：免责声明弹窗逻辑从 HTML `<script>` 内联块迁移至 `verify-core.js#initDisclaimer()`；服务器 `script-src 'self'` 策略全面合规（任务 4.19 / 红线 P78）
+- **SheetJS 版本标识**：`xlsx.mini.min.js` 加 `?v=0.20.3`，符合红线30（JS/CSS 引用必须有版本标识）
 
-#### 性能基线 (M6.07)
-- `/api/v1/verify` 端点本地压测 (8 次连续调用)：avg **11ms**，max **14ms**
-- 远低于 P99 < 3 000ms 目标
+#### M5 导出功能
+- **M5.03 SheetJS 本地化**：下载 `xlsx.mini.min.js` (280 KB, v0.20.3) 至 `static/js/`，实现真正 6-Sheet `.xlsx` 导出（四柱/五行/大运/分析维度/神煞/原始JSON）— 满足 P0-22
+- **M5.02/M5.03 CSV 字段名零不匹配**：`exportCSV()` 重写为 `field_path`/`value` 格式，使用 API 字段路径（`pillars_primary.year.stem`、`ten_gods.year` 等）— 满足红线12
 
-#### 测试覆盖率 (M6.09)
-- 新增 `TestYongshenExtraEdge`、`TestLifestyleTables`、`TestWealthBranches`、`TestInterpretBranches` 等测试类
-- 覆盖率从 96% 提升至 **98%**（1876 条语句，41条未覆盖）
-- 最终测试结果：**499 passed, 1 xfailed**
+#### M6 验收门（全通过）
+- **M6.07 性能**：`/api/v1/verify` 连续 5 次平均 **19ms**（目标 < 3s）
+- **M6.08 Prometheus 指标**：`bazi_verify_total` / `bazi_verify_duration_seconds` / `bazi_boundary_risk_total` 已实现（P50/GAP-15）
+- **M6.09 覆盖率**：核心引擎 **99%**（目标 ≥ 80%）— 测试 **558 passed**
+- **M6.10 .dockerignore**：排除 `.env` / `*.db` / `data/*.db` 已验证
+- **M6.11 Dockerfile HEALTHCHECK URL**：`/api/v1/health` → `/health`（与实际路由一致）
+- **M6.13 git tag**：`v7.0-release` at `e1bf18e`
 
-#### 部署 (M6.11)
-- Dockerfile 新增 `HEALTHCHECK`（urllib 模式，`/api/v1/health`，30s 间隔 / 10s 超时 / 3 次重试）
-- 注：本机无 Docker 环境，构建步骤记录在 docs/DEPLOYMENT-GUIDE.md 中，由 CI 执行
+#### 免责声明与页脚 (task 4.23)
+- `<footer>` 四款声明（不存储/娱乐参考/数据来源/算法版本）
+- 首次访问弹窗（`localStorage=bazi_disclaimer_v1`）
 
-#### 标记
-- 打标 `git tag v7.0-release`（M6.13）
+#### 神煞与格局
+- 神煞 `classic_source` 字段从 `SHENSHA_META.classic` 自动填充（P69 / 红线规格）
+- `is_star` / `is_beneficial` 字段映射修正；`render.js` 使用正确 API 字段名
+- 格局 `classic_ref` 从实际 refs 取最后一条填充；`render.js` 解析 `key.name` + details 折叠
+
+#### 其他修复
+- 地支关系★标记渲染（Tab2 / task 4.20 / P69）
+- `request.client` None 防崩溃守卫（P87）
+- `datetime.utcnow()` → `datetime.now(timezone.utc)`（P89）
+- `pytest.ini` 添加 `pythonpath=.`（消除 PYTHONPATH 环境变量依赖）
+- 术语 tooltip 弹窗（verify-guide.js）+ CSP script-src 硬化（task 4.14/4.19）
+- P0-14：`wealth_score` 不再复制 `strength.score`，改用用神匹配公式
+
+#### 红线全符合 (35条)
+- 红线12：CSV 字段名与 API 零不匹配 ✅
+- 红线28：速率限制 `/verify` 30/min + `/bazi/full` 20/min ✅
+- 红线30：所有 JS/CSS 引用有版本标识 ✅
+- 红线33：三层模型 fact_data/inference_tags/interpretation_text 全维度 ✅
+- 红线34：城市选择器 36 城 ✅
+- 红线35：L 级别 P0-23 决策表一致 ✅
 
 ---
 

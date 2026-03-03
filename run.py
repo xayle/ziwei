@@ -201,9 +201,9 @@ async def add_security_headers(request: Request, call_next):
 	"""添加安全响应头 - CSP, Cache-Control 等"""
 	response = await call_next(request)
 	
-	# 内容安全策略 (CSP) - 防止XSS
-	# verify.html 无内联脚本，script-src 不需要 'unsafe-inline' 或 cdn.jsdelivr.net
-	# style-src 保留 'unsafe-inline'：模板中存在 23 处内联 style="" 属性
+	# 内容安全策略 (CSP) - 防止XSS (P78 / task 4.19)
+	# script-src 'self' only — 无内联脚本 (task 4.19 已外部化)
+	# style-src 保留 'unsafe-inline'：模板存在 23 处内联 style="" 属性（inline attr 非脚本注入风险）
 	response.headers["Content-Security-Policy"] = (
 		"default-src 'self'; "
 		"connect-src 'self'; "
