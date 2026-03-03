@@ -538,13 +538,15 @@ def _enrich_v2_analysis(
             hour_stem=hs_st, hour_branch=hs_br,
         )
         shensha_items_raw = shensha_raw.get("items", [])
+        _shensha_star_chart = shensha_raw.get("star", False)  # ≥3 unique items
         verify_response.shensha = [
             ShenshaModel(
                 name=s.get("name", ""),
                 dizhi=s.get("pillar", ""),
                 pillar=s.get("pillar", ""),
-                is_beneficial=(s.get("polarity", "") == "positive"),
-                is_star=s.get("priority", "") == "high",
+                is_beneficial=(s.get("polarity", "") == "+"),
+                # ★ 当整体符合 ≥3 条神煞且本项为 A 级吉神时标记 [P69]
+                is_star=_shensha_star_chart and s.get("priority", "") == "A",
                 meaning=s.get("note", ""),
                 classic_source="",
             )

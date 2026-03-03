@@ -263,9 +263,9 @@ function renderTab4(json, el) {
     <div class="card">
       <p class="card-title"><span class="dot"></span>神煞（${json.shensha.length}种）</p>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
-        ${json.shensha.slice(0,20).map(s=>`<span class="chip${s.is_favorable?' ok':s.is_harmful?' bad':''}" title="${esc(s.description||'')}">
-          ${s.is_key?'★ ':''}${esc(s.name||'')}
-          ${s.location?`<small class="hint">${esc(s.location)}</small>`:''}
+        ${json.shensha.slice(0,20).map(s=>`<span class="chip${s.is_beneficial?' ok':' bad'}" title="${esc(s.meaning||'')}">
+          ${s.is_star?'★ ':''}${esc(s.name||'')}
+          ${s.pillar?`<small class="hint">${esc(s.pillar)}</small>`:''}
         </span>`).join('')}
       </div>
     </div>`:'<div class="card"><p class="card-title"><span class="dot"></span>神煞</p><div class="hint">暂无神煞数据</div></div>'}
