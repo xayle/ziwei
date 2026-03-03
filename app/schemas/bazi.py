@@ -291,6 +291,12 @@ class VerifyRequest(BaseModel):
     solar_time_enabled: bool = Field(False, description="Enable solar-time adjustment when true")
     tz: str = Field("Asia/Shanghai", description="Timezone used only when dt is naive")
     gender: Optional[Literal["male", "female"]] = Field(None, description="Gender for dayun direction: male/female")
+    city_tier: Optional[Literal["一线", "新一线", "其余"]] = Field(
+        "其余", description="城市层级，影响财富数额地区系数：一线×1.8 / 新一线×1.2 / 其余×1.0 (M3.03)"
+    )
+    industry: Optional[Literal["金融IT", "教育公务", "其余"]] = Field(
+        "其余", description="行业，影响财富行业系数：金融IT×1.5 / 教育公务×0.8 / 其余×1.0 (M3.03)"
+    )
 
     @model_validator(mode="after")
     def validate_lon(self):  # type: ignore[override]

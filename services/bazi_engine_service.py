@@ -97,6 +97,8 @@ def _calculate_v1(
     gender: Optional[str],
     request_id: str,
     extra_warnings: list[str],
+    city_tier: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> CalculateResult:
     """旧 bazi_full_service 路径（从 run.py 提取）"""
     from typing import Literal, cast
@@ -254,10 +256,20 @@ def _calculate_v1(
             hints = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
             item.love_hint = hints.get("love_hint", "")
             item.child_hint = hints.get("child_hint", "")
-        # wealth_range 按流运五行粗估
+        # wealth_range 按流运五行粗估，并应用地区/行业系数 (M3.03)
         if item.flow_wuxing and item.wealth_range is None:
             lo, hi = _WX_WEALTH_RANGE.get(item.flow_wuxing, (6, 30))
-            item.wealth_range = RangeModel(min=lo, max=hi, currency="万元/年")
+            # M3.03: 地区系数 一线×1.8 / 新一线×1.2 / 其余×1.0
+            _ct_coeff = {"一线": 1.8, "新一线": 1.2}.get(city_tier or "", 1.0)
+            # M3.03: 行业系数 金融IT×1.5 / 教育公务×0.8 / 其余×1.0
+            _ind_coeff = 1.5 if (industry or "") == "金融IT" else (
+                         0.8 if (industry or "") == "教育公务" else 1.0)
+            _m3_coeff = round(_ct_coeff * _ind_coeff, 2)
+            item.wealth_range = RangeModel(
+                min=round(lo * _m3_coeff, 1),
+                max=round(hi * _m3_coeff, 1),
+                currency="万元/年",
+            )
         # refs（古籍引用）
         if item.refs is None:
             refs_tg = _get_refs_by_tag(item.ten_god) if item.ten_god else []
@@ -301,6 +313,8 @@ def _calculate_v1(
             dt=dt,
             gender=gender,
             mode=mode,
+            city_tier=city_tier,
+            industry=industry,
         )
     except Exception as _exc:
         logger.warning("[M2 analysis] enrichment failed: %s", _exc, exc_info=True)
@@ -355,6 +369,8 @@ def _calculate_v2(
     gender: Optional[str],
     request_id: str,
     extra_warnings: list[str],
+    city_tier: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> CalculateResult:
     """
     新引擎路径（M1 完成后激活）.
@@ -365,6 +381,7 @@ def _calculate_v2(
         dt=dt, lon=lon, tz=tz, use_solar=use_solar,
         mode=mode, gender=gender, request_id=request_id,
         extra_warnings=extra_warnings,
+        city_tier=city_tier, industry=industry,
     )
 
 
@@ -381,6 +398,8 @@ def calculate(
     gender: Optional[str] = None,
     request_id: str = "unknown",
     extra_warnings: list[str] | None = None,
+    city_tier: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> CalculateResult:
     """
     统一八字计算入口.
@@ -394,6 +413,8 @@ def calculate(
         gender:          "male" | "female" | None
         request_id:      请求追踪 ID
         extra_warnings:  额外警告信息
+        city_tier:       城市层级 (M3.03) 一线/新一线/其余
+        industry:        行业 (M3.03) 金融IT/教育公务/其余
 
     Returns:
         CalculateResult with verify_response and metadata
@@ -412,12 +433,14 @@ def calculate(
             dt=dt, lon=lon, tz=tz, use_solar=use_solar,
             mode=mode, gender=gender, request_id=request_id,
             extra_warnings=_extra,
+            city_tier=city_tier, industry=industry,
         )
     else:
         result = _calculate_v1(
             dt=dt, lon=lon, tz=tz, use_solar=use_solar,
             mode=mode, gender=gender, request_id=request_id,
             extra_warnings=_extra,
+            city_tier=city_tier, industry=industry,
         )
 
     # ── 存入缓存 ──────────────────────────────────────────────────────────────
@@ -442,6 +465,8 @@ def _enrich_v2_analysis(
     dt: datetime,
     gender: Optional[str],
     mode: str,
+    city_tier: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> VerifyResponse:
     """
     调用 M2 各分析引擎，填充 VerifyResponse 的新字段。

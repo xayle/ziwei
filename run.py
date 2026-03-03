@@ -506,6 +506,8 @@ def api_verify(
 				gender=getattr(body, "gender", None),
 				request_id=req_id,
 				extra_warnings=warnings,
+				city_tier=getattr(body, "city_tier", None),
+				industry=getattr(body, "industry", None),
 			)
 		except HTTPException:
 			raise
