@@ -4,15 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [v8.0.0] - 2026-03-04
 
-### Milestone N7 — 测试与发布（833 tests · bandit 0 HIGH · v8.0-release）
+### Milestone N7 — 测试与发布（854 tests · bandit 0 HIGH · v8.0-release）
 
 #### 测试 & 质量门
-- **N7.01 测试总量 >700**：共 833 passed（目标 700），较 N2 基线（315）增加 518 用例
+- **N7.01 测试总量 >700**：共 854 passed（目标 700），较 N2 基线（315）增加 539 用例
 - **N7.02 E2E Playwright 测试**：新建 `tests/e2e/test_verify_flow.py`，覆盖 6 个场景：
   完整计算流程（Tab>10 且非空）／历史对比并排展示／分享卡片 PNG >10KB／Token 过期重定向／CSV >50 行前端拦截／非法日期报错
 - **N7.03 格局置信度回归**：`test_golden.py` 8 组黄金案例，全部断言 `0.0 ≤ confidence ≤ 1.0` 且 `geju_name` 非空
 - **N7.04 性能结论**：更新 `scripts/performance_benchmark_report.json`，追加 `v8_0_final`：
   concurrency_1 overall_p95=106.95ms，concurrency_50 overall_p95=120.90ms；N4.01 skip 确认
+- **N7.06 文档更新**：`docs/DEPLOYMENT-GUIDE.md` 追加 PostgreSQL 部署配置说明（N7.06 要求）；README.md v8.0 功能列表更新至 854 tests
 - **N7.05 安全扫描**：`bandit -r . -ll --exclude .venv,tests,docs` → 0 MEDIUM, 0 HIGH；新建 `.bandit` 配置
 - **N7.07 Docker 标签**：`Dockerfile` 添加 `LABEL version="8.0"`；`docker-compose.yml` 添加 `image: bazi:v8.0`
 

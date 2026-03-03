@@ -1,13 +1,13 @@
 # 部署指南 & 生产检查清单
 
-> **当前版本**: v8.0-release (2026-03-04)  
-> **Git 标签**: `git tag v8.0-release`  
-> **测试状态**: **833 passed** (全绿，含 N5/N6/N7 新增用例) · `bazi:v8.0`
+> **当前版本**: v8.0.3 (2026-03-04)  
+> **Git 标签**: `git tag v8.0.3`  
+> **测试状态**: **854 passed** (全绿，含 N5/N6/N7 新增用例) · `bazi:v8.0`
 
 ## 🎯 部署前检查清单
 
 ### 代码质量检查
-- [x] 所有测试通过 (833/833 — 含 N5/N6/N7 新增用例)
+- [x] 所有测试通过 (854/854 — 含 N5/N6/N7 新增用例)
 - [x] 无语法错误
 - [x] Pylance类型检查通过
 - [x] 核心引擎覆盖率 **99%** (bazi_engine 包整体，目标≥80%)，core modules均100%
@@ -560,7 +560,99 @@ app.add_middleware(
 
 ---
 
-## 📞 支持与维护
+## � PostgreSQL 生产部署配置（N7.06）
+
+生产环境建议将默认 SQLite 切换为 PostgreSQL，以获得更好的并发性能和数据可靠性。
+
+### 1. 安装 PostgreSQL 驱动
+
+```bash
+pip install asyncpg psycopg2-binary
+```
+
+或追加到 `requirements.txt`：
+
+```
+asyncpg>=0.29
+psycopg2-binary>=2.9
+```
+
+### 2. .env 配置示例
+
+```dotenv
+# SQLite（默认开发配置）
+# DATABASE_URL=sqlite:///./data/mingli.db
+
+# PostgreSQL（生产环境）
+DATABASE_URL=postgresql+asyncpg://bazi_user:StrongPass@localhost:5432/mingli
+
+# 连接池调优（PostgreSQL 推荐值）
+DB_POOL_SIZE=20
+DB_MAX_OVERFLOW=30
+DB_POOL_RECYCLE=3600
+```
+
+> ⚠️ `asyncpg` 异步驱动与 `SQLAlchemy` 异步引擎配合使用；如使用同步 ORM 查询，改用
+> `psycopg2` 并将 URL scheme 改为 `postgresql+psycopg2://`。
+
+### 3. 初始化数据库
+
+```bash
+# 创建数据库和用户
+psql -U postgres -c "CREATE USER bazi_user WITH PASSWORD 'StrongPass';"
+psql -U postgres -c "CREATE DATABASE mingli OWNER bazi_user;"
+
+# 执行 Alembic 迁移
+alembic upgrade head
+
+# 初始化种子数据（可选）
+python init_db.py
+```
+
+### 4. Docker Compose 集成
+
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bazi_user
+      POSTGRES_PASSWORD: StrongPass
+      POSTGRES_DB: mingli
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bazi_user -d mingli"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: bazi:v8.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://bazi_user:StrongPass@db:5432/mingli
+      DB_POOL_SIZE: "20"
+      DB_MAX_OVERFLOW: "30"
+
+volumes:
+  pgdata:
+```
+
+### 5. 性能对比参考
+
+| 指标 | SQLite (单机) | PostgreSQL (生产) |
+|------|--------------|------------------|
+| 并发写入 | 受 WAL 锁限制 | 多进程无锁 |
+| P95 响应（concurrency=50） | 120.9 ms | 预期 80-100 ms |
+| 连接池 | 不适用 | pool_size=20 |
+| 适用场景 | 开发 / 单节点演示 | 生产 / 多节点 |
+
+---
+
+## �📞 支持与维护
 
 ### 获取帮助
 - GitHub Issues: <repository-issues-url>
@@ -574,6 +666,6 @@ app.add_middleware(
 
 ---
 
-**部署指南版本**: v7.0  
-**最后更新**: 2026年3月3日  
+**部署指南版本**: v8.0.3
+**最后更新**: 2026年3月4日
 **维护者**: DevOps Team
