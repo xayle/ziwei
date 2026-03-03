@@ -54,7 +54,14 @@ def _user(session, username, role=Role.OWNER, active=True):
     session.add(u)
     session.commit()
     session.refresh(u)
+    assert u.id is not None
     return u
+
+
+def _nid(x: "User | Delegation") -> int:
+    """Return x.id as int, asserting not None after commit."""
+    assert x.id is not None
+    return x.id
 
 
 def _deleg(session, frm, to, perm, active=True, expires_at=None, scope=None):
@@ -222,7 +229,7 @@ class TestLogAndAudit:
     def test_log_action_creates_entry(self, session):
         owner = _user(session, "audit_own1")
         log = log_action(
-            session, owner.id,
+            session, _nid(owner),
             action="test_action",
             resource_type="member",
             resource_id="42",
@@ -235,7 +242,7 @@ class TestLogAndAudit:
     def test_log_action_with_error(self, session):
         owner = _user(session, "audit_own2")
         log = log_action(
-            session, owner.id,
+            session, _nid(owner),
             action="failed_op",
             resource_type="event",
             status="failure",
@@ -247,28 +254,28 @@ class TestLogAndAudit:
     def test_get_audit_logs_filter_by_user(self, session):
         owner = _user(session, "audit_own3")
         other = _user(session, "audit_other3")
-        log_action(session, owner.id, action="act1", resource_type="r")
-        log_action(session, other.id, action="act2", resource_type="r")
+        log_action(session, _nid(owner), action="act1", resource_type="r")
+        log_action(session, _nid(other), action="act2", resource_type="r")
         logs = get_audit_logs(session, user_id=owner.id)
         assert all(l.user_id == owner.id for l in logs)
 
     def test_get_audit_logs_filter_by_action(self, session):
         owner = _user(session, "audit_own4")
-        log_action(session, owner.id, action="unique_act_xyz", resource_type="r")
-        log_action(session, owner.id, action="other_act", resource_type="r")
+        log_action(session, _nid(owner), action="unique_act_xyz", resource_type="r")
+        log_action(session, _nid(owner), action="other_act", resource_type="r")
         logs = get_audit_logs(session, action="unique_act_xyz")
         assert all(l.action == "unique_act_xyz" for l in logs)
 
     def test_get_audit_logs_filter_by_resource(self, session):
         owner = _user(session, "audit_own5")
-        log_action(session, owner.id, action="a", resource_type="member")
-        log_action(session, owner.id, action="b", resource_type="event")
+        log_action(session, _nid(owner), action="a", resource_type="member")
+        log_action(session, _nid(owner), action="b", resource_type="event")
         logs = get_audit_logs(session, resource_type="member")
         assert all(l.resource_type == "member" for l in logs)
 
     def test_get_audit_logs_limit(self, session):
         owner = _user(session, "audit_own6")
         for i in range(10):
-            log_action(session, owner.id, action=f"bulk_{i}", resource_type="r")
+            log_action(session, _nid(owner), action=f"bulk_{i}", resource_type="r")
         logs = get_audit_logs(session, user_id=owner.id, limit=3)
         assert len(logs) <= 3

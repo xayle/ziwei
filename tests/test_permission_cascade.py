@@ -51,7 +51,14 @@ def _make_user(session: Session, username: str, role: Role, active: bool = True)
     session.add(u)
     session.commit()
     session.refresh(u)
+    assert u.id is not None
     return u
+
+
+def _nid(x: "User | Delegation") -> int:
+    """Return x.id as int, asserting not None after commit."""
+    assert x.id is not None
+    return x.id
 
 
 def _make_delegation(
@@ -64,8 +71,8 @@ def _make_delegation(
     member_scope=None,
 ) -> Delegation:
     d = Delegation(
-        from_user_id=from_user.id,
-        to_user_id=to_user.id,
+        from_user_id=_nid(from_user),
+        to_user_id=_nid(to_user),
         permission_type=perm.value,
         is_active=is_active,
         expires_at=expires_at,
@@ -87,12 +94,12 @@ class TestGetUserEffectivePermissions:
 
     def test_base_permissions_from_role(self, session: Session):
         owner = _make_user(session, "p_owner", Role.OWNER)
-        perms = get_user_effective_permissions(session, owner.id)
+        perms = get_user_effective_permissions(session, _nid(owner))
         assert Permission.DELETE_MEMBER in perms
 
     def test_viewer_base_permissions(self, session: Session):
         viewer = _make_user(session, "p_viewer", Role.VIEWER)
-        perms = get_user_effective_permissions(session, viewer.id)
+        perms = get_user_effective_permissions(session, _nid(viewer))
         assert Permission.READ_MEMBER in perms
         assert Permission.DELETE_MEMBER not in perms
 
@@ -100,7 +107,7 @@ class TestGetUserEffectivePermissions:
         owner = _make_user(session, "p_owner2", Role.OWNER)
         viewer = _make_user(session, "p_viewer2", Role.VIEWER)
         _make_delegation(session, owner, viewer, Permission.CREATE_MEMBER)
-        perms = get_user_effective_permissions(session, viewer.id)
+        perms = get_user_effective_permissions(session, _nid(viewer))
         assert Permission.CREATE_MEMBER in perms
 
     def test_expired_delegation_not_included(self, session: Session):
@@ -108,7 +115,7 @@ class TestGetUserEffectivePermissions:
         viewer = _make_user(session, "p_viewer3", Role.VIEWER)
         past = datetime.utcnow() - timedelta(hours=1)  # SQLite stores naive datetime
         _make_delegation(session, owner, viewer, Permission.CREATE_MEMBER, expires_at=past)
-        perms = get_user_effective_permissions(session, viewer.id)
+        perms = get_user_effective_permissions(session, _nid(viewer))
         assert Permission.CREATE_MEMBER not in perms
 
     def test_member_scope_filter(self, session: Session):
@@ -117,7 +124,7 @@ class TestGetUserEffectivePermissions:
         viewer = _make_user(session, "p_viewer4", Role.VIEWER)
         _make_delegation(session, owner, viewer, Permission.CREATE_MEMBER, member_scope=555)
         # 查询 member_id=1，与委托的 scope=555 不匹配
-        perms = get_user_effective_permissions(session, viewer.id, member_id=1)
+        perms = get_user_effective_permissions(session, _nid(viewer), member_id=1)
         assert Permission.CREATE_MEMBER not in perms
 
     def test_null_scope_matches_any_member(self, session: Session):
@@ -125,14 +132,14 @@ class TestGetUserEffectivePermissions:
         owner = _make_user(session, "p_owner5", Role.OWNER)
         viewer = _make_user(session, "p_viewer5", Role.VIEWER)
         _make_delegation(session, owner, viewer, Permission.CREATE_MEMBER, member_scope=None)
-        perms = get_user_effective_permissions(session, viewer.id, member_id=42)
+        perms = get_user_effective_permissions(session, _nid(viewer), member_id=42)
         assert Permission.CREATE_MEMBER in perms
 
     def test_inactive_delegation_not_included(self, session: Session):
         owner = _make_user(session, "p_owner6", Role.OWNER)
         viewer = _make_user(session, "p_viewer6", Role.VIEWER)
         _make_delegation(session, owner, viewer, Permission.CREATE_MEMBER, is_active=False)
-        perms = get_user_effective_permissions(session, viewer.id)
+        perms = get_user_effective_permissions(session, _nid(viewer))
         assert Permission.CREATE_MEMBER not in perms
 
 
@@ -143,7 +150,7 @@ class TestValidatePermissionEscalation:
     def test_valid_escalation_owner_has_perm(self, session: Session):
         owner = _make_user(session, "e_owner1", Role.OWNER)
         ok, err = validate_permission_escalation(
-            session, owner.id, Role.OWNER,
+            session, _nid(owner), Role.OWNER,
             Permission.DELETE_MEMBER,
         )
         assert ok is True
@@ -152,7 +159,7 @@ class TestValidatePermissionEscalation:
     def test_invalid_escalation_viewer_lacks_perm(self, session: Session):
         viewer = _make_user(session, "e_viewer1", Role.VIEWER)
         ok, err = validate_permission_escalation(
-            session, viewer.id, Role.VIEWER,
+            session, _nid(viewer), Role.VIEWER,
             Permission.DELETE_MEMBER,
         )
         assert ok is False
@@ -163,15 +170,15 @@ class TestValidatePermissionEscalation:
         owner = _make_user(session, "e_owner2", Role.OWNER)
         # 先手动插入一条 from=owner → to=owner 的委托
         d = Delegation(
-            from_user_id=owner.id,
-            to_user_id=owner.id,
+            from_user_id=_nid(owner),
+            to_user_id=_nid(owner),
             permission_type=Permission.DELETE_MEMBER.value,
             is_active=True,
         )
         session.add(d)
         session.commit()
         ok, err = validate_permission_escalation(
-            session, owner.id, Role.OWNER,
+            session, _nid(owner), Role.OWNER,
             Permission.DELETE_MEMBER,
         )
         assert ok is False
@@ -193,7 +200,7 @@ class TestValidatePermissionChain:
     def test_direct_role_permission(self, session: Session):
         owner = _make_user(session, "c_owner1", Role.OWNER)
         ok, err = validate_permission_chain(
-            session, owner.id,
+            session, _nid(owner),
             required_permission=Permission.DELETE_MEMBER,
         )
         assert ok is True
@@ -202,7 +209,7 @@ class TestValidatePermissionChain:
     def test_missing_permission_no_delegation(self, session: Session):
         viewer = _make_user(session, "c_viewer1", Role.VIEWER)
         ok, err = validate_permission_chain(
-            session, viewer.id,
+            session, _nid(viewer),
             required_permission=Permission.DELETE_MEMBER,
         )
         assert ok is False
@@ -212,7 +219,7 @@ class TestValidatePermissionChain:
         viewer = _make_user(session, "c_viewer2", Role.VIEWER)
         _make_delegation(session, owner, viewer, Permission.DELETE_MEMBER)
         ok, _ = validate_permission_chain(
-            session, viewer.id,
+            session, _nid(viewer),
             required_permission=Permission.DELETE_MEMBER,
         )
         assert ok is True
@@ -223,7 +230,7 @@ class TestValidatePermissionChain:
         past = datetime.utcnow() - timedelta(hours=2)  # SQLite stores naive datetime
         _make_delegation(session, owner, viewer, Permission.DELETE_MEMBER, expires_at=past)
         ok, _ = validate_permission_chain(
-            session, viewer.id,
+            session, _nid(viewer),
             required_permission=Permission.DELETE_MEMBER,
         )
         assert ok is False
@@ -233,7 +240,7 @@ class TestValidatePermissionChain:
         viewer = _make_user(session, "c_viewer4", Role.VIEWER)
         _make_delegation(session, owner, viewer, Permission.DELETE_MEMBER, member_scope=999)
         ok, _ = validate_permission_chain(
-            session, viewer.id,
+            session, _nid(viewer),
             required_permission=Permission.DELETE_MEMBER,
             member_id=1,
         )
@@ -242,7 +249,7 @@ class TestValidatePermissionChain:
     def test_chain_depth_exceeded(self, session: Session):
         viewer = _make_user(session, "c_viewer5", Role.VIEWER)
         ok, err = validate_permission_chain(
-            session, viewer.id,
+            session, _nid(viewer),
             required_permission=Permission.DELETE_MEMBER,
             chain_depth=10,
             max_chain_depth=3,
@@ -263,7 +270,7 @@ class TestRevokeDelegationAndDependent:
         owner = _make_user(session, "r_owner1", Role.OWNER)
         viewer = _make_user(session, "r_viewer1", Role.VIEWER)
         d = _make_delegation(session, owner, viewer, Permission.READ_MEMBER)
-        count = revoke_delegation_and_dependent(session, d.id, audit_user_id=owner.id)
+        count = revoke_delegation_and_dependent(session, _nid(d), audit_user_id=_nid(owner))
         assert count == 1
         session.refresh(d)
         assert d.is_active is False
@@ -275,7 +282,7 @@ class TestRevokeDelegationAndDependent:
         viewer = _make_user(session, "r_viewer2", Role.VIEWER)
         d1 = _make_delegation(session, owner, editor, Permission.READ_MEMBER)
         d2 = _make_delegation(session, editor, viewer, Permission.READ_MEMBER)
-        count = revoke_delegation_and_dependent(session, d1.id, audit_user_id=owner.id)
+        count = revoke_delegation_and_dependent(session, _nid(d1), audit_user_id=_nid(owner))
         assert count >= 2
         session.refresh(d1)
         session.refresh(d2)
@@ -327,8 +334,8 @@ class TestVerifyDelegationsIntegrity:
         owner = _make_user(session, "v_owner2", Role.OWNER)
         viewer = _make_user(session, "v_viewer2", Role.VIEWER)
         bad = Delegation(
-            from_user_id=owner.id,
-            to_user_id=viewer.id,
+            from_user_id=_nid(owner),
+            to_user_id=_nid(viewer),
             permission_type="invalid_perm_xyz",
             is_active=True,
         )

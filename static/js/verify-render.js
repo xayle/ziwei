@@ -255,8 +255,12 @@ function renderTab3(json, el) {
     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div>
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:6px">格局名称</div>
-        <div style="font-size:28px;font-weight:800;color:var(--text);font-family:var(--font-title)">${esc(g.geju_name||g.name||'未知格局')}</div>
+        <div style="font-size:28px;font-weight:800;color:var(--text);font-family:var(--font-title)">
+          ${esc(g.geju_name||g.name||'未知格局')}
+          ${(typeof g.confidence==='number'&&g.confidence<0.5)?`<span class="tag-uncertain" title="置信度${Math.round((g.confidence||0)*100)}%，格局尚不确定">待定</span>`:''}
+        </div>
         ${g.geju_level?`<div class="geju-tier-badge ${tierCls}" style="margin-top:8px;font-size:14px">${g.geju_level==='上格'?'▲ 上格':g.geju_level==='中格'?'◆ 中格':g.geju_level==='下格'?'▽ 下格':g.geju_level}</div>`:''}
+        ${(typeof g.confidence==='number')?`<div style="font-size:11px;color:var(--muted);margin-top:4px">置信度 ${Math.round(g.confidence*100)}%</div>`:''}
       </div>
       ${g.score!==undefined?`<div style="text-align:center"><div style="font-size:11px;color:var(--muted);font-weight:700">格局评分</div><div style="font-size:36px;font-weight:800;color:var(--accent-gold)">${g.score.toFixed(0)}</div></div>`:''}
     </div>

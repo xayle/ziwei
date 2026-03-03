@@ -273,6 +273,7 @@ class TestGetMetricsResponse:
         """Content-Type 为 Prometheus 格式"""
         from prometheus_client import CONTENT_TYPE_LATEST
         resp = get_metrics_response()
+        assert resp.media_type is not None
         assert CONTENT_TYPE_LATEST in resp.media_type
 
     def test_body_contains_metric_names(self):

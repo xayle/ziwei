@@ -9,7 +9,7 @@ import time
 import statistics
 import json
 from typing import List, Dict, Any
-import aiohttp
+import aiohttp  # type: ignore[import]
 from datetime import datetime
 
 # 测试配置

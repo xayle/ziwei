@@ -29,6 +29,10 @@ uv_err.txt
 .vscode/settings.json
 .idea/
 
+# 备份文件
+*.bak
+*.bak[0-9]*
+
 # 测试覆盖率
 .coverage
 htmlcov/

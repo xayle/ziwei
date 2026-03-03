@@ -77,16 +77,16 @@ class TestFiveElementsStringConversion:
     def test_invalid_string_raises_value_error(self):
         """非数字字符串触发 ValidationError（Lines 60-61）"""
         with pytest.raises(ValidationError):
-            FiveElementsModel(wood="abc", fire=10.0, earth=10.0, metal=10.0, water=10.0)
+            FiveElementsModel(wood="abc", fire=10.0, earth=10.0, metal=10.0, water=10.0)  # type: ignore[arg-type]
 
     def test_numeric_string_converts(self):
         """数字字符串正常转换为 float"""
-        m = FiveElementsModel(wood="30.5", fire=10.0, earth=10.0, metal=10.0, water=10.0)
+        m = FiveElementsModel(wood="30.5", fire=10.0, earth=10.0, metal=10.0, water=10.0)  # type: ignore[arg-type]
         assert m.wood == 30.5
 
     def test_integer_string_converts(self):
         """整数字符串正常转换"""
-        m = FiveElementsModel(wood="25", fire=10.0, earth=10.0, metal=10.0, water=10.0)
+        m = FiveElementsModel(wood="25", fire=10.0, earth=10.0, metal=10.0, water=10.0)  # type: ignore[arg-type]
         assert m.wood == 25.0
 
 
@@ -225,6 +225,7 @@ class TestGenericJsonValidators:
         """validate_json_string 返回正确模型实例（Lines 262-267）"""
         payload = json.dumps({"title": "ok", "confidence": 0.5})
         result = validate_json_string(payload, RecommendationModel)
+        assert isinstance(result, RecommendationModel)
         assert result.title == "ok"
 
     def test_validate_json_string_invalid_json_raises(self):

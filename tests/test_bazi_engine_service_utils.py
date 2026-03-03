@@ -265,6 +265,7 @@ class TestBuildMonthGanzhis:
     def test_jia_year_first_month_is_bingyin(self):
         """甲年正月（寅月）起天干丙 → 丙寅"""
         result = _build_month_ganzhis("甲")
+        assert result is not None
         assert result[0] == "丙寅"
 
     def test_all_valid_year_stems(self):
@@ -282,11 +283,13 @@ class TestBuildMonthGanzhis:
     def test_geng_year_first_month_is_wuyin(self):
         """庚年正月起天干戊 → 戊寅"""
         result = _build_month_ganzhis("庚")
+        assert result is not None
         assert result[0] == "戊寅"
 
     def test_month_branches_in_correct_order(self):
         """月支顺序：寅卯辰巳午未申酉戌亥子丑"""
         result = _build_month_ganzhis("甲")
+        assert result is not None
         branches = [gz[1] for gz in result]
         assert branches == list(_MONTH_BRANCHES)
 
