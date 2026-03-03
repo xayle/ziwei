@@ -218,7 +218,7 @@ def compute_geju(
         if meta["type"] == "outer":
             # 动态置信度：取主导五行比例计算
             if wuxing_scores:
-                dominant_elem = max(wuxing_scores, key=wuxing_scores.get)
+                dominant_elem = max(wuxing_scores, key=lambda k: wuxing_scores.get(k) or 0.0)
                 ratio = wuxing_scores[dominant_elem] / total_wx
                 if dominant_elem == day_elem:
                     confidence = min(0.5 + ratio * 0.5, 0.95)   # 从旺格类（同气）

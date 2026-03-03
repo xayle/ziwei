@@ -369,7 +369,7 @@ def approve_permission_request(
     # 乐观状态锁：UPDATE WHERE status='pending'
     from sqlalchemy import text as sa_text
     result = session.exec(  # type: ignore[call-overload]
-        sa_text(
+        sa_text(  # type: ignore[arg-type]
             "UPDATE delegations SET status='approved', approved_by=:approver, "
             "approved_at=:now, is_active=1, from_user_id=:from_uid "
             "WHERE id=:id AND status='pending'"

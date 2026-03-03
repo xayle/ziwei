@@ -79,7 +79,7 @@ class TestConfidenceRules:
     # ── 从旺格动态置信度 ────────────────────────────────────────────────
     def test_congwang_confidence_dynamic(self):
         """从旺格：木气80% → confidence = min(0.5+0.8*0.5, 0.95) = 0.90"""
-        scores = {"wood": 80, "fire": 5, "earth": 5, "metal": 5, "water": 5}
+        scores = {"wood": 80.0, "fire": 5.0, "earth": 5.0, "metal": 5.0, "water": 5.0}
         r = compute_geju("甲", "甲", "寅", "甲", "甲", wuxing_scores=scores)
         assert r["name"] in ("曲直格", "从旺格")
         # 期望 ≈ 0.90，允许 ±0.05
@@ -87,7 +87,7 @@ class TestConfidenceRules:
 
     def test_zhuanwang_confidence_lower_than_congwang(self):
         """专旺格（非日主元素）置信度低于从旺格同等比例"""
-        scores = {"wood": 5, "fire": 5, "earth": 5, "metal": 80, "water": 5}
+        scores = {"wood": 5.0, "fire": 5.0, "earth": 5.0, "metal": 80.0, "water": 5.0}
         # 甲日（木），金气80%，金非日主元素 → 从革格（专旺）
         r_special = compute_geju("庚", "庚", "酉", "甲", "庚", wuxing_scores=scores)
         # 甲日金80% → 专旺，confidence = min(0.4+0.8*0.4, 0.85) = min(0.72, 0.85) = 0.72
@@ -282,7 +282,7 @@ class TestGejuPriority:
     def test_huaqi_beats_outer(self):
         """化气格优先级 > 外格：即使五行极端，化气格优先"""
         # 甲日己月辰支 → 化土格；即使 wuxing_scores 中土≥70%，也应当是化土格
-        scores = {"wood": 5, "fire": 5, "earth": 75, "metal": 5, "water": 10}
+        scores = {"wood": 5.0, "fire": 5.0, "earth": 75.0, "metal": 5.0, "water": 10.0}
         r = compute_geju("庚", "己", "辰", "甲", "庚", wuxing_scores=scores)
         assert r["name"] == "化土格", f"化气格应优先，得 {r['name']}"
 

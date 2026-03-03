@@ -28,7 +28,7 @@ import os
 import time
 import random
 
-from locust import HttpUser, between, task, events
+from locust import HttpUser, between, task, events  # type: ignore[import-untyped]
 
 # ─── 配置 ─────────────────────────────────────────────────────────────────────
 TOKEN = os.getenv("API_TOKEN", "")

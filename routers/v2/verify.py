@@ -145,7 +145,7 @@ def v2_verify(
     vr = calc.verify_response
 
     if body.output_format == "minimal":
-        data: VerifyResponseFull | VerifyResponseMinimal = VerifyResponseMinimal(
+        data: VerifyResponseFull | VerifyResponseMinimal = VerifyResponseMinimal(  # type: ignore[call-overload]
             geju=vr.geju,
             yongshen=vr.yongshen,
             dayun_current=_find_current_dayun(vr.dayun),

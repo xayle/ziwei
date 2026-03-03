@@ -41,7 +41,7 @@ class AuditLogResponse(BaseModel):
     new_status: Optional[str] = None
     operator_id: Optional[int] = None
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _extract_rbac_fields(self) -> "AuditLogResponse":
         """从 details JSON 中提取 RBAC 关键字段（仅在字段未显式设置时）"""
         if self.details and self.action in (

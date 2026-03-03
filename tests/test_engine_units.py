@@ -1652,7 +1652,7 @@ class TestBalanceScore:
         """偏缺/偏旺检测逻辑验证"""
         from services.bazi_engine.scoring import get_wuxing_weak_strong
         # 均值=40; 弱阈<20; 强阈>72
-        wx = {"木": 30, "火": 5, "土": 40, "金": 55, "水": 100}
+        wx: dict[str, float] = {"木": 30.0, "火": 5.0, "土": 40.0, "金": 55.0, "水": 100.0}
         weak, strong = get_wuxing_weak_strong(wx)
         assert "火" in weak, "火分值=5，均值=46，5<23，应为偏缺"
         assert "水" in strong, "水分值=100，均值=46，100>82.8，应为偏旺"

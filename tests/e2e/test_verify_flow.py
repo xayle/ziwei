@@ -27,7 +27,7 @@ BASE_URL = os.getenv("E2E_BASE_URL", "http://localhost:8000")
 
 playwright_available = False
 try:
-    import playwright  # noqa: F401
+    import playwright  # noqa: F401  # type: ignore[import-untyped]
     playwright_available = True
 except ImportError:
     pass
@@ -44,7 +44,7 @@ pytestmark = pytest.mark.skipif(
 
 def _fill_verify_form(page, dt: str = "1990-03-15T08:30") -> None:
     """填写排盘表单并点击提交."""
-    from playwright.sync_api import expect  # noqa: F401
+    from playwright.sync_api import expect  # noqa: F401  # type: ignore[import-untyped]
 
     page.goto(f"{BASE_URL}/verify")
     page.wait_for_load_state("networkidle", timeout=10_000)
@@ -216,7 +216,7 @@ def test_expired_token_redirects(page):
 def test_csv_over_limit_blocked(page):
     """场景5（R39）: 上传超 50 行 CSV → 断言前端拦截，不发出网络请求."""
     import io
-    from playwright.sync_api import Route
+    from playwright.sync_api import Route  # type: ignore[import-untyped]
 
     page.goto(f"{BASE_URL}/batch")
     page.wait_for_load_state("domcontentloaded")

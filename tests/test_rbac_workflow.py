@@ -296,7 +296,7 @@ def test_concurrent_approve_returns_409(engine, session: Session):
         # 在 s1 中创建 pending delegation
         d = Delegation(
             from_user_id=0,
-            to_user_id=requester.id,
+            to_user_id=requester.id or 0,
             permission_type="view",
             is_active=False,
             status="pending",
@@ -310,7 +310,7 @@ def test_concurrent_approve_returns_409(engine, session: Session):
         # admin_a 先批准
         from sqlalchemy import text as sa_text
         result_a = s1.exec(  # type: ignore[call-overload]
-            sa_text(
+            sa_text(  # type: ignore[arg-type]
                 "UPDATE delegations SET status='approved', approved_by=:approver, "
                 "is_active=1, from_user_id=:approver "
                 "WHERE id=:id AND status='pending'"
@@ -321,7 +321,7 @@ def test_concurrent_approve_returns_409(engine, session: Session):
 
         # admin_b 后批准（rowcount 应为 0）
         result_b = s2.exec(  # type: ignore[call-overload]
-            sa_text(
+            sa_text(  # type: ignore[arg-type]
                 "UPDATE delegations SET status='approved', approved_by=:approver, "
                 "is_active=1, from_user_id=:approver "
                 "WHERE id=:id AND status='pending'"
