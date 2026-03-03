@@ -34,6 +34,9 @@ services:
       # 数据库配置 (可选，默认SQLite)
       DB_PATH: "${DB_PATH:-/app/data/bazi.db}"
       
+      # 引擎路由开关 (M1任务1.23: M1完成后切为 true)
+      ENGINE_V2: "${ENGINE_V2:-true}"
+      
       # API配置
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}"
     
