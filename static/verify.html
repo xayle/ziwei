@@ -239,5 +239,45 @@
 <script src="/static/js/verify-compare.js?v=20260301"></script>
 <script src="/static/js/verify-export.js?v=20260301"></script>
   <script src="/static/js/verify-guide.js?v=20260301"></script>
+
+<!-- task 4.23: 数据来源页脚 (SRC-6) -->
+<footer class="footer" style="margin:16px;max-width:900px;margin-left:auto;margin-right:auto" aria-label="版权与来源说明">
+  <div style="margin-bottom:6px"><span class="footer-brand">八字命理工作台 v7.0</span> &nbsp;·&nbsp; 规则版本 r7.0 &nbsp;·&nbsp; 算法 ENGINE_V2</div>
+  <div style="color:var(--muted);line-height:1.8">
+    ① 本站<strong>不主动存储</strong>您的生日信息（分享链接除外，使用前请知情确认）。<br/>
+    ② 本工具<strong>仅供学术研究与娱乐参考</strong>，不代替专业建议，不作任何决策依据。<br/>
+    ③ <strong>数据来源</strong>：《三命通会》《渊海子平》《子平真诠》《协纪辨方书》；节气基于 sxtwl VSOP87 天文历；藏干权重参考现代命理界通行约定。<br/>
+    ④ <strong>算法版本</strong>：ENGINE_V2 r7.0 · 五行/用神/格局/神煞/大运 均按规格 §1.01–§1.18 实现。
+  </div>
+</footer>
+
+<!-- task 4.23: 免责声明首次弹窗 (localStorage=bazi_disclaimer_v1) -->
+<div id="disclaimerOverlay" role="dialog" aria-modal="true" aria-labelledby="disclaimerTitle" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;flex-direction:column;align-items:center;justify-content:center">
+  <div style="background:var(--panel);border-radius:18px;padding:28px 24px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <h2 id="disclaimerTitle" style="font-family:var(--font-title);color:var(--accent-red);margin-bottom:16px;font-size:18px">使用须知</h2>
+    <div style="font-size:13px;line-height:2;color:var(--text)">
+      ① 本站<strong>不主动存储</strong>您的个人信息。<br/>
+      ② 本工具仅供<strong>学术研究与娱乐参考</strong>，不作任何决策依据。<br/>
+      ③ 数据来源：《三命通会》《渊海子平》等传统典籍及 sxtwl 天文历。<br/>
+      ④ 算法版本 ENGINE_V2 r7.0，计算结果仅代表命理学研究视角。
+    </div>
+    <button id="disclaimerBtn" style="margin-top:20px;width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer">我已了解，开始使用</button>
+  </div>
+</div>
+<script>
+(function(){
+  var KEY='bazi_disclaimer_v1';
+  if(!localStorage.getItem(KEY)){
+    var el=document.getElementById('disclaimerOverlay');
+    if(el){el.style.display='flex';}
+    var btn=document.getElementById('disclaimerBtn');
+    if(btn){btn.addEventListener('click',function(){
+      localStorage.setItem(KEY,'1');
+      document.getElementById('disclaimerOverlay').style.display='none';
+    });}
+  }
+  // display:none 初始已设置，无需 else 分支
+})();
+</script>
 </body>
 </html>
