@@ -609,6 +609,22 @@ function announceStatus(msg) {
 }
 window.announceStatus = announceStatus;
 
+/* task 4.23: 首次访问免责声明弹窗 (localStorage=bazi_disclaimer_v1) */
+function initDisclaimer() {
+  var KEY = 'bazi_disclaimer_v1';
+  if (!localStorage.getItem(KEY)) {
+    var el = document.getElementById('disclaimerOverlay');
+    if (el) { el.style.display = 'flex'; }
+    var btn = document.getElementById('disclaimerBtn');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        localStorage.setItem(KEY, '1');
+        document.getElementById('disclaimerOverlay').style.display = 'none';
+      });
+    }
+  }
+}
+
 /* 主初始化 */
 document.addEventListener('DOMContentLoaded', () => {
   initDarkMode();
@@ -622,6 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
   restoreTabFromURL();
   initPWA();
   maybeShowOnboarding();
+  initDisclaimer();  // task 4.23: 首次免责声明弹窗
   // Keyboard shortcut: Enter 提交
   document.addEventListener('keydown', e => {
     const tag = document.activeElement?.tagName;

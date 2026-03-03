@@ -234,7 +234,8 @@
 </div>
 
 <!-- M5.03: SheetJS 本地版，用于真正的 .xlsx 6-Sheet 导出 -->
-<script src="/static/js/xlsx.mini.min.js"></script>
+<script src="/static/js/xlsx.mini.min.js?v=0.20.3"></script>
+<script src="/static/js/verify-core.js?v=20260303"></script>
 <script src="/static/js/relation-shared.js?v=20260301"></script>
 <script src="/static/js/verify-chart.js?v=20260301"></script>
 <script src="/static/js/verify-render.js?v=20260301"></script>
@@ -266,20 +267,5 @@
     <button id="disclaimerBtn" style="margin-top:20px;width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer">我已了解，开始使用</button>
   </div>
 </div>
-<script>
-(function(){
-  var KEY='bazi_disclaimer_v1';
-  if(!localStorage.getItem(KEY)){
-    var el=document.getElementById('disclaimerOverlay');
-    if(el){el.style.display='flex';}
-    var btn=document.getElementById('disclaimerBtn');
-    if(btn){btn.addEventListener('click',function(){
-      localStorage.setItem(KEY,'1');
-      document.getElementById('disclaimerOverlay').style.display='none';
-    });}
-  }
-  // display:none 初始已设置，无需 else 分支
-})();
-</script>
 </body>
 </html>

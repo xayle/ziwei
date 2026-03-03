@@ -1,16 +1,16 @@
 # 部署指南 & 生产检查清单
 
-> **当前版本**: v7.0-release (2026-03-02)  
+> **当前版本**: v7.0-release (2026-03-03)  
 > **Git 标签**: `git tag v7.0-release`  
-> **测试状态**: 348 passed, 1 xfailed (pre-existing)
+> **测试状态**: 558 passed (全绿，含 M5/M6 新增用例)
 
 ## 🎯 部署前检查清单
 
 ### 代码质量检查
-- [x] 所有测试通过 (348/348 — 含 M6 新增 P0-11/P0-21/P0-23/M6.06/M6.08/M6.09/§4.13/红线#32 用例)
+- [x] 所有测试通过 (558/558 — 含 M5/M6 新增 P0-11/P0-21/P0-22/P0-23/M6.06/M6.08/M6.09/§4.13/红线#32-35 用例)
 - [x] 无语法错误
 - [x] Pylance类型检查通过
-- [x] 核心引擎覆盖率 **89%** (bazi_engine 包整体)，五大核心模块 ≥94%，liunian/personality 均100%
+- [x] 核心引擎覆盖率 **99%** (bazi_engine 包整体，目标≥80%)，core modules均100%
 - [x] 无未处理的异常
 - [x] 所有导入解决
 
@@ -60,11 +60,13 @@
 - [x] 更新日志记录
 
 ### M6 验收门 (v7.0 新增)
-- [x] `pytest tests/` 全通过 (核心引擎覆盖率 89% ≥ 80%)
-- [x] `/verify` P99 延迟 < 3s (localhost 实测 5 次最大 < 0.5s)
-- [x] Docker healthcheck 使用 `urllib.request` (非 `requests`) [F4]
+- [x] `pytest tests/` 全通过 (558 passed，核心引擎覆盖率 99% ≥ 80%)
+- [x] `/verify` P99 延迟 < 3s (localhost 实测 5 次平均 **19ms**)
+- [x] Docker healthcheck 使用 `urllib.request` [F4]，URL 已修正为 `/health`
 - [x] `.dockerignore` 排除 `.env` / `.env.*` / `data/*.db` [M6.10]
-- [x] `git tag v7.0-release` 已打标
+- [x] SheetJS xlsx.mini.min.js (280KB) 本地化，Excel 6 Sheet 导出 [M5.03/P0-22]
+- [x] CSV 字段名与 API 响应字段名零不匹配 [M5.02/红线#12]
+- [x] `git tag v7.0-release` 已打标 (HEAD=a8ef496)
 
 ### .dockerignore 验证 (M6.10)
 确认以下路径均在 `.dockerignore` 中排除，构建镜像不含敏感文件：
@@ -569,6 +571,6 @@ app.add_middleware(
 
 ---
 
-**部署指南版本**: v1.0  
-**最后更新**: 2026年2月25日  
+**部署指南版本**: v7.0  
+**最后更新**: 2026年3月3日  
 **维护者**: DevOps Team
