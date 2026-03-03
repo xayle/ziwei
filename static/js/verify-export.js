@@ -46,56 +46,116 @@ function exportJSON(json) {
 window.exportJSON = exportJSON;
 
 /* ══════════════════════════════════════════════════
-   CSV 导出  M5.02 (单表，关键字段)
+   CSV 导出  M5.02 (单表，字段名与 VerifyResponseModel 一致)
+   格式: 两列 [field_path, value]，UTF-8 BOM
+   spec §5.03: 所有字段名与 API 响应 schema 零不匹配
 ═══════════════════════════════════════════════════ */
 function exportCSV(json) {
   const rows = [];
-  const add  = (label, value) => rows.push([label, value]);
+  // 行以 [api_field_path, value] 格式 → 与 VerifyResponseModel 字段名零不匹配
+  const add  = (field, value) => rows.push([field, value]);
 
-  add('请求ID',  json.request_id||'');
-  add('API版本', json.api_version||'');
-  add('规则版本', json.rule_version||'');
-  add('模式',    json.mode_effective||'');
-  add('输入时间', json.dt_input||'');
+  // 顶层字段
+  add('request_id',                json.request_id||'');
+  add('api_version',               json.api_version||'');
+  add('rule_version',              json.rule_version||'');
+  add('mode_effective',            json.mode_effective||'');
+  add('dt_input',                  json.dt_input||'');
+  add('solar_time_offset_minutes', json.solar_time_offset_minutes??'');
 
+  // 四柱
   const p = json.pillars_primary||{};
-  const CN = {year:'年',month:'月',day:'日',hour:'时'};
   ['year','month','day','hour'].forEach(k => {
-    add(`${CN[k]}柱天干`, p[k]?.stem||'');
-    add(`${CN[k]}柱地支`, p[k]?.branch||'');
-    add(`${CN[k]}柱干支`, p[k]?.ganzhi||'');
+    add(`pillars_primary.${k}.stem`,    p[k]?.stem||'');
+    add(`pillars_primary.${k}.branch`,  p[k]?.branch||'');
+    add(`pillars_primary.${k}.ganzhi`,  p[k]?.ganzhi||'');
   });
 
+  // 十神
   const tg = json.ten_gods||{};
-  ['year','month','day','hour'].forEach(k => add(`${CN[k]}柱十神`, k==='day'?'日主':(tg[k]||'')));
+  ['year','month','day','hour'].forEach(k => add(`ten_gods.${k}`, k==='day'?'ri_zhu':(tg[k]||'')));
 
+  // 五行
   const wx = json.wuxing_score||{};
-  const WX_CN = {wood:'木',fire:'火',earth:'土',metal:'金',water:'水'};
-  ['wood','fire','earth','metal','water'].forEach(k=>{
-    add(`五行_${WX_CN[k]}`, (wx[k]||0).toFixed(2));
-  });
+  ['wood','fire','earth','metal','water'].forEach(k => add(`wuxing_score.${k}`, (wx[k]||0).toFixed(2)));
 
-  add('日主强弱',   json.day_master_strength?.tier||'');
-  add('日主强弱分', (json.day_master_strength?.score||0).toFixed(2));
+  // 日主
+  add('day_master_strength.tier',  json.day_master_strength?.tier||'');
+  add('day_master_strength.score', (json.day_master_strength?.score||0).toFixed(2));
 
+  // 格局
   const g = json.geju||{};
-  add('格局名称',   g.geju_name||'');    // geju_name field per schema
-  add('格局评级',   g.geju_level||'');   // geju_level field per schema
-  add('月干十神',   g.month_stem_shishen||'');
+  add('geju.geju_name',            g.geju_name||'');
+  add('geju.geju_level',           g.geju_level||'');
+  add('geju.month_stem_shishen',   g.month_stem_shishen||'');
+  add('geju.classic_ref',          g.classic_ref||'');
 
-  add('校验级别',   json.validation?.level||'');
+  // 用神
+  add('yongshen.favor',            (json.yongshen?.favor||[]).join('/'));
+  add('yongshen.avoid',            (json.yongshen?.avoid||[]).join('/'));
 
-  add('财运分',     (json.wealth_analysis?.wealth_score??''));
-  add('财运层级',   json.wealth_analysis?.wealth_tier||'');
-  add('推荐行业',   (json.wealth_analysis?.industries||[]).join('/'));
-  add('事业分',     (json.career?.career_score??''));
-  add('职业方向',   (json.career?.career_directions||[]).join('/'));
-  add('婚姻分',     (json.marriage_analysis?.marriage_score??''));
-  add('桃花旺衰',   json.marriage_analysis?.peach_blossom||'');
-  add('健康分',     (json.health?.health_score??''));
-  add('健康风险',   json.health?.risk_level||'');
-  add('人际分',     (json.relationship?.relationship_score??''));
-  add('人生格局',   json.life_arc?.overall_tier||'');
+  // 校验
+  add('validation.level',          json.validation?.level||'');
+  add('validation.mode_effective', json.validation?.mode_effective||'');
+
+  // 财运
+  const wa = json.wealth_analysis||{};
+  add('wealth_analysis.wealth_score',  wa.wealth_score??'');
+  add('wealth_analysis.wealth_tier',   wa.wealth_tier||'');
+  add('wealth_analysis.annual_range',  wa.annual_range||'');
+  add('wealth_analysis.industries',    (wa.industries||[]).join('/'));
+
+  // 事业
+  const ca = json.career||{};
+  add('career.career_score',        ca.career_score??'');
+  add('career.career_directions',   (ca.career_directions||[]).join('/'));
+  add('career.leadership_potential',ca.leadership_potential?'true':'false');
+  add('career.optimal_move_timing', ca.optimal_move_timing||'');
+
+  // 婚姻
+  const ma = json.marriage_analysis||{};
+  add('marriage_analysis.marriage_score',      ma.marriage_score??'');
+  add('marriage_analysis.peach_blossom',       ma.peach_blossom||'');
+  add('marriage_analysis.partner_wuxing',      ma.partner_wuxing||'');
+  add('marriage_analysis.optimal_marriage_age',ma.optimal_marriage_age||'');
+
+  // 健康
+  const ha = json.health||{};
+  add('health.health_score',   ha.health_score??'');
+  add('health.risk_organs',    (ha.risk_organs||[]).join('/'));
+  add('health.risk_level',     ha.risk_level||'');
+
+  // 人际
+  const ra = json.relationship||{};
+  add('relationship.relationship_score', ra.relationship_score??'');
+  add('relationship.social_strategy',    ra.social_strategy||'');
+
+  // 性格
+  const pe = json.personality||{};
+  add('personality.day_stem',      pe.day_stem||'');
+  add('personality.day_stem_trait',pe.day_stem_trait||'');
+  add('personality.advantages',    (pe.advantages||[]).join('；'));
+  add('personality.disadvantages', (pe.disadvantages||[]).join('；'));
+
+  // 人生弧线
+  const la = json.life_arc||{};
+  add('life_arc.overall_tier',  la.overall_tier||'');
+  add('life_arc.early_fortune', la.early_fortune||'');
+  add('life_arc.mid_fortune',   la.mid_fortune||'');
+  add('life_arc.late_fortune',  la.late_fortune||'');
+  add('life_arc.peak_periods',  (la.peak_periods||[]).join('；'));
+
+  // 大运概要
+  const dy = json.dayun||{};
+  add('dayun.method',         dy.method||'');
+  add('dayun.start_age',      dy.start_age??'');
+  add('dayun.items_count',    (dy.items||[]).length);
+
+  // 神煞数量
+  add('shensha_count',        (json.shensha||[]).length);
+
+  // header 行
+  rows.unshift(['field_path', 'value']);
 
   const csvContent = '\uFEFF' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
   const blob = new Blob([csvContent], { type:'text/csv;charset=utf-8' });

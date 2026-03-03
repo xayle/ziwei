@@ -51,7 +51,7 @@ EXPOSE 8000
 
 # M6.11: Docker healthcheck (urllib, 无需安装 requests) [F4]
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD python -c "import urllib.request, sys; urllib.request.urlopen('http://localhost:8000/api/v1/health', timeout=8); sys.exit(0)" || exit 1
+  CMD python -c "import urllib.request, sys; urllib.request.urlopen('http://localhost:8000/health', timeout=8); sys.exit(0)" || exit 1
 
 # 启动应用
 CMD ["sh", "-c", "uvicorn run:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS} --log-level ${UVICORN_LOG_LEVEL}"]
