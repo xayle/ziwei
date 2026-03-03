@@ -12,7 +12,7 @@ Phase 2 性能测试 - 验证深度优化效果
 import json
 import time
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import httpx
 
@@ -36,7 +36,7 @@ class Phase2PerformanceTest:
     
     def __init__(self):
         self.results = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "test_config": {
                 "duration_seconds": TEST_DURATION,
                 "concurrency_levels": CONCURRENCY_LEVELS,
@@ -67,7 +67,7 @@ class Phase2PerformanceTest:
                         "status": "pass",
                         "status_code": response.status_code,
                         "response_time_ms": duration,
-                        "timestamp": datetime.utcnow().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                     return True
                 else:

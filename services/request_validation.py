@@ -42,8 +42,9 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             try:
                 size = int(content_length)
                 if size > MAX_REQUEST_SIZE:
+                    _client_host = request.client.host if request.client else "unknown"
                     logger.warning(
-                        f"Request too large: {size} bytes from {request.client.host} "
+                        f"Request too large: {size} bytes from {_client_host} "
                         f"to {request.url.path}"
                     )
                     return Response(
@@ -61,9 +62,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             
             # 检查是否有有效的 Content-Type
             if not content_type:
+                _client_host = request.client.host if request.client else "unknown"
                 logger.warning(
                     f"Missing Content-Type header for {request.method} "
-                    f"from {request.client.host} to {request.url.path}"
+                    f"from {_client_host} to {request.url.path}"
                 )
                 return Response(
                     "Content-Type header is required",
@@ -76,9 +78,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 allowed in content_type for allowed in ALLOWED_CONTENT_TYPES
             )
             if not is_valid:
+                _client_host = request.client.host if request.client else "unknown"
                 logger.warning(
                     f"Invalid Content-Type '{content_type}' for {request.method} "
-                    f"from {request.client.host} to {request.url.path}"
+                    f"from {_client_host} to {request.url.path}"
                 )
                 return Response(
                     f"Unsupported Content-Type. Allowed: {', '.join(ALLOWED_CONTENT_TYPES)}",

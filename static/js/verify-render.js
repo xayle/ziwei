@@ -197,6 +197,39 @@ function renderTab2(json, el) {
   if (typeof renderWuxingRingChart === 'function') {
     renderWuxingRingChart(wx, $('wuxingRingContainer'));
   }
+
+  // Task 4.20 [P69]: 地支关系★标记渲染
+  const dzRels = json.dizhi_relations||[];
+  const tgClashes = json.tiangan_clashes||[];
+  if (dzRels.length || tgClashes.length) {
+    const starMark = dzRels.length >= 3 ? '<span style="color:var(--accent-gold);font-size:16px;font-weight:900" title="地支多关系≥3条★">★</span> ' : '';
+    const relChips = dzRels.map(r => {
+      const brs = (r.branches||[]).join('');
+      const status = r.status ? `<small class="hint">${esc(r.status)}</small>` : '';
+      const elem = r.element ? `<small style="color:var(--muted)">${esc(r.element)}</small>` : '';
+      const relType = r.type||'';
+      const isHarm = relType.includes('冲') || relType.includes('刑') || relType.includes('害') || relType.includes('破');
+      return `<span class="chip${isHarm?' bad':' ok'}" title="${esc(relType)}: ${esc(r.positions?.join('→')||'')}">
+        ${esc(brs)} ${esc(relType)} ${status} ${elem}
+      </span>`;
+    }).join('');
+    const clashChips = tgClashes.map(c => {
+      const stems = (c.stems||[]).join('');
+      const scope = c.scope ? `<small class="hint">${esc(c.scope)}</small>` : '';
+      return `<span class="chip bad" title="${esc(c.type||'克')}: ${esc(c.positions?.join('→')||'')}">
+        ${esc(stems)} 克 ${scope}
+      </span>`;
+    }).join('');
+    const relCard = document.createElement('div');
+    relCard.className = 'card';
+    relCard.style.marginTop = '12px';
+    relCard.innerHTML = `
+      <p class="card-title"><span class="dot"></span>${starMark}地支关系（${dzRels.length}条）${tgClashes.length?` · 天干相克（${tgClashes.length}条）`:''}</p>
+      ${relChips?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:${tgClashes.length?'10px':'0'}">${relChips}</div>`:''}
+      ${clashChips?`<div style="display:flex;flex-wrap:wrap;gap:6px">${clashChips}</div>`:''}
+    `;
+    el.appendChild(relCard);
+  }
 }
 
 /* ══════════════════════════════════════════════════
