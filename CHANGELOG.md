@@ -21,7 +21,13 @@ All notable changes to this project will be documented in this file.
 - **M6.09 覆盖率**：核心引擎 **99%**（目标 ≥ 80%）— 测试 **558 passed**
 - **M6.10 .dockerignore**：排除 `.env` / `*.db` / `data/*.db` 已验证
 - **M6.11 Dockerfile HEALTHCHECK URL**：`/api/v1/health` → `/health`（与实际路由一致）
-- **M6.13 git tag**：`v7.0-release` at `e1bf18e`
+- **M6.13 git tag**：`v7.0-release` at HEAD (最终提交见下)
+
+#### 补充提交（本 session 完成）
+- **M1.09 神煞优先级**：`ShenshaModel` 新增 `priority: Literal["A","B","C"]`，API 返回 `天乙贵人 priority=A`，前端 Tab4 按优先级分组渲染 (commit `5c6bb39`)
+- **M3.02 大运叙事字数**：`generate_dayun_narrative()` 结构化输出 400-600 字（事业/财运/情感/健康/古籍/声明），实测 478 字 (commit `c04548e`)
+- **M3.03 城市/行业财富乘数**：`VerifyRequest` 新增 `city_tier`/`industry` 字段，`wealth_range` 按 一线×1.8 / 新一线×1.2 / 金融IT×1.5 / 教育公务×0.8 动态计算 (commit `1729763`)
+- **M6.12 部署文档**：`DEPLOYMENT-GUIDE.md` HEAD hash 同步 (commit `35d6c4d`)
 
 #### 免责声明与页脚 (task 4.23)
 - `<footer>` 四款声明（不存储/娱乐参考/数据来源/算法版本）

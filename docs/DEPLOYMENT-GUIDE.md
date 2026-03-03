@@ -66,7 +66,7 @@
 - [x] `.dockerignore` 排除 `.env` / `.env.*` / `data/*.db` [M6.10]
 - [x] SheetJS xlsx.mini.min.js (280KB) 本地化，Excel 6 Sheet 导出 [M5.03/P0-22]
 - [x] CSV 字段名与 API 响应字段名零不匹配 [M5.02/红线#12]
-- [x] `git tag v7.0-release` 已打标 (HEAD=1729763)
+- [x] `git tag v7.0-release` 已打标 (HEAD=35d6c4d，最终发布状态)
 
 ### .dockerignore 验证 (M6.10)
 确认以下路径均在 `.dockerignore` 中排除，构建镜像不含敏感文件：

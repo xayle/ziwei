@@ -22,6 +22,8 @@ env/
 # 日志
 logs/
 *.log
+uvicorn_err.txt
+uv_err.txt
 
 # IDE
 .vscode/settings.json
