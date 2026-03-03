@@ -1,6 +1,4 @@
 """数据模型包 - 集中导出所有SQLModel模型."""
-from __future__ import annotations
-
 # Core models
 from .base import User, RefreshToken
 from .case import Case, Snapshot

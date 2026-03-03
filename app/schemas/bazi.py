@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -107,7 +107,7 @@ class MarriageModel(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "MarriageModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "marriage_flags": self.marriage_flags.model_dump() if self.marriage_flags else None,
@@ -132,7 +132,7 @@ class WealthModel(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "WealthModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "wealth_score": self.wealth_score,

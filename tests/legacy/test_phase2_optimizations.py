@@ -11,7 +11,7 @@ import json
 import time
 import statistics
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -39,7 +39,7 @@ def log(message: str, severity: str = "INFO"):
         # 如果编码失败，尝试使用 ascii 模式
         print(f"[{timestamp}] {severity:8s} | {message.encode('ascii', 'ignore').decode('ascii')}")
 
-def get_auth_token() -> str:
+def get_auth_token() -> Optional[str]:
     """获取认证 token"""
     global DEMO_USER_TOKEN
     
@@ -98,7 +98,7 @@ def get_auth_token() -> str:
         log(f"❌ 登录异常: {e}", "ERROR")
         return None
 
-def make_request(method: str, endpoint: str, data: Dict = None, params: Dict = None) -> tuple[int, Any, float]:
+def make_request(method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None) -> tuple[int, Any, float]:
     """
     发起 HTTP 请求，记录响应时间
     返回: (status_code, response_json, response_time_ms)

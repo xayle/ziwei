@@ -11,6 +11,7 @@ tests/test_analysis_coverage.py — 覆盖率补充测试
 """
 from __future__ import annotations
 
+from typing import Any
 import pytest
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -638,7 +639,7 @@ class TestWealthBranches:
 
     def _compute(self, **kw):
         from services.bazi_engine.analysis.wealth import compute_wealth
-        defaults = dict(
+        defaults: dict[str, Any] = dict(
             yongshen_favor=["wood", "water"],
             yongshen_avoid=["metal", "earth"],
             wuxing_scores={"wood": 30.0, "fire": 20.0, "earth": 15.0,
@@ -730,7 +731,7 @@ class TestInterpretBranches:
 
     def _interpret(self, **kw):
         from services.bazi_engine.interpret import interpret_bazi, InterpretInput
-        defaults = dict(
+        defaults: dict[str, Any] = dict(
             day_stem="甲",
             wuxing_scores={"wood": 20.0, "fire": 20.0, "earth": 20.0,
                            "metal": 20.0, "water": 20.0},

@@ -91,16 +91,20 @@ def compute_monthly(
     yongshen_avoid: list[str],     # 忌神五行（英文）
     year_branch: str = "",         # 流年地支（可选）
     mode: str = "dual",            # "dual" | "single"
+    month_ganzhis: list[str] | None = None,  # 12个月干支，如["甲寅","乙卯",...]
+    current_dayun_stem: str | None = None,   # 当前大运天干
 ) -> list[MonthlyFortuneModel]:
     """
     §4.11-G 月运引擎
 
     Parameters:
-        day_branch:     日支（配偶宫同时是月运基准）
-        yongshen_favor: 用神五行列表
-        yongshen_avoid: 忌神五行列表
-        year_branch:    流年干支中的地支
-        mode:           "dual"=双身份完整推算; "single"=全部降级为"平"
+        day_branch:         日支（配偶宫同时是月运基准）
+        yongshen_favor:     用神五行列表
+        yongshen_avoid:     忌神五行列表
+        year_branch:        流年干支中的地支
+        mode:               "dual"=双身份完整推算; "single"=全部降级为"平"
+        month_ganzhis:      长度12的月干支列表，如["甲寅","乙卯",...]；None则不填充
+        current_dayun_stem: 当前大运天干，如"甲"；None则不填充
 
     Returns:
         list[MonthlyFortuneModel] — 长度恰好 12
@@ -120,6 +124,8 @@ def compute_monthly(
                 color_hint="灰/白",
                 tip="本月平稳，顺势而为。",
                 clash_with=None,
+                month_ganzhi=month_ganzhis[month_idx] if month_ganzhis else None,
+                dayun_stem=current_dayun_stem,
             ))
             continue
 
@@ -176,6 +182,8 @@ def compute_monthly(
             color_hint=color_hint,
             tip=tip,
             clash_with=clash_with,
+            month_ganzhi=month_ganzhis[month_idx] if month_ganzhis else None,
+            dayun_stem=current_dayun_stem,
         ))
 
     return results

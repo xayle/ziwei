@@ -463,6 +463,49 @@ def calculate(
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# 月干支辅助（五虎遁年起月法）
+# ──────────────────────────────────────────────────────────────────────────────
+
+_STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+_MONTH_BRANCHES = ["寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子", "丑"]
+# 山年令天干对应正月（寅月）起天干
+_YEAR_STEM_MONTH1_STEM: dict[str, str] = {
+    "甲": "丙", "己": "丙",
+    "乙": "戊", "庚": "戊",
+    "丙": "庚", "辛": "庚",
+    "丁": "壬", "壬": "壬",
+    "戊": "甲", "癸": "甲",
+}
+
+
+def _build_month_ganzhis(year_stem: str) -> list[str] | None:
+    """根据年天干，返回当年12个月的干支（正月=寅月起）。"""
+    start = _YEAR_STEM_MONTH1_STEM.get(year_stem)
+    if not start:
+        return None
+    start_idx = _STEMS.index(start)
+    return [
+        _STEMS[(start_idx + i) % 10] + _MONTH_BRANCHES[i]
+        for i in range(12)
+    ]
+
+
+def _get_current_dayun_stem(dayun_list: list[dict], birth_year: int) -> str | None:
+    """根据今年推算当前大运天干。"""
+    from datetime import date
+    current_age = date.today().year - birth_year
+    current: dict | None = None
+    for item in dayun_list:
+        start_age = item.get("start_age")
+        if start_age is not None and float(start_age) <= current_age:
+            current = item
+        else:
+            if start_age is not None:
+                break
+    return current.get("stem") if current else None
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # M2: 分析引擎集成辅助
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -559,6 +602,8 @@ def _enrich_v2_analysis(
             inference_tags=[geju_name],
             interpretation_text=geju_raw.get("note", ""),
             classic_ref=_geju_refs_text,
+            confidence=geju_raw.get("confidence", 0.0),
+            geju_detail=geju_raw.get("note", ""),
         )
     except Exception as exc:
         logger.debug("[M2 geju] %s", exc)
@@ -686,9 +731,13 @@ def _enrich_v2_analysis(
         logger.debug("[M2 personality] %s", exc)
 
     try:
+        _month_ganzhis = _build_month_ganzhis(ys_st)
+        _dayun_stem = _get_current_dayun_stem(dayun_list, dt.year)
         verify_response.monthly_fortune = compute_monthly(
             day_branch=ds_br, yongshen_favor=favor, yongshen_avoid=avoid,
             year_branch=ys_br, mode=mode,
+            month_ganzhis=_month_ganzhis,
+            current_dayun_stem=_dayun_stem,
         )
     except Exception as exc:
         logger.debug("[M2 monthly] %s", exc)

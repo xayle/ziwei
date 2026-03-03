@@ -164,25 +164,6 @@ class Scenario(SQLModel, table=True):
     deleted_at: Optional[datetime] = None
 
 
-class Delegation(SQLModel, table=True):
-    """权限委托表 - 用户间的权限授予"""
-    __tablename__: ClassVar[str] = "delegations"
-    __table_args__ = (
-        Index("idx_delegations_from_to", "from_user_id", "to_user_id"),
-    )
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    from_user_id: int = Field(foreign_key="users.id", index=True)
-    to_user_id: int = Field(foreign_key="users.id", index=True)
-    permission_type: str
-    member_scope: Optional[int] = Field(default=None, foreign_key="members.id")
-
-    is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    expires_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
-
-
 class AuditLog(SQLModel, table=True):
     """审计日志表 - 记录所有重要操作"""
     __tablename__: ClassVar[str] = "audit_logs"

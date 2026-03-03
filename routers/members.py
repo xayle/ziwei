@@ -15,7 +15,7 @@ from services.permission_service import (
     Permission, Role, has_permission
 )
 from services.delegation_service import log_action
-from services.optimization_tools import QueryCache, PaginationOptimizer
+from services.optimization_tools import QueryCache
 
 # [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
 _members_cache = QueryCache(cache_seconds=600)

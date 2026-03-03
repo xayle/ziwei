@@ -19,7 +19,7 @@ class RangeModel(BaseModel):
     max: Optional[float] = None
     low: Optional[float] = None
     high: Optional[float] = None
-    from_: Optional[float] = Field(None, alias="from")
+    from_: Optional[float] = Field(default=None, alias="from")
     to: Optional[float] = None
     currency: Optional[str] = None
 

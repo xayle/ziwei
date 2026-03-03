@@ -810,3 +810,6 @@ pre { background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:12px;
   color:var(--muted); font-weight:700; border-bottom:2px solid var(--line); text-align:left; }
 .pillar-table td { padding:8px 10px; border-bottom:1px solid var(--line); }
 .pillar-table tr:hover td { background:rgba(37,99,235,.04); }
+
+/* ── v8.0 新增：格局待定标签 ──────── */
+.tag-uncertain { color: #999; font-size: 0.8em; margin-left: 4px; font-weight: normal; }

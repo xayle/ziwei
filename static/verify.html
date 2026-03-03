@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#B22222" />
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'; object-src 'none';" />
-  <title>八字命理验证工作台 v4 — 双引擎 · 20维</title>
+  <title>八字命理验证工作台 v8.0 — 双引擎 · 20维</title>
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="stylesheet" href="/static/css/verify.css?v=20260301" />
   <link rel="stylesheet" href="/static/css/verify-print.css?v=20260301" media="print" />
@@ -241,7 +241,16 @@
 <script src="/static/js/verify-render.js?v=20260301"></script>
 <script src="/static/js/verify-compare.js?v=20260301"></script>
 <script src="/static/js/verify-export.js?v=20260301"></script>
-  <script src="/static/js/verify-guide.js?v=20260301"></script>
+<script src="/static/js/verify-guide.js?v=20260301"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/static/sw.js')
+        .then(function(reg) { console.log('[SW] registered, scope:', reg.scope); })
+        .catch(function(err) { console.warn('[SW] registration failed:', err); });
+    });
+  }
+</script>
 
 <!-- task 4.23: 数据来源页脚 (SRC-6) -->
 <footer class="footer" style="margin:16px;max-width:900px;margin-left:auto;margin-right:auto" aria-label="版权与来源说明">

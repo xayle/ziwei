@@ -5,8 +5,8 @@
  * - API请求：网络优先，失败则从缓存恢复
  */
 
-const CACHE_VERSION = 'bazi-v5-2026-03-01-root-guard-v3';
-const RUNTIME_CACHE = 'bazi-runtime-v5-2026-03-01-v3';
+const CACHE_VERSION = 'bazi-v8-2026-03-04';
+const RUNTIME_CACHE = 'bazi-runtime-v8-2026-03-04';
 
 const STATIC_ASSETS = [
   '/static/sw.js'

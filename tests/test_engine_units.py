@@ -492,11 +492,11 @@ class TestP007Geju:
         )
 
     def test_geju_comment_in_source(self):
-        """P0-07: geju.py 源码有「只判成格，不判破格」注释"""
+        """P0-07: geju.py 源码包含破格判断实现（check_po_geju）"""
         import pathlib
         src = pathlib.Path(__file__).parents[1] / "services" / "bazi_engine" / "geju.py"
-        assert "只判成格，不判破格" in src.read_text(encoding="utf-8"), (
-            "P0-07: geju.py 源码缺少「只判成格，不判破格」注释"
+        assert "check_po_geju" in src.read_text(encoding="utf-8"), (
+            "P0-07: geju.py 源码缺少 check_po_geju 破格判断函数"
         )
 
 
@@ -914,7 +914,7 @@ class TestGejuEdgePaths:
         assert result["name"] == "\u666e\u901a\u683c"
 
     def test_cong_wang_ge_detected(self):
-        """从旺格：日主五行占比≥70% → 返回'从旺格'"""
+        """曲直格：日主wood五行占比≥70% → 返回'曲直格'（原从旺格的wood细分）"""
         from services.bazi_engine.geju import _check_outer_geju
         # wood(日主甲=wood)占75%，英文键与 STEM_ELEMENT 一致
         result = _check_outer_geju(
@@ -923,19 +923,19 @@ class TestGejuEdgePaths:
             month_stem="\u7532",
             month_branch="\u5bc5",
         )
-        assert result == "\u4ece\u65fa\u683c", f"got {result!r}"
+        assert result == "\u66f2\u76f4\u683c", f"got {result!r}"  # 曲直格
 
     def test_zhuan_wang_ge_detected(self):
-        """专旺格：非日主五行占比≥70% → 返回'专旺格'"""
+        """炎上格：非日主fire五行占比≥70% → 返回'炎上格'（原专旺格fire细分）"""
         from services.bazi_engine.geju import _check_outer_geju
-        # fire占72%，日主为甲(wood)，fire != wood → 专旺格
+        # fire占72%，日主为甲(wood)，fire != wood → 炎上格
         result = _check_outer_geju(
             wuxing_scores={"fire": 72.0, "wood": 5.0, "water": 5.0, "metal": 8.0, "earth": 10.0},
             day_stem="\u7532",
             month_stem="\u5c71",
             month_branch="\u5348",
         )
-        assert result == "\u4e13\u65fa\u683c", f"got {result!r}"
+        assert result == "\u708e\u4e0a\u683c", f"got {result!r}"  # 炎上格
 
     def test_check_outer_none_when_no_dominant(self):
         """无主导五行（<70%）时 _check_outer_geju 应返回 None"""
@@ -949,13 +949,13 @@ class TestGejuEdgePaths:
     def test_compute_geju_outer_overrides_putong(self):
         """当格局为普通格且外格触发时，geju_name 被外格覆盖（line 132 path）"""
         from services.bazi_engine.geju import compute_geju
-        # wood占75%，日主甲(wood) → 从旺格
+        # wood占75%，日主甲(wood) → 曲直格（wood专旺）
         result = compute_geju(
             year_stem="\u7532", month_stem="\u7532", day_stem="\u7532",
             hour_stem="\u7532", month_branch="\u5bc5",
             wuxing_scores={"wood": 75.0, "metal": 5.0, "water": 5.0, "fire": 5.0, "earth": 10.0},
         )
-        assert result["name"] == "\u4ece\u65fa\u683c"
+        assert result["name"] == "\u66f2\u76f4\u683c"  # 曲直格
 
 
 # ═══════════════════════════════════════════════════════════════════════════

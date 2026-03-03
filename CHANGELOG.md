@@ -2,7 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v7.0.0] - 2026-03-03
+## [v8.0.0] - 2026-03-04
+
+### 开发前自检 + 全面补全（558 tests · 0 pyright errors）
+
+#### 数据库 & 迁移
+- **alembic stamp + 迁移**：`mingli.db` 首次纳入 alembic 管理；新建迁移 `999dd22bd7c8` 将 `delegations.from_member_id/to_member_id` 重命名为 `from_user_id/to_user_id`，并新增 `deleted_at` 软删除字段
+- **.env DATABASE_URL**：修正 `bazi.db` → `mingli.db`；`ALGORITHM` → `JWT_ALGORITHM`；`ACCESS_TOKEN_EXPIRE_MINUTES` 1440 → 15（安全修复）
+
+#### 代码结构 & 类型安全
+- **pyright 0 errors**：修复 10 处 `@model_validator(mode='after')` 返回类型，全部改为 `-> Self:`（Pydantic v2.11 兼容）
+- **pyrightconfig.json**：`pythonVersion` 3.10 → 3.11
+- **死代码清理**：git rm `bazi.py` / `ganzhi.py` / `interpret.py` / `relations.py` / `verify.html.bak20260301`；删除 `models.py` 根文件中重复的 `Delegation` 类
+- **optimization_tools.py**：移除 `PaginationOptimizer`、`RedisCache`、`PerformanceMonitor` 三个无调用者的死类，保留 `BulkOperationOptimizer`、`QueryCache`、`optimize_query_for_relationships`
+- **PaginationOptimizer 孤立导入**：从 `routers/members.py` 移除
+
+#### 命理引擎
+- **geju.py 格局扩充**：新增 5 种五行专旺格（曲直/炎上/稼穑/从革/润下）、4 种从格（从财/从官杀/从儿/从势），外格判断增加 从格检测（日主 ≤10%，他元素 ≥55%），所有格局返回 `confidence` 置信度评分
+- **GejuModel 新字段**：`confidence: float`（0-1）、`geju_detail: Optional[str]`，`_enrich_v2_analysis` 中同步填充
+- **建禄格 note 修正**：改为"月令为日主临官位（禄），日主有根有力"（原误写为帝旺）
+- **MonthlyFortuneModel 新字段**：`month_ganzhi`（月干支）、`dayun_stem`（当前大运天干）
+- **compute_monthly 调用**：新增 `_build_month_ganzhis()`（五虎遁年起月）和 `_get_current_dayun_stem()` 辅助函数，月运模型字段现已实际填充
+
+#### 安全 & 配置
+- **per-user 限速**：`services/rate_limit.py` 认证用户按 `user_id` 限速，未认证按 IP
+- **.env.example 完整重写**：35 个环境变量，含字段说明及 `JWT_ALGORITHM` 注释
+
+#### 前端
+- **verify.html 标题**：`v4` → `v8.0`
+- **ServiceWorker 注册**：新增 `register('/static/sw.js')` + 错误处理
+- **sw.js CACHE_VERSION**：`bazi-v5-2026-03-01-root-guard-v3` → `bazi-v8-2026-03-04`
+- **.tag-uncertain CSS**：补全 `verify.css` 中格局待定标签样式
+
+
 
 ### Milestone 6 完成 — 558 tests · 99% coverage · v7.0-release
 

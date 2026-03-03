@@ -206,7 +206,7 @@ def compute_yongshen(
     elem_map = {"strong": ("same", "parent"), "weak": ("ke", "consume"), "balanced": ("ke",)}
     # 取日主五行（从 strength.factors 的 same_element_support）
     day_elem = next(
-        (f.reason.split()[0] for f in (strength.factors or []) if "same" in f.name),
+        ((f.reason or "").split()[0] for f in (strength.factors or []) if "same" in f.name),
         None,
     )
     if day_elem and strength.tier in ("strong", "weak"):

@@ -10,6 +10,21 @@ from app.models import User, Delegation
 from services.permission_service import Permission, Role, ROLE_PERMISSIONS, has_permission
 
 
+def _utcnow() -> datetime:
+    """返回当前 UTC 时间（naive），兼容 SQLite 存储的 naive datetime。"""
+    return datetime.utcnow()
+
+
+def _is_expired(expires_at: Optional[datetime]) -> bool:
+    """检查是否已过期，兼容 naive 与 aware datetime。"""
+    if not expires_at:
+        return False
+    now = _utcnow()
+    # 若 expires_at 含时区信息则转为 naive UTC 再比较
+    exp = expires_at.replace(tzinfo=None) if expires_at.tzinfo else expires_at
+    return now > exp
+
+
 def get_user_effective_permissions(
     session: Session,
     user_id: int,
@@ -73,11 +88,9 @@ def _get_delegated_permissions(
     delegations = session.exec(query).all()
     permissions = set()
     
-    now = datetime.now(timezone.utc)
-    
     for delegation in delegations:
         # 检查过期时间
-        if delegation.expires_at and now > delegation.expires_at:
+        if _is_expired(delegation.expires_at):
             continue
         
         # 检查成员范围限制
@@ -197,11 +210,9 @@ def validate_permission_chain(
         )
     ).all()
     
-    now = datetime.now(timezone.utc)
-    
     for delegation in delegations:
         # 检查过期时间
-        if delegation.expires_at and now > delegation.expires_at:
+        if _is_expired(delegation.expires_at):
             continue
         
         # 检查成员范围
@@ -371,9 +382,8 @@ def verify_delegations_integrity(session: Session) -> List[str]:
             issues.append(f"Delegation {delegation.id}: invalid permission_type {delegation.permission_type}")
         
         # 检查过期时间
-        if delegation.expires_at:
-            if delegation.expires_at < datetime.now(timezone.utc) and delegation.is_active:
-                issues.append(f"Delegation {delegation.id}: should be auto-revoked (expired)")
+        if delegation.expires_at and _is_expired(delegation.expires_at) and delegation.is_active:
+            issues.append(f"Delegation {delegation.id}: should be auto-revoked (expired)")
     
     return issues
 

@@ -24,7 +24,7 @@ app/schemas/analysis.py — M2 新增 19 个分析模型 (任务 2.08)
 """
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Literal, Optional, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -63,9 +63,11 @@ class GejuModel(BaseModel):
     classic_ref:         str
     disclaimer:          str = "仅供学术研究参考"
     fact_data:           Optional[dict] = None
+    confidence:          float = Field(default=0.0, ge=0.0, le=1.0, description="格局判断置信度 0-1")
+    geju_detail:         Optional[str] = None   # 判断依据文字说明
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "GejuModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "geju_name": self.geju_name,
@@ -97,7 +99,7 @@ class PalaceModel(BaseModel):
     fact_data:       Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "PalaceModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "ming_gong": self.ming_gong.model_dump(),
@@ -137,7 +139,7 @@ class WealthAnalysisModel(BaseModel):
     fact_data:           Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "WealthAnalysisModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "wealth_score": self.wealth_score,
@@ -164,7 +166,7 @@ class CareerAnalysisModel(BaseModel):
     fact_data:            Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "CareerAnalysisModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "career_score": self.career_score,
@@ -194,7 +196,7 @@ class MarriageAnalysisModel(BaseModel):
     fact_data:            Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "MarriageAnalysisModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "marriage_score": self.marriage_score,
@@ -224,7 +226,7 @@ class HealthAnalysisModel(BaseModel):
     fact_data:       Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "HealthAnalysisModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "health_score": self.health_score,
@@ -251,7 +253,7 @@ class RelationshipAnalysisModel(BaseModel):
     fact_data:       Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "RelationshipAnalysisModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "relationship_score": self.relationship_score,
@@ -276,7 +278,7 @@ class PersonalityModel(BaseModel):
     fact_data:         Optional[dict] = None
 
     @model_validator(mode="after")
-    def _fill_fact_data(self) -> "PersonalityModel":
+    def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
                 "day_stem": self.day_stem,
@@ -291,13 +293,15 @@ class PersonalityModel(BaseModel):
 
 class MonthlyFortuneModel(BaseModel):
     """月运模型 §4.11-G"""
-    month:       int = Field(..., ge=1, le=12)
-    month_dizhi: str
-    luck_level:  Literal["吉", "平", "凶"]
-    color_hint:  str    # CSS色值
-    tip:         str
-    clash_with:  Optional[str] = None
-    disclaimer:  str = "仅供学术研究参考"
+    month:         int = Field(..., ge=1, le=12)
+    month_dizhi:   str
+    luck_level:    Literal["吉", "平", "凶"]
+    color_hint:    str    # CSS色值
+    tip:           str
+    clash_with:    Optional[str] = None
+    month_ganzhi:  Optional[str] = None   # 月干支，如"甲子"
+    dayun_stem:    Optional[str] = None   # 当前大运天干
+    disclaimer:    str = "仅供学术研究参考"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
