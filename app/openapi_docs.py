@@ -326,7 +326,8 @@ def setup_openapi_docs(app: FastAPI) -> None:
     
     # 版本管理器
     version_manager = APIVersionManager()
-    version_manager.register_version("v1", "Initial version")
+    version_manager.register_version("v1", "初始版本（已废弃，将于 2026-12-31 停止支持）", deprecated=True)
+    version_manager.register_version("v2", "当前稳定版本：新增 output_format 精简响应、meta 信封（R38）、批量排盘（R39）")
     
     openapi_schema = get_openapi_with_error_schemas(app)
     openapi_schema = version_manager.add_version_info_to_openapi(openapi_schema)

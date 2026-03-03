@@ -93,6 +93,7 @@ def compute_monthly(
     mode: str = "dual",            # "dual" | "single"
     month_ganzhis: list[str] | None = None,  # 12个月干支，如["甲寅","乙卯",...]
     current_dayun_stem: str | None = None,   # 当前大运天干
+    day_stem: str | None = None,             # 日主天干，用于计算十神关系（N2.03）
 ) -> list[MonthlyFortuneModel]:
     """
     §4.11-G 月运引擎
@@ -105,15 +106,27 @@ def compute_monthly(
         mode:               "dual"=双身份完整推算; "single"=全部降级为"平"
         month_ganzhis:      长度12的月干支列表，如["甲寅","乙卯",...]；None则不填充
         current_dayun_stem: 当前大运天干，如"甲"；None则不填充
+        day_stem:           日主天干，用于计算月干对日主十神关系（N2.03）
 
     Returns:
         list[MonthlyFortuneModel] — 长度恰好 12
     """
+    from services.bazi_engine.tables import get_ten_god as _gtg
     results: list[MonthlyFortuneModel] = []
 
     for month_idx in range(12):
         mb = _MONTH_BRANCH[month_idx]
         month_num = month_idx + 1
+
+        # 十神关系：该月天干对日主天干的十神
+        _mgz = month_ganzhis[month_idx] if month_ganzhis else None
+        _month_stem = _mgz[0] if _mgz and len(_mgz) >= 1 else ""
+        _relation = None
+        if day_stem and _month_stem:
+            try:
+                _relation = _gtg(day_stem, _month_stem)
+            except Exception:
+                _relation = None
 
         if mode == "single":
             # 单用户模式：全部降级为"平"
@@ -124,8 +137,9 @@ def compute_monthly(
                 color_hint="灰/白",
                 tip="本月平稳，顺势而为。",
                 clash_with=None,
-                month_ganzhi=month_ganzhis[month_idx] if month_ganzhis else None,
+                month_ganzhi=_mgz,
                 dayun_stem=current_dayun_stem,
+                relation_to_rizhu=_relation,
             ))
             continue
 
@@ -182,8 +196,9 @@ def compute_monthly(
             color_hint=color_hint,
             tip=tip,
             clash_with=clash_with,
-            month_ganzhi=month_ganzhis[month_idx] if month_ganzhis else None,
+            month_ganzhi=_mgz,
             dayun_stem=current_dayun_stem,
+            relation_to_rizhu=_relation,
         ))
 
     return results

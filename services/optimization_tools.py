@@ -121,6 +121,10 @@ class QueryCache:
     def get_stats(self) -> Dict[str, int]:
         return {"cached_items": len(self._cache), "cache_ttl_seconds": self.cache_seconds}
 
+    def __len__(self) -> int:
+        """N4.04: 返回当前有效缓存条目数（供 /health/detail 使用）。"""
+        return len(self._cache)
+
 
 # 全局实例（router 直接使用）
 query_cache = QueryCache(cache_seconds=600)

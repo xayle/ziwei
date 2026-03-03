@@ -84,7 +84,27 @@ BUSINESS_OPERATION_DURATION = Histogram(
     buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 )
 
-# 错误计数
+# ── N4.05 八字引擎专属指标 ────────────────────────────────────────────────────
+
+# 八字计算耗时（_enrich_v2_analysis 全链路）
+BAZI_ENGINE_CALC_SECONDS = Histogram(
+    'bazi_engine_calc_seconds',
+    'BaZi engine full calculation duration in seconds (_enrich_v2_analysis)',
+    buckets=(0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0)
+)
+
+# 引擎缓存命中/未命中计数（由 run.py 计时区域内手动记录）
+BAZI_CACHE_HITS = Counter(
+    'bazi_cache_hits_total',
+    'BaZi query cache hits total'
+)
+
+BAZI_CACHE_MISSES = Counter(
+    'bazi_cache_misses_total',
+    'BaZi query cache misses total'
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
 ERROR_COUNT = Counter(
     'errors_total',
     'Total errors',

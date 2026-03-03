@@ -125,6 +125,31 @@ SANQI_GROUPS: list[frozenset[str]] = [
     frozenset({"壬", "癸", "辛"}),   # 人三奇（部分流派）
 ]
 
+# ── v8.0 N2.02 新增神煞查表 ────────────────────────────────────────────────
+
+# 血刃: 年支→血刃日支（对冲位），《三命通会》
+XUELUN: dict[str, str] = {
+    "子": "午", "丑": "未", "寅": "申", "卯": "酉",
+    "辰": "戌", "巳": "亥", "午": "子", "未": "丑",
+    "申": "寅", "酉": "卯", "戌": "辰", "亥": "巳",
+}
+
+# 灾煞: 三合局各五行绝命支（查绝地表，非位移计算）
+# 申子辰水局绝于巳，寅午戌火局绝于亥，巳酉丑金局绝于寅，亥卯未木局绝于申
+ZAISHA: dict[str, str] = {
+    "申": "巳", "子": "巳", "辰": "巳",
+    "寅": "亥", "午": "亥", "戌": "亥",
+    "巳": "寅", "酉": "寅", "丑": "寅",
+    "亥": "申", "卯": "申", "未": "申",
+}
+
+# 天厨贵人: 日干→命局月支，《三命通会》
+TIANCHU_GUIREN: dict[str, str] = {
+    "甲": "巳", "乙": "午", "丙": "巳", "丁": "午",
+    "戊": "申", "己": "酉", "庚": "亥", "辛": "子",
+    "壬": "寅", "癸": "卯",
+}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 神煞元数据
@@ -152,6 +177,12 @@ SHENSHA_META: dict[str, dict] = {
     "金舆":     {"priority": "B", "polarity": "+", "topic": "财富", "note": "主富贵，金钱财帛有余",            "classic": "《三命通会》"},
     "魁罡":     {"priority": "A", "polarity": "~", "topic": "权威", "note": "刚毅果断，逢岁运生旺则权威大，遇冲则凶", "classic": "《三命通会》"},
     "三奇":     {"priority": "A", "polarity": "+", "topic": "奇特", "note": "天地人三奇，主出奇制胜，运势奇特不凡", "classic": "《三命通会》"},
+    # v8.0 N2.02 新增 5 种
+    "血刃":     {"priority": "B", "polarity": "-", "topic": "血光", "note": "主血光横祸，宜防刀伤车祸",             "classic": "《三命通会》"},
+    "灾煞":     {"priority": "B", "polarity": "-", "topic": "灾祸", "note": "三合局绝地，主灾祸横至，宜低调守成",   "classic": "《三命通会》"},
+    "天罗":     {"priority": "C", "polarity": "-", "topic": "困厄", "note": "戌亥并见，主困厄缠身，逢运难解",       "classic": "《三命通会》"},
+    "地网":     {"priority": "C", "polarity": "-", "topic": "困厄", "note": "辰巳并见，主牢狱官非，行事受阻",       "classic": "《三命通会》"},
+    "天厨贵人": {"priority": "A", "polarity": "+", "topic": "饮食", "note": "主衣食丰足，财禄充裕，享美食之福",     "classic": "《三命通会》"},
 }
 
 
@@ -343,6 +374,33 @@ def compute_shensha(
         if group <= all_stems_set:
             _add("三奇", "year")  # 以年柱为代表位
             break
+
+    # ── 血刃（年支→日支对照，B/-）────────────────────────────────────────────
+    xl = XUELUN.get(year_branch)
+    if xl and day_branch == xl:
+        _add("血刃", "day")
+
+    # ── 灾煞（三合局绝地，按年支/日支查，B/-）───────────────────────────────
+    for ref_key in ("year", "day"):
+        zs = ZAISHA.get(branches[ref_key])
+        if zs:
+            for br_key, br in branches.items():
+                if br == zs and br_key != ref_key:
+                    _add("灾煞", br_key)
+
+    # ── 天罗（四柱同时出现戌 AND 亥，C/-）───────────────────────────────────
+    all_branches_set = set(branches.values())
+    if "戌" in all_branches_set and "亥" in all_branches_set:
+        _add("天罗", "year")  # 以年柱为代表位
+
+    # ── 地网（四柱同时出现辰 AND 巳，C/-）───────────────────────────────────
+    if "辰" in all_branches_set and "巳" in all_branches_set:
+        _add("地网", "year")  # 以年柱为代表位
+
+    # ── 天厨贵人（日干→固定月支，A/+）──────────────────────────────────────
+    tc = TIANCHU_GUIREN.get(day_stem)
+    if tc and month_branch == tc:
+        _add("天厨贵人", "month")
 
     # ── 去重 + 排序 ───────────────────────────────────────────────────────────
     seen: set[str] = set()

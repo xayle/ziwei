@@ -193,9 +193,9 @@ function renderTab2(json, el) {
     </div>
   </div>
   `;
-  // 渲染五行环形图 (M4.30)
+  // 渲染五行环形图 (M4.30 + N5.06)
   if (typeof renderWuxingRingChart === 'function') {
-    renderWuxingRingChart(wx, $('wuxingRingContainer'));
+    renderWuxingRingChart(wx, $('wuxingRingContainer'), json);
   }
 
   // Task 4.20 [P69]: 地支关系★标记渲染
@@ -649,8 +649,16 @@ function renderTab15(json, el) {
 }
 
 /* ══════════════════════════════════════════════════
-   Tab 16: 大运（可展开叙事 + 真实走势图 M4.08）
+   Tab 16: 大运（可展开叙事 + 真实走势图 M4.08 + N5.07）
 ═══════════════════════════════════════════════════ */
+// N5.07 前端六十甲子速算 (year 1984=甲子)
+function _yearGanzhi(year) {
+  const GAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const ZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const idx = ((year - 4) % 60 + 60) % 60;
+  return GAN[idx % 10] + ZHI[idx % 12];
+}
+
 function renderTab16(json, el) {
   const dy = json.dayun||{};
   const items = dy.items||[];
@@ -667,12 +675,21 @@ function renderTab16(json, el) {
         <div style="font-size:12px;color:var(--muted);margin-top:6px">当前使用单节气库推算，大运起止年份精度受限，仅供学术参考。</div>
        </div>` : '';
 
+  // N5.07: 顺/逆行方向
+  const directionCN = dy.direction === 'forward' ? '顺行' : dy.direction === 'backward' ? '逆行' : '—';
+  const startAgeHtml = dy.start_age != null ? `起运岁数：<strong>${dy.start_age}岁</strong>` : '';
+  const directionHtml = dy.direction
+    ? `<div class="k">行运方向</div><div><span class="chip ${dy.direction==='forward'?'ok':'warn'}">${directionCN}</span> ${esc(dy.direction_basis?.basis_text||dy.direction_basis?.summary||'')}</div>`
+    : '';
+
   el.innerHTML = singleModeNotice + `
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>大运推算方法</p>
     <div class="kv">
       <div class="k">方法</div><div>${esc(dy.method||'—')}</div>
       <div class="k">边界</div><div>${esc(dy.boundary||'—')}</div>
+      ${startAgeHtml ? `<div class="k">起运岁数</div><div><strong>${dy.start_age}岁</strong>${dy.start_age_months?` (${dy.start_age_months}月)`:''}</div>` : ''}
+      ${directionHtml}
     </div>
   </div>
   <div id="dayunChartContainer" style="margin-bottom:16px"></div>
@@ -680,9 +697,29 @@ function renderTab16(json, el) {
     <table class="dayun-table">
       <thead><tr><th>干支</th><th>起年</th><th>起岁</th><th>十神</th><th>财运</th><th>健康</th><th>感情</th><th>叙事/古籍</th></tr></thead>
       <tbody>
-        ${items.map(d=>`
-          <tr class="${isCurrent(d)?'dayun-current':''}">
-            <td><div class="dayun-gz ${GAN_CSS[d.stem]||''}">${esc(d.stem||'')}${esc(d.branch||'')}</div></td>
+        ${items.map((d,di)=>{
+          const cur = isCurrent(d);
+          // N5.07: 流年展开行 (此行 data-dayun-idx 供 JS 展开用)
+          const liunianRows = (() => {
+            const sy = d.start_year;
+            if (!sy) return '';
+            // 优先用 json.liunian_detail 中的数据（适用于当前大运）
+            const liunianSrc = cur ? (json.liunian_detail||[]) : [];
+            const years = Array.from({length:10},(_,i)=>sy+i);
+            const cells = years.map(y=>{
+              const ld = liunianSrc.find(l=>l.year===y);
+              const gz = ld ? (ld.ganzhi||(ld.stem||'')+(ld.branch||'')) : _yearGanzhi(y);
+              const score = ld?.annual_score;
+              const isCurYear = y===thisYear;
+              return `<td style="padding:3px 6px;text-align:center;white-space:nowrap${isCurYear?';font-weight:700;color:var(--accent)':''}">
+                ${y}<br><span style="font-size:11px">${gz}</span>${score!=null?`<br><span style="font-size:10px;color:${score>=70?'var(--ok)':score>=50?'var(--warn)':'var(--bad)'}">${score}</span>`:''}
+              </td>`;
+            }).join('');
+            return `<tr class="dayun-liunian-row" id="dayun-ln-${di}" style="display:none"><td colspan="8" style="padding:0"><div style="overflow-x:auto"><table style="font-size:11px;width:100%;border-collapse:collapse"><tbody><tr>${cells}</tr></tbody></table></div></td></tr>`;
+          })();
+          return `
+          <tr class="${cur?'dayun-current':''}" style="cursor:pointer" onclick="(function(){var r=document.getElementById('dayun-ln-${di}');if(r)r.style.display=r.style.display==='none'?'':'none';})()" title="点击展开/收起流年">
+            <td><div class="dayun-gz ${GAN_CSS[d.stem]||''}">${esc(d.stem||'')}${esc(d.branch||'')}</div>${cur?`<div style="font-size:10px;color:var(--accent);margin-top:2px">▶ 当前</div>`:''}</td>
             <td>${d.start_year||'—'}</td>
             <td>${d.start_age!==undefined?d.start_age+'岁':'—'}</td>
             <td>${d.ten_god?`<span class="tengod-badge ${tenGodType(d.ten_god)}">${tenGodCN(d.ten_god)}</span>`:'—'}</td>
@@ -694,7 +731,8 @@ function renderTab16(json, el) {
               ${(d.refs&&d.refs.length)?`<details style="margin-top:4px"><summary style="cursor:pointer;font-size:11px;color:var(--accent-gold)">查看古籍引用</summary><div style="font-size:11px;line-height:1.7;padding:6px 8px;max-width:320px;font-style:italic;font-family:var(--font-title)">${d.refs.map(r=>`<div style="margin-bottom:4px"><span style="color:var(--accent-gold)">【${esc(r.source||'')}】</span>${esc(r.text||'')}</div>`).join('')}</div></details>`:''}
               ${!d.narrative_text&&!(d.refs&&d.refs.length)?'—':''}
             </td>
-          </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">暂无数据</td></tr>'}
+          </tr>${liunianRows}`;
+        }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">暂无数据</td></tr>'}
       </tbody>
     </table>
   </div>

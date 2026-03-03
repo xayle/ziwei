@@ -1,9 +1,10 @@
 """
 审计日志路由 - 查看操作历史和安全审计
 """
+import json
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, Any
+from pydantic import BaseModel, model_validator
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/api/v1", tags=["audit"])
 
 
 class AuditLogResponse(BaseModel):
-    """审计日志响应"""
+    """审计日志响应（N3.06：新增 RBAC 操作关键字段）"""
     id: int
     user_id: int
     action: str
@@ -35,6 +36,28 @@ class AuditLogResponse(BaseModel):
     status: str
     error_message: Optional[str]
     created_at: datetime
+    # N3.06 新增字段：从 details JSON 提取，approve/reject/revoke 操作可用
+    old_status: Optional[str] = None
+    new_status: Optional[str] = None
+    operator_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def _extract_rbac_fields(self) -> "AuditLogResponse":
+        """从 details JSON 中提取 RBAC 关键字段（仅在字段未显式设置时）"""
+        if self.details and self.action in (
+            "approve_permission", "reject_permission", "revoke_permission"
+        ):
+            try:
+                d: dict[str, Any] = json.loads(self.details)
+                if self.old_status is None:
+                    self.old_status = d.get("old_status")
+                if self.new_status is None:
+                    self.new_status = d.get("new_status")
+                if self.operator_id is None:
+                    self.operator_id = d.get("operator_id")
+            except (json.JSONDecodeError, TypeError):
+                pass
+        return self
 
 
 @router.get("/audit-logs")

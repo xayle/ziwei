@@ -1,7 +1,8 @@
 """
 权限委托路由 - 用户之间的权限授予和撤销
+包括 N3.02 工作流端点（申请/批准/拒绝/撤销）
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Request
@@ -21,9 +22,11 @@ from app.exceptions import (
     BusinessException,
     ErrorCode,
     ResourceNotFoundException,
+    ResourceConflictException,
     ValidationException,
 )
 from app.error_handling import handle_exceptions
+from app.dependencies.permissions import _permission_cache
 
 router = APIRouter(prefix="/api/v1", tags=["delegation"])
 
@@ -214,3 +217,353 @@ def revoke_user_delegation(
             code=ErrorCode.BUSINESS_OPERATION_FAILED,
             message="Failed to revoke delegation",
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# N3.02 — 权限申请工作流端点
+# ══════════════════════════════════════════════════════════════════════════════
+
+class PermissionRequestBody(BaseModel):
+    """发起权限申请"""
+    permission_type: str  # "view"/"edit"/"share"/"manage"
+    from_user_id: Optional[int] = None  # 向谁申请；默认向任意 admin 申请
+    member_scope: Optional[int] = None
+    expires_days: int = 30
+
+
+class RejectBody(BaseModel):
+    reject_reason: Optional[str] = None
+
+
+def _require_manage_permission(current_user: User, session: Session) -> None:
+    """
+    检查当前用户是否拥有 MANAGE 权限。
+    满足以下任一条件：
+      1. is_admin = True
+      2. 拥有 status='approved' 的 manage 级别委托
+    """
+    if current_user.is_admin:
+        return
+    manage_delegation = session.exec(
+        select(Delegation).where(
+            Delegation.to_user_id == current_user.id,
+            Delegation.permission_type == "manage",
+            Delegation.status == "approved",
+            Delegation.is_active.is_(True),   # type: ignore[union-attr]
+            Delegation.deleted_at.is_(None),  # type: ignore[union-attr]
+        )
+    ).first()
+    if not manage_delegation:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="MANAGE permission required",
+        )
+
+
+@router.post("/permissions/request", status_code=201)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def request_permission(
+    body: PermissionRequestBody,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    N3.02 — 发起权限申请（status=pending）
+    任何已登录用户均可发起；审批人需有 MANAGE 权限。
+    """
+    valid_types = ["view", "edit", "share", "manage"]
+    if body.permission_type not in valid_types:
+        raise ValidationException(
+            code=ErrorCode.VALIDATION_INVALID_INPUT,
+            message=f"Invalid permission_type. Must be one of: {', '.join(valid_types)}",
+        )
+
+    from_uid = body.from_user_id or 0
+
+    delegation = Delegation(
+        from_user_id=from_uid,
+        to_user_id=current_user.id or 0,
+        permission_type=body.permission_type,
+        member_scope=body.member_scope,
+        is_active=False,           # 未批准前不生效
+        expires_at=None,
+        status="pending",
+        requested_by=current_user.id or 0,
+    )
+    session.add(delegation)
+    session.commit()
+    session.refresh(delegation)
+
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="request_permission",
+        resource_type="delegation",
+        resource_id=str(delegation.id or 0),
+        details={
+            "permission_type": body.permission_type,
+            "from_user_id": from_uid,
+            "member_scope": body.member_scope,
+            "expires_days": body.expires_days,
+            "old_status": None,
+            "new_status": "pending",
+            "operator_id": current_user.id,
+        },
+    )
+
+    return {
+        "id": delegation.id,
+        "to_user_id": delegation.to_user_id,
+        "permission_type": delegation.permission_type,
+        "status": delegation.status,
+        "requested_by": delegation.requested_by,
+        "created_at": delegation.created_at,
+    }
+
+
+@router.put("/permissions/request/{delegation_id}/approve")
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def approve_permission_request(
+    delegation_id: int,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    N3.02 — 批准权限申请（status: pending → approved）
+    需要 MANAGE 权限。
+    - 禁止自我审批（requested_by == current_user.id → 403）
+    - 重复审批（已非 pending）→ 409
+    - 并发：UPDATE WHERE status='pending'，rowcount==0 → 409
+    """
+    _require_manage_permission(current_user, session)
+
+    delegation = session.exec(
+        select(Delegation).where(
+            Delegation.id == delegation_id,
+            Delegation.deleted_at.is_(None),  # type: ignore[union-attr]
+        )
+    ).first()
+
+    if not delegation:
+        raise ResourceNotFoundException(
+            message="Permission request not found",
+            details={"resource_type": "delegation", "resource_id": delegation_id},
+        )
+
+    # 禁止自我审批
+    if delegation.requested_by == current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="Self-approval is not allowed",
+        )
+
+    # 重复审批检查
+    if delegation.status != "pending":
+        raise ResourceConflictException(
+            resource_type="delegation",
+            code=ErrorCode.RESOURCE_CONFLICT,
+            message=f"Cannot approve: current status is '{delegation.status}' (expected 'pending')",
+            resource_id=str(delegation_id),
+        )
+
+    # 乐观状态锁：UPDATE WHERE status='pending'
+    from sqlalchemy import text as sa_text
+    result = session.exec(  # type: ignore[call-overload]
+        sa_text(
+            "UPDATE delegations SET status='approved', approved_by=:approver, "
+            "approved_at=:now, is_active=1, from_user_id=:from_uid "
+            "WHERE id=:id AND status='pending'"
+        ).bindparams(
+            approver=current_user.id,
+            now=datetime.now(timezone.utc).replace(tzinfo=None),
+            from_uid=current_user.id,
+            id=delegation_id,
+        )
+    )
+    session.commit()
+
+    if result.rowcount == 0:  # type: ignore[union-attr]
+        raise ResourceConflictException(
+            resource_type="delegation",
+            code=ErrorCode.RESOURCE_CONFLICT,
+            message="Concurrent approval detected: request already processed",
+            resource_id=str(delegation_id),
+        )
+
+    # 刷新
+    session.refresh(delegation)
+
+    # 主动清除权限缓存
+    cache_key = f"perm:{delegation.to_user_id}:{delegation.permission_type}"
+    _permission_cache.invalidate(cache_key)
+
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="approve_permission",
+        resource_type="delegation",
+        resource_id=str(delegation_id),
+        details={
+            "old_status": "pending",
+            "new_status": "approved",
+            "operator_id": current_user.id,
+            "to_user_id": delegation.to_user_id,
+            "permission_type": delegation.permission_type,
+        },
+    )
+
+    return {
+        "id": delegation.id,
+        "status": delegation.status,
+        "approved_by": delegation.approved_by,
+        "approved_at": delegation.approved_at,
+    }
+
+
+@router.put("/permissions/request/{delegation_id}/reject")
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def reject_permission_request(
+    delegation_id: int,
+    body: RejectBody,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    N3.02 — 拒绝权限申请（status: pending → rejected）
+    需要 MANAGE 权限。
+    - 已 approved 的申请不得直接 reject → 409（须走 revoke 端点）
+    """
+    _require_manage_permission(current_user, session)
+
+    delegation = session.exec(
+        select(Delegation).where(
+            Delegation.id == delegation_id,
+            Delegation.deleted_at.is_(None),  # type: ignore[union-attr]
+        )
+    ).first()
+
+    if not delegation:
+        raise ResourceNotFoundException(
+            message="Permission request not found",
+            details={"resource_type": "delegation", "resource_id": delegation_id},
+        )
+
+    # 已 approved 不得 reject（须用 revoke）
+    if delegation.status == "approved":
+        raise ResourceConflictException(
+            resource_type="delegation",
+            code=ErrorCode.RESOURCE_CONFLICT,
+            message="Cannot reject an already-approved request; use the revoke endpoint instead",
+            resource_id=str(delegation_id),
+        )
+
+    if delegation.status != "pending":
+        raise ResourceConflictException(
+            resource_type="delegation",
+            code=ErrorCode.RESOURCE_CONFLICT,
+            message=f"Cannot reject: current status is '{delegation.status}' (expected 'pending')",
+            resource_id=str(delegation_id),
+        )
+
+    old_status = delegation.status
+    delegation.status = "rejected"
+    delegation.reject_reason = body.reject_reason
+    session.add(delegation)
+    session.commit()
+    session.refresh(delegation)
+
+    # 清除权限缓存（虽然 pending 时缓存一般无 True，但保持一致）
+    cache_key = f"perm:{delegation.to_user_id}:{delegation.permission_type}"
+    _permission_cache.invalidate(cache_key)
+
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="reject_permission",
+        resource_type="delegation",
+        resource_id=str(delegation_id),
+        details={
+            "old_status": old_status,
+            "new_status": "rejected",
+            "operator_id": current_user.id,
+            "reject_reason": body.reject_reason,
+            "to_user_id": delegation.to_user_id,
+            "permission_type": delegation.permission_type,
+        },
+    )
+
+    return {
+        "id": delegation.id,
+        "status": delegation.status,
+        "reject_reason": delegation.reject_reason,
+    }
+
+
+@router.delete("/permissions/request/{delegation_id}/revoke", status_code=200)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def revoke_approved_permission(
+    delegation_id: int,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    N3.02 — 撤销已批准的权限（status: approved → revoked）
+    需要 MANAGE 权限。
+    - 仅 approved 状态可撤销；其他状态 → 409
+    - ⚠️ 最高风险操作，审计日志强制写入
+    """
+    _require_manage_permission(current_user, session)
+
+    delegation = session.exec(
+        select(Delegation).where(
+            Delegation.id == delegation_id,
+            Delegation.deleted_at.is_(None),  # type: ignore[union-attr]
+        )
+    ).first()
+
+    if not delegation:
+        raise ResourceNotFoundException(
+            message="Permission record not found",
+            details={"resource_type": "delegation", "resource_id": delegation_id},
+        )
+
+    if delegation.status != "approved":
+        raise ResourceConflictException(
+            resource_type="delegation",
+            code=ErrorCode.RESOURCE_CONFLICT,
+            message=f"Cannot revoke: current status is '{delegation.status}' (expected 'approved')",
+            resource_id=str(delegation_id),
+        )
+
+    delegation.status = "revoked"
+    delegation.is_active = False
+    session.add(delegation)
+    session.commit()
+    session.refresh(delegation)
+
+    # 主动清除权限缓存（撤销为高风险操作，必须立即清缓存）
+    cache_key = f"perm:{delegation.to_user_id}:{delegation.permission_type}"
+    _permission_cache.invalidate(cache_key)
+    _permission_cache.invalidate_user(delegation.to_user_id or 0)
+
+    # ⚠️ 审计日志强制写入（append-only，撤销操作尤关键）
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="revoke_permission",
+        resource_type="delegation",
+        resource_id=str(delegation_id),
+        details={
+            "old_status": "approved",
+            "new_status": "revoked",
+            "operator_id": current_user.id,
+            "to_user_id": delegation.to_user_id,
+            "permission_type": delegation.permission_type,
+        },
+    )
+
+    return {
+        "id": delegation.id,
+        "status": delegation.status,
+        "message": "Permission successfully revoked",
+    }

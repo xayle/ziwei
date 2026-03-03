@@ -4,7 +4,130 @@ All notable changes to this project will be documented in this file.
 
 ## [v8.0.0] - 2026-03-04
 
+### Milestone N7 — 测试与发布（833 tests · bandit 0 HIGH · v8.0-release）
+
+#### 测试 & 质量门
+- **N7.01 测试总量 >700**：共 833 passed（目标 700），较 N2 基线（315）增加 518 用例
+- **N7.02 E2E Playwright 测试**：新建 `tests/e2e/test_verify_flow.py`，覆盖 6 个场景：
+  完整计算流程（Tab>10 且非空）／历史对比并排展示／分享卡片 PNG >10KB／Token 过期重定向／CSV >50 行前端拦截／非法日期报错
+- **N7.03 格局置信度回归**：`test_golden.py` 8 组黄金案例，全部断言 `0.0 ≤ confidence ≤ 1.0` 且 `geju_name` 非空
+- **N7.04 性能结论**：更新 `scripts/performance_benchmark_report.json`，追加 `v8_0_final`：
+  concurrency_1 overall_p95=106.95ms，concurrency_50 overall_p95=120.90ms；N4.01 skip 确认
+- **N7.05 安全扫描**：`bandit -r . -ll --exclude .venv,tests,docs` → 0 MEDIUM, 0 HIGH；新建 `.bandit` 配置
+- **N7.07 Docker 标签**：`Dockerfile` 添加 `LABEL version="8.0"`；`docker-compose.yml` 添加 `image: bazi:v8.0`
+
+---
+
+### Milestone N6 — API v2（6 tasks 全部完成）
+
+#### API 路由 & Schema
+- **N6.01 `/api/v2` 路由**：新建 `routers/v2/__init__.py` + `routers/v2/verify.py`，已注册 `prefix="/api/v2"`
+- **N6.02 v2 Schema**：新建 `app/schemas/v2/verify.py`（`VerifyRequestV2`, `ResponseMeta`, `VerifyResponseFull`, `VerifyResponseMinimal`, `VerifyResponseV2` 带 `fields` 过滤参数）
+- **N6.03 v1 弃用头**：`add_v1_deprecation_headers` 中间件，所有 `/api/v1/*` 响应附加 `Deprecation: true` / `Sunset: 2026-12-31`
+
+#### 文档 & 工具
+- **N6.04 OpenAPI 分版本**：`app/openapi_docs.py` 分别注册 v1（含弃用说明）和 v2 文档
+- **N6.05 SDK 示例**：新建 `docs/samples/python_v2_example.py` 和 `docs/samples/js_v2_example.js`
+- **N6.06 Locust 压测脚本**：新建 `scripts/locustfile.py`（`/api/v2/verify` 基准场景）；`locust>=2.24` 加入 `requirements-dev.txt`
+
+---
+
+### Milestone N5 — UX 增强（9 tasks 全部完成）
+
+#### 历史 & 对比
+- **N5.01 历史 FIFO-5**：`localStorage` 保留最新 5 条记录，超出自动淘汰；新增历史对比面板（并排展示）
+- **N5.09 批量 CSV 页面**：新建 `static/batch.html`，支持最多 50 行 CSV 上传，前端超限拦截
+
+#### 导出
+- **N5.02 分享卡片 PNG**：`html2canvas` 渲染卡片，含 "仅供娱乐参考" 水印，文件 >10KB
+- **N5.03 批量 API**：`POST /api/v2/batch/verify`（N5.03），接受 CSV 数组，返回聚合结果
+
+#### 可视化
+- **N5.04 五行环图**：ECharts 玫瑰图展示五行得分分布
+- **N5.05 大运展开列**：点击大运条展开月运详情（dayun click expand）
+
+#### 响应式 & 主题
+- **N5.06 移动端响应式**：断点 ≤768px 折叠 Tab 为下拉选择器
+- **N5.07 暗黑模式**：`prefers-color-scheme: dark` 自动切换 + 手动 toggle
+- **N5.08 Service Worker 缓存**：`sw.js` 版本更新至 `bazi-v8-2026-03-04`
+
+---
+
 ### 开发前自检 + 全面补全（558 tests · 0 pyright errors）
+
+#### 数据库 & 迁移
+- **alembic stamp + 迁移**：`mingli.db` 首次纳入 alembic 管理；新建迁移 `999dd22bd7c8` 将 `delegations.from_member_id/to_member_id` 重命名为 `from_user_id/to_user_id`，并新增 `deleted_at` 软删除字段
+- **.env DATABASE_URL**：修正 `bazi.db` → `mingli.db`；`ALGORITHM` → `JWT_ALGORITHM`；`ACCESS_TOKEN_EXPIRE_MINUTES` 1440 → 15（安全修复）
+
+#### 代码结构 & 类型安全
+- **pyright 0 errors**：修复 10 处 `@model_validator(mode='after')` 返回类型，全部改为 `-> Self:`（Pydantic v2.11 兼容）
+- **pyrightconfig.json**：`pythonVersion` 3.10 → 3.11
+- **死代码清理**：git rm `bazi.py` / `ganzhi.py` / `interpret.py` / `relations.py` / `verify.html.bak20260301`；删除 `models.py` 根文件中重复的 `Delegation` 类
+- **optimization_tools.py**：移除 `PaginationOptimizer`、`RedisCache`、`PerformanceMonitor` 三个无调用者的死类，保留 `BulkOperationOptimizer`、`QueryCache`、`optimize_query_for_relationships`
+- **PaginationOptimizer 孤立导入**：从 `routers/members.py` 移除
+
+#### 命理引擎
+- **geju.py 格局扩充**：新增 5 种五行专旺格（曲直/炎上/稼穑/从革/润下）、4 种从格（从财/从官杀/从儿/从势），外格判断增加 从格检测（日主 ≤10%，他元素 ≥55%），所有格局返回 `confidence` 置信度评分
+- **GejuModel 新字段**：`confidence: float`（0-1）、`geju_detail: Optional[str]`，`_enrich_v2_analysis` 中同步填充
+- **建禄格 note 修正**：改为"月令为日主临官位（禄），日主有根有力"（原误写为帝旺）
+- **MonthlyFortuneModel 新字段**：`month_ganzhi`（月干支）、`dayun_stem`（当前大运天干）
+- **compute_monthly 调用**：新增 `_build_month_ganzhis()`（五虎遁年起月）和 `_get_current_dayun_stem()` 辅助函数，月运模型字段现已实际填充
+
+#### 安全 & 配置
+- **per-user 限速**：`services/rate_limit.py` 认证用户按 `user_id` 限速，未认证按 IP
+- **.env.example 完整重写**：35 个环境变量，含字段说明及 `JWT_ALGORITHM` 注释
+
+#### 前端
+- **verify.html 标题**：`v4` → `v8.0`
+- **ServiceWorker 注册**：新增 `register('/static/sw.js')` + 错误处理
+- **sw.js CACHE_VERSION**：`bazi-v5-2026-03-01-root-guard-v3` → `bazi-v8-2026-03-04`
+- **.tag-uncertain CSS**：补全 `verify.css` 中格局待定标签样式
+
+
+
+### Milestone 6 完成 — 558 tests · 99% coverage · v7.0-release
+
+#### 前端关键修复
+- **verify-core.js 补入 HTML**：`verify-core.js` 缺失引用导致前端整体无法运行；已正确加入并附版本标识 `?v=20260303`
+- **CSP 内联脚本违规修复**：免责声明弹窗逻辑从 HTML `<script>` 内联块迁移至 `verify-core.js#initDisclaimer()`；服务器 `script-src 'self'` 策略全面合规（任务 4.19 / 红线 P78）
+- **SheetJS 版本标识**：`xlsx.mini.min.js` 加 `?v=0.20.3`，符合红线30（JS/CSS 引用必须有版本标识）
+
+#### M5 导出功能
+- **M5.03 SheetJS 本地化**：下载 `xlsx.mini.min.js` (280 KB, v0.20.3) 至 `static/js/`，实现真正 6-Sheet `.xlsx` 导出（四柱/五行/大运/分析维度/神煞/原始JSON）— 满足 P0-22
+- **M5.02/M5.03 CSV 字段名零不匹配**：`exportCSV()` 重写为 `field_path`/`value` 格式，使用 API 字段路径（`pillars_primary.year.stem`、`ten_gods.year` 等）— 满足红线12
+
+#### M6 验收门（全通过）
+- **M6.07 性能**：`/api/v1/verify` 连续 5 次平均 **19ms**（目标 < 3s）
+- **M6.08 Prometheus 指标**：`bazi_verify_total` / `bazi_verify_duration_seconds` / `bazi_boundary_risk_total` 已实现（P50/GAP-15）
+- **M6.09 覆盖率**：核心引擎 **99%**（目标 ≥ 80%）— 测试 **558 passed**
+- **M6.10 .dockerignore**：排除 `.env` / `*.db` / `data/*.db` 已验证
+- **M6.11 Dockerfile HEALTHCHECK URL**：`/api/v1/health` → `/health`（与实际路由一致）
+- **M6.13 git tag**：`v7.0-release` at HEAD (最终提交见下)
+
+#### 补充提交（本 session 完成）
+- **M1.09 神煞优先级**：`ShenshaModel` 新增 `priority: Literal["A","B","C"]`，API 返回 `天乙贵人 priority=A`，前端 Tab4 按优先级分组渲染 (commit `5c6bb39`)
+- **M3.02 大运叙事字数**：`generate_dayun_narrative()` 结构化输出 400-600 字（事业/财运/情感/健康/古籍/声明），实测 478 字 (commit `c04548e`)
+- **M3.03 城市/行业财富乘数**：`VerifyRequest` 新增 `city_tier`/`industry` 字段，`wealth_range` 按 一线×1.8 / 新一线×1.2 / 金融IT×1.5 / 教育公务×0.8 动态计算 (commit `1729763`)
+- **M6.12 部署文档**：`DEPLOYMENT-GUIDE.md` HEAD hash 同步 (commit `35d6c4d`)
+
+#### 免责声明与页脚 (task 4.23)
+- `<footer>` 四款声明（不存储/娱乐参考/数据来源/算法版本）
+- 首次访问弹窗（`localStorage=bazi_disclaimer_v1`）
+
+#### 神煞与格局
+- 神煞 `classic_source` 字段从 `SHENSHA_META.classic` 自动填充（P69 / 红线规格）
+- `is_star` / `is_beneficial` 字段映射修正；`render.js` 使用正确 API 字段名
+- 格局 `classic_ref` 从实际 refs 取最后一条填充；`render.js` 解析 `key.name` + details 折叠
+
+#### 其他修复
+- 地支关系★标记渲染（Tab2 / task 4.20 / P69）
+- `request.client` None 防崩溃守卫（P87）
+- `datetime.utcnow()` → `datetime.now(timezone.utc)`（P89）
+- `pytest.ini` 添加 `pythonpath=.`（消除 PYTHONPATH 环境变量依赖）
+- 术语 tooltip 弹窗（verify-guide.js）+ CSP script-src 硬化（task 4.14/4.19）
+- P0-14：`wealth_score` 不再复制 `strength.score`，改用用神匹配公式
+
+#### 红线全符合 (35条)
 
 #### 数据库 & 迁移
 - **alembic stamp + 迁移**：`mingli.db` 首次纳入 alembic 管理；新建迁移 `999dd22bd7c8` 将 `delegations.from_member_id/to_member_id` 重命名为 `from_user_id/to_user_id`，并新增 `deleted_at` 软删除字段

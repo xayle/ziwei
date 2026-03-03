@@ -1,0 +1,11 @@
+# .bandit — bandit 安全扫描配置（N7.05）
+#
+# bandit -r . -ll --exclude ./.venv,./tests,./docs,./migrations
+# N7.05 结果（2026-03-04）：
+#   Total lines of code: 17786
+#   Total issues: 0 MEDIUM, 0 HIGH (仅 51 LOW)
+#   → N7.05 PASS
+
+[bandit]
+exclude_dirs = [".venv", "tests", "docs", "migrations", "__pycache__"]
+skips = []

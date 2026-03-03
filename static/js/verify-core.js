@@ -188,8 +188,8 @@ function setLonHint() {
    7. 表单保存/加载 & 输入历史 (M4.33)
 ═══════════════════════════════════════════════════ */
 const INPUTS_KEY = 'bazi_inputs_v4';
-const HIST_KEY   = 'bazi_history';   // M4.33: spec requires key='bazi_history'
-const HIST_MAX   = 10;
+const HIST_KEY   = 'bazi_history';   // N5.01: Array<{id,ts,summary}>, FIFO 5
+const HIST_MAX   = 5;
 
 window.saveInputs = function() {
   try {
@@ -238,10 +238,63 @@ window.histRender = function() {
     <div class="hist-item" onclick="histFill(${i})">
       <div class="hist-body">
         <div class="hist-dt">${esc(h.dt||'-')} | ${esc(h.userName||'匿名')}</div>
-        <div class="hist-rid">${esc(h.rid||'-')}</div>
+        ${h.summary ? `<div class="hist-summary" style="font-size:11px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px">
+          <span>${esc(h.summary.day_stem||'—')}日主</span>
+          <span>${esc(h.summary.geju||'—')}</span>
+          <span>用神:${esc(h.summary.yongshen||'—')}</span>
+          ${h.summary.annual_score!=null?`<span style="color:var(--ok)">本年:${h.summary.annual_score}分</span>`:''}
+        </div>` : `<div class="hist-rid">${esc(h.rid||'-')}</div>`}
       </div>
       <div class="hist-ts">${esc(h.ts||'')}</div>
     </div>`).join('');
+  if (items.length >= 2) {
+    list.innerHTML += `<div style="padding:6px 4px 2px"><button onclick="histCompare()" style="width:100%;font-size:12px;background:var(--input);border:1px solid var(--border);padding:6px 0;border-radius:6px;cursor:pointer">对比最近2条 →</button></div>`;
+  }
+};
+window.histCompare = function() {
+  const items = histLoad();
+  if (items.length < 2) return;
+  const [a, b] = [items[0], items[1]];
+  const sa = a.summary||{}, sb = b.summary||{};
+  const diffCls = (va, vb) => va !== vb ? 'style="color:var(--accent);font-weight:700"' : '';
+  const modal = $('modalHistCompare');
+  if (modal) {
+    const body = modal.querySelector('.hist-compare-body');
+    if (body) body.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)">项目</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--accent)">${esc(a.ts||'最新')} ${esc(a.dt||'')}</th>
+        <th style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--muted)">${esc(b.ts||'上条')} ${esc(b.dt||'')}</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:5px 8px;color:var(--muted)">日主</td><td ${diffCls(sa.day_stem,sb.day_stem)} style="padding:5px 8px">${esc(sa.day_stem||'—')}</td><td ${diffCls(sb.day_stem,sa.day_stem)} style="padding:5px 8px">${esc(sb.day_stem||'—')}</td></tr>
+        <tr><td style="padding:5px 8px;color:var(--muted)">格局</td><td ${diffCls(sa.geju,sb.geju)} style="padding:5px 8px">${esc(sa.geju||'—')}</td><td ${diffCls(sb.geju,sa.geju)} style="padding:5px 8px">${esc(sb.geju||'—')}</td></tr>
+        <tr><td style="padding:5px 8px;color:var(--muted)">用神</td><td ${diffCls(sa.yongshen,sb.yongshen)} style="padding:5px 8px">${esc(sa.yongshen||'—')}</td><td ${diffCls(sb.yongshen,sa.yongshen)} style="padding:5px 8px">${esc(sb.yongshen||'—')}</td></tr>
+        <tr><td style="padding:5px 8px;color:var(--muted)">本年运势</td><td style="padding:5px 8px;font-weight:700;color:${sa.annual_score>=70?'var(--ok)':sa.annual_score>=50?'var(--warn)':'var(--bad)'}">${sa.annual_score!=null?sa.annual_score+'分':'—'}</td><td style="padding:5px 8px;font-weight:700;color:${sb.annual_score>=70?'var(--ok)':sb.annual_score>=50?'var(--warn)':'var(--bad)'}">${sb.annual_score!=null?sb.annual_score+'分':'—'}</td></tr>
+      </tbody>
+    </table>`;
+    modal.classList.add('show');
+    return;
+  }
+  // Fallback: inline compare panel
+  const panel = $('histComparePanel');
+  if (!panel) return;
+  panel.innerHTML = `
+  <div style="font-weight:700;font-size:13px;margin-bottom:10px">最近2条历史对比</div>
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr>
+      <th style="padding:4px 6px;text-align:left;border-bottom:1px solid var(--border)">项目</th>
+      <th style="padding:4px 6px;border-bottom:1px solid var(--border);color:var(--accent)">最新 ${esc(a.dt||'')}</th>
+      <th style="padding:4px 6px;border-bottom:1px solid var(--border);color:var(--muted)">上条 ${esc(b.dt||'')}</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:4px 6px;color:var(--muted)">格局</td><td ${diffCls(sa.geju,sb.geju)} style="padding:4px 6px">${esc(sa.geju||'—')}</td><td ${diffCls(sb.geju,sa.geju)} style="padding:4px 6px">${esc(sb.geju||'—')}</td></tr>
+      <tr><td style="padding:4px 6px;color:var(--muted)">用神</td><td ${diffCls(sa.yongshen,sb.yongshen)} style="padding:4px 6px">${esc(sa.yongshen||'—')}</td><td ${diffCls(sb.yongshen,sa.yongshen)} style="padding:4px 6px">${esc(sb.yongshen||'—')}</td></tr>
+      <tr><td style="padding:4px 6px;color:var(--muted)">本年运势</td><td style="padding:4px 6px;font-weight:700">${sa.annual_score!=null?sa.annual_score+'分':'—'}</td><td style="padding:4px 6px;font-weight:700">${sb.annual_score!=null?sb.annual_score+'分':'—'}</td></tr>
+    </tbody>
+  </table>`;
+  panel.style.display = 'block';
 };
 window.histFill = i => {
   const items = histLoad(); const h = items[i]; if(!h) return;
@@ -324,6 +377,8 @@ function restoreTabFromURL() {
 window.toggleDarkMode = function() {
   const html = document.documentElement;
   const isDark = html.classList.toggle('dark-mode');
+  // N5.09: 双机制 — 也设置 data-theme 属性
+  html.dataset.theme = isDark ? 'dark' : 'light';
   localStorage.setItem('darkMode', isDark?'1':'0');
   const btn=$('btn-dark');
   if(btn){ btn.textContent=isDark?'☀️':'🌙'; btn.title=isDark?'切换到浅色模式':'切换到深色模式'; }
@@ -334,10 +389,47 @@ function initDarkMode() {
   const systemDark = window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
   if (saved==='1' || (saved===null&&systemDark)) {
     document.documentElement.classList.add('dark-mode');
+    document.documentElement.dataset.theme = 'dark';
     const btn=$('btn-dark');
     if(btn){ btn.textContent='☀️'; btn.title='切换到浅色模式'; }
+  } else if (saved==='0') {
+    document.documentElement.dataset.theme = 'light';
   }
 }
+
+/* ══════════════════════════════════════════════════
+   N5.08 移动端 Tab Select 初始化
+═══════════════════════════════════════════════════ */
+function initMobileTabSelect() {
+  const tabNav = document.getElementById('tabNav');
+  if (!tabNav) return;
+  // 只在小屏幕上插入 select（也可在 resize 中处理，这里直接插入并用 CSS 控制显示）
+  if (document.getElementById('tab-mobile-select')) return;
+  const buttons = Array.from(tabNav.querySelectorAll('.tab-nav-item[data-idx]'));
+  const sel = document.createElement('select');
+  sel.id = 'tab-mobile-select';
+  sel.setAttribute('aria-label', '功能面板导航');
+  buttons.forEach(btn => {
+    const opt = document.createElement('option');
+    opt.value = btn.dataset.idx;
+    // Extract text content without the dot span
+    opt.textContent = btn.textContent.replace('●','').trim();
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => {
+    switchTab(Number(sel.value));
+  });
+  // Insert before the tab nav
+  tabNav.parentNode.insertBefore(sel, tabNav);
+}
+
+// 在 switchTab 中同步 select 值
+const _origSwitchTab = window.switchTab;
+window.switchTab = function(idx) {
+  if (_origSwitchTab) _origSwitchTab(idx);
+  const sel = document.getElementById('tab-mobile-select');
+  if (sel && sel.value !== String(idx)) sel.value = String(idx);
+};
 
 /* ══════════════════════════════════════════════════
    10. 请求构建 & API 调用
@@ -453,12 +545,21 @@ window.runVerify = async function() {
 
   ST.result = json;
   ST.tabLoaded.clear();  // 清除懒加载缓存，强制重新渲染
-  // 保存历史
+  // 保存历史 (N5.01: {id,ts,summary} + form fill fields, FIFO 5)
+  const _thisYear = new Date().getFullYear();
   histSave({
+    id: json.request_id || Date.now().toString(36),
+    ts: new Date().toLocaleTimeString(),
+    summary: {
+      day_stem: json.pillars_primary?.day?.stem || null,
+      geju: json.geju?.geju_name || json.geju?.name || null,
+      yongshen: (json.yongshen?.favor||[]).join('/') || null,
+      annual_score: (json.liunian_detail||[]).find(l=>l.year===_thisYear)?.annual_score ?? null,
+    },
     userName:$('userName')?.value, userGender:$('userGender')?.value,
     birthPlace:$('birthPlace')?.value, dt:payload.dt, tz:payload.tz,
     lon:payload.lon, mode:payload.mode, solar:payload.solar_time_enabled,
-    rid:json.request_id, level:json.validation?.level, ts:new Date().toLocaleTimeString()
+    rid:json.request_id, level:json.validation?.level,
   });
   // 保存到历史命盘 (4.36 最多5条)
   pushProfile({ payload, json, ts:Date.now() });
@@ -715,6 +816,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initPWA();
   maybeShowOnboarding();
   initDisclaimer();  // task 4.23: 首次免责声明弹窗
+  // N5.08: 移动端 Tab 下拉 select
+  initMobileTabSelect();
   // Keyboard shortcut: Enter 提交
   document.addEventListener('keydown', e => {
     const tag = document.activeElement?.tagName;

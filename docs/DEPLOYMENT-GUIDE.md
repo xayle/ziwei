@@ -1,13 +1,13 @@
 # 部署指南 & 生产检查清单
 
-> **当前版本**: v7.0-release (2026-03-03)  
-> **Git 标签**: `git tag v7.0-release`  
-> **测试状态**: 558 passed (全绿，含 M5/M6 新增用例)
+> **当前版本**: v8.0-release (2026-03-04)  
+> **Git 标签**: `git tag v8.0-release`  
+> **测试状态**: **833 passed** (全绿，含 N5/N6/N7 新增用例) · `bazi:v8.0`
 
 ## 🎯 部署前检查清单
 
 ### 代码质量检查
-- [x] 所有测试通过 (558/558 — 含 M5/M6 新增 P0-11/P0-21/P0-22/P0-23/M6.06/M6.08/M6.09/§4.13/红线#32-35 用例)
+- [x] 所有测试通过 (833/833 — 含 N5/N6/N7 新增用例)
 - [x] 无语法错误
 - [x] Pylance类型检查通过
 - [x] 核心引擎覆盖率 **99%** (bazi_engine 包整体，目标≥80%)，core modules均100%
@@ -53,20 +53,23 @@
 
 ### 文档完成度
 - [x] API文档完整
-- [x] 部署指南完成 (v7.0 更新)
+- [x] 部署指南完成 (v8.0 更新)
 - [x] 故障排查指南
 - [x] 权限管理指南
 - [x] 开发者指南
 - [x] 更新日志记录
 
-### M6 验收门 (v7.0 新增)
-- [x] `pytest tests/` 全通过 (558 passed，核心引擎覆盖率 99% ≥ 80%)
-- [x] `/verify` P99 延迟 < 3s (localhost 实测 5 次平均 **19ms**)
+### N7 验收门 (v8.0 发布门)
+- [x] `pytest tests/` 全通过 (833 passed，核心引擎覆盖率 99% ≥ 80%)
+- [x] `/verify` P95 延迟 < 3s (实测 106.95ms，N4.01 skip 已确认)
 - [x] Docker healthcheck 使用 `urllib.request` [F4]，URL 已修正为 `/health`
 - [x] `.dockerignore` 排除 `.env` / `.env.*` / `data/*.db` [M6.10]
 - [x] SheetJS xlsx.mini.min.js (280KB) 本地化，Excel 6 Sheet 导出 [M5.03/P0-22]
 - [x] CSV 字段名与 API 响应字段名零不匹配 [M5.02/红线#12]
-- [x] `git tag v7.0-release` 已打标 (HEAD=f48faed，最终发布状态)
+- [x] Dockerfile `LABEL version="8.0"` (N7.07)
+- [x] docker-compose.yml `image: bazi:v8.0` (N7.07)
+- [x] bandit 0 MEDIUM, 0 HIGH (N7.05)
+- [x] `git tag v8.0-release` 已打标
 
 ### .dockerignore 验证 (M6.10)
 确认以下路径均在 `.dockerignore` 中排除，构建镜像不含敏感文件：

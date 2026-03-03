@@ -26,6 +26,7 @@
         <button onclick="exportResult('csv')"  role="menuitem">CSV 导出</button>
         <button onclick="exportResult('excel')" role="menuitem">Excel 导出（6表）</button>
         <button onclick="exportResult('print')" role="menuitem">打印 / PDF</button>
+        <button onclick="exportShareCard()" role="menuitem">🖼️ 分享卡片 PNG</button>
       </div>
     </div>
     <button id="btn-fav"     aria-label="收藏夹" onclick="showFavoritesModal()">⭐ 收藏</button>
@@ -235,6 +236,7 @@
 
 <!-- M5.03: SheetJS 本地版，用于真正的 .xlsx 6-Sheet 导出 -->
 <script src="/static/js/xlsx.mini.min.js?v=0.20.3"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="/static/js/verify-core.js?v=20260303"></script>
 <script src="/static/js/relation-shared.js?v=20260301"></script>
 <script src="/static/js/verify-chart.js?v=20260301"></script>

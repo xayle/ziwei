@@ -865,6 +865,13 @@ CLASSIC_REFS: list[dict] = [
         "category": "通论",
         "tags": ["调候", "五行", "寒暖", "燥湿"],
     },
+    {
+        "id": "general_ext08",
+        "source": "《子平真诠·论用神》",
+        "text": "用神者，命局之主宰也。财官印食，各有所宜；生扶制化，全凭用神；用神得力，格局自成；用神受伤，命理遭损。学命者，须先明用神，方可言吉凶。",
+        "category": "通论",
+        "tags": ["用神", "财官印食", "格局", "吉凶"],
+    },
 ]
 
 # 快速索引：按id / category / tag 查找
@@ -887,7 +894,7 @@ def get_refs_by_tag(tag: str) -> list[dict]:
 
 
 def self_check() -> None:
-    assert len(CLASSIC_REFS) >= 80, f"classic_refs should have ≥80 entries, got {len(CLASSIC_REFS)}"
+    assert len(CLASSIC_REFS) >= 120, f"classic_refs should have ≥120 entries, got {len(CLASSIC_REFS)}"
     ids = [r["id"] for r in CLASSIC_REFS]
     assert len(ids) == len(set(ids)), "Duplicate ref IDs found"
     for r in CLASSIC_REFS:

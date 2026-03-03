@@ -7,6 +7,8 @@ services/bazi_engine/scoring.py — 八字评分模型 (M3 任务 3.04)
 
 权重说明: "现代命理界通行约定，非古籍原文"
 """
+# 五行权重方案（工程近似）：天干1.0 / 主气0.8 / 中气0.3 / 余气0.1
+# 此权重影响从旺/专旺格的70%阈值判断；如需修改权重，须同步更新 geju.py 阈值逻辑
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -62,6 +64,46 @@ def _score_wuxing_balance(wuxing_scores: dict[str, float]) -> float:
     # CV=0 → 满分20; CV≥1.5 → 0分
     raw = max(0.0, (1.5 - cv) / 1.5) * 20
     return round(raw, 2)
+
+
+def balance_score(wx_scores: dict[str, float]) -> float:
+    """五行均衡分 [0-100]，_score_wuxing_balance 归一化包装（N2.05）。"""
+    return round(_score_wuxing_balance(wx_scores) / 20 * 100, 1)
+
+
+def get_wuxing_weak_strong(
+    wx_scores: dict[str, float],
+) -> tuple[list[str], list[str]]:
+    """
+    返回 (weak_list, strong_list)。
+    weak:   wx_score < 均值 × 0.5 的五行
+    strong: wx_score > 均值 × 1.8 的五行
+    """
+    vals = list(wx_scores.values())
+    if not vals:
+        return [], []
+    mean = sum(vals) / len(vals)
+    if mean == 0:
+        return list(wx_scores.keys()), []
+    weak   = [k for k, v in wx_scores.items() if v < mean * 0.5]
+    strong = [k for k, v in wx_scores.items() if v > mean * 1.8]
+    return weak, strong
+
+
+def build_balance_advice(weak: list[str], strong: list[str]) -> str:
+    """生成一句话五行均衡建议文字（N2.05）。"""
+    if not weak:
+        return "五行较均衡，命格平和，运势稳定。"
+    x = "、".join(weak)
+    remedies = {
+        "木": "多接触绿色植物、东方环境，以木为辅",
+        "火": "多接触红色、南方事物，适度社交",
+        "土": "稳固居所、信黄色，踏实务实",
+        "金": "佩戴金属饰物、居西方，以金水为辅",
+        "水": "多近水源、北方旅行，亲水为宜",
+    }
+    tips = "；".join(remedies.get(w, f"补{w}") for w in weak)
+    return f"命局偏缺{x}，建议{tips}。"
 
 
 def _score_daymaster_strength(strength_score: float, strength_tier: str) -> float:

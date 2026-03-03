@@ -182,6 +182,75 @@
       <div class="hint" style="margin-top:6px;">接口返回 401 时，请检查 token 是否在 URL、localStorage.token/access_token 或 sessionStorage.access_token 中；本地可用 LOCAL_AUTH_BYPASS=1。</div>
     </details>
   </section>
+
+  <!-- N3.01 权限管理 & 用户列表 -->
+  <section class="section grid columns-2">
+    <div class="card">
+      <p class="card-title"><span class="dot"></span>权限委托管理</p>
+      <div class="hint">查看当前用户已授予或收到的委托；管理员可审批待办申请。</div>
+      <div class="row" style="margin-top:10px;">
+        <a class="pill accent" href="/static/delegation.html">打开委托管理</a>
+        <span class="pill gray" id="dash-pending-badge">加载中…</span>
+      </div>
+    </div>
+
+    <div class="card" id="dash-user-panel" style="display:none;">
+      <p class="card-title"><span class="dot"></span>用户列表（仅管理员可见）</p>
+      <div id="dash-user-list" class="hint">加载中…</div>
+    </div>
+  </section>
 </div>
+
+<script>
+(function(){
+  /* 检查 token，若无则不显示管理面板 */
+  const token = localStorage.getItem('access_token') || localStorage.getItem('token')
+              || sessionStorage.getItem('access_token')
+              || new URLSearchParams(location.search).get('token');
+
+  if (!token) {
+    document.getElementById('dash-pending-badge').textContent = '请先登录';
+    return;
+  }
+
+  const AUTH = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+  /* 加载待审批数量 */
+  fetch('/api/v1/delegations/incoming', { headers: AUTH })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data) { document.getElementById('dash-pending-badge').textContent = '无权限'; return; }
+      const pending = (data.delegations || []).filter(d => d.status === 'pending').length;
+      const badge = document.getElementById('dash-pending-badge');
+      if (pending > 0) {
+        badge.textContent = pending + ' 条待审批';
+        badge.className = 'pill warn';
+      } else {
+        badge.textContent = '无待审批';
+        badge.className = 'pill ok';
+      }
+    })
+    .catch(() => { document.getElementById('dash-pending-badge').textContent = '加载失败'; });
+
+  /* 尝试加载用户列表（仅 admin 成功） */
+  fetch('/api/v1/auth/users', { headers: AUTH })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.users) return;
+      const panel = document.getElementById('dash-user-panel');
+      panel.style.display = '';
+      const list = document.getElementById('dash-user-list');
+      list.innerHTML = data.users.slice(0, 20).map(u =>
+        '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);">' +
+        '<span style="font-weight:700;min-width:90px;">' + u.username + '</span>' +
+        '<span class="pill ' + (u.is_admin ? 'warn' : 'gray') + '">' + (u.is_admin ? '管理员' : u.role) + '</span>' +
+        '<span class="hint">' + (u.email || '') + '</span>' +
+        '<a href="/static/delegation.html?target=' + u.id + '" class="pill accent" style="margin-left:auto;">委托</a>' +
+        '</div>'
+      ).join('');
+    })
+    .catch(() => {});
+})();
+</script>
 </body>
 </html>

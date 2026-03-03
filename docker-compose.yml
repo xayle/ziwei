@@ -1,5 +1,5 @@
 # ============================================================================
-# BaZi API v7.0 - Docker Compose 配置
+# BaZi API v8.0 - Docker Compose 配置
 # 支持开发和生产环境
 # ============================================================================
 
@@ -8,6 +8,7 @@ services:
     # ========================================================================
     # 应用配置
     # ========================================================================
+    image: bazi:v8.0
     build:
       context: .
       dockerfile: Dockerfile
@@ -73,9 +74,31 @@ services:
         max-size: "10m"
         max-file: "3"
 
+# N4.02 — PostgreSQL 服务（生产/CI 使用）
+  db:
+    image: postgres:16-alpine
+    container_name: bazi-postgres
+    environment:
+      POSTGRES_USER: bazi
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-bazi_dev_pass}"
+      POSTGRES_DB: bazi
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bazi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 # ============================================================================
 # 网络配置
 # ============================================================================
 networks:
   default:
     driver: bridge
+
+volumes:
+  pg_data:

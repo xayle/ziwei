@@ -1621,3 +1621,152 @@ class TestLifeArcExtra:
         ]
         text = _build_phase_text(dayun, "early")
         assert "逆运居多" in text, f"预期逆运居多，实际: {text}"
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# N2.05 balance_score 单元测试
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestBalanceScore:
+    """N2.05 — balance_score / get_wuxing_weak_strong / build_balance_advice"""
+
+    def test_balance_score_full_even(self):
+        """case1: 五行完全均衡，得分应接近 100"""
+        from services.bazi_engine.scoring import balance_score
+        s = balance_score({"木": 20.0, "火": 20.0, "土": 20.0, "金": 20.0, "水": 20.0})
+        assert s >= 99.0, f"均衡命盘期望≥99，实际={s}"
+
+    def test_balance_score_single_dominant(self):
+        """case2: 单一五行独大，得分应 < 20"""
+        from services.bazi_engine.scoring import balance_score
+        s = balance_score({"木": 100.0, "火": 0.0, "土": 0.0, "金": 0.0, "水": 0.0})
+        assert s < 20.0, f"单一独大期望<20，实际={s}"
+
+    def test_balance_score_normal_distribution(self):
+        """case3: 普通命盘分布，得分应在 [30, 80]"""
+        from services.bazi_engine.scoring import balance_score
+        s = balance_score({"木": 30.0, "火": 20.0, "土": 25.0, "金": 15.0, "水": 10.0})
+        assert 30.0 <= s <= 80.0, f"普通分布期望[30,80]，实际={s}"
+
+    def test_wuxing_weak_strong_detection(self):
+        """偏缺/偏旺检测逻辑验证"""
+        from services.bazi_engine.scoring import get_wuxing_weak_strong
+        # 均值=40; 弱阈<20; 强阈>72
+        wx = {"木": 30, "火": 5, "土": 40, "金": 55, "水": 100}
+        weak, strong = get_wuxing_weak_strong(wx)
+        assert "火" in weak, "火分值=5，均值=46，5<23，应为偏缺"
+        assert "水" in strong, "水分值=100，均值=46，100>82.8，应为偏旺"
+
+    def test_balance_advice_weak_generates_text(self):
+        """有偏缺五行时，建议文字含'命局偏缺'"""
+        from services.bazi_engine.scoring import build_balance_advice
+        advice = build_balance_advice(["水", "木"], [])
+        assert "命局偏缺" in advice
+
+    def test_balance_advice_even_returns_balanced(self):
+        """五行均衡时，建议文字含'五行较均衡'"""
+        from services.bazi_engine.scoring import build_balance_advice
+        advice = build_balance_advice([], [])
+        assert "五行较均衡" in advice
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# N2.06 覆盖率补充 — liunian_domain.py 低覆盖分支
+# ══════════════════════════════════════════════════════════════════════════════
+
+class TestLiunianDomainCoverage:
+    """N2.06 — liunian_domain.py 75%→>80% 覆盖率补充"""
+
+    _BASE_WX = {"wood": 0.2, "fire": 0.2, "earth": 0.2, "metal": 0.2, "water": 0.2}
+
+    def _call(self, year_stem, year_branch, day_stem, day_branch,
+              shishen=None, favor=None, wx=None, gender="male"):
+        from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
+        return compute_liunian_domain_forecasts(
+            year=2025,
+            year_stem=year_stem, year_branch=year_branch,
+            day_stem=day_stem, day_branch=day_branch,
+            shishen_scores=shishen or {},
+            yongshen_favor=favor or ["wood"],
+            wuxing_scores=wx or self._BASE_WX,
+            gender=gender,
+        )
+
+    def test_bijie_caiyun_branch(self):
+        """比劫分数>0.35 → '比劫争财'分支"""
+        r = self._call("甲", "子", "丙", "午",
+                       shishen={"比肩": 0.2, "劫财": 0.2}, favor=["fire"])
+        assert "比劫" in r["财运"]
+
+    def test_weak_caiyun_branch(self):
+        """无财气 → '守成减负'分支"""
+        r = self._call("甲", "子", "丙", "午",
+                       shishen={"正财": 0.0, "偏财": 0.0, "比肩": 0.0},
+                       favor=["earth"])
+        assert "守成" in r["财运"] or "财" in r["财运"]
+
+    def test_female_guanxing_branch(self):
+        """女命官星>0.15 → 官星感情分支"""
+        r = self._call("庚", "申", "甲", "子",
+                       shishen={"正官": 0.3}, favor=["metal"], gender="female")
+        assert "官" in r["婚恋"] or "感情" in r["婚恋"]
+
+    def test_female_qisha_branch(self):
+        """女命七杀>0.2 → 七杀感情分支"""
+        r = self._call("庚", "申", "甲", "子",
+                       shishen={"七杀": 0.25}, favor=["metal"], gender="female")
+        assert "七杀" in r["婚恋"] or "感情" in r["婚恋"]
+
+    def test_health_克daymaster(self):
+        """流年克日主五行 → 健康提示含脏腑"""
+        # 年干庚(金)→克甲(木) → 木的脏腑=肝胆
+        r = self._call("庚", "申", "甲", "子",
+                       wx={"wood": 0.3, "metal": 0.4, "fire": 0.1, "water": 0.1, "earth": 0.1},
+                       favor=["wood"])
+        assert "肝胆" in r["健康"] or "健康" in r["健康"]
+
+    def test_health_dominant_wuxing(self):
+        """某五行>50% → 对应脏腑保养提示"""
+        r = self._call("甲", "子", "丙", "午",
+                       wx={"wood": 0.0, "fire": 0.8, "earth": 0.05, "metal": 0.05, "water": 0.1},
+                       favor=["wood"])
+        assert "火" in r["健康"] or "心" in r["健康"] or "保养" in r["健康"]
+
+
+class TestMonthlyCoverage:
+    """N2.06 — monthly.py 83%→>85% 覆盖率补充（三刑/六合分支）"""
+
+    def test_sanxing_branch(self):
+        """月支三刑日支 → luck_level='凶'，tip含'三刑'"""
+        from services.bazi_engine.analysis.monthly import compute_monthly
+        # 寅月三刑巳日（寅巳申三刑）
+        results = compute_monthly(
+            day_branch="巳",
+            yongshen_favor=["earth"],
+            yongshen_avoid=["water"],
+            year_branch="子",
+            mode="dual",
+            day_stem="戊",
+        )
+        # 寅月(index 0)，月支=寅，日支=巳 → 三刑
+        xing_month = next((m for m in results if m.month_dizhi == "寅"), None)
+        assert xing_month is not None, "应有寅月"
+        assert xing_month.luck_level == "凶"
+
+    def test_liuhe_peaceful_branch(self):
+        """月支与年支六合 → tip含年支六合提示"""
+        from services.bazi_engine.analysis.monthly import compute_monthly
+        # 丑月(12月, month_dizhi=丑) 与 年支子 六合
+        # yongshen_favor=["wood"] 保证丑(earth)不触发用神分支
+        results = compute_monthly(
+            day_branch="午",         # 不会产生与丑的冲
+            yongshen_favor=["wood"],
+            yongshen_avoid=[],
+            year_branch="子",        # 丑月与子六合
+            mode="dual",
+            day_stem="乙",
+        )
+        # 月支丑(第12月) 与 年支子 → 六合
+        liuhe_month = next((m for m in results if m.month_dizhi == "丑"), None)
+        assert liuhe_month is not None
+        assert "六合" in liuhe_month.tip

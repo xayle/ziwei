@@ -392,4 +392,107 @@ document.addEventListener('click', e => {
   }
 });
 
+/* ══════════════════════════════════════════════════
+   N5.02 分享卡片 – html2canvas PNG 导出
+   依赖: verify.html 中通过 CDN 加载 html2canvas
+═══════════════════════════════════════════════════ */
+window.exportShareCard = function() {
+  const json = window.ST?.result;
+  if (!json) { alert('请先完成排盘再生成分享卡片。'); return; }
+
+  // 1. 构建或更新 #share-card div
+  let card = document.getElementById('share-card');
+  if (!card) {
+    card = document.createElement('div');
+    card.id = 'share-card';
+    document.body.appendChild(card);
+  }
+
+  const thisYear = new Date().getFullYear();
+  const liunianNow = (json.liunian_detail||[]).find(l=>l.year===thisYear);
+  const annualScore = liunianNow?.annual_score != null ? liunianNow.annual_score + '分' : '—';
+  const dayStem     = json.pillars_primary?.day?.stem || '—';
+  const gejuName    = json.geju?.geju_name || json.geju?.name || '—';
+  const gejuLevel   = json.geju?.geju_level || '';
+  const yongshen    = (json.yongshen?.favor||[]).join(' / ') || '—';
+  const dtInput     = json.dt_input ? json.dt_input.slice(0,16).replace('T',' ') : '—';
+  const requestId   = json.request_id || '';
+
+  card.innerHTML = `
+  <div class="share-card-inner">
+    <div class="share-card-header">
+      <div class="share-card-title">八字命理分析结果</div>
+      <div class="share-card-sub">${dtInput}</div>
+    </div>
+    <div class="share-card-body">
+      <div class="share-item"><span class="share-label">日主</span><span class="share-value">${dayStem}</span></div>
+      <div class="share-item"><span class="share-label">格局</span><span class="share-value">${gejuName}${gejuLevel?' · '+gejuLevel:''}</span></div>
+      <div class="share-item"><span class="share-label">用神</span><span class="share-value">${yongshen}</span></div>
+      <div class="share-item"><span class="share-label">本年运势（${thisYear}）</span><span class="share-value share-score">${annualScore}</span></div>
+    </div>
+    <div class="share-card-footer">
+      <div class="share-watermark">本结果仅供娱乐参考，不构成任何建议</div>
+      <div class="share-rid" style="font-size:9px;opacity:0.5;margin-top:4px">ID: ${requestId.slice(0,12)}</div>
+    </div>
+  </div>`;
+
+  // Card styling (injected once)
+  if (!document.getElementById('share-card-style')) {
+    const style = document.createElement('style');
+    style.id = 'share-card-style';
+    style.textContent = `
+    #share-card {
+      position: fixed; left: -9999px; top: 0;
+      width: 360px; background: #1a1128; color: #f5f0ff;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      border-radius: 16px; overflow: hidden; padding: 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    #share-card .share-card-inner { padding: 24px 20px 16px; }
+    #share-card .share-card-header { margin-bottom: 16px; text-align: center; }
+    #share-card .share-card-title { font-size: 18px; font-weight: 700; color: #d4af37; }
+    #share-card .share-card-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    #share-card .share-card-body { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    #share-card .share-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.07); border-radius: 8px; }
+    #share-card .share-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+    #share-card .share-value { font-size: 14px; font-weight: 600; }
+    #share-card .share-score { color: #4ade80; font-size: 18px; font-weight: 800; }
+    #share-card .share-card-footer { text-align: center; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
+    #share-card .share-watermark { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; position: relative; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // 2. 使用 html2canvas 截图并下载
+  if (typeof html2canvas !== 'function') {
+    alert('分享卡片功能需要网络连接加载 html2canvas 库，请检查网络后重试。');
+    return;
+  }
+
+  card.style.left = '-9999px';
+  card.style.display = 'block';
+
+  html2canvas(card, {
+    backgroundColor: '#1a1128',
+    scale: 2,
+    useCORS: true,
+    logging: false,
+  }).then(canvas => {
+    card.style.left = '-9999px';
+    canvas.toBlob(blob => {
+      if (!blob) { alert('生成图片失败，请重试。'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bazi-share-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+    }, 'image/png');
+  }).catch(err => {
+    console.error('html2canvas error:', err);
+    alert('生成分享卡片失败，请稍后重试。');
+  });
+};
+
 })();

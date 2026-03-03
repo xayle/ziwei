@@ -1,8 +1,13 @@
-# 权限管理最佳实践指南
+# 权限管理指南（N3 更新）
 
-## 📚 概念基础
+> **版本**：N3.0 · 更新于 2026-03-04  
+> **变更**：新增委托申请-审批工作流、status 字段说明、全套 curl 示例
 
-### 权限三角形
+---
+
+## 一、核心概念
+
+### 1.1 权限三角形
 
 ```
     用户(User)
@@ -11,24 +16,22 @@
 (Permission) (Resource)
 ```
 
-- **用户**: 系统中的账户
-- **权限**: 可执行的操作
-- **资源**: 操作的对象
+- **用户**：系统账户
+- **权限**：可执行的操作
+- **资源**：操作的对象
 
-### 权限模型演化
+### 1.2 权限模型
 
 | 阶段 | 模型 | 特点 | 应用 |
 |------|------|------|------|
 | v1 | 硬编码权限 | 权限在代码中 | 小项目 ❌ |
-| v2 | ACL列表 | 直接分配权限 | 中等项目 ⚠️ |
+| v2 | ACL 列表 | 直接分配权限 | 中等项目 ⚠️ |
 | v3 | **RBAC** | 角色归类权限 | **本项目** ✅ |
 | v4+ | ABAC | 属性决定权限 | 大企业 |
 
 ---
 
-## 🎯 RBAC系统详解
-
-### 我们的4个角色
+## 二、RBAC 角色与权限
 
 ```
 权限数量: OWNER(18) > EDITOR(10) > VIEWER(3) > GUEST(1)
@@ -583,11 +586,136 @@ for delegation in delegations:
 | 部署指南 | docs/DEPLOYMENT-GUIDE.md | 生产部署 |
 | 源代码 | services/permission_cascade_service.py | 实现细节 |
 | 单元测试 | tests/test_cascade_validation.py | 使用示例 |
+| **N3 工作流测试** | **tests/test_rbac_workflow.py** | **申请-审批流程** |
 
 ---
 
-**版本**: v1.0  
-**最后更新**: 2026年2月25日  
-**作者**: Development Team
+## N3 申请-审批工作流（新增）
 
-✅ **本指南涵盖了权限管理的各个方面，从基础概念到高级实战。建议开发人员在实现权限相关功能时参考本指南。**
+### 状态机
+
+```
+POST /permissions/request
+        ↓ status="pending"
+   ┌────┴────────┐
+   ↓ approve     ↓ reject
+status=approved status=rejected
+   ↓ revoke
+status=revoked
+```
+
+**合法状态转换**：  
+- `pending` → `approved`（approve 端点）  
+- `pending` → `rejected`（reject 端点）  
+- `approved` → `revoked`（revoke 端点）  
+- 其他转换（如 `approved` → `rejected`）→ **409 Conflict**
+
+---
+
+### Delegation.status 字段取值
+
+| status | 含义 | is_active |
+|--------|------|-----------|
+| `pending` | 等待审批 | `false` |
+| `approved` | 已批准、权限生效 | `true` |
+| `rejected` | 已拒绝、权限不生效 | `false` |
+| `revoked` | 已撤销（从 approved 变更） | `false` |
+
+> **旧数据迁移**（N3.00 migration）：所有历史记录视为已批准，迁移为 `status='approved'`，`requested_by` 为 NULL。
+
+---
+
+### API 端点 & curl 示例
+
+#### 1. 发起申请（任意已登录用户）
+
+```bash
+TOKEN="<your_access_token>"
+
+curl -X POST http://localhost:8000/api/v1/permissions/request \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "permission_type": "edit",
+    "expires_days": 30
+  }'
+
+# 响应：
+# { "id": 42, "status": "pending", "requested_by": 7, ... }
+```
+
+#### 2. 管理员批准（需 MANAGE 权限 / is_admin=true）
+
+```bash
+ADMIN_TOKEN="<admin_access_token>"
+DELEGATION_ID=42
+
+curl -X PUT http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/approve \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json"
+
+# 响应：
+# { "id": 42, "status": "approved", "approved_by": 1, "approved_at": "2026-03-04T..." }
+#
+# 错误码：
+#   403 — 无 MANAGE 权限，或自我审批
+#   404 — delegation 不存在
+#   409 — 已非 pending 状态（含并发审批）
+```
+
+#### 3. 管理员拒绝
+
+```bash
+curl -X PUT http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/reject \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"reject_reason": "不满足申请条件"}'
+
+# 错误码：
+#   409 — 已 approved（请改用 revoke）；或已非 pending
+```
+
+#### 4. 撤销已批准权限（高风险操作，强制写审计日志）
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/revoke \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json"
+
+# 响应：
+# { "id": 42, "status": "revoked", "message": "Permission successfully revoked" }
+#
+# 错误码：
+#   409 — 非 approved 状态（无法 revoke）
+```
+
+---
+
+### 安全约束
+
+| 约束 | 说明 | HTTP 码 |
+|------|------|---------|
+| 自我审批禁止 | `requested_by == approver_id` | 403 |
+| 并发审批防重 | `UPDATE WHERE status='pending'`，rowcount=0 | 409 |
+| 非法状态转换 | approved → reject（须走 revoke） | 409 |
+| 重复审批 | 已非 pending 再次 approve | 409 |
+| 审计日志 append-only | 禁止修改/删除审计记录 | — |
+
+---
+
+### 权限缓存（N3.05）
+
+- 缓存位于 `app/dependencies/permissions.py` 的私有单例 `_permission_cache`
+- **与引擎 QueryCache 物理隔离**（不同类、不同实例、不同 key 空间）
+- TTL = 300 秒（5 分钟）
+- Cache key 格式：`perm:{user_id}:{permission_type}`
+- `approve` / `reject` / `revoke` 操作后自动调用 `_permission_cache.invalidate(key)` 清除缓存
+- `revoke` 操作额外调用 `invalidate_user(user_id)` 清除该用户全部权限缓存
+
+---
+
+**版本**: v2.0 (N3)  
+**最后更新**: 2026-03-04  
+**作者**: Development Team  
+
+✅ **本指南涵盖权限管理的各个方面，包括基础 RBAC 和 N3 申请-审批工作流。**

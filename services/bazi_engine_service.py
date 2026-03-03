@@ -584,6 +584,7 @@ def _enrich_v2_analysis(
         geju_raw = compute_geju(
             year_stem=ys_st, month_stem=ms_st, month_branch=ms_br,
             day_stem=ds_st, hour_stem=hs_st, wuxing_scores=wx_scores,
+            year_branch=ys_br, day_branch=ds_br, hour_branch=hs_br,  # N1.03 三合局
         )
         geju_name = geju_raw.get("name", "普通格")
         is_broken = not geju_raw.get("confident", True)
@@ -738,6 +739,7 @@ def _enrich_v2_analysis(
             year_branch=ys_br, mode=mode,
             month_ganzhis=_month_ganzhis,
             current_dayun_stem=_dayun_stem,
+            day_stem=ds_st,   # N2.03 十神关系
         )
     except Exception as exc:
         logger.debug("[M2 monthly] %s", exc)
@@ -1089,6 +1091,40 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M4 current_fortune_summary] %s", exc)
+
+    # ── N2.05 五行均衡评分 ────────────────────────────────────────────────────
+    try:
+        from services.bazi_engine.scoring import (
+            balance_score as _balance_score,
+            get_wuxing_weak_strong as _wws,
+            build_balance_advice as _bba,
+        )
+        verify_response.wuxing_balance_score = _balance_score(wx_scores)
+        _weak, _strong = _wws(wx_scores)
+        verify_response.wuxing_weak   = _weak   or None
+        verify_response.wuxing_strong = _strong or None
+        verify_response.balance_advice = _bba(_weak, _strong)
+    except Exception as exc:
+        logger.debug("[N2.05 balance_score] %s", exc)
+
+    # ── N2.07 流年运势（当前大运覆盖年份）───────────────────────────────────
+    try:
+        from services.bazi_engine.liunian import compute_liunian_for_dayun as _clf_dayun
+        _cur_dy = dayun_list[0] if dayun_list else {}
+        if _cur_dy:
+            _dy_start_age  = int(_cur_dy.get("start_age",  0))
+            _dy_start_year = int(_cur_dy.get("start_year", 0))
+            if _dy_start_year > 0:
+                _liunian_list = _clf_dayun(
+                    day_stem=ds_st,
+                    day_branch=ds_br,
+                    dayun_start_age=_dy_start_age,
+                    dayun_start_year=_dy_start_year,
+                    span=10,
+                )
+                verify_response.yearly_fortune = _liunian_list
+    except Exception as exc:
+        logger.debug("[N2.07 yearly_fortune] %s", exc)
 
     return verify_response
 

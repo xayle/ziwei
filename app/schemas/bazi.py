@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from constants import MAX_LON, MIN_LON
 from .common import RangeModel, WarningModel, BackendInfo
@@ -305,6 +305,26 @@ class VerifyRequest(BaseModel):
         return self
 
 
+class BatchVerifyRequest(BaseModel):
+    """N5.03 批量验证请求，最多 50 条"""
+    items: List[VerifyRequest] = Field(..., description="批量请求列表，最多 50 条")
+
+    @field_validator("items")
+    @classmethod
+    def validate_items_length(cls, v: List[VerifyRequest]) -> List[VerifyRequest]:
+        if len(v) > 50:
+            raise ValueError(f"items 最多 50 条，当前 {len(v)} 条")
+        if len(v) == 0:
+            raise ValueError("items 不能为空")
+        return v
+
+
+class BatchVerifyResponse(BaseModel):
+    """N5.03 批量验证响应"""
+    results: List[dict] = Field(default_factory=list, description="成功结果列表（有序，与 items 对应）")
+    failed: List[dict] = Field(default_factory=list, description="失败列表 [{index: int, error: str}]")
+
+
 class VerifyResponse(BaseModel):
     """验证响应 - 完整的八字分析结果"""
     api_version: str = Field(..., description="API semantic version")
@@ -362,6 +382,13 @@ class VerifyResponse(BaseModel):
     tiangan_clashes: Optional[list[dict]] = Field(
         None, description="天干相克关系，scope=day_related，见P0-11"
     )
+    # ── N2.05 五行均衡评分与建议 ────────────────────────────────────────────
+    wuxing_balance_score: Optional[float] = Field(None, description="五行均衡分 [0-100]")
+    wuxing_weak: Optional[list[str]] = Field(None, description="偏缺五行列表，如 [\"水\", \"木\"]")
+    wuxing_strong: Optional[list[str]] = Field(None, description="偏旺五行列表，如 [\"火\"]")
+    balance_advice: Optional[str] = Field(None, description="一句话五行补救建议")
+    # ── N2.07 流年运势 ───────────────────────────────────────────────────────
+    yearly_fortune: Optional[list[dict]] = Field(None, description="流年运势列表（当前大运覆盖的年份）")
 
 
 class BaziFullRequest(BaseModel):

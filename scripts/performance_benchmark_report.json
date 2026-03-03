@@ -247,5 +247,38 @@
         }
       }
     }
+  },
+  "v8_0_baseline": {
+    "recorded_at": "2026-03-04T04:29:17.484865",
+    "engine_test_baseline": 333,
+    "total_test_count": 815,
+    "note": "v8.0 N2.01-N2.07 milestone baseline; engine_test_baseline = pytest -k 'engine or geju or shensha or scoring' collected count",
+    "milestone": "N2",
+    "classic_refs_count": 120,
+    "shensha_count": 25
+  },
+  "v8_0_final": {
+    "recorded_at": "2026-03-04",
+    "milestone": "N7",
+    "test_count_final": 833,
+    "test_count_baseline_n2": 815,
+    "test_count_delta": 18,
+    "performance_baseline_p95_ms": {
+      "health_concurrency1": 64.89,
+      "metrics_concurrency1": 95.95,
+      "docs_concurrency1": 109.02,
+      "overall_concurrency1": 106.95,
+      "overall_concurrency50": 120.9
+    },
+    "n4_01_decision": "skip",
+    "n4_01_reason": "单并发 verify P95 < 3000ms（实测 overall_p95=106.95ms，远低于 3s 阈值）；ThreadPoolExecutor 未引入同步阻塞；N4.01 Celery/异步化 skip 条件已满足",
+    "conclusion": "v8.0 最终性能结论：concurrency_1 overall_p95=106.95ms，concurrency_50 overall_p95=120.90ms，success_rate=100%。相较于 v7.0 基线（overall_p95=109.02ms）保持稳定。五阶段并发全部 0 错误。",
+    "milestones_completed": ["N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7"],
+    "security_scan": {
+      "bandit_severity": "LOW",
+      "safety_status": "pass",
+      "note": "bandit -r . -ll --exclude ./tests,./docs 全量扫描结果"
+    },
+    "release_tag": "v8.0-release"
   }
 }

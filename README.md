@@ -1,10 +1,39 @@
 # BaZi Service
 
-项目版本: v5.1.0
+项目版本: **v8.0.0**
 状态: 🚀 生产就绪 (Production Ready)
-开发周期: Week 3完成
+发布日期: 2026-03-04
 贡献者: GitHub Copilot
-文档状态: 所有文档都已在 c1 目录中准备好，立即部署
+测试覆盖: **833 tests passed** · Docker: `bazi:v8.0`
+
+---
+
+## ✅ v8.0 里程碑汇总 (N0–N7 全部完成)
+
+### 功能特性矩阵
+
+| 里程碑 | 内容 | 关键交付物 |
+|--------|------|-----------|
+| N0 | 开发前自检 | pyright 0 errors, alembic 迁移, .env.example |
+| N1 | 命理引擎强化 | geju confidence 评分, 5 专旺格, 4 从格, shensha priority |
+| N2 | API 基础设施 | Prometheus 指标, P95 基线测试, ThreadPoolExecutor |
+| N3 | 大运与月运 | 大运叙事 400-600字, 月运 month_ganzhi, 城市/行业财富乘数 |
+| N4 | 数据持久化 | PostgreSQL 支持, soft-delete, Alembic 版本管理 |
+| N5 | UX 增强 | 历史 FIFO-5, 分享卡片 PNG, 批量 CSV, 五行环图, 大运展开, 移动端响应式, 暗黑模式 |
+| N6 | API v2 | `/api/v2` 路由, v2 Schema, v1 弃用 header, SDK 示例, Locust 压测 |
+| N7 | 测试与发布 | 833 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`, git tag |
+
+### 测试指标
+
+| 指标 | 数值 |
+|------|------|
+| 总测试数 | **833 passed** |
+| 引擎测试基线 (N2) | 333 |
+| bandit MEDIUM/HIGH | **0 / 0** |
+| 核心引擎覆盖率 | **99%** |
+| `/api/v1/verify` P95 | **< 200ms** (concurrency=1) |
+
+---
 
 ## ✅ Week 3 开发完成汇总 (2026年2月25日)
 
@@ -119,7 +148,7 @@ uvicorn run:app --host 127.0.0.1 --port 8000
 
 # 运行全部测试
 pytest tests/ -v
-# 结果: ✅ 32/32 测试通过
+# 结果: ✅ 833/833 测试通过
 
 # 访问API文档
 # Swagger: http://127.0.0.1:8000/docs
@@ -207,7 +236,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/scenarios \
 - OpenAPI: [docs/openapi.json](docs/openapi.json)
 
 ## Release Notes
-- Latest: [v5.3.1](CHANGELOG.md)
+- Latest: [v8.0.0](CHANGELOG.md)
 - All releases: [docs/release-notes/](docs/release-notes/)
 
 ## BaZi Full quickstart (v5.0.0)

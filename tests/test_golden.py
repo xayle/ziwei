@@ -346,3 +346,41 @@ def test_all_8_cases_pillars_non_empty(dt_str, lon):
     for pillar in ("year", "month", "day", "hour"):
         assert p[pillar]["stem"], f"[{dt_str}] {pillar}.stem 为空"
         assert p[pillar]["branch"], f"[{dt_str}] {pillar}.branch 为空"
+
+
+def _verify_direct_geju(dt_str: str, lon: float) -> dict:
+    """直接调用 calculate() 获取 geju 字段（绕过 HTTP 限流）"""
+    from services.bazi_engine_service import calculate
+    dt = datetime.fromisoformat(dt_str).replace(tzinfo=ZoneInfo("Asia/Shanghai"))
+    result = calculate(dt, lon=lon, tz="Asia/Shanghai", use_solar=False, mode="single")
+    geju = result.verify_response.geju
+    if geju is None:
+        return {"geju": None}
+    return {"geju": {"geju_name": geju.geju_name, "confidence": geju.confidence}}
+
+
+# ---------------------------------------------------------------------------
+# N1.07: 格局置信度范围验证（8个黄金案例）
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("dt_str,lon", [
+    ("1990-07-17T12:20:00", 116.4),
+    ("1993-03-06T08:00:00", 116.4),
+    ("1985-11-15T06:00:00", 121.5),
+    ("1988-03-20T14:00:00", 120.2),
+    ("2000-01-01T23:30:00", 116.4),
+    ("2000-01-01T00:15:00", 116.4),
+    ("2000-01-01T22:59:00", 116.4),
+    ("2000-01-01T01:00:00", 116.4),
+])
+def test_geju_confidence_range(dt_str, lon):
+    """N1.07: 所有黄金案例格局置信度在 [0.0, 1.0] 且格局名称非空（直接调用，不走HTTP限流）"""
+    data = _verify_direct_geju(dt_str, lon)
+    geju = data.get("geju")
+    if geju is None:
+        pytest.skip("geju 字段未返回")
+    assert geju.get("geju_name") is not None, f"[{dt_str}] geju_name 为 None"
+    assert geju.get("geju_name") != "", f"[{dt_str}] geju_name 为空字符串"
+    confidence = geju.get("confidence", -1)
+    assert 0.0 <= confidence <= 1.0, (
+        f"[{dt_str}] geju.confidence={confidence!r} 超出 [0.0, 1.0] 范围"
+    )

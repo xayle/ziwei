@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import ClassVar, Optional
 
-from sqlalchemy import Index
+from sqlalchemy import Column, Index, Text
 from sqlmodel import Field, Relationship, SQLModel
 
 from .base import User
@@ -48,6 +48,13 @@ class Delegation(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
+    # ── N3.00 工作流状态字段 ─────────────────────────────────────────────────
+    # status 取值：pending / approved / rejected / revoked
+    status: str = Field(default="approved", max_length=20)
+    requested_by: Optional[int] = Field(default=None, foreign_key="users.id")
+    approved_by: Optional[int] = Field(default=None, foreign_key="users.id")
+    approved_at: Optional[datetime] = None
+    reject_reason: Optional[str] = Field(default=None, sa_column=Column(Text))
 
 
 class AuditLog(SQLModel, table=True):

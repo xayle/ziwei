@@ -813,3 +813,91 @@ pre { background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:12px;
 
 /* ── v8.0 新增：格局待定标签 ──────── */
 .tag-uncertain { color: #999; font-size: 0.8em; margin-left: 4px; font-weight: normal; }
+
+/* ══════════════════════════════════════════════════
+   N5.08  移动端响应式 (@media max-width 768px)
+   • Tab 栏隐藏 → 显示 #tab-mobile-select 下拉
+   • 卡片全宽、无网格
+═══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* 隐藏桌面 Tab 导航，显示移动端 select */
+  .tab-nav { display: none !important; }
+  #tab-mobile-select {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    background: var(--input);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    margin-bottom: 10px;
+    cursor: pointer;
+    appearance: auto;
+  }
+  /* 卡片/网格全宽 */
+  .g2, .g3, .g4 {
+    grid-template-columns: 1fr !important;
+  }
+  .card { margin-bottom: 10px; }
+  /* 主容器不限宽 */
+  .container { padding: 0 8px; }
+  /* 标题栏精简 */
+  header .header-actions { gap: 4px; }
+  header .header-actions button { padding: 6px 8px; font-size: 12px; }
+  /* 隐藏底部导航抽屉（移动端已有底导） */
+  .sidebar { display: none; }
+}
+
+/* ══════════════════════════════════════════════════
+   N5.09  深色模式双机制
+   • @media (prefers-color-scheme: dark) — 系统偏好自动触发
+   • [data-theme="dark"] — JS 手动切换（与旧 :root.dark-mode 共存）
+═══════════════════════════════════════════════════ */
+/* data-theme="dark" 变量覆写（与 :root.dark-mode 等效） */
+:root[data-theme="dark"],
+[data-theme="dark"] {
+  --bg:      #0f172a;
+  --bg-grad: #0d1626;
+  --panel:   #1e293b;
+  --text:    #f1f5f9;
+  --muted:   #94a3b8;
+  --line:    #334155;
+  --input:   #1e293b;
+  --shadow:  0 18px 50px rgba(0,0,0,.45);
+}
+
+/* 系统深色模式自动触发（未强制设置浅色时生效） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light-mode) {
+    --bg:      #0f172a;
+    --bg-grad: #0d1626;
+    --panel:   #1e293b;
+    --text:    #f1f5f9;
+    --muted:   #94a3b8;
+    --line:    #334155;
+    --input:   #1e293b;
+    --shadow:  0 18px 50px rgba(0,0,0,.45);
+  }
+  :root:not([data-theme="light"]):not(.light-mode) body {
+    background: var(--bg);
+    color: var(--text);
+  }
+  :root:not([data-theme="light"]):not(.light-mode) header {
+    background: rgba(15,23,42,.95);
+    border-bottom-color: #334155;
+  }
+  :root:not([data-theme="light"]):not(.light-mode) .tab-nav-item {
+    background: #1e293b;
+    color: #94a3b8;
+  }
+  :root:not([data-theme="light"]):not(.light-mode) .tab-nav-item.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  :root:not([data-theme="light"]):not(.light-mode) pre {
+    background: #020617;
+    border-color: #1e293b;
+  }
+}

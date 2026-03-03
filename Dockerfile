@@ -1,5 +1,5 @@
 # ============================================================================
-# BaZi API v7.0 — 多阶段构建
+# BaZi API v8.0 — 多阶段构建
 # ============================================================================
 
 FROM python:3.11-slim as builder
@@ -21,6 +21,10 @@ RUN python -m pip install --upgrade pip && \
 # ============================================================================
 
 FROM python:3.11-slim
+
+LABEL version="8.0" \
+      maintainer="bazi-api" \
+      description="八字排盘 API v8.0"
 
 # 配置时区和Python行为
 ENV PYTHONDONTWRITEBYTECODE=1 \

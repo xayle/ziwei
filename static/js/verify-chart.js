@@ -16,7 +16,7 @@ const SCORE_LABELS = ['财运','事业','婚姻','健康','发展','整体'];
    五行环形图  M4.30
    用 CSS conic-gradient 绘制甜甜圈
 ═══════════════════════════════════════════════════ */
-window.renderWuxingRingChart = function(wx, container) {
+window.renderWuxingRingChart = function(wx, container, json) {
   if (!container) return;
   const keys  = ['wood','fire','earth','metal','water'];
   const vals  = keys.map(k => Math.max(0, wx[k]||0));
@@ -40,6 +40,27 @@ window.renderWuxingRingChart = function(wx, container) {
       <span style="font-weight:700">${(vals[i]/total*100).toFixed(0)}%</span>
     </div>`).join('');
 
+  // N5.06: 五行均衡分、偏缺/偏旺
+  const balanceScore = json?.wuxing_balance_score;
+  const wxWeak   = json?.wuxing_weak   || [];
+  const wxStrong = json?.wuxing_strong || [];
+  const yongshenList = json?.yongshen?.favor || [];
+
+  // 五行建议映射 (N5.06)
+  const WX_ADVICE = {
+    water: '水：宜北方、黑蓝色系、金融/理财行业',
+    wood:  '木：宜东方、绿色系、教育/文化行业',
+    fire:  '火：宜南方、红色系、文娱/传媒行业',
+    earth: '土：宜中央/中部、黄色系、房产/建筑行业',
+    metal: '金：宜西方、白色系、法律/金融/机械行业',
+  };
+  const adviceLines = yongshenList.map(f => WX_ADVICE[f]).filter(Boolean);
+
+  const balanceHtml = balanceScore != null ? `<div style="margin-top:8px;font-size:12px;color:var(--muted)">均衡分 <strong style="color:${balanceScore>=70?'var(--ok)':balanceScore>=50?'var(--warn)':'var(--bad)'}">${balanceScore.toFixed(1)}</strong></div>` : '';
+  const weakHtml  = wxWeak.length  ? `<div style="margin-top:4px;font-size:11px;color:var(--bad)">偏缺：${wxWeak.join('、')}</div>` : '';
+  const strongHtml= wxStrong.length? `<div style="font-size:11px;color:var(--warn)">偏旺：${wxStrong.join('、')}</div>` : '';
+  const adviceHtml= adviceLines.length ? `<div style="margin-top:8px;font-size:11px;line-height:1.7;border-top:1px solid var(--line);padding-top:6px">${adviceLines.map(a=>`<div>▸ ${a}</div>`).join('')}</div>` : '';
+
   container.innerHTML = `
   <div class="wuxing-ring">
     <div class="wuxing-ring-outer" style="background: conic-gradient(${grad})">
@@ -50,7 +71,8 @@ window.renderWuxingRingChart = function(wx, container) {
       </div>
     </div>
     <div class="wuxing-legend">${legend}</div>
-  </div>`;
+  </div>
+  ${balanceHtml}${weakHtml}${strongHtml}${adviceHtml}`;
 };
 
 /* ══════════════════════════════════════════════════

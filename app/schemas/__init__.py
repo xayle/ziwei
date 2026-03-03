@@ -59,6 +59,8 @@ from .bazi import (
     SocialModel,
     VerifyRequest,
     VerifyResponse,
+    BatchVerifyRequest,
+    BatchVerifyResponse,
     BaziFullRequest,
     BaziFullResponse,
 )
@@ -141,6 +143,8 @@ __all__ = [
     "SocialModel",
     "VerifyRequest",
     "VerifyResponse",
+    "BatchVerifyRequest",
+    "BatchVerifyResponse",
     "BaziFullRequest",
     "BaziFullResponse",
     # Cases

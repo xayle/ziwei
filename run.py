@@ -30,7 +30,10 @@ from typing import Optional, Callable, cast
 from services.request_validation import RequestValidationMiddleware
 
 # ✅ Priority 3.9: Prometheus 监控和性能指标
-from services.prometheus_monitoring import prometheus_middleware, get_metrics_response, record_verify_metrics
+from services.prometheus_monitoring import (
+    prometheus_middleware, get_metrics_response, record_verify_metrics,
+    BAZI_ENGINE_CALC_SECONDS, BAZI_CACHE_HITS, BAZI_CACHE_MISSES,
+)
 
 # 0.36: 结构化日志配置 — log_level 读环境变量，LOG_FORMAT=json 时输出 JSON
 _LOG_LEVEL_STR = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -63,6 +66,8 @@ from app.schemas import (
 	ValidationModel,
 	VerifyRequest,
 	VerifyResponse,
+	BatchVerifyRequest,
+	BatchVerifyResponse,
 	WealthModel,
 	WarningModel,
 	DayMasterStrengthModel,
@@ -87,6 +92,7 @@ from routers import audit as audit_router
 from routers import events as events_router
 from routers import scenarios as scenarios_router
 from routers import static_data as static_data_router
+from routers import v2 as v2_router_module  # N6.01: API v2 路由
 from services.normalize_input import validate_lon_strict, warn_lon_cn_range
 from services.bazi_full_service import (
 	build_dayun,
@@ -111,6 +117,8 @@ from zoneinfo import ZoneInfoNotFoundError
 from app.error_handling import ExceptionHandlingMiddleware
 from app.openapi_docs import setup_openapi_docs
 
+# N4.04: 服务启动时间，用于 /health/detail uptime_seconds
+_APP_START_TIME: float = time.time()
 
 # 自定义 JSONResponse 以支持中文字符（ensure_ascii=False）
 class UnescapedJSONResponse(JSONResponse):
@@ -193,6 +201,17 @@ app.add_middleware(RequestValidationMiddleware)
 async def monitoring_middleware(request: Request, call_next):
 	"""Prometheus 性能监控中间件"""
 	return await prometheus_middleware(request, call_next)
+
+
+# N6.03: v1 废弃声明响应头（满足红线 R45）
+@app.middleware("http")
+async def add_v1_deprecation_headers(request: Request, call_next):
+	"""对所有 /api/v1/* 响应追加废弃声明头（R45）."""
+	response = await call_next(request)
+	if request.url.path.startswith("/api/v1/"):
+		response.headers["Deprecation"] = "true"
+		response.headers["Sunset"] = "2026-12-31"
+	return response
 
 
 # ✅ P0 安全响应头中间件 (Production Security)
@@ -306,6 +325,7 @@ app.include_router(audit_router.router)
 app.include_router(events_router.router)
 app.include_router(scenarios_router.router)
 app.include_router(static_data_router.router)
+app.include_router(v2_router_module.router, prefix="/api/v2")  # N6.01: API v2，ENGINE_V2=false时返回501
 
 # ⚙️ 0.13: 统一认证依赖 — 直接从 app.dependencies.auth 引用，run.py 不重复定义
 # get_current_user / require_user 已在 app/dependencies/auth.py 实现
@@ -393,6 +413,46 @@ def ready(response: Response):
 			"status": "not_ready",
 			"timestamp": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
 		}
+
+
+@app.get("/health/detail")
+def health_detail():
+	"""
+	N4.04: 详细健康检查
+	返回 {db_reachable, cache_size, engine_version, uptime_seconds}
+	"""
+	import importlib.metadata as _imeta
+
+	# db_reachable — 执行 SELECT 1
+	db_ok = False
+	try:
+		from db import get_engine as _get_engine
+		from sqlalchemy import text as _sa_text
+		with _get_engine().connect() as _conn:
+			_conn.execute(_sa_text("SELECT 1"))
+		db_ok = True
+	except Exception:
+		pass
+
+	# cache_size — 使用 __len__ 接口（N4.04 要求，不直接访问 _cache）
+	try:
+		from services.optimization_tools import query_cache as _qc
+		cache_sz = len(_qc)
+	except Exception:
+		cache_sz = -1
+
+	# engine_version
+	try:
+		engine_ver = _imeta.version("sxtwl")
+	except Exception:
+		engine_ver = "unknown"
+
+	return {
+		"db_reachable": db_ok,
+		"cache_size": cache_sz,
+		"engine_version": engine_ver,
+		"uptime_seconds": round(time.time() - _APP_START_TIME, 1),
+	}
 
 
 def _attach_tz(dt: datetime, tz_name: str) -> datetime:
@@ -717,6 +777,7 @@ def api_verify(
 		logger.debug("[tiangan_clashes] %s", _tc_exc)
 	# ── M2 分析引擎集成 ─────────────────────────────────────────────────
 	try:
+		_engine_t0 = time.time()  # N4.05: 引擎计时起点
 		verify_response = _enrich_v2_analysis(
 			verify_response=verify_response,
 			rp=rp,
@@ -728,6 +789,7 @@ def api_verify(
 			gender=getattr(body, "gender", None),
 			mode=body.mode,
 		)
+		BAZI_ENGINE_CALC_SECONDS.observe(time.time() - _engine_t0)  # N4.05
 	except Exception as _enrich_exc:
 		logger.warning("M2 enrichment failed in legacy path: %s", _enrich_exc, exc_info=True)
 	# 使用自定义 UnescapedJSONResponse 以正确处理中文字符
@@ -737,6 +799,113 @@ def api_verify(
 	return UnescapedJSONResponse(
 		content=response_data,
 		headers={"X-Request-Id": req_id},
+	)
+
+
+# N5.03: 批量验证端点 POST /api/v2/batch/verify
+import os as _os
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutureTimeoutError, as_completed as _as_completed
+import uuid as _uuid
+
+_BATCH_EXECUTOR = ThreadPoolExecutor(
+	max_workers=int(_os.getenv("BATCH_WORKERS", "4")),
+	thread_name_prefix="batch-verify",
+)
+
+
+def _batch_single_verify(item: VerifyRequest, idx: int) -> tuple[int, dict]:
+	"""执行单条批量验证，返回 (index, result_dict)."""
+	import warnings as _warn_mod
+	_warnings: list[str] = []
+	_req_id = _uuid.uuid4().hex[:12]
+
+	# 时区验证
+	_validate_tz(item.tz)
+
+	if not (1900 <= item.dt.year <= 2100):
+		raise ValueError(f"dt.year {item.dt.year} 超出支持范围 [1900, 2100]")
+
+	_dt = _attach_tz(item.dt, item.tz)
+	_lon = validate_lon_strict(item.lon)
+
+	# 优先使用 ENGINE_V2 路径
+	if _bazi_engine_service._engine_v2_enabled():
+		_calc = _bazi_engine_service.calculate(
+			dt=_dt,
+			lon=_lon,
+			tz=item.tz,
+			use_solar=item.solar_time_enabled,
+			mode=item.mode,
+			gender=getattr(item, "gender", None),
+			request_id=_req_id,
+			extra_warnings=_warnings,
+			city_tier=getattr(item, "city_tier", None),
+			industry=getattr(item, "industry", None),
+		)
+		return idx, _calc.verify_response.model_dump(mode="json")
+
+	# 回退到 v1 路径
+	_result = verify_full(_dt, lon=_lon, use_solar=item.solar_time_enabled, mode=item.mode)
+	return idx, {"request_id": _req_id, "mode_effective": _result.mode_effective}
+
+
+@app.post("/api/v2/batch/verify", response_model=BatchVerifyResponse)
+@limiter.limit("10/minute")  # N5.03: 每用户10次/分钟（_rate_limit_key 已实现 user-based key）
+def api_batch_verify(
+	request: Request,
+	body: BatchVerifyRequest,
+):
+	"""N5.03 批量验证端点.
+
+	- items 最多 50 条
+	- ThreadPoolExecutor(BATCH_WORKERS) 并行
+	- 整体超时 60s，单条超时 5s
+	- 部分成功返回（partial results on timeout）
+	"""
+	_deadline = 60.0
+	_per_item_timeout = 5.0
+
+	results_map: dict[int, dict] = {}
+	failed_list: list[dict] = []
+
+	futures = {
+		_BATCH_EXECUTOR.submit(_batch_single_verify, item, idx): idx
+		for idx, item in enumerate(body.items)
+	}
+
+	import time as _time
+	_start = _time.time()
+
+	for future in _as_completed(futures, timeout=_deadline):
+		idx = futures[future]
+		try:
+			_i, _res = future.result(timeout=_per_item_timeout)
+			results_map[_i] = _res
+		except _FutureTimeoutError:
+			failed_list.append({"index": idx, "error": "timeout"})
+		except Exception as exc:
+			failed_list.append({"index": idx, "error": str(exc)[:200]})
+
+		# 外部截止检查
+		if _time.time() - _start >= _deadline:
+			# 标记尚未完成的条目为超时
+			for f, remaining_idx in futures.items():
+				if remaining_idx not in results_map and not any(f_["index"] == remaining_idx for f_ in failed_list):
+					f.cancel()
+					failed_list.append({"index": remaining_idx, "error": "deadline_exceeded"})
+			break
+
+	# 保证 len(results) + len(failed) == len(items)
+	all_present = set(results_map.keys()) | {f["index"] for f in failed_list}
+	for missing_idx in range(len(body.items)):
+		if missing_idx not in all_present:
+			failed_list.append({"index": missing_idx, "error": "not_completed"})
+
+	# 按原始顺序输出成功结果
+	ordered_results = [results_map[i] for i in sorted(results_map.keys())]
+
+	return UnescapedJSONResponse(
+		content={"results": ordered_results, "failed": failed_list}
 	)
 
 

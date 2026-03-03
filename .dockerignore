@@ -50,6 +50,10 @@ monitoring/
 # 脚本（非运行时需要）
 scripts/
 
+# 文本文档（保留 requirements*.txt）
+*.txt
+!requirements*.txt
+
 # 杂项
 *.bak
 *.swp

@@ -299,9 +299,10 @@ class MonthlyFortuneModel(BaseModel):
     color_hint:    str    # CSS色值
     tip:           str
     clash_with:    Optional[str] = None
-    month_ganzhi:  Optional[str] = None   # 月干支，如"甲子"
-    dayun_stem:    Optional[str] = None   # 当前大运天干
-    disclaimer:    str = "仅供学术研究参考"
+    month_ganzhi:      Optional[str] = None   # 月干支，如"甲子"
+    dayun_stem:        Optional[str] = None   # 当前大运天干
+    relation_to_rizhu: Optional[str] = None   # 该月天干对日主的十神关系（N2.03）
+    disclaimer:        str = "仅供学术研究参考"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
