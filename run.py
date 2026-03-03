@@ -858,10 +858,20 @@ def api_batch_verify(
 	"""N5.03 批量验证端点.
 
 	- items 最多 50 条
+	- ENGINE_V2=false 时返回 501（R40）
 	- ThreadPoolExecutor(BATCH_WORKERS) 并行
 	- 整体超时 60s，单条超时 5s
 	- 部分成功返回（partial results on timeout）
 	"""
+	# ── R40: ENGINE_V2 开关检查 ─────────────────────────────────────────────
+	if not _bazi_engine_service._engine_v2_enabled():
+		from fastapi import Response as _Response
+		from fastapi.responses import JSONResponse as _JSONResponse
+		return _JSONResponse(
+			status_code=501,
+			content={"detail": "v2 engine not enabled (set ENGINE_V2=true to activate)"},
+		)
+
 	_deadline = 60.0
 	_per_item_timeout = 5.0
 
