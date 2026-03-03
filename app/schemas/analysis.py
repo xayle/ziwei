@@ -114,6 +114,7 @@ class ShenshaModel(BaseModel):
     pillar:         Literal["year", "month", "day", "hour"]
     is_beneficial:  bool
     is_star:        bool = False     # ≥3条相关关系时置True [P69]
+    priority:       Literal["A", "B", "C"] = "B"  # M1.09三级优先度: A=一级必出, B=二级有则展示, C=三级仅专业视图
     meaning:        str
     classic_source: str
 

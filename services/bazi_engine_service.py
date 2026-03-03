@@ -547,6 +547,7 @@ def _enrich_v2_analysis(
                 is_beneficial=(s.get("polarity", "") == "+"),
                 # ★ 当整体符合 ≥3 条神煞且本项为 A 级吉神时标记 [P69]
                 is_star=_shensha_star_chart and s.get("priority", "") == "A",
+                priority=s.get("priority", "B"),  # M1.09: A/B/C 三级优先度传递到前端
                 meaning=s.get("note", ""),
                 classic_source=s.get("classic", ""),
             )
