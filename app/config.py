@@ -28,7 +28,7 @@ class Settings:
     """应用配置"""
     
     # ===== 应用基本配置 =====
-    app_name: str = os.getenv("APP_NAME", "BaZi Service v7.0")
+    app_name: str = os.getenv("APP_NAME", "BaZi Service v8.0")
     app_env: str = os.getenv("APP_ENV", "development")  # development, staging, production
     debug: bool = os.getenv("DEBUG", "false").lower() == "true"
     

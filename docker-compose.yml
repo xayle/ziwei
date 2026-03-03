@@ -33,7 +33,7 @@ services:
       UVICORN_LOG_LEVEL: "${UVICORN_LOG_LEVEL:-info}"
       
       # 数据库配置 (可选，默认SQLite)
-      DB_PATH: "${DB_PATH:-/app/data/bazi.db}"
+      DB_PATH: "${DB_PATH:-/app/data/mingli.db}"
       
       # 引擎路由开关 (M1任务1.23: M1完成后切为 true)
       ENGINE_V2: "${ENGINE_V2:-true}"

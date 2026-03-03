@@ -11,10 +11,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# 复制和安装依赖
-COPY requirements.txt ./
+# 复制和安装依赖（使用锁定版本保证可重现构建）
+COPY requirements-lock.txt ./
 RUN python -m pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements-lock.txt
 
 # ============================================================================
 # 生产镜像
