@@ -27,9 +27,11 @@ def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
         return app.openapi_schema
     
     # 获取默认的 OpenAPI schema
+    # openapi_version 固定 3.0.3：swagger-ui 4.x 不支持 3.1.0
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
+        openapi_version="3.0.3",
         description=app.description,
         routes=app.routes,
     )
