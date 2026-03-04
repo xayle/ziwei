@@ -4,7 +4,7 @@
 状态: 🚀 生产就绪 (Production Ready)
 发布日期: 2026-03-04
 贡献者: GitHub Copilot
-测试覆盖: **833 tests passed** · Docker: `bazi:v8.0`
+测试覆盖: **854 tests passed** · Docker: `bazi:v8.0`
 
 ---
 
@@ -21,13 +21,13 @@
 | N4 | 数据持久化 | PostgreSQL 支持, soft-delete, Alembic 版本管理 |
 | N5 | UX 增强 | 历史 FIFO-5, 分享卡片 PNG, 批量 CSV, 五行环图, 大运展开, 移动端响应式, 暗黑模式 |
 | N6 | API v2 | `/api/v2` 路由, v2 Schema, v1 弃用 header, SDK 示例, Locust 压测 |
-| N7 | 测试与发布 | 833 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`, git tag |
+| N7 | 测试与发布 | 854 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`, git tag |
 
 ### 测试指标
 
 | 指标 | 数值 |
 |------|------|
-| 总测试数 | **833 passed** |
+| 总测试数 | **854 passed** |
 | 引擎测试基线 (N2) | 333 |
 | bandit MEDIUM/HIGH | **0 / 0** |
 | 核心引擎覆盖率 | **99%** |
@@ -148,7 +148,7 @@ uvicorn run:app --host 127.0.0.1 --port 8000
 
 # 运行全部测试
 pytest tests/ -v
-# 结果: ✅ 833/833 测试通过
+# 结果: ✅ 854/854 tests passed (6 skipped)
 
 # 访问API文档
 # Swagger: http://127.0.0.1:8000/docs
