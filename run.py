@@ -285,8 +285,10 @@ async def add_security_headers(request: Request, call_next):
 		# 其他静态资源（JS/CSS/图片）缓存30天
 		response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
 	elif request.url.path in ["/docs", "/redoc", "/openapi.json"]:
-		# ✅ Phase 1: API文档缓存1小时（减少重复加载）
-		response.headers["Cache-Control"] = "public, max-age=3600"
+		# API 文档不缓存：CSP 变更需立即生效，避免浏览器使用旧 CSP 头
+		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+		response.headers["Pragma"] = "no-cache"
+		response.headers["Expires"] = "0"
 	elif request.url.path.startswith("/api/"):
 		# API响应不缓存
 		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
