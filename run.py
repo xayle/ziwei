@@ -164,7 +164,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="BaZi v7.0",
+    title="BaZi v8.0",
     version=API_VERSION,
     lifespan=lifespan,
     docs_url=None,    # 禁用默认 CDN /docs，由下方本地路由接管

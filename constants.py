@@ -1,6 +1,6 @@
-# Core constants for v7.0
+# Core constants for v8.0
 API_VERSION = "v1"
-RULE_VERSION = "v7.0"
+RULE_VERSION = "v8.0"
 DEFAULT_LON = 120.0
 SUPPORTED_YEAR_RANGE = (1900, 2101)
 SHICHEN_THRESHOLD_MIN = 15
