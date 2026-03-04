@@ -15,7 +15,8 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Header, HTTPException, Response, Depends
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware  # ✅ Priority 3.3: CORS支持
 from fastapi.middleware.gzip import GZipMiddleware  # ✅ Phase 1: GZIP压缩
@@ -162,7 +163,13 @@ async def lifespan(app: FastAPI):
 	# Shutdown
 
 
-app = FastAPI(title="BaZi v7.0", version=API_VERSION, lifespan=lifespan)
+app = FastAPI(
+    title="BaZi v7.0",
+    version=API_VERSION,
+    lifespan=lifespan,
+    docs_url=None,    # 禁用默认 CDN /docs，由下方本地路由接管
+    redoc_url=None,   # 禁用默认 CDN /redoc
+)
 
 # ✅ Week 3: 添加全局异常处理中间件（必须在其他中间件之前）
 app.add_middleware(ExceptionHandlingMiddleware)
@@ -225,18 +232,16 @@ async def add_security_headers(request: Request, call_next):
 	# 其余路径保持严格 'self' only
 	_is_docs_path = request.url.path in ("/docs", "/redoc", "/openapi.json")
 	if _is_docs_path:
-		# Swagger UI / ReDoc: 开放 jsdelivr CDN + fastapi favicon + 允许内联脚本（Swagger UI 初始化用）
-		_CDN = "https://cdn.jsdelivr.net"
-		_FASTAPI = "https://fastapi.tiangolo.com"
+		# Swagger UI / ReDoc：资源已本地化至 /static/swagger-ui/，允许内联脚本供 Swagger 初始化
 		response.headers["Content-Security-Policy"] = (
-			f"default-src 'self'; "
-			f"connect-src 'self' {_CDN}; "
-			f"style-src 'self' 'unsafe-inline' {_CDN}; "
-			f"script-src 'self' 'unsafe-inline' {_CDN}; "
-			f"img-src 'self' data: {_CDN} {_FASTAPI}; "
-			f"font-src 'self' {_CDN}; "
-			f"object-src 'none'; "
-			f"frame-ancestors 'self';"
+			"default-src 'self'; "
+			"connect-src 'self'; "
+			"style-src 'self' 'unsafe-inline'; "
+			"script-src 'self' 'unsafe-inline'; "
+			"img-src 'self' data:; "
+			"font-src 'self'; "
+			"object-src 'none'; "
+			"frame-ancestors 'self';"
 		)
 	else:
 		response.headers["Content-Security-Policy"] = (
@@ -956,3 +961,27 @@ def metrics(request: Request):
 
 # ✅ Week 3: 设置增强的 OpenAPI 文档
 setup_openapi_docs(app)
+
+
+# ─── 本地化 Swagger UI（离线环境，CDN 不可达）────────────────────────────────
+@app.get("/docs", include_in_schema=False, response_class=HTMLResponse)
+async def custom_swagger_ui() -> HTMLResponse:
+    """使用本地 /static/swagger-ui/ 资源渲染 Swagger UI，不依赖外部 CDN。"""
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title="BaZi v8.0 - API Docs",
+        swagger_js_url="/static/swagger-ui/swagger-ui-bundle.js",
+        swagger_css_url="/static/swagger-ui/swagger-ui.css",
+        swagger_favicon_url="/static/swagger-ui/favicon.png",
+        oauth2_redirect_url="/static/swagger-ui/oauth2-redirect.html",
+    )
+
+
+@app.get("/redoc", include_in_schema=False, response_class=HTMLResponse)
+async def custom_redoc() -> HTMLResponse:
+    """ReDoc 文档页面（FastAPI 内置渲染，亦通过本地路由服务）。"""
+    return get_redoc_html(
+        openapi_url="/openapi.json",
+        title="BaZi v8.0 - ReDoc",
+        redoc_favicon_url="/static/swagger-ui/favicon.png",
+    )
