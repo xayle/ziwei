@@ -1,10 +1,11 @@
 # N7.08 Red Line Gate Verification Report
-> Date: 2026-03-04 | Release: v8.0-release | Commit: 12fc7c1
+> Date: 2026-03-04 | Release: v8.0-release | Commit: 9f9378e (v8.0-final)
+> Includes hotfixes: v8.0.1~v8.0.6 (swagger-ui offline, openapi 3.0.3, CSP)
 
 ## Gate Prerequisites ✅
 | Item | Result |
 |------|--------|
-| pytest ≥ 700 tests | **833 PASS** |
+| pytest ≥ 700 tests | **854 PASS** (6 skipped) |
 | pyright errors | **0 errors** |
 | bandit HIGH/MEDIUM | **0 HIGH / 0 MEDIUM** |
 | v2 P95 < 1s | **106.95ms** (benchmark JSON) |
@@ -39,9 +40,9 @@
 ---
 
 ## Final Status: **v8.0-release GATE PASSED ✅**
-- git tag: `v8.0-release` on commit `12fc7c1`
-- All N0–N7 tasks completed
-- 833 tests passing
+- git tag: `v8.0-release` = `v8.0-final` on commit `9f9378e`
+- All N0–N7 tasks completed + v8.0.1~v8.0.6 hotfixes applied
+- 854 tests passing (6 skipped)
 - pyright 0 errors
-- bandit 0 HIGH
+- bandit 0 HIGH / 0 MEDIUM severity
 - All 10 red lines verified
