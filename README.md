@@ -1,6 +1,6 @@
 # BaZi Service
 
-项目版本: **v8.0.0**
+项目版本: **v8.0.7**
 状态: 🚀 生产就绪 (Production Ready)
 发布日期: 2026-03-04
 贡献者: GitHub Copilot
@@ -236,7 +236,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/scenarios \
 - OpenAPI: [docs/openapi.json](docs/openapi.json)
 
 ## Release Notes
-- Latest: [v8.0.0](CHANGELOG.md)
+- Latest: [v8.0.7](CHANGELOG.md)
 - All releases: [docs/release-notes/](docs/release-notes/)
 
 ## BaZi Full quickstart (v5.0.0)

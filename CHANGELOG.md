@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v8.0.7] - 2026-03-04
+
+### Hotfix — 版本字符串同步 & 部署脚本修正
+
+- **fix(constants)**: `RULE_VERSION` 从 `v7.0` 修正为 `v8.0`，修复 `GET /health` 返回 `rule_version:"v7.0"` 的遗留问题
+- **fix(run)**: FastAPI `title` 从 `"BaZi v7.0"` 更新为 `"BaZi v8.0"`，与 OpenAPI 文档一致
+- **chore(deploy)**: `deploy.ps1` 版本号 `5.3.1` → `8.0`；`local up` 改为调用 `start-dev.ps1`（端口 8765），避免与生产端口 8000 冲突；`local down` / `smoke` 端口同步为 8765
+
+---
+
 ## [v8.0.6] - 2026-03-04
 
 ### Hotfix — Swagger UI 离线化 & OpenAPI 兼容性修复
