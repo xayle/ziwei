@@ -9,6 +9,7 @@ tzdata>=2023.3
 sqlmodel>=0.0.22,<0.0.23
 prometheus-client>=0.17.0
 alembic>=1.13,<2
+swagger-ui-bundle>=1.1.0  # 本地化 Swagger UI 资源，离线环境 /docs 加载
 # 认证依赖（P83：之前缺失导致全新环境启动失败）
 python-jose[cryptography]>=3.3,<4
 argon2-cffi>=23.1,<24
