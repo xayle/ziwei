@@ -20,9 +20,9 @@
     .\deploy.ps1 -Environment k8s -Action deploy
 
 .NOTES
-    版本: 5.3.1
+    版本: 8.0
     作者: BaZi Team
-    日期: 2026-02-26
+    日期: 2026-03-04
 #>
 
 [CmdletBinding()]
@@ -44,7 +44,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProjectName = 'bazi-api'
-$Version = '5.3.1'
+$Version = '8.0'
 $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 
 # ============================================================================
@@ -113,8 +113,8 @@ function Deploy-Local {
         }
         
         'down' {
-            Write-Info '停止本地服务器...'
-            Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | 
+            Write-Info '停止本地开发服务器 (端口 8765)...'
+            Get-NetTCPConnection -LocalPort 8765 -ErrorAction SilentlyContinue | 
                 ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
             Write-Success '服务器已停止'
         }
@@ -127,7 +127,7 @@ function Deploy-Local {
         
         'smoke' {
             Write-Info '运行冒烟测试...'
-            $env:BASE_URL = 'http://127.0.0.1:8000'
+            $env:BASE_URL = 'http://127.0.0.1:8765'
             pwsh -NoLogo -NoProfile scripts/smoke_local.ps1
         }
         
@@ -374,7 +374,7 @@ function Show-Help {
     $helpText = @"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  BaZi API v$Version 部署工具
+  BaZi API v$Version 部署工具  (开发端口: 8765 / 生产端口: 8000)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📋 用法:
