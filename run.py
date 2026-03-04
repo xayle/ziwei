@@ -221,18 +221,34 @@ async def add_security_headers(request: Request, call_next):
 	response = await call_next(request)
 	
 	# 内容安全策略 (CSP) - 防止XSS (P78 / task 4.19)
-	# script-src 'self' only — 无内联脚本 (task 4.19 已外部化)
-	# style-src 保留 'unsafe-inline'：模板存在 23 处内联 style="" 属性（inline attr 非脚本注入风险）
-	response.headers["Content-Security-Policy"] = (
-		"default-src 'self'; "
-		"connect-src 'self'; "
-		"style-src 'self' 'unsafe-inline'; "
-		"script-src 'self'; "
-		"img-src 'self' data:; "
-		"font-src 'self'; "
-		"object-src 'none'; "
-		"frame-ancestors 'self';"
-	)
+	# /docs 和 /redoc 需要从 cdn.jsdelivr.net / fastapi.tiangolo.com 加载 Swagger UI 资源
+	# 其余路径保持严格 'self' only
+	_is_docs_path = request.url.path in ("/docs", "/redoc", "/openapi.json")
+	if _is_docs_path:
+		# Swagger UI / ReDoc: 开放 jsdelivr CDN + fastapi favicon + 允许内联脚本（Swagger UI 初始化用）
+		_CDN = "https://cdn.jsdelivr.net"
+		_FASTAPI = "https://fastapi.tiangolo.com"
+		response.headers["Content-Security-Policy"] = (
+			f"default-src 'self'; "
+			f"connect-src 'self' {_CDN}; "
+			f"style-src 'self' 'unsafe-inline' {_CDN}; "
+			f"script-src 'self' 'unsafe-inline' {_CDN}; "
+			f"img-src 'self' data: {_CDN} {_FASTAPI}; "
+			f"font-src 'self' {_CDN}; "
+			f"object-src 'none'; "
+			f"frame-ancestors 'self';"
+		)
+	else:
+		response.headers["Content-Security-Policy"] = (
+			"default-src 'self'; "
+			"connect-src 'self'; "
+			"style-src 'self' 'unsafe-inline'; "
+			"script-src 'self'; "
+			"img-src 'self' data:; "
+			"font-src 'self'; "
+			"object-src 'none'; "
+			"frame-ancestors 'self';"
+		)
 	
 	# 防点击劫持
 	response.headers["X-Frame-Options"] = "SAMEORIGIN"
