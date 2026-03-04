@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v8.0.6] - 2026-03-04
+
+### Hotfix — Swagger UI 离线化 & OpenAPI 兼容性修复
+
+- **fix(openapi)**: `openapi_version` 从 3.1.0 降级为 3.0.3，修复 swagger-ui 4.x 显示
+  "Unable to render this definition" 问题（FastAPI 0.133.0 默认输出 3.1.0，超出 swagger-ui 4.x 支持范围）
+- **fix(docs)**: 将 swagger-ui 4.15.5 资源本地化至 `static/swagger-ui/`，消除对 `cdn.jsdelivr.net` 的外网依赖
+  - 安装 `swagger-ui-bundle==1.1.0` 获取本地资产（`swagger-ui.css` / `swagger-ui-bundle.js` / favicon / oauth2-redirect）
+  - `FastAPI(docs_url=None, redoc_url=None)` 禁用默认 CDN 版文档；新增本地路由 `GET /docs` / `GET /redoc`
+  - CSP `/docs` 路径不再需要 CDN 白名单，恢复为纯 `'self' + 'unsafe-inline'`
+- **fix(csp)**: `/docs` / `/redoc` / `/openapi.json` 路径 `Cache-Control` 改为 `no-cache, no-store, must-revalidate`，防止浏览器缓存旧 CSP 头
+- **fix(csp)**: CSP 按路径分支——文档路径允许 `cdn.jsdelivr.net`（后续已改为本地化，此条已无实际效果，保留历史记录）
+
+---
+
 ## [v8.0.0] - 2026-03-04
 
 ### Milestone N7 — 测试与发布（854 tests · bandit 0 HIGH · v8.0-release）
