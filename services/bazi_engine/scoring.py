@@ -92,17 +92,23 @@ def get_wuxing_weak_strong(
 
 def build_balance_advice(weak: list[str], strong: list[str]) -> str:
     """生成一句话五行均衡建议文字（N2.05）。"""
-    if not weak:
+    # 英文→中文五行名映射（wx_scores 使用英文键，对外输出须用中文）
+    _en2cn: dict[str, str] = {
+        "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水",
+        "木": "木", "火": "火", "土": "土", "金": "金", "水": "水",
+    }
+    weak_cn   = [_en2cn.get(w, w) for w in weak]
+    if not weak_cn:
         return "五行较均衡，命格平和，运势稳定。"
-    x = "、".join(weak)
+    x = "、".join(weak_cn)
     remedies = {
         "木": "多接触绿色植物、东方环境，以木为辅",
         "火": "多接触红色、南方事物，适度社交",
-        "土": "稳固居所、信黄色，踏实务实",
-        "金": "佩戴金属饰物、居西方，以金水为辅",
+        "土": "稳固居所、近黄色事物，踏实务实",
+        "金": "佩戴金属饰物、居西方，以金为辅",
         "水": "多近水源、北方旅行，亲水为宜",
     }
-    tips = "；".join(remedies.get(w, f"补{w}") for w in weak)
+    tips = "；".join(remedies.get(w, f"补{w}") for w in weak_cn)
     return f"命局偏缺{x}，建议{tips}。"
 
 

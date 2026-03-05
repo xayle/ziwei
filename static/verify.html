@@ -4,12 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#B22222" />
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; connect-src 'self'; object-src 'none';" />
+  <!-- CSP 由服务器 HTTP 响应头统一管理（run.py add_security_headers），此处不重复设置 -->
   <title>八字命理验证工作台 v8.0 — 双引擎 · 20维</title>
   <link rel="manifest" href="/static/manifest.json" />
-  <link rel="stylesheet" href="/static/css/verify.css?v=20260301" />
-  <link rel="stylesheet" href="/static/css/verify-print.css?v=20260301" media="print" />
+  <link rel="stylesheet" href="/static/css/verify.css?v=20260305N" />
+  <link rel="stylesheet" href="/static/css/verify-print.css?v=20260305" media="print" />
 </head>
 <body>
 
@@ -22,17 +21,17 @@
     <div id="exportMenuWrapper" style="position:relative;display:inline-flex">
       <button id="btn-export-menu" aria-haspopup="true" aria-controls="exportDropdown" aria-label="导出">📥 导出</button>
       <div id="exportDropdown" class="dropdown-menu" role="menu" aria-labelledby="btn-export-menu">
-        <button onclick="exportResult('json')" role="menuitem">JSON 导出</button>
-        <button onclick="exportResult('csv')"  role="menuitem">CSV 导出</button>
-        <button onclick="exportResult('excel')" role="menuitem">Excel 导出（6表）</button>
-        <button onclick="exportResult('print')" role="menuitem">打印 / PDF</button>
-        <button onclick="exportShareCard()" role="menuitem">🖼️ 分享卡片 PNG</button>
+        <button id="btn-export-json"        role="menuitem">JSON 导出</button>
+        <button id="btn-export-csv"         role="menuitem">CSV 导出</button>
+        <button id="btn-export-excel"       role="menuitem">Excel 导出（6表）</button>
+        <button id="btn-export-print"       role="menuitem">打印 / PDF</button>
+        <button id="btn-export-share-card"  role="menuitem">🖼️ 分享卡片 PNG</button>
       </div>
     </div>
-    <button id="btn-fav"     aria-label="收藏夹" onclick="showFavoritesModal()">⭐ 收藏</button>
-    <button id="btn-compare" aria-label="对比"   onclick="toggleCompare()">⚖️ 对比</button>
-    <button id="btn-share"   aria-label="分享"   onclick="showShareModal()">🔗 分享</button>
-    <button id="btn-dark"    aria-label="切换深色模式" onclick="toggleDarkMode()">🌙</button>
+    <button id="btn-fav"     aria-label="收藏夹">⭐ 收藏</button>
+    <button id="btn-compare" aria-label="对比"  >⚖️ 对比</button>
+    <button id="btn-share"   aria-label="分享"  >🔗 分享</button>
+    <button id="btn-dark"    aria-label="切换深色模式">🌙</button>
     <button id="btn-hist-drawer" aria-label="历史命盘">🕑</button>
   </div>
   <div id="statusBar" role="status" aria-live="polite">
@@ -44,26 +43,26 @@
 <div id="compareNotifyBar" style="display:none;background:var(--accent-gold);color:#fff;padding:8px 16px;font-size:12px;text-align:center;" role="alert"></div>
 
 <nav class="tab-nav" id="tabNav" role="tablist" aria-label="功能面板导航">
-  <button class="tab-nav-item" role="tab" data-idx="0"  aria-selected="true"  aria-controls="panel-0"  id="tab-btn-0" >总览<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="1"  aria-selected="false" aria-controls="panel-1"  id="tab-btn-1" >请求<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="2"  aria-selected="false" aria-controls="panel-2"  id="tab-btn-2" >命盘<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="3"  aria-selected="false" aria-controls="panel-3"  id="tab-btn-3" >格局<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="4"  aria-selected="false" aria-controls="panel-4"  id="tab-btn-4" >命宫<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="5"  aria-selected="false" aria-controls="panel-5"  id="tab-btn-5" >摘要<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="6"  aria-selected="false" aria-controls="panel-6"  id="tab-btn-6" >诊断<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="7"  aria-selected="false" aria-controls="panel-7"  id="tab-btn-7" >财运<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="8"  aria-selected="false" aria-controls="panel-8"  id="tab-btn-8" >事业<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="9"  aria-selected="false" aria-controls="panel-9"  id="tab-btn-9" >姻缘<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="10" aria-selected="false" aria-controls="panel-10" id="tab-btn-10">健康<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="11" aria-selected="false" aria-controls="panel-11" id="tab-btn-11">人际<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="12" aria-selected="false" aria-controls="panel-12" id="tab-btn-12">性格<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="13" aria-selected="false" aria-controls="panel-13" id="tab-btn-13">风水<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="14" aria-selected="false" aria-controls="panel-14" id="tab-btn-14">饰品<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="15" aria-selected="false" aria-controls="panel-15" id="tab-btn-15">开运<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="16" aria-selected="false" aria-controls="panel-16" id="tab-btn-16">大运<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="17" aria-selected="false" aria-controls="panel-17" id="tab-btn-17">流年<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="18" aria-selected="false" aria-controls="panel-18" id="tab-btn-18">月运<span class="tab-dot"></span></button>
-  <button class="tab-nav-item" role="tab" data-idx="19" aria-selected="false" aria-controls="panel-19" id="tab-btn-19">案例<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="0"  aria-selected="true"  aria-controls="panel-0"  id="tab-btn-0" >☯ 总览<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="1"  aria-selected="false" aria-controls="panel-1"  id="tab-btn-1" >✎ 请求<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="2"  aria-selected="false" aria-controls="panel-2"  id="tab-btn-2" >✦ 命盘<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="3"  aria-selected="false" aria-controls="panel-3"  id="tab-btn-3" >⊞ 格局<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="4"  aria-selected="false" aria-controls="panel-4"  id="tab-btn-4" >◈ 命宫<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="5"  aria-selected="false" aria-controls="panel-5"  id="tab-btn-5" >◎ 摘要<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="6"  aria-selected="false" aria-controls="panel-6"  id="tab-btn-6" >⚑ 诊断<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="7"  aria-selected="false" aria-controls="panel-7"  id="tab-btn-7" >💰 财运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="8"  aria-selected="false" aria-controls="panel-8"  id="tab-btn-8" >⚡ 事业<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="9"  aria-selected="false" aria-controls="panel-9"  id="tab-btn-9" >♡ 姻缘<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="10" aria-selected="false" aria-controls="panel-10" id="tab-btn-10">♥ 健康<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="11" aria-selected="false" aria-controls="panel-11" id="tab-btn-11">☯ 人际<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="12" aria-selected="false" aria-controls="panel-12" id="tab-btn-12">◉ 性格<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="13" aria-selected="false" aria-controls="panel-13" id="tab-btn-13">⌂ 风水<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="14" aria-selected="false" aria-controls="panel-14" id="tab-btn-14">◇ 饰品<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="15" aria-selected="false" aria-controls="panel-15" id="tab-btn-15">★ 开运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="16" aria-selected="false" aria-controls="panel-16" id="tab-btn-16">▶ 大运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="17" aria-selected="false" aria-controls="panel-17" id="tab-btn-17">◷ 流年<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="18" aria-selected="false" aria-controls="panel-18" id="tab-btn-18">◑ 月运<span class="tab-dot"></span></button>
+  <button class="tab-nav-item" role="tab" data-idx="19" aria-selected="false" aria-controls="panel-19" id="tab-btn-19">📋 案例<span class="tab-dot"></span></button>
 </nav>
 
 <main id="tabPanels" role="main">
@@ -76,7 +75,7 @@
           <div style="font-weight:700">等待排盘</div>
           <div>前往「请求」Tab 填写出生时间，点击「开始排盘」</div>
         </div>
-        <button onclick="switchTab(1)" style="margin-top:12px">前往请求 →</button>
+        <button id="btn-goto-request" style="margin-top:12px">前往请求 →</button>
       </div>
     </div>
   </div>
@@ -224,7 +223,7 @@
 
 <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-label="新手引导" style="display:none">
   <div class="onboarding-box">
-    <h2>欢迎使用八字命理工作台 v4</h2>
+    <h2>欢迎使用八字命理工作台 v8.0</h2>
     <ul style="text-align:left;line-height:2">
       <li>共 <strong>20 个面板</strong>，涵盖命盘、格局、大运、流年等维度</li>
       <li>前往「请求」Tab 填入出生时间后点击开始排盘</li>
@@ -236,32 +235,25 @@
 
 <!-- M5.03: SheetJS 本地版，用于真正的 .xlsx 6-Sheet 导出 -->
 <script src="/static/js/xlsx.mini.min.js?v=0.20.3"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="/static/js/verify-core.js?v=20260303"></script>
+<!-- html2canvas 已本地化，避免 CDN 依赖和 CSP 违规 -->
+<script src="/static/js/html2canvas.min.js"></script>
+<script src="/static/js/verify-core.js?v=20260305N"></script>
 <script src="/static/js/relation-shared.js?v=20260301"></script>
-<script src="/static/js/verify-chart.js?v=20260301"></script>
-<script src="/static/js/verify-render.js?v=20260301"></script>
+<script src="/static/js/verify-chart.js?v=20260305Q"></script>
+<script src="/static/js/verify-render.js?v=20260305Q"></script>
 <script src="/static/js/verify-compare.js?v=20260301"></script>
 <script src="/static/js/verify-export.js?v=20260301"></script>
-<script src="/static/js/verify-guide.js?v=20260301"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/static/sw.js')
-        .then(function(reg) { console.log('[SW] registered, scope:', reg.scope); })
-        .catch(function(err) { console.warn('[SW] registration failed:', err); });
-    });
-  }
-</script>
+<script src="/static/js/verify-guide.js?v=20260305e"></script>
+<script src="/static/js/verify-init.js?v=20260304"></script>
 
 <!-- task 4.23: 数据来源页脚 (SRC-6) -->
 <footer class="footer" style="margin:16px;max-width:900px;margin-left:auto;margin-right:auto" aria-label="版权与来源说明">
-  <div style="margin-bottom:6px"><span class="footer-brand">八字命理工作台 v7.0</span> &nbsp;·&nbsp; 规则版本 r7.0 &nbsp;·&nbsp; 算法 ENGINE_V2</div>
+  <div style="margin-bottom:6px"><span class="footer-brand">八字命理工作台 v8.0</span> &nbsp;·&nbsp; 规则版本 r8.0 &nbsp;·&nbsp; 算法 ENGINE_V2</div>
   <div style="color:var(--muted);line-height:1.8">
     ① 本站<strong>不主动存储</strong>您的生日信息（分享链接除外，使用前请知情确认）。<br/>
     ② 本工具<strong>仅供学术研究与娱乐参考</strong>，不代替专业建议，不作任何决策依据。<br/>
     ③ <strong>数据来源</strong>：《三命通会》《渊海子平》《子平真诠》《协纪辨方书》；节气基于 sxtwl VSOP87 天文历；藏干权重参考现代命理界通行约定。<br/>
-    ④ <strong>算法版本</strong>：ENGINE_V2 r7.0 · 五行/用神/格局/神煞/大运 均按规格 §1.01–§1.18 实现。
+    ④ <strong>算法版本</strong>：ENGINE_V2 r8.0 · 五行/用神/格局/神煞/大运 均按规格 §1.01–1.18 实现。
   </div>
 </footer>
 
@@ -273,10 +265,12 @@
       ① 本站<strong>不主动存储</strong>您的个人信息。<br/>
       ② 本工具仅供<strong>学术研究与娱乐参考</strong>，不作任何决策依据。<br/>
       ③ 数据来源：《三命通会》《渊海子平》等传统典籍及 sxtwl 天文历。<br/>
-      ④ 算法版本 ENGINE_V2 r7.0，计算结果仅代表命理学研究视角。
+      ④ 算法版本 ENGINE_V2 r8.0，计算结果仅代表命理学研究视角。
     </div>
     <button id="disclaimerBtn" style="margin-top:20px;width:100%;padding:12px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer">我已了解，开始使用</button>
   </div>
 </div>
+
+<!-- N5.05 PWA: ServiceWorker 注册由 verify-init.js 统一处理，符合 CSP script-src 'self' -->
 </body>
 </html>

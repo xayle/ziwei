@@ -5,65 +5,80 @@
 
 /* ── 主题变量（基础 + M4.26 中国风色盘） ──────── */
 :root {
-  --bg:        #f4f6fb;
-  --bg-grad:   #f7f8fb;
+  --bg:        #fdf8f1;
+  --bg-grad:   #fef9f2;
   --panel:     #ffffff;
-  --text:      #0f172a;
-  --muted:     #5f6b86;
-  --ok:        #16a34a;
-  --warn:      #d97706;
-  --bad:       #dc2626;
-  --accent:    #2563eb;
-  --line:      #e2e8f0;
-  --input:     #f8fafc;
-  --shadow:    0 18px 50px rgba(15, 23, 42, 0.08);
+  --text:      #1a1008;
+  --muted:     #7a6148;
+  --ok:        #2d8a4e;
+  --warn:      #c97b10;
+  --bad:       #c0392b;
+  --accent:    #c2590a;
+  --line:      #eedfc8;
+  --input:     #fdf9f4;
+  --shadow:    0 18px 50px rgba(80, 40, 10, 0.10);
   /* 五行色系 */
-  --wx-wood:   #22c55e;
-  --wx-fire:   #ef4444;
-  --wx-earth:  #d97706;
-  --wx-metal:  #64748b;
-  --wx-water:  #2563eb;
+  --wx-wood:   #3cb06a;
+  --wx-fire:   #e05030;
+  --wx-earth:  #c97b10;
+  --wx-metal:  #8a7060;
+  --wx-water:  #2e72c0;
   /* M4.26 中国风色盘 */
-  --bg-warm:   #F5F0E8;
-  --text-ink:  #2C2C2C;
-  --accent-red:#B22222;
-  --accent-gold:#B8860B;
+  --bg-warm:   #fef3e0;
+  --text-ink:  #2C1a08;
+  --accent-red:#c0392b;
+  --accent-gold:#e08b00;
   /* 字体栈 */
   --font-title:"Source Han Serif SC","Noto Serif CJK SC","FZShuSong-Z01",Georgia,serif;
   --font-body: "Source Han Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei","DM Sans",sans-serif;
+  /* ── 类型比例（Type Scale）─────────── */
+  --fs-xs:   11px;
+  --fs-sm:   12px;
+  --fs-body: 13px;
+  --fs-lg:   16px;
+  --fs-xl:   20px;
+  --fs-2xl:  28px;
+  --fs-3xl:  36px;
+  /* ── 间距规范（Spacing Scale）────────── */
+  --sp-xs:   4px;
+  --sp-sm:   8px;
+  --sp-md:   12px;
+  --sp-lg:   16px;
+  --sp-xl:   24px;
 }
 
 /* ── 深色模式 ────────────────────────────────── */
 :root.dark-mode {
-  --bg:     #0f172a;  --bg-grad:#1e293b;
-  --panel:  #1e293b;  --text:   #f1f5f9;
-  --muted:  #94a3b8;  --ok:     #22c55e;
-  --warn:   #f59e0b;  --bad:    #ef4444;
-  --accent: #3b82f6;  --line:   #334155;
-  --input:  #0f172a;  --shadow: 0 18px 50px rgba(0,0,0,.5);
-  --bg-warm:#1e2940;  --text-ink:#e2e8f0;
+  --bg:     #1a110a;  --bg-grad:#231608;
+  --panel:  #2a1d12;  --text:   #f5ead8;
+  --muted:  #b89070;  --ok:     #3daa60;
+  --warn:   #e09030;  --bad:    #e04040;
+  --accent: #e07b30;  --line:   #3d2a1a;
+  --input:  #1a110a;  --shadow: 0 18px 50px rgba(0,0,0,.6);
+  --bg-warm:#2a1d12;  --text-ink:#f5ead8;
+  --accent-gold:#f0a820;
 }
 :root.dark-mode body {
-  background:radial-gradient(1200px circle at 10% 10%,rgba(59,130,246,.15),transparent 40%),
-             radial-gradient(900px circle at 80% 0%,rgba(14,165,233,.12),transparent 40%),
+  background:radial-gradient(1200px circle at 10% 10%,rgba(224,123,48,.12),transparent 40%),
+             radial-gradient(900px circle at 80% 0%,rgba(194,89,10,.10),transparent 40%),
              linear-gradient(180deg,var(--bg) 0%,var(--bg-grad) 100%);
 }
-:root.dark-mode header       { background:rgba(15,23,42,.95);border-bottom-color:#334155; }
+:root.dark-mode header       { background:rgba(26,17,10,.95);border-bottom-color:#3d2a1a; }
 :root.dark-mode input,:root.dark-mode select { background:var(--input);border-color:var(--line);color:var(--text); }
-:root.dark-mode input:focus,:root.dark-mode select:focus { background:#1e293b; }
-:root.dark-mode pre          { background:#020617;border-color:#1e293b; }
-:root.dark-mode .pillar-table th  { background:#1e293b;color:#cbd5e1; }
-:root.dark-mode .pillar-table tr:hover td { background:rgba(59,130,246,.08); }
-:root.dark-mode .tab-nav-item     { background:#1e293b;color:#94a3b8; }
+:root.dark-mode input:focus,:root.dark-mode select:focus { background:#231608; }
+:root.dark-mode pre          { background:#0d0800;border-color:#231608; }
+:root.dark-mode .pillar-table th  { background:#231608;color:#c8b090; }
+:root.dark-mode .pillar-table tr:hover td { background:rgba(224,123,48,.08); }
+:root.dark-mode .tab-nav-item     { background:#231608;color:#b89070; }
 :root.dark-mode .tab-nav-item.active { background:var(--accent);color:#fff; }
-:root.dark-mode .pillar-card { background:linear-gradient(180deg,#1e293b,#0f172a); }
-:root.dark-mode .section-block { background:linear-gradient(180deg,#1e293b,#162136); }
-:root.dark-mode .info-card  { background:#1e293b; }
-:root.dark-mode .summary-card { background:linear-gradient(180deg,#1e293b,#162136); }
-:root.dark-mode .note       { background:#1a293e; }
-:root.dark-mode .warnitem   { background:rgba(245,158,11,.08); }
-:root.dark-mode .stat-card  { background:linear-gradient(135deg,#1e2d40,#182438); }
-:root.dark-mode .skeleton   { background:linear-gradient(90deg,#1e293b 25%,#334155 37%,#1e293b 63%); }
+:root.dark-mode .pillar-card { background:linear-gradient(180deg,#2a1d12,#1a110a); }
+:root.dark-mode .section-block { background:linear-gradient(180deg,#2a1d12,#1e1208); }
+:root.dark-mode .info-card  { background:#2a1d12; }
+:root.dark-mode .summary-card { background:linear-gradient(180deg,#2a1d12,#1e1208); }
+:root.dark-mode .note       { background:#1e1a12; }
+:root.dark-mode .warnitem   { background:rgba(224,144,48,.08); }
+:root.dark-mode .stat-card  { background:linear-gradient(135deg,#2a2012,#1e1a0e); }
+:root.dark-mode .skeleton   { background:linear-gradient(90deg,#2a1d12 25%,#3d2a1a 37%,#2a1d12 63%); }
 
 *, *::before, *::after { box-sizing:border-box; }
 body {
@@ -77,6 +92,69 @@ body {
 }
 code { font-family:"Cascadia Code","Fira Code",Consolas,monospace; font-size:12px; }
 h1,h2,h3 { font-family:var(--font-title); }
+
+/* ── 命局速览 Hero Summary Card ─────────────── */
+.hero-summary {
+  background: linear-gradient(135deg, var(--accent-red) 0%, rgba(184,134,11,.85) 100%);
+  border-radius: 16px;
+  padding: var(--sp-lg);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-lg);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-lg);
+  box-shadow: 0 6px 28px rgba(178,34,34,.30);
+}
+.hero-summary .hs-label   { font-size: var(--fs-xs); opacity: .75; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+.hero-summary .hs-day     { display:flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.hero-summary .hs-day-stem{ font-size: var(--fs-2xl); font-weight: 900; font-family: var(--font-title); line-height: 1.1; }
+.hero-summary .hs-day-desc{ font-size: var(--fs-sm); opacity: .8; }
+.hero-summary .hs-geju    { font-size: var(--fs-lg); font-weight: 700; margin-top: 5px; }
+.hero-summary .hs-conf    { font-size: var(--fs-xs); opacity: .70; margin-left: 6px; }
+.hero-summary .hs-yongshen{ margin-top: 5px; font-size: var(--fs-sm); opacity: .90; }
+.hero-action-pills        { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--sp-sm); }
+.hero-action-pill {
+  background: rgba(255,255,255,.20);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.hero-score {
+  text-align: center;
+  background: rgba(255,255,255,.18);
+  border-radius: 12px;
+  padding: var(--sp-sm) var(--sp-md);
+  min-width: 76px;
+  flex-shrink: 0;
+}
+.hero-score .hs-score-num   { font-size: var(--fs-3xl); font-weight: 900; line-height: 1; }
+.hero-score .hs-score-label { font-size: var(--fs-xs); opacity: .75; margin-top: 3px; }
+:root.dark-mode .hero-summary { box-shadow: 0 6px 28px rgba(0,0,0,.45); }
+
+/* ── 免责声明条 ──────────────────────────────── */
+.disclaimer-note {
+  margin-top: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp-md);
+  background: rgba(220,38,38,.06);
+  border-left: 3px solid var(--bad);
+  border-radius: 0 8px 8px 0;
+  font-size: var(--fs-sm);
+  color: var(--bad);
+  line-height: 1.6;
+}
+.month-disclaimer {
+  padding: var(--sp-sm) var(--sp-md);
+  background: rgba(217,119,6,.08);
+  border: 1px solid rgba(217,119,6,.25);
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  color: var(--warn);
+  font-weight: 600;
+  margin-bottom: var(--sp-md);
+  line-height: 1.6;
+}
 
 /* ── 顶栏 ───────────────────────────────────── */
 header {
@@ -254,8 +332,29 @@ button.copied { border-color:rgba(34,197,94,.5); color:#86efac; }
 .wx-bar-fill.earth { background:linear-gradient(90deg,#b45309,#fbbf24); }
 .wx-bar-fill.metal { background:linear-gradient(90deg,#475569,#94a3b8); }
 .wx-bar-fill.water { background:linear-gradient(90deg,#1d4ed8,#60a5fa); }
+.wx-bar-val { font-size:11px; color:var(--muted); width:30px; text-align:right; flex-shrink:0; }
 
-/* ── 五行环形图（M4.30 CSS conic-gradient） ─── */
+/* ── 命盘 Tab2：日主强弱因素列表 ────────────── */
+.strength-factors { margin-top:4px; }
+.strength-factor-row {
+  display:flex; align-items:center; gap:8px;
+  padding:5px 0; border-bottom:1px solid var(--line);
+  font-size:12px;
+}
+.sfr-name   { flex:0 0 72px; color:var(--muted); font-weight:600; }
+.sfr-score  { flex:0 0 36px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
+.sfr-reason { flex:1; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.8; }
+
+/* ── 命盘 Tab2：干支互动列表 ────────────────── */
+.rel-list { display:flex; flex-direction:column; gap:2px; }
+.rel-row  {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:7px 0; border-bottom:1px solid var(--line); font-size:12px;
+}
+.rel-chip { flex-shrink:0; font-size:11px !important; white-space:nowrap; }
+.rel-desc { flex:1; color:var(--text); line-height:1.6; }
+
+
 .wuxing-ring {
   width:160px; height:160px; border-radius:50%; margin:0 auto;
   position:relative;
@@ -350,6 +449,7 @@ button.copied { border-color:rgba(34,197,94,.5); color:#86efac; }
 .fortune-item-label { font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; }
 .fortune-item-value { font-size:20px; font-weight:800; color:var(--text); }
 .fortune-4d-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:12px; }
+@media (max-width:600px) { .fortune-4d-grid { grid-template-columns:repeat(2,1fr); } }
 .fortune-4d-item { border:1px solid var(--line); border-radius:10px; padding:8px; text-align:center; }
 .fortune-4d-label { font-size:10px; color:var(--muted); font-weight:700; }
 .fortune-4d-text  { font-size:11px; color:var(--text); margin-top:3px; line-height:1.3; }
@@ -814,6 +914,283 @@ pre { background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:12px;
 /* ── v8.0 新增：格局待定标签 ──────── */
 .tag-uncertain { color: #999; font-size: 0.8em; margin-left: 4px; font-weight: normal; }
 
+/* ═══════════════════════════════════════════════════
+   Tab2 命盘全息优化  v4.0.20260305g
+   ─ 命理大师 · 资深用户 · 品鉴大师 · UI设计师 四维重设
+   ═══════════════════════════════════════════════════ */
+
+/* ── 命盘概览条 ──────────────────────────────────── */
+.bazi-overview {
+  display:flex; align-items:center; flex-wrap:wrap; gap:6px;
+  padding:10px 16px; margin-bottom:14px;
+  background:linear-gradient(135deg,rgba(184,134,11,.07),rgba(37,99,235,.05));
+  border:1px solid rgba(184,134,11,.25); border-radius:14px;
+}
+.bov-tag { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.bov-gan { font-size:22px; font-weight:800; font-family:var(--font-title); cursor:help; line-height:1; }
+.bov-elem-chip { font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; background:rgba(0,0,0,.06); }
+.bov-div { color:var(--line); font-size:14px; }
+.bov-score-text { font-size:11px; color:var(--muted); }
+.bov-yn-lbl-ok  { font-size:11px; color:var(--ok);  font-weight:700; }
+.bov-yn-lbl-bad { font-size:11px; color:var(--bad); font-weight:700; }
+.bov-wxchip { font-size:11px!important; padding:1px 6px!important; }
+
+/* ── 四柱卡 – 五行元素主题背景 ──────────────────── */
+.pc-card-wood  { background:linear-gradient(160deg,#f0fdf4,#dcfce7)!important; border-color:#86efac!important; }
+.pc-card-fire  { background:linear-gradient(160deg,#fff5f5,#fee2e2)!important; border-color:#fca5a5!important; }
+.pc-card-earth { background:linear-gradient(160deg,#fffbeb,#fef3c7)!important; border-color:#fde68a!important; }
+.pc-card-metal { background:linear-gradient(160deg,#f8fafc,#f1f5f9)!important; border-color:#cbd5e1!important; }
+.pc-card-water { background:linear-gradient(160deg,#eff6ff,#dbeafe)!important; border-color:#93c5fd!important; }
+.pc-card-self  { background:linear-gradient(160deg,#dbeafe,#bfdbfe)!important; border-color:var(--accent)!important; border-width:2px!important; box-shadow:0 0 0 3px rgba(37,99,235,.18), 0 0 16px 0 rgba(37,99,235,.12)!important; }
+
+/* ── 四柱卡内：天干元素标签 / 分隔线 / 藏干 ─────── */
+.pc-elem-tag { display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; margin:2px 0 3px; }
+.pc-elem-tag.wx-wood  { background:#dcfce7; color:#166534; }
+.pc-elem-tag.wx-fire  { background:#fee2e2; color:#991b1b; }
+.pc-elem-tag.wx-earth { background:#fef9c3; color:#92400e; }
+.pc-elem-tag.wx-metal { background:#f1f5f9; color:#475569; }
+.pc-elem-tag.wx-water { background:#dbeafe; color:#1d4ed8; }
+.pc-divider { height:1px; background:rgba(0,0,0,.07); margin:4px 0; }
+.pc-hidden-stems { display:flex; gap:3px; justify-content:center; flex-wrap:wrap; margin-top:3px; }
+.pc-hidden-gan { font-size:10px; font-weight:700; padding:1px 3px; border-radius:3px; background:rgba(0,0,0,.06); cursor:help; }
+
+/* 地支五行着色（利用已有 wx-* 颜色变量） */
+.pc-branch.wx-wood  { color:var(--wx-wood)!important; }
+.pc-branch.wx-fire  { color:var(--wx-fire)!important; }
+.pc-branch.wx-earth { color:var(--wx-earth)!important; }
+.pc-branch.wx-metal { color:var(--wx-metal)!important; }
+.pc-branch.wx-water { color:var(--wx-water)!important; }
+
+/* ── 五行 bar 缺行 & 百分数 ─────────────────────── */
+.wx-pct { color:var(--muted); font-size:10px; margin-left:2px; }
+.wx-missing { color:var(--bad); font-size:10px; font-weight:700; letter-spacing:.02em; }
+
+/* ── 用神/忌神区块 ───────────────────────────────── */
+.yn-section { margin-top:14px; padding-top:10px; border-top:1px solid var(--line); display:grid; gap:5px; }
+.yn-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.yn-lbl-ok  { font-size:11px; color:var(--ok);  font-weight:700; white-space:nowrap; }
+.yn-lbl-bad { font-size:11px; color:var(--bad); font-weight:700; white-space:nowrap; }
+.yn-chips { display:flex; gap:4px; flex-wrap:wrap; }
+.yn-rationale { font-size:11px; color:var(--muted); line-height:1.65; margin-top:2px; }
+.yn-rationale p { margin:2px 0; }
+
+/* ── 日主分析面板 ────────────────────────────────── */
+.strength-hero { display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+.strength-score-block { text-align:center; }
+.strength-score-num { font-size:34px; font-weight:800; color:var(--text); line-height:1; font-variant-numeric:tabular-nums; }
+.strength-score-lbl { font-size:10px; color:var(--muted); margin-top:2px; }
+.strength-meter { height:7px; border-radius:4px; background:var(--line); overflow:hidden; margin:4px 0 10px; }
+.strength-meter-fill { height:100%; border-radius:4px; transition:width .7s cubic-bezier(.4,0,.2,1); }
+.strength-meter-fill.ok   { background:linear-gradient(90deg,#22c55e,#86efac); }
+.strength-meter-fill.warn { background:linear-gradient(90deg,#f59e0b,#fcd34d); }
+.strength-meter-fill.bad  { background:linear-gradient(90deg,#ef4444,#fca5a5); }
+.tier-insight {
+  font-size:12px; color:var(--text); line-height:1.7;
+  padding:8px 12px; border-radius:10px;
+  background:rgba(37,99,235,.04); border-left:2px solid var(--accent);
+  margin-bottom:2px;
+}
+.sfr-header { font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; margin-bottom:5px; letter-spacing:.05em; }
+.sfr-ok  { color:var(--ok)!important; }
+.sfr-mid { color:var(--warn)!important; }
+
+/* ── 干支互动区块 ────────────────────────────────── */
+.rel-legend { display:flex; gap:14px; font-size:11px; margin-bottom:8px; flex-wrap:wrap; }
+.rel-legend-ok  { color:var(--ok);  font-weight:600; }
+.rel-legend-bad { color:var(--bad); font-weight:600; }
+.rel-star  { color:var(--accent-gold); font-size:13px; margin-right:4px; }
+.rel-icon  { font-size:13px; flex-shrink:0; margin-top:2px; line-height:1; }
+.rel-icon-ok  { color:var(--ok); }
+.rel-icon-bad { color:var(--bad); }
+.rel-empty { font-size:12px; color:var(--muted); padding:4px 0; }
+.rel-tg-section { margin-top:6px; padding-top:6px; border-top:1px dashed var(--line); }
+
+/* ── 通用工具类 ──────────────────────────────────── */
+.card-title-sub  { font-weight:400; color:var(--muted); font-size:11px; margin-left:6px; }
+.pillar-footnote { font-size:10px; color:var(--muted); margin-top:8px; }
+/* 纳音标签 */
+.pc-nayin { font-size:10px; color:var(--muted); margin:2px 0 3px; line-height:1; letter-spacing:.03em; font-style:italic; }
+/* 藏干本气/中气/余气 上标 */
+.pc-hidden-role { font-size:8px; vertical-align:super; opacity:.65; margin-right:1px; font-style:normal; }
+/* tier-insight 内的跳转按钮 */
+.tier-geju-link { font-size:11px; padding:1px 7px; border-radius:5px; background:var(--accent); color:#fff; border:none; cursor:pointer; margin-left:6px; vertical-align:middle; }
+.tier-geju-link:hover { opacity:.85; }
+
+/* ══════════════════════════════════════════════════
+   N5.10  Tab3 格局 — 印章英雄 + 置信进度条 + 古籍折叠
+═══════════════════════════════════════════════════ */
+/* 印章英雄区 */
+.geju-hero { display:flex; align-items:flex-start; gap:18px; }
+.geju-seal {
+  flex-shrink:0; width:88px; height:88px; border-radius:10px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-family:var(--font-title,serif); font-weight:800; line-height:1.2;
+  border:2px solid; position:relative; gap:0;
+}
+.geju-seal-high { background:linear-gradient(150deg,#7c2d12,#b45309); border-color:#f59e0b; color:#fff; }
+.geju-seal-mid  { background:linear-gradient(150deg,#1e3a5f,#1d4ed8); border-color:#60a5fa; color:#fff; }
+.geju-seal-low  { background:linear-gradient(150deg,#1a1a2e,#374151); border-color:#6b7280; color:#d1d5db; }
+.geju-seal-ln   { font-size:20px; letter-spacing:.08em; }
+.geju-seal-score { position:absolute; bottom:5px; right:8px; font-size:11px; font-weight:700; opacity:.9; background:rgba(0,0,0,.25); border-radius:4px; padding:1px 4px; }
+.geju-hero-body { flex:1; min-width:0; }
+.geju-hero-name { font-size:22px; font-weight:800; font-family:var(--font-title,serif); color:var(--text); margin-bottom:6px; line-height:1.2; }
+/* 置信度条 */
+.geju-conf-row   { display:flex; align-items:center; gap:8px; margin-top:4px; }
+.geju-conf-label { font-size:11px; color:var(--muted); flex-shrink:0; }
+.geju-conf-track { flex:1; height:8px; min-height:8px; background:var(--line); border-radius:4px; overflow:hidden; }
+.geju-conf-fill  { height:100%; border-radius:4px; transition:width .5s ease; }
+.geju-conf-ok    { background:var(--ok,#22c55e); }
+.geju-conf-mid   { background:var(--warn,#f59e0b); }
+.geju-conf-low   { background:var(--bad,#ef4444); }
+.geju-conf-val   { font-size:11px; font-weight:700; color:var(--muted); flex-shrink:0; min-width:30px; text-align:right; }
+/* 古籍引用折叠 */
+.geju-classic        { padding:12px 14px; cursor:pointer; }
+.geju-classic summary { font-size:12px; color:var(--accent-gold); font-weight:600; cursor:pointer; user-select:none; }
+.geju-classic summary::-webkit-details-marker { color:var(--accent-gold); }
+.geju-classic-body   { margin-top:10px; font-size:12px; line-height:1.9; color:var(--text); font-family:var(--font-title,serif); font-style:italic; white-space:pre-line; background:rgba(255,251,235,.6); padding:10px 12px; border-radius:6px; border-left:3px solid var(--accent-gold); }
+/* 释义/解读文本 */
+.geju-text { font-size:13px; line-height:1.8; color:var(--text); }
+/* 空态 */
+.geju-empty { text-align:center; padding:40px 16px; color:var(--muted); font-size:14px; }
+
+/* ══════════════════════════════════════════════════
+   N5.11  Tab4 命宫+神煞 — 宫位对卡 + 分级神煞 + 十二宫格
+═══════════════════════════════════════════════════ */
+/* 命宫·身宫 pair */
+.palace-pair { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.palace-slot { border:1px solid var(--line); border-radius:10px; padding:14px 12px; text-align:center; background:var(--panel); }
+.ps-title { font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; margin-bottom:8px; letter-spacing:.05em; }
+.ps-zhi   { font-size:32px; font-weight:900; font-family:var(--font-title,serif); line-height:1; margin-bottom:6px; }
+.ps-str   { font-size:11px; color:var(--muted); margin-bottom:6px; }
+.ps-tg    { margin-top:2px; }
+/* 神煞分组 */
+.ss-groups { display:flex; flex-direction:column; gap:12px; }
+.ss-group  { }
+.ss-group-lbl { font-size:11px; font-weight:700; letter-spacing:.06em; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; }
+.ss-a-ok   { color:#16a34a; }
+.ss-a-bad  { color:#dc2626; }
+.ss-b-ok   { color:#0284c7; }
+.ss-b-bad  { color:#9333ea; }
+.ss-cnt    { background:var(--line); color:var(--muted); border-radius:999px; padding:0 7px; font-size:10px; font-weight:600; }
+.ss-chips  { display:flex; flex-wrap:wrap; gap:5px; }
+.ss-chip   { display:inline-flex; align-items:center; gap:3px; border-radius:7px; padding:3px 9px; font-size:12px; border:1px solid transparent; cursor:default; }
+.ss-chip.ss-a-ok  { background:#f0fdf4; border-color:#86efac; color:#166534; }
+.ss-chip.ss-a-bad { background:#fff1f2; border-color:#fca5a5; color:#9f1239; }
+.ss-chip.ss-b-ok  { background:#eff6ff; border-color:#93c5fd; color:#1e40af; }
+.ss-chip.ss-b-bad { background:#faf5ff; border-color:#d8b4fe; color:#6b21a8; }
+/* 十二宫格 */
+.twelve-palace-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.tpc { border:1px solid var(--line); border-radius:8px; padding:8px 6px; text-align:center; font-size:11px; background:var(--panel); }
+.tpc-name { color:var(--muted); font-weight:600; margin-bottom:3px; font-size:10px; letter-spacing:.04em; }
+.tpc-zhi  { font-size:18px; font-weight:800; font-family:var(--font-title,serif); line-height:1.2; }
+.tpc-str  { color:var(--muted); font-size:10px; margin-top:2px; }
+.tpc-note { color:var(--muted); font-size:12px; margin-top:3px; line-height:1.4; }
+
+/* ══════════════════════════════════════════════════
+   N5.12  Tab7-10 fortune-hero 评分英雄区
+═══════════════════════════════════════════════════ */
+.fortune-hero { display:flex; align-items:center; gap:16px; }
+.fh-score-block { text-align:center; flex-shrink:0; min-width:70px; }
+.fh-icon  { font-size:24px; line-height:1; margin-bottom:4px; }
+.fh-score { font-size:36px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+.fh-label { font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; margin-top:2px; }
+.fh-body  { flex:1; min-width:0; }
+.fh-tier  { font-size:14px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.fh-range { font-size:12px; color:var(--muted); margin-bottom:6px; }
+.fh-fact  { font-size:11px; color:var(--muted); margin-top:4px; }
+.fh-fact-ok { color:var(--ok); }
+.fh-bar   { height:6px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:4px; }
+.fh-bar-fill { height:100%; border-radius:4px; transition:width .7s cubic-bezier(.4,0,.2,1); }
+/* 大运财运周期列表 */
+.dayun-forecast-list { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.dfc-row  { display:flex; align-items:center; gap:10px; padding:6px 10px; background:var(--input); border-radius:8px; font-size:12px; }
+.dfc-gz   { font-weight:700; font-family:var(--font-title,serif); min-width:28px; }
+.dfc-trend { color:var(--muted); flex:1; }
+/* 职业方向 chip */
+.career-chip { background:var(--input); border-color:var(--line); }
+/* 桃花年 chip */
+.taohua-chip { background:#fff1f5; border-color:#fda4af; color:#9f1239; }
+/* 子女缘卡片 */
+.child-hint-card { border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center; background:var(--panel); }
+.chc-label { font-size:10px; color:var(--muted); font-weight:700; margin-bottom:4px; }
+.chc-text  { font-size:12px; color:var(--text); line-height:1.5; }
+
+/* ══════════════════════════════════════════════════
+   N5.13  Tab10 五行器官色条
+═══════════════════════════════════════════════════ */
+.organ-map  { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.organ-row  { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; font-size:12px; }
+.organ-row.wx-wood  { background:rgba(134,239,172,.15); border-left:3px solid #4ade80; }
+.organ-row.wx-fire  { background:rgba(252,165,165,.15); border-left:3px solid #f87171; }
+.organ-row.wx-earth { background:rgba(254,240,138,.15); border-left:3px solid #fde047; }
+.organ-row.wx-metal { background:rgba(203,213,225,.20); border-left:3px solid #94a3b8; }
+.organ-row.wx-water { background:rgba(147,197,253,.15); border-left:3px solid #60a5fa; }
+.organ-elem { font-weight:800; font-size:14px; font-family:var(--font-title,serif); width:16px; flex-shrink:0; }
+.organ-name { color:var(--text); }
+.advice-section-lbl { font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; }
+
+/* ══════════════════════════════════════════════════
+   N5.14  Tab11 人际贵人/小人chip
+═══════════════════════════════════════════════════ */
+.people-grid { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.ppl-chip { display:inline-flex; align-items:center; gap:4px; border-radius:8px; padding:5px 12px; font-size:12px; font-weight:600; border:1px solid transparent; }
+.ppl-chip.ok  { background:#f0fdf4; border-color:#86efac; color:#166534; }
+.ppl-chip.bad { background:#fff1f2; border-color:#fca5a5; color:#9f1239; }
+
+/* ══════════════════════════════════════════════════
+   N5.15  Tab12 性格优劣势勾叉列表
+═══════════════════════════════════════════════════ */
+.pro-con-list { list-style:none; padding:0; margin:6px 0 0; display:flex; flex-direction:column; gap:5px; }
+.pro-item { color:#166534; font-size:12px; line-height:1.5; padding:4px 8px; background:#f0fdf4; border-radius:6px; }
+.con-item { color:#9f1239; font-size:12px; line-height:1.5; padding:4px 8px; background:#fff1f2; border-radius:6px; }
+
+/* ══════════════════════════════════════════════════
+   N5.16  Tab15 幸运数字砖格 + 颜色色块
+═══════════════════════════════════════════════════ */
+.lucky-num-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.lucky-num { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:800; background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border:1px solid #f59e0b; color:#92400e; font-family:var(--font-title,serif); }
+.lucky-color-row   { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.lucky-color-chip  { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.lcc-swatch { width:32px; height:32px; border-radius:8px; border:1px solid rgba(0,0,0,.1); }
+.lcc-name   { font-size:11px; color:var(--muted); }
+
+/* ── 暗色模式 Tab7-15 新组件 ──────────────────────── */
+:root.dark-mode .taohua-chip    { background:rgba(244,63,94,.12); border-color:#f43f5e; color:#fda4af; }
+:root.dark-mode .child-hint-card { background:var(--panel); }
+:root.dark-mode .ppl-chip.ok   { background:rgba(22,163,74,.15);  border-color:#4ade80; color:#86efac; }
+:root.dark-mode .ppl-chip.bad  { background:rgba(220,38,38,.15);  border-color:#f87171; color:#fca5a5; }
+:root.dark-mode .pro-item { background:rgba(22,163,74,.12);  color:#86efac; }
+:root.dark-mode .con-item { background:rgba(220,38,38,.12);  color:#fca5a5; }
+:root.dark-mode .lucky-num { background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(184,134,11,.2)); border-color:var(--accent-gold); color:var(--accent-gold); }
+:root.dark-mode .organ-row.wx-wood  { background:rgba(74,222,128,.08);  border-left-color:#4ade80; }
+:root.dark-mode .organ-row.wx-fire  { background:rgba(248,113,113,.08); border-left-color:#f87171; }
+:root.dark-mode .organ-row.wx-earth { background:rgba(253,224,71,.08);  border-left-color:#fde047; }
+:root.dark-mode .organ-row.wx-metal { background:rgba(148,163,184,.08); border-left-color:#94a3b8; }
+:root.dark-mode .organ-row.wx-water { background:rgba(96,165,250,.08);  border-left-color:#60a5fa; }
+
+/* ── 暗色模式 Tab3/4 ────────────────────────────── */
+:root.dark-mode .geju-classic-body { background:rgba(255,251,235,.05); }
+:root.dark-mode .palace-slot  { background:var(--panel); border-color:var(--line); }
+:root.dark-mode .tpc          { background:var(--panel); border-color:var(--line); }
+:root.dark-mode .ss-chip.ss-a-ok  { background:rgba(22,163,74,.22);  border-color:#4ade80; color:#bbf7d0; }
+:root.dark-mode .ss-chip.ss-a-bad { background:rgba(220,38,38,.22);  border-color:#f87171; color:#fecaca; }
+:root.dark-mode .ss-chip.ss-b-ok  { background:rgba(2,132,199,.22);  border-color:#60a5fa; color:#bfdbfe; }
+:root.dark-mode .ss-chip.ss-b-bad { background:rgba(147,51,234,.22); border-color:#c084fc; color:#ede9fe; }
+
+/* ── 暗色模式适配 ────────────────────────────────── */
+:root.dark-mode .bazi-overview  { background:linear-gradient(135deg,rgba(184,134,11,.1),rgba(59,130,246,.08)); border-color:rgba(184,134,11,.2); }
+:root.dark-mode .bov-elem-chip  { background:rgba(255,255,255,.1); }
+:root.dark-mode .pc-card-wood   { background:linear-gradient(160deg,#052e16,#14532d)!important; border-color:#4ade80!important; }
+:root.dark-mode .pc-card-fire   { background:linear-gradient(160deg,#450a0a,#7f1d1d)!important; border-color:#fca5a5!important; }
+:root.dark-mode .pc-card-earth  { background:linear-gradient(160deg,#431407,#78350f)!important; border-color:#fde68a!important; }
+:root.dark-mode .pc-card-metal  { background:linear-gradient(160deg,#1e293b,#334155)!important; border-color:#94a3b8!important; }
+:root.dark-mode .pc-card-water  { background:linear-gradient(160deg,#1e3a5f,#1e40af)!important; border-color:#93c5fd!important; }
+:root.dark-mode .pc-card-self   { background:linear-gradient(160deg,#1e3a5f,#1d4ed8)!important; border-width:2px!important; box-shadow:0 0 0 3px rgba(96,165,250,.25), 0 0 20px 0 rgba(96,165,250,.15)!important; }
+:root.dark-mode .tier-insight   { background:rgba(59,130,246,.08); }
+:root.dark-mode .pc-hidden-gan  { background:rgba(255,255,255,.1); color:var(--muted); }
+
 /* ══════════════════════════════════════════════════
    N5.08  移动端响应式 (@media max-width 768px)
    • Tab 栏隐藏 → 显示 #tab-mobile-select 下拉
@@ -840,6 +1217,9 @@ pre { background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:12px;
   .g2, .g3, .g4 {
     grid-template-columns: 1fr !important;
   }
+  .palace-pair { grid-template-columns: 1fr !important; }
+  .twelve-palace-grid { grid-template-columns: repeat(3,1fr) !important; }
+  .pillar-card { min-width: 0; }
   .card { margin-bottom: 10px; }
   /* 主容器不限宽 */
   .container { padding: 0 8px; }

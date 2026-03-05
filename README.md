@@ -1,10 +1,10 @@
 # BaZi Service
 
-项目版本: **v8.0.7**
+项目版本: **v8.0.8**
 状态: 🚀 生产就绪 (Production Ready)
 发布日期: 2026-03-04
 贡献者: GitHub Copilot
-测试覆盖: **854 tests passed** · Docker: `bazi:v8.0`
+测试覆盖: **865 tests passed** · Docker: `bazi:v8.0`
 
 ---
 
@@ -21,7 +21,7 @@
 | N4 | 数据持久化 | PostgreSQL 支持, soft-delete, Alembic 版本管理 |
 | N5 | UX 增强 | 历史 FIFO-5, 分享卡片 PNG, 批量 CSV, 五行环图, 大运展开, 移动端响应式, 暗黑模式 |
 | N6 | API v2 | `/api/v2` 路由, v2 Schema, v1 弃用 header, SDK 示例, Locust 压测 |
-| N7 | 测试与发布 | 854 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`, git tag |
+| N7 | 测试与发布 | 865 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`,  git tag |
 
 ### 测试指标
 

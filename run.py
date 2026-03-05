@@ -225,20 +225,28 @@ async def add_v1_deprecation_headers(request: Request, call_next):
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
 	"""添加安全响应头 - CSP, Cache-Control 等"""
+	# ⚠️ 必须在 call_next 之前捕获路径：Starlette 路由到挂载子应用（StaticFiles）时
+	# 会修改 scope["path"]（剥离挂载前缀），导致之后读取 request.url.path 不正确
+	_req_path = request.url.path
 	response = await call_next(request)
 	
 	# 内容安全策略 (CSP) - 防止XSS (P78 / task 4.19)
 	# /docs 和 /redoc 需要从 cdn.jsdelivr.net / fastapi.tiangolo.com 加载 Swagger UI 资源
 	# 其余路径保持严格 'self' only
-	_is_docs_path = request.url.path in ("/docs", "/redoc", "/openapi.json")
-	if _is_docs_path:
-		# Swagger UI / ReDoc：资源已本地化至 /static/swagger-ui/，允许内联脚本供 Swagger 初始化
+	_is_docs_path = _req_path in ("/docs", "/redoc", "/openapi.json")
+	# /static/*.html 页面含内联脚本和事件处理器，需要 'unsafe-inline'
+	_is_static_html = (
+		_req_path.startswith("/static/")
+		and _req_path.endswith(".html")
+	)
+	if _is_docs_path or _is_static_html:
+		# Swagger UI / ReDoc / 静态 HTML 工具页：允许内联脚本，img-src 含 blob: 供 html2canvas 导出
 		response.headers["Content-Security-Policy"] = (
 			"default-src 'self'; "
 			"connect-src 'self'; "
 			"style-src 'self' 'unsafe-inline'; "
 			"script-src 'self' 'unsafe-inline'; "
-			"img-src 'self' data:; "
+			"img-src 'self' data: blob:; "
 			"font-src 'self'; "
 			"object-src 'none'; "
 			"frame-ancestors 'self';"
@@ -273,28 +281,28 @@ async def add_security_headers(request: Request, call_next):
 		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 		response.headers["Pragma"] = "no-cache"
 		response.headers["Expires"] = "0"
-	elif request.url.path in ["/", "/dashboard", "/verify"]:
+	elif _req_path in ["/", "/dashboard", "/verify"]:
 		# 根路径及核心页面：禁止缓存，避免旧 CSP 头被浏览器磁盘缓存复用
 		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 		response.headers["Pragma"] = "no-cache"
 		response.headers["Expires"] = "0"
 		# 强制客户端清理缓存，避免旧 CSP 头继续被复用
 		response.headers["Clear-Site-Data"] = '"cache"'
-	elif request.url.path.startswith("/static/") and request.url.path.endswith(".html"):
+	elif _req_path.startswith("/static/") and _req_path.endswith(".html"):
 		# HTML 文件不缓存，确保每次获取最新版本；同时清理缓存避免旧 CSP 复用
 		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 		response.headers["Pragma"] = "no-cache"
 		response.headers["Expires"] = "0"
 		response.headers["Clear-Site-Data"] = '"cache"'
-	elif request.url.path.startswith("/static/"):
+	elif _req_path.startswith("/static/"):
 		# 其他静态资源（JS/CSS/图片）缓存30天
 		response.headers["Cache-Control"] = "public, max-age=2592000, immutable"
-	elif request.url.path in ["/docs", "/redoc", "/openapi.json"]:
+	elif _req_path in ["/docs", "/redoc", "/openapi.json"]:
 		# API 文档不缓存：CSP 变更需立即生效，避免浏览器使用旧 CSP 头
 		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 		response.headers["Pragma"] = "no-cache"
 		response.headers["Expires"] = "0"
-	elif request.url.path.startswith("/api/"):
+	elif _req_path.startswith("/api/"):
 		# API响应不缓存
 		response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
 		response.headers["Pragma"] = "no-cache"

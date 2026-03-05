@@ -454,6 +454,9 @@ def calculate(
             city_tier=city_tier, industry=industry,
         )
 
+    # ── R38: 将 engine_version 同步到 verify_response ─────────────────────────
+    result.verify_response.engine_version = result.engine_version
+
     # ── 存入缓存 ──────────────────────────────────────────────────────────────
     if _CACHETOOLS_AVAILABLE:
         _RESULT_CACHE[cache_key] = result

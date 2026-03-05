@@ -1669,6 +1669,20 @@ class TestBalanceScore:
         advice = build_balance_advice([], [])
         assert "五行较均衡" in advice
 
+    def test_wuxing_weak_strong_all_zero(self):
+        """所有五行均为 0 → mean=0 分支：weak=全部五行，strong=空列表"""
+        from services.bazi_engine.scoring import get_wuxing_weak_strong
+        wx = {"木": 0.0, "火": 0.0, "土": 0.0, "金": 0.0, "水": 0.0}
+        weak, strong = get_wuxing_weak_strong(wx)
+        assert set(weak) == {"木", "火", "土", "金", "水"}, f"全零时 weak 应为全部五行，实际={weak}"
+        assert strong == [], f"全零时 strong 应为空，实际={strong}"
+
+    def test_wuxing_weak_strong_empty_dict(self):
+        """空字典 → 返回 ([], [])"""
+        from services.bazi_engine.scoring import get_wuxing_weak_strong
+        weak, strong = get_wuxing_weak_strong({})
+        assert weak == [] and strong == []
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # N2.06 覆盖率补充 — liunian_domain.py 低覆盖分支

@@ -105,6 +105,8 @@
         }
 
         if (changed) {
+          // 清洗残留的 "> 分隔符（后端模板注释），避免被 innerHTML 渲染成可见文字
+          text = text.replace(/&quot;>/g, ' · ').replace(/">/g, ' · ');
           var span = document.createElement('span');
           span.className = 'glossary-inline-host';
           span.innerHTML = text;

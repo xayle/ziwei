@@ -11,6 +11,15 @@
 ═══════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+// 清洗 API 返回文本中的 "> 分隔符（后端模板注释残留），各段以 · 连接
+const cleanText = s => String(s||'').split('">').map(p=>p.trim()).filter(Boolean).join(' · ');
+// 短文本：清洗 + 转义（用于行内 kv / hint 字段）
+const txt = s => esc(cleanText(s));
+// 长段落：每段独立 <p>，适合 note / card 正文
+const renderPara = s => { const segs=String(s||'').split('">').map(p=>p.trim()).filter(Boolean); return segs.length?segs.map(seg=>`<p style="margin:3px 0;line-height:1.65">${esc(seg)}</p>`).join(''):''; };
+// 神煞/chip 名称：取 "> 分隔的最后一段（实际名称），前面的段全部移入 title tooltip
+const chipName = s => { const parts=String(s||'').split('">').map(p=>p.trim()).filter(Boolean); return parts.length?esc(parts[parts.length-1]):esc(s||''); };
+const chipTitle = s => { const parts=String(s||'').split('">').map(p=>p.trim()).filter(Boolean); return parts.length>1?esc(parts.slice(0,-1).join(' · ')):esc(s||''); };
 const pretty = x => JSON.stringify(x ?? null, null, 2);
 const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; };
@@ -235,7 +244,7 @@ window.histRender = function() {
   if (!items.length) { list.innerHTML = '<div class="hint" style="padding:8px">暂无历史记录</div>'; $('histCount').textContent='0'; return; }
   $('histCount').textContent = items.length;
   list.innerHTML = items.map((h,i) => `
-    <div class="hist-item" onclick="histFill(${i})">
+    <div class="hist-item" data-hist-fill="${i}">
       <div class="hist-body">
         <div class="hist-dt">${esc(h.dt||'-')} | ${esc(h.userName||'匿名')}</div>
         ${h.summary ? `<div class="hist-summary" style="font-size:11px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px">
@@ -248,7 +257,7 @@ window.histRender = function() {
       <div class="hist-ts">${esc(h.ts||'')}</div>
     </div>`).join('');
   if (items.length >= 2) {
-    list.innerHTML += `<div style="padding:6px 4px 2px"><button onclick="histCompare()" style="width:100%;font-size:12px;background:var(--input);border:1px solid var(--border);padding:6px 0;border-radius:6px;cursor:pointer">对比最近2条 →</button></div>`;
+    list.innerHTML += `<div style="padding:6px 4px 2px"><button data-action="histCompare" style="width:100%;font-size:12px;background:var(--input);border:1px solid var(--border);padding:6px 0;border-radius:6px;cursor:pointer">对比最近2条 →</button></div>`;
   }
 };
 window.histCompare = function() {
@@ -446,7 +455,11 @@ window.buildPayload = function() {
   if (isNaN(lon)||lon<70||lon>140) { lonEl?.classList.add('err'); throw new Error('经度须在 70–140 之间'); }
   dtEl.classList.remove('err'); lonEl.classList.remove('err');
   const tz = normalizeTimezone(tzEl?.value||'Asia/Shanghai');
-  return { dt:dtEl.value, lon, tz, mode:$('mode')?.value||'dual', solar_time_enabled:$('solar_time_enabled')?.checked||false };
+  const sexEl = $('sex');
+  const gender = sexEl?.value === 'M' ? 'male' : sexEl?.value === 'F' ? 'female' : null;
+  const payload = { dt:dtEl.value, lon, tz, mode:$('mode')?.value||'dual', solar_time_enabled:$('solar_time_enabled')?.checked||false };
+  if (gender) payload.gender = gender;
+  return payload;
 };
 
 /* §4.5.1: 带 AbortController 超时的 fetch（30s）*/
@@ -677,7 +690,18 @@ window.saveCacheResult = async function(item) {
    15. helper: translateFactorName / Reason / Rationale
 ═══════════════════════════════════════════════════ */
 window.translateFactorName = function(name) {
-  const map = { root_score:'根气得分', season_score:'旺相休囚', help_score:'帮扶力量', month_gi:'月令气场', dayun_trend:'大运趋势', shensha:'神煞影响', geju_level:'格局层次', yongshen_score:'用神得力', wuxing_balance:'五行均衡' };
+  const map = {
+    root_score:'根气得分', season_score:'旺相休囚', help_score:'帮扶力量',
+    month_gi:'月令气场', dayun_trend:'大运趋势', shensha:'神煞影响',
+    geju_level:'格局层次', yongshen_score:'用神得力', wuxing_balance:'五行均衡',
+    same_element_support:'同类帮扶', parent_element_support:'母生相助',
+    child_element_drain:'泄耗子星', controlling_element:'克制用事',
+    branch_root:'地支有根', stem_help:'天干帮扶', stem_clash:'天干相冲',
+    branch_clash:'地支相冲', branch_combine:'地支相合', branch_penalty:'地支相刑',
+    five_tiger:'五虎运', five_rat:'五鼠遁', nayin_score:'纳音影响',
+    geju_score:'格局加成', special_geju:'特殊格局', kongliang:'空亡影响',
+    dayun_stem:'大运天干', dayun_branch:'大运地支', liunian_impact:'流年影响'
+  };
   return map[name] || name;
 };
 window.translateFactorReason = function(text) {

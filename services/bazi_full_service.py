@@ -150,9 +150,10 @@ def compute_strength(day_stem: str, score: WuXingScoreModel) -> DayMasterStrengt
     else:
         tier = "balanced"
 
+    _elem_cn = {'wood': '木', 'fire': '火', 'earth': '土', 'metal': '金', 'water': '水'}
     factors = [
-        StrengthFactorModel(name="same_element_support", score=same, reason=f"{day_elem} count"),
-        StrengthFactorModel(name="parent_element_support", score=0.8 * parent, reason=f"{parent_elem} generates {day_elem}"),
+        StrengthFactorModel(name="same_element_support", score=same, reason=f"{_elem_cn.get(day_elem, day_elem)} 同类总量"),
+        StrengthFactorModel(name="parent_element_support", score=0.8 * parent, reason=f"{_elem_cn.get(parent_elem, parent_elem)} 生 {_elem_cn.get(day_elem, day_elem)}"),
     ]
     return DayMasterStrengthModel(score=strength_score, tier=tier, factors=factors)
 

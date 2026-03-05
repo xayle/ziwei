@@ -57,8 +57,8 @@ window.showFavoritesModal = function() {
           <div style="font-size:11px;color:var(--muted)">${new Date(f.ts).toLocaleString('zh-CN')}</div>
         </div>
         <div style="display:flex;gap:6px">
-          <button onclick="loadFavorite(${i})" style="font-size:12px">载入</button>
-          <button onclick="deleteFavorite(${i})" style="font-size:12px;background:var(--bad);color:#fff">删除</button>
+          <button data-load-favorite="${i}" style="font-size:12px">载入</button>
+          <button data-delete-favorite="${i}" style="font-size:12px;background:var(--bad);color:#fff">删除</button>
         </div>
       </div>`).join('')}
   </div>`;
@@ -149,7 +149,7 @@ window.showCompareResult = function(slotA, slotB) {
     <tbody>${rows}</tbody>
   </table>
   <div style="margin-top:10px;font-size:11px;color:var(--muted)">命盘A: ${esc(a.request_id||'?')} &nbsp;|&nbsp; 命盘B: ${esc(b.request_id||'?')}</div>
-  <button onclick="window._compareData=null;$('compareModal')?.classList.remove('open')" style="margin-top:10px">清除对比</button>
+  <button data-action="clearCompare" style="margin-top:10px">清除对比</button>
   `;
   // 渲染雷达图
   renderCompareRadar(dims.map(d=>+getScore(a,d)), dims.map(d=>+getScore(b,d)), dims.map(d=>dimCN[d]), $('compareRadarContainer'));

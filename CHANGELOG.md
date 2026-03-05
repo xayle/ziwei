@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v8.0.9] - 2026-03-05
+
+### UI 完善 & PWA 启用 & 发布门控通过
+
+**UI 多维度评价修复（命理师 / UI设计师 / 用户视角）**
+- **feat(ui)**: Tab0 新增 Hero 命局速览卡（格局名/用神/本年评分三秒速览），红金渐变卡片
+- **feat(ui)**: CSS 字体变量系统（`--fs-xs` ~ `--fs-3xl`）+间距变量（`--sp-xs` ~ `--sp-xl`）
+- **feat(ui)**: Tab2 干支互动文字化，9种地支关系+2种天干关系均附命理说明文字（替换纯 chip 显示）
+- **feat(ui)**: Tab7 财运区块新增 `.disclaimer-note` 免责声明（非精密测算，不构成财务建议）
+- **feat(ui)**: Tab18 月运新增 `.month-disclaimer` 加大免责提示（11px隐藏文本 → 醒目边框块）
+- **feat(ui)**: Tab8/13/14/18 空状态改为具体指引（替换通用"暂无"）
+
+**PWA 支持（N5.05）**
+- **feat(pwa)**: `verify.html` 添加 `navigator.serviceWorker.register('/static/sw.js')`，
+  SW 正式激活；`CACHE_VERSION = 'bazi-v8.0'`（sw.js 已就绪，之前缺注册调用）
+
+**R38 修复（批次响应 meta 字段）**
+- **fix(v2)**: `VerifyResponse` 新增 `engine_version` / `calc_ms` 字段；
+  `routers/v2/batch.py` 注入实际耗时 `calc_ms`；`services/bazi_engine_service.py` 同步 `engine_version`
+
+**N7.08 发布门控**
+- pytest 865 passed / 6 skipped（`--co -q` 871 collected，≥700 ✅）
+- pyright 0 errors ✅
+- bandit 0 HIGH / 0 MEDIUM（18500 行业务代码）✅
+- R36–R45 全 10 条红线：`tests/test_redlines_r36_r45.py` 21/21 ✅
+
+---
+
+## [v8.0.8] - 2026-03-04
+
+### 继续优化 — 批量 API 测试 & 文档更新
+
+- **feat(tests)**: 新建 `tests/test_v2_batch.py`，9 条测试覆盖批量端点 count invariant / 响应字段 / 失败隔离 / 响应结构；修复跨文件 429 问题（`AUTH_BYPASS` module-fixture）
+- **feat(tests)**: `tests/test_engine_units.py` 补充 `get_wuxing_weak_strong` 边界测试（全零/空字典），scoring.py 覆盖率 98%→100%
+- **chore(readme)**: 版本更新至 v8.0.8，测试数量 865
+- **chore(docs)**: `docs/openapi.json` 快照更新，包含 `POST /api/v2/batch/verify`（46 条路径）
+- **N7.05 confirmed**: `bandit -r . -ll` → 0 HIGH / 0 MEDIUM（18494 行代码）
+
+---
+
 ## [v8.0.7] - 2026-03-04
 
 ### Hotfix — 版本字符串同步 & 部署脚本修正

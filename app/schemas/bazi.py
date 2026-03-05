@@ -328,6 +328,8 @@ class BatchVerifyResponse(BaseModel):
 class VerifyResponse(BaseModel):
     """验证响应 - 完整的八字分析结果"""
     api_version: str = Field(..., description="API semantic version")
+    engine_version: str = Field(default="v1", description="Engine version used for calculation (R38)")
+    calc_ms: float = Field(default=0.0, description="Calculation elapsed time in milliseconds (R38)")
     rule_version: str = Field(..., description="Rule/data version")
     request_id: str = Field(..., description="Request correlation id")
     backend: BackendInfo
