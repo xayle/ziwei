@@ -204,7 +204,7 @@ def create_refresh_token_record(session, user_id: int, ip_address: Optional[str]
     Returns:
         str: 生成的刷新令牌
     """
-    from models import RefreshToken
+    from app.models import RefreshToken
     
     token = generate_refresh_token()
     # ✅ 使用配置常量（而非硬编码7天）
@@ -239,7 +239,7 @@ def verify_refresh_token(session, user_id: int, token: str) -> bool:
     引发:
         AuthenticationException: 令牌无效或已到期
     """
-    from models import RefreshToken
+    from app.models import RefreshToken
     from sqlmodel import select
     
     if not token:
@@ -285,7 +285,7 @@ def verify_refresh_token(session, user_id: int, token: str) -> bool:
 
 def revoke_refresh_token(session, token: str):
     """撤销刷新令牌"""
-    from models import RefreshToken
+    from app.models import RefreshToken
     from sqlmodel import select
     
     refresh_token = session.exec(
@@ -300,7 +300,7 @@ def revoke_refresh_token(session, token: str):
 
 def revoke_all_user_tokens(session, user_id: int):
     """撤销用户的所有刷新令牌 (如修改密码时调用)"""
-    from models import RefreshToken
+    from app.models import RefreshToken
     from sqlmodel import select
     
     tokens = session.exec(

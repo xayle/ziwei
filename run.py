@@ -67,8 +67,6 @@ from app.schemas import (
 	ValidationModel,
 	VerifyRequest,
 	VerifyResponse,
-	BatchVerifyRequest,
-	BatchVerifyResponse,
 	WealthModel,
 	WarningModel,
 	DayMasterStrengthModel,
@@ -422,7 +420,7 @@ def ready(response: Response):
 	"""
 	try:
 		from db import get_session
-		from models import User  # type: ignore
+		from app.models import User
 		from sqlmodel import select
 		
 		# 尝试获取数据库会话并执行简单查询
@@ -832,122 +830,6 @@ def api_verify(
 		headers={"X-Request-Id": req_id},
 	)
 
-
-# N5.03: 批量验证端点 POST /api/v2/batch/verify
-import os as _os
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as _FutureTimeoutError, as_completed as _as_completed
-import uuid as _uuid
-
-_BATCH_EXECUTOR = ThreadPoolExecutor(
-	max_workers=int(_os.getenv("BATCH_WORKERS", "4")),
-	thread_name_prefix="batch-verify",
-)
-
-
-def _batch_single_verify(item: VerifyRequest, idx: int) -> tuple[int, dict]:
-	"""执行单条批量验证，返回 (index, result_dict)."""
-	import warnings as _warn_mod
-	_warnings: list[str] = []
-	_req_id = _uuid.uuid4().hex[:12]
-
-	# 时区验证
-	_validate_tz(item.tz)
-
-	if not (1900 <= item.dt.year <= 2100):
-		raise ValueError(f"dt.year {item.dt.year} 超出支持范围 [1900, 2100]")
-
-	_dt = _attach_tz(item.dt, item.tz)
-	_lon = validate_lon_strict(item.lon)
-
-	# 优先使用 ENGINE_V2 路径
-	if _bazi_engine_service._engine_v2_enabled():
-		_calc = _bazi_engine_service.calculate(
-			dt=_dt,
-			lon=_lon,
-			tz=item.tz,
-			use_solar=item.solar_time_enabled,
-			mode=item.mode,
-			gender=getattr(item, "gender", None),
-			request_id=_req_id,
-			extra_warnings=_warnings,
-			city_tier=getattr(item, "city_tier", None),
-			industry=getattr(item, "industry", None),
-		)
-		return idx, _calc.verify_response.model_dump(mode="json")
-
-	# 回退到 v1 路径
-	_result = verify_full(_dt, lon=_lon, use_solar=item.solar_time_enabled, mode=item.mode)
-	return idx, {"request_id": _req_id, "mode_effective": _result.mode_effective}
-
-
-@app.post("/api/v2/batch/verify", response_model=BatchVerifyResponse)
-@limiter.limit("10/minute")  # N5.03: 每用户10次/分钟（_rate_limit_key 已实现 user-based key）
-def api_batch_verify(
-	request: Request,
-	body: BatchVerifyRequest,
-):
-	"""N5.03 批量验证端点.
-
-	- items 最多 50 条
-	- ENGINE_V2=false 时返回 501（R40）
-	- ThreadPoolExecutor(BATCH_WORKERS) 并行
-	- 整体超时 60s，单条超时 5s
-	- 部分成功返回（partial results on timeout）
-	"""
-	# ── R40: ENGINE_V2 开关检查 ─────────────────────────────────────────────
-	if not _bazi_engine_service._engine_v2_enabled():
-		from fastapi import Response as _Response
-		from fastapi.responses import JSONResponse as _JSONResponse
-		return _JSONResponse(
-			status_code=501,
-			content={"detail": "v2 engine not enabled (set ENGINE_V2=true to activate)"},
-		)
-
-	_deadline = 60.0
-	_per_item_timeout = 5.0
-
-	results_map: dict[int, dict] = {}
-	failed_list: list[dict] = []
-
-	futures = {
-		_BATCH_EXECUTOR.submit(_batch_single_verify, item, idx): idx
-		for idx, item in enumerate(body.items)
-	}
-
-	import time as _time
-	_start = _time.time()
-
-	for future in _as_completed(futures, timeout=_deadline):
-		idx = futures[future]
-		try:
-			_i, _res = future.result(timeout=_per_item_timeout)
-			results_map[_i] = _res
-		except _FutureTimeoutError:
-			failed_list.append({"index": idx, "error": "timeout"})
-		except Exception as exc:
-			failed_list.append({"index": idx, "error": str(exc)[:200]})
-
-		# 外部截止检查
-		if _time.time() - _start >= _deadline:
-			# 标记尚未完成的条目为超时
-			for f, remaining_idx in futures.items():
-				if remaining_idx not in results_map and not any(f_["index"] == remaining_idx for f_ in failed_list):
-					f.cancel()
-					failed_list.append({"index": remaining_idx, "error": "deadline_exceeded"})
-			break
-
-	# 保证 len(results) + len(failed) == len(items)
-	all_present = set(results_map.keys()) | {f["index"] for f in failed_list}
-	for missing_idx in range(len(body.items)):
-		if missing_idx not in all_present:
-			failed_list.append({"index": missing_idx, "error": "not_completed"})
-
-	# 按原始顺序输出成功结果
-	ordered_results = [results_map[i] for i in sorted(results_map.keys())]
-
-	return UnescapedJSONResponse(
-		content={"results": ordered_results, "failed": failed_list}
-	)
 
 
 @app.get("/metrics")
