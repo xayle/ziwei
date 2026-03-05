@@ -78,9 +78,13 @@ def compute_lucky(
         lucky_direction = "中部"
 
     el_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor[:2])
+    _colors_top = "、".join(lucky_colors[:2])
+    _nums_top   = "、".join(str(n) for n in lucky_numbers[:3])
     interp = (
-        f"用神五行为{el_cn}，幸运色为{'、'.join(lucky_colors[:2])}，"
-        f"旺运方位{lucky_direction}，可在重要场合搭配使用。"
+        f"用神五行为【{el_cn}】，幸运色为【{_colors_top}】，旺运数字为【{_nums_top}】。"
+        f"旺运方位【{lucky_direction}】，出行、择座或开会时优先选择该方向可增添气场。"
+        f"开运物「{lucky_item}」适合随身携带或置于工作桌上，在重要场合与面试、签约前使用效果更佳。"
+        f"将幸运色融入日常穿搭或配饰中，有助于在社交与职场中彰显个人磁场。"
         f"（仅供学术研究参考）"
     )
 

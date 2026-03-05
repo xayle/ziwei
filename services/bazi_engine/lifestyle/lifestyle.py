@@ -65,17 +65,27 @@ def compute_lifestyle(
     prim = yongshen_favor[0] if yongshen_favor else "earth"
     sec  = yongshen_favor[1] if len(yongshen_favor) > 1 else prim
 
-    exercise       = [_ELEMENT_EXERCISE.get(prim, "适量有氧运动")]
+    exercise       = [
+        _ELEMENT_EXERCISE.get(prim, "适量有氧运动"),
+        _ELEMENT_EXERCISE.get(sec, "拉伸放松运动") if sec != prim else "每天快走或慢跑 30 分钟",
+        "每周两次力量训练或HIIT，增强体能底蕴",
+    ]
     best_times     = _ELEMENT_BEST_TIMES.get(prim, "早晨 7-9 点")
-    diet           = [_ELEMENT_DIET.get(prim, "均衡饮食，清淡为主")]
+    diet           = [
+        _ELEMENT_DIET.get(prim, "均衡饮食，清淡为主"),
+        _ELEMENT_DIET.get(sec, "多食新鲜蔬果") if sec != prim else "每天至少五种颜色蔬果",
+        "每日饮水不少于 1500ml，避免高糖高油饮食",
+        "晚餐清淡少量，睡前两小时不再进食",
+    ]
     travel_direction = _ELEMENT_TRAVEL.get(prim, "东南方")
     sleep_advice   = _ELEMENT_SLEEP.get(prim, "保持规律作息，早睡早起")
 
     el_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor[:2])
     interp = (
-        f"用神五行（{el_cn}）主导生活节律，"
-        f"推荐{exercise[:10]}等运动，出行宜往{travel_direction}。"
-        f"饮食以{diet[:15]}为主。"
+        f"用神五行（{el_cn}）主导生活节律，运动以「{exercise[0]}」和「{exercise[1]}」为主。"
+        f"每日最佳活动时间段为【{best_times}】，此时精力最充沛，适合重要事务。"
+        f"饮食以「{diet[0]}」为核心方向，同时保证充足水分摄入与规律三餐节律。"
+        f"出行旅游方向推荐{travel_direction}，睡眠建议：{sleep_advice}。"
         f"（仅供学术研究参考）"
     )
 

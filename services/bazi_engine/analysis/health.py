@@ -108,8 +108,17 @@ def compute_health(
         prim_el = "earth"
 
     health_advice = _WUXING_TO_HEALTH_ADVICE.get(prim_el, "保持作息规律，定期体检。")
-    exercise      = [_WUXING_TO_EXERCISE.get(prim_el, "适量有氧运动")]
-    diet          = [_WUXING_TO_DIET.get(prim_el, "均衡饮食，清淡为主")]
+    exercise      = [
+        _WUXING_TO_EXERCISE.get(prim_el, "适量有氧运动"),
+        "每天快走 30 分钟，降低循环血压力、增强心肺功能",
+        "每周两次拉伸或正念练习以放松神经、缓解压力",
+    ]
+    diet          = [
+        _WUXING_TO_DIET.get(prim_el, "均衡饮食，清淡为主"),
+        "每日饮水不少于 1500ml，额外补充新鲜蔬果",
+        "少食加工食品和高糖饮料，减少内脏负担",
+        "晚餐应在 19:00 前完成，防止影响消化与睡眠",
+    ]
 
     # ─── 6. 旺盛期 ─────────────────────────────────────────────────────
     if yongshen_favor:
@@ -127,10 +136,15 @@ def compute_health(
     if not tags:
         tags.append("五行均衡，体质较佳")
 
+    _risk_str = ("风险脏腑：" + "、".join(risk_organs[:3]) + "。") if risk_organs else "脏腑整体平衡。"
+    _ex_top = exercise[0]
+    _diet_top = diet[0]
     interp = (
-        f"健康评分{health_score}分，风险等级{risk_level}。"
-        f"{'风险脏腑：' + '、'.join(risk_organs[:3]) + '。' if risk_organs else '脏腑整体平衡。'}"
-        f"建议：{health_advice}"
+        f"健康评分为 {health_score} 分，整体风险等级【{risk_level}】。"
+        f"{_risk_str}"
+        f"运动建议：以「{_ex_top}」为主，配合每天快走与舒展，延缓升火气。"
+        f"饮食建议：{_diet_top}，配合充足水分摄入与规律三餐。"
+        f"旺盛期参考：{peak_period}。"
         f"（仅供学术研究参考）"
     )
 

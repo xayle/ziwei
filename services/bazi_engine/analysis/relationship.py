@@ -68,13 +68,22 @@ def compute_relationship(
         score = shishen_scores.get(shen, 0.0)
         pct   = score / total
         if pct >= 0.3:
-            desc = "有力，关系较亲近"
+            desc = (
+                f"{shen}天干在命局占比较高（{pct*100:.0f}%），与该六亲缘分深厚、情感亲近，"
+                f"常有展眼相助或心灵支撑。"
+            )
         elif pct >= 0.1:
-            desc = "一般，关系平淡"
+            desc = (
+                f"{shen}干平均（{pct*100:.0f}%），与该六亲关系平淡中性，"
+                f"顺带即安，不必过分依赖或期待。"
+            )
         else:
-            desc = "弱，关系疏远或缘分浅"
+            desc = (
+                f"{shen}天干尚弱（{pct*100:.0f}%），与该六亲缘分较淡，"
+                f"建议主动维护感情联系，避免缘分进一步疏离。"
+            )
         if kin not in liu_qin:
-            liu_qin[kin] = f"{shen}（{pct*100:.0f}%）{desc}"
+            liu_qin[kin] = desc
 
     # ─── 2. 贵人 ─────────────────────────────────────────────────────
     noble_people: list[str] = []
@@ -104,13 +113,25 @@ def compute_relationship(
     food = shishen_scores.get("食神", 0.0)
 
     if yin / total >= 0.3:
-        strategy = "印星旺，亲和力强，适合贵人推荐型社交，信任口碑。"
+        strategy = (
+            "印星旺盛，亲和力强，常受贵人推荐和信任网络的加持，适合口碑型社交展示。"
+            "建议主动大方分享知识和经验，以和谐态度成为包容联结者，自然吸引高质量相助。"
+        )
     elif food / total >= 0.3:
-        strategy = "食神旺，人云亦云，善于分享者得福，多参与社群活动。"
+        strategy = (
+            "食神旺盛，社交对象广泛，善于分享的人最终得福。"
+            "高频参与社群活动、开设工作坊或展示成果，是拓展优质人脉的最短路径。"
+        )
     elif (bi + jie) / total >= 0.4:
-        strategy = "比劫旺，竞争感强，需主动建立个人品牌以区分自身价值。"
+        strategy = (
+            "比劫旺盛，竞争心强，人际层面需主动建立清晰的个人品牌和差异化价值。"
+            "防范因激烈竞争而损伤的关系，在实力层面而非情绪层面建立合作。"
+        )
     else:
-        strategy = "命局均衡，人际关系中庸，广泛社交比专注单一圈层更有利。"
+        strategy = (
+            "命局均衡，人际关系中幸而不尽，广泛社交比专注单一圈子更有利。"
+            "覆盖不同行业和背景的人群网络，保持开放的学习态度，打造多元化价值。"
+        )
 
     # ─── relationship_score ─────────────────────────────────────────
     guiren_count = len([s for s in shensha_items if s.get("is_beneficial")])
@@ -126,10 +147,12 @@ def compute_relationship(
     if sha / total >= 0.3:
         tags.append("七杀压制需化")
 
+    _noble_str = "、".join(noble_people[:3])
     interp = (
-        f"六亲关系评分{relationship_score}分。"
-        f"贵人为{'、'.join(noble_people[:2])}。"
-        f"{strategy}"
+        f"六亲人际评分为 {relationship_score} 分。"
+        f"命局贵人星级为【{_noble_str}】，值得珍视与口碑型、信任型人际。"
+        f"小人警惕：{'；'.join(petty_people)}。"
+        f"社交策略建议：{strategy}"
         f"（仅供学术研究参考）"
     )
 

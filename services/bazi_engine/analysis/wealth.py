@@ -178,15 +178,35 @@ def compute_wealth(
             elif trend == "平稳":
                 trend = "上升"
 
-        dayun_forecast.append({"ganzhi": gz, "trend": trend})
+        # 生成趋势说明语
+        if trend == "上升":
+            trend_desc = f"{gz}大运：天干五行顺用神，财运进入升阾通道，适合主动拻展"
+        elif trend == "下降":
+            trend_desc = f"{gz}大运：天干五行与用神相忌，财务守成为主，谨慎投资与负债"
+        else:
+            trend_desc = f"{gz}大运：财运平稳，轻丬稳打，携大运居安即可"
+
+        dayun_forecast.append({"ganzhi": gz, "trend": trend, "description": trend_desc})
 
     # ─── 7. 策略建议 ─────────────────────────────────────────────────────
     if tier == "上":
-        strategy = "财运旺盛，适合主动开拓增量，投资需留意过于分散。"
+        strategy = (
+            "财运旺盛期，适当加大主动收入的拟定力度，多路并进开拓增量渠道。"
+            "投资方面可尝试中长期配置，但需避免过度分散或盲目追高风险行业。"
+            "建议每季强制存入流动盈予的 20％，为个人资产建立安全垃岛。"
+        )
     elif tier == "中":
-        strategy = "稳中求进，守住正职收入同时适度投资，避免贸然冒进。"
+        strategy = (
+            "财运属中等层，稳中求进是最佳策略，守住主职收入并少量开拓副业。"
+            "投资选择温和型品种（编内基金、定期健定），避免购买高风险行业股或高杠杆衍生品。"
+            "建议增强财务记账习惯，清楚每月收支结构再作决策。"
+        )
     else:
-        strategy = "守成为主，节流优先，宜积累基础后再寻拓展时机。"
+        strategy = (
+            "财运属弱势层，守成减负是首要任务，俧祯财务漏洞和高息负债。"
+            "在此阶段重点積累专业技能和行业资源，为下一个财运高峰基妵蓄力。"
+            "尽量避免借贷或为他人担保，勿在劣势期购入投资性资产。"
+        )
 
     # ─── inference_tags ─────────────────────────────────────────────────
     tags = []
@@ -200,11 +220,14 @@ def compute_wealth(
         tags.append("财多身弱主贫困警示")
 
     # ─── interpretation_text ────────────────────────────────────────────
+    _ys_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor) or "未知"
+    _ind_top3 = "、".join(industries[:3])
     interp = (
-        f"此命财运评分{wealth_score}分（{tier}等），"
-        f"财星力量{cai_power:.0f}/100，用神五行为"
-        f"{'、'.join(_ELEMENT_CN.get(e, e) for e in yongshen_favor) or '未知'}。"
-        f"推荐发展行业：{'、'.join(industries[:3])}。"
+        f"此命财运综合评分为 {wealth_score} 分（{tier}等），"
+        f"财星力量指数 {cai_power:.0f}/100，"
+        f"用神五行属【{_ys_cn}】，命局对财运的支撇程度属 {tier}级。"
+        f"连按财星强弱与用神匹配度，预计年收入區间为 {annual_range}，"
+        f"推荐最适宜进入的行业领域为：{_ind_top3}。"
         f"{strategy}"
         f"（仅供学术研究参考）"
     )

@@ -75,6 +75,22 @@ def compute_fengshui(
         d2 = _ELEMENT_DECOR.get(el, "")
         if d2 and d2 not in decor_list:
             decor_list.append(d2)
+            # 按房间拆分补充装饰建议
+            if el == "wood":
+                decor_list.append("书房放置绿植与竹编书架，引动木气")
+                decor_list.append("卧室选用原木床架与棉麻床品，增益睡眠")
+            elif el == "fire":
+                decor_list.append("客厅挂暖色调装饰画，激活火能量")
+                decor_list.append("书房点燃香薰蜡烛或暖光台灯，助集中")
+            elif el == "earth":
+                decor_list.append("玄关摆放陶土盆景或石材摆件，稳固入口气场")
+                decor_list.append("餐厅选用土黄色桌布，助脾胃消化")
+            elif el == "metal":
+                decor_list.append("客厅悬挂圆形金属艺术品，聚气旺财")
+                decor_list.append("书房用白色或银灰色收纳系统，利于思维清晰")
+            elif el == "water":
+                decor_list.append("玄关放置流水摆件或小型鱼缸，引动财水")
+                decor_list.append("卧室使用蓝灰色系窗帘，助眠宁神")
         p = _ELEMENT_PLANT.get(el, "")
         if p and p not in plants:
             plants.append(p)
@@ -85,16 +101,29 @@ def compute_fengshui(
     for el in yongshen_avoid[:2]:
         t = _ELEMENT_TABOO_DIRECTION.get(el, "")
         if t:
-            taboo.append(t)
+            reason_map = {
+                "wood":  "过度绿化会加重木气郁结，引发情绪压抑",
+                "fire":  "过多红色在忌火命局中会引发躁动不安",
+                "earth": "中央堆重物阻断气流，影响整体运势流通",
+                "metal": "金属陈设过多会加重利器之气，影响人际",
+                "water": "北方潮湿阴暗会使水气凝滞，耗损精力",
+            }
+            reason = reason_map.get(el, "忌神五行过旺会干扰命局平衡")
+            taboo.append(f"{t}（原因：{reason}）")
 
     if not auspicious_directions:
         auspicious_directions = ["东南方"]
     if not lucky_colors:
         lucky_colors = ["黄色", "棕色"]
 
+    _ys_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor[:2])
+    _dirs = "、".join(auspicious_directions[:2])
+    _colors = "、".join(lucky_colors[:3])
+    _plant_top = plants[0] if plants else "绿植"
     interp = (
-        f"用神五行（{'、'.join(_ELEMENT_CN.get(e,e) for e in yongshen_favor[:2])}）对应"
-        f"吉方为{'、'.join(auspicious_directions[:2])}，可在该方位强化布置。"
+        f"用神五行（{_ys_cn}）对应吉方为【{_dirs}】，可在该方位强化布置以汇聚气场。"
+        f"室内装饰建议以【{_colors}】为主色调，搭配{_plant_top}等植物增添生机。"
+        f"{'以下方位/颜色需规避：' + '；'.join(taboo[:2]) + '。' if taboo else '忌神方位无明显风险，整体布局较为均衡。'}"
         f"（仅供学术研究参考）"
     )
 
