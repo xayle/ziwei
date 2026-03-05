@@ -14,6 +14,7 @@ N3.07 — RBAC 权限申请工作流测试
 """
 from __future__ import annotations
 
+import os
 import threading
 from datetime import timedelta
 from typing import Dict
@@ -33,6 +34,23 @@ from services.permission_service import Role
 # ════════════════════════════════════════════════════════════════════
 # 测试数据库 & 客户端 fixtures
 # ════════════════════════════════════════════════════════════════════
+
+@pytest.fixture(autouse=True)
+def disable_auth_bypass(monkeypatch):
+    """
+    RBAC 测试必须关闭 AUTH_BYPASS。
+
+    当 AUTH_BYPASS=true 时，require_user 始终返回 id=0 的 dummy 用户，
+    所有请求都被视为同一个人，破坏了：
+      - 自我审批保护（requester.id == approver.id == 0 → 永远 403）
+      - 未认证测试（无 token 也能通过 → 不会返回 401）
+
+    修复：每个测试执行前临时移除 AUTH_BYPASS，使真实 JWT 验证生效，
+    测试结束后由 monkeypatch 自动还原。
+    """
+    monkeypatch.delenv("AUTH_BYPASS", raising=False)
+    yield
+
 
 @pytest.fixture(scope="module")
 def engine():
