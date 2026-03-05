@@ -448,3 +448,4 @@ class BaziFullResponse(BaseModel):
     liunian_detail: Optional[list[LiuNianDetailModel]] = None
     life_arc: Optional[LifeArcModel] = None
     current_fortune_summary: Optional[CurrentFortuneSummaryModel] = None
+    start_dayun_age: Optional[float] = Field(None, description="大运起运年龄（精确到0.1岁，N5.07）")

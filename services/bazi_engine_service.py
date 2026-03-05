@@ -493,10 +493,18 @@ def _build_month_ganzhis(year_stem: str) -> list[str] | None:
     ]
 
 
-def _get_current_dayun_stem(dayun_list: list[dict], birth_year: int) -> str | None:
-    """根据今年推算当前大运天干。"""
+def _get_current_dayun_stem(
+    dayun_list: list[dict],
+    birth_year: int,
+    birth_month: int = 7,
+    birth_day: int = 1,
+) -> str | None:
+    """根据今天日期精确推算当前大运天干（考虑出生月日，P1-D）。"""
     from datetime import date
-    current_age = date.today().year - birth_year
+    _td = date.today()
+    current_age = _td.year - birth_year - (
+        (_td.month, _td.day) < (birth_month, birth_day)
+    )
     current: dict | None = None
     for item in dayun_list:
         start_age = item.get("start_age")
@@ -592,6 +600,7 @@ def _enrich_v2_analysis(
     )
 
     # ── 格局 ─────────────────────────────────────────────────────────
+    is_broken: bool = False  # P2-A: 在 try 外初始化避免 dir() 脆弱模式
     try:
         geju_raw = compute_geju(
             year_stem=ys_st, month_stem=ms_st, month_branch=ms_br,
@@ -621,6 +630,10 @@ def _enrich_v2_analysis(
     except Exception as exc:
         logger.debug("[M2 geju] %s", exc)
         geju_name = "普通格"
+        if hasattr(verify_response, "validation") and verify_response.validation:
+            verify_response.validation.warnings.append(
+                WarningModel(code="M2_GEJU_FAIL", message="格局计算失败，已降级为普通格")
+            )
 
     # ── 建禄格/羊刃格：重算用神（geju_name 确定后）────────────────────────
     if geju_name in ("建禄格", "羊刃格"):
@@ -710,6 +723,13 @@ def _enrich_v2_analysis(
         logger.debug("[M2 palace] %s", exc)
 
     # ── 7 分析引擎 ────────────────────────────────────────────────────
+    # P1-A: M2 各引擎失败时统一写入 warnings（§4.5）
+    def _m2_warn(code: str, msg: str) -> None:
+        if hasattr(verify_response, "validation") and verify_response.validation:
+            verify_response.validation.warnings.append(
+                WarningModel(code=code, message=msg)
+            )
+
     try:
         verify_response.wealth_analysis = compute_wealth(
             yongshen_favor=favor, yongshen_avoid=avoid,
@@ -719,6 +739,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 wealth] %s", exc)
+        _m2_warn("M2_WEALTH_FAIL", "财运分析计算失败，结果可能不完整")
 
     try:
         verify_response.career = compute_career(
@@ -728,6 +749,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 career] %s", exc)
+        _m2_warn("M2_CAREER_FAIL", "事业分析计算失败，结果可能不完整")
 
     try:
         verify_response.marriage_analysis = compute_marriage(
@@ -738,6 +760,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 marriage] %s", exc)
+        _m2_warn("M2_MARRIAGE_FAIL", "婚姻分析计算失败，结果可能不完整")
 
     try:
         verify_response.health = compute_health(
@@ -746,6 +769,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 health] %s", exc)
+        _m2_warn("M2_HEALTH_FAIL", "健康分析计算失败，结果可能不完整")
 
     try:
         verify_response.relationship = compute_relationship(
@@ -754,6 +778,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 relationship] %s", exc)
+        _m2_warn("M2_RELATIONSHIP_FAIL", "人际关系分析计算失败，结果可能不完整")
 
     try:
         verify_response.personality = compute_personality(
@@ -762,13 +787,24 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 personality] %s", exc)
+        _m2_warn("M2_PERSONALITY_FAIL", "性格分析计算失败，结果可能不完整")
 
     try:
-        _month_ganzhis = _build_month_ganzhis(ys_st)
-        _dayun_stem = _get_current_dayun_stem(dayun_list, dt.year)
+        # P1-F: 月运 year_branch 使用当前年地支（而非出生年地支）
+        # P2-C: 月干支基于当前年天干（而非出生年天干）
+        from datetime import date as _date_now
+        _cur_yr_int = _date_now.today().year
+        _CUR_STEMS   = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+        _CUR_BRANCHES= ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+        _cur_yr_stem   = _CUR_STEMS[(_cur_yr_int - 4) % 10]
+        _cur_yr_branch = _CUR_BRANCHES[(_cur_yr_int - 4) % 12]
+        _month_ganzhis = _build_month_ganzhis(_cur_yr_stem)
+        _dayun_stem = _get_current_dayun_stem(
+            dayun_list, dt.year, dt.month, dt.day
+        )
         verify_response.monthly_fortune = compute_monthly(
             day_branch=ds_br, yongshen_favor=favor, yongshen_avoid=avoid,
-            year_branch=ys_br, mode=mode,
+            year_branch=_cur_yr_branch, mode=mode,
             month_ganzhis=_month_ganzhis,
             current_dayun_stem=_dayun_stem,
             day_stem=ds_st,   # N2.03 十神关系
@@ -1096,18 +1132,28 @@ def _enrich_v2_analysis(
             _BRANCHES12= ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
             return _STEMS10[(y - 4) % 10] + _BRANCHES12[(y - 4) % 12]
 
-        current_year = dt.year
+        import datetime as _dt_today_mod
+        current_year = _dt_today_mod.date.today().year
         liunian_gz = _year_ganzhi_cfs(current_year)
         liunian_stem = liunian_gz[0]
         liunian_branch = liunian_gz[1]
 
-        # 当前大运
-        current_dy = dayun_list[0] if dayun_list else {}
+        # 当前大运：找到start_age<=当前年龄的最后一条大运
+        _today = _dt_today_mod.date.today()
+        age_now = _today.year - dt.year - (
+            (_today.month, _today.day) < (dt.month, dt.day)
+        ) if dt else 0
+        current_dy = (dayun_list[0] if dayun_list else {})
+        for _dy_item in dayun_list:
+            _sa = _dy_item.get("start_age")
+            if _sa is not None and float(_sa) <= age_now:
+                current_dy = _dy_item
+            elif _sa is not None:
+                break
         dayun_gz = f"{current_dy.get('stem','?')}{current_dy.get('branch','?')}" if current_dy else "??"
         start_age = current_dy.get("start_age", 0) if current_dy else 0
         start_yr  = current_dy.get("start_year", 0) if current_dy else 0
-        age_now   = current_year - dt.year if dt else 0
-        years_remaining = max(0, 10 - (current_year - start_yr)) if start_yr else 5
+        years_remaining = max(0, 10 - (current_year - int(start_yr))) if start_yr else 5
 
         # 今年四维
         from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts as _clf

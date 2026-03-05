@@ -278,8 +278,9 @@ def compute_yongshen(
             return _get_congqiang_yongshen(day_elem)
 
     # ③ 极弱 → 判断是否从弱
-    if strength.tier == "极弱":
-        # 找出最强五行
+    if strength.tier == "极弱":        # P2-F: 防护 scores_weighted 为空时 max() 抛 ValueError
+        if not wuxing.scores_weighted:
+            return _get_fuyi_yongshen(day_elem, strength, wuxing)        # 找出最强五行
         dominant_elem = max(wuxing.scores_weighted, key=lambda e: wuxing.scores_weighted[e])
         same_score = wuxing.scores_weighted.get(day_elem, 0)
         parent_score = wuxing.scores_weighted.get(SHENG_REV.get(day_elem, ""), 0)

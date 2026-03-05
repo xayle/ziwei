@@ -75,13 +75,11 @@ _ELEMENT_CN: dict[str, str] = {
     "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
 }
 
-# lucky_color hint
-_ELEMENT_COLOR: dict[str, str] = {
-    "metal": "白/金",
-    "wood":  "绿/青",
-    "water": "黑/蓝",
-    "fire":  "红/紫",
-    "earth": "黄/棕",
+# lucky_color hint — CSS 十六进制（按吉凶等级，规格 P0-15）
+_LUCK_COLOR: dict[str, str] = {
+    "吉": "#2E8B57",
+    "平": "#888888",
+    "凶": "#C0392B",
 }
 
 
@@ -137,7 +135,7 @@ def compute_monthly(
                 month=month_num,
                 month_dizhi=mb,
                 luck_level="平",
-                color_hint="灰/白",
+                color_hint=_LUCK_COLOR["平"],
                 tip="本月平稳，顺势而为。",
                 clash_with=None,
                 month_ganzhi=_mgz,
@@ -189,8 +187,8 @@ def compute_monthly(
             else:
                 tip = f"本月{mb}平稳，正常作息，稳步推进计划。"
 
-        # color_hint
-        color_hint = _ELEMENT_COLOR.get(mb_element, "白") if mb_element else "白"
+        # color_hint — 根据 luck_level 返回 CSS 十六进制颜色（P0-15）
+        color_hint = _LUCK_COLOR.get(luck_level, "#888888")
 
         results.append(MonthlyFortuneModel(
             month=month_num,
