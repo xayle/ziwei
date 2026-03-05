@@ -102,11 +102,11 @@ class LoginRequest(BaseModel):
     def validate_username(cls, v: str) -> str:
         """验证用户名格式"""
         if not v or len(v) < 3:
-            raise ValueError('Username must be at least 3 characters long')
+            raise ValueError('用户名至少3个字符')
         if len(v) > 50:
-            raise ValueError('Username must not exceed 50 characters')
+            raise ValueError('用户名不超过50个字符')
         if not re.match(r'^[a-zA-Z0-9_]+$', v):
-            raise ValueError('Username can only contain letters, numbers and underscores')
+            raise ValueError('用户名只能包含字母、数字和下划线')
         return v
     
     @field_validator('password')
@@ -114,7 +114,7 @@ class LoginRequest(BaseModel):
     def validate_password(cls, v: str) -> str:
         """验证密码基本要求"""
         if not v or len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError('密码至少8个字符')
         return v
 
 
@@ -129,11 +129,11 @@ class RegisterRequest(BaseModel):
     def validate_username(cls, v: str) -> str:
         """验证用户名格式"""
         if not v or len(v) < 3:
-            raise ValueError('Username must be at least 3 characters long')
+            raise ValueError('用户名至少3个字符')
         if len(v) > 50:
-            raise ValueError('Username must not exceed 50 characters')
+            raise ValueError('用户名不超过50个字符')
         if not re.match(r'^[a-zA-Z0-9_]+$', v):
-            raise ValueError('Username can only contain letters, numbers and underscores')
+            raise ValueError('用户名只能包含字母、数字和下划线')
         return v
     
     @field_validator('email')
@@ -141,13 +141,13 @@ class RegisterRequest(BaseModel):
     def validate_email(cls, v: str) -> str:
         """验证邮箱格式"""
         if not v:
-            raise ValueError('Email is required')
+            raise ValueError('邮箱不能为空')
         # 简单的邮箱格式验证
         email_pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
         if not re.match(email_pattern, v):
-            raise ValueError('Invalid email format')
+            raise ValueError('邮箱格式不正确')
         if len(v) > 255:
-            raise ValueError('Email must not exceed 255 characters')
+            raise ValueError('邮箱不超过255个字符')
         return v.lower()  # 统一转换为小写
     
     @field_validator('password')
@@ -155,16 +155,16 @@ class RegisterRequest(BaseModel):
     def validate_password(cls, v: str) -> str:
         """验证密码强度"""
         if not v or len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError('密码至少8个字符')
         if len(v) > 128:
-            raise ValueError('Password must not exceed 128 characters')
+            raise ValueError('密码不超过128个字符')
         
         # 检查密码强度：至少包含字母和数字
         has_letter = bool(re.search(r'[a-zA-Z]', v))
         has_digit = bool(re.search(r'[0-9]', v))
         
         if not (has_letter and has_digit):
-            raise ValueError('Password must contain both letters and numbers')
+            raise ValueError('密码须同时包含字母和数字')
         
         return v
 

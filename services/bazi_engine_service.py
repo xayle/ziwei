@@ -574,6 +574,15 @@ def _enrich_v2_analysis(
             d = item.model_dump() if hasattr(item, "model_dump") else dict(item.__dict__)
             dayun_list.append(d)
 
+    # ── N5.07: 起运年龄 ──────────────────────────────────────────────────
+    try:
+        if hasattr(verify_response, "dayun") and verify_response.dayun:
+            _sm = verify_response.dayun.start_age_months or 0
+            _sa = verify_response.dayun.start_age or 0
+            verify_response.start_dayun_age = round(float(_sm) / 12.0, 1) if _sm else float(_sa)
+    except Exception as exc:
+        logger.debug("[N5.07 start_dayun_age] %s", exc)
+
     # ── 十神得分 ──────────────────────────────────────────────────────
     shishen_scores = compute_shishen_scores(
         day_stem=ds_st,
@@ -612,6 +621,26 @@ def _enrich_v2_analysis(
     except Exception as exc:
         logger.debug("[M2 geju] %s", exc)
         geju_name = "普通格"
+
+    # ── 建禄格/羊刃格：重算用神（geju_name 确定后）────────────────────────
+    if geju_name in ("建禄格", "羊刃格"):
+        try:
+            from services.bazi_engine.wuxing import compute_wuxing as _eng_wx2
+            from services.bazi_engine.strength import compute_strength as _eng_str2
+            from services.bazi_engine.yongshen import compute_yongshen as _eng_ys2
+            _w2 = _eng_wx2(ys_st, ys_br, ms_st, ms_br, ds_st, ds_br, hs_st, hs_br)
+            _s2 = _eng_str2(ds_st, ms_br, ys_st, ms_st, hs_st, ys_br, ds_br, hs_br, _w2)
+            _ys2 = _eng_ys2(
+                day_stem=ds_st, month_branch=ms_br,
+                strength=_s2, wuxing=_w2, geju_name=geju_name,
+            )
+            verify_response.yongshen = YongShenModel(
+                favor=_ys2.favor, avoid=_ys2.avoid, rationale=_ys2.rationale,
+            )
+            favor = list(_ys2.favor)
+            avoid = list(_ys2.avoid)
+        except Exception as _exc2:
+            logger.debug("[M2 geju-yongshen] %s", _exc2)
 
     # ── 神煞 ─────────────────────────────────────────────────────────
     shensha_items_raw: list[dict] = []
@@ -746,6 +775,10 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 monthly] %s", exc)
+        if hasattr(verify_response, "validation") and verify_response.validation:
+            verify_response.validation.warnings.append(
+                WarningModel(code="M2_MONTHLY_FAIL", message="月运模块计算失败，结果可能不完整")
+            )
 
     # ── M2.5: lifestyle/里程碑 ────────────────────────────────────────
     try:
@@ -785,13 +818,17 @@ def _enrich_v2_analysis(
                 # 流年从大运年份中提取（简化：取大运起始年+0~9）
                 start_age = dy_dict.get("start_age", 0)
                 dy_branch = dy_dict.get("branch", "")
+                _gz_stems_m = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+                _gz_branches_m = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
                 for i in range(10):
                     yr = birth_year + start_age + i
+                    _yr_stem = _gz_stems_m[(yr - 4) % 10]
+                    _yr_branch = _gz_branches_m[(yr - 4) % 12]
                     liunian_items.append({
                         "year": yr,
-                        "ganzhi": f"流年{yr}",
-                        "branch": dy_branch,
-                        "stem": "",
+                        "ganzhi": _yr_stem + _yr_branch,
+                        "branch": _yr_branch,
+                        "stem": _yr_stem,
                     })
         verify_response.milestones = compute_milestones(
             birth_year=birth_year, day_branch=ds_br, year_branch=ys_br,

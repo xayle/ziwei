@@ -391,6 +391,8 @@ class VerifyResponse(BaseModel):
     balance_advice: Optional[str] = Field(None, description="一句话五行补救建议")
     # ── N2.07 流年运势 ───────────────────────────────────────────────────────
     yearly_fortune: Optional[list[dict]] = Field(None, description="流年运势列表（当前大运覆盖的年份）")
+    # ── N5.07 起运年龄 ────────────────────────────────────────────────────────
+    start_dayun_age: Optional[float] = Field(None, description="大运起运年龄（精确到0.1岁，N5.07）")
 
 
 class BaziFullRequest(BaseModel):

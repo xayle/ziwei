@@ -174,6 +174,65 @@ def _get_tiaohou_yongshen(
     )
 
 
+def _get_jianluge_yongshen(
+    day_elem: str,
+    wuxing: WuxingResult,
+) -> YongshenResult:
+    """
+    建禄格用神：日主坐禄身强，月令即为日主旺气，不以月令为用。
+    取四柱透干中官/杀/财/食最旺者为用神。
+    优先级：官杀（克我）> 财星（我克）> 食伤（我生）
+    """
+    ke_me = KE_REV.get(day_elem, "")     # 克我（官杀）
+    i_ke = KE.get(day_elem, "")           # 我克（财星）
+    child_elem = SHENG.get(day_elem, "")  # 我生（食伤）
+    parent_elem = SHENG_REV.get(day_elem, "")  # 生我（印星）
+
+    scores = wuxing.scores_weighted if wuxing and hasattr(wuxing, "scores_weighted") else {}
+    candidates = [e for e in [ke_me, i_ke, child_elem] if e]
+    best = max(candidates, key=lambda e: scores.get(e, 0)) if candidates else (ke_me or i_ke or "")
+    sec_candidates = [e for e in candidates if e and e != best]
+    sec = max(sec_candidates, key=lambda e: scores.get(e, 0)) if sec_candidates else ""
+
+    favor = [e for e in [best, sec] if e]
+    avoid = [e for e in [day_elem, parent_elem] if e]
+    return YongshenResult(
+        branch="建禄格",
+        favor=favor,
+        avoid=avoid,
+        rationale=(
+            f"建禄格：日主{day_elem}坐禄身强，不以月令为用，"
+            f"取透干中最旺之{best}（官/财）为用神；"
+            f"忌{day_elem}比劫、{parent_elem}印星再助旺。"
+        ),
+        inference_tags=["建禄格专用分支"],
+    )
+
+
+def _get_yangrenge_yongshen(day_elem: str) -> YongshenResult:
+    """
+    羊刃格用神：刃旺须制，官杀制刃为首要用神，财星辅之。
+    忌印比再增旺。
+    """
+    ke_me = KE_REV.get(day_elem, "")   # 官杀（克我）
+    i_ke = KE.get(day_elem, "")         # 财星（我克）
+    parent_elem = SHENG_REV.get(day_elem, "")  # 印星（生我）
+
+    favor = [e for e in [ke_me, i_ke] if e]
+    avoid = [e for e in [day_elem, parent_elem] if e]
+    return YongshenResult(
+        branch="羊刃格",
+        favor=favor,
+        avoid=avoid,
+        rationale=(
+            f"羊刃格：刃旺须制，取{ke_me}（官杀）制刃为用神，"
+            f"{i_ke}（财星）辅之（财滋官杀）；"
+            f"忌{day_elem}比劫再助刃旺，{parent_elem}印星亦忌。"
+        ),
+        inference_tags=["羊刃格专用分支"],
+    )
+
+
 def compute_yongshen(
     day_stem: str,
     month_branch: str,
@@ -185,6 +244,7 @@ def compute_yongshen(
     用神决策树入口（5分支）。
 
     优先级:
+      0. 特殊格局（建禄格/羊刃格）→ 专用分支（geju_name 传入时）
       1. 极端月令（寒月/热月）→ 调候法
       2. 极旺 + 无克泄 → 从强格
       3. 极弱 + 无印比 → 从弱格（顺从强势五行）
@@ -195,6 +255,12 @@ def compute_yongshen(
     hot_months = {"巳", "午", "未"}
 
     day_elem = strength.day_elem
+
+    # ⓪ 特殊格局：建禄格/羊刃格 → 专用用神分支（优先级最高）
+    if "建禄" in geju_name:
+        return _get_jianluge_yongshen(day_elem, wuxing)
+    if "羊刃" in geju_name:
+        return _get_yangrenge_yongshen(day_elem)
 
     # ① 月令极端 → 调候优先（寒热月且日主非调候喜用五行时）
     if month_branch in cold_months and day_elem in ("water", "metal"):

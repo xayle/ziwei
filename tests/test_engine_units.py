@@ -1784,3 +1784,38 @@ class TestMonthlyCoverage:
         liuhe_month = next((m for m in results if m.month_dizhi == "丑"), None)
         assert liuhe_month is not None
         assert "六合" in liuhe_month.tip
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TestComputeLifestyle — compute_lifestyle 单元测试（P2 补全）
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestComputeLifestyle:
+    """compute_lifestyle 全分支覆盖"""
+
+    def test_metal_favor_direction(self):
+        """金系用神 → 旅行方向含'西'，饮食含白色食物"""
+        from services.bazi_engine.lifestyle.lifestyle import compute_lifestyle
+        result = compute_lifestyle(yongshen_favor=["metal"], yongshen_avoid=["wood"])
+        assert result is not None
+        assert result.travel_direction is not None
+        assert "西" in result.travel_direction
+        assert result.diet
+        assert any("白" in d or "山药" in d or "梨" in d for d in result.diet)
+
+    def test_water_favor_direction(self):
+        """水系用神 → 旅行偏北方/海边，睡眠/最佳时间均有值"""
+        from services.bazi_engine.lifestyle.lifestyle import compute_lifestyle
+        result = compute_lifestyle(yongshen_favor=["water", "metal"], yongshen_avoid=["fire"])
+        assert result is not None
+        assert "北" in result.travel_direction
+        assert result.sleep_advice
+        assert result.best_times
+
+    def test_empty_favor_no_crash(self):
+        """空列表时不崩溃，返回合法 LifestyleModel"""
+        from services.bazi_engine.lifestyle.lifestyle import compute_lifestyle
+        result = compute_lifestyle(yongshen_favor=[], yongshen_avoid=[])
+        assert result is not None
+        assert isinstance(result.exercise, list)
+        assert result.interpretation_text

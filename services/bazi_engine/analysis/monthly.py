@@ -115,11 +115,14 @@ def compute_monthly(
     results: list[MonthlyFortuneModel] = []
 
     for month_idx in range(12):
-        mb = _MONTH_BRANCH[month_idx]
+        # 节气偏移：寅月（正月）从立春（约2月4日）起，故1月对应丑月（上一周期末）
+        # month_idx=0(Jan)→丑(11), month_idx=1(Feb)→寅(0), ..., month_idx=11(Dec)→子(10)
+        _chi_idx = (month_idx - 1) % 12
+        mb = _MONTH_BRANCH[_chi_idx]
         month_num = month_idx + 1
 
         # 十神关系：该月天干对日主天干的十神
-        _mgz = month_ganzhis[month_idx] if month_ganzhis else None
+        _mgz = month_ganzhis[_chi_idx] if month_ganzhis else None
         _month_stem = _mgz[0] if _mgz and len(_mgz) >= 1 else ""
         _relation = None
         if day_stem and _month_stem:

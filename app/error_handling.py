@@ -131,7 +131,7 @@ def handle_exceptions(
                 )
                 raise AppException(
                     code=default_error_code,
-                    message=f"Error in {func.__name__}: {str(exc)}",
+                    message="服务器内部错误，请稍后重试",
                     status_code=final_status_code,
                 )
         
@@ -149,7 +149,7 @@ def handle_exceptions(
                 )
                 raise AppException(
                     code=default_error_code,
-                    message=f"Error in {func.__name__}: {str(exc)}",
+                    message="服务器内部错误，请稍后重试",
                     status_code=final_status_code,
                 )
         

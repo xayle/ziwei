@@ -97,10 +97,29 @@
   }
 
   /* ══════════ CSV 解析 ══════════════════════════ */
+  /** RFC 4180 兼容的单行 CSV 解析，处理带引号的逗号和 "" 转义 */
+  function parseCSVLine(line) {
+    const result = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (ch === ',' && !inQuote) {
+        result.push(cur.trim()); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
   function parseCSV(text) {
     const lines = text.trim().split(/\r?\n/);
     if (!lines.length) return { error: 'CSV 为空' };
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+    const headers = parseCSVLine(lines[0]);
 
     // 检查必填列
     const missing = ['dt','lon'].filter(c => !headers.includes(c));
@@ -110,8 +129,7 @@
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
-      // 简单 CSV 分割（不处理带引号的逗号）
-      const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+      const vals = parseCSVLine(line);
       const row = {};
       headers.forEach((h, idx) => { row[h] = vals[idx] ?? ''; });
       rows.push(row);
