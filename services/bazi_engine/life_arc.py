@@ -134,40 +134,45 @@ def _build_phase_text(dayun_list: list[dict], phase: str) -> str:
     total = len(relevant)
 
     if favorable_count == total:
-        quality = "顺旺，诸事顺遂，用神得令"
+        quality = "顺旺，诸事顺遂，用神得令，宜积极进取"
     elif favorable_count >= total * 0.6:
-        quality = "总体偏顺，多得贵助，间有波折"
+        quality = "总体偏顺，多得贵助，间有波折，把握顺运最为关键"
     elif favorable_count >= total * 0.4:
-        quality = "顺逆参半，宜稳中求进，把握顺运之机"
+        quality = "顺逆参半，宜稳中求进，顺运时出击，逆运时守成"
     else:
-        quality = "逆运居多，宜低调守成，积蓄待时"
+        quality = "逆运居多，宜低调守成、积德蓄势，待时而动"
 
-    ganzhi_list = "、".join(d.get("ganzhi", "") for d in relevant if d.get("ganzhi"))
-    return f"{label}：大运{ganzhi_list}，运势{quality}。"
+    ganzhi_list = "、".join(
+        d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
+        for d in relevant
+        if d.get("ganzhi") or (d.get("stem") and d.get("branch"))
+    )
+    if ganzhi_list:
+        return f"{label}：历经{ganzhi_list}大运，运势{quality}。"
+    return f"{label}：运势{quality}。"
 
 
 def _find_peak_periods(dayun_list: list[dict]) -> list[str]:
     """找出顺运且趋势上升的大运步，作为峰值期"""
     peaks = []
     for d in dayun_list:
-        if d.get("is_favorable", False) and d.get("trend") == "上升":
-            ganzhi = d.get("ganzhi", "")
+        if d.get("is_favorable", False) and d.get("trend") in ("上升", "平稳"):
+            ganzhi = d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
             start  = d.get("start_age", "?")
             end    = d.get("end_age",   "?")
-            ten_god = d.get("ten_god", "")
-            peaks.append(f"{start}-{end}岁·{ganzhi}{ten_god}大运")
-    return peaks or ["大运资料不足，请参阅完整排盘"]
+            peaks.append(f"{start}-{end}岁·{ganzhi}大运（顺运）")
+    return peaks or ["暂无明显顺运峰值期，宜均衡规划"]
 
 
 def _find_caution_periods(dayun_list: list[dict]) -> list[str]:
-    """找出逆运且趋势下降的大运步，作为谨慎期"""
+    """找出逆运的大运步，作为谨慎期"""
     cautions = []
     for d in dayun_list:
-        if not d.get("is_favorable", True) and d.get("trend") == "下降":
-            ganzhi = d.get("ganzhi", "")
+        if not d.get("is_favorable", True):
+            ganzhi = d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
             start  = d.get("start_age", "?")
             end    = d.get("end_age",   "?")
-            cautions.append(f"{start}-{end}岁·{ganzhi}大运（逆运，宜守成）")
+            cautions.append(f"{start}-{end}岁·{ganzhi}大运（逆运，宜守成稳进）")
     return cautions or ["暂无明显逆运期"]
 
 

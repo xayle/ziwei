@@ -607,6 +607,22 @@ def _enrich_v2_analysis(
         for item in (dayun_model.items or []):
             d = item.model_dump() if hasattr(item, "model_dump") else dict(item.__dict__)
             dayun_list.append(d)
+    # 补充 life_arc 所需字段：ganzhi / is_favorable / trend / end_age
+    _STEM_WX_LA = {
+        "甲":"wood","乙":"wood","丙":"fire","丁":"fire","戊":"earth",
+        "己":"earth","庚":"metal","辛":"metal","壬":"water","癸":"water",
+    }
+    for _i, _d in enumerate(dayun_list):
+        if not _d.get("ganzhi"):
+            _d["ganzhi"] = (_d.get("stem","") or "") + (_d.get("branch","") or "")
+        if "is_favorable" not in _d:
+            _fx = _d.get("flow_wuxing") or _STEM_WX_LA.get(_d.get("stem",""), "")
+            _d["is_favorable"] = _fx in (favor or [])
+        if "trend" not in _d:
+            _d["trend"] = "上升" if _d.get("is_favorable") else "平稳"
+        if "end_age" not in _d:
+            _nxt = dayun_list[_i+1] if _i+1 < len(dayun_list) else None
+            _d["end_age"] = _nxt.get("start_age", "?") if _nxt else "?"
 
     # ── N5.07: 起运年龄 ──────────────────────────────────────────────────
     try:
@@ -1081,10 +1097,32 @@ def _enrich_v2_analysis(
             yongshen_favor=favor,
             wuxing_scores=wx_scores,
         )
-        # 选一条古籍作为 life_motto
-        _motto_ref = (
-            "用神得力，行顺运则诸事顺遂。"
-            "——《子平真诠·论大运》"
+        # 动态古籍格言（按命局等级）
+        _MOTTO_MAP = {
+            "局高": "用神得力，行顺运则诸事顺遂。——《子平真诠·论大运》",
+            "局中": "顺逆相半，宜于顺运中积功，逆运中守成。——《渊海子平》",
+            "局小": "命运虽偏，一勤天下无难事，积德改运乃正道。——《三命通会》",
+        }
+        _motto_ref = _MOTTO_MAP.get(_arc.overall_tier, _MOTTO_MAP["局中"])
+
+        # 扩充解读文本（从1句→多句）
+        _WX_CN = {"wood":"木","fire":"火","earth":"土","metal":"金","water":"水"}
+        _TIER_CN = {
+            "extremely_strong":"极旺","strong":"偏旺","balanced":"中和",
+            "neutral":"中和","weak":"偏弱","extremely_weak":"极弱",
+        }
+        _strength_cn = _TIER_CN.get(strength_tier, strength_tier)
+        _wx_favor_cn = "、".join(_WX_CN.get(f, f) for f in (favor or [])[:2])
+        _peak_summary = "、".join(_arc.peak_periods[:2]) if _arc.peak_periods and "暂无" not in _arc.peak_periods[0] else "需参考完整大运排盘"
+        _arc_interp = (
+            f"{_arc.summary}。"
+            f"命局格局为【{geju_name}】，日主{_strength_cn}，"
+            f"用神五行为{_wx_favor_cn}，行顺运时发展空间较大。"
+            f"{_arc.early_fortune} "
+            f"{_arc.mid_fortune} "
+            f"{_arc.late_fortune}"
+            f"顶峰大运参考：{_peak_summary}。"
+            "（仅供学术研究参考）"
         )
         verify_response.life_arc = _LifeArcSchema(
             overall_tier=_arc.overall_tier,  # type: ignore[arg-type]
@@ -1095,7 +1133,7 @@ def _enrich_v2_analysis(
             caution_periods=_arc.caution_periods,
             life_motto=_motto_ref,
             inference_tags=[_arc.overall_tier, f"score={_arc.total_score:.0f}"],
-            interpretation_text=_arc.summary,
+            interpretation_text=_arc_interp,
             disclaimer=_arc.disclaimer,
         )
     except Exception as exc:
