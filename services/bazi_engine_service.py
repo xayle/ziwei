@@ -1208,6 +1208,8 @@ def _enrich_v2_analysis(
             # 红线10: 计算犯太岁关系（流年支 vs 命局年支）
             taisui_rel = _liunian_day_relation(ybranch, ys_br)
             taisui_list = [taisui_rel] if taisui_rel else []
+            # 扩展字段：十神（先算，供 domain 分支使用）
+            _tg   = _calc_ten_god(ystem, ds_st)
             domain = compute_liunian_domain_forecasts(
                 year=yr, year_stem=ystem, year_branch=ybranch,
                 day_stem=ds_st, day_branch=ds_br,
@@ -1215,9 +1217,8 @@ def _enrich_v2_analysis(
                 yongshen_favor=favor,
                 wuxing_scores=wx_scores,
                 gender=gender or "male",
+                year_ten_god=_tg,
             )
-            # 扩展字段：十神、五行、冲支
-            _tg   = _calc_ten_god(ystem, ds_st)
             _fwx  = _TG_STEM_WX.get(ystem, "")
             _clash_br = _BR_CLASH_PAIRS.get(ybranch)
             _clash_str = f"流年{ybranch}冲命{_clash_br}" if _clash_br and _clash_br == ds_br else None

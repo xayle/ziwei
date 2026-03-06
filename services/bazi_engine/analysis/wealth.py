@@ -178,13 +178,49 @@ def compute_wealth(
             elif trend == "平稳":
                 trend = "上升"
 
-        # 生成趋势说明语
+        # 生成趋势说明语（依据天干/地支五行组合差异化描述）
+        stem_cn   = _ELEMENT_CN.get(stem_el, "")
+        branch_cn = _ELEMENT_CN.get(branch_el, "")
+        branch_in_favor = bool(branch_el and yongshen_favor and branch_el in yongshen_favor)
+        branch_in_avoid = bool(branch_el and yongshen_avoid and branch_el in yongshen_avoid)
+
         if trend == "上升":
-            trend_desc = f"{gz}大运：天干五行顺用神，财运进入上升通道，适合主动拓展投资与副业"
+            if branch_in_favor:
+                trend_desc = (
+                    f"{gz}大运：天干{stem_cn}、地支{branch_cn}双顺用神，财运进入强势上升通道。"
+                    f"宜主动布局多元收益，稳健配置长线资产，把握大运红利。"
+                )
+            elif branch_in_avoid:
+                trend_desc = (
+                    f"{gz}大运：天干{stem_cn}顺用神，地支{branch_cn}稍有阻力，财运上升中需稳中求进。"
+                    f"主动开拓收入渠道，同时注意防范地支带来的小挫折，不宜过度冒进。"
+                )
+            else:
+                trend_desc = (
+                    f"{gz}大运：天干{stem_cn}五行顺用神，财运进入上升通道。"
+                    f"适合主动拓展主副业收益，顺势而为积累财富底仓。"
+                )
         elif trend == "下降":
-            trend_desc = f"{gz}大运：天干五行与用神相忌，财务守成为主，谨慎投资与负债"
+            trend_desc = (
+                f"{gz}大运：天干{stem_cn}与用神相忌，财运进入收缩期，守成为主。"
+                f"控制投资风险与负债规模，精简开支，等待下一顺运大运再谋进取。"
+            )
         else:
-            trend_desc = f"{gz}大运：财运平稳，轻装稳打，稳健发展即可"
+            if branch_in_favor:
+                trend_desc = (
+                    f"{gz}大运：天干中和，地支{branch_cn}有用神之气托底，财运平稳中带稳。"
+                    f"可小步稳健理财，守住本职收入，不必冒进。"
+                )
+            elif branch_in_avoid:
+                trend_desc = (
+                    f"{gz}大运：天干中和，地支{branch_cn}稍逆用神，财运偏平。"
+                    f"守住既有资产，精简无效支出，为下一顺运期积累资本。"
+                )
+            else:
+                trend_desc = (
+                    f"{gz}大运：财运平稳，五行中和，收支基本均衡。"
+                    f"轻装稳打，稳健发展为宜，不必冒进。"
+                )
 
         dayun_forecast.append({"ganzhi": gz, "trend": trend, "description": trend_desc})
 
