@@ -431,7 +431,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     elif inp.dayun_trend == "下降":
         result.general_text += "\n" + _GENERAL_TMPL["unfavorable_dayun"]
 
-    # ── 9. 全文汇总（无截断，取首句摘要）────────────────────────────────────
+    # ── 9. 全文汇总（结构化六段式，400-600字）────────────────────────────────
     def _first_sentence(text: str) -> str:
         for sep in ("。", "；", "\n"):
             if sep in text:
@@ -439,17 +439,89 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
                 return frag if frag.endswith("。") else f"{frag}。"
         return text
 
-    summary_parts: list[str] = []
-    if result.missing_wuxing_texts:
-        summary_parts.append(_first_sentence(result.missing_wuxing_texts[0]))
-    if result.dominant_wuxing_texts:
-        summary_parts.append(_first_sentence(result.dominant_wuxing_texts[0]))
-    summary_parts.append(_first_sentence(result.geju_text))
-    if result.shensha_texts:
-        summary_parts.append(_first_sentence(result.shensha_texts[0]))
-    summary_parts.append(_first_sentence(result.general_text))
-    summary_parts.append(f"用神{favor_cn}，忌神{avoid_cn}，顺用神方向择业与布局。")
+    # ── §9-A 命局总评 ──────────────────────────────────────────────────────
+    _tier_desc = {
+        "极旺": "日主极旺，身强势锐，命局阳刚之气充沛",
+        "偏旺": "日主偏旺，根基稳健，格局整体偏刚",
+        "中和": "日主中和，阴阳平衡，命局格局均匀协调",
+        "偏弱": "日主偏弱，需用印比扶身，方能稳健发展",
+        "极弱": "日主极弱，命局从弱有利，化弱为用是关键",
+    }
+    _tier_text = _tier_desc.get(inp.strength_tier, f"日主{inp.strength_tier}")
+    _total_el = sum(inp.wuxing_scores.values()) or 1.0
+    _max_el = max(inp.wuxing_scores, key=lambda k: inp.wuxing_scores.get(k, 0))
+    _max_el_cn = _WUXING_CN.get(_max_el, _max_el)
+    _max_pct = inp.wuxing_scores.get(_max_el, 0) / _total_el
+    _sec1 = (
+        f"【命局总评】{_tier_text}，格局为【{inp.geju_name}】。"
+        f"命局五行以{_max_el_cn}为主导（占比{_max_pct:.0%}），"
+        f"整体气场{'阳刚进取' if inp.strength_tier in ('极旺','偏旺') else '中正平和' if inp.strength_tier == '中和' else '柔韧内敛'}。"
+    )
 
-    result.full_summary = " ".join(summary_parts[:6]) + "（仅供学术研究参考，不构成任何形式的预测或建议）"
+    # ── §9-B 格局分析 ──────────────────────────────────────────────────────
+    _geju_brief = _first_sentence(result.geju_text)
+    _sec2 = f"【格局分析】{_geju_brief}"
+
+    # ── §9-C 五行特点 ──────────────────────────────────────────────────────
+    _missing_parts: list[str] = []
+    for el, score in inp.wuxing_scores.items():
+        ratio = score / _total_el
+        if ratio < 0.08:
+            _missing_parts.append(_WUXING_CN.get(el, el))
+    _dominant_parts: list[str] = []
+    for el, score in inp.wuxing_scores.items():
+        ratio = score / _total_el
+        if ratio > 0.40:
+            _dominant_parts.append(_WUXING_CN.get(el, el))
+    if _missing_parts and _dominant_parts:
+        _sec3 = (
+            f"【五行特点】五行以{_dominant_parts[0]}为旺，缺{'、'.join(_missing_parts)}，"
+            f"宜在生活/居家/事业方向上补充{_missing_parts[0]}属性的色彩与元素，以平衡气场。"
+        )
+    elif _missing_parts:
+        _sec3 = (
+            f"【五行特点】五行相对均衡，其中{_missing_parts[0]}稍显不足，"
+            f"可通过{'、'.join(_missing_parts)}属性的饮食、环境布置或行业方向予以弥补。"
+        )
+    elif _dominant_parts:
+        _sec3 = (
+            f"【五行特点】五行以{_dominant_parts[0]}为旺，"
+            f"气场偏{'刚锐' if _dominant_parts[0] in ('金','火') else '柔韧' if _dominant_parts[0] in ('木','水') else '稳重'}，"
+            f"注意节制{_dominant_parts[0]}属性的使用，防止过度旺盛带来对应脏腑压力。"
+        )
+    else:
+        _sec3 = "【五行特点】五行分布较为均匀，气场协调，整体外部环境适应力较强。"
+
+    # ── §9-D 神煞加持 ──────────────────────────────────────────────────────
+    _bene_shensha = [s for s in inp.shensha_items if s.get("is_beneficial")]
+    _harm_shensha = [s for s in inp.shensha_items if not s.get("is_beneficial")]
+    if _bene_shensha or _harm_shensha:
+        _b_names = "、".join(s.get("name", "") for s in _bene_shensha[:2])
+        _h_names = "、".join(s.get("name", "") for s in _harm_shensha[:2])
+        _sec4_parts: list[str] = []
+        if _b_names:
+            _sec4_parts.append(f"命局吉神有{_b_names}，可增强运势与人际贵人缘")
+        if _h_names:
+            _sec4_parts.append(f"命中凶煞有{_h_names}，需注意化解相关领域的潜在风险")
+        _sec4 = "【神煞加持】" + "，".join(_sec4_parts) + "。"
+    else:
+        _sec4 = "【神煞加持】命局神煞分布均衡，无突出的吉凶神煞干扰，整体运势以自身实力为主导。"
+
+    # ── §9-E 人生主线建议 ──────────────────────────────────────────────────
+    _dayun_desc = {"上升": "当前大运处于上升通道，宜积极拓展", "下降": "当前大运偏于收缩，宜守成蓄力", "平稳": "当前大运运势平稳，宜稳中求进"}
+    _dayun_hint = _dayun_desc.get(inp.dayun_trend, "大运平稳")
+    _sec5 = (
+        f"【人生主线建议】用神为{favor_cn}，忌神为{avoid_cn}。"
+        f"{_dayun_hint}，在用神五行旺盛的流年把握关键决策时机。"
+        f"事业择业与投资方向优先顺应用神属性，居家方位与色彩也宜偏向用神五行以助运。"
+    )
+
+    # ── §9-F 综合总结 ─────────────────────────────────────────────────────
+    _general_brief = _first_sentence(result.general_text)
+    _sec6 = f"【综合总结】{_general_brief}"
+
+    # 拼合六段，控制总字数在400-600之间
+    full_summary_raw = "".join([_sec1, _sec2, _sec3, _sec4, _sec5, _sec6])
+    result.full_summary = full_summary_raw + "（仅供学术研究参考，不构成任何形式的预测或建议）"
 
     return result

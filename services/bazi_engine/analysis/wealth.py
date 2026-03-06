@@ -268,6 +268,98 @@ def compute_wealth(
         f"（仅供学术研究参考）"
     )
 
+    # ─── 新增：投资偏好 ──────────────────────────────────────────────────
+    zheng_cai_pct = zheng_cai / total_shishen
+    pian_cai_pct  = pian_cai  / total_shishen
+    if zheng_cai_pct > pian_cai_pct and zheng_cai_pct >= 0.12:
+        investment_preference = (
+            f"正财有根（正财占比{zheng_cai_pct:.0%}），天然倾向稳健收益型投资。"
+            "建议采用「核心+卫星」资产配置：60-70%配置债券基金/稳健理财，"
+            "20-30%配置指数基金进行长期定投，5-10%保留流动储备。"
+            "投资决策应遵循最小12个月验证周期，避免追热点短炒；"
+            "年复合回报预期维持在8-15%为合理区间，不轻易追求超额收益。"
+        )
+    elif pian_cai_pct > zheng_cai_pct and pian_cai_pct >= 0.12:
+        investment_preference = (
+            f"偏财有力（偏财占比{pian_cai_pct:.0%}），天然具备捕捉机会的商业敏锐性。"
+            "建议配合「机会主义+纪律性」策略：设置严格止损线（亏损超15%强制离场），"
+            "仅在用神顺运大运年才可增加高风险仓位（不超总资产35%）。"
+            "任何单笔投资仓位不超10%，并强制建立「失控复盘清单」，记录失败投资优化决策。"
+        )
+    elif zheng_cai_pct >= 0.08 and pian_cai_pct >= 0.08:
+        investment_preference = (
+            "正财偏财并存，兼具稳健与机会捕捉能力，适合「均衡型」组合。"
+            "建议50%配置稳健基金/REITs，30%配置精选个股/主题ETF，20%保留流动现金；"
+            "每季度进行一次仓位再平衡，防止偏财旺性引发过度集中持仓风险。"
+        )
+    else:
+        investment_preference = (
+            "财星力量偏弱，财富积累应以「提升总体收入」为第一优先级，而非追求投资超额回报。"
+            "建议将80%以上资产配置于货币基金或银行定存等防御性工具，"
+            "以技能提升带来的主动收入增长为核心策略，待大运财运顺势后再逐步增加投资仓位。"
+        )
+
+    # ─── 新增：财务禁区 ──────────────────────────────────────────────────
+    taboo_items: list[str] = []
+    for el in yongshen_avoid[:2]:
+        ind_list = _WUXING_TO_INDUSTRIES.get(el, [])
+        el_cn_str = _ELEMENT_CN.get(el, el)
+        if ind_list:
+            taboo_items.append(
+                f"忌神五行属{el_cn_str}，对应行业（{'、'.join(ind_list[:3])}）"
+                "为财运高风险领域，投资或创业须谨慎进入，强烈建议不超总资产5%试仓。"
+            )
+    if strength_score < 30 and (zheng_cai_pct + pian_cai_pct) > 0.25:
+        taboo_items.append(
+            "身弱财多（日主力量不足以驾驭财星），切忌大规模举债投资或为他人担保，"
+            "否则极易在财运高峰期遭遇反向财务危机，须先强主气（行用神旺运）再谈驾驭财富。"
+        )
+    if pian_cai_pct >= 0.3:
+        taboo_items.append(
+            "偏财过旺，对高风险高回报项目吸引力极强，须特别警惕「一夜暴富」型项目诱惑，"
+            "以及涉及陌生人担保、传销性质投资、杠杆率超3倍的金融衍生品，防止倾家荡产式风险。"
+        )
+    if not taboo_items:
+        taboo_items.append(
+            "命局财星结构较为均衡，无明显财务禁区，维持稳健理财习惯、保持合理负债率（低于40%）即可；"
+            "仍需在大运忌神当令年份警惕轻率投资与情绪性超支消费行为。"
+        )
+    financial_taboos = "；".join(taboo_items)
+
+    # ─── 新增：财富积累三阶段规划 ────────────────────────────────────────
+    _phases: list[str] = []
+    for i, dy in enumerate(dayun_list[:3]):
+        gz = dy.get("ganzhi") or (
+            (dy.get("stem") or "") + (dy.get("branch") or "")
+        )
+        stem_el = _STEM_ELEMENT.get(dy.get("stem", ""), "")
+        start_age = dy.get("start_age", "")
+        end_age   = dy.get("end_age", "")
+        age_str = f"{start_age}-{end_age}岁" if start_age or end_age else f"第{i + 1}大运"
+        if stem_el and yongshen_favor and stem_el in yongshen_favor:
+            phase_strategy = (
+                f"【{gz}大运·{age_str}】财运上升期：主动布局多元收入，"
+                "可适当提升权益类投资仓位至30-40%，此为财富跃升的关键窗口，宜大胆推进。"
+            )
+        elif stem_el and yongshen_avoid and stem_el in yongshen_avoid:
+            phase_strategy = (
+                f"【{gz}大运·{age_str}】财运收缩期：以保守守成为主，压缩投资风险仓位至10%以下，"
+                "集中清偿高息债务，储备3-6个月生活支出的流动应急资金，蓄力待机。"
+            )
+        else:
+            phase_strategy = (
+                f"【{gz}大运·{age_str}】财运平稳期：维持均衡配置，"
+                "坚持每月定投指数基金，将月收入10-15%转入专项储蓄积累复利基础。"
+            )
+        _phases.append(phase_strategy)
+    if not _phases:
+        _phases = [
+            "【早期阶段】以「开源为主、节流为辅」为核心，重点投资技能与人脉提升主动收入。",
+            "【中期阶段】在用神顺运大运中积极扩大投资仓位，形成收入多元化格局。",
+            "【成熟阶段】以资产保值增值为主，布局稳健性现金流资产，形成坚实财富护城河。",
+        ]
+    wealth_accumulation_phases = "".join(_phases)
+
     return WealthAnalysisModel(
         wealth_score=wealth_score,
         wealth_tier=tier,
@@ -277,4 +369,7 @@ def compute_wealth(
         dayun_forecast=dayun_forecast,
         inference_tags=tags,
         interpretation_text=interp,
+        investment_preference=investment_preference,
+        financial_taboos=financial_taboos,
+        wealth_accumulation_phases=wealth_accumulation_phases,
     )

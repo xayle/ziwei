@@ -180,6 +180,87 @@ def compute_career(
         f"（仅供学术研究参考）"
     )
 
+    # ─── 新增：创业 vs 打工评估 ─────────────────────────────────────────
+    if shi_shang_pct >= 0.4:
+        entrepreneurship_assessment = (
+            f"食伤旺盛（占比{shi_shang_pct:.0%}），命局具备较强创业基因，创意与表达力是核心竞争力，"
+            "适合在技术创业、内容创业或自由职业领域开拓事业。"
+            "建议在25-35岁积累第一波资源与客户关系后，于用神顺运年份（大运天干顺用神时）启动创业；"
+            "创业形态建议以「轻资产+高技术溢价」模式切入，规避重资产风险。"
+        )
+    elif leadership and guan_sha_pct >= 0.3:
+        entrepreneurship_assessment = (
+            f"官杀有力（占比{guan_sha_pct:.0%}）且日主中和，具备典型的职场上升型命局，"
+            "稳步晋升至中高管层是最高性价比路径，借助体制内或大平台放大个人影响力。"
+            "若有创业意愿，建议以「内部创业」或「孵化器资源扶持」为跳板，降低初创风险；"
+            "正式独立创业最佳时机在40岁后资源积累充分期。"
+        )
+    elif cai_pct >= 0.35:
+        entrepreneurship_assessment = (
+            f"财星有力（占比{cai_pct:.0%}），具备商业嗅觉与资源整合能力。"
+            "适合以销售、贸易、代理等低门槛商业路径为起点，逐步升级为自主经营；"
+            "财星旺而身强者具备独立商业成功的潜质，宜在大运财运顺遂期主动切换为自主创业。"
+        )
+    else:
+        entrepreneurship_assessment = (
+            "命局食伤与官星均衡，兼具稳定性与成长性，职场深耕与适度创业均可发展。"
+            "建议优先在现有平台积累3-5年核心资源与人脉后，再评估创业可行性；"
+            "若有意创业，建议选择与当前主业高度相关的细分市场，而非全面跨行转型。"
+        )
+
+    # ─── 新增：五年发展路线图 ─────────────────────────────────────────────
+    _roadmap_steps: list[str] = []
+    for dy in dayun_list[:3]:
+        gz = dy.get("ganzhi") or (
+            (dy.get("stem") or "") + (dy.get("branch") or "")
+        )
+        stem_el = _STEM_ELEMENT.get(dy.get("stem", ""), "")
+        if stem_el and yongshen_favor and stem_el in yongshen_favor:
+            action = "积极出击，主动争取晋升、跳槽或创业机会，是职业跃升的黄金窗口"
+        elif stem_el and yongshen_avoid and stem_el in yongshen_avoid:
+            action = "守成为主，强化专业技能积累，暂缓重大职业变动，防止因逆运期鲁莽行动造成损失"
+        else:
+            action = "稳中求进，持续积累行业人脉与项目经验，为下一个顺运期蓄力"
+        start_age = dy.get("start_age", "")
+        end_age = dy.get("end_age", "")
+        age_str = f"（{start_age}-{end_age}岁）" if start_age or end_age else ""
+        _roadmap_steps.append(f"【{gz}大运{age_str}】{action}。")
+    if not _roadmap_steps:
+        _roadmap_steps = [
+            "近期：夯实专业技能基础，积累行业资源与人脉，争取至少1次跨部门协作经验。",
+            "中期：把握用神顺运年份推进职务晋升或副业尝试，建立个人品牌认知度。",
+            "远期：在财运与事业大运双顺时期系统整合资源，推动职业级别跨越式突破。",
+        ]
+    five_year_roadmap = "".join(_roadmap_steps)
+
+    # ─── 新增：协作风格 ──────────────────────────────────────────────────
+    bi = shishen_scores.get("比肩", 0.0) + shishen_scores.get("劫财", 0.0)
+    bi_pct = bi / total
+    if bi_pct >= 0.35:
+        collaboration_style = (
+            f"比劫有力（占比{bi_pct:.0%}），自主意识强，倾向于独立主导或与平等伙伴共同推进。"
+            "最适合「合伙人制」或「平行团队」协作模式，不宜在层级严格的科层制组织中长期沉淀；"
+            "在合作关系中应提前明确权责边界，降低利益摩擦风险，避免因意见分歧引发团队内耗。"
+        )
+    elif yin_pct >= 0.35:
+        collaboration_style = (
+            f"印绶有力（占比{yin_pct:.0%}），独立研究能力强，偏好小团队或导师带徒式协作模式。"
+            "在以专业深度为核心的工作场景中效率最高；与外向型协作者搭档时互补性极强，"
+            "建议主动承担「方案策划/技术攻关」角色，让擅长社交的伙伴负责对外协调。"
+        )
+    elif shi_shang_pct >= 0.35:
+        collaboration_style = (
+            f"食伤有力（占比{shi_shang_pct:.0%}），创新表达力突出，是团队中的「创意发动机」。"
+            "在开放讨论的扁平化团队中表现最佳；与官杀型（决策执行型）伙伴组合时，"
+            "形成完美的「创意+执行」搭档关系，建议主动寻找此类互补型合作者。"
+        )
+    else:
+        collaboration_style = (
+            "命局五行较为均衡，团队协作中展现出高度适应性，能灵活承担不同角色。"
+            "既可独立推进专项，也能与不同类型的伙伴高效衔接；"
+            "建议主动在项目中承担「协调整合」的核心角色，发挥五行均衡带来的广泛兼容优势。"
+        )
+
     return CareerAnalysisModel(
         career_score=career_score,
         career_directions=directions,
@@ -189,4 +270,7 @@ def compute_career(
         optimal_move_timing=optimal_timing,
         inference_tags=tags,
         interpretation_text=interp,
+        entrepreneurship_assessment=entrepreneurship_assessment,
+        five_year_roadmap=five_year_roadmap,
+        collaboration_style=collaboration_style,
     )

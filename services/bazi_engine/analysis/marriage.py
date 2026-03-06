@@ -261,6 +261,66 @@ def compute_marriage(
         f"（仅供学术研究参考）"
     )
 
+    # ─── 新增：情感禁区 ──────────────────────────────────────────────────
+    pitfall_items: list[str] = []
+    if guan_sha_mixed:
+        pitfall_items.append(
+            "官杀混杂：感情中容易同时接受多段关系的情感投入，需克制「脚踏多船」的诱惑，"
+            "主动培养感情专注度，一旦确定伴侣关系须保持高度专一，否则极易引发婚姻不稳或情感纠纷。"
+        )
+    if stability_delta < -10:
+        pitfall_items.append(
+            "日支冲害：配偶宫不稳，感情关系中容易因性格差异或外部压力出现裂缝，"
+            "建议婚前充分了解双方价值观与生活习惯（至少3年），避免冲动型婚姻决策；"
+            "婚后遭遇冲年（日支六冲流年）时，需主动投入感情修复，切勿在此期间做出离婚决定。"
+        )
+    if peach_blossom == "旺" and taohua_count >= 2:
+        pitfall_items.append(
+            "桃花过旺：异性缘极佳但感情线复杂，在竞争性感情关系中容易分心，"
+            "需有意识降低外部情感干扰，专注深耕核心感情；同时提防「烂桃花」在流年桃花旺时入侵。"
+        )
+    if gender == "female" and guan_sha_pct >= 0.4:
+        pitfall_items.append(
+            "官星过旺（女命）：感情中容易对伴侣要求过高或情感投入过度，"
+            "建议保持独立的事业追求与个人空间，避免将全部情感价值投注于单一关系；"
+            "在感情受挫时需警惕「自我惩罚」心理，及时寻求情感支持。"
+        )
+    if gender == "male" and cai_pct >= 0.5:
+        pitfall_items.append(
+            "财星过旺（男命）：对感情的投入容易伴随物质利益考量，"
+            "在伴侣选择上需避免纯以条件衡量，注重精神契合度与长期价值观一致性，"
+            "否则即便物质条件匹配，婚姻内核缺乏情感共鸣也难以长久稳定。"
+        )
+    if not pitfall_items:
+        pitfall_items.append(
+            "命局感情结构较为平衡，整体情感风险度较低，宜顺其自然培养稳定感情关系；"
+            "即便如此，仍需保持良好的沟通习惯与情感界限意识，是维系长久婚姻的基础保障。"
+        )
+    emotional_pitfalls = "；".join(pitfall_items)
+
+    # ─── 新增：二婚指征 ──────────────────────────────────────────────────
+    sha_pct = sha / total
+    if sha_pct >= 0.3:
+        second_marriage_indicator = (
+            f"七杀力量偏强（占比{sha_pct:.0%}），命局中隐含婚姻波折信号，"
+            "第一段感情中容易遭遇磕碰或分离，有一定概率经历婚变或二婚。"
+            "化解方向：建议婚前充分了解伴侣三年以上再定终身；在感情遭遇重大危机时，"
+            "优先尝试专业婚姻咨询而非冲动离婚；流年七杀旺时（申、酉年遇庚辛天干透出）尤需警惕感情动荡。"
+        )
+    elif guan_sha_mixed:
+        second_marriage_indicator = (
+            "官杀混杂，感情经历中容易出现多段重要关系，再婚指征为中等。"
+            "婚变往往源于感情专注度不足或双方价值观随时间产生偏差；"
+            "化解方向：珍视第一段婚姻，在关系出现危机信号时主动投资感情修复（共同旅行/专业咨询/仪式感建立），"
+            "在流年官杀双透年份保持高度情感专注，避免外部诱惑乘虚而入。"
+        )
+    else:
+        second_marriage_indicator = (
+            "命局官杀结构较为清晰，婚姻稳定性及感情专注度整体良好，再婚风险属于较低水平。"
+            "双方只要保持有效沟通与相互理解，长期和谐婚姻的概率较高；"
+            "即便遭遇婚姻低谷期，也具备通过沟通协商平稳度过的内在心理基础与情感韧性。"
+        )
+
     return MarriageAnalysisModel(
         marriage_score=marriage_score,
         peach_blossom=peach_blossom,
@@ -273,4 +333,6 @@ def compute_marriage(
         children_timing=children_timing,
         inference_tags=tags,
         interpretation_text=interp,
+        emotional_pitfalls=emotional_pitfalls,
+        second_marriage_indicator=second_marriage_indicator,
     )

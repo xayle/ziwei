@@ -137,6 +137,10 @@ class WealthAnalysisModel(BaseModel):
     interpretation_text: str
     disclaimer:          str = "仅供学术研究参考"
     fact_data:           Optional[dict] = None
+    # 新增分析维度
+    investment_preference:       Optional[str] = None   # 投资偏好方向
+    financial_taboos:            Optional[str] = None   # 理财禁忌（忌神方向）
+    wealth_accumulation_phases:  Optional[str] = None   # 财富积累三阶段
 
     @model_validator(mode="after")
     def _fill_fact_data(self) -> Self:
@@ -164,6 +168,10 @@ class CareerAnalysisModel(BaseModel):
     interpretation_text:  str
     disclaimer:           str = "仅供学术研究参考"
     fact_data:            Optional[dict] = None
+    # 新增分析维度
+    entrepreneurship_assessment: Optional[str] = None   # 创业vs打工评估
+    five_year_roadmap:           Optional[str] = None   # 五年职业路线图
+    collaboration_style:         Optional[str] = None   # 最佳合作方式
 
     @model_validator(mode="after")
     def _fill_fact_data(self) -> Self:
@@ -194,6 +202,9 @@ class MarriageAnalysisModel(BaseModel):
     interpretation_text:  str
     disclaimer:           str = "仅供学术研究参考"
     fact_data:            Optional[dict] = None
+    # 新增分析维度
+    emotional_pitfalls:         Optional[str] = None   # 感情雷区与禁忌
+    second_marriage_indicator:  Optional[str] = None   # 再婚/感情波折指标
 
     @model_validator(mode="after")
     def _fill_fact_data(self) -> Self:
@@ -224,6 +235,10 @@ class HealthAnalysisModel(BaseModel):
     interpretation_text: str
     disclaimer:      str = "仅供学术研究参考"
     fact_data:       Optional[dict] = None
+    # 新增分析维度
+    seasonal_health:       Optional[str] = None   # 季节性养生重点
+    mental_health_advice:  Optional[str] = None   # 心理健康建议
+    constitution_type:     Optional[str] = None   # 五行体质类型
 
     @model_validator(mode="after")
     def _fill_fact_data(self) -> Self:
@@ -276,6 +291,10 @@ class PersonalityModel(BaseModel):
     interpretation_text: str
     disclaimer:        str = "仅供学术研究参考"
     fact_data:         Optional[dict] = None
+    # 新增分析维度
+    communication_style:   Optional[str] = None   # 沟通风格
+    stress_coping_mode:    Optional[str] = None   # 压力应对模式
+    potential_activation:  Optional[str] = None   # 潜能激活时机建议
 
     @model_validator(mode="after")
     def _fill_fact_data(self) -> Self:
