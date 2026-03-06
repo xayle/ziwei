@@ -630,7 +630,7 @@ def _enrich_v2_analysis(
             _d["trend"] = "上升" if _d.get("is_favorable") else "平稳"
         if "end_age" not in _d:
             _nxt = dayun_list[_i+1] if _i+1 < len(dayun_list) else None
-            _d["end_age"] = _nxt.get("start_age", "?") if _nxt else "?"
+            _d["end_age"] = (_nxt.get("start_age") or 999) if _nxt else 999
 
     # ── N5.07: 起运年龄 ──────────────────────────────────────────────────
     try:
@@ -915,7 +915,7 @@ def _enrich_v2_analysis(
                 _gz_stems_m = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
                 _gz_branches_m = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
                 for i in range(10):
-                    yr = birth_year + start_age + i
+                    yr = birth_year + int(start_age) + i
                     _yr_stem = _gz_stems_m[(yr - 4) % 10]
                     _yr_branch = _gz_branches_m[(yr - 4) % 12]
                     liunian_items.append({
