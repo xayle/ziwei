@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import os
 import logging
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional
@@ -49,6 +50,18 @@ from app.schemas import (
 )
 from app.config import settings
 from constants import API_VERSION, RULE_VERSION
+
+# 可选的 Prometheus 指标（缺失时优雅降级）
+try:
+    from services.prometheus_monitoring import (
+        BAZI_CACHE_HITS,
+        BAZI_CACHE_MISSES,
+        BAZI_ENGINE_CALC_SECONDS,
+    )
+except Exception:  # pragma: no cover - 监控依赖缺失时忽略
+    BAZI_CACHE_HITS = None
+    BAZI_CACHE_MISSES = None
+    BAZI_ENGINE_CALC_SECONDS = None
 
 logger = logging.getLogger(__name__)
 
@@ -471,7 +484,15 @@ def calculate(
     if _CACHETOOLS_AVAILABLE and cache_key in _RESULT_CACHE:
         cached: CalculateResult = _RESULT_CACHE[cache_key]
         logger.debug("[Cache] HIT key=%s...", cache_key[:8])
+        try:
+            if BAZI_CACHE_HITS:
+                BAZI_CACHE_HITS.inc()
+        except Exception:
+            pass
         return cached
+
+    # 统计耗时（含缓存未命中场景）
+    _start_ts = time.perf_counter()
 
     if _engine_v2_enabled():
         result = _calculate_v2(
@@ -487,6 +508,14 @@ def calculate(
             extra_warnings=_extra,
             city_tier=city_tier, industry=industry,
         )
+    _duration = time.perf_counter() - _start_ts
+    try:
+        if BAZI_CACHE_MISSES:
+            BAZI_CACHE_MISSES.inc()
+        if BAZI_ENGINE_CALC_SECONDS:
+            BAZI_ENGINE_CALC_SECONDS.observe(_duration)
+    except Exception:
+        pass
 
     # ── R38: 将 engine_version 同步到 verify_response ─────────────────────────
     result.verify_response.engine_version = result.engine_version

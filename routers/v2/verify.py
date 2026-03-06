@@ -26,6 +26,7 @@ from app.schemas.v2.verify import (
 )
 from services.normalize_input import validate_lon_strict
 from services.rate_limit import limiter
+from services.prometheus_monitoring import record_verify_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,18 @@ def v2_verify(
 
     # ── 构建 data（full / minimal）────────────────────────────────────────────
     vr = calc.verify_response
+
+    # Prometheus 自定义业务指标
+    try:
+        _boundary_level = getattr(getattr(vr, "validation", None), "level", "") or "unknown"
+        record_verify_metrics(
+            mode=body.mode,
+            boundary_level=_boundary_level,
+            duration_secs=calc_ms / 1000.0,
+            success=True,
+        )
+    except Exception:
+        logger.debug("[metrics] record_verify_metrics skipped", exc_info=True)
 
     if body.output_format == "minimal":
         data: VerifyResponseFull | VerifyResponseMinimal = VerifyResponseMinimal(  # type: ignore[call-overload]
