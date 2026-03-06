@@ -191,7 +191,7 @@ def _calculate_v1(
         _wealth_score_v1 = round(_wealth_score_v1 - 0.01 if _wealth_score_v1 > 0 else _wealth_score_v1 + 0.01, 2)
     wealth = WealthModel(
         wealth_score=_wealth_score_v1,
-        industry_tags=yongshen.favor or [],
+        industry_tags=[{"wood":"木","fire":"火","earth":"土","metal":"金","water":"水"}.get(e,e) for e in (yongshen.favor or [])],
         risk_hint=(
             "靠近时辰/节气边界，解读请守"
             if v.boundary_risk_shichen or v.boundary_risk_jieqi

@@ -710,7 +710,7 @@ window.translateFactorReason = function(text) {
 };
 window.translateRationale = function(text) {
   if (!text) return '';
-  const m = [{from:'strong',to:'身强'},{from:'weak',to:'身弱'},{from:'neutral',to:'中和'},{from:'extremely_strong',to:'极强'},{from:'extremely_weak',to:'极弱'}];
+  const m = [{from:'balanced',to:'中和'},{from:'strong',to:'身强'},{from:'weak',to:'身弱'},{from:'neutral',to:'中和'},{from:'extremely_strong',to:'极强'},{from:'extremely_weak',to:'极弱'}];
   let r = text;
   m.forEach(p=>{ r=r.replaceAll(p.from,p.to); });
   return r;

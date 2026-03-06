@@ -190,10 +190,13 @@ def compute_yongshen(
             strength=_s,
             wuxing=_w,
         )
+        _WX2CN = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+        _rat = result.rationale
+        for _en, _cn in _WX2CN.items(): _rat = _rat.replace(_en, _cn)
         return YongShenModel(
             favor=result.favor,
             avoid=result.avoid,
-            rationale=result.rationale,
+            rationale=_rat,
         )
 
     # ── 扶抑法 fallback（无四柱时使用，兼顾旧路径） ──────────────────────
