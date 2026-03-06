@@ -160,12 +160,17 @@ def generate_dayun_narrative(
     favor_cn = "、".join({"wood": "木", "fire": "火", "earth": "土",
                           "metal": "金", "water": "水"}.get(e, e)
                          for e in yongshen_favor)
+    _TIER_CN_N = {
+        "extremely_strong":"极旺","strong":"偏旺","balanced":"中和",
+        "neutral":"中和","weak":"偏弱","extremely_weak":"极弱",
+    }
+    _strength_cn = _TIER_CN_N.get(strength_tier, strength_tier)
 
     # 核心意象（~40字）
     core_image = (
         f"【{start_age}岁—{end_age}岁·{ganzhi}大运】"
         f"天干{stem}：{stem_img}；地支{branch}：{branch_img}。"
-        f"命局格局{geju_name}，日主{strength_tier}，"
+        f"命局格局{geju_name}，日主{_strength_cn}，"
         f"{'用神得力，气运相顺，诸事较为顺遂' if is_favorable else '用神受制，气运偏逆，诸事宜守'}。"
     )
 

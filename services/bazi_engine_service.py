@@ -256,7 +256,15 @@ def _calculate_v1(
     _dayun_refs_common = _get_refs_by_tag("大运")[:2]
     for item in dayun_model.items:
         if item.stem:
-            item.ten_god = ten_god(rp.day.stem, item.stem)
+            _tg_raw = ten_god(rp.day.stem, item.stem)
+            _TG_CN = {
+                "bi_jian":"比肩","jie_cai":"劫财",
+                "shi_shen":"食神","shang_guan":"伤官",
+                "zheng_cai":"正财","pian_cai":"偏财",
+                "zheng_guan":"正官","qi_sha":"七杀",
+                "zheng_yin":"正印","pian_yin":"偏印",
+            }
+            item.ten_god = _TG_CN.get(_tg_raw, _tg_raw) if _tg_raw else None
         _s_el = _ST_EL.get(item.stem or "", "")
         _b_el = _BR_EL.get(item.branch or "", "")
         _s_cn = _WX_CN_MAP.get(_s_el, item.stem or "")
