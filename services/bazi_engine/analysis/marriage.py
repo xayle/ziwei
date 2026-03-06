@@ -64,18 +64,9 @@ _ELEMENT_CN: dict[str, str] = {
     "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
 }
 
-# 用于计算夫/妻星五行（男命：财星→妻星；女命：官杀→夫星）
-_SHISHEN_WUXING: dict[str, str] = {
-    "正财": "earth",  # 简化，实际需从日主五行推导
-    "偏财": "earth",
-    "正官": "metal",
-    "七杀": "metal",
-    "正印": "fire",
-    "偏印": "fire",
-    "食神": "water",
-    "伤官": "water",
-    "比肩": "wood",
-    "劫财": "wood",
+# 配偶五行（中文）→ 英文，用于婚恋窗口匹配
+_PARTNER_WUXING_EN: dict[str, str] = {
+    "金": "metal", "木": "wood", "水": "water", "火": "fire", "土": "earth",
 }
 
 
@@ -215,11 +206,16 @@ def compute_marriage(
         )
         branch = dyun.get("branch", "")
         stem   = dyun.get("stem", "")
-        if gender == "female":
-            # 地支与官杀星同旺 → 婚期窗口
-            is_window = _BRANCH_ELEMENT.get(branch, "") in ["metal"]
-        else:
-            is_window = _BRANCH_ELEMENT.get(branch, "") in ["earth", "water"]
+        # 大支五行与配偶星五行同气或相生 → 婚期窗口
+        br_el = _BRANCH_ELEMENT.get(branch, "")
+        partner_el_en = _PARTNER_WUXING_EN.get(partner_wuxing, "")
+        _SHENG_EN: dict[str, str] = {
+            "wood": "fire", "fire": "earth", "earth": "metal",
+            "metal": "water", "water": "wood",
+        }
+        is_window = bool(br_el and partner_el_en and (
+            br_el == partner_el_en or _SHENG_EN.get(br_el) == partner_el_en
+        ))
         if is_window:
             start_age = dyun.get("start_age", 0)
             end_age   = dyun.get("end_age", start_age + 10)

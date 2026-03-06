@@ -160,7 +160,11 @@ def _find_peak_periods(dayun_list: list[dict]) -> list[str]:
             ganzhi = d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
             start  = d.get("start_age", "?")
             end    = d.get("end_age",   "?")
-            peaks.append(f"{start}-{end}岁·{ganzhi}大运（顺运）")
+            trend  = d.get("trend", "上升")
+            ten_god = d.get("ten_god", "")
+            ten_god_part = f"，{ten_god}当令" if ten_god else ""
+            action = "宜积极进取、抓住机遇" if trend == "上升" else "宜稳中求进、逐步积累"
+            peaks.append(f"{start}-{end}岁·{ganzhi}大运（顺运·{trend}{ten_god_part}，{action}）")
     return peaks or ["暂无明显顺运峰值期，宜均衡规划"]
 
 
@@ -172,7 +176,11 @@ def _find_caution_periods(dayun_list: list[dict]) -> list[str]:
             ganzhi = d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
             start  = d.get("start_age", "?")
             end    = d.get("end_age",   "?")
-            cautions.append(f"{start}-{end}岁·{ganzhi}大运（逆运，宜守成稳进）")
+            trend  = d.get("trend", "下降")
+            ten_god = d.get("ten_god", "")
+            ten_god_part = f"（{ten_god}）" if ten_god else ""
+            advice = "宜控险守成，避免大额投资" if trend == "下降" else "宜低调蓄势，稳步度过"
+            cautions.append(f"{start}-{end}岁·{ganzhi}大运{ten_god_part}（逆运·{trend}，{advice}）")
     return cautions or ["暂无明显逆运期"]
 
 

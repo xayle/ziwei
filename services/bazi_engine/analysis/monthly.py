@@ -82,6 +82,15 @@ _LUCK_COLOR: dict[str, str] = {
     "凶": "#C0392B",
 }
 
+# 吉月：按月支五行差异化利好方向（用于区分各月"吉"月的具体建议）
+_ELEMENT_LUCKY_TIP: dict[str, str] = {
+    "wood":  "宜推进学业、教育或文职事务，人际拓展顺畅，有利签约与合作",
+    "fire":  "宜表达展示、社交拓展，名声曝光度提升，创意与传媒类事务有进展",
+    "earth": "宜稳健置业、商贸谈判，实业与不动产类事务推进顺利",
+    "metal": "宜处理法务、金融或签约事宜，收益稳定，管理效率提升",
+    "water": "宜开展贸易、远行或IT类项目，智识工作与流通事务顺利",
+}
+
 
 def compute_monthly(
     day_branch: str,               # 日支
@@ -164,7 +173,8 @@ def compute_monthly(
         ):
             luck_level = "吉"
             el_cn = _ELEMENT_CN.get(mb_element, mb_element)
-            tip = f"本月{mb}（{el_cn}）有助用神，财运/事业有正向进展。"
+            _specific = _ELEMENT_LUCKY_TIP.get(mb_element, "各方面均有正向进展")
+            tip = f"本月{mb}（{el_cn}）顺应用神，{_specific}。"
 
         # 3. 月支与忌神相克 → 凶
         elif mb_element and yongshen_avoid and (
