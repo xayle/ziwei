@@ -1103,9 +1103,10 @@ pre { background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:12px;
 .fh-bar-fill { height:100%; border-radius:4px; transition:width .7s cubic-bezier(.4,0,.2,1); }
 /* 大运财运周期列表 */
 .dayun-forecast-list { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-.dfc-row  { display:flex; align-items:center; gap:10px; padding:6px 10px; background:var(--input); border-radius:8px; font-size:12px; }
+.dfc-row  { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding:6px 10px; background:var(--input); border-radius:8px; font-size:12px; }
 .dfc-gz   { font-weight:700; font-family:var(--font-title,serif); min-width:28px; }
-.dfc-trend { color:var(--muted); flex:1; }
+.dfc-trend { color:var(--muted); min-width:28px; }
+.dfc-desc  { flex-basis:100%; font-size:11px; color:var(--muted); line-height:1.5; padding-left:2px; }
 /* 职业方向 chip */
 .career-chip { background:var(--input); border-color:var(--line); }
 /* 桃花年 chip */

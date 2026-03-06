@@ -772,7 +772,7 @@ function renderTab7(json, el) {
   <div class="card">
     <p class="card-title"><span class="dot"></span>大运财运周期</p>
     <div class="dayun-forecast-list">
-      ${w.dayun_forecast.map(fc=>`<div class="dfc-row"><div class="dfc-gz">${esc(fc.ganzhi||'')}</div><div class="dfc-trend">${txt(fc.trend||'')}</div></div>`).join('')}
+      ${w.dayun_forecast.map(fc=>`<div class="dfc-row"><div class="dfc-gz">${esc(fc.ganzhi||'')}</div><div class="dfc-trend">${txt(fc.trend||'')}</div>${fc.description?`<div class="dfc-desc">${txt(fc.description)}</div>`:''}</div>`).join('')}
     </div>
   </div>` : '';
 
@@ -1120,6 +1120,7 @@ function renderTab15(json, el) {
   ${ls.diet?.length?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>饮食调养</p><ul class="panel-list">${ls.diet.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}
   ${ls.exercise?.length?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>运动锻炼</p><ul class="panel-list">${ls.exercise.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>`:''}
   ${ls.interpretation_text?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>生活方式综述</p><div style="font-size:13px;line-height:1.75">${renderPara(ls.interpretation_text)}</div></div>`:''}
+  ${lk.interpretation_text?`<div class="card" style="margin-top:12px"><p class="card-title"><span class="dot"></span>开运综述</p><div style="font-size:13px;line-height:1.75">${renderPara(lk.interpretation_text)}</div></div>`:''}
   `;
 }
 
