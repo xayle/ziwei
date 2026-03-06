@@ -173,9 +173,9 @@ def compute_career(
     _dir_top = "、".join(directions[:3])
     _ind_top = "、".join(industries[:3])
     interp = (
-        f"事业评分为 {career_score} 分，寓经命局格局为【{geju_name}】，"
-        f"主要事业方向包括：{_dir_top}，提议优先考虑 {_ind_top} 等行业。"
-        f"领导潜力评估：{'\u5177备，可向管理道路发展' if leadership else '中等，适合专家型职业路线'}。"
+        f"事业评分为 {career_score} 分，命局格局为【{geju_name}】，"
+        f"主要事业方向包括：{_dir_top}，推荐优先考虑 {_ind_top} 等行业。"
+        f"领导潜力评估：{'具备，可向管理路线发展' if leadership else '有限，适合专家型职业路线'}。"
         f"{development_advice}"
         f"（仅供学术研究参考）"
     )

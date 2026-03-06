@@ -255,13 +255,13 @@ def compute_marriage(
         tags.append("官杀混杂")
     tags.extend(warnings)
 
-    _win_str = ("、".join(marriage_windows[:2]) + "为婚恋开花颗，") if marriage_windows else "大运顺运期为婚恋高峰期，"
+    _win_str = ("、".join(marriage_windows[:2]) + "为最佳婚恋时机，") if marriage_windows else "大运顺运期为婚恋高峰期，"
     interp = (
         f"婚姻综合评分 {marriage_score} 分，桃花指数【{peach_blossom}】，配偶五行属【{partner_wuxing}】。"
         f"{partner_profile}"
         f"建议在 {optimal_marriage_age} 之间考虑确定关系，{_win_str}"
         f"子女缘分评估：{children_outlook}，{children_timing}。"
-        f"{'\u611f情注意事项：' + '\uff1b'.join(warnings) + '。' if warnings else '整体感情运走较为平稳，宜经营和守常约匹配。'}"
+        f"{'感情注意事项：' + '；'.join(warnings) + '。' if warnings else '整体感情运势平稳，宜用心经营、顺其自然。'}"
         f"（仅供学术研究参考）"
     )
 

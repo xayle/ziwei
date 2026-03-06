@@ -125,7 +125,12 @@ def compute_personality(
     disadvantages = disadvantages[:5]
 
     # ─── inference_tags ─────────────────────────────────────────────
-    tags = [day_stem + "日主", strength_tier]
+    _TIER_CN_P = {
+        "extremely_strong": "极旺", "strong": "偏旺", "balanced": "中和",
+        "neutral": "中和", "weak": "偏弱", "extremely_weak": "极弱",
+    }
+    _tier_display = _TIER_CN_P.get(strength_tier, strength_tier)
+    tags = [day_stem + "日主", _tier_display]
     if geju_name:
         tags.append(geju_name)
 
