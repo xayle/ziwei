@@ -197,7 +197,7 @@ def _calculate_v1(
             if v.boundary_risk_shichen or v.boundary_risk_jieqi
             else None
         ),
-        note="依据五行强弱与用神粗略推断，供前端模板占位",
+        note=None,
     )
     marriage = MarriageModel(
         marriage_flags=MarriageFlagsModel(allow_interpret=v.interpretation_enabled),
@@ -211,8 +211,11 @@ def _calculate_v1(
         taohua_hit=None,
         relation_conflict=None,
         social_hint=(
-            f"用神:{'/'.join(yongshen.favor)} 忌神:{'/'.join(yongshen.avoid)}"
-            if yongshen.favor or yongshen.avoid
+            "命局用神偏" + "、".join(
+                {"wood":"木","fire":"火","earth":"土","metal":"金","water":"水"}.get(f, f)
+                for f in (yongshen.favor or [])[:2]
+            ) + "，感情宜广结五行相合之缘，避开忌神方位"
+            if yongshen.favor
             else None
         ),
     )
@@ -244,14 +247,37 @@ def _calculate_v1(
         "water": (10, 35),
     }
     _WX_CN_MAP = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+    _ST_EL = {"甲":"wood","乙":"wood","丙":"fire","丁":"fire","戊":"earth",
+              "己":"earth","庚":"metal","辛":"metal","壬":"water","癸":"water"}
+    _BR_EL = {"子":"water","丑":"earth","寅":"wood","卯":"wood","辰":"earth",
+              "巳":"fire","午":"fire","未":"earth","申":"metal","酉":"metal",
+              "戌":"earth","亥":"water"}
+    _ORGAN_CN = {"wood":"肝胆","fire":"心脑","earth":"脾胃","metal":"肺肠","water":"肾膀胱"}
     _dayun_refs_common = _get_refs_by_tag("大运")[:2]
     for item in dayun_model.items:
         if item.stem:
             item.ten_god = ten_god(rp.day.stem, item.stem)
-        if yongshen.favor:
-            item.wealth_hint = f"用神倾向: {', '.join(_WX_CN_MAP.get(f, f) for f in yongshen.favor)}"
-        if yongshen.avoid:
-            item.health_hint = f"忌神: {', '.join(_WX_CN_MAP.get(a, a) for a in yongshen.avoid)}"
+        _s_el = _ST_EL.get(item.stem or "", "")
+        _b_el = _BR_EL.get(item.branch or "", "")
+        _s_cn = _WX_CN_MAP.get(_s_el, item.stem or "")
+        _fav = yongshen.favor or []
+        _avd = yongshen.avoid or []
+        if _s_el in _fav:
+            item.wealth_hint = f"{_s_cn}天干用神当令，财运进入上升轨道，可积极谋进拓展"
+        elif _s_el in _avd:
+            item.wealth_hint = f"{_s_cn}天干忌神旺，财务以守成为主，谨慎投资与负债"
+        elif _b_el in _fav:
+            item.wealth_hint = f"地支{_WX_CN_MAP.get(_b_el,'')}助用神，财运平稳偏升，稳中求进"
+        elif item.stem:
+            item.wealth_hint = f"{_s_cn}运行，财运平稳，量力而行稳健发展"
+        if _s_el in _avd:
+            item.health_hint = f"{_s_cn}忌神当令，注意{_ORGAN_CN.get(_s_el,'')}相关病症，避免过劳"
+        elif _b_el in _avd:
+            item.health_hint = f"地支忌神旺，{_ORGAN_CN.get(_b_el,'')}需多关注，保持规律作息"
+        elif _s_el in _fav:
+            item.health_hint = f"{_s_cn}用神旺盛，精力充沛，为养生调理最佳阶段"
+        elif item.stem:
+            item.health_hint = f"本大运健康趋于平稳，注意定期体检与作息规律"
         # 填充 love_hint / child_hint（按干支五行）
         if item.stem and not item.love_hint:
             hints = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
@@ -622,7 +648,7 @@ def _enrich_v2_analysis(
             month_stem_shishen=geju_raw.get("ten_god", ""),
             is_broken=is_broken,
             inference_tags=[geju_name],
-            interpretation_text=geju_raw.get("note", ""),
+            interpretation_text="",  # 留空，由 interpret_bazi 深度解读模板填入
             classic_ref=_geju_refs_text,
             confidence=geju_raw.get("confidence", 0.0),
             geju_detail=geju_raw.get("note", ""),
@@ -717,7 +743,15 @@ def _enrich_v2_analysis(
             shen_gong=shen_item,
             twelve_palaces=palace_items,
             inference_tags=[],
-            interpretation_text=f"命宫{ming_gong_br}，身宫{shen_gong_br}",
+            interpretation_text=(
+                f"命宫{ming_gong_br}，"
+                + {"子":"智慧灵动善谋虑","丑":"沉稳务实耐力强","寅":"积极进取拓展力强",
+                   "卯":"温文亲和多文艺才华","辰":"思维灵活富创新","巳":"好学悟道有钻研精神",
+                   "午":"热情开朗表现力强","未":"重情重义服务心强","申":"果断干练执行力强",
+                   "酉":"细致精准审美出众","戌":"认真负责有守护之心","亥":"智慧深邃包容宽广",
+                   }.get(ming_gong_br, "顺应五行天赋方向")
+                + f"，此为本命先天天赋方向。身宫{shen_gong_br}，代表精力流向与后天运势重心，与命宫协调配合可增强整体运势。建议顺应命宫地支五行寻找对应方位与行业，顺势而为则事半功倍。（仅供学术研究参考）"
+            ),
         )
     except Exception as exc:
         logger.debug("[M2 palace] %s", exc)
