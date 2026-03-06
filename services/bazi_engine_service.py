@@ -1140,7 +1140,7 @@ def _enrich_v2_analysis(
             peak_periods=_arc.peak_periods,
             caution_periods=_arc.caution_periods,
             life_motto=_motto_ref,
-            inference_tags=[_arc.overall_tier, f"score={_arc.total_score:.0f}"],
+            inference_tags=[_arc.overall_tier, f"评分{_arc.total_score:.0f}分"],
             interpretation_text=_arc_interp,
             disclaimer=_arc.disclaimer,
         )
