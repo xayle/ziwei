@@ -5,6 +5,8 @@ services/bazi_engine/milestones.py — 人生里程碑引擎 (M2.5 任务 2.56)
 """
 from __future__ import annotations
 
+import datetime
+
 from app.schemas.analysis import MilestoneModel
 
 # 地支六冲
@@ -53,14 +55,11 @@ def compute_milestones(
     """
     生成人生里程碑列表（不超过15条，按年龄/年份排序）。
     """
-    import datetime
     if current_year is None:
         current_year = datetime.date.today().year
 
     milestones: list[MilestoneModel] = []
     seen_years: set[int] = set()
-
-    from typing import cast as _cast
 
     def add(age: int, year: int, mtype: str, context: str, desc: str, risk: str, advice: str) -> None:
         if year in seen_years:

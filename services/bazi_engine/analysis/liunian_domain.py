@@ -84,12 +84,6 @@ _YIMA_MAP = {
     "巳": "亥", "酉": "亥", "丑": "亥",
 }
 
-# 天干十神分类
-_ZHENGCAI_STEMS = set()  # 正财天干集合（运行时根据日主计算，此处占位）
-_PIANCAI_STEMS  = set()
-_SHISHEN_LUCKY  = {"食神", "正印", "天乙贵人", "正官", "正财"}
-
-
 def _is_taohua(day_branch: str, year_branch: str) -> bool:
     taohua = _TAOHUAL_MAP.get(day_branch)
     return taohua == year_branch

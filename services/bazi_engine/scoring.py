@@ -11,6 +11,7 @@ services/bazi_engine/scoring.py — 八字评分模型 (M3 任务 3.04)
 # 此权重影响从旺/专旺格的70%阈值判断；如需修改权重，须同步更新 geju.py 阈值逻辑
 from __future__ import annotations
 
+import statistics
 from dataclasses import dataclass
 from typing import Literal
 
@@ -49,7 +50,6 @@ def _score_wuxing_balance(wuxing_scores: dict[str, float]) -> float:
     使用五行分值的变异系数衡量均衡度：
       CV = std/mean → 越小越均衡
     """
-    import statistics
     vals = list(wuxing_scores.values())
     if not vals or all(v == 0 for v in vals):
         return 8.0   # 中等

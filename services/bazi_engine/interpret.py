@@ -431,21 +431,25 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     elif inp.dayun_trend == "下降":
         result.general_text += "\n" + _GENERAL_TMPL["unfavorable_dayun"]
 
-    # ── 9. 全文汇总（100-200字）──────────────────────────────────────────────
-    parts = []
-    if result.missing_wuxing_texts:
-        parts.append(result.missing_wuxing_texts[0][:50] + "…")
-    if result.dominant_wuxing_texts:
-        parts.append(result.dominant_wuxing_texts[0][:50] + "…")
-    parts.append(result.geju_text[:60] + "…")
-    if result.shensha_texts:
-        parts.append(result.shensha_texts[0][:40] + "…")
-    parts.append(result.general_text[:60] + "…")
+    # ── 9. 全文汇总（无截断，取首句摘要）────────────────────────────────────
+    def _first_sentence(text: str) -> str:
+        for sep in ("。", "；", "\n"):
+            if sep in text:
+                frag = text.split(sep)[0]
+                return frag if frag.endswith("。") else f"{frag}。"
+        return text
 
-    result.full_summary = (
-        "\n".join(parts[:4])
-        + f"\n用神{favor_cn}，忌神{avoid_cn}，建议顺用神方向择业、布局。"
-        + "（仅供学术研究参考，不构成任何形式的预测或建议）"
-    )
+    summary_parts: list[str] = []
+    if result.missing_wuxing_texts:
+        summary_parts.append(_first_sentence(result.missing_wuxing_texts[0]))
+    if result.dominant_wuxing_texts:
+        summary_parts.append(_first_sentence(result.dominant_wuxing_texts[0]))
+    summary_parts.append(_first_sentence(result.geju_text))
+    if result.shensha_texts:
+        summary_parts.append(_first_sentence(result.shensha_texts[0]))
+    summary_parts.append(_first_sentence(result.general_text))
+    summary_parts.append(f"用神{favor_cn}，忌神{avoid_cn}，顺用神方向择业与布局。")
+
+    result.full_summary = " ".join(summary_parts[:6]) + "（仅供学术研究参考，不构成任何形式的预测或建议）"
 
     return result
