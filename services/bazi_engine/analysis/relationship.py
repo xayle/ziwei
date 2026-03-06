@@ -68,20 +68,11 @@ def compute_relationship(
         score = shishen_scores.get(shen, 0.0)
         pct   = score / total
         if pct >= 0.3:
-            desc = (
-                f"{shen}天干在命局占比较高（{pct*100:.0f}%），与该六亲缘分深厚、情感亲近，"
-                f"常有展眼相助或心灵支撑。"
-            )
+            desc = f"命中{kin}缘分深厚，情感联结稳固，互动中常有支撑与提携。"
         elif pct >= 0.1:
-            desc = (
-                f"{shen}干平均（{pct*100:.0f}%），与该六亲关系平淡中性，"
-                f"顺带即安，不必过分依赖或期待。"
-            )
+            desc = f"命中{kin}关系平和，相处自然，宜顺缘而行，不强求。"
         else:
-            desc = (
-                f"{shen}天干尚弱（{pct*100:.0f}%），与该六亲缘分较淡，"
-                f"建议主动维护感情联系，避免缘分进一步疏离。"
-            )
+            desc = f"命中{kin}缘分较淡，建议主动维系情感联系，珍惜相聚机会。"
         if kin not in liu_qin:
             liu_qin[kin] = desc
 

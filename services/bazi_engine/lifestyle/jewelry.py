@@ -79,12 +79,22 @@ def compute_jewelry(
             material="黄金", gemstone="黄水晶", position="右腕", wuxing="土",
         )]
 
+    _p0_mat = primary_list[0].material if primary_list else "黄金"
+    _p0_wx  = primary_list[0].wuxing   if primary_list else "土"
+    _p0_pos = primary_list[0].position if primary_list else "任意"
+    _s0_mat = secondary_list[0].material if secondary_list else "银"
+    _s0_wx  = secondary_list[0].wuxing   if secondary_list else "金"
+    _taboo_str = taboo[0] if taboo else "忌神材质"
+    _ys_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor[:2])
+
     combination = (
-        "主饰用神五行材质为核，配饰辅助协调整体气场，禁忌材质请避免叠戴。"
+        f"以{_p0_mat}（{_p0_wx}）为主饰，辅以{_s0_mat}（{_s0_wx}）协调气场，"
+        f"形神互补；禁忌{_taboo_str}叠戴，以免干扰命局平衡。"
     )
     interp = (
-        f"推荐用神五行（{'、'.join(_ELEMENT_CN.get(e,e) for e in yongshen_favor[:2])}）"
-        f"对应首饰，有助提升运势气场。（仅供学术研究参考）"
+        f"用神五行（{_ys_cn}）对应{_p0_mat}搭配{_s0_mat}，两者互补提升整体气场共振。"
+        f"主饰建议佩戴于{_p0_pos}，以最大化用神五行的能量导引。"
+        f"（仅供学术研究参考）"
     )
 
     primary_item   = primary_list[0] if primary_list else JewelryItemModel(

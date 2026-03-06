@@ -64,11 +64,17 @@ def compute_lifestyle(
     """
     prim = yongshen_favor[0] if yongshen_favor else "earth"
     sec  = yongshen_favor[1] if len(yongshen_favor) > 1 else prim
+    tert = yongshen_favor[2] if len(yongshen_favor) > 2 else None
 
+    _ex3 = (
+        _ELEMENT_EXERCISE.get(tert, "每周 2-3 次有氧运动，保持整体体能平衡")
+        if tert and tert not in (prim, sec)
+        else "每周 2-3 次有氧运动，保持整体体能平衡"
+    )
     exercise       = [
         _ELEMENT_EXERCISE.get(prim, "适量有氧运动"),
         _ELEMENT_EXERCISE.get(sec, "拉伸放松运动") if sec != prim else "每天快走或慢跑 30 分钟",
-        "每周两次力量训练或HIIT，增强体能底蕴",
+        _ex3,
     ]
     best_times     = _ELEMENT_BEST_TIMES.get(prim, "早晨 7-9 点")
     diet           = [

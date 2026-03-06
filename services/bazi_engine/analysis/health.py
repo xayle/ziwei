@@ -80,9 +80,16 @@ def compute_health(
 
     # ─── 2. 风险脏腑 ──────────────────────────────────────────────────
     risk_organs: list[str] = []
-    for el in strong_wuxing + weak_wuxing:
-        risk_organs.extend(_WUXING_TO_ORGAN.get(el, []))
-    risk_organs = list(dict.fromkeys(risk_organs))
+    for el in strong_wuxing:
+        for organ in _WUXING_TO_ORGAN.get(el, []):
+            labeled = f"{organ}（偏旺需节制）"
+            if labeled not in risk_organs:
+                risk_organs.append(labeled)
+    for el in weak_wuxing:
+        for organ in _WUXING_TO_ORGAN.get(el, []):
+            labeled = f"{organ}（偏弱需滋补）"
+            if labeled not in risk_organs:
+                risk_organs.append(labeled)
 
     # ─── 3. 风险等级 ──────────────────────────────────────────────────
     weak_count = len(weak_wuxing)
