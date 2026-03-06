@@ -1224,10 +1224,10 @@ def _enrich_v2_analysis(
                 f"{yr}年（{ystem}{ybranch}"
                 + (f"，{_tg}" if _tg else "")
                 + f"）：{_trend_hint}。"
-                f"财运：{domain.get('财运','')}；"
-                f"事业：{domain.get('事业','')}；"
-                f"婚恋：{domain.get('婚恋','')}；"
-                f"健康：{domain.get('健康','')}。"
+                f"财运：{domain.get('财运','').rstrip('。')}。"
+                f"事业：{domain.get('事业','').rstrip('。')}。"
+                f"婚恋：{domain.get('婚恋','').rstrip('。')}。"
+                f"健康：{domain.get('健康','').rstrip('。')}。"
                 "（仅供学术研究参考）"
             )
             _detail_list.append(LiuNianDetailModel(
@@ -1238,7 +1238,7 @@ def _enrich_v2_analysis(
                 notable_months=[],
                 annual_score=_domain_to_score(domain, favor, ystem),
                 domain_forecasts=domain,
-                inference_tags=[f"{ystem}{ybranch}", "liunian"],
+                inference_tags=[f"{ystem}{ybranch}", "流年"],
                 interpretation_text=_interp,
                 ten_god=_tg or None,
                 flow_wuxing=_fwx or None,

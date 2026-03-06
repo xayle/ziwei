@@ -147,10 +147,10 @@ def compute_relationship(
     if sha / total >= 0.3:
         tags.append("七杀压制需化")
 
-    _noble_str = "、".join(noble_people[:3])
+    _noble_str = "；".join(noble_people[:3])
     interp = (
         f"六亲人际评分为 {relationship_score} 分。"
-        f"命局贵人星级为【{_noble_str}】，值得珍视与口碑型、信任型人际。"
+        f"贵人运势：{_noble_str}，宜主动维系信任型人际网络。"
         f"小人警惕：{'；'.join(petty_people)}。"
         f"社交策略建议：{strategy}"
         f"（仅供学术研究参考）"
