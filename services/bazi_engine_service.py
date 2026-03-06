@@ -1118,6 +1118,40 @@ def _enrich_v2_analysis(
         _GANZHI_STEMS   = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
         _GANZHI_BRANCHES= ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
 
+        # 十神计算辅助
+        _TG_STEM_WX: dict[str, str] = {
+            "甲":"wood","乙":"wood","丙":"fire","丁":"fire","戊":"earth",
+            "己":"earth","庚":"metal","辛":"metal","壬":"water","癸":"water",
+        }
+        _TG_YIN = {"乙","丁","己","辛","癸"}
+        _TG_GEN = {"wood":"fire","fire":"earth","earth":"metal","metal":"water","water":"wood"}
+        _TG_CTL = {"wood":"earth","fire":"metal","earth":"water","metal":"wood","water":"fire"}
+
+        def _calc_ten_god(yst: str, dst: str) -> str:
+            ys_wx = _TG_STEM_WX.get(yst, "")
+            ds_wx = _TG_STEM_WX.get(dst, "")
+            same_yy = (yst in _TG_YIN) == (dst in _TG_YIN)
+            if ys_wx == ds_wx:
+                return "比肩" if same_yy else "劫财"
+            if _TG_GEN.get(ds_wx) == ys_wx:
+                return "食神" if same_yy else "伤官"
+            if _TG_CTL.get(ds_wx) == ys_wx:
+                return "偏财" if same_yy else "正财"
+            if _TG_GEN.get(ys_wx) == ds_wx:
+                return "偏印" if same_yy else "正印"
+            if _TG_CTL.get(ys_wx) == ds_wx:
+                return "七杀" if same_yy else "正官"
+            return ""
+
+        # 地支冲对照 (双向)
+        _BR_CLASH_PAIRS = {
+            "子":"午","午":"子","丑":"未","未":"丑",
+            "寅":"申","申":"寅","卯":"酉","酉":"卯",
+            "辰":"戌","戌":"辰","巳":"亥","亥":"巳",
+        }
+        # 桃花支
+        _TAOHUA_BR = {"子","午","卯","酉"}
+
         def _year_ganzhi(y: int) -> tuple[str, str]:
             """返回 (天干, 地支)"""
             return (_GANZHI_STEMS[(y - 4) % 10], _GANZHI_BRANCHES[(y - 4) % 12])
@@ -1136,6 +1170,28 @@ def _enrich_v2_analysis(
                 wuxing_scores=wx_scores,
                 gender=gender or "male",
             )
+            # 扩展字段：十神、五行、冲支
+            _tg   = _calc_ten_god(ystem, ds_st)
+            _fwx  = _TG_STEM_WX.get(ystem, "")
+            _clash_br = _BR_CLASH_PAIRS.get(ybranch)
+            _clash_str = f"流年{ybranch}冲命{_clash_br}" if _clash_br and _clash_br == ds_br else None
+
+            # 判断用神/忌神以生成积极/保守提示
+            _is_favor_yr = ystem in {
+                s for s, wx in _TG_STEM_WX.items() if wx in (favor or [])
+            }
+            _trend_hint = "用神当令，整体运势向好，宜积极进取" if _is_favor_yr else "宜稳健守成，审时度势"
+
+            _interp = (
+                f"{yr}年（{ystem}{ybranch}"
+                + (f"，{_tg}" if _tg else "")
+                + f"）：{_trend_hint}。"
+                f"财运：{domain.get('财运','')}；"
+                f"事业：{domain.get('事业','')}；"
+                f"婚恋：{domain.get('婚恋','')}；"
+                f"健康：{domain.get('健康','')}。"
+                "（仅供学术研究参考）"
+            )
             _detail_list.append(LiuNianDetailModel(
                 year=yr,
                 ganzhi=f"{ystem}{ybranch}",
@@ -1145,12 +1201,17 @@ def _enrich_v2_analysis(
                 annual_score=_domain_to_score(domain, favor, ystem),
                 domain_forecasts=domain,
                 inference_tags=[f"{ystem}{ybranch}", "liunian"],
-                interpretation_text=(
-                    f"{yr}年({ystem}{ybranch})：财运—{domain['财运'][:20]}；"
-                    f"事业—{domain['事业'][:20]}。"
-                ),
+                interpretation_text=_interp,
+                ten_god=_tg or None,
+                flow_wuxing=_fwx or None,
+                clash=_clash_str,
             ))
         verify_response.liunian_detail = _detail_list
+
+        # 填充桃花流年（Tab9 taohua_year_hit）
+        _taohua_years = [ld.year for ld in _detail_list if ld.ganzhi[1:2] in _TAOHUA_BR]
+        if verify_response.social and _taohua_years:
+            verify_response.social.taohua_year_hit = _taohua_years
     except Exception as exc:
         logger.debug("[M3 liunian_detail] %s", exc)
 
@@ -1199,8 +1260,8 @@ def _enrich_v2_analysis(
             gender=gender or "male",
         )
         top3 = [
-            f"流年{liunian_gz}：{v[:25]}" for v in domains.values()
-        ][:3]
+            f"【{k}】{v}" for k, v in list(domains.items())[:3]
+        ]
 
         verify_response.current_fortune_summary = _CFS(
             current_dayun=dayun_gz,
@@ -1230,7 +1291,19 @@ def _enrich_v2_analysis(
     # ── N2.07 流年运势（当前大运覆盖年份）───────────────────────────────────
     try:
         from services.bazi_engine.liunian import compute_liunian_for_dayun as _clf_dayun
+        import datetime as _dt_yf_mod
+        # 找当前年龄对应的大运（与 current_fortune_summary 逻辑一致）
+        _today_yf = _dt_yf_mod.date.today()
+        _age_yf = _today_yf.year - dt.year - (
+            (_today_yf.month, _today_yf.day) < (dt.month, dt.day)
+        ) if dt else 0
         _cur_dy = dayun_list[0] if dayun_list else {}
+        for _d in dayun_list:
+            _sa = _d.get("start_age")
+            if _sa is not None and float(_sa) <= _age_yf:
+                _cur_dy = _d
+            elif _sa is not None:
+                break
         if _cur_dy:
             _dy_start_age  = int(_cur_dy.get("start_age",  0))
             _dy_start_year = int(_cur_dy.get("start_year", 0))

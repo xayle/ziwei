@@ -387,6 +387,10 @@ class LiuNianDetailModel(BaseModel):
     inference_tags:    list[str]
     interpretation_text: str
     disclaimer:        str = "仅供学术研究参考"
+    # 前端展示扩展字段
+    ten_god:     Optional[str] = None   # 流年天干与日主的十神关系
+    flow_wuxing: Optional[str] = None   # 流年天干五行(英文key)
+    clash:       Optional[str] = None   # 流年地支冲克描述
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -737,7 +737,8 @@ function renderTab7(json, el) {
     <div class="row">${w.inference_tags.map(t=>`<span class="chip ok">${esc(t)}</span>`).join('')}</div>
   </div>` : '';
 
-  const indList = [...(w.industries||[]),(wo.industry_tags||[])].flat();
+  // 只使用新模型的Chinese行业列表，丢弃旧WealthModel.industry_tags(English)
+  const indList = (w.industries||[]);
   const indHtml = indList.length ? `
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>适合行业</p>
