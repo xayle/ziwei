@@ -44,126 +44,153 @@ function renderTab0(json, el) {
   const thisYear = new Date().getFullYear();
   const thisLiunian = liunianDetail.find(l=>l.year===thisYear)||liunianDetail[0];
 
-  /* ── Hero Summary Card（命局速览）──*/
-  const dayStem   = json.pillars_primary?.day?.stem || '—';
-  const dayDesc   = (window.GAN_DESC||{})[dayStem] || '';
-  const gejuName  = json.geju?.geju_name || json.geju?.name || '—';
-  const gejuLevel = json.geju?.geju_level || '';
-  const gejuConf  = typeof json.geju?.confidence === 'number' ? Math.round(json.geju.confidence*100) : null;
-  const yongshenFavor = (json.yongshen?.favor||[]).map(f=>typeof wxCN==='function'?wxCN(f):f).join('\u00b7') || '—';
-  const yearScore = thisLiunian?.annual_score;
-  const scoreColor = yearScore>=70 ? '#22c55e' : yearScore>=50 ? '#f8c13c' : '#ef4444';
-  const top3 = cf?.top3_actions || [];
-  const heroHtml = `<div class="hero-summary">
-    <div style="flex:1;min-width:180px">
-      <div class="hs-label">命局速览</div>
-      <div class="hs-day">
-        <span class="hs-day-stem">${esc(dayStem)}</span>
-        ${dayDesc ? `<span class="hs-day-desc">${esc(dayDesc)}</span>` : ''}
-      </div>
-      <div class="hs-geju">${esc(gejuName)}${gejuLevel ? ` \u00b7 ${esc(gejuLevel)}` : ''}${gejuConf!==null ? `<span class="hs-conf">${gejuConf}%</span>` : ''}</div>
-      <div class="hs-yongshen">用神：${esc(yongshenFavor)}</div>
-      ${(arc?.inference_tags||[]).length ? `<div class="hero-action-pills">${arc.inference_tags.slice(0,5).map(a=>`<span class="hero-action-pill">${esc(a)}</span>`).join('')}</div>` : ''}
-      ${top3.length ? `<div class="hero-action-pills">${top3.slice(0,3).map(a=>{const s=txt(a);const short=s.length>28?s.slice(0,27)+'\u2026':s;return `<span class="hero-action-pill" title="${esc(s)}">\u2726 ${esc(short)}</span>`;}).join('')}</div>` : ''}
-    </div>
-    ${yearScore !== undefined ? `<div class="hero-score">
-      <div class="hs-score-num" style="color:${scoreColor}">${yearScore}</div>
-      <div class="hs-score-label">${thisYear}年运势</div>
-    </div>` : ''}
-  </div>`;
+  const p          = json.pillars_primary || {};
+  const gejuName   = json.geju?.geju_name || json.geju?.name || '—';
+  const gejuLevel  = json.geju?.geju_level || '';
+  const gejuConf   = typeof json.geju?.confidence === 'number' ? Math.round(json.geju.confidence*100) : null;
+  const yongshenFavor = (json.yongshen?.favor||[]).map(f=>typeof wxCN==='function'?wxCN(f):f).join('·') || '—';
+  const yongshenAvoid = (json.yongshen?.avoid||[]).map(f=>typeof wxCN==='function'?wxCN(f):f).join('·') || '';
+  const yearScore  = thisLiunian?.annual_score;
+  const scoreColor = yearScore>=70?'var(--ok)':yearScore>=50?'var(--warn)':'var(--bad)';
+  const top3       = cf?.top3_actions || [];
+  const _dyItems   = json.dayun?.items || [];
+  const curDayunItem = _dyItems.find(d=>d.start_year<=thisYear&&(d.start_year||0)+10>thisYear)||_dyItems.slice(-1)[0]||null;
+  const peakDayun  = arc?.peak_periods?.[0] || '尚未推算';
+  const cautionDayuns = arc?.caution_periods?.length ? arc.caution_periods.map(d=>`<span class="chip warn" style="font-size:11px">${esc(d)}</span>`).join(' ') : '—';
 
-  const tierBadge = (tier) => {
+  // 出生年份（用于人生阶段判断）
+  const birthYear  = json.dt_input ? parseInt(json.dt_input.slice(0,4),10) : null;
+  const currentAge = birthYear ? thisYear - birthYear : null;
+  const phaseIdx   = currentAge == null ? -1 : currentAge < 30 ? 0 : currentAge < 60 ? 1 : 2;
+
+  // 当前大运进度
+  const dyProgress = curDayunItem ? (()=>{
+    const elapsed = Math.max(0, thisYear - (curDayunItem.start_year||thisYear));
+    return { elapsed, pct: Math.min(100, elapsed/10*100), endYear: (curDayunItem.start_year||0)+10 };
+  })() : null;
+
+  const tierBadge = tier => {
     const cls = tier==='局高'?'high':tier==='局中'?'mid':'low';
     return `<span class="geju-tier-badge ${cls}">${esc(tier||'—')}</span>`;
   };
 
-  const formatDayun = (d) => d?`${d.stem||''}${d.branch||''} 起于${d.start_age||'?'}岁`:'';
-  const peakDayun = arc?.peak_periods?.[0] || '尚未推算';
-  const cautionDayuns = arc?.caution_periods?.length ? arc.caution_periods.map(d=>`<span class="chip warn">${esc(d)}</span>`).join(' ') : '—';
+  /* ① 四柱速览 + 基本信息 */
+  const pillarLabels = {year:'年',month:'月',day:'日',hour:'时'};
+  const pillarsStrip = ['year','month','day','hour'].map(k => {
+    const pl = p[k]||{};
+    const isDay = k==='day';
+    const ganCls = GAN_CSS[pl.stem]||'';
+    return `<div style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:${isDay?'rgba(184,122,10,0.1)':'var(--bg2,rgba(0,0,0,0.04))'};${isDay?'border:1px solid rgba(184,122,10,0.3)':''}">
+      <div style="font-size:9px;color:var(--muted);margin-bottom:2px">${pillarLabels[k]}</div>
+      <div style="font-size:17px;font-weight:800;line-height:1.15" class="${ganCls}">${esc(pl.stem||'—')}</div>
+      <div style="font-size:13px;font-weight:600">${esc(pl.branch||'—')}</div>
+      ${isDay?'<div style="font-size:9px;color:var(--accent-gold,#b87a0a);font-weight:700;margin-top:1px">日主</div>':''}
+    </div>`;
+  }).join('');
 
-  // 当前大运详情
-  const _dyItems = json.dayun?.items || [];
-  const curDayunItem = _dyItems.find(d=>d.start_year<=thisYear&&(d.start_year||0)+10>thisYear) || _dyItems.slice(-1)[0] || null;
+  /* ② 四域运势 */
+  const domains4Html = (thisLiunian?.domain_forecasts||cf?.this_year_domains) ? (() => {
+    const DM = thisLiunian?.domain_forecasts||cf?.this_year_domains||{};
+    const icons = {财运:'💰',事业:'⚡',婚恋:'❤️',健康:'🏥'};
+    return ['财运','事业','婚恋','健康'].map(k => {
+      const val = DM[k]||'暂无';
+      const bad  = /(注意|不佳|凶|差|衰|难|险|弱)/.test(val);
+      const good = /(顺|旺|吉|好|升|进|佳|旺)/.test(val);
+      const bc   = bad?'var(--bad)':good?'var(--ok)':'var(--line)';
+      return `<div style="padding:10px;border-radius:8px;background:var(--bg2,rgba(0,0,0,0.04));border-left:3px solid ${bc}">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">${icons[k]} ${k}</div>
+        <div style="font-size:12px;line-height:1.55">${txt(val)}</div>
+      </div>`;
+    }).join('');
+  })() : '';
 
-  el.innerHTML = heroHtml + `
-  <div class="life-arc-card" style="margin-bottom:16px">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-      <div>
-        <div style="font-size:11px;color:var(--accent-gold);font-weight:700;text-transform:uppercase;margin-bottom:4px">人生格局</div>
-        <div class="life-arc-tier">${tierBadge(arc?.overall_tier||'—')}</div>
+  el.innerHTML = `
+  <!-- ① 四柱 + 命格 -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">${pillarsStrip}</div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">格局</div>
+        <div style="font-size:14px;font-weight:700">${esc(gejuName)}${gejuLevel?`<span style="font-size:11px;color:var(--muted);margin-left:4px">${esc(gejuLevel)}</span>`:''}${gejuConf!==null?`<span style="font-size:10px;color:var(--muted);margin-left:4px">${gejuConf}%</span>`:''}</div>
       </div>
-      <div>
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">命局总述</div>
-        <div style="font-size:13px;color:var(--text)">${arc?.life_motto?txt(arc.life_motto):'—'}</div>
+      <div style="flex:1;min-width:100px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">用神 / 忌神</div>
+        <div style="font-size:12px"><span style="color:var(--ok)">${esc(yongshenFavor)}</span>${yongshenAvoid?`<span style="color:var(--muted);margin:0 4px">/</span><span style="color:var(--bad)">${esc(yongshenAvoid)}</span>`:''}</div>
       </div>
+      ${arc?.overall_tier?`<div>${tierBadge(arc.overall_tier)}</div>`:''}
+      ${yearScore!=null?`<div style="text-align:center;min-width:52px;padding:4px 8px;border-radius:8px;background:var(--bg2,rgba(0,0,0,0.04))">
+        <div style="font-size:26px;font-weight:800;line-height:1;color:${scoreColor}">${yearScore}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:1px">${thisYear}年运势</div>
+      </div>`:''}
     </div>
-    <div class="life-arc-segments">
-      ${arc?.early_fortune?`<div class="life-arc-seg"><div class="life-arc-seg-label">早年（0-30）</div><div class="life-arc-seg-text">${renderPara(arc.early_fortune)}</div></div>`:''}
-      ${arc?.mid_fortune  ?`<div class="life-arc-seg"><div class="life-arc-seg-label">中年（30-60）</div><div class="life-arc-seg-text">${renderPara(arc.mid_fortune)}</div></div>`:''}
-      ${arc?.late_fortune ?`<div class="life-arc-seg"><div class="life-arc-seg-label">晚年（60+）</div><div class="life-arc-seg-text">${renderPara(arc.late_fortune)}</div></div>`:''}
-    </div>
-    <div class="kv" style="margin-top:12px">
-      <div class="k">顶峰大运</div><div>${esc(peakDayun)}</div>
-      <div class="k">注意大运</div><div>${cautionDayuns||'—'}</div>
-    </div>
-    ${arc?.interpretation_text ? `<div class="note" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><div style="font-size:13px;line-height:1.75;color:var(--text)">${renderPara(arc.interpretation_text)}</div></div>` : ''}
+    ${arc?.life_motto?`<div style="margin-top:10px;padding:8px 12px;background:var(--bg2,rgba(0,0,0,0.04));border-radius:8px;font-size:13px;font-style:italic">"${txt(arc.life_motto)}"</div>`:''}
+    ${(arc?.inference_tags||[]).length?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">${arc.inference_tags.slice(0,6).map(t=>`<span class="hero-action-pill">${esc(t)}</span>`).join('')}</div>`:''}
   </div>
 
-  <div class="current-fortune-card">
-    <div style="font-size:11px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:12px">当前运势卡</div>
-    <div class="fortune-row">
+  <!-- ② 当年四域运势 -->
+  ${domains4Html?`<div class="card" style="margin-bottom:12px">
+    <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px">${thisYear}年四域运势${thisLiunian?.ganzhi?` · ${thisLiunian.ganzhi}`:''}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${domains4Html}</div>
+    ${arc?.optimal_action?`<div style="margin-top:10px;padding:8px 12px;background:rgba(184,122,10,0.07);border-radius:8px;font-size:12px;line-height:1.6;border-left:3px solid var(--accent-gold,#b87a0a)"><span style="font-weight:700;color:var(--accent-gold,#b87a0a)">📌 行动建议：</span>${esc(arc.optimal_action)}</div>`:''}
+    ${top3.length?`<ul style="margin:8px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:3px">${top3.slice(0,3).map(a=>`<li style="font-size:12px;line-height:1.5">${txt(a)}</li>`).join('')}</ul>`:''}
+  </div>`:''}
+
+  <!-- ③ 当前大运 -->
+  ${curDayunItem?`<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--accent);font-weight:700">▶ 当前大运</div>
+      ${dyProgress?`<div style="font-size:11px;color:var(--muted)">已走 ${dyProgress.elapsed} 年 / 10 年</div>`:''}
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div class="dayun-gz ${GAN_CSS[curDayunItem.stem]||''}" style="font-size:18px;padding:6px 10px;flex-shrink:0">${esc(curDayunItem.stem||'')}${esc(curDayunItem.branch||'')}</div>
       <div>
-        <div class="fortune-item-label">当前大运</div>
-        <div class="fortune-item-value">${cf?.current_dayun ? esc(cf.current_dayun) : (()=>{ const items=json.dayun?.items||[]; const now=new Date().getFullYear(); const cur=items.find(d=>d.start_year<=now&&(d.start_year||0)+10>now)||items.slice(-1)[0]; return cur?esc((cur.stem||'')+(cur.branch||'')):'—'; })()}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          ${cf?.dayun_years_remaining !== undefined ? `<span>剩余约${cf.dayun_years_remaining}年</span>` : ''}
-          ${curDayunItem?.ten_god ? `<span class="tengod-badge ${typeof tenGodType==='function'?tenGodType(curDayunItem.ten_god):''}" style="font-size:10px;padding:1px 5px">${typeof tenGodCN==='function'?tenGodCN(curDayunItem.ten_god):curDayunItem.ten_god}</span>` : ''}
-        </div>
-      </div>
-      <div>
-        <div class="fortune-item-label">当前流年（${thisYear}）</div>
-        <div class="fortune-item-value">${thisLiunian ? esc((thisLiunian.ganzhi||thisLiunian.year||thisYear)+'') : esc(String(thisYear))}</div>
-        ${thisLiunian?.ten_god ? `<div style="margin-top:2px"><span class="tengod-badge ${typeof tenGodType==='function'?tenGodType(thisLiunian.ten_god_code||thisLiunian.ten_god):''}" style="font-size:10px;padding:1px 5px">${typeof tenGodCN==='function'?tenGodCN(thisLiunian.ten_god_code||thisLiunian.ten_god):thisLiunian.ten_god}</span></div>` : ''}
+        <div style="font-size:12px">${curDayunItem.start_year||'?'}–${(curDayunItem.start_year||0)+10}年 · ${curDayunItem.start_age||'?'}–${(curDayunItem.start_age||0)+10}岁</div>
+        ${curDayunItem.ten_god?`<div style="margin-top:3px"><span class="tengod-badge ${typeof tenGodType==='function'?tenGodType(curDayunItem.ten_god):''}">${typeof tenGodCN==='function'?tenGodCN(curDayunItem.ten_god):curDayunItem.ten_god}</span></div>`:''}
       </div>
     </div>
-    ${(curDayunItem?.narrative || curDayunItem?.wealth_hint || curDayunItem?.health_hint || curDayunItem?.love_hint) ? `
-    <details style="margin-top:8px">
-      <summary style="cursor:pointer;font-size:11px;color:var(--accent);font-weight:600">▦ 当前大运叙事 &amp; 提示</summary>
-      <div style="margin-top:8px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px">
-        ${curDayunItem?.narrative ? `<div style="font-size:12px;line-height:1.65;color:var(--text);margin-bottom:8px">${renderPara(curDayunItem.narrative)}</div>` : ''}
-        ${(curDayunItem?.wealth_hint||curDayunItem?.health_hint||curDayunItem?.love_hint) ? `
-        <div style="display:flex;flex-direction:column;gap:5px">
-          ${curDayunItem?.wealth_hint ? `<div style="font-size:11px;line-height:1.5"><span style="color:var(--accent-gold);font-weight:700">💰 财：</span>${txt(curDayunItem.wealth_hint)}</div>` : ''}
-          ${curDayunItem?.health_hint ? `<div style="font-size:11px;line-height:1.5"><span style="color:var(--ok);font-weight:700">🏃 健：</span>${txt(curDayunItem.health_hint)}</div>` : ''}
-          ${curDayunItem?.love_hint   ? `<div style="font-size:11px;line-height:1.5"><span style="color:#f43f5e;font-weight:700">♡ 婚：</span>${txt(curDayunItem.love_hint)}</div>` : ''}
-        </div>` : ''}
-      </div>
-    </details>` : ''}
-    ${(thisLiunian?.domain_forecasts || cf?.this_year_domains) ? `
-    <div class="fortune-4d-grid">
-      ${['财运','事业','婚恋','健康'].map(k=>{
-        const val = (thisLiunian?.domain_forecasts||cf?.this_year_domains||{})[k]||'暂无';
-        const isBad = /(注意|不佳|凶|差|衰|难|险)/.test(val);
-        const isGood = /(顺|旺|吉|好|升|进|佳)/.test(val);
-        const borderCol = isBad?'#fca5a5':isGood?'#86efac':'var(--line)';
-        return `<div class="fortune-4d-item" style="border-bottom:3px solid ${borderCol}">
-          <div class="fortune-4d-label">${k}</div>
-          <div class="fortune-4d-text">${txt(val)}</div>
+    ${dyProgress?`<div style="background:var(--bg2,rgba(0,0,0,0.07));border-radius:4px;height:6px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:${dyProgress.pct}%;background:var(--accent);border-radius:4px"></div></div>`:''}
+    ${(curDayunItem.wealth_hint||curDayunItem.health_hint||curDayunItem.love_hint||curDayunItem.child_hint)?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      ${curDayunItem.wealth_hint?`<div style="font-size:11px;line-height:1.5;padding:6px 8px;background:rgba(45,138,78,0.07);border-radius:6px"><span style="font-weight:700;color:var(--ok)">💰 财</span><br>${esc(curDayunItem.wealth_hint.slice(0,50))}${curDayunItem.wealth_hint.length>50?'…':''}</div>`:''}
+      ${curDayunItem.health_hint?`<div style="font-size:11px;line-height:1.5;padding:6px 8px;background:rgba(45,138,78,0.07);border-radius:6px"><span style="font-weight:700;color:var(--ok)">🩺 健</span><br>${esc(curDayunItem.health_hint.slice(0,50))}${curDayunItem.health_hint.length>50?'…':''}</div>`:''}
+      ${curDayunItem.love_hint?`<div style="font-size:11px;line-height:1.5;padding:6px 8px;background:rgba(192,57,43,0.07);border-radius:6px"><span style="font-weight:700;color:var(--bad)">❤️ 婚</span><br>${esc(curDayunItem.love_hint.slice(0,50))}${curDayunItem.love_hint.length>50?'…':''}</div>`:''}
+      ${curDayunItem.child_hint?`<div style="font-size:11px;line-height:1.5;padding:6px 8px;background:rgba(99,102,241,0.07);border-radius:6px"><span style="font-weight:700;color:#6366f1">👶 子</span><br>${esc(curDayunItem.child_hint.slice(0,50))}${curDayunItem.child_hint.length>50?'…':''}</div>`:''}
+    </div>`:''}
+  </div>`:''}
+
+  <!-- ④ 人生三阶段 -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--accent-gold,#b87a0a);font-weight:700">人生三阶段</div>
+      ${arc?.overall_tier?tierBadge(arc.overall_tier):''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px">
+      ${[['早年','0–30岁',arc?.early_fortune,0],['中年','30–60岁',arc?.mid_fortune,1],['晚年','60+岁',arc?.late_fortune,2]].map(([lbl,range,text,idx])=>{
+        const active = phaseIdx===idx;
+        return `<div style="padding:8px;${active?'background:rgba(184,122,10,0.1);':''};${idx<2?'border-right:1px solid var(--line);':''}">
+          <div style="font-size:10px;font-weight:700;color:${active?'var(--accent-gold,#b87a0a)':'var(--muted)'};">${lbl}${active?' ◀':''}</div>
+          <div style="font-size:9px;color:var(--muted);margin-bottom:3px">${range}</div>
+          <div style="font-size:11px;line-height:1.5">${text?esc(text.slice(0,55))+(text.length>55?'…':''):'<span style="color:var(--muted)">暂无</span>'}</div>
         </div>`;
       }).join('')}
-    </div>` : ''}
-    ${arc?.optimal_action ? `<div style="margin-top:10px;padding:8px 12px;background:var(--accent-gold-bg,rgba(224,139,0,0.08));border-radius:8px;font-size:12px;line-height:1.6"><span style="font-weight:700;color:var(--accent-gold)">📌 行动建议：</span>${esc(arc.optimal_action)}</div>` : ''}
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:110px"><div style="font-size:10px;color:var(--muted);margin-bottom:2px">顶峰大运</div><div style="font-size:12px;font-weight:600">${esc(peakDayun)}</div></div>
+      <div style="flex:1;min-width:110px"><div style="font-size:10px;color:var(--muted);margin-bottom:2px">注意大运</div><div style="font-size:12px">${cautionDayuns}</div></div>
+    </div>
+    ${arc?.interpretation_text?`<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--accent)">命局详述 ▾</summary><div style="font-size:13px;line-height:1.75;padding:8px 0">${renderPara(arc.interpretation_text)}</div></details>`:''}
   </div>
 
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-    <button data-switch-tab="2">查看命盘 →</button>
-    <button data-switch-tab="5">查看摘要 →</button>
-    <button data-switch-tab="16">查看大运 →</button>
-    <button id="btn-history-drawer" class="no-print">历史对比</button>
+  <!-- ⑤ 快捷导航 -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+    <button data-switch-tab="2" style="font-size:12px">✦ 命盘</button>
+    <button data-switch-tab="7" style="font-size:12px">💰 财运</button>
+    <button data-switch-tab="8" style="font-size:12px">⚡ 事业</button>
+    <button data-switch-tab="9" style="font-size:12px">❤️ 姻缘</button>
+    <button data-switch-tab="16" style="font-size:12px">▶ 大运</button>
+    <button id="btn-history-drawer" class="no-print" style="font-size:12px">📋 历史</button>
   </div>
-  <div style="margin-top:8px;font-size:11px;color:var(--muted)">⚠ 仅供参考，不作为任何决策依据。《三命通会》《渊海子平》《子平真诠》</div>
+  <div style="font-size:10px;color:var(--muted);text-align:center;padding:4px 0">⚠ 仅供参考，不作为任何决策依据。</div>
   `;
-  // 重新绑定历史对比按钮
   $('btn-history-drawer')?.addEventListener('click',()=>{ $('historyDrawer')?.classList.toggle('open'); if(typeof renderHistoryDrawer==='function') renderHistoryDrawer(); });
 }
 
@@ -803,6 +830,13 @@ function renderTab7(json, el) {
   const score = w.wealth_score ?? wo.score;
   const scoreColor = score>=70?'var(--ok)':score>=50?'var(--warn)':'var(--bad)';
 
+  // 当前大运财运 cross-ref
+  const thisYear7 = new Date().getFullYear();
+  const curDY7 = (json.dayun?.items||[]).find(d=>d.start_year<=thisYear7&&(d.start_year||0)+10>thisYear7)||null;
+  const incomeRange = wo.wealth_range?.min!=null
+    ? `${wo.wealth_range.min}–${wo.wealth_range.max} 万元/年`
+    : w.annual_range||'';
+
   const heroHtml = `
   <div class="fortune-hero card" style="margin-bottom:12px">
     <div class="fh-score-block">
@@ -811,12 +845,17 @@ function renderTab7(json, el) {
       <div class="fh-label">财运评分</div>
     </div>
     <div class="fh-body">
-      ${w.wealth_tier||wo.wealth_range?.label?`<div class="fh-tier">${esc(w.wealth_tier||wo.wealth_range?.label||'')}</div>`:''}
-      ${w.annual_range?`<div class="fh-range">年收入参考：<strong>${esc(w.annual_range)}</strong></div>`:''}
-      ${score!=null?`<div class="fh-bar"><div class="fh-bar-fill" style="width:${clamp(score,0,100)}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>`:''}
+      ${w.wealth_tier||wo.wealth_range?.label?`<div class="fh-tier" style="font-size:13px;font-weight:700">${esc(w.wealth_tier||wo.wealth_range?.label||'')}</div>`:''}
+      ${incomeRange?`<div style="margin:4px 0;padding:4px 10px;background:rgba(45,138,78,0.1);border-radius:6px;font-size:13px;font-weight:700;color:var(--ok);display:inline-block">💵 ${esc(incomeRange)}</div>`:''}
+      ${score!=null?`<div class="fh-bar" style="margin-top:6px"><div class="fh-bar-fill" style="width:${clamp(score,0,100)}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div></div>`:''}
       ${w.fact_data?.wealth_tier?`<div class="fh-fact">实证：${txt(w.fact_data.wealth_tier)}</div>`:''}
     </div>
-  </div>`;
+  </div>
+  ${curDY7?.wealth_hint?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--ok)">
+    <div style="font-size:11px;color:var(--ok);font-weight:700;margin-bottom:6px">▶ 当前大运财运 · ${esc((curDY7.stem||'')+(curDY7.branch||''))}</div>
+    <div style="font-size:13px;line-height:1.7">${esc(curDY7.wealth_hint)}</div>
+    ${curDY7.wealth_range?.min!=null?`<div style="margin-top:6px;font-size:12px;color:var(--ok)">💵 本运年收 ${curDY7.wealth_range.min}–${curDY7.wealth_range.max} 万元</div>`:''}
+  </div>`:''}`;
 
   const tagHtml = w.inference_tags?.length ? `
   <div class="card" style="margin-bottom:12px">
@@ -901,23 +940,34 @@ function renderTab8(json, el) {
     </div>
   </div>`;
 
-  const CAREER_ICON = {'管理':'🏛','教育':'📚','技术':'💻','金融':'📈','医疗':'⚕','法律':'⚖','艺术':'🎨','传媒':'📡','销售':'📢','建筑':'🏗','农':'🌾','军':'⚔','行政':'📋'};
+  const CAREER_ICON = {'管理':'🏛','教育':'📚','技术':'💻','金融':'📈','医疗':'🏥','法律':'⚖','艺术':'🎨','传媒':'📡','销售':'📢','建筑':'🏗','农':'🌾','军':'⚔','行政':'📋','咨询':'💼','科研':'🔬','餐饮':'🍽'};
   const getCareerIcon = d => Object.entries(CAREER_ICON).find(([k])=>d.includes(k))?.[1]||'▸';
+
+  // 当前大运事业 cross-ref
+  const thisYear8 = new Date().getFullYear();
+  const curDY8 = (json.dayun?.items||[]).find(d=>d.start_year<=thisYear8&&(d.start_year||0)+10>thisYear8)||null;
 
   const dirHtml = c.career_directions?.length ? `
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>职业方向</p>
-    <div class="row">${c.career_directions.map(d=>`<span class="chip career-chip">${getCareerIcon(d)} ${esc(d)}</span>`).join('')}</div>
-    ${c.interpretation_text?`<div style="margin-top:10px;font-size:13px;line-height:1.6">${renderPara(c.interpretation_text)}</div>`:''}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${c.interpretation_text?'10':'0'}px">${c.career_directions.map(d=>`<div style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg2,rgba(0,0,0,0.04));border-radius:8px;font-size:12px"><span style="font-size:16px">${getCareerIcon(d)}</span>${esc(d)}</div>`).join('')}</div>
+    ${c.interpretation_text?`<div style="font-size:13px;line-height:1.65;border-top:1px solid var(--line);padding-top:10px">${renderPara(c.interpretation_text)}</div>`:''}
   </div>` : (c.interpretation_text?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>事业解读</p><div style="font-size:13px;line-height:1.7">${renderPara(c.interpretation_text)}</div></div>`:'');
 
-  el.innerHTML = heroHtml + dirHtml + `
-  ${c.development_advice?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>发展建议</p><div style="font-size:13px;line-height:1.7">${renderPara(c.development_advice)}</div></div>`:''}
-  ${c.entrepreneurship_assessment?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>创业vs职场评估</p><div style="font-size:13px;line-height:1.7">${renderPara(c.entrepreneurship_assessment)}</div></div>`:''}
+  const curDY8Html = curDY8 ? `<div class="card" style="margin-bottom:12px;border-left:3px solid var(--accent)">
+    <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px">▶ 当前大运要务 · ${esc((curDY8.stem||'')+(curDY8.branch||''))}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${curDY8.wealth_hint?`<div style="font-size:11px;line-height:1.5;padding:6px 8px;background:rgba(45,138,78,0.07);border-radius:6px"><span style="font-weight:700;color:var(--ok)">💰 财</span><br>${esc(curDY8.wealth_hint.slice(0,60))}${curDY8.wealth_hint.length>60?'…':''}</div>`:''}
+      ${curDY8.love_hint?`<div style="font-size:11px;line-height:1.5;padding:6px 8px;background:rgba(192,57,43,0.07);border-radius:6px"><span style="font-weight:700;color:var(--bad)">❤️ 婚</span><br>${esc(curDY8.love_hint.slice(0,60))}${curDY8.love_hint.length>60?'…':''}</div>`:''}
+    </div>
+  </div>` : '';
+
+  el.innerHTML = heroHtml + curDY8Html + dirHtml + `
+  ${c.optimal_move_timing?`<div style="margin-bottom:12px;padding:10px 14px;background:rgba(184,122,10,0.07);border:1px solid rgba(184,122,10,0.2);border-radius:8px"><span style="font-size:11px;font-weight:700;color:var(--accent-gold,#b87a0a)">⏰ 最佳行动时机：</span><span style="font-size:13px">${txt(c.optimal_move_timing)}</span></div>`:''}
+  ${(c.development_advice||c.entrepreneurship_assessment)?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>发展建议 &amp; 创业分析</p>${c.development_advice?`<div style="font-size:13px;line-height:1.7;margin-bottom:${c.entrepreneurship_assessment?'10':'0'}px">${renderPara(c.development_advice)}</div>`:''}${c.entrepreneurship_assessment?`<details><summary style="cursor:pointer;font-size:12px;color:var(--accent)">创业 vs 职场评估 ▾</summary><div style="font-size:13px;line-height:1.7;padding:8px 0">${renderPara(c.entrepreneurship_assessment)}</div></details>`:''}</div>`:''}
   ${c.five_year_roadmap?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>五年职业路线图</p><div style="font-size:13px;line-height:1.7">${renderPara(c.five_year_roadmap)}</div></div>`:''}
   ${c.collaboration_style?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>最佳协作风格</p><div style="font-size:13px;line-height:1.7">${renderPara(c.collaboration_style)}</div></div>`:''}
-  ${c.suitable_industries?.length?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>适合行业</p><div class="row">${c.suitable_industries.map(i=>`<span class="chip">🏢 ${esc(i)}</span>`).join('')}</div></div>`:''}
-  ${c.inference_tags?.length?`<div class="card"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${c.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
+  ${(c.suitable_industries?.length||c.inference_tags?.length)?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>适合行业 &amp; 标签</p><div class="row" style="flex-wrap:wrap;gap:4px">${(c.suitable_industries||[]).map(i=>`<span class="chip">🏢 ${esc(i)}</span>`).join('')}${(c.inference_tags||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
   `;
 }
 
@@ -932,22 +982,34 @@ function renderTab9(json, el) {
 
   // 桃花状态
   const pb = ma.peach_blossom||'';
-  const pbLabel = pb==='旺'?'🌸 桃花旺，姻缘活跃':pb==='中'?'🌸 桃花中等':pb==='弱'?'桃花较弱，需主动经营':'';
+  const pbColor = pb==='旺'?'#f43f5e':pb==='中'?'var(--warn)':'var(--muted)';
+  const pbLabel = pb==='旺'?'🌸 桃花旺':pb==='中'?'🌸 桃花中':pb==='弱'?'🌸 桃花弱':so.taohua_hit?'🌸 桃花星':'';
+
+  // 当前大运感情 cross-ref
+  const thisYear9 = new Date().getFullYear();
+  const curDY9 = (json.dayun?.items||[]).find(d=>d.start_year<=thisYear9&&(d.start_year||0)+10>thisYear9)||null;
 
   const heroHtml = `
   <div class="fortune-hero card" style="margin-bottom:12px">
     <div class="fh-score-block">
-      <div class="fh-icon">♡</div>
+      <div class="fh-icon">❤️</div>
       <div class="fh-score" style="color:${scoreColor}">${score!=null?score.toFixed(1):'—'}</div>
-      <div class="fh-label">婚姻评分</div>
+      <div class="fh-label">婚恋评分</div>
     </div>
     <div class="fh-body">
-      ${ma.marriage_windows?.length?`<div class="fh-tier">婚期：${ma.marriage_windows.slice(0,2).map(w=>esc(w)).join('，')}</div>`:''}
-      ${ma.optimal_marriage_age?`<div class="fh-tier">最佳婚龄：${esc(ma.optimal_marriage_age)}</div>`:''}
-      ${pbLabel?`<div class="fh-fact ${pb==='旺'?'fh-fact-ok':''}">${pbLabel}</div>`:`${so.taohua_hit?'<div class="fh-fact fh-fact-ok">🌸 命中桃花星</div>':'<div class="fh-fact">暂无桃花星</div>'}`}
-      ${score!=null?`<div class="fh-bar"><div class="fh-bar-fill" style="width:${Math.min(score,100)}%;background:linear-gradient(90deg,#f43f5e,#fb7185)"></div></div>`:''}
+      ${(ma.marriage_windows?.length||ma.optimal_marriage_age)?`<div style="margin-bottom:6px">
+        ${ma.optimal_marriage_age?`<div style="font-size:13px;font-weight:700;margin-bottom:4px">💍 最佳婚龄：${esc(ma.optimal_marriage_age)}</div>`:''}
+        ${ma.marriage_windows?.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">${ma.marriage_windows.slice(0,3).map(w=>`<span style="font-size:12px;padding:3px 8px;background:rgba(244,63,94,0.1);border-radius:6px;color:#f43f5e;font-weight:600">${esc(w)}</span>`).join('')}</div>`:''}
+      </div>`:''}
+      ${pbLabel?`<div style="font-size:12px;color:${pbColor};font-weight:600">${pbLabel}</div>`:''}
+      ${score!=null?`<div class="fh-bar" style="margin-top:6px"><div class="fh-bar-fill" style="width:${Math.min(score,100)}%;background:linear-gradient(90deg,#f43f5e,#fb7185)"></div></div>`:''}
     </div>
-  </div>`;
+  </div>
+  ${curDY9?.love_hint?`<div class="card" style="margin-bottom:12px;border-left:3px solid #f43f5e">
+    <div style="font-size:11px;color:#f43f5e;font-weight:700;margin-bottom:6px">▶ 当前大运姻缘 · ${esc((curDY9.stem||'')+(curDY9.branch||''))}</div>
+    <div style="font-size:13px;line-height:1.7">${esc(curDY9.love_hint)}</div>
+    ${curDY9.child_hint?`<div style="margin-top:8px;font-size:12px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-weight:700;color:#6366f1">👶 子女：</span>${esc(curDY9.child_hint)}</div>`:''}
+  </div>`:''}`;
 
   const profileHtml = ma.partner_profile ? `
   <div class="card" style="margin-bottom:12px">
@@ -1031,16 +1093,33 @@ function renderTab10(json, el) {
     </div>
   </div>`;
 
+  // 当前大运健康 cross-ref
+  const thisYear10 = new Date().getFullYear();
+  const curDY10 = (json.dayun?.items||[]).find(d=>d.start_year<=thisYear10&&(d.start_year||0)+10>thisYear10)||null;
+
   // 五行默认器官（用于参考展示）
   const WX_DEFAULT_ORGANS = {'木':'肝·胆','火':'心·小肠','土':'脾·胃','金':'肺·大肠','水':'肾·膀胱'};
   const WX_EN = {'木':'wood','火':'fire','土':'earth','金':'metal','水':'water'};
+  const WX_DISEASE = {'木':'肝炎/脂肪肝/眼疾','火':'心血管/高血压','土':'脾胃/妇科问题','金':'呼吸/肺炎','水':'肾虚/泌尿系统'};
   const organMapHtml = `
+  ${curDY10?.health_hint?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--ok)">
+    <div style="font-size:11px;color:var(--ok);font-weight:700;margin-bottom:6px">▶ 当前大运健康提示 · ${esc((curDY10.stem||'')+(curDY10.branch||''))}</div>
+    <div style="font-size:13px;line-height:1.7">${esc(curDY10.health_hint)}</div>
+  </div>`:''}
   <div class="card" style="margin-bottom:12px">
-    <p class="card-title"><span class="dot"></span>五行器官简表</p>
-    <div class="organ-map">
+    <p class="card-title"><span class="dot"></span>五行器官风险图</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       ${Object.entries(WX_DEFAULT_ORGANS).map(([cn, organs]) => {
         const isRisk = h.risk_organs?.some(r=>organs.includes(r)||r.includes(cn));
-        return `<div class="organ-row wx-${WX_EN[cn]}" ${isRisk?'style="font-weight:600"':''}><span class="organ-elem">${cn}</span><span class="organ-name">${esc(organs)}</span>${isRisk?'<span class="chip warn" style="font-size:10px;padding:1px 5px;margin-left:4px">⚠</span>':''}</div>`;
+        const enKey = WX_EN[cn];
+        return `<div style="padding:8px 10px;border-radius:8px;border:1px solid var(--line);${isRisk?'border-left:3px solid var(--bad);background:rgba(192,57,43,0.05);':''}">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <span class="wx-${enKey}" style="font-size:14px;font-weight:800">${cn}</span>
+            ${isRisk?'<span style="font-size:10px;color:var(--bad);font-weight:700">⚠ 注意</span>':''}
+          </div>
+          <div style="font-size:12px;margin-bottom:2px">${esc(organs)}</div>
+          <div style="font-size:10px;color:var(--muted)">${esc(WX_DISEASE[cn]||'')}</div>
+        </div>`;
       }).join('')}
     </div>
   </div>`;
