@@ -72,9 +72,15 @@ window.TEN_GOD_TYPE = {
 window.WX_CN  = {wood:'木', fire:'火', earth:'土', metal:'金', water:'水'};
 window.WX_CSS = {wood:'wx-wood', fire:'wx-fire', earth:'wx-earth', metal:'wx-metal', water:'wx-water'};
 window.wxCN   = k => WX_CN[k] || k;
-window.tenGodCN   = code => TEN_GOD_CN[code] || code || '—';
-window.tenGodDesc = code => TEN_GOD_DESC[code] || '';
-window.tenGodType = code => TEN_GOD_TYPE[code] || '';
+// 反向映射：中文十神 → 英文代码（API 部分接口直接返回中文字符串）
+window._TG_CN_TO_CODE = {
+  '比肩':'bi_jian','劫财':'jie_cai','食神':'shi_shen','伤官':'shang_guan',
+  '偏印':'pian_yin','正印':'zheng_yin','偏财':'pian_cai','正财':'zheng_cai',
+  '七杀':'qi_sha','正官':'zheng_guan','日主':'ri_zhu',
+};
+window.tenGodCN   = code => TEN_GOD_CN[code] || TEN_GOD_CN[_TG_CN_TO_CODE[code]] || code || '—';
+window.tenGodDesc = code => TEN_GOD_DESC[code] || TEN_GOD_DESC[_TG_CN_TO_CODE[code]] || '';
+window.tenGodType = code => TEN_GOD_TYPE[code] || TEN_GOD_TYPE[_TG_CN_TO_CODE[code]] || '';
 window.GAN_WUXING = {'甲':'wood','乙':'wood','丙':'fire','丁':'fire','戊':'earth','己':'earth','庚':'metal','辛':'metal','壬':'water','癸':'water'};
 window.GAN_CSS    = {'甲':'gan-mu','乙':'gan-mu','丙':'gan-huo','丁':'gan-huo','戊':'gan-tu','己':'gan-tu','庚':'gan-jin','辛':'gan-jin','壬':'gan-shui','癸':'gan-shui'};
 window.ganClass   = g => `gan ${GAN_CSS[g]||''}`;

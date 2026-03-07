@@ -64,7 +64,7 @@ function renderTab0(json, el) {
       <div class="hs-geju">${esc(gejuName)}${gejuLevel ? ` \u00b7 ${esc(gejuLevel)}` : ''}${gejuConf!==null ? `<span class="hs-conf">${gejuConf}%</span>` : ''}</div>
       <div class="hs-yongshen">用神：${esc(yongshenFavor)}</div>
       ${(arc?.inference_tags||[]).length ? `<div class="hero-action-pills">${arc.inference_tags.slice(0,5).map(a=>`<span class="hero-action-pill">${esc(a)}</span>`).join('')}</div>` : ''}
-      ${top3.length ? `<div class="hero-action-pills">${top3.slice(0,3).map(a=>`<span class="hero-action-pill">\u2726 ${txt(a)}</span>`).join('')}</div>` : ''}
+      ${top3.length ? `<div class="hero-action-pills">${top3.slice(0,3).map(a=>{const s=txt(a);const short=s.length>28?s.slice(0,27)+'\u2026':s;return `<span class="hero-action-pill" title="${esc(s)}">\u2726 ${esc(short)}</span>`;}).join('')}</div>` : ''}
     </div>
     ${yearScore !== undefined ? `<div class="hero-score">
       <div class="hs-score-num" style="color:${scoreColor}">${yearScore}</div>
