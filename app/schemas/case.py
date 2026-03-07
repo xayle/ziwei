@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -156,11 +156,18 @@ class CasePatch(BaseModel):
             raise ValueError(f"tz must be IANA name: {exc}")
         return v
 
-    @field_validator("tags")
+    @field_validator("tags", mode="before")
     @classmethod
-    def validate_tags(cls, v: Optional[str]) -> Optional[str]:
+    def validate_tags(cls, v) -> Optional[str]:
         if v is None:
             return v
+        if isinstance(v, list):
+            parts = [str(t).strip() for t in v if str(t).strip()]
+            v = ",".join(parts) if parts else None
+            if v is None:
+                return None
+        if not isinstance(v, str):
+            raise ValueError("tags must be str or list of str")
         v = v.strip()
         if not v:
             return None
@@ -190,6 +197,22 @@ class CaseOut(CaseBase):
     rule_version_last: Optional[str] = None
     schema_version: Optional[str] = None
     latest_verify_summary: Optional[dict] = None
+    # 覆盖父类 str 类型 → 输出为列表，前端标签组件可直接绑定
+    tags: Optional[List[str]] = None  # type: ignore[assignment]
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def validate_tags(cls, v) -> Optional[List[str]]:
+        """覆盖 CaseBase.validate_tags：DB 字符串拆分为列表输出。"""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            parts = [t.strip() for t in v.split(",") if t.strip()]
+            return parts or None
+        if isinstance(v, list):
+            parts = [str(t).strip() for t in v if str(t).strip()]
+            return parts or None
+        return None
 
 
 class SnapshotOut(BaseModel):

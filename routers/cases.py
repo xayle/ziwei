@@ -43,7 +43,7 @@ def create_case(
     return CaseOut.model_validate(case)
 
 
-@router.get("", response_model=List[CaseOut])
+@router.get("", response_model=None)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_cases(
     current_user: RequiredUser,
@@ -112,7 +112,11 @@ def list_cases(
         co = CaseOut.model_validate(c)
         co.latest_verify_summary = summary
         results.append(co)
-    return results
+    return {
+        "items": results,
+        "total": len(results),
+        "next_cursor": None,
+    }
 
 
 @router.get("/{case_id}", response_model=CaseOut)

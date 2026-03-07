@@ -85,7 +85,7 @@ def get_user_audit_logs(
     next_cursor = logs[-1].id if len(logs) == limit else None
 
     return {
-        "logs": [
+        "items": [
             AuditLogResponse(
                 id=log.id or 0,
                 user_id=log.user_id or 0,
@@ -140,7 +140,7 @@ def get_all_audit_logs(
     next_cursor = logs[-1].id if len(logs) == limit else None
 
     return {
-        "logs": [
+        "items": [
             AuditLogResponse(
                 id=log.id or 0,
                 user_id=log.user_id or 0,

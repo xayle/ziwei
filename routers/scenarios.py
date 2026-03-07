@@ -219,7 +219,8 @@ def list_scenarios(
         query = query.where(Scenario.scenario_type == scenario_type)
     
     scenarios = session.exec(query).all()
-    return [ScenarioResponse(**s.__dict__) for s in scenarios]
+    items = [ScenarioResponse(**s.__dict__) for s in scenarios]
+    return {"items": items, "total": len(items), "next_cursor": None}
 
 
 @router.get("/scenarios/{scenario_id}", response_model=ScenarioResponse)
@@ -401,5 +402,6 @@ def list_member_scenarios(
             (Scenario.deleted_at.is_(None))  # type: ignore[union-attr]
         )
     ).all()
-    
-    return [ScenarioResponse(**s.__dict__) for s in scenarios]
+
+    items = [ScenarioResponse(**s.__dict__) for s in scenarios]
+    return {"items": items, "total": len(items), "next_cursor": None}

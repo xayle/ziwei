@@ -108,23 +108,13 @@ def _store_snapshot(
     return snap
 
 
-@router.post("/{case_id}/compute", response_model=ComputeResponse)
-@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
-def compute_case(
-    case_id: str,
+def _do_compute_for_case(
+    session: Session,
+    case: Case,
     payload: ComputeRequest,
-    current_user: RequiredUser,
-    session: Session = Depends(get_session),
-):
-    case = session.exec(
-        select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore
-    ).first()
-    if not case:
-        raise ResourceNotFoundException(
-            message="case not found",
-            details={"resource_type": "case", "resource_id": case_id},
-        )
-
+) -> ComputeResponse:
+    """核心计算逻辑：对已存在的 Case 执行 bazi+verify 并写入 Snapshot。
+    可被 compute_case 路由和 quickstart 路由共享调用。"""
     compute_batch_id = str(uuid4())
 
     # Effective input assembly
@@ -194,16 +184,9 @@ def compute_case(
             "request_id": compute_batch_id,
         }
         snap_bazi = _store_snapshot(
-            session,
-            case,
-            kind="bazi",
-            compute_flags=compute_flags,
-            input_json=input_effective,
-            output_json=error_payload,
-            backend_json=None,
-            summary_level=None,
-            summary_warning_count=None,
-            summary_diff_count=None,
+            session, case, kind="bazi",
+            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
+            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_bazi))
         tasks_status["bazi"] = ComputeTaskStatus(status="failed", snapshot_id=snap_bazi.id, message=exc.message)
@@ -215,16 +198,9 @@ def compute_case(
             "request_id": compute_batch_id,
         }
         snap_bazi = _store_snapshot(
-            session,
-            case,
-            kind="bazi",
-            compute_flags=compute_flags,
-            input_json=input_effective,
-            output_json=error_payload,
-            backend_json=None,
-            summary_level=None,
-            summary_warning_count=None,
-            summary_diff_count=None,
+            session, case, kind="bazi",
+            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
+            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_bazi))
         tasks_status["bazi"] = ComputeTaskStatus(status="failed", snapshot_id=snap_bazi.id, message=str(exc))
@@ -233,7 +209,6 @@ def compute_case(
     try:
         result = verify_full(dt_aware, lon=lon, use_solar=solar_enabled, mode=mode)
 
-        # Build backend info
         backend_info = BackendInfo(
             primary=settings.primary_backend,
             secondary="cnlunar" if mode == "dual" else None,
@@ -286,16 +261,10 @@ def compute_case(
         summary_diff_count = len(v.diff_fields)
 
         snap_verify = _store_snapshot(
-            session,
-            case,
-            kind="verify",
-            compute_flags=compute_flags,
-            input_json=input_effective,
-            output_json=verify_output,
-            backend_json=None,
-            summary_level=summary_level,
-            summary_warning_count=summary_warning_count,
-            summary_diff_count=summary_diff_count,
+            session, case, kind="verify",
+            compute_flags=compute_flags, input_json=input_effective, output_json=verify_output,
+            backend_json=None, summary_level=summary_level,
+            summary_warning_count=summary_warning_count, summary_diff_count=summary_diff_count,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_verify))
         tasks_status["verify"] = ComputeTaskStatus(status="success", snapshot_id=snap_verify.id, message=None)
@@ -307,16 +276,9 @@ def compute_case(
             "request_id": compute_batch_id,
         }
         snap_verify = _store_snapshot(
-            session,
-            case,
-            kind="verify",
-            compute_flags=compute_flags,
-            input_json=input_effective,
-            output_json=error_payload,
-            backend_json=None,
-            summary_level=None,
-            summary_warning_count=None,
-            summary_diff_count=None,
+            session, case, kind="verify",
+            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
+            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_verify))
         tasks_status["verify"] = ComputeTaskStatus(status="failed", snapshot_id=snap_verify.id, message=exc.message)
@@ -328,25 +290,37 @@ def compute_case(
             "request_id": compute_batch_id,
         }
         snap_verify = _store_snapshot(
-            session,
-            case,
-            kind="verify",
-            compute_flags=compute_flags,
-            input_json=input_effective,
-            output_json=error_payload,
-            backend_json=None,
-            summary_level=None,
-            summary_warning_count=None,
-            summary_diff_count=None,
+            session, case, kind="verify",
+            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
+            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_verify))
         tasks_status["verify"] = ComputeTaskStatus(status="failed", snapshot_id=snap_verify.id, message=str(exc))
 
-    response = ComputeResponse(
+    return ComputeResponse(
         compute_batch_id=compute_batch_id,
         case_id=case.id,
         input_effective=input_effective,
         tasks=tasks_status,
         snapshots_created=snapshots_created,
     )
-    return response
+
+
+@router.post("/{case_id}/compute", response_model=ComputeResponse)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def compute_case(
+    case_id: str,
+    payload: ComputeRequest,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    case = session.exec(
+        select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore
+    ).first()
+    if not case:
+        raise ResourceNotFoundException(
+            message="case not found",
+            details={"resource_type": "case", "resource_id": case_id},
+        )
+
+    return _do_compute_for_case(session, case, payload)

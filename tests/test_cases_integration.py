@@ -326,11 +326,13 @@ class TestCaseTagSearch:
         assert search_resp.status_code == 200, f"搜索应返回200，实际: {search_resp.status_code}"
 
         data = search_resp.json()
-        assert isinstance(data, list), "响应应为列表"
-        assert len(data) >= 1, "搜索'七杀格'应至少返回1条案例"
+        # GET /cases 现在返回统一信封 {items, total, next_cursor}
+        items = data["items"] if isinstance(data, dict) else data
+        assert isinstance(items, list), "响应应为列表"
+        assert len(items) >= 1, "搜索'七杀格'应至少返回1条案例"
 
         # Step 3: 验证返回的案例确实包含该 tag
-        ids_with_tag = [c["id"] for c in data if "七杀格" in (c.get("tags") or "")]
+        ids_with_tag = [c["id"] for c in items if "七杀格" in (str(c.get("tags") or ""))]
         assert len(ids_with_tag) >= 1, "返回的案例中应有至少1条包含'七杀格' tag"
 
     def test_name_search_returns_matching_cases(self, client_with_auth: TestClient):
@@ -350,5 +352,6 @@ class TestCaseTagSearch:
         search_resp = client_with_auth.get("/api/v1/cases", params={"q": "七杀格命盘"})
         assert search_resp.status_code == 200
         data = search_resp.json()
-        assert any("七杀格命盘" in (c.get("name") or "") for c in data), \
+        items = data["items"] if isinstance(data, dict) else data
+        assert any("七杀格命盘" in (c.get("name") or "") for c in items), \
             "按名称搜索'七杀格命盘'应返回相关案例"

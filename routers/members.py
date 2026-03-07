@@ -3,7 +3,7 @@
 """
 from datetime import date, datetime, timezone
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator, computed_field
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
@@ -40,10 +40,30 @@ class MemberCreateRequest(BaseModel):
     gender: str  # "M", "F", "U"
     birth_time_hour: Optional[int] = None
     birth_time_minute: Optional[int] = None
+    # 便捷输入：'HH:MM' 格式，等价于同时设置 birth_time_hour + birth_time_minute
+    birth_time: Optional[str] = Field(default=None, description="'HH:MM' 格式，等价于 birth_time_hour + birth_time_minute")
     birth_city: Optional[str] = None
     birth_longitude: Optional[float] = None
     solar_time_enabled: bool = False
     notes: Optional[str] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _parse_birth_time(cls, data):
+        if not isinstance(data, dict):
+            return data
+        bt = data.get("birth_time")
+        if bt:
+            try:
+                h_str, m_str = str(bt).split(":")
+                h, m = int(h_str), int(m_str)
+            except (ValueError, AttributeError):
+                raise ValueError("birth_time 格式应为 'HH:MM'，例如 '14:30'")
+            if not (0 <= h <= 23 and 0 <= m <= 59):
+                raise ValueError("birth_time: 时 0-23，分 0-59")
+            data["birth_time_hour"] = h
+            data["birth_time_minute"] = m
+        return data
 
 
 class MemberUpdateRequest(BaseModel):
@@ -52,11 +72,31 @@ class MemberUpdateRequest(BaseModel):
     gender: Optional[str] = None
     birth_time_hour: Optional[int] = None
     birth_time_minute: Optional[int] = None
+    # 便捷字段：如果提供，覆盖 birth_time_hour/minute
+    birth_time: Optional[str] = Field(default=None, description="'HH:MM' 格式，覆盖 birth_time_hour + birth_time_minute")
     birth_city: Optional[str] = None
     birth_longitude: Optional[float] = None
     solar_time_enabled: Optional[bool] = None
     notes: Optional[str] = None
     # birth_date 不允许 PATCH — 出生日期是身份核心字段，更改需走完整 PUT
+
+    @model_validator(mode="before")
+    @classmethod
+    def _parse_birth_time(cls, data):
+        if not isinstance(data, dict):
+            return data
+        bt = data.get("birth_time")
+        if bt:
+            try:
+                h_str, m_str = str(bt).split(":")
+                h, m = int(h_str), int(m_str)
+            except (ValueError, AttributeError):
+                raise ValueError("birth_time 格式应为 'HH:MM'，例如 '14:30'")
+            if not (0 <= h <= 23 and 0 <= m <= 59):
+                raise ValueError("birth_time: 时 0-23，分 0-59")
+            data["birth_time_hour"] = h
+            data["birth_time_minute"] = m
+        return data
 
 
 class MemberResponse(BaseModel):
@@ -71,6 +111,14 @@ class MemberResponse(BaseModel):
     birth_longitude: Optional[float]
     solar_time_enabled: bool
     notes: Optional[str]
+
+    @computed_field
+    @property
+    def birth_time(self) -> Optional[str]:
+        """输出 'HH:MM' 格式时间，方便前端时间选择器直接绑定。"""
+        if self.birth_time_hour is not None:
+            return f"{self.birth_time_hour:02d}:{(self.birth_time_minute or 0):02d}"
+        return None
 
 
 def check_permission(required_permission: Permission):
@@ -188,10 +236,9 @@ def list_members(
     next_cursor = members[-1].id if (members and len(members) == limit) else None
 
     result = {
-        "members": member_responses,
+        "items": member_responses,
         "next_cursor": next_cursor,
-        "has_more": len(members) == limit,
-        "total_returned": len(members),
+        "total": len(members),
     }
     
     # ✅ 第四步：缓存结果 10 分钟

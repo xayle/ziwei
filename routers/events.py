@@ -314,10 +314,9 @@ def list_events(
     next_cursor = events[-1].id if (events and len(events) == limit) else None
     
     result = {
-        "events": event_responses,
+        "items": event_responses,
         "next_cursor": next_cursor,
-        "has_more": len(events) == limit,
-        "total_returned": len(events),
+        "total": len(events),
     }
     
     # ✅ 第六步：缓存结果 5 分钟
