@@ -4,6 +4,7 @@
 import logging
 import re
 from datetime import datetime, timezone
+from jose import jwt as _jose_jwt
 from pydantic import BaseModel, field_validator
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session, select
@@ -85,11 +86,7 @@ async def require_user(
     """强制认证的依赖函数"""
     if _auth_bypass_enabled():
         return TokenPayload(user_id=0, username="local", role="owner")
-    if user is None:
-        raise AuthenticationException(
-            code=ErrorCode.AUTH_TOKEN_INVALID,
-            message="Authentication required",
-        )
+    # NOTE: get_current_user_from_token 从不返回 None（始终 raise 或 return payload）
     return user
 
 
@@ -455,9 +452,8 @@ def logout(
     parts = auth_header.split()
     if len(parts) == 2 and parts[0].lower() == "bearer":
         try:
-            from jose import jwt as _jwt
             from services.auth_service import SECRET_KEY, ALGORITHM
-            payload = _jwt.decode(
+            payload = _jose_jwt.decode(
                 parts[1], SECRET_KEY, algorithms=[ALGORITHM],
                 options={"leeway": 86400}  # 允许已到期的 token 仍能注销
             )

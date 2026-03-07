@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import ClassVar, Optional
 from dotenv import load_dotenv
 
 from constants import DEFAULT_LON, RULE_VERSION, API_VERSION
@@ -95,8 +95,8 @@ class Settings:
     rate_limit_requests: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
     rate_limit_window_seconds: int = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
     
-    # 弱密钥常量集合（用于生产环境检查）
-    _WEAK_SECRET_KEYS: frozenset = frozenset({
+    # 弱密钥常量集合（用于生产环境检查）— ClassVar 使其不作为 dataclass 字段
+    _WEAK_SECRET_KEYS: ClassVar[frozenset] = frozenset({
         "your-secret-key-change-in-production",
         "dev-secret-key-change-in-production",
         "secret",

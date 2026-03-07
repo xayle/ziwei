@@ -46,6 +46,19 @@ class MemberCreateRequest(BaseModel):
     notes: Optional[str] = None
 
 
+class MemberUpdateRequest(BaseModel):
+    """部分更新成员请求（PATCH）— 所有字段可选"""
+    name: Optional[str] = None
+    gender: Optional[str] = None
+    birth_time_hour: Optional[int] = None
+    birth_time_minute: Optional[int] = None
+    birth_city: Optional[str] = None
+    birth_longitude: Optional[float] = None
+    solar_time_enabled: Optional[bool] = None
+    notes: Optional[str] = None
+    # birth_date 不允许 PATCH — 出生日期是身份核心字段，更改需走完整 PUT
+
+
 class MemberResponse(BaseModel):
     """成员响应模型"""
     id: int
@@ -159,32 +172,21 @@ def list_members(
         return cached_result
     
     # ✅ 第二步：使用 Keyset 分页查询（快 25 倍！）
-    members = []
-    if last_id == 0:
-        # 第一页：直接获取前 limit 条
-        members = session.exec(
-            select(Member)
-            .where(Member.owner_id == current_user.id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
-            .order_by(Member.id)  # type: ignore[arg-type]
-            .limit(limit)
-        ).all()
-    else:
-        # 后续页：从 last_id 之后获取
-        members = session.exec(
-            select(Member)
-            .where(
-                Member.owner_id == current_user.id,
-                Member.deleted_at.is_(None),  # type: ignore[union-attr]
-                Member.id > last_id  # type: ignore[operator]  # ✅ 关键：直接跳到正确位置，无需 OFFSET
-            )
-            .order_by(Member.id)  # type: ignore[arg-type]
-            .limit(limit)
-        ).all()
+    query = (
+        select(Member)
+        .where(Member.owner_id == current_user.id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
+        .order_by(Member.id)  # type: ignore[arg-type]
+        .limit(limit)
+    )
+    if last_id > 0:
+        query = query.where(Member.id > last_id)  # type: ignore[operator]
+    members = session.exec(query).all()
     
     # ✅ 第三步：准备响应
     member_responses = [MemberResponse(**m.__dict__) for m in members]
-    next_cursor = members[-1].id if members else 0
-    
+    # next_cursor: 满页时提供下一页游标，末页返回 None（与 list_events 一致）
+    next_cursor = members[-1].id if (members and len(members) == limit) else None
+
     result = {
         "members": member_responses,
         "next_cursor": next_cursor,
@@ -282,6 +284,65 @@ def update_member(
             message="Update failed",
         )
     
+    return MemberResponse(**member.__dict__)
+
+
+@router.patch("/members/{member_id}")
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def patch_member(
+    member_id: int,
+    body: MemberUpdateRequest,
+    current_user: User = Depends(
+        check_permission(Permission.UPDATE_MEMBER)
+    ),
+    session: Session = Depends(get_session),
+):
+    """
+    部分更新成员信息（仅修改提供的字段）
+    birth_date 不允许 PATCH — 出生日期更改需走完整 PUT
+    需要权限：UPDATE_MEMBER
+    """
+    member = session.exec(
+        select(Member).where(Member.id == member_id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
+    ).first()
+
+    if not member:
+        raise ResourceNotFoundException(
+            message="Member not found",
+            details={"resource_type": "member", "resource_id": member_id},
+        )
+
+    if member.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to update this member",
+        )
+
+    updates = body.model_dump(exclude_unset=True)
+    for key, value in updates.items():
+        setattr(member, key, value)
+    member.updated_at = datetime.now(timezone.utc)
+
+    try:
+        session.add(member)
+        session.commit()
+        session.refresh(member)
+    except IntegrityError:
+        session.rollback()
+        raise BusinessException(
+            code=ErrorCode.BUSINESS_OPERATION_FAILED,
+            message="Patch failed",
+        )
+
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="patch_member",
+        resource_type="member",
+        resource_id=str(member_id),
+        details=updates,
+    )
+
     return MemberResponse(**member.__dict__)
 
 
