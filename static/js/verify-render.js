@@ -1362,7 +1362,7 @@ function renderTab13(json, el) {
       <p class="card-title"><span class="dot"></span>布局建议</p>
       ${f.decor?.length?`<ul class="panel-list">${f.decor.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'<div class="hint">暂无</div>'}
   </div>
-  + `${f.plants?.length||f.taboo?.length?`<div class="card" style="margin-bottom:12px">
+  ${f.plants?.length||f.taboo?.length?`<div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>植物 & 注意事项</p>
     ${f.plants?.length?`<div class="row" style="margin-bottom:8px">${f.plants.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
     ${f.taboo?.length?`<ul class="panel-list">${f.taboo.map(t=>`<li style="color:var(--bad)">${esc(t)}</li>`).join('')}</ul>`:''}
