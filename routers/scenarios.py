@@ -337,7 +337,7 @@ def delete_scenario(
             message="Permission denied: delete_scenario required",
         )
     
-    scenario = session.exec(select(Scenario).where(Scenario.id == scenario_id)).first()
+    scenario = session.exec(select(Scenario).where(Scenario.id == scenario_id, Scenario.deleted_at.is_(None))).first()  # type: ignore[union-attr]
     if not scenario:
         raise ResourceNotFoundException(
             message="Scenario not found",
