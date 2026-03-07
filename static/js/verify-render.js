@@ -220,6 +220,17 @@ function renderTab2(json, el) {
   const tierCls = st.tier==='strong'||st.tier==='extremely_strong' ? 'ok'
                 : st.tier==='weak'  ||st.tier==='extremely_weak'   ? 'bad' : 'warn';
 
+  // ── 当前大运 banner ──────────────────────────
+  const _thisYear2 = new Date().getFullYear();
+  const _curDY2 = (json.dayun?.items||[]).find(d=>d.start_year<=_thisYear2&&(d.start_year||0)+10>_thisYear2)||null;
+  const dayunBannerHtml = _curDY2 ? `
+  <div style="margin-bottom:12px;padding:8px 14px;background:var(--bg2,rgba(0,0,0,0.04));border-radius:10px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;border-left:3px solid var(--accent)">
+    <span style="font-size:11px;color:var(--accent);font-weight:700">▶ 当前大运</span>
+    <span style="font-size:16px;font-weight:800;letter-spacing:2px;color:var(--text)">${esc((_curDY2.stem||'')+(_curDY2.branch||''))}</span>
+    ${_curDY2.start_year?`<span style="font-size:11px;color:var(--muted)">${_curDY2.start_year}–${_curDY2.start_year+9}年</span>`:''}
+    ${_curDY2.wealth_hint?`<span style="font-size:11px;color:var(--ok);flex:1;min-width:160px">💰 ${esc(_curDY2.wealth_hint.slice(0,40))}…</span>`:''}
+  </div>` : '';
+
   /* ── 强弱诠释文字 ─────────────────────────────── */
   const TIER_INSIGHT = {
     extremely_strong: '日主太旺，命局偏强。用神宜取财星、官杀耗泄，忌印绶比劫再扶。',
@@ -330,6 +341,7 @@ function renderTab2(json, el) {
 
   /* ── 主体 HTML ───────────────────────────────── */
   el.innerHTML = `
+  ${dayunBannerHtml}
   ${overviewHtml}
 
   <!-- 四柱排盘 -->
@@ -342,6 +354,10 @@ function renderTab2(json, el) {
       《三命通会》《子平真诠》 · 节气历：sxtwl VSOP87 · 藏干：子平通行版（悬停查看）
     </div>
   </div>
+
+  <!-- 五行偏重警示 -->
+  ${(()=>{const wxArr=[['wood',wx.wood||0],['fire',wx.fire||0],['earth',wx.earth||0],['metal',wx.metal||0],['water',wx.water||0]];const tot=wxArr.reduce((s,[,v])=>s+v,0);const dom=wxArr.filter(([,v])=>tot&&v/tot>0.45);return dom.length?`<div style="margin-bottom:12px;padding:7px 12px;background:rgba(192,57,43,0.06);border-radius:8px;border-left:3px solid var(--bad);font-size:12px"><span style="color:var(--bad);font-weight:700">⚠ 命局偏重：</span>${dom.map(([k])=>`<span class="wx-${k}" style="font-weight:700">${{wood:'木',fire:'火',earth:'土',metal:'金',water:'水'}[k]}</span>`).join('+')} 偏旺，注意用神调候。</div>`:'';})()
+  }
 
   <!-- 五行格局 ｜ 日主分析 -->
   <div class="g2" style="margin-bottom:14px">
@@ -501,6 +517,18 @@ function renderTab3(json, el) {
     el.innerHTML = `<div class="geju-empty"><div style="font-size:40px;margin-bottom:10px">⊞</div><div>格局数据尚未计算，请先排盘。</div></div>`;
     return;
   }
+
+  // ── 当前大运格局 cross-ref ───────────────────
+  const _thisYear3 = new Date().getFullYear();
+  const _curDY3 = (json.dayun?.items||[]).find(d=>d.start_year<=_thisYear3&&(d.start_year||0)+10>_thisYear3)||null;
+  const gejuDayunHtml = _curDY3 ? `
+  <div class="card" style="margin-bottom:12px;border-left:3px solid var(--accent)">
+    <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px">▶ 当前大运 · ${esc((_curDY3.stem||'')+(_curDY3.branch||''))}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${_curDY3.wealth_hint?`<div style="font-size:12px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:6px;padding:7px"><span style="font-size:10px;color:var(--ok);font-weight:700">💰 财</span><br>${esc(_curDY3.wealth_hint.slice(0,50))}</div>`:''}
+      ${_curDY3.love_hint?`<div style="font-size:12px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:6px;padding:7px"><span style="font-size:10px;color:#f43f5e;font-weight:700">❤️ 情</span><br>${esc(_curDY3.love_hint.slice(0,50))}</div>`:''}
+    </div>
+  </div>` : '';
   const tierCls = (g.tier==='高'||g.geju_level==='上格') ? 'high' : (g.tier==='中'||g.geju_level==='中格') ? 'mid' : 'low';
   const confPct  = typeof g.confidence === 'number' ? Math.round(g.confidence * 100) : null;
   const uncertain = confPct !== null && confPct < 50;
@@ -554,7 +582,7 @@ function renderTab3(json, el) {
     ? `<div style="margin-bottom:12px;font-size:11px;color:var(--ok);padding:4px 8px;background:rgba(34,197,94,0.08);border-radius:6px;display:inline-block">✓ 格局完整（未见破格）</div>`
     : '';
 
-  el.innerHTML = heroHtml + brokenBadge + `
+  el.innerHTML = (gejuDayunHtml||'') + heroHtml + brokenBadge + `
   ${_showDetailCard ? `<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>格局释义</p><div class="geju-text">${renderPara(_detailText)}</div></div>` : ''}
   ${g.interpretation_text ? `<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>深度解读</p><div class="geju-text">${renderPara(g.interpretation_text)}</div>${_detailText&&!_showDetailCard?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">📐 判断依据：${esc(_detailText)}</div>`:''}${g.month_stem_shishen?`<div style="margin-top:4px;font-size:11px;color:var(--muted)">月令十神：<code>${esc(g.month_stem_shishen)}</code></div>`:''}</div>` : ''}
   ${g.inference_tags?.length ? `<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${g.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>` : ''}
@@ -568,6 +596,15 @@ function renderTab3(json, el) {
 function renderTab4(json, el) {
   const palace = json.palace;
   if (!palace) { el.innerHTML = '<div class="hint" style="padding:16px">命宫数据尚未计算。</div>'; return; }
+
+  // ── 当前大运与神煞联动提示 ──────────────────
+  const _thisYear4 = new Date().getFullYear();
+  const _curDY4 = (json.dayun?.items||[]).find(d=>d.start_year<=_thisYear4&&(d.start_year||0)+10>_thisYear4)||null;
+  const palaceDayunHtml = _curDY4 ? `
+  <div style="margin-bottom:12px;padding:7px 12px;background:var(--bg2,rgba(0,0,0,0.04));border-radius:8px;border-left:3px solid var(--accent);font-size:12px">
+    <span style="font-size:11px;color:var(--accent);font-weight:700">▶ 当前大运 ${esc((_curDY4.stem||'')+(_curDY4.branch||''))}</span>
+    ${_curDY4.health_hint?`<span style="margin-left:10px;color:var(--muted)">${esc(_curDY4.health_hint.slice(0,60))}</span>`:''}
+  </div>` : '';
 
   // ── 命宫·身宫 宫位卡槽 ──
   const makePalaceSlot = (p, lbl) => {
@@ -657,7 +694,7 @@ function renderTab4(json, el) {
     </div>
   </div>` : '';
 
-  el.innerHTML = palaceCard + shenshaCard + houseGrid;
+  el.innerHTML = (palaceDayunHtml||'') + palaceCard + shenshaCard + houseGrid;
 }
 
 /* ══════════════════════════════════════════════════
@@ -785,13 +822,38 @@ function renderTab6(json, el) {
   const diffFields = v.diff_fields||[];
   const p1 = json.pillars_primary;
   const p2 = json.pillars_secondary;
+
+  // 状态汇总横条
+  const lvl6 = v.level||'—';
+  const lvlColor6 = {L0:'var(--ok)',L1:'var(--ok)',L2:'var(--warn)',L3:'var(--bad)'}[lvl6]||'var(--muted)';
+  const warnCount6 = (v.warnings||[]).length;
+  const diffCount6 = diffFields.length;
+  const statusBannerHtml = `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+    <div style="padding:10px 12px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border-left:3px solid ${lvlColor6}">
+      <div style="font-size:10px;color:var(--muted);font-weight:700">校验级别</div>
+      <div style="font-size:20px;font-weight:800;color:${lvlColor6}">${esc(lvl6)}</div>
+      <div style="font-size:11px;color:var(--muted)">${{L0:'无差异',L1:'时柱差异',L2:'月柱差异',L3:'多柱差异'}[lvl6]||'—'}</div>
+    </div>
+    <div style="padding:10px 12px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border-left:3px solid ${warnCount6?'var(--warn)':'var(--ok)'}">
+      <div style="font-size:10px;color:var(--muted);font-weight:700">告警数量</div>
+      <div style="font-size:20px;font-weight:800;color:${warnCount6?'var(--warn)':'var(--ok)'}">${warnCount6}</div>
+      <div style="font-size:11px;color:var(--muted)">${warnCount6?'存在告警':'运行正常'}</div>
+    </div>
+    <div style="padding:10px 12px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border-left:3px solid ${diffCount6?'var(--bad)':'var(--ok)'}">
+      <div style="font-size:10px;color:var(--muted);font-weight:700">差异字段</div>
+      <div style="font-size:20px;font-weight:800;color:${diffCount6?'var(--bad)':'var(--ok)'}">${diffCount6}</div>
+      <div style="font-size:11px;color:var(--muted)">${diffCount6?diffFields.map(f=>({year:'年',month:'月',day:'日',hour:'时'}[f]||f)).join('/'):'无差异'}</div>
+    </div>
+  </div>`;
+
   const renderPillars = (p, diff=[]) => {
     if (!p) return '<div class="hint">无数据</div>';
     return `<table class="pillar-table"><thead><tr><th>柱</th><th>天干</th><th>地支</th><th>干支</th></tr></thead><tbody>
       ${['year','month','day','hour'].map(k=>`<tr class="${diff.includes(k)?'diff-row':''}"><td>${{year:'年',month:'月',day:'日',hour:'时'}[k]}</td><td class="${GAN_CSS[p[k]?.stem]||''}">${esc(p[k]?.stem||'—')}</td><td>${esc(p[k]?.branch||'—')}</td><td>${esc(p[k]?.ganzhi||'—')}</td></tr>`).join('')}
     </tbody></table>`;
   };
-  el.innerHTML = `
+  el.innerHTML = statusBannerHtml + `
   <div class="g2" style="margin-bottom:12px">
     <div class="card"><p class="card-title"><span class="dot"></span>主引擎四柱</p>${renderPillars(p1,diffFields)}</div>
     <div class="card"><p class="card-title"><span class="dot" style="background:var(--muted)"></span>校验引擎四柱</p>${renderPillars(p2,diffFields)}</div>
@@ -1161,6 +1223,16 @@ function renderTab11(json, el) {
   const score = r.relationship_score;
   const scoreColor = score>=70?'var(--ok)':score>=50?'var(--warn)':'var(--bad)';
 
+  // ── 当前大运人际 cross-ref ───────────────────
+  const _thisYear11 = new Date().getFullYear();
+  const _curDY11 = (json.dayun?.items||[]).find(d=>d.start_year<=_thisYear11&&(d.start_year||0)+10>_thisYear11)||null;
+  const relDayunHtml = _curDY11?.love_hint ? `
+  <div class="card" style="margin-bottom:12px;border-left:3px solid #a78bfa">
+    <div style="font-size:11px;color:#a78bfa;font-weight:700;margin-bottom:6px">▶ 当前大运人际 · ${esc((_curDY11.stem||'')+(_curDY11.branch||''))}</div>
+    <div style="font-size:13px;line-height:1.7">${esc(_curDY11.love_hint)}</div>
+    ${_curDY11.child_hint?`<div style="margin-top:6px;font-size:12px;color:var(--muted)">👶 ${esc(_curDY11.child_hint.slice(0,60))}</div>`:''}
+  </div>` : '';
+
   const heroHtml = score != null ? `
   <div class="fortune-hero card" style="margin-bottom:12px">
     <div class="fh-score-block">
@@ -1198,7 +1270,7 @@ function renderTab11(json, el) {
     </div>
   </div>` : '';
 
-  el.innerHTML = heroHtml + `
+  el.innerHTML = relDayunHtml + heroHtml + `
   ${r.interpretation_text?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>六亲关系</p><div style="font-size:13px;line-height:1.7">${renderPara(r.interpretation_text)}</div></div>`:''}
   ${liuQinHtml}
   ${peopleHtml}
@@ -1223,12 +1295,23 @@ function renderTab12(json, el) {
     ${p.inference_tags?.length?`<span class="bov-div">·</span>${p.inference_tags.slice(0,4).map(t=>`<span class="chip" style="font-size:11px">${esc(t)}</span>`).join('')}`:''}
   </div>`;
 
+  // 优势/劣势 → icon 卡片化
+  const advCards = p.advantages?.length
+    ? `<div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot" style="background:var(--ok)"></span>优势特质</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:6px">
+      ${p.advantages.map(s=>`<div style="padding:7px 10px;background:rgba(45,138,78,0.06);border-radius:8px;border-left:3px solid var(--ok);font-size:12px;line-height:1.5">✓ ${esc(s)}</div>`).join('')}
+    </div></div>` : '';
+  const disCards = p.disadvantages?.length
+    ? `<div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot" style="background:var(--bad)"></span>需注意之处</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-top:6px">
+      ${p.disadvantages.map(s=>`<div style="padding:7px 10px;background:rgba(192,57,43,0.06);border-radius:8px;border-left:3px solid var(--bad);font-size:12px;line-height:1.5">✕ ${esc(s)}</div>`).join('')}
+    </div></div>` : '';
+
   el.innerHTML = stemHeroHtml + `
   ${p.interpretation_text||p.day_stem_trait?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>性格综述</p><div style="font-size:13px;line-height:1.7">${renderPara(p.interpretation_text||p.day_stem_trait)}</div>${p.strength_modifier?`<div style="font-size:11px;color:var(--muted);margin-top:6px">${txt('（'+p.strength_modifier+'）')}</div>`:''}</div>`:''}
-  <div class="g2" style="margin-bottom:12px">
-    ${p.advantages?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--ok)"></span>优势特质</p><ul class="pro-con-list">${p.advantages.map(s=>`<li class="pro-item">✓ ${esc(s)}</li>`).join('')}</ul></div>`:''}
-    ${p.disadvantages?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>需注意之处</p><ul class="pro-con-list">${p.disadvantages.map(s=>`<li class="con-item">✕ ${esc(s)}</li>`).join('')}</ul></div>`:''}
-  </div>
+  ${advCards}${disCards}
   ${p.growth_advice?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>成长建议</p><div style="font-size:13px;line-height:1.7">${renderPara(p.growth_advice)}</div></div>`:''}
   ${(p.communication_style||p.stress_coping_mode||p.potential_activation)?`
   <div class="card">
@@ -1245,19 +1328,41 @@ function renderTab12(json, el) {
 ═══════════════════════════════════════════════════ */
 function renderTab13(json, el) {
   const f = json.fengshui||{};
-  el.innerHTML = `
-  <div class="g2" style="margin-bottom:12px">
-    <div class="card">
-      <p class="card-title"><span class="dot"></span>吉利方位</p>
-      <div class="row" style="flex-wrap:wrap">${(f.auspicious_directions||[]).map(d=>`<span class="chip ok">↗ ${esc(d)}</span>`).join('')||'<span style="color:var(--muted);font-size:12px">建议结合实际房屋格局判断</span>'}</div>
-      ${f.lucky_colors?.length?`<div style="margin-top:10px"><strong style="font-size:12px;color:var(--muted)">吉利颜色：</strong><div class="row" style="flex-wrap:wrap;margin-top:4px">${f.lucky_colors.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div></div>`:''}
+  // 方位罗盘可视化
+  const DIR_POS = {
+    '北': {top:'0',left:'50%',transform:'translate(-50%,0)'},
+    '东北': {top:'8%',left:'85%',transform:'translate(-50%,0)'},
+    '东': {top:'50%',left:'100%',transform:'translate(-100%,-50%)'},
+    '东南': {top:'85%',left:'85%',transform:'translate(-50%,-100%)'},
+    '南': {top:'100%',left:'50%',transform:'translate(-50%,-100%)'},
+    '西南': {top:'85%',left:'8%',transform:'translate(0,-100%)'},
+    '西': {top:'50%',left:'0',transform:'translate(0,-50%)'},
+    '西北': {top:'8%',left:'8%',transform:'translate(0,0)'},
+  };
+  const auspDirs = f.auspicious_directions||[];
+  const compassHtml = `
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot"></span>吉利方位</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+      ${['北','东北','东','东南','南','西南','西','西北'].map(d=>{
+        const isAusp = auspDirs.some(a=>a.includes(d)||d.includes(a));
+        return `<div style="padding:6px 14px;border-radius:20px;border:2px solid ${isAusp?'var(--ok)':'var(--line)'};background:${isAusp?'rgba(45,138,78,0.08)':'transparent'};font-size:13px;font-weight:${isAusp?'700':'400'};color:${isAusp?'var(--ok)':'var(--muted)'}">${isAusp?'✓ ':''} ${esc(d)}</div>`;
+      }).join('')}
     </div>
-    <div class="card">
+    ${f.lucky_colors?.length?`<div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted);font-weight:700">吉利颜色：</span>${f.lucky_colors.map(c=>{
+        const HEX={'红':'#ef4444','橙':'#f97316','黄':'#eab308','绿':'#22c55e','青':'#06b6d4','蓝':'#3b82f6','紫':'#a855f7','白':'#94a3b8','黑':'#334155','金':'#f59e0b','粉':'#f43f5e','棕':'#92400e','灰':'#6b7280'};
+        const hex=Object.entries(HEX).find(([k])=>c.includes(k))?.[1]||'var(--accent)';
+        return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px"><span style="width:14px;height:14px;border-radius:50%;background:${hex};display:inline-block"></span>${esc(c)}</span>`;
+      }).join('')}</div>`:''}
+  </div>`;
+
+  el.innerHTML = compassHtml + `
+  <div class="card" style="margin-bottom:12px">
       <p class="card-title"><span class="dot"></span>布局建议</p>
       ${f.decor?.length?`<ul class="panel-list">${f.decor.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'<div class="hint">暂无</div>'}
-    </div>
   </div>
-  ${f.plants?.length||f.taboo?.length?`<div class="card" style="margin-bottom:12px">
+  + `${f.plants?.length||f.taboo?.length?`<div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>植物 & 注意事项</p>
     ${f.plants?.length?`<div class="row" style="margin-bottom:8px">${f.plants.map(p=>`<span class="chip">${esc(p)}</span>`).join('')}</div>`:''}
     ${f.taboo?.length?`<ul class="panel-list">${f.taboo.map(t=>`<li style="color:var(--bad)">${esc(t)}</li>`).join('')}</ul>`:''}
@@ -1272,17 +1377,17 @@ function renderTab13(json, el) {
 function renderTab14(json, el) {
   const j = json.jewelry||{};
 
-  // primary / secondary JewelryItemModel { material, gemstone, position, wuxing }
+  // primary / secondary — 大卡片样式
+  const WX_CLR={'木':'#4ade80','火':'#f87171','土':'#fbbf24','金':'#e2e8f0','水':'#93c5fd'};
   const renderJewelItem = (item, label) => {
     if (!item) return '';
-    const title = [item.material, item.gemstone].filter(Boolean).join('·');
-    const detail = item.position ? `佩戴位置：${item.position}` : '';
-    const wxTag  = item.wuxing   ? `<span class="chip" style="font-size:11px">${esc(item.wuxing)}</span>` : '';
-    return `<div class="card">
-      <p class="card-title"><span class="dot"></span>${label}</p>
-      ${title?`<div style="font-size:14px;font-weight:600;margin-bottom:6px">💎 ${esc(title)}</div>`:''}
-      ${wxTag}
-      ${detail?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${esc(detail)}</div>`:''}
+    const title = [item.material, item.gemstone].filter(Boolean).join(' · ');
+    const wxColor = WX_CLR[item.wuxing]||'var(--line)';
+    return `<div class="card" style="border-top:3px solid ${wxColor};padding-top:12px">
+      <div style="font-size:10px;text-transform:uppercase;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:6px">${esc(label)}</div>
+      ${title?`<div style="font-size:18px;font-weight:700;margin-bottom:6px">💎 ${esc(title)}</div>`:''}
+      ${item.wuxing?`<span class="chip" style="background:${wxColor};color:#fff;font-size:11px;font-weight:700">${esc(item.wuxing)}</span>`:''}
+      ${item.position?`<div style="font-size:12px;color:var(--muted);margin-top:8px">📍 佩戴位置：${esc(item.position)}</div>`:''}
     </div>`;
   };
 
@@ -1303,6 +1408,15 @@ function renderTab14(json, el) {
 function renderTab15(json, el) {
   const lk = json.lucky||{};
   const ls = json.lifestyle||{};
+
+  // ── 顶部汇总条 ──────────────────────────────
+  const summaryHtml = `
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--bg2,rgba(0,0,0,0.04));border-radius:10px;align-items:center">
+    ${lk.lucky_numbers?.length?`<div style="text-align:center"><div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:3px">幸运数</div><div style="font-size:14px;font-weight:800;color:var(--accent)">${lk.lucky_numbers.slice(0,3).join(' · ')}</div></div>`:''}      
+    ${lk.lucky_direction?`<div style="text-align:center"><div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:3px">吉方</div><div style="font-size:14px;font-weight:800;color:var(--ok)">${esc(lk.lucky_direction)}</div></div>`:''}
+    ${lk.lucky_item?`<div style="text-align:center"><div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:3px">开运物</div><div style="font-size:13px;font-weight:700">🔮 ${esc(lk.lucky_item)}</div></div>`:''}
+    ${lk.lucky_colors?.length?`<div style="flex:1;min-width:120px"><div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:3px">吉色</div><div style="display:flex;gap:5px;flex-wrap:wrap">${lk.lucky_colors.slice(0,4).map(c=>{const HEX={'红':'#ef4444','橙':'#f97316','黄':'#eab308','绿':'#22c55e','青':'#06b6d4','蓝':'#3b82f6','紫':'#a855f7','白':'#94a3b8','黑':'#334155','金':'#f59e0b','粉':'#f43f5e','棕':'#92400e','灰':'#6b7280'};const h=Object.entries(HEX).find(([k])=>c.includes(k))?.[1]||'var(--accent)';return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px"><span style="width:12px;height:12px;border-radius:50%;background:${h};display:inline-block"></span>${esc(c)}</span>`;}).join('')}</div></div>`:''}
+  </div>`;
 
   // 幸运数字 — 大砖格
   const numHtml = lk.lucky_numbers?.length ? `
@@ -1334,7 +1448,7 @@ function renderTab15(json, el) {
     <div class="row"><span class="chip ok" style="font-size:14px">${getDirSym(dirStr)} ${esc(dirStr)}</span></div>
   </div>` : '';
 
-  el.innerHTML = numHtml + colorHtml + dirHtml + `
+  el.innerHTML = summaryHtml + numHtml + colorHtml + dirHtml + `
   ${lk.lucky_item?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>开运物品</p><div style="font-size:14px;font-weight:600">🔮 ${esc(lk.lucky_item)}</div></div>`:''}
   <div class="g2">
     ${ls.travel_direction?`<div class="card"><p class="card-title"><span class="dot"></span>出行建议</p><div style="font-size:13px">${txt(ls.travel_direction)}</div></div>`:''}
@@ -1501,9 +1615,31 @@ function renderTab18(json, el) {
   const mf = json.monthly_fortune||[];
   if (!mf.length) { el.innerHTML='<div class="hint" style="padding:16px">月运数据尚未计算，请先完成排盘。</div>'; return; }
   const MONTHS = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+
+  // ── 统计摘要行 ──────────────────────────────
+  const jiCount = mf.filter(m=>m.luck_level==='吉').length;
+  const xiongCount = mf.filter(m=>m.luck_level==='凶').length;
+  const pingCount = mf.length - jiCount - xiongCount;
+  const bestMonth = mf.reduce((a,b)=>(b.luck_score??0)>(a.luck_score??0)?b:a, mf[0]);
+  const worstMonth = mf.reduce((a,b)=>(b.luck_score??99)<(a.luck_score??99)?b:a, mf[0]);
+  const monthSummaryHtml = `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+    <div style="padding:8px 12px;background:rgba(45,138,78,0.08);border-radius:8px;border-left:3px solid var(--ok);text-align:center">
+      <div style="font-size:10px;font-weight:700;color:var(--ok)">吉月</div>
+      <div style="font-size:22px;font-weight:800;color:var(--ok)">${jiCount}</div>
+    </div>
+    <div style="padding:8px 12px;background:rgba(192,57,43,0.08);border-radius:8px;border-left:3px solid var(--bad);text-align:center">
+      <div style="font-size:10px;font-weight:700;color:var(--bad)">凶月</div>
+      <div style="font-size:22px;font-weight:800;color:var(--bad)">${xiongCount}</div>
+    </div>
+    <div style="padding:8px 12px;background:var(--bg2,rgba(0,0,0,0.04));border-radius:8px;border-left:3px solid var(--muted);text-align:center">
+      <div style="font-size:10px;font-weight:700;color:var(--muted)">平月</div>
+      <div style="font-size:22px;font-weight:800;color:var(--muted)">${pingCount}</div>
+    </div>
+  </div>`;
   // 月运五行色调映射（兼容旧文字键和新十六进制格式）
   const _colorMap = {'白/金':'#e2e8f0','绿/青':'#86efac','黑/蓝':'#93c5fd','红/紫':'#fca5a5','黄/棕':'#fde68a'};
-  el.innerHTML = `
+  el.innerHTML = monthSummaryHtml + `
   <div class="month-disclaimer">⚠ 月运为大方向参考，吉凶判断受出生地精度、时辰误差等影响，请结合当下实际情况综合判断，不作为行动依据。</div>
   <div class="monthly-grid">
     ${mf.map((m,i)=>{
