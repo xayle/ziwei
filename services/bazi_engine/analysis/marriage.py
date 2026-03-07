@@ -260,6 +260,7 @@ def compute_marriage(
         f"{'感情注意事项：' + '；'.join(warnings) + '。' if warnings else '整体感情运势平稳，宜用心经营、顺其自然。'}"
         f"（仅供学术研究参考）"
     )
+    # interp 后续会在新字段计算完后用新内容覆盖，此处保留临时值
 
     # ─── 新增：情感禁区 ──────────────────────────────────────────────────
     pitfall_items: list[str] = []
@@ -332,7 +333,15 @@ def compute_marriage(
         children_outlook=children_outlook,
         children_timing=children_timing,
         inference_tags=tags,
-        interpretation_text=interp,
+        interpretation_text=(
+            f"婚姻综合评分 {marriage_score} 分，桃花指数【{peach_blossom}】，配偶五行属【{partner_wuxing}】。\n"
+            f"{partner_profile}\n"
+            f"建议在 {optimal_marriage_age} 之间考虑确定关系，{_win_str}\n"
+            f"子女缘分评估：{children_outlook}，{children_timing}。\n"
+            f"【情感禁区】{emotional_pitfalls}\n"
+            f"【再婚指征】{second_marriage_indicator}"
+            f"（仅供学术研究参考）"
+        ),
         emotional_pitfalls=emotional_pitfalls,
         second_marriage_indicator=second_marriage_indicator,
     )

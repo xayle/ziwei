@@ -283,7 +283,17 @@ def compute_health(
         diet=diet,
         peak_period=peak_period,
         inference_tags=tags,
-        interpretation_text=interp,
+        interpretation_text=(
+            f"健康评分为 {health_score} 分，整体风险等级【{risk_level}】。"
+            f"{_risk_str}\n"
+            f"运动建议：以「{_ex_top}」为主，配合每天快走与舒展。\n"
+            f"饮食建议：{_diet_top}，配合充足水分摄入与规律三餐。\n"
+            f"旺盛期参考：{peak_period}。\n"
+            f"【季节养生】{seasonal_health}\n"
+            f"【心理健康】{mental_health_advice}\n"
+            f"【体质辨识】{constitution_type}"
+            f"（仅供学术研究参考）"
+        ),
         seasonal_health=seasonal_health,
         mental_health_advice=mental_health_advice,
         constitution_type=constitution_type,

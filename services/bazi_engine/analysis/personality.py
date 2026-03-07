@@ -374,18 +374,21 @@ def compute_personality(
     if geju_name:
         tags.append(geju_name)
 
+    _comm_style  = _COMMUNICATION_STYLE_TMPL.get(day_stem, "沟通风格均衡，能灵活适应不同场合与对象。")
+    _stress_mode = _STRESS_COPING_TMPL.get(day_stem, "压力下保持内心稳定，善于逐步分析与化解。")
+    _potential   = _POTENTIAL_ACTIVATION_TMPL.get(day_stem, "在用神顺运年份潜能最易爆发。")
+
     interp = (
         f"日主为【{day_stem}】，{template['trait']}。"
         f"{modifier}"
         f"在【{geju_name or '气中格'}】加持下，性格特质进一步得到塑造和强化。"
         f"核心优势：{'、'.join(advantages[:3])}；要注意的局限：{'、'.join(disadvantages)}。"
-        f"成长建议：{template['growth']}"
+        f"成长建议：{template['growth']}\n"
+        f"【沟通风格】{_comm_style}\n"
+        f"【压力应对】{_stress_mode}\n"
+        f"【潜能激活】{_potential}"
         f"（仅供学术研究参考）"
     )
-
-    _default_comm = "沟通风格均衡，能灵活适应不同场合与对象，表达清晰而不失温度。"
-    _default_stress = "压力下保持内心稳定，善于逐步分析与化解，不易被情绪主导。"
-    _default_potential = "在用神顺运年份潜能最易爆发，建议在大运流年共振时主动出击。"
 
     return PersonalityModel(
         day_stem=day_stem,
@@ -396,7 +399,7 @@ def compute_personality(
         growth_advice=template["growth"],
         inference_tags=tags,
         interpretation_text=interp,
-        communication_style=_COMMUNICATION_STYLE_TMPL.get(day_stem, _default_comm),
-        stress_coping_mode=_STRESS_COPING_TMPL.get(day_stem, _default_stress),
-        potential_activation=_POTENTIAL_ACTIVATION_TMPL.get(day_stem, _default_potential),
+        communication_style=_comm_style,
+        stress_coping_mode=_stress_mode,
+        potential_activation=_potential,
     )

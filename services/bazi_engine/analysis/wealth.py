@@ -368,7 +368,17 @@ def compute_wealth(
         strategy=strategy,
         dayun_forecast=dayun_forecast,
         inference_tags=tags,
-        interpretation_text=interp,
+        interpretation_text=(
+            f"此命财运综合评分为 {wealth_score} 分（{tier}等），"
+            f"财星力量指数 {cai_power:.0f}/100，"
+            f"用神五行属【{_ys_cn}】。\n"
+            f"预计年收入区间为 {annual_range}，推荐首选行业：{_ind_top3}。\n"
+            f"【财务策略】{strategy}\n"
+            f"【投资偏好】{investment_preference}\n"
+            f"【财务禁区】{financial_taboos}\n"
+            f"【财富积累三阶段】{wealth_accumulation_phases}"
+            f"（仅供学术研究参考）"
+        ),
         investment_preference=investment_preference,
         financial_taboos=financial_taboos,
         wealth_accumulation_phases=wealth_accumulation_phases,

@@ -172,14 +172,6 @@ def compute_career(
 
     _dir_top = "、".join(directions[:3])
     _ind_top = "、".join(industries[:3])
-    interp = (
-        f"事业评分为 {career_score} 分，命局格局为【{geju_name}】，"
-        f"主要事业方向包括：{_dir_top}，推荐优先考虑 {_ind_top} 等行业。"
-        f"领导潜力评估：{'具备，可向管理路线发展' if leadership else '有限，适合专家型职业路线'}。"
-        f"{development_advice}"
-        f"（仅供学术研究参考）"
-    )
-
     # ─── 新增：创业 vs 打工评估 ─────────────────────────────────────────
     if shi_shang_pct >= 0.4:
         entrepreneurship_assessment = (
@@ -269,7 +261,16 @@ def compute_career(
         development_advice=development_advice,
         optimal_move_timing=optimal_timing,
         inference_tags=tags,
-        interpretation_text=interp,
+        interpretation_text=(
+            f"事业评分为 {career_score} 分，命局格局为【{geju_name}】，"
+            f"主要事业方向包括：{_dir_top}，推荐优先考虑 {_ind_top} 等行业。\n"
+            f"领导潜力评估：{'具备，可向管理路线发展' if leadership else '有限，适合专家型职业路线'}。\n"
+            f"【发展建议】{development_advice}\n"
+            f"【创业评估】{entrepreneurship_assessment}\n"
+            f"【五年路线图】{five_year_roadmap}\n"
+            f"【协作风格】{collaboration_style}"
+            f"（仅供学术研究参考）"
+        ),
         entrepreneurship_assessment=entrepreneurship_assessment,
         five_year_roadmap=five_year_roadmap,
         collaboration_style=collaboration_style,
