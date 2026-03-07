@@ -501,6 +501,7 @@ function renderTab4(json, el) {
     return `<div class="palace-slot">
       <div class="ps-title">${lbl}</div>
       <div class="ps-zhi ${wCls}">${esc(p.dizhi||'—')}</div>
+      ${p.tiangan?`<div style="font-size:10px;color:var(--muted);margin-top:1px">干：${esc(p.tiangan)}</div>`:''}
       ${p.strength ? `<div class="ps-str">${esc(p.strength)}</div>` : ''}
       ${tgCN ? `<span class="tengod-badge ${tgType} ps-tg" title="${typeof tenGodDesc==='function'?tenGodDesc(tgCode):''}">${tgCN}</span>` : ''}
     </div>`;
@@ -912,7 +913,15 @@ function renderTab9(json, el) {
     </div>
   </div>` : '';
 
-  el.innerHTML = heroHtml + profileHtml + taohuaYearsHtml + childHtml + mfHtml + socialHintHtml9 + `
+  const loveWindowHtml = (json.marriage?.love_window||[]).length ? `
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot" style="background:#f43f5e"></span>💑 婚恋时间窗口</p>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      ${(json.marriage.love_window).map(w=>`<div class="chip ok" style="font-size:12px;padding:4px 10px">${esc(w.label||'')} <span style="color:var(--muted);font-size:11px">${w.age_from!=null?w.age_from+'–'+(w.age_to||'')+'岁':''}</span></div>`).join('')}
+    </div>
+  </div>` : '';
+
+  el.innerHTML = heroHtml + profileHtml + loveWindowHtml + taohuaYearsHtml + childHtml + mfHtml + socialHintHtml9 + `
   ${ma.emotional_pitfalls?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--bad)"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>情感禁区</p><div style="font-size:13px;line-height:1.7">${renderPara(ma.emotional_pitfalls)}</div></div>`:''}
   ${ma.second_marriage_indicator?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>再婚 / 感情波折指标</p><div style="font-size:13px;line-height:1.7">${renderPara(ma.second_marriage_indicator)}</div></div>`:''}
   ${ma.inference_tags?.length?`<div class="card"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${ma.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
@@ -1213,6 +1222,7 @@ function renderTab16(json, el) {
       <div class="k">边界</div><div>${esc(dy.boundary||'—')}</div>
       ${startAgeHtml ? `<div class="k">起运岁数</div><div><strong>${dy.start_age}岁</strong>${dy.start_age_months?` (${dy.start_age_months}月)`:''}</div>` : ''}
       ${directionHtml}
+      ${dy.anchor_jieqi_name?`<div class="k">参考节气</div><div>${esc(dy.anchor_jieqi_name)}${dy.anchor_jieqi_dt?` <span style="color:var(--muted);font-size:11px">(${esc(dy.anchor_jieqi_dt.slice(0,10))})</span>`:''}</div>`:''}
     </div>
   </div>
   <div id="dayunChartContainer" style="margin-bottom:16px"></div>
@@ -1252,7 +1262,8 @@ function renderTab16(json, el) {
             <td>
               ${d.narrative?`<details><summary style="cursor:pointer;font-size:11px;color:var(--accent)">查看叙事</summary><div style="font-size:12px;line-height:1.6;padding:8px;max-width:300px">${renderPara(d.narrative)}</div></details>`:''}  
               ${(d.refs&&d.refs.length)?`<details style="margin-top:4px"><summary style="cursor:pointer;font-size:11px;color:var(--accent-gold)">查看古籍引用</summary><div style="font-size:11px;line-height:1.7;padding:6px 8px;max-width:320px;font-style:italic;font-family:var(--font-title)">${d.refs.map(r=>`<div style="margin-bottom:4px"><span style="color:var(--accent-gold)">《${esc(r.source||'')}》</span>${txt(r.text||'')}</div>`).join('')}</div></details>`:''}
-              ${!d.narrative&&!(d.refs&&d.refs.length)?'—':''}
+              ${d.child_hint?`<div style="margin-top:4px;font-size:11px;color:var(--muted)">👶 ${txt(d.child_hint)}</div>`:''}
+              ${!d.narrative&&!(d.refs&&d.refs.length)&&!d.child_hint?'—':''}
             </td>
           </tr>${liunianRows}`;
         }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--muted)">暂无数据</td></tr>'}
@@ -1311,6 +1322,9 @@ function renderTab17(json, el) {
               </div>`).join('')}
           </div>`:''}
           ${item.notable_months?.length?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">重点月份：${item.notable_months.map(m=>`<span class="chip" style="font-size:10px;padding:1px 5px">${m}月</span>`).join('')}</div>`:''}
+          ${item.clash_pillars?.length?`<div style="margin-top:5px;font-size:10px;color:var(--bad)">冲柱：${item.clash_pillars.map(c=>`<span class="chip bad" style="font-size:9px;padding:1px 4px">${esc(c)}</span>`).join('')}</div>`:''}
+          ${item.optimal_action?`<div style="margin-top:6px;padding:4px 8px;background:var(--accent-gold-bg,rgba(224,139,0,0.08));border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--accent-gold)">📌 </span>${esc(item.optimal_action)}</div>`:''}
+          ${item.inference_tags?.length?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">${item.inference_tags.map(t=>`<span class="chip" style="font-size:9px;padding:1px 5px">${esc(t)}</span>`).join('')}</div>`:''}
           ${item.interpretation_text?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--accent)">查看流年解析</summary><div style="font-size:12px;line-height:1.65;padding:6px 8px;max-width:320px">${renderPara(item.interpretation_text)}</div></details>`:''}
         </div>
       </div>`;
@@ -1345,6 +1359,7 @@ function renderTab18(json, el) {
         ${tgBadge}
         <div class="month-luck" style="font-size:11px;font-weight:700;color:${cls==='good'?'var(--ok)':cls==='bad'?'var(--bad)':'var(--muted)'}">${esc(m.luck_level||'平')}</div>
         <div class="month-hint">${txt(m.tip||'—')}</div>
+        ${m.clash_with?`<div style="font-size:9px;color:var(--bad);margin-top:2px">冲：${esc(m.clash_with)}</div>`:''}
         ${dyCtx}
       </div>`;
     }).join('')}
