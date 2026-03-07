@@ -120,11 +120,16 @@ function renderTab0(json, el) {
     </div>
     ${(thisLiunian?.domain_forecasts || cf?.this_year_domains) ? `
     <div class="fortune-4d-grid">
-      ${['财运','事业','婚恋','健康'].map(k=>`
-        <div class="fortune-4d-item">
+      ${['财运','事业','婚恋','健康'].map(k=>{
+        const val = (thisLiunian?.domain_forecasts||cf?.this_year_domains||{})[k]||'暂无';
+        const isBad = /(注意|不佳|凶|差|衰|难|险)/.test(val);
+        const isGood = /(顺|旺|吉|好|升|进|佳)/.test(val);
+        const borderCol = isBad?'#fca5a5':isGood?'#86efac':'var(--line)';
+        return `<div class="fortune-4d-item" style="border-bottom:3px solid ${borderCol}">
           <div class="fortune-4d-label">${k}</div>
-          <div class="fortune-4d-text">${txt((thisLiunian?.domain_forecasts||cf?.this_year_domains||{})[k]||'暂无')}</div>
-        </div>`).join('')}
+          <div class="fortune-4d-text">${txt(val)}</div>
+        </div>`;
+      }).join('')}
     </div>` : ''}
     ${arc?.optimal_action ? `<div style="margin-top:10px;padding:8px 12px;background:var(--accent-gold-bg,rgba(224,139,0,0.08));border-radius:8px;font-size:12px;line-height:1.6"><span style="font-weight:700;color:var(--accent-gold)">📌 行动建议：</span>${esc(arc.optimal_action)}</div>` : ''}
   </div>
@@ -641,6 +646,7 @@ function renderTab5(json, el) {
     <div class="summary-card"><div class="summary-label">日主</div><div class="summary-value">${esc(translateRationale(json.day_master_strength?.tier)||'—')}</div></div>
   </div>
   <div id="scoringRadarContainer" style="margin:12px 0"></div>
+  ${warnings.length?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--warn)"><p class="card-title"><span class="dot" style="background:var(--warn)"></span>告警列表 <span class="chip warn" style="font-size:10px;padding:1px 6px">${warnings.length}条</span></p><div class="warnlist">${warnings.map(w=>`<div class="warnitem"><div class="wcode">${esc(w.code||w.type||'WARN')}</div><div class="wmsg">${esc(w.message||w.msg||'')}</div></div>`).join('')}</div></div>`:''}
   <details style="margin-bottom:12px">
     <summary style="cursor:pointer;padding:8px 0;font-size:12px;color:var(--muted);font-weight:600">⚙ 技术详情（校验 / 版本 / 调试）</summary>
     <div class="kv card" style="margin-top:8px">
@@ -652,7 +658,6 @@ function renderTab5(json, el) {
       <div class="k">规则版本</div><div>${esc(json.rule_version||'—')}</div>
       <div class="k">太阳时偏移</div><div>${nn(json.solar_time_offset_minutes)} 分钟</div>
     </div>
-    ${warnings.length?`<div class="card" style="margin-top:8px"><p class="card-title"><span class="dot"></span>告警列表</p><div class="warnlist">${warnings.map(w=>`<div class="warnitem"><div class="wcode">${esc(w.code||w.type||'WARN')}</div><div class="wmsg">${esc(w.message||w.msg||'')}</div></div>`).join('')}</div></div>`:''}
     ${Object.keys(rt).length?`<div class="card" style="margin-top:8px"><p class="card-title"><span class="dot"></span>规则版本明细</p><div class="kv">${Object.entries(rt).map(([k,v])=>`<div class="k">${esc(k)}</div><div><code>${esc(v)}</code></div>`).join('')}</div></div>`:''}
   </details>`;
 
@@ -1236,8 +1241,8 @@ function renderTab16(json, el) {
             return `<tr class="dayun-liunian-row" id="dayun-ln-${di}" style="display:none"><td colspan="8" style="padding:0"><div style="overflow-x:auto"><table style="font-size:11px;width:100%;border-collapse:collapse"><tbody><tr>${cells}</tr></tbody></table></div></td></tr>`;
           })();
           return `
-          <tr class="${cur?'dayun-current':''}" style="cursor:pointer" data-toggle="dayun-ln-${di}" title="点击展开/收起流年">
-            <td><div class="dayun-gz ${GAN_CSS[d.stem]||''}">${esc(d.stem||'')}${esc(d.branch||'')}</div>${cur?`<div style="font-size:10px;color:var(--accent);margin-top:2px">▶ 当前</div>`:''}</td>
+          <tr class="${cur?'dayun-current':''}" style="cursor:pointer${cur?';border-left:3px solid var(--accent)':''}" data-toggle="dayun-ln-${di}" title="点击展开/收起流年">
+            <td style="${cur?'padding-left:8px':''}"><div class="dayun-gz ${GAN_CSS[d.stem]||''}">${esc(d.stem||'')}${esc(d.branch||'')}</div>${cur?`<div style="font-size:10px;color:var(--accent);margin-top:2px;font-weight:700">▶ 当前大运</div>`:''}</td>
             <td>${d.start_year||'—'}</td>
             <td>${d.start_age!==undefined?d.start_age+'岁':'—'}</td>
             <td>${d.ten_god?`<span class="tengod-badge ${tenGodType(d.ten_god)}">${tenGodCN(d.ten_god)}</span>`:'—'}</td>
@@ -1285,9 +1290,10 @@ function renderTab17(json, el) {
       const taisuiLabel = item.tai_sui_relations?.[0] || '';
       const gz = item.ganzhi || (item.stem||'')+(item.branch||'');
       return `
-      <div class="liunian-item${isFanTaisui?' fan-taisui':''}${isCurrentYear?' dayun-current':''}">
+      <div class="liunian-item${isFanTaisui?' fan-taisui':''}${isCurrentYear?' liunian-current-year':''}">
         <div>
-          <div class="liunian-year">${item.year||'—'}</div>
+          <div class="liunian-year" style="${isCurrentYear?'color:var(--accent-red)':''}">\n            ${isCurrentYear?'<span style="font-size:10px;background:var(--accent-red);color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:3px;display:block">▶ 今年</span>':''}
+            ${item.year||'—'}</div>
           <div class="liunian-gz">${esc(gz)}</div>
           ${item.ten_god?`<div style="margin-top:4px"><span class="tengod-badge ${tenGodType(item.ten_god_code||item.ten_god)}">${tenGodCN(item.ten_god_code||item.ten_god)}</span></div>`:''}
           ${taisuiLabel?`<div style="font-size:10px;color:var(--bad);margin-top:3px">⚡ ${esc(taisuiLabel)}</div>`:''}
@@ -1295,7 +1301,7 @@ function renderTab17(json, el) {
         </div>
         <div>
           ${item.flow_wuxing?`<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--muted)">流年五行：</span><strong>${esc(typeof wxCN==='function'?wxCN(item.flow_wuxing):item.flow_wuxing)}</strong></div>`:''}
-          ${item.annual_score!==undefined?`<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted);font-weight:700">年运评分</div><div style="font-size:18px;font-weight:800;color:${item.annual_score>=70?'var(--ok)':item.annual_score>=50?'var(--warn)':'var(--bad)'}">${item.annual_score}</div></div>`:''}
+          ${item.annual_score!==undefined?`<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted);font-weight:700">年运评分</div><div style="font-size:18px;font-weight:800;color:${item.annual_score>=70?'var(--ok)':item.annual_score>=50?'var(--warn)':'var(--bad)'}">${item.annual_score}</div><div style="height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:2px"><div style="height:100%;width:${Math.min(item.annual_score,100)}%;border-radius:2px;background:${item.annual_score>=70?'var(--ok)':item.annual_score>=50?'var(--warn)':'var(--bad)'}">&nbsp;</div></div></div>`:''}
           ${item.domain_forecasts?`
           <div class="liunian-domains">
             ${['财运','事业','婚恋','健康'].map(k=>`

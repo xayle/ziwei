@@ -410,6 +410,8 @@ button.copied { border-color:rgba(34,197,94,.5); color:#86efac; }
 }
 .liunian-item.fan-taisui { border-color:var(--bad); background:rgba(239,68,68,.04); }
 .liunian-item.fan-taisui::before { content:"⚡ 犯太岁"; position:absolute; top:-1px; right:10px; background:var(--bad); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:0 0 8px 8px; }
+.liunian-item.liunian-current-year { border-color:var(--accent); box-shadow:0 0 0 2px rgba(37,99,235,.18), 0 4px 16px rgba(37,99,235,.12); }
+.liunian-item.liunian-current-year .liunian-year { color:var(--accent-red); }
 .liunian-year { font-size:22px; font-weight:800; color:var(--accent); }
 .liunian-gz   { font-size:14px; color:var(--muted); }
 .liunian-domains { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:8px; }

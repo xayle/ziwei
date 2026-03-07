@@ -104,6 +104,10 @@ window.switchTab = function(idx) {
     const active = Number(b.dataset.idx) === id;
     b.setAttribute('aria-selected', active ? 'true' : 'false');
     b.classList.toggle('active', active);
+    // 自动滚动到激活 Tab（消除移动端/桌面端滚动迷失）
+    if (active) {
+      try { b.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' }); } catch{}
+    }
   });
   document.querySelectorAll('.tab-panel').forEach(p => {
     const active = Number(p.dataset.panel) === id;
