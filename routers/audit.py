@@ -67,10 +67,11 @@ def get_user_audit_logs(
     session: Session = Depends(get_session),
     action: Optional[str] = Query(None, description="按操作类型过滤"),
     resource_type: Optional[str] = Query(None, description="按资源类型过滤"),
-    limit: int = Query(100, ge=1, le=1000, description="返回数量限制"),
+    limit: int = Query(50, ge=1, le=200, description="返回数量限制"),
+    before_id: Optional[int] = Query(None, description="keyset 分页游标：仅返回 id 小于此值的记录"),
 ):
     """
-    获取当前用户的审计日志
+    获取当前用户的审计日志（keyset 分页：传入 next_cursor 作为下次 before_id）
     """
     logs = get_audit_logs(
         session,
@@ -78,8 +79,11 @@ def get_user_audit_logs(
         action=action,
         resource_type=resource_type,
         limit=limit,
+        before_id=before_id,
     )
-    
+
+    next_cursor = logs[-1].id if len(logs) == limit else None
+
     return {
         "logs": [
             AuditLogResponse(
@@ -98,6 +102,7 @@ def get_user_audit_logs(
             for log in logs
         ],
         "total": len(logs),
+        "next_cursor": next_cursor,
     }
 
 
@@ -109,10 +114,11 @@ def get_all_audit_logs(
     user_id: Optional[int] = Query(None, description="按用户过滤"),
     action: Optional[str] = Query(None, description="按操作类型过滤"),
     resource_type: Optional[str] = Query(None, description="按资源类型过滤"),
-    limit: int = Query(500, ge=1, le=5000, description="返回数量限制"),
+    limit: int = Query(100, ge=1, le=1000, description="返回数量限制"),
+    before_id: Optional[int] = Query(None, description="keyset 分页游标：仅返回 id 小于此值的记录"),
 ):
     """
-    获取全局审计日志 - 仅限管理员或具有VIEW_AUDIT_LOG权限
+    获取全局审计日志 - 仅限管理员或具有VIEW_AUDIT_LOG权限（keyset 分页）
     """
     # 检查权限
     user_role = Role(current_user.role)
@@ -121,15 +127,18 @@ def get_all_audit_logs(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="Permission denied: VIEW_AUDIT_LOG required",
         )
-    
+
     logs = get_audit_logs(
         session,
         user_id=user_id,
         action=action,
         resource_type=resource_type,
         limit=limit,
+        before_id=before_id,
     )
-    
+
+    next_cursor = logs[-1].id if len(logs) == limit else None
+
     return {
         "logs": [
             AuditLogResponse(
@@ -148,6 +157,7 @@ def get_all_audit_logs(
             for log in logs
         ],
         "total": len(logs),
+        "next_cursor": next_cursor,
     }
 
 
@@ -193,18 +203,26 @@ def get_audit_log_detail(
     )
 
 
+class ManualAuditLogRequest(BaseModel):
+    """手动审计日志请求体"""
+    action: str
+    resource_type: str
+    resource_id: Optional[str] = None
+
+
 @router.post("/audit-logs/manual")
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def log_manual_action(
+    body: ManualAuditLogRequest,
     current_user: RequiredUser,
     session: Session = Depends(get_session),
-    action: str = Query(..., description="操作类型"),
-    resource_type: str = Query(..., description="资源类型"),
-    resource_id: Optional[str] = Query(None, description="资源ID"),
 ):
     """
     手动记录自定义审计日志
     """
+    action = body.action
+    resource_type = body.resource_type
+    resource_id = body.resource_id
     log = log_action(
         session,
         user_id=current_user.id or 0,

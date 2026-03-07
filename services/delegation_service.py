@@ -437,33 +437,38 @@ def get_audit_logs(
     user_id: Optional[int] = None,
     action: Optional[str] = None,
     resource_type: Optional[str] = None,
-    limit: int = 100,
+    limit: int = 50,
+    before_id: Optional[int] = None,
 ) -> List[AuditLog]:
     """
-    获取审计日志列表
-    
+    获取审计日志列表（keyset 分页：用 before_id 向前翻页）
+
     Args:
         session: 数据库会话
         user_id: 按用户过滤
         action: 按操作类型过滤
         resource_type: 按资源类型过滤
         limit: 返回最多多少条记录
-        
+        before_id: 仅返回 id < before_id 的记录（keyset 分页游标）
+
     Returns:
         审计日志列表
     """
-    query = select(AuditLog)
-    
+    query = select(AuditLog).where(AuditLog.deleted_at.is_(None))  # type: ignore[union-attr]
+
     if user_id:
         query = query.where(AuditLog.user_id == user_id)
-    
+
     if action:
         query = query.where(AuditLog.action == action)
-    
+
     if resource_type:
         query = query.where(AuditLog.resource_type == resource_type)
-    
-    # 按时间倒序（最新在前）
-    query = query.order_by(col(AuditLog.created_at).desc()).limit(limit)
-    
+
+    if before_id is not None:
+        query = query.where(AuditLog.id < before_id)  # type: ignore[operator]
+
+    # 按 id 倒序（最新在前），keyset 分页依赖 id 单调递增
+    query = query.order_by(col(AuditLog.id).desc()).limit(limit)
+
     return list(session.exec(query).all())
