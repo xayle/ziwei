@@ -12,6 +12,7 @@ from app.models import Case, Snapshot, User
 from app.schemas import CaseCreate, CaseOut, CasePatch
 from app.dependencies import RequiredUser
 from app.exceptions import (
+    AuthorizationException,
     ErrorCode,
     ResourceNotFoundException,
 )
@@ -32,6 +33,7 @@ def create_case(
     session: Session = Depends(get_session)
 ):
     case = Case(**payload.model_dump())
+    case.owner_id = current_user.id  # 所有权归属当前用户
     now = _now_utc()
     case.created_at = now
     case.updated_at = now
@@ -54,7 +56,10 @@ def list_cases(
     dir: str = Query(default="desc", pattern="^(asc|desc)$"),
 ):
     # ✅ 第一步：获取 case 列表（1 次查询）
-    stmt = select(Case).where(Case.deleted_at.is_(None))  # type: ignore
+    stmt = (
+        select(Case)
+        .where(Case.deleted_at.is_(None), Case.owner_id == current_user.id)  # type: ignore
+    )
     name_col = cast(ColumnElement[str], Case.name)
     tags_col = cast(ColumnElement[str], Case.tags)
     if q:
@@ -74,12 +79,8 @@ def list_cases(
     
     # ✅ 第二步：批量加载所有 case 的最新 verify snapshot（1 次查询，而不是 N 次！）
     case_ids = [c.id for c in cases]
-    
-    # 优化版本：一次查询获取所有需要的 snapshot
-    from sqlalchemy import func, and_
-    from sqlalchemy.orm import aliased
-    
-    # 方法：为每个 case_id 获取最新的 snapshot
+
+    # 为每个 case_id 获取最新的 snapshot
     all_snapshots = session.exec(
         select(Snapshot)
         .where(
@@ -129,6 +130,12 @@ def get_case(
             message="case not found",
             details={"resource_type": "case", "resource_id": case_id},
         )
+    # 所有权校验——兼容旧数据（owner_id 可能为 None）
+    if case.owner_id is not None and case.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to access this case",
+        )
     latest_verify = (
         session.exec(
             select(Snapshot)
@@ -171,6 +178,12 @@ def patch_case(
             message="case not found",
             details={"resource_type": "case", "resource_id": case_id},
         )
+    # 所有权校验
+    if case.owner_id is not None and case.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to update this case",
+        )
     data = payload.model_dump(exclude_unset=True)
     for key, value in data.items():
         setattr(case, key, value)
@@ -180,3 +193,30 @@ def patch_case(
     session.refresh(case)
     co = CaseOut.model_validate(case)
     return co
+
+
+@router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def delete_case(
+    case_id: str,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session)
+):
+    """软删除 Case（设置 deleted_at）——需要所有权"""
+    case = session.exec(
+        select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore
+    ).first()
+    if not case:
+        raise ResourceNotFoundException(
+            message="case not found",
+            details={"resource_type": "case", "resource_id": case_id},
+        )
+    if case.owner_id is not None and case.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to delete this case",
+        )
+    case.deleted_at = _now_utc()
+    case.updated_at = _now_utc()
+    session.add(case)
+    session.commit()
