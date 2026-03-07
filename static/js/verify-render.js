@@ -1,7 +1,8 @@
 /**
- * verify-render.js  v4.0.20260305Q
+ * verify-render.js  v4.0.20260307
  * M4: 20个 Tab 渲染 / 命盘 / 五行 / 大运 / 流年 / 月运 / 总览 / 格局 / 命宫 等
- * 依赖: verify-core.js
+ * @requires verify-core.js（必须先于本文件加载）
+ * 全局依赖（由 verify-core.js 注入）: wxCN, GAN_CSS, GAN_DESC, _ZHI_ROLE
  */
 ;(function(){
 'use strict';
@@ -30,7 +31,18 @@ window.renderTabById = function(id, json) {
   ][id];
   if (fn && json) {
     const panel = document.querySelector(`[data-panel="${id}"] .panel-content`);
-    if (panel) fn(json, panel);
+    if (panel) {
+      try {
+        fn(json, panel);
+      } catch(e) {
+        console.error(`[Tab ${id}] 渲染失败:`, e);
+        panel.innerHTML = `<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">
+          <div style="font-size:28px;margin-bottom:8px">⚠️</div>
+          <div>此面板渲染出错，请刷新页面重试</div>
+          <div style="font-size:11px;margin-top:4px;opacity:.6">${e.message||''}</div>
+        </div>`;
+      }
+    }
   }
 };
 

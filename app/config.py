@@ -67,7 +67,9 @@ class Settings:
     allowed_origins: list[str] = field(default_factory=list)
     allow_credentials: bool = True
     allow_methods: list[str] = field(default_factory=lambda: ["GET", "POST", "PUT", "PATCH", "DELETE"])
-    allow_headers: list[str] = field(default_factory=lambda: ["*"])
+    allow_headers: list[str] = field(default_factory=lambda: [
+        "Authorization", "Content-Type", "X-Request-Id", "Accept", "Accept-Language",
+    ])
     
     # ===== 缓存配置 =====
     cache_enabled: bool = os.getenv("CACHE_ENABLED", "true").lower() == "true"

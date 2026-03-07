@@ -449,9 +449,10 @@ def logout(
     """
     try:
         revoke_refresh_token(session, body.refresh_token)
-    except Exception:
-        # 即使撤销失败也返回成功
-        pass
+    except Exception as exc:
+        # 撤销失败时记录日志但仍返回 204（客户端应丢弃 token）
+        logger.warning("logout: refresh token revoke failed: %s", exc)
+        # 数据库不可用时不抛出，避免用户无法完成注销操作
 
 
 @router.post("/auth/change-password", status_code=200)

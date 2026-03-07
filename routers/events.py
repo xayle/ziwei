@@ -125,8 +125,6 @@ def check_member_ownership(session: Session, current_user: User, member_id: int)
         )
     
     return member
-    
-    return member
 
 
 @router.post("/events", response_model=EventResponse, status_code=201)
@@ -279,7 +277,8 @@ def list_events(
     
     # ✅ 第五步：准备响应
     event_responses = [EventResponse(**e.__dict__) for e in events]
-    next_cursor = events[-1].id if events else 0
+    # next_cursor: 仅当返回满页时才有下一页，否则返回 None 表示末页
+    next_cursor = events[-1].id if (events and len(events) == limit) else None
     
     result = {
         "events": event_responses,
@@ -466,9 +465,11 @@ def list_member_events(
     member_id: int,
     current_user: RequiredUser,
     session: Session = Depends(get_session),
+    last_id: int = Query(default=0, ge=0, description="游标分页起始 ID"),
+    limit: int = Query(default=50, ge=1, le=200, description="每页最多返回条数"),
 ):
     """
-    获取特定成员的所有事件
+    获取特定成员的所有事件（游标分页）
     需要权限：READ_EVENT
     """
     # 检查权限
@@ -482,11 +483,19 @@ def list_member_events(
     # 验证成员存在且属于当前用户
     check_member_ownership(session, current_user, member_id)
     
-    events = session.exec(
-        select(Event).where(Event.member_id == member_id, Event.deleted_at.is_(None))  # type: ignore[union-attr]
-    ).all()
+    query = select(Event).where(
+        Event.member_id == member_id,
+        Event.deleted_at.is_(None),  # type: ignore[union-attr]
+    )
+    if last_id > 0:
+        query = query.where(Event.id > last_id)  # type: ignore[operator]
+    query = query.order_by(Event.id).limit(limit)  # type: ignore[arg-type]
+    events = session.exec(query).all()
     
+    next_cursor = events[-1].id if (events and len(events) == limit) else None
     return {
         "events": [EventResponse(**e.__dict__) for e in events],
-        "total": len(events),
+        "next_cursor": next_cursor,
+        "has_more": next_cursor is not None,
+        "total_returned": len(events),
     }

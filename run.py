@@ -214,8 +214,11 @@ async def add_v1_deprecation_headers(request: Request, call_next):
 	"""对所有 /api/v1/* 响应追加废弃声明头（R45）."""
 	response = await call_next(request)
 	if request.url.path.startswith("/api/v1/"):
+		# R45 红线: 保留 Deprecation: true 以兼容现有路由客户端
+		# RFC 9210 补充: Link header 指明废弃日期
 		response.headers["Deprecation"] = "true"
 		response.headers["Sunset"] = "2026-12-31"
+		response.headers["Link"] = '<https://api.example.com/api/v2>; rel="successor-version"'
 	return response
 
 
