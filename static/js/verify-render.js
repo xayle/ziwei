@@ -606,7 +606,7 @@ function renderTab5(json, el) {
 
   /* ── 人生里程碑时间轴 ─────────────────────────── */
   const milestones = json.milestones || [];
-  const MS_ICON = {'大运交接':'🔄','社会节点':'👥','流年冲关':'⚡','本命年':'🔥','人生节点':'📍','节气节点':'🌿','事业节点':'💼','婚恋节点':'💞','健康节点':'🏥'};
+  const MS_ICON = {'犯太岁':'⚡','岁运并临':'🌟','大运交接':'🔄','社会节点':'👥','流年冲关':'⚡','本命年':'🔥','人生节点':'📍','节气节点':'🌿','事业节点':'💼','婚恋节点':'💞','健康节点':'🏥'};
   const msHtml = milestones.length ? `
   <div class="card" style="margin-bottom:14px">
     <p class="card-title"><span class="dot" style="background:var(--accent)"></span>人生里程碑 <span class="card-title-sub">共${milestones.length}个节点</span></p>
@@ -647,6 +647,8 @@ function renderTab5(json, el) {
       <div class="k">推算模式</div><div>${esc(json.mode_requested||'?')} → ${esc(json.mode_effective||'?')}</div>
       <div class="k">request_id</div><div><code>${esc(json.request_id||'—')}</code> <button data-copy-text="${esc(json.request_id||'')}" style="font-size:11px;padding:2px 8px">复制</button></div>
       <div class="k">API版本</div><div>${esc(json.api_version||'—')}</div>
+      <div class="k">引擎版本</div><div>${esc(json.engine_version||'—')}</div>
+      <div class="k">计算耗时</div><div>${json.calc_ms!=null?json.calc_ms.toFixed(1)+' ms':'—'}</div>
       <div class="k">规则版本</div><div>${esc(json.rule_version||'—')}</div>
       <div class="k">太阳时偏移</div><div>${nn(json.solar_time_offset_minutes)} 分钟</div>
     </div>
@@ -893,7 +895,19 @@ function renderTab9(json, el) {
     ${so.relation_conflict!==undefined?`<div style="margin-top:6px;font-size:12px;color:${so.relation_conflict?'var(--bad)':'var(--ok)'}">${so.relation_conflict?'⚠ 命局有人际冲突倾向':'✓ 人际关系基础较顺'}</div>`:''}
   </div>` : '';
 
-  el.innerHTML = heroHtml + profileHtml + taohuaYearsHtml + childHtml + socialHintHtml9 + `
+  // 官杀混杂 / 夫妻宫冲克 来自老 marriage 模型
+  const mf = json.marriage?.marriage_flags||{};
+  const mfHtml = (mf.guansha_mix!=null || mf.spouse_palace_conflict!=null) ? `
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot"></span>命局婚姻信号</p>
+    <div class="row" style="flex-wrap:wrap;gap:6px">
+      ${mf.guansha_mix!=null?`<span class="chip ${mf.guansha_mix?'warn':'ok'}">${mf.guansha_mix?'⚠ 官杀混杂，感情多变':'✓ 官杀清晰，感情稳定'}</span>`:''}
+      ${mf.spouse_palace_conflict!=null?`<span class="chip ${mf.spouse_palace_conflict?'warn':'ok'}">${mf.spouse_palace_conflict?'⚠ 夫妻宫受冲':'✓ 夫妻宫稳固'}</span>`:''}
+      ${mf.allow_interpret===false?`<span class="chip bad">⛔ 命局不建议深度解读婚姻</span>`:''}
+    </div>
+  </div>` : '';
+
+  el.innerHTML = heroHtml + profileHtml + taohuaYearsHtml + childHtml + mfHtml + socialHintHtml9 + `
   ${ma.emotional_pitfalls?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--bad)"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>情感禁区</p><div style="font-size:13px;line-height:1.7">${renderPara(ma.emotional_pitfalls)}</div></div>`:''}
   ${ma.second_marriage_indicator?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>再婚 / 感情波折指标</p><div style="font-size:13px;line-height:1.7">${renderPara(ma.second_marriage_indicator)}</div></div>`:''}
   ${ma.inference_tags?.length?`<div class="card"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${ma.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
@@ -1278,7 +1292,6 @@ function renderTab17(json, el) {
           ${item.ten_god?`<div style="margin-top:4px"><span class="tengod-badge ${tenGodType(item.ten_god_code||item.ten_god)}">${tenGodCN(item.ten_god_code||item.ten_god)}</span></div>`:''}
           ${taisuiLabel?`<div style="font-size:10px;color:var(--bad);margin-top:3px">⚡ ${esc(taisuiLabel)}</div>`:''}
           ${item.clash?`<div style="font-size:10px;color:var(--bad);margin-top:3px">⚡ ${esc(item.clash)}</div>`:''}
-          ${item.clash_note?`<div style="font-size:10px;color:var(--bad);margin-top:3px">${esc(item.clash_note)}</div>`:''}
         </div>
         <div>
           ${item.flow_wuxing?`<div style="margin-bottom:6px"><span style="font-size:11px;color:var(--muted)">流年五行：</span><strong>${esc(typeof wxCN==='function'?wxCN(item.flow_wuxing):item.flow_wuxing)}</strong></div>`:''}
@@ -1291,7 +1304,8 @@ function renderTab17(json, el) {
                 <div class="ld-text">${txt(item.domain_forecasts[k]||'—')}</div>
               </div>`).join('')}
           </div>`:''}
-          ${item.monthly_highlights?.length?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--accent)">月份提示</summary><ul class="panel-list" style="font-size:11px">${item.monthly_highlights.map(m=>`<li>${txt(m)}</li>`).join('')}</ul></details>`:''}
+          ${item.notable_months?.length?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">重点月份：${item.notable_months.map(m=>`<span class="chip" style="font-size:10px;padding:1px 5px">${m}月</span>`).join('')}</div>`:''}
+          ${item.interpretation_text?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--accent)">查看流年解析</summary><div style="font-size:12px;line-height:1.65;padding:6px 8px;max-width:320px">${renderPara(item.interpretation_text)}</div></details>`:''}
         </div>
       </div>`;
     }).join('')}
