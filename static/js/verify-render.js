@@ -777,7 +777,15 @@ function renderTab7(json, el) {
     </div>
   </div>` : '';
 
-  el.innerHTML = heroHtml + tagHtml + indHtml + interpHtml + stratHtml + riskHtml + noteHtml + dayunHtml;
+  const wealthDimsHtml = (w.investment_preference || w.financial_taboos || w.wealth_accumulation_phases) ? `
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot"></span>财运深度分析</p>
+    ${w.investment_preference ? `<div style="margin-bottom:10px"><div class="advice-section-lbl">📈 投资偏好</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(w.investment_preference)}</div></div>` : ''}
+    ${w.financial_taboos ? `<div style="margin-bottom:10px"><div class="advice-section-lbl" style="color:var(--bad)">🚫 财务禁区</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(w.financial_taboos)}</div></div>` : ''}
+    ${w.wealth_accumulation_phases ? `<div><div class="advice-section-lbl">🗓 三阶段规划</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(w.wealth_accumulation_phases)}</div></div>` : ''}
+  </div>` : '';
+
+  el.innerHTML = heroHtml + tagHtml + indHtml + interpHtml + stratHtml + wealthDimsHtml + riskHtml + noteHtml + dayunHtml;
   el.insertAdjacentHTML('beforeend','<div class="disclaimer-note" style="margin-top:8px">▲ 年收入区间为基于五行推断的模糊参考，非精密测算，不构成任何投资或财务建议。</div>');
 }
 
@@ -818,6 +826,9 @@ function renderTab8(json, el) {
 
   el.innerHTML = heroHtml + dirHtml + `
   ${c.development_advice?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>发展建议</p><div style="font-size:13px;line-height:1.7">${renderPara(c.development_advice)}</div></div>`:''}
+  ${c.entrepreneurship_assessment?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>创业vs职场评估</p><div style="font-size:13px;line-height:1.7">${renderPara(c.entrepreneurship_assessment)}</div></div>`:''}
+  ${c.five_year_roadmap?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>五年职业路线图</p><div style="font-size:13px;line-height:1.7">${renderPara(c.five_year_roadmap)}</div></div>`:''}
+  ${c.collaboration_style?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>最佳协作风格</p><div style="font-size:13px;line-height:1.7">${renderPara(c.collaboration_style)}</div></div>`:''}
   ${c.suitable_industries?.length?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>适合行业</p><div class="row">${c.suitable_industries.map(i=>`<span class="chip">🏢 ${esc(i)}</span>`).join('')}</div></div>`:''}
   ${c.inference_tags?.length?`<div class="card"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${c.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
   `;
@@ -883,6 +894,8 @@ function renderTab9(json, el) {
   </div>` : '';
 
   el.innerHTML = heroHtml + profileHtml + taohuaYearsHtml + childHtml + socialHintHtml9 + `
+  ${ma.emotional_pitfalls?`<div class="card" style="margin-bottom:12px;border-left:3px solid var(--bad)"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>情感禁区</p><div style="font-size:13px;line-height:1.7">${renderPara(ma.emotional_pitfalls)}</div></div>`:''}
+  ${ma.second_marriage_indicator?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>再婚 / 感情波折指标</p><div style="font-size:13px;line-height:1.7">${renderPara(ma.second_marriage_indicator)}</div></div>`:''}
   ${ma.inference_tags?.length?`<div class="card"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${ma.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>`:''}
   `;
 }
@@ -941,7 +954,14 @@ function renderTab10(json, el) {
     </div>
     ${h.interpretation_text?`<div class="card"><p class="card-title"><span class="dot"></span>健康解读</p><div style="font-size:12px;line-height:1.6">${renderPara(h.interpretation_text)}</div></div>`:''}
   </div>
-  ${h.peak_period?`<div class="card"><p class="card-title"><span class="dot"></span>健康旺盛期</p><div style="font-size:13px">${txt(h.peak_period)}</div></div>`:''}
+  ${h.peak_period?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>健康旺盛期</p><div style="font-size:13px">${txt(h.peak_period)}</div></div>`:''}
+  ${(h.seasonal_health||h.mental_health_advice||h.constitution_type)?`
+  <div class="card" style="margin-bottom:12px">
+    <p class="card-title"><span class="dot"></span>深度健康分析</p>
+    ${h.constitution_type?`<div style="margin-bottom:10px"><div class="advice-section-lbl">🔬 体质辨识</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(h.constitution_type)}</div></div>`:''}
+    ${h.seasonal_health?`<div style="margin-bottom:10px"><div class="advice-section-lbl">🌿 季节调养</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(h.seasonal_health)}</div></div>`:''}
+    ${h.mental_health_advice?`<div><div class="advice-section-lbl">🧠 心理健康</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(h.mental_health_advice)}</div></div>`:''}
+  </div>`:''}
   `;
 }
 
@@ -1014,7 +1034,14 @@ function renderTab12(json, el) {
     ${p.advantages?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--ok)"></span>优势特质</p><ul class="pro-con-list">${p.advantages.map(s=>`<li class="pro-item">✓ ${esc(s)}</li>`).join('')}</ul></div>`:''}
     ${p.disadvantages?.length?`<div class="card"><p class="card-title"><span class="dot" style="background:var(--bad)"></span>需注意之处</p><ul class="pro-con-list">${p.disadvantages.map(s=>`<li class="con-item">✕ ${esc(s)}</li>`).join('')}</ul></div>`:''}
   </div>
-  ${p.growth_advice?`<div class="card"><p class="card-title"><span class="dot"></span>成长建议</p><div style="font-size:13px;line-height:1.7">${renderPara(p.growth_advice)}</div></div>`:''}
+  ${p.growth_advice?`<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>成长建议</p><div style="font-size:13px;line-height:1.7">${renderPara(p.growth_advice)}</div></div>`:''}
+  ${(p.communication_style||p.stress_coping_mode||p.potential_activation)?`
+  <div class="card">
+    <p class="card-title"><span class="dot"></span>性格深度维度</p>
+    ${p.communication_style?`<div style="margin-bottom:10px"><div class="advice-section-lbl">💬 沟通风格</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(p.communication_style)}</div></div>`:''}
+    ${p.stress_coping_mode?`<div style="margin-bottom:10px"><div class="advice-section-lbl">⚙ 压力应对</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(p.stress_coping_mode)}</div></div>`:''}
+    ${p.potential_activation?`<div><div class="advice-section-lbl">✨ 潜能激活</div><div style="font-size:13px;line-height:1.7;margin-top:4px">${renderPara(p.potential_activation)}</div></div>`:''}
+  </div>`:''}
   `;
 }
 
