@@ -213,14 +213,14 @@ const HIST_MAX   = 5;
 window.saveInputs = function() {
   try {
     localStorage.setItem(INPUTS_KEY, JSON.stringify({
-      userName:$('userName')?.value,
-      userGender:$('userGender')?.value,
-      birthPlace:$('birthPlace')?.value,
+      sex:$('sex')?.value,
       dt:$('dt')?.value,
       tz:$('tz')?.value,
       lon:$('lon')?.value,
       mode:$('mode')?.value,
       solar:$('solar_time_enabled')?.checked,
+      city_tier:$('city_tier')?.value,
+      industry:$('industry')?.value,
     }));
   } catch{}
 };
@@ -229,14 +229,14 @@ window.loadInputs = function() {
   try {
     const d = JSON.parse(localStorage.getItem(INPUTS_KEY)||'null');
     if (!d) { setLonHint(); return; }
-    if($('userName') && d.userName) $('userName').value = d.userName;
-    if($('userGender') && d.userGender) $('userGender').value = d.userGender;
-    if($('birthPlace') && d.birthPlace) $('birthPlace').value = d.birthPlace;
+    if($('sex') && d.sex) $('sex').value = d.sex;
     if($('dt') && d.dt) $('dt').value = d.dt;
     if($('tz') && d.tz) $('tz').value = d.tz;
     if($('lon') && d.lon) { $('lon').value = d.lon; } else { setLonHint(); }
     if($('mode') && d.mode) $('mode').value = d.mode;
     if($('solar_time_enabled') && d.solar !== undefined) $('solar_time_enabled').checked = d.solar;
+    if($('city_tier') && d.city_tier) $('city_tier').value = d.city_tier;
+    if($('industry') && d.industry) $('industry').value = d.industry;
   } catch { setLonHint(); }
 };
 
@@ -317,14 +317,14 @@ window.histCompare = function() {
 };
 window.histFill = i => {
   const items = histLoad(); const h = items[i]; if(!h) return;
-  if(h.userName) $('userName').value=h.userName;
-  if(h.userGender) $('userGender').value=h.userGender;
-  if(h.birthPlace) $('birthPlace').value=h.birthPlace;
+  if(h.sex && $('sex')) $('sex').value=h.sex;
   if(h.dt && $('dt')) $('dt').value=h.dt;
   if(h.tz && $('tz')) $('tz').value=h.tz;
   if(h.lon && $('lon')) $('lon').value=h.lon;
   if(h.mode && $('mode')) $('mode').value=h.mode;
   if(h.solar !== undefined && $('solar_time_enabled')) $('solar_time_enabled').checked=h.solar;
+  if(h.city_tier && $('city_tier')) $('city_tier').value=h.city_tier;
+  if(h.industry && $('industry')) $('industry').value=h.industry;
   saveInputs();
   setStatus('历史参数已填入，请点击"开始排盘"','muted');
 };
@@ -342,7 +342,7 @@ window.buildShareURL = function() {
   params.set('d',  d.getDate());
   params.set('h',  d.getHours());
   params.set('mi', d.getMinutes());
-  params.set('sex', $('userGender')?.value||'');
+  params.set('sex', $('sex')?.value||'');
   params.set('lng', $('lon')?.value||'116.41');
   params.set('solar', $('solar_time_enabled')?.checked?'1':'0');
   params.set('share','1');
@@ -583,9 +583,9 @@ window.runVerify = async function() {
       yongshen: (json.yongshen?.favor||[]).join('/') || null,
       annual_score: (json.liunian_detail||[]).find(l=>l.year===_thisYear)?.annual_score ?? null,
     },
-    userName:$('userName')?.value, userGender:$('userGender')?.value,
-    birthPlace:$('birthPlace')?.value, dt:payload.dt, tz:payload.tz,
+    sex:$('sex')?.value, dt:payload.dt, tz:payload.tz,
     lon:payload.lon, mode:payload.mode, solar:payload.solar_time_enabled,
+    city_tier:payload.city_tier, industry:payload.industry,
     rid:json.request_id, level:json.validation?.level,
   });
   // 保存到历史命盘 (4.36 最多5条)

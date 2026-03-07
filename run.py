@@ -419,18 +419,14 @@ def ready(response: Response):
 	返回 200 表示服务已就绪，500 表示未就绪
 	"""
 	try:
-		from db import get_session
+		from db import get_engine
 		from app.models import User
-		from sqlmodel import select
-		
-		# 尝试获取数据库会话并执行简单查询
-		session_gen = get_session()
-		session = next(session_gen)
-		
-		# 执行简单的查询以验证数据库连接
-		_ = session.exec(select(User)).first()
-		session.close()
-		
+		from sqlmodel import Session, select
+
+		# 使用 with 语句确保 Session 的 __exit__ 正确执行，连接归还连接池
+		with Session(get_engine()) as session:
+			session.exec(select(User)).first()
+
 		return {
 			"status": "ready",
 			"timestamp": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
@@ -542,6 +538,176 @@ def _validate_tz(tz_name: str) -> None:
         raise HTTPException(status_code=400, detail=f"Invalid timezone: {tz_name!r}")
 
 
+def _build_legacy_verify_response(body, dt, lon, req_id, warnings):
+	"""Legacy path (ENGINE_V2 disabled): 完整计算返回 (VerifyResponse, boundary_level)。
+	遇到输入/内部错误时直接抛出 HTTPException，由调用方负责指标记录。
+	"""
+	try:
+		result = verify_full(dt, lon=lon, use_solar=body.solar_time_enabled, mode=body.mode)
+	except HTTPException:
+		raise
+	except ValueError as exc:
+		logger.warning("Verify validation error", extra={"request_id": req_id, "error": str(exc)})
+		raise HTTPException(status_code=400, detail="Invalid input parameters")
+	except Exception as exc:
+		logger.exception("Unexpected error in verify",
+			extra={"request_id": req_id, "error_type": type(exc).__name__}, exc_info=True)
+		raise HTTPException(status_code=500, detail="Internal server error")
+
+	offset_minutes_int = int(round(result.solar_time_offset_minutes))
+	dt_effective = dt + timedelta(minutes=offset_minutes_int)
+
+	rp = _to_pillars_model(result.pillars_primary)
+	rs = _to_pillars_model(result.pillars_secondary) if result.pillars_secondary else None
+	rf = RiskFlagsModel(**result.risk_flags.__dict__)
+	v_payload = result.validation.__dict__.copy()
+	v_payload["risk_flags"] = rf
+	raw_warnings = list(result.validation.warnings) + warnings
+	parsed_warnings = []
+	for w in raw_warnings:
+		if isinstance(w, dict):
+			parsed_warnings.append(WarningModel.model_validate(w))
+		else:
+			parsed_warnings.append(WarningModel(code="legacy", message=str(w)))
+
+	v_payload["warnings"] = parsed_warnings
+	v = ValidationModel(**v_payload)
+
+	sxtwl_ok, _ = _backend_status("sxtwl")
+	cnlunar_ok, _ = _backend_status("cnlunar")
+
+	backend_info = BackendInfo(
+		primary=settings.primary_backend,
+		secondary="cnlunar" if body.mode == "dual" else None,
+		sxtwl_available=sxtwl_ok,
+		cnlunar_available=cnlunar_ok,
+	)
+
+	# lightweight derived info for UI templates
+	wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1
+	strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
+	yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw, rp)  # RL#2
+	ten_gods_map = build_ten_gods(rp.day.stem, rp)
+	ten_gods = TenGodsModel(**ten_gods_map)
+
+	wuxing_score = WuXingScoreModel.model_validate(
+		wuxing_score_raw.model_dump() if hasattr(wuxing_score_raw, "model_dump") else getattr(wuxing_score_raw, "__dict__", wuxing_score_raw)
+	)
+	wuxing_breakdown = WuXingBreakdownModel.model_validate(
+		wuxing_breakdown_raw.model_dump() if hasattr(wuxing_breakdown_raw, "model_dump") else getattr(wuxing_breakdown_raw, "__dict__", wuxing_breakdown_raw)
+	)
+	strength = DayMasterStrengthModel.model_validate(
+		strength_raw.model_dump() if hasattr(strength_raw, "model_dump") else getattr(strength_raw, "__dict__", strength_raw)
+	)
+	yongshen = YongShenModel.model_validate(
+		yongshen_raw.model_dump() if hasattr(yongshen_raw, "model_dump") else getattr(yongshen_raw, "__dict__", yongshen_raw)
+	)
+	# P0-14: wealth_score 独立于 strength.score 计算
+	_wx_dict = wuxing_score.model_dump() if hasattr(wuxing_score, "model_dump") else {}
+	_favor = yongshen.favor or []
+	_favor_total = sum(_wx_dict.get(e, 0.0) for e in _favor)
+	_neutral_penalty = sum(max(0.0, _wx_dict.get(e, 0.0) - 25) for e in ["wood","fire","earth","metal","water"] if e not in _favor and e not in (yongshen.avoid or []))
+	_wealth_score_raw = max(0.0, min(100.0, _favor_total * 1.8 - _neutral_penalty * 0.3 + 10))
+	_wealth_score = round(_wealth_score_raw, 1)
+	wealth = WealthModel(
+		wealth_score=_wealth_score,
+		industry_tags=yongshen.favor or [],
+		risk_hint=("靠近时辰/节气边界，解读请守" if v.boundary_risk_shichen or v.boundary_risk_jieqi else None),
+		note="依据五行强弱与用神粗略推断，供前端模板占位",
+	)
+	marriage = MarriageModel(
+		marriage_flags=MarriageFlagsModel(allow_interpret=v.interpretation_enabled),
+		risk_hint=("差异/边界存在，婚姻解读需折叠" if v.boundary_risk_shichen or v.boundary_risk_jieqi or v.diff_fields else None),
+	)
+	# RL#9: 计算桃花神煞
+	_shensha_result = _compute_shensha(
+		year_stem=rp.year.stem, year_branch=rp.year.branch,
+		month_stem=rp.month.stem, month_branch=rp.month.branch,
+		day_stem=rp.day.stem, day_branch=rp.day.branch,
+		hour_stem=rp.hour.stem, hour_branch=rp.hour.branch,
+	)
+	_taohua_hit = any(s.get("name") == "桃花" for s in _shensha_result.get("items", []))
+	social = SocialModel(
+		taohua_hit=_taohua_hit,
+		relation_conflict=None,
+		social_hint=f"用神:{'/'.join(yongshen.favor)} 忌神:{'/'.join(yongshen.avoid)}" if yongshen.favor or yongshen.avoid else None,
+	)
+	methods = BaziMethodsModel()
+	_gender_for_dayun = getattr(body, "gender", None)
+	dayun_model_raw, _raw_dayun = build_dayun(dt_effective, rp, methods, gender=_gender_for_dayun)
+	dayun_model = DaYunModel.model_validate(
+		dayun_model_raw.model_dump() if hasattr(dayun_model_raw, "model_dump") else getattr(dayun_model_raw, "__dict__", dayun_model_raw)
+	)
+	# RL#3: 大运元数据
+	dayun_model.direction = _raw_dayun.direction
+	dayun_model.direction_basis = _raw_dayun.direction_basis
+	dayun_model.anchor_jieqi_name = _raw_dayun.anchor_jieqi_name
+	dayun_model.anchor_jieqi_dt = _raw_dayun.anchor_jieqi_dt
+	if _raw_dayun.computed_months_before_rounding is not None:
+		from math import ceil as _ceil
+		_sam = _ceil(_raw_dayun.computed_months_before_rounding)
+		dayun_model.start_age_months = _sam
+		dayun_model.start_age = _sam // 12
+	_WX_CN_MAP = {'wood':'木','fire':'火','earth':'土','metal':'金','water':'水'}
+	_dayun_base_refs = get_refs_by_tag("大运")[:2]
+	for item in dayun_model.items:
+		if item.stem:
+			item.ten_god = ten_god(rp.day.stem, item.stem)
+		if yongshen.favor:
+			item.wealth_hint = f"用神倾向: {', '.join(_WX_CN_MAP.get(f,f) for f in yongshen.favor)}"
+		if yongshen.avoid:
+			item.health_hint = f"忌神: {', '.join(_WX_CN_MAP.get(a,a) for a in yongshen.avoid)}"
+		if item.flow_wuxing and not item.love_hint:  # 红线5
+			item.love_hint = _LOVE_HINTS.get(item.flow_wuxing, "")
+		if item.flow_wuxing and not item.child_hint:  # 红线5
+			item.child_hint = _CHILD_HINTS.get(item.flow_wuxing, "")
+		if item.refs is None:  # 红线6
+			_item_refs = (get_refs_by_tag(item.ten_god) if item.ten_god else [])
+			item.refs = (_dayun_base_refs + _item_refs)[:3]
+		if item.wealth_range is None and item.flow_wuxing:  # RL#5
+			from app.schemas.common import RangeModel as _RM
+			_WX_WR = {"wood":(8,30),"fire":(10,40),"earth":(6,25),"metal":(12,50),"water":(10,35)}
+			_lo, _hi = _WX_WR.get(item.flow_wuxing, (6, 30))
+			item.wealth_range = _RM(min=_lo, max=_hi, currency="万元/年")
+
+	verify_response = VerifyResponse(
+		api_version=API_VERSION, rule_version=RULE_VERSION, request_id=req_id,
+		backend=backend_info,
+		mode_requested=result.mode_requested,  # type: ignore[arg-type]
+		mode_effective=result.mode_effective,  # type: ignore[arg-type]
+		pillars_primary=rp, pillars_secondary=rs, risk_flags=rf, validation=v,
+		solar_time_offset_minutes=result.solar_time_offset_minutes,
+		dt_input=body.dt.isoformat(), dt_effective_utc8=dt_effective.isoformat(), tz=body.tz,
+		wuxing_score=wuxing_score, wuxing_breakdown=wuxing_breakdown,
+		day_master_strength=strength, yongshen=yongshen, ten_gods=ten_gods,
+		wealth=wealth, marriage=marriage, social=social, dayun=dayun_model,
+	)
+	try:  # 红线14
+		verify_response.dizhi_relations = get_branch_relations(
+			rp.year.branch, rp.month.branch, rp.day.branch, rp.hour.branch
+		)
+	except Exception as _rel_exc:
+		logger.debug("[dizhi_relations] %s", _rel_exc)
+	try:  # P0-11
+		verify_response.tiangan_clashes = get_stem_clashes(
+			rp.year.stem, rp.month.stem, rp.day.stem, rp.hour.stem
+		)
+	except Exception as _tc_exc:
+		logger.debug("[tiangan_clashes] %s", _tc_exc)
+	try:  # M2 分析引擎集成
+		_engine_t0 = time.time()
+		verify_response = _enrich_v2_analysis(
+			verify_response=verify_response, rp=rp, yongshen=yongshen, strength=strength,
+			wuxing_score=wuxing_score, dayun_model=dayun_model, dt=dt_effective,
+			gender=getattr(body, "gender", None), mode=body.mode,
+		)
+		BAZI_ENGINE_CALC_SECONDS.observe(time.time() - _engine_t0)  # N4.05
+	except Exception as _enrich_exc:
+		logger.warning("M2 enrichment failed in legacy path: %s", _enrich_exc, exc_info=True)
+
+	return verify_response, v.level if hasattr(v, "level") else ""
+
+
 @app.post("/api/v1/verify")
 @limiter.limit("30/minute")  # 0.14: /verify 速率限制 30 req/min
 def api_verify(
@@ -577,7 +743,6 @@ def api_verify(
 
 	dt = _attach_tz(body.dt, body.tz)
 	lon = validate_lon_strict(body.lon)
-	offset_minutes_int = 0
 
 	# soft warning for CN range when tz=Asia/Shanghai
 	for w in warn_lon_cn_range(body.tz, lon):
@@ -620,213 +785,15 @@ def api_verify(
 		)
 	# ──────────────────────────────────────────────────────────────────────────
 
+	# Legacy path: 委托给 _build_legacy_verify_response() 完成全部计算
 	try:
-		result = verify_full(dt, lon=lon, use_solar=body.solar_time_enabled, mode=body.mode)
+		verify_response, _bl_legacy = _build_legacy_verify_response(body, dt, lon, req_id, warnings)
 	except HTTPException:
+		record_verify_metrics(mode=body.mode, boundary_level="", duration_secs=time.time() - _verify_start, success=False)
 		raise
-	except ValueError as exc:
-		# ✅ 业务逻辑错误：输入验证失败
-		record_verify_metrics(mode=body.mode, boundary_level="", duration_secs=time.time() - _verify_start, success=False)
-		logger.warning(
-			f"Verify validation error",
-			extra={"request_id": req_id, "error": str(exc)}
-		)
-		raise HTTPException(status_code=400, detail="Invalid input parameters")
-	except Exception as exc:
-		# ✅ 其他未预期的错误，记录详细信息但不暴露给用户
-		record_verify_metrics(mode=body.mode, boundary_level="", duration_secs=time.time() - _verify_start, success=False)
-		logger.exception(
-			f"Unexpected error in verify",
-			extra={"request_id": req_id, "error_type": type(exc).__name__},
-			exc_info=True
-		)
-		raise HTTPException(status_code=500, detail="Internal server error")
-
-	offset_minutes_int = int(round(result.solar_time_offset_minutes))
-	dt_effective = dt + timedelta(minutes=offset_minutes_int)
-
-	rp = _to_pillars_model(result.pillars_primary)
-	rs = _to_pillars_model(result.pillars_secondary) if result.pillars_secondary else None
-	rf = RiskFlagsModel(**result.risk_flags.__dict__)
-	v_payload = result.validation.__dict__.copy()
-	v_payload["risk_flags"] = rf
-	raw_warnings = list(result.validation.warnings) + warnings
-	parsed_warnings = []
-	for w in raw_warnings:
-		if isinstance(w, dict):
-			parsed_warnings.append(WarningModel.model_validate(w))
-		else:
-			parsed_warnings.append(WarningModel(code="legacy", message=str(w)))
-
-	v_payload["warnings"] = parsed_warnings
-	v = ValidationModel(**v_payload)
-
-	sxtwl_ok, _ = _backend_status("sxtwl")
-	cnlunar_ok, _ = _backend_status("cnlunar")
-
-	backend_info = BackendInfo(
-		primary=settings.primary_backend,
-		secondary="cnlunar" if body.mode == "dual" else None,
-		sxtwl_available=sxtwl_ok,
-		cnlunar_available=cnlunar_ok,
-	)
-
-	# lightweight derived info for UI templates
-	wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1: 保留 breakdown
-	strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
-	yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw, rp)  # RL#2: 5分支
-	ten_gods_map = build_ten_gods(rp.day.stem, rp)
-	ten_gods = TenGodsModel(**ten_gods_map)
-
-	# 将内部模型转换为 Pydantic 模型，避免类型不匹配
-	wuxing_score = WuXingScoreModel.model_validate(
-		wuxing_score_raw.model_dump() if hasattr(wuxing_score_raw, "model_dump") else getattr(wuxing_score_raw, "__dict__", wuxing_score_raw)
-	)
-	wuxing_breakdown = WuXingBreakdownModel.model_validate(
-		wuxing_breakdown_raw.model_dump() if hasattr(wuxing_breakdown_raw, "model_dump") else getattr(wuxing_breakdown_raw, "__dict__", wuxing_breakdown_raw)
-	)
-	strength = DayMasterStrengthModel.model_validate(
-		strength_raw.model_dump() if hasattr(strength_raw, "model_dump") else getattr(strength_raw, "__dict__", strength_raw)
-	)
-	yongshen = YongShenModel.model_validate(
-		yongshen_raw.model_dump() if hasattr(yongshen_raw, "model_dump") else getattr(yongshen_raw, "__dict__", yongshen_raw)
-	)
-	# P0-14: wealth_score 必须独立于 strength.score 计算（不得相等）
-	# 使用用神五行得分之和 * 缩放系数，产生 0-100 量级的财运评分
-	_wx_dict = wuxing_score.model_dump() if hasattr(wuxing_score, "model_dump") else {}
-	_favor = yongshen.favor or []
-	_favor_total = sum(_wx_dict.get(e, 0.0) for e in _favor)
-	_neutral_penalty = sum(max(0.0, _wx_dict.get(e, 0.0) - 25) for e in ["wood","fire","earth","metal","water"] if e not in _favor and e not in (yongshen.avoid or []))
-	_wealth_score_raw = max(0.0, min(100.0, _favor_total * 1.8 - _neutral_penalty * 0.3 + 10))
-	_wealth_score = round(_wealth_score_raw, 1)
-	wealth = WealthModel(
-		wealth_score=_wealth_score,
-		industry_tags=yongshen.favor or [],
-		risk_hint=("靠近时辰/节气边界，解读请守" if v.boundary_risk_shichen or v.boundary_risk_jieqi else None),
-		note="依据五行强弱与用神粗略推断，供前端模板占位",
-	)
-	marriage = MarriageModel(
-		marriage_flags=MarriageFlagsModel(allow_interpret=v.interpretation_enabled),
-		risk_hint=("差异/边界存在，婚姻解读需折叠" if v.boundary_risk_shichen or v.boundary_risk_jieqi or v.diff_fields else None),
-	)
-	# RL#9: 计算桃花神煞
-	_shensha_result = _compute_shensha(
-		year_stem=rp.year.stem, year_branch=rp.year.branch,
-		month_stem=rp.month.stem, month_branch=rp.month.branch,
-		day_stem=rp.day.stem, day_branch=rp.day.branch,
-		hour_stem=rp.hour.stem, hour_branch=rp.hour.branch,
-	)
-	_taohua_hit = any(s.get("name") == "桃花" for s in _shensha_result.get("items", []))
-	social = SocialModel(
-		taohua_hit=_taohua_hit,
-		relation_conflict=None,
-		social_hint=f"用神:{'/'.join(yongshen.favor)} 忌神:{'/'.join(yongshen.avoid)}" if yongshen.favor or yongshen.avoid else None,
-	)
-	methods = BaziMethodsModel()
-	_gender_for_dayun = getattr(body, "gender", None)
-	dayun_model_raw, _raw_dayun = build_dayun(dt_effective, rp, methods, gender=_gender_for_dayun)
-	dayun_model = DaYunModel.model_validate(
-		dayun_model_raw.model_dump() if hasattr(dayun_model_raw, "model_dump") else getattr(dayun_model_raw, "__dict__", dayun_model_raw)
-	)
-	# RL#3: 转移大运元数据（方向/锚点节气/起运年龄）
-	dayun_model.direction = _raw_dayun.direction
-	dayun_model.direction_basis = _raw_dayun.direction_basis
-	dayun_model.anchor_jieqi_name = _raw_dayun.anchor_jieqi_name
-	dayun_model.anchor_jieqi_dt = _raw_dayun.anchor_jieqi_dt
-	if _raw_dayun.computed_months_before_rounding is not None:
-		from math import ceil as _ceil
-		_sam = _ceil(_raw_dayun.computed_months_before_rounding)
-		dayun_model.start_age_months = _sam
-		dayun_model.start_age = _sam // 12
-	_WX_CN_MAP = {'wood':'木','fire':'火','earth':'土','metal':'金','water':'水'}
-	_dayun_base_refs = get_refs_by_tag("大运")[:2]
-	for item in dayun_model.items:
-		if item.stem:
-			item.ten_god = ten_god(rp.day.stem, item.stem)
-		if yongshen.favor:
-			item.wealth_hint = f"用神倾向: {', '.join(_WX_CN_MAP.get(f,f) for f in yongshen.favor)}"
-		if yongshen.avoid:
-			item.health_hint = f"忌神: {', '.join(_WX_CN_MAP.get(a,a) for a in yongshen.avoid)}"
-		# 红线5: 填充感情/子女提示
-		if item.flow_wuxing and not item.love_hint:
-			item.love_hint = _LOVE_HINTS.get(item.flow_wuxing, "")
-		if item.flow_wuxing and not item.child_hint:
-			item.child_hint = _CHILD_HINTS.get(item.flow_wuxing, "")
-		# 红线6: 填充大运古籍引用
-		if item.refs is None:
-			_item_refs = (
-				get_refs_by_tag(item.ten_god) if item.ten_god else []
-			)
-			item.refs = (_dayun_base_refs + _item_refs)[:3]
-		# RL#5: wealth_range 按五行粗估
-		if item.wealth_range is None and item.flow_wuxing:
-			from app.schemas.common import RangeModel as _RM
-			_WX_WR = {"wood":(8,30),"fire":(10,40),"earth":(6,25),"metal":(12,50),"water":(10,35)}
-			_lo, _hi = _WX_WR.get(item.flow_wuxing, (6, 30))
-			item.wealth_range = _RM(min=_lo, max=_hi, currency="万元/年")
-
-	verify_response = VerifyResponse(
-		api_version=API_VERSION,
-		rule_version=RULE_VERSION,
-		request_id=req_id,
-		backend=backend_info,
-		mode_requested=result.mode_requested,  # type: ignore[arg-type]
-		mode_effective=result.mode_effective,  # type: ignore[arg-type]
-		pillars_primary=rp,
-		pillars_secondary=rs,
-		risk_flags=rf,
-		validation=v,
-		solar_time_offset_minutes=result.solar_time_offset_minutes,
-		dt_input=body.dt.isoformat(),
-		dt_effective_utc8=dt_effective.isoformat(),
-		tz=body.tz,
-		wuxing_score=wuxing_score,
-		wuxing_breakdown=wuxing_breakdown,
-		day_master_strength=strength,
-		yongshen=yongshen,
-		ten_gods=ten_gods,
-		wealth=wealth,
-		marriage=marriage,
-		social=social,
-		dayun=dayun_model,
-	)
-	# 红线14: 填充地支关系（全合/半合/拱合/六合/六冲）
-	try:
-		verify_response.dizhi_relations = get_branch_relations(
-			rp.year.branch, rp.month.branch, rp.day.branch, rp.hour.branch
-		)
-	except Exception as _rel_exc:
-		logger.debug("[dizhi_relations] %s", _rel_exc)
-	# P0-11: 天干相克 scope=day_related
-	try:
-		verify_response.tiangan_clashes = get_stem_clashes(
-			rp.year.stem, rp.month.stem, rp.day.stem, rp.hour.stem
-		)
-	except Exception as _tc_exc:
-		logger.debug("[tiangan_clashes] %s", _tc_exc)
-	# ── M2 分析引擎集成 ─────────────────────────────────────────────────
-	try:
-		_engine_t0 = time.time()  # N4.05: 引擎计时起点
-		verify_response = _enrich_v2_analysis(
-			verify_response=verify_response,
-			rp=rp,
-			yongshen=yongshen,
-			strength=strength,
-			wuxing_score=wuxing_score,
-			dayun_model=dayun_model,
-			dt=dt_effective,
-			gender=getattr(body, "gender", None),
-			mode=body.mode,
-		)
-		BAZI_ENGINE_CALC_SECONDS.observe(time.time() - _engine_t0)  # N4.05
-	except Exception as _enrich_exc:
-		logger.warning("M2 enrichment failed in legacy path: %s", _enrich_exc, exc_info=True)
-	# 使用自定义 UnescapedJSONResponse 以正确处理中文字符
-	response_data = verify_response.model_dump(mode="json")
-	_bl_legacy = v.level if hasattr(v, "level") else ""
 	record_verify_metrics(mode=body.mode, boundary_level=_bl_legacy, duration_secs=time.time() - _verify_start, success=True)
 	return UnescapedJSONResponse(
-		content=response_data,
+		content=verify_response.model_dump(mode="json"),
 		headers={"X-Request-Id": req_id},
 	)
 

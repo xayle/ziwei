@@ -74,26 +74,13 @@ def init_db() -> None:
     engine = get_engine()
     SQLModel.metadata.create_all(engine)
 
-    # SQLite 兼容：老库补充缺失列，避免手工迁移阻塞
-    # ⚠️ DEPRECATED (P57/0.33): 此函数绕过了 Alembic 迁移管理流程。
-    # 新字段变更请通过 alembic revision --autogenerate 生成迁移脚本。
-    # 此函数仅保留用于版本升级兼容期，计划在 M2 正式删除。
+    # SQLite 兼容：直接补充 snapshots.deleted_at 列（老库升级用）
+    # 已通过 Alembic 迁移管理，此处仅保留 SELECT-free 的 ADD COLUMN 兼容逻辑
     if not settings.use_postgres:
-        import warnings
-
-        def _ensure_sqlite_column(table: str, column: str, definition: str) -> None:
-            warnings.warn(
-                f"_ensure_sqlite_column('{table}', '{column}') is deprecated. "
-                "Use Alembic migrations instead. Will be removed in M2.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            with engine.connect() as conn:
-                cols = [row[1] for row in conn.exec_driver_sql(f"PRAGMA table_info({table});")]
-                if column not in cols:
-                    conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {definition};")
-		
-        _ensure_sqlite_column("snapshots", "deleted_at", "deleted_at TIMESTAMP")
+        with engine.connect() as conn:
+            cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(snapshots);")]
+            if "deleted_at" not in cols:
+                conn.exec_driver_sql("ALTER TABLE snapshots ADD COLUMN deleted_at TIMESTAMP;")
 
 
 def get_session() -> Generator[Session, None, None]:
