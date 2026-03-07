@@ -1161,6 +1161,18 @@ def _enrich_v2_analysis(
             f"顶峰大运参考：{_peak_summary}。"
             "（仅供学术研究参考）"
         )
+        # 生成 optimal_action（人生策略一句话）
+        _tier_action_map = {
+            "局高": "顺运积极出击，建立核心资产与人脉；逆运期以守为攻，厚积薄发",
+            "局中": "顺运中等发力，逆运稳健守成，注重积累而非冒进，循序渐进",
+            "局小": "以守为攻策略，保全本金与健康，顺运期集中资源单点突破",
+        }
+        _life_optimal = _tier_action_map.get(_arc.overall_tier, "顺运积极，逆运守成，量力而行")
+        if _arc.peak_periods and "暂无" not in str(_arc.peak_periods[0]):
+            _life_optimal += f"；重点把握【{_arc.peak_periods[0]}】为核心发展窗口"
+        if _arc.caution_periods:
+            _life_optimal += f"；【{'、'.join(_arc.caution_periods[:2])}】大运宜保守"
+
         verify_response.life_arc = _LifeArcSchema(
             overall_tier=_arc.overall_tier,  # type: ignore[arg-type]
             early_fortune=_arc.early_fortune,
@@ -1172,6 +1184,7 @@ def _enrich_v2_analysis(
             inference_tags=[_arc.overall_tier, f"评分{_arc.total_score:.0f}分"],
             interpretation_text=_arc_interp,
             disclaimer=_arc.disclaimer,
+            optimal_action=_life_optimal,
         )
     except Exception as exc:
         logger.debug("[M3 life_arc] %s", exc)
@@ -1268,14 +1281,38 @@ def _enrich_v2_analysis(
                 f"健康：{domain.get('健康','').rstrip('。')}。"
                 "（仅供学术研究参考）"
             )
+
+            # 流年最佳行动建议（基于用神判断和四维预测）
+            _action_domain = "事业" if _is_favor_yr else "健康"
+            _action_text = domain.get(_action_domain, "").split("，")[0].split("。")[0]
+            _year_optimal = (
+                f"{'主动出击' if _is_favor_yr else '稳健守成'}：{_action_text[:35]}"
+                if _action_text else _trend_hint
+            )
+            if taisui_list:
+                _year_optimal += f"（{taisui_list[0]}，行事宜低调谨慎）"
+
+            # 重点月份：月支五行在用神中的月份（月支顺序：寅卯辰巳午未申酉戌亥子丑）
+            _BRANCH_WX_M = {
+                "子": "water", "丑": "earth", "寅": "wood", "卯": "wood",
+                "辰": "earth", "巳": "fire",  "午": "fire",  "未": "earth",
+                "申": "metal", "酉": "metal", "戌": "earth", "亥": "water",
+            }
+            _MONTH_BR_12 = ["寅","卯","辰","巳","午","未","申","酉","戌","亥","子","丑"]
+            _notable_months = [
+                i + 1 for i, br in enumerate(_MONTH_BR_12)
+                if _BRANCH_WX_M.get(br) in (favor or [])
+            ][:3]
+
             _detail_list.append(LiuNianDetailModel(
                 year=yr,
                 ganzhi=f"{ystem}{ybranch}",
                 tai_sui_relations=taisui_list,  # 红线10: 犯太岁关系
                 clash_pillars=[],
-                notable_months=[],
+                notable_months=_notable_months,
                 annual_score=_domain_to_score(domain, favor, ystem),
                 domain_forecasts=domain,
+                optimal_action=_year_optimal,
                 inference_tags=[f"{ystem}{ybranch}", "流年"],
                 interpretation_text=_interp,
                 ten_god=_tg or None,

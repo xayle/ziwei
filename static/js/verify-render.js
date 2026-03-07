@@ -1082,11 +1082,20 @@ function renderTab11(json, el) {
   </div>` : '';
 
   /* 六亲解读（始终渲染, 不与 interpretation_text 互斥） */
+  const _LQ_ICON = {'父':'👴','母':'👵','兄弟':'👬','姊妹':'👭','妻':'👫','夫':'💑',
+    '子女':'🧒','子女(男)':'👦','子女(女)':'👧','子':'🧒','女':'👧','祖父':'🏛','祖母':'🏡'};
   const liuQinHtml = r.liu_qin && Object.keys(r.liu_qin).length ? `
   <div class="card" style="margin-bottom:12px">
     <p class="card-title"><span class="dot"></span>六亲分析</p>
-    <div style="font-size:12px;line-height:1.7">
-      ${Object.entries(r.liu_qin).map(([k,v])=>`<div style="margin-bottom:4px"><strong style="color:var(--accent)">${esc(k)}：</strong>${txt(v)}</div>`).join('')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:6px">
+      ${Object.entries(r.liu_qin).map(([k,v])=>`
+      <div style="padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;border:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+          <span style="font-size:18px">${_LQ_ICON[k]||'👤'}</span>
+          <strong style="font-size:12px;color:var(--accent)">${esc(k)}</strong>
+        </div>
+        <div style="font-size:11px;line-height:1.65;color:var(--text)">${txt(v)}</div>
+      </div>`).join('')}
     </div>
   </div>` : '';
 
@@ -1390,7 +1399,7 @@ function renderTab17(json, el) {
           ${item.clash_pillars?.length?`<div style="margin-top:5px;font-size:10px;color:var(--bad)">冲柱：${item.clash_pillars.map(c=>`<span class="chip bad" style="font-size:9px;padding:1px 4px">${esc(c)}</span>`).join('')}</div>`:''}
           ${item.optimal_action?`<div style="margin-top:6px;padding:4px 8px;background:var(--accent-gold-bg,rgba(224,139,0,0.08));border-radius:6px;font-size:11px"><span style="font-weight:700;color:var(--accent-gold)">📌 </span>${esc(item.optimal_action)}</div>`:''}
           ${item.inference_tags?.length?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">${item.inference_tags.map(t=>`<span class="chip" style="font-size:9px;padding:1px 5px">${esc(t)}</span>`).join('')}</div>`:''}
-          ${item.interpretation_text?`<details style="margin-top:8px"><summary style="font-size:11px;color:var(--accent)">查看流年解析</summary><div style="font-size:12px;line-height:1.65;padding:6px 8px;max-width:320px">${renderPara(item.interpretation_text)}</div></details>`:''}
+          ${item.interpretation_text?`<div style="margin-top:6px;font-size:11px;line-height:1.55;color:var(--muted)">${esc(item.interpretation_text.slice(0,60))}${item.interpretation_text.length>60?`…<details style="display:inline"><summary style="font-size:10px;color:var(--accent);cursor:pointer;margin-left:4px">全文</summary><div style="font-size:11px;line-height:1.65;padding:6px 8px;margin-top:4px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:6px;max-width:300px">${renderPara(item.interpretation_text)}</div></details>`:''}</div>`:''}
         </div>
       </div>`;
     }).join('')}
