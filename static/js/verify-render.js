@@ -353,6 +353,30 @@ function renderTab2(json, el) {
     renderWuxingRingChart(wx, $('wuxingRingContainer'), json);
   }
 
+  /* ── 五行详细贡献（天干/地支/藏干） ─────────────── */
+  const wb = json.wuxing_breakdown;
+  if (wb && (wb.stem_contrib || wb.branch_contrib || wb.hidden_contrib)) {
+    const WX_KEYS = ['wood','fire','earth','metal','water'];
+    const WX_CN_MAP = {wood:'木',fire:'火',earth:'土',metal:'金',water:'水'};
+    const card = document.createElement('details');
+    card.className = 'card'; card.style.marginBottom = '14px';
+    const rows = WX_KEYS.map(k => {
+      const s = (wb.stem_contrib?.[k]||0).toFixed(2);
+      const b = (wb.branch_contrib?.[k]||0).toFixed(2);
+      const h = (wb.hidden_contrib?.[k]||0).toFixed(2);
+      const total = ((wb.stem_contrib?.[k]||0)+(wb.branch_contrib?.[k]||0)+(wb.hidden_contrib?.[k]||0)).toFixed(2);
+      return `<tr><td class="wx-${k}" style="font-weight:700;padding:4px 8px">${WX_CN_MAP[k]}</td><td style="padding:4px 8px;text-align:right">${s}</td><td style="padding:4px 8px;text-align:right">${b}</td><td style="padding:4px 8px;text-align:right;color:var(--muted)">${h}</td><td style="padding:4px 8px;text-align:right;font-weight:600">${total}</td></tr>`;
+    }).join('');
+    card.innerHTML = `<summary style="cursor:pointer;padding:8px 10px;font-size:12px;color:var(--muted);font-weight:600">⊞ 五行分量明细（天干 / 地支 / 藏干）</summary>
+    <div style="overflow-x:auto;padding:8px 10px">
+      <table style="font-size:12px;border-collapse:collapse;width:100%">
+        <thead><tr><th style="padding:3px 8px;text-align:left;color:var(--muted)">五行</th><th style="padding:3px 8px;text-align:right;color:var(--muted)">天干</th><th style="padding:3px 8px;text-align:right;color:var(--muted)">地支</th><th style="padding:3px 8px;text-align:right;color:var(--muted)">藏干</th><th style="padding:3px 8px;text-align:right;color:var(--muted)">合计</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+    el.appendChild(card);
+  }
+
   /* ── 干支互动 ────────────────────────────────── */
   const dzRels    = json.dizhi_relations  || [];
   const tgClashes = json.tiangan_clashes  || [];
@@ -476,7 +500,13 @@ function renderTab3(json, el) {
   const _detailText = (g.geju_detail || g.description || '').trim();
   const _showDetailCard = _detailText && _detailText !== (g.interpretation_text||'').trim();
 
-  el.innerHTML = heroHtml + `
+  const brokenBadge = g.is_broken === true
+    ? `<div class="card" style="margin-bottom:12px;border-left:3px solid var(--bad)"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">⚠️</span><div><div style="font-weight:700;color:var(--bad)">格局已破</div><div style="font-size:12px;color:var(--muted);margin-top:2px">命局存在破格因素，格局力量受限，解读需结合大运调候</div></div></div></div>`
+    : g.is_broken === false
+    ? `<div style="margin-bottom:12px;font-size:11px;color:var(--ok);padding:4px 8px;background:rgba(34,197,94,0.08);border-radius:6px;display:inline-block">✓ 格局完整（未见破格）</div>`
+    : '';
+
+  el.innerHTML = heroHtml + brokenBadge + `
   ${_showDetailCard ? `<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>格局释义</p><div class="geju-text">${renderPara(_detailText)}</div></div>` : ''}
   ${g.interpretation_text ? `<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>深度解读</p><div class="geju-text">${renderPara(g.interpretation_text)}</div>${_detailText&&!_showDetailCard?`<div style="margin-top:6px;font-size:11px;color:var(--muted)">📐 判断依据：${esc(_detailText)}</div>`:''}${g.month_stem_shishen?`<div style="margin-top:4px;font-size:11px;color:var(--muted)">月令十神：<code>${esc(g.month_stem_shishen)}</code></div>`:''}</div>` : ''}
   ${g.inference_tags?.length ? `<div class="card" style="margin-bottom:12px"><p class="card-title"><span class="dot"></span>分析标签</p><div class="row">${g.inference_tags.map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div></div>` : ''}
@@ -1213,6 +1243,8 @@ function renderTab16(json, el) {
   const directionHtml = dy.direction
     ? `<div class="k">行运方向</div><div><span class="chip ${dy.direction==='forward'?'ok':'warn'}">${directionCN}</span><span class="hint" style="margin-left:6px;font-size:11px" title="${txt(dy.direction_basis?.basis_text||dy.direction_basis?.summary||'')}">${txt(dy.direction_basis?.basis_text||dy.direction_basis?.summary||'')}</span></div>`
     : '';
+  // 优先使用顶级精确起运年龄（如 0.7岁），fallback 到 DaYunModel 整数值
+  const preciseStartAge = json.start_dayun_age ?? dy.start_age;
 
   el.innerHTML = singleModeNotice + `
   <div class="card" style="margin-bottom:12px">
@@ -1220,7 +1252,7 @@ function renderTab16(json, el) {
     <div class="kv">
       <div class="k">方法</div><div>${esc(dy.method||'—')}</div>
       <div class="k">边界</div><div>${esc(dy.boundary||'—')}</div>
-      ${startAgeHtml ? `<div class="k">起运岁数</div><div><strong>${dy.start_age}岁</strong>${dy.start_age_months?` (${dy.start_age_months}月)`:''}</div>` : ''}
+      ${preciseStartAge != null ? `<div class="k">起运岁数</div><div><strong>${preciseStartAge}岁</strong>${dy.start_age_months?` (${dy.start_age_months}月)`:''}</div>` : ''}
       ${directionHtml}
       ${dy.anchor_jieqi_name?`<div class="k">参考节气</div><div>${esc(dy.anchor_jieqi_name)}${dy.anchor_jieqi_dt?` <span style="color:var(--muted);font-size:11px">(${esc(dy.anchor_jieqi_dt.slice(0,10))})</span>`:''}</div>`:''}
     </div>
@@ -1339,14 +1371,14 @@ function renderTab18(json, el) {
   const mf = json.monthly_fortune||[];
   if (!mf.length) { el.innerHTML='<div class="hint" style="padding:16px">月运数据尚未计算，请先完成排盘。</div>'; return; }
   const MONTHS = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
-  // 月运五行色调映射
+  // 月运五行色调映射（兼容旧文字键和新十六进制格式）
   const _colorMap = {'白/金':'#e2e8f0','绿/青':'#86efac','黑/蓝':'#93c5fd','红/紫':'#fca5a5','黄/棕':'#fde68a'};
   el.innerHTML = `
   <div class="month-disclaimer">⚠ 月运为大方向参考，吉凶判断受出生地精度、时辰误差等影响，请结合当下实际情况综合判断，不作为行动依据。</div>
   <div class="monthly-grid">
     ${mf.map((m,i)=>{
       const cls = m.luck_level==='吉'?'good':m.luck_level==='凶'?'bad':'neutral';
-      const borderColor = _colorMap[m.color_hint] || 'var(--line)';
+      const borderColor = _colorMap[m.color_hint] || (typeof m.color_hint==='string'&&m.color_hint.startsWith('#') ? m.color_hint : 'var(--line)');
       const gz = m.month_ganzhi || m.month_dizhi || '';
       const tgBadge = m.relation_to_rizhu
         ? `<div style="margin:2px 0"><span class="tengod-badge ${tenGodType(m.relation_to_rizhu)}" style="font-size:9px;padding:1px 4px">${tenGodCN(m.relation_to_rizhu)}</span></div>`
