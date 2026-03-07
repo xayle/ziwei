@@ -3,6 +3,7 @@
 """
 import os
 import hashlib
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -29,6 +30,15 @@ REFRESH_TOKEN_EXPIRE_DAYS: int = settings.jwt_refresh_days
 
 # Argon2密码哈希器
 _argon2_hasher = PasswordHasher()
+
+# ============ Access Token JTI 黑名单（内存单例）============
+# 进程重启后自动清空；distributed 部署需改用 Redis
+_revoked_jtis: set[str] = set()
+
+
+def revoke_access_token_jti(jti: str) -> None:
+    """将 Access Token 的 JTI 加入黑名单，使其立即失效。"""
+    _revoked_jtis.add(jti)
 
 
 class TokenPayload(BaseModel):
@@ -108,6 +118,7 @@ def create_access_token(user_id: int, username: str, role: str = "editor", expir
         "role": role,
         "exp": int(expire.timestamp()),
         "iat": int(now.timestamp()),
+        "jti": str(uuid.uuid4()),  # JWT ID — 用于 Access Token 吊销
     }
     
     encoded_jwt = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -144,7 +155,15 @@ def verify_token(token: str) -> Optional[TokenPayload]:
                 code=ErrorCode.AUTH_TOKEN_INVALID,
                 message="Invalid token structure",
             )
-        
+
+        # JTI 黑名单检查（Access Token 吊销）
+        jti = payload.get("jti")
+        if jti and jti in _revoked_jtis:
+            raise AuthenticationException(
+                code=ErrorCode.AUTH_TOKEN_INVALID,
+                message="Token has been revoked",
+            )
+
         user_id = user_id_value
         username = username_value
         role = role_value if isinstance(role_value, str) else "editor"

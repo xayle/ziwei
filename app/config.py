@@ -95,8 +95,25 @@ class Settings:
     rate_limit_requests: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
     rate_limit_window_seconds: int = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
     
+    # 弱密钥常量集合（用于生产环境检查）
+    _WEAK_SECRET_KEYS: frozenset = frozenset({
+        "your-secret-key-change-in-production",
+        "dev-secret-key-change-in-production",
+        "secret",
+        "changeme",
+        "password",
+    })
+
     def __post_init__(self):
-        """初始化后处理 - 解析 ALLOWED_ORIGINS"""
+        """初始化后处理 - 解析 ALLOWED_ORIGINS + 生产环境安全检查"""
+        # 生产环境弱密钥检测（提前阻断，避免上线后被暴击）
+        if self.app_env == "production" and self.jwt_secret_key in self._WEAK_SECRET_KEYS:
+            raise ValueError(
+                "FATAL: SECRET_KEY is set to a known-weak default value. "
+                "Set a strong random key via the SECRET_KEY environment variable "
+                "before running in production."
+            )
+
         origins_str = os.getenv("ALLOWED_ORIGINS")
         if origins_str:
             # 支持逗号分隔的列表

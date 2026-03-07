@@ -31,6 +31,7 @@ from services.auth_service import (
     revoke_refresh_token,
     revoke_all_user_tokens,
     verify_token,
+    revoke_access_token_jti,
 )
 from services.rate_limit import limiter
 
@@ -438,15 +439,35 @@ def refresh_token(
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def logout(
     body: RefreshTokenRequest,
+    request: Request,
     session: Session = Depends(get_session),
 ):
     """
-    用户登出 - 撤销刷新令牌
-    
+    用户登出 - 同时吊销 Access Token（JTI 黑名单）和 Refresh Token
+
     Args:
         body: 包含刷新令牌
+        request: HTTP请求对象（用于提取 Authorization header）
         session: 数据库会话
     """
+    # 1. 将当前 Access Token 的 JTI 加入黑名单（立即失效，不等15分钟过期）
+    auth_header = request.headers.get("Authorization", "")
+    parts = auth_header.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        try:
+            from jose import jwt as _jwt
+            from services.auth_service import SECRET_KEY, ALGORITHM
+            payload = _jwt.decode(
+                parts[1], SECRET_KEY, algorithms=[ALGORITHM],
+                options={"leeway": 86400}  # 允许已到期的 token 仍能注销
+            )
+            jti = payload.get("jti")
+            if jti:
+                revoke_access_token_jti(jti)
+        except Exception as exc:
+            logger.warning("logout: access token JTI revoke failed: %s", exc)
+
+    # 2. 吊销 Refresh Token
     try:
         revoke_refresh_token(session, body.refresh_token)
     except Exception as exc:

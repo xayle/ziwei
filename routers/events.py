@@ -87,6 +87,39 @@ class EventCreateRequest(BaseModel):
         return _validate_json_field(v, "recommendation", dict)
 
 
+class EventUpdateRequest(BaseModel):
+    """部分更新事件请求（PATCH）— 所有字段可选，不允许修改计算结果 bazi_json"""
+    name: Optional[str] = None
+    event_type: Optional[str] = None
+    L_level: Optional[int] = None
+    confidence_score: Optional[float] = None
+    recommendation: Optional[str] = None
+    recommendation_engine: Optional[str] = None
+    pillars_primary: Optional[str] = None
+    ten_gods: Optional[str] = None
+    five_elements: Optional[str] = None
+
+    @field_validator("recommendation")
+    @classmethod
+    def validate_recommendation(cls, v: Optional[str]) -> Optional[str]:
+        return _validate_json_field(v, "recommendation", dict)
+
+    @field_validator("pillars_primary")
+    @classmethod
+    def validate_pillars_primary(cls, v: Optional[str]) -> Optional[str]:
+        return _validate_json_field(v, "pillars_primary", dict)
+
+    @field_validator("ten_gods")
+    @classmethod
+    def validate_ten_gods(cls, v: Optional[str]) -> Optional[str]:
+        return _validate_json_field(v, "ten_gods", list)
+
+    @field_validator("five_elements")
+    @classmethod
+    def validate_five_elements(cls, v: Optional[str]) -> Optional[str]:
+        return _validate_json_field(v, "five_elements", dict)
+
+
 class EventResponse(BaseModel):
     """事件响应"""
     id: int
@@ -329,6 +362,71 @@ def get_event(
             message="You don't have permission to access this event",
         )
     
+    return EventResponse(**event.__dict__)
+
+
+@router.patch("/events/{event_id}")
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def patch_event(
+    event_id: int,
+    body: EventUpdateRequest,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    部分更新事件（仅修改提供的字段）
+    不允许修改 bazi_json：计算结果应通过重新计算生成
+    需要权限：UPDATE_EVENT
+    """
+    user_role = Role(current_user.role)
+    if not has_permission(user_role, Permission.UPDATE_EVENT):
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="Permission denied: update_event required",
+        )
+
+    event = session.exec(
+        select(Event).where(Event.id == event_id, Event.deleted_at.is_(None))  # type: ignore[union-attr]
+    ).first()
+
+    if not event:
+        raise ResourceNotFoundException(
+            message="Event not found",
+            details={"resource_type": "event", "resource_id": event_id},
+        )
+
+    if event.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to update this event",
+        )
+
+    # 只更新请求中显式提供的字段
+    updates = body.model_dump(exclude_unset=True)
+    for key, value in updates.items():
+        setattr(event, key, value)
+    event.updated_at = datetime.now(timezone.utc)
+
+    try:
+        session.add(event)
+        session.commit()
+        session.refresh(event)
+    except IntegrityError:
+        session.rollback()
+        raise BusinessException(
+            code=ErrorCode.BUSINESS_OPERATION_FAILED,
+            message="Patch failed",
+        )
+
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="patch_event",
+        resource_type="event",
+        resource_id=str(event_id),
+        details=updates,
+    )
+
     return EventResponse(**event.__dict__)
 
 
