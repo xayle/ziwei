@@ -81,6 +81,10 @@ function renderTab0(json, el) {
   const peakDayun = arc?.peak_periods?.[0] || '尚未推算';
   const cautionDayuns = arc?.caution_periods?.length ? arc.caution_periods.map(d=>`<span class="chip warn">${esc(d)}</span>`).join(' ') : '—';
 
+  // 当前大运详情
+  const _dyItems = json.dayun?.items || [];
+  const curDayunItem = _dyItems.find(d=>d.start_year<=thisYear&&(d.start_year||0)+10>thisYear) || _dyItems.slice(-1)[0] || null;
+
   el.innerHTML = heroHtml + `
   <div class="life-arc-card" style="margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -111,13 +115,30 @@ function renderTab0(json, el) {
       <div>
         <div class="fortune-item-label">当前大运</div>
         <div class="fortune-item-value">${cf?.current_dayun ? esc(cf.current_dayun) : (()=>{ const items=json.dayun?.items||[]; const now=new Date().getFullYear(); const cur=items.find(d=>d.start_year<=now&&(d.start_year||0)+10>now)||items.slice(-1)[0]; return cur?esc((cur.stem||'')+(cur.branch||'')):'—'; })()}</div>
-        <div style="font-size:11px;color:var(--muted)">${cf?.dayun_years_remaining !== undefined ? `剩余约${cf.dayun_years_remaining}年` : ''}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          ${cf?.dayun_years_remaining !== undefined ? `<span>剩余约${cf.dayun_years_remaining}年</span>` : ''}
+          ${curDayunItem?.ten_god ? `<span class="tengod-badge ${typeof tenGodType==='function'?tenGodType(curDayunItem.ten_god):''}" style="font-size:10px;padding:1px 5px">${typeof tenGodCN==='function'?tenGodCN(curDayunItem.ten_god):curDayunItem.ten_god}</span>` : ''}
+        </div>
       </div>
       <div>
         <div class="fortune-item-label">当前流年（${thisYear}）</div>
         <div class="fortune-item-value">${thisLiunian ? esc((thisLiunian.ganzhi||thisLiunian.year||thisYear)+'') : esc(String(thisYear))}</div>
+        ${thisLiunian?.ten_god ? `<div style="margin-top:2px"><span class="tengod-badge ${typeof tenGodType==='function'?tenGodType(thisLiunian.ten_god_code||thisLiunian.ten_god):''}" style="font-size:10px;padding:1px 5px">${typeof tenGodCN==='function'?tenGodCN(thisLiunian.ten_god_code||thisLiunian.ten_god):thisLiunian.ten_god}</span></div>` : ''}
       </div>
     </div>
+    ${(curDayunItem?.narrative || curDayunItem?.wealth_hint || curDayunItem?.health_hint || curDayunItem?.love_hint) ? `
+    <details style="margin-top:8px">
+      <summary style="cursor:pointer;font-size:11px;color:var(--accent);font-weight:600">▦ 当前大运叙事 &amp; 提示</summary>
+      <div style="margin-top:8px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px">
+        ${curDayunItem?.narrative ? `<div style="font-size:12px;line-height:1.65;color:var(--text);margin-bottom:8px">${renderPara(curDayunItem.narrative)}</div>` : ''}
+        ${(curDayunItem?.wealth_hint||curDayunItem?.health_hint||curDayunItem?.love_hint) ? `
+        <div style="display:flex;flex-direction:column;gap:5px">
+          ${curDayunItem?.wealth_hint ? `<div style="font-size:11px;line-height:1.5"><span style="color:var(--accent-gold);font-weight:700">💰 财：</span>${txt(curDayunItem.wealth_hint)}</div>` : ''}
+          ${curDayunItem?.health_hint ? `<div style="font-size:11px;line-height:1.5"><span style="color:var(--ok);font-weight:700">🏃 健：</span>${txt(curDayunItem.health_hint)}</div>` : ''}
+          ${curDayunItem?.love_hint   ? `<div style="font-size:11px;line-height:1.5"><span style="color:#f43f5e;font-weight:700">♡ 婚：</span>${txt(curDayunItem.love_hint)}</div>` : ''}
+        </div>` : ''}
+      </div>
+    </details>` : ''}
     ${(thisLiunian?.domain_forecasts || cf?.this_year_domains) ? `
     <div class="fortune-4d-grid">
       ${['财运','事业','婚恋','健康'].map(k=>{
@@ -562,7 +583,7 @@ function renderTab4(json, el) {
       const chips = items.map(s => {
         const sn  = chipName(s.name || '');
         const pc  = {year:'年',month:'月',day:'日',hour:'时'}[s.pillar] || s.pillar || '';
-        const tt  = [chipTitle(s.name||''), txt(s.meaning||'')].filter(Boolean).join('：');
+        const tt  = [chipTitle(s.name||''), txt(s.meaning||''), s.classic_source?`出自${s.classic_source}`:''].filter(Boolean).join('\n');
         return `<span class="ss-chip ${cls}" title="${tt}">${s.is_star?'★ ':''}<strong>${sn}</strong>${pc?` <small class="hint">${pc}</small>`:''}</span>`;
       }).join('');
       return `<div class="ss-group">
@@ -593,9 +614,15 @@ function renderTab4(json, el) {
     <div class="twelve-palace-grid">
       ${houses.map((h, i) => {
         const wCls = (window.ZHI_CSS||{})[h.dizhi] || '';
+        const hShishen = h.shishen || h.ten_god || '';
+        const hTgCode  = hShishen;
+        const hTgCN    = hShishen ? (typeof tenGodCN  ==='function' ? tenGodCN(hTgCode)  : hShishen) : '';
+        const hTgType  = hShishen ? (typeof tenGodType==='function' ? tenGodType(hTgCode) : '')      : '';
         return `<div class="tpc">
           <div class="tpc-name">${esc(h.palace_name||`宫${i+1}`)}</div>
           <div class="tpc-zhi ${wCls}">${esc(h.dizhi||'—')}</div>
+          ${h.tiangan ? `<div style="font-size:9px;color:var(--muted);margin-top:1px;letter-spacing:.03em">干：${esc(h.tiangan)}</div>` : ''}
+          ${hTgCN ? `<div style="margin-top:2px"><span class="tengod-badge ${hTgType}" style="font-size:9px;padding:1px 4px">${hTgCN}</span></div>` : ''}
           ${h.strength ? `<div class="tpc-str">${esc(h.strength)}</div>` : ''}
           ${h.note||h.description ? `<div class="tpc-note">${txt(h.note||h.description)}</div>` : ''}
         </div>`;
@@ -650,6 +677,7 @@ function renderTab5(json, el) {
       ${milestones.map(m => {
         const rlCls = m.risk_level==='高'?'bad':m.risk_level==='中'?'warn':'ok';
         const typeIcon = MS_ICON[m.milestone_type] || '📌';
+        const showTypeTag = m.milestone_type && m.description && m.description !== m.milestone_type;
         return `<div style="display:flex;gap:10px;padding:8px 10px;background:var(--bg2,rgba(0,0,0,0.03));border-radius:8px;align-items:flex-start">
           <div style="min-width:56px;text-align:center;flex-shrink:0">
             <div style="font-size:16px;font-weight:800;color:var(--accent)">${m.age}岁</div>
@@ -657,7 +685,8 @@ function renderTab5(json, el) {
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
-              <span style="font-size:13px;font-weight:600">${typeIcon} ${esc(m.description||m.milestone_type)}</span>
+              ${showTypeTag ? `<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(var(--accent-rgb,99,102,241),0.1);color:var(--accent);font-weight:600">${typeIcon} ${esc(m.milestone_type)}</span>` : ''}
+              <span style="font-size:13px;font-weight:600">${showTypeTag ? '' : typeIcon+' '}${esc(m.description||m.milestone_type)}</span>
               ${m.risk_level?`<span class="chip ${rlCls}" style="font-size:10px;padding:1px 6px">${esc(m.risk_level)}</span>`:''}
               ${m.ganzhi_context?`<span style="font-size:11px;color:var(--muted)">${esc(m.ganzhi_context)}</span>`:''}
             </div>
@@ -1276,8 +1305,12 @@ function renderTab16(json, el) {
               const gz = ld ? (ld.ganzhi||(ld.stem||'')+(ld.branch||'')) : _yearGanzhi(y);
               const score = ld?.annual_score;
               const isCurYear = y===thisYear;
-              return `<td style="padding:3px 6px;text-align:center;white-space:nowrap${isCurYear?';font-weight:700;color:var(--accent)':''}">
+              // 构建四域预测 tooltip
+              const df = ld?.domain_forecasts || {};
+              const dfTooltip = ['财运','事业','婚恋','健康'].filter(k=>df[k]).map(k=>`${k}：${df[k]}`).join('\n');
+              return `<td style="padding:3px 6px;text-align:center;white-space:nowrap${isCurYear?';font-weight:700;color:var(--accent)':''}" title="${dfTooltip?`${y}年四域预测\n${dfTooltip}`:''}">
                 ${y}<br><span style="font-size:11px">${gz}</span>${score!=null?`<br><span style="font-size:10px;color:${score>=70?'var(--ok)':score>=50?'var(--warn)':'var(--bad)'}">${score}</span>`:''}
+                ${dfTooltip?`<br><span style="font-size:9px;color:var(--muted)" title="${esc(dfTooltip)}">▦四域</span>`:''}
               </td>`;
             }).join('');
             return `<tr class="dayun-liunian-row" id="dayun-ln-${di}" style="display:none"><td colspan="8" style="padding:0"><div style="overflow-x:auto"><table style="font-size:11px;width:100%;border-collapse:collapse"><tbody><tr>${cells}</tr></tbody></table></div></td></tr>`;
