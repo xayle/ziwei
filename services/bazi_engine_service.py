@@ -283,33 +283,11 @@ def _calculate_v1(
         _s_cn = _WX_CN_MAP.get(_s_el, item.stem or "")
         _fav = yongshen.favor or []
         _avd = yongshen.avoid or []
-        if _s_el in _fav:
-            item.wealth_hint = f"{_s_cn}天干用神当令，财运进入上升轨道，可积极谋进拓展"
-        elif _s_el in _avd:
-            item.wealth_hint = f"{_s_cn}天干忌神旺，财务以守成为主，谨慎投资与负债"
-        elif _b_el in _fav:
-            item.wealth_hint = f"地支{_WX_CN_MAP.get(_b_el,'')}助用神，财运平稳偏升，稳中求进"
-        elif item.stem:
-            item.wealth_hint = f"{_s_cn}运行，财运平稳，量力而行稳健发展"
-        if _s_el in _avd:
-            item.health_hint = f"{_s_cn}忌神当令，注意{_ORGAN_CN.get(_s_el,'')}相关病症，避免过劳"
-        elif _b_el in _avd:
-            item.health_hint = f"地支忌神旺，{_ORGAN_CN.get(_b_el,'')}需多关注，保持规律作息"
-        elif _s_el in _fav:
-            item.health_hint = f"{_s_cn}用神旺盛，精力充沛，为养生调理最佳阶段"
-        elif item.stem:
-            item.health_hint = f"本大运健康趋于平稳，注意定期体检与作息规律"
-        # 填充 love_hint / child_hint（按干支五行）
-        if item.stem and not item.love_hint:
-            hints = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
-            item.love_hint = hints.get("love_hint", "")
-            item.child_hint = hints.get("child_hint", "")
-        # wealth_range 按流运五行粗估，并应用地区/行业系数 (M3.03)
+
+        # ── 先计算 wealth_range，便于 wealth_hint 引用数值 (M3.03) ──────
         if item.flow_wuxing and item.wealth_range is None:
             lo, hi = _WX_WEALTH_RANGE.get(item.flow_wuxing, (6, 30))
-            # M3.03: 地区系数 一线×1.8 / 新一线×1.2 / 其余×1.0
             _ct_coeff = {"一线": 1.8, "新一线": 1.2}.get(city_tier or "", 1.0)
-            # M3.03: 行业系数 金融IT×1.5 / 教育公务×0.8 / 其余×1.0
             _ind_coeff = 1.5 if (industry or "") == "金融IT" else (
                          0.8 if (industry or "") == "教育公务" else 1.0)
             _m3_coeff = round(_ct_coeff * _ind_coeff, 2)
@@ -318,6 +296,114 @@ def _calculate_v1(
                 max=round(hi * _m3_coeff, 1),
                 currency="万元/年",
             )
+        _wr_str = (
+            f"年收入参考区间约 {item.wealth_range.min:.0f}–{item.wealth_range.max:.0f} 万元"
+            if item.wealth_range else ""
+        )
+
+        # ── 财运 hint（深化版，含区间+具体策略）──────────────────────────
+        _w_strategy_map = {
+            "metal": "可主动拓展副业与投资，防官非纠纷",
+            "water": "流动性好，宜积累固定资产，防财来财去",
+            "wood":  "通过自身努力稳步提升，忌急于求成",
+            "fire":  "名利运好，注意防过度消耗元气",
+            "earth": "稳健积累，宜配置不动产与实业",
+        }
+        _w_risk_map = {
+            "metal": "防官司、合同纠纷带来意外破财",
+            "water": "防资金链断裂，避免高风险借贷",
+            "wood":  "防合伙人背弃、合同纠纷",
+            "fire":  "防投机暴亏，远离股市赌博",
+            "earth": "防房产套牢、债务纠纷",
+        }
+        if _s_el in _fav:
+            _ws = _w_strategy_map.get(_s_el, "积极谋进拓展")
+            item.wealth_hint = f"【顺运·财路开阔】{_s_cn}天干用神当令，{_ws}。{_wr_str}。"
+        elif _s_el in _avd:
+            _wr = _w_risk_map.get(_s_el, "谨慎投资与负债")
+            item.wealth_hint = f"【逆运·守成为主】{_s_cn}天干忌神旺，{_wr}。{_wr_str}。"
+        elif _b_el in _fav:
+            item.wealth_hint = f"【平稳偏升】地支{_WX_CN_MAP.get(_b_el,'')}暗助用神，稳中求进，勿冒险投机。{_wr_str}。"
+        elif item.stem:
+            item.wealth_hint = f"财运平稳，量力而行，稳健发展。{_wr_str}。"
+
+        # ── 健康 hint（深化版，含具体病症+gender差异）────────────────────
+        _dz_disease = {
+            "wood":  ["肝炎/脂肪肝", "胆结石", "眼疾", "筋骨酸痛"],
+            "fire":  ["心血管疾病", "高血压", "神经衰弱", "失眠"],
+            "earth": ["脾胃炎", "消化不良", "糖尿病风险", "湿气重"],
+            "metal": ["肺炎/哮喘", "鼻炎", "皮肤过敏", "大肠问题"],
+            "water": ["肾炎/肾虚", "泌尿系统感染", "腰椎问题", "关节寒湿"],
+        }
+        _gender_extra = {
+            "wood":  "女性注意月经不调；男性防肝阳亢奋",
+            "fire":  "女性注意心悸与更年期提前风险；男性防血压骤升",
+            "earth": "女性注意子宫肌瘤、卵巢囊肿；男性防前列腺炎",
+            "metal": "女性注意乳腺结节；男性防肺气肿",
+            "water": "女性注意宫寒、白带异常；男性防肾虚",
+        }
+        _base_diseases = _dz_disease.get(_s_el, [])
+        _g_note = _gender_extra.get(_s_el, "")
+        if _s_el in _avd:
+            _dis_str = "、".join(_base_diseases[:3]) if _base_diseases else f"{_ORGAN_CN.get(_s_el,'')}相关问题"
+            item.health_hint = (
+                f"【注意】{_s_cn}忌神当令，重点防范：{_dis_str}。"
+                + (f"{_g_note}。" if _g_note else "")
+                + "建议每年专项体检。"
+            )
+        elif _b_el in _avd:
+            _b_dis = "、".join(_dz_disease.get(_b_el, [_ORGAN_CN.get(_b_el, "相关问题")])[:2])
+            item.health_hint = f"地支忌神影响，防{_b_dis}；保持规律作息，勿熬夜。"
+        elif _s_el in _fav:
+            item.health_hint = (
+                f"用神旺盛，精力较充沛，是调理旧疾好时机。"
+                + (f"仍需注意：{_g_note}。" if _g_note else f"定期保养{_ORGAN_CN.get(_s_el,'')}。")
+            )
+        elif item.stem:
+            item.health_hint = f"健康趋于平稳，建议定期体检，注意{_ORGAN_CN.get(_s_el,'')}日常保养。"
+
+        # ── 感情/婚姻 hint（深化版，含婚龄段+十神特征）──────────────────
+        _age_lo = int(item.start_age or 0)
+        _age_hi = _age_lo + 9
+        _marriage_tg_map = {
+            "正官": f"正官入运，{_age_lo+2}–{_age_hi-2}岁为感情落实最佳窗口，异性缘好，宜认真经营婚姻",
+            "七杀": f"七杀冲动情感，来势快去势也快，{_age_lo}–{_age_hi}岁中后段宜慎重决断婚事，防仓促结婚",
+            "正财": f"正财运利稳定婚姻，感情踏实，{_age_lo+1}–{_age_hi-1}岁可认真谈婚论嫁",
+            "偏财": f"偏财桃花活跃，缘分多但难以沉淀，{_age_lo+3}岁后若有持续缘分值得认真把握",
+            "食神": f"食神入运感情自然舒展，{_age_lo}–{_age_hi}岁缘分多从生活圈产生，顺其自然为佳",
+            "伤官": f"伤官旺，感情取舍频，{_age_lo}–{_age_hi}岁易有分合波折，婚后需特别注意沟通方式",
+            "比肩": f"比肩运感情受竞争干扰，{_age_lo+2}岁后宜主动出击，防他人插足婚姻",
+            "劫财": f"劫财耗散，感情资源易被争夺，{_age_lo}–{_age_hi}岁宜主动出击，莫被动等待",
+            "偏印": f"偏印克食伤感情内敛，此运不宜急于确定终身大事，{_age_lo+4}岁后更适合",
+            "正印": f"正印入运感情趋稳，{_age_lo+2}岁后适合完善婚姻基础，家庭关系改善",
+        }
+        _love_tg = _marriage_tg_map.get(item.ten_god or "", "")
+        if _love_tg:
+            item.love_hint = _love_tg
+        elif not item.love_hint:
+            hints_l = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
+            item.love_hint = hints_l.get("love_hint", "")
+
+        # ── 子女 hint（深化版，按十神判断亲子关系）──────────────────────
+        _child_tg_map = {
+            "食神": "食神当令，子女缘厚，亲子关系融洽，孩子多聪明好学，此运生育利于母子健康",
+            "伤官": "伤官旺，子女个性强，亲子关系需耐心磨合，严禁强硬管控，否则必生逆反",
+            "正官": "正官管束，子女依规矩成长，但亲子略显压抑，多用鼓励肯定替代批评",
+            "七杀": "七杀克制，恩中带严，过度管教必引逆反；本运生育可能有波折，需注意孕期护理",
+            "偏印": "偏印克食伤（子女星），此运不宜为主要生育窗口，已有子女者防教育理念冲突",
+            "正印": "正印化杀生身，子女健康稳定，亲子依赖感强，适当鼓励独立性，勿过度溺爱",
+            "比肩": "比肩运精力多放在自身事业，对子女陪伴时间偏少，需有意识拨出亲子时间",
+            "劫财": "劫财耗财，子女可能带来额外经济负担，管理好家庭财务，勿为子女倾家荡产",
+            "正财": "正财稳健，子女生活条件较好，亲子关系正向，可放心规划教育投资",
+            "偏财": "偏财旺，子女独立性强，缘分淡而情深，给予充分空间比约束更有效",
+        }
+        _child_hint_val = _child_tg_map.get(item.ten_god or "", "")
+        if _child_hint_val:
+            item.child_hint = _child_hint_val
+        elif not item.child_hint:
+            hints_c = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
+            item.child_hint = hints_c.get("child_hint", "")
+
         # refs（古籍引用）
         if item.refs is None:
             refs_tg = _get_refs_by_tag(item.ten_god) if item.ten_god else []
