@@ -552,7 +552,7 @@ function renderTab3(json, el) {
   <div class="geju-hero card" style="margin-bottom:12px">
     <div class="geju-seal geju-seal-${tierCls}">
       ${sealLines.map(l=>`<div class="geju-seal-ln">${esc(l)}</div>`).join('')}
-      ${g.score !== undefined ? `<div class="geju-seal-score">${Math.round(g.score)}</div>` : ''}
+      ${g.confidence != null && g.confidence > 0 ? `<div class="geju-seal-score">${Math.round(g.confidence*100)}%</div>` : ''}
     </div>
     <div class="geju-hero-body">
       <div class="geju-hero-name">
@@ -889,7 +889,7 @@ function renderTab7(json, el) {
   const w  = json.wealth_analysis||{};
   const wo = json.wealth||{};
   const clamp = (v,a,b) => Math.min(Math.max(v,a),b);
-  const score = w.wealth_score ?? wo.score;
+  const score = w.wealth_score ?? wo.wealth_score;
   const scoreColor = score>=70?'var(--ok)':score>=50?'var(--warn)':'var(--bad)';
 
   // 当前大运财运 cross-ref
@@ -1620,8 +1620,10 @@ function renderTab18(json, el) {
   const jiCount = mf.filter(m=>m.luck_level==='吉').length;
   const xiongCount = mf.filter(m=>m.luck_level==='凶').length;
   const pingCount = mf.length - jiCount - xiongCount;
-  const bestMonth = mf.reduce((a,b)=>(b.luck_score??0)>(a.luck_score??0)?b:a, mf[0]);
-  const worstMonth = mf.reduce((a,b)=>(b.luck_score??99)<(a.luck_score??99)?b:a, mf[0]);
+  // 最佳月/最差月：优先利用 luck_level（吉=高分 2，平=1，凶=0）
+  const _lv = m => m.luck_level==='吉'?2:m.luck_level==='凶'?0:1;
+  const bestMonth = mf.reduce((a,b)=>_lv(b)>_lv(a)?b:a, mf[0]);
+  const worstMonth = mf.reduce((a,b)=>_lv(b)<_lv(a)?b:a, mf[0]);
   const monthSummaryHtml = `
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
     <div style="padding:8px 12px;background:rgba(45,138,78,0.08);border-radius:8px;border-left:3px solid var(--ok);text-align:center">
@@ -1636,7 +1638,11 @@ function renderTab18(json, el) {
       <div style="font-size:10px;font-weight:700;color:var(--muted)">平月</div>
       <div style="font-size:22px;font-weight:800;color:var(--muted)">${pingCount}</div>
     </div>
-  </div>`;
+  </div>
+  ${(bestMonth||worstMonth)?`<div style="display:flex;gap:8px;margin-bottom:10px;font-size:12px">
+    ${bestMonth&&bestMonth.luck_level==='吉'?`<div style="flex:1;padding:5px 10px;background:rgba(45,138,78,0.06);border-radius:6px">🌟 最佳：<strong>${(MONTHS[bestMonth.month-1]||bestMonth.month)+'月'}</strong> ${esc(bestMonth.month_ganzhi||bestMonth.month_dizhi||'')}</div>`:''}
+    ${worstMonth&&worstMonth.luck_level==='凶'?`<div style="flex:1;padding:5px 10px;background:rgba(192,57,43,0.06);border-radius:6px">⚠ 注意：<strong>${(MONTHS[worstMonth.month-1]||worstMonth.month)+'月'}</strong> ${esc(worstMonth.month_ganzhi||worstMonth.month_dizhi||'')}</div>`:''}
+  </div>`:''}`;
   // 月运五行色调映射（兼容旧文字键和新十六进制格式）
   const _colorMap = {'白/金':'#e2e8f0','绿/青':'#86efac','黑/蓝':'#93c5fd','红/紫':'#fca5a5','黄/棕':'#fde68a'};
   el.innerHTML = monthSummaryHtml + `

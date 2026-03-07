@@ -469,6 +469,10 @@ window.buildPayload = function() {
   const gender = sexEl?.value === 'M' ? 'male' : sexEl?.value === 'F' ? 'female' : null;
   const payload = { dt:dtEl.value, lon, tz, mode:$('mode')?.value||'dual', solar_time_enabled:$('solar_time_enabled')?.checked||false };
   if (gender) payload.gender = gender;
+  const cityTier = $('city_tier')?.value;
+  if (cityTier) payload.city_tier = cityTier;
+  const industry = $('industry')?.value;
+  if (industry) payload.industry = industry;
   return payload;
 };
 
