@@ -14,6 +14,7 @@ from app.schemas import SnapshotOut
 from app.dependencies import require_user, RequiredUser
 from app.exceptions import AuthorizationException, ErrorCode, ResourceNotFoundException
 from app.error_handling import handle_exceptions
+from services.delegation_service import log_action
 
 router = APIRouter(prefix="/api/v1", tags=["snapshots"])
 
@@ -108,3 +109,11 @@ def delete_snapshot(
     snap.deleted_at = datetime.now(timezone.utc)
     session.add(snap)
     session.commit()
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="delete_snapshot",
+        resource_type="snapshot",
+        resource_id=str(snapshot_id),
+        details={"case_id": str(snap.case_id)},
+    )
