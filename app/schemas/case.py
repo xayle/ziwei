@@ -88,11 +88,19 @@ class CaseBase(BaseModel):
             raise ValueError(f"tz must be IANA name: {exc}")
         return v
 
-    @field_validator("tags")
+    @field_validator("tags", mode="before")
     @classmethod
-    def validate_tags(cls, v: Optional[str]) -> Optional[str]:
+    def validate_tags(cls, v) -> Optional[str]:
         if v is None:
             return v
+        # 支持前端传入 List[str]，自动转为逗号分隔字符串存储
+        if isinstance(v, list):
+            parts = [str(t).strip() for t in v if str(t).strip()]
+            v = ",".join(parts) if parts else None
+            if v is None:
+                return None
+        if not isinstance(v, str):
+            raise ValueError("tags must be str or list of str")
         v = v.strip()
         if not v:
             return None

@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, cast
 
 from fastapi import APIRouter, Depends, Query, Request, status
+from sqlalchemy import func
 from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import Session, select
 
@@ -55,29 +56,33 @@ def list_cases(
     order: str = Query(default="updated_at", pattern="^(updated_at|created_at|name)$"),
     dir: str = Query(default="desc", pattern="^(asc|desc)$"),
 ):
-    # ✅ 第一步：获取 case 列表（1 次查询）
-    stmt = (
-        select(Case)
-        .where(Case.deleted_at.is_(None), Case.owner_id == current_user.id)  # type: ignore
-    )
+    # ✅ 第一步：构建共用的 WHERE 条件
     name_col = cast(ColumnElement[str], Case.name)
     tags_col = cast(ColumnElement[str], Case.tags)
+
+    base_filters = [Case.deleted_at.is_(None), Case.owner_id == current_user.id]  # type: ignore
     if q:
-        stmt = stmt.where(name_col.contains(q))
+        base_filters.append(name_col.contains(q))
     if tag:
-        stmt = stmt.where(tags_col.contains(tag))
+        base_filters.append(tags_col.contains(tag))
+
+    # ✅ 第二步：COUNT 查询获取真实总数
+    count_stmt = select(func.count()).select_from(Case).where(*base_filters)
+    total_count: int = session.exec(count_stmt).one()  # type: ignore[assignment]
+
+    # ✅ 第三步：获取 case 列表（1 次查询）
     order_col = cast(ColumnElement, getattr(Case, order))
     if dir == "desc":
         order_col = order_col.desc()
     else:
         order_col = order_col.asc()
-    stmt = stmt.order_by(order_col).offset(offset).limit(limit)
+    stmt = select(Case).where(*base_filters).order_by(order_col).offset(offset).limit(limit)
     cases = session.exec(stmt).all()
-    
+
     if not cases:
-        return []
-    
-    # ✅ 第二步：批量加载所有 case 的最新 verify snapshot（1 次查询，而不是 N 次！）
+        return {"items": [], "total": total_count, "next_cursor": None}
+
+    # ✅ 第四步：批量加载所有 case 的最新 verify snapshot（1 次查询，而不是 N 次！）
     case_ids = [c.id for c in cases]
 
     # 为每个 case_id 获取最新的 snapshot
@@ -91,13 +96,13 @@ def list_cases(
         .order_by(Snapshot.case_id, Snapshot.created_at.desc())  # type: ignore[union-attr]
     ).all()
     
-    # ✅ 第三步：构建 case_id → snapshot 的映射（避免重复）
+    # ✅ 第五步：构建 case_id → snapshot 的映射（避免重复）
     snapshot_map = {}
     for snap in all_snapshots:
         if snap.case_id not in snapshot_map:
             snapshot_map[snap.case_id] = snap
-    
-    # ✅ 第四步：构建结果（只需数据操作，无额外数据库查询）
+
+    # ✅ 第六步：构建结果（只需数据操作，无额外数据库查询）
     results: List[CaseOut] = []
     for c in cases:
         summary = None
@@ -114,7 +119,7 @@ def list_cases(
         results.append(co)
     return {
         "items": results,
-        "total": len(results),
+        "total": total_count,
         "next_cursor": None,
     }
 
