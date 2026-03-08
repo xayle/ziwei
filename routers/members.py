@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, model_validator, computed_field
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from db import get_session
@@ -219,29 +220,35 @@ def list_members(
     if cached_result:
         return cached_result
     
-    # ✅ 第二步：使用 Keyset 分页查询（快 25 倍！）
-    query = (
+    # ✅ 第二步：构建基础过滤条件（不含游标/limit）
+    base_filters = [Member.owner_id == current_user.id, Member.deleted_at.is_(None)]  # type: ignore[union-attr]
+
+    # ✅ 第三步：COUNT 查询获取真实总数（游标无关）
+    count_stmt = select(func.count()).select_from(Member).where(*base_filters)
+    total_count: int = session.exec(count_stmt).one()  # type: ignore[assignment]
+
+    # ✅ 第四步：使用 Keyset 分页查询（快 25 倍！）
+    data_query = (
         select(Member)
-        .where(Member.owner_id == current_user.id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
+        .where(*base_filters)
         .order_by(Member.id)  # type: ignore[arg-type]
         .limit(limit)
     )
     if last_id > 0:
-        query = query.where(Member.id > last_id)  # type: ignore[operator]
-    members = session.exec(query).all()
-    
-    # ✅ 第三步：准备响应
+        data_query = data_query.where(Member.id > last_id)  # type: ignore[operator]
+    members = session.exec(data_query).all()
+
+    # ✅ 第五步：准备响应
     member_responses = [MemberResponse(**m.__dict__) for m in members]
-    # next_cursor: 满页时提供下一页游标，末页返回 None（与 list_events 一致）
     next_cursor = members[-1].id if (members and len(members) == limit) else None
 
     result = {
         "items": member_responses,
         "next_cursor": next_cursor,
-        "total": len(members),
+        "total": total_count,
     }
     
-    # ✅ 第四步：缓存结果 10 分钟
+    # ✅ 第六步：缓存结果 10 分钟
     cache.set(cache_key, result)
     
     return result

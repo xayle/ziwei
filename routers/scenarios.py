@@ -6,7 +6,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel, field_validator, ValidationError
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy import func
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
@@ -195,6 +196,8 @@ def list_scenarios(
     session: Session = Depends(get_session),
     member_id: Optional[int] = None,
     scenario_type: Optional[str] = None,
+    limit: int = Query(20, ge=1, le=100, description="每页数量"),
+    last_id: int = Query(0, ge=0, description="游标（上一页最后 ID）"),
 ):
     """列表查询场景"""
     # 检查权限
@@ -204,23 +207,31 @@ def list_scenarios(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="Permission denied: read_scenario required",
         )
-    
-    # 构建查询
-    query = select(Scenario).where(
+
+    # 基础过滤条件
+    base_filters = [
         Scenario.owner_id == current_user.id,
         Scenario.deleted_at.is_(None),  # type: ignore[union-attr]
-    )
-    
-    # 添加筛选条件
+    ]
     if member_id:
-        query = query.where(Scenario.base_member_id == member_id)
-    
+        base_filters.append(Scenario.base_member_id == member_id)  # type: ignore[arg-type]
     if scenario_type:
-        query = query.where(Scenario.scenario_type == scenario_type)
-    
-    scenarios = session.exec(query).all()
+        base_filters.append(Scenario.scenario_type == scenario_type)  # type: ignore[arg-type]
+
+    # COUNT 查询获取真实总数
+    count_stmt = select(func.count()).select_from(Scenario).where(*base_filters)
+    total_count: int = session.exec(count_stmt).one()  # type: ignore[assignment]
+
+    # Keyset 分页数据查询
+    data_query = select(Scenario).where(*base_filters).order_by(Scenario.id)  # type: ignore[arg-type]
+    if last_id > 0:
+        data_query = data_query.where(Scenario.id > last_id)  # type: ignore[operator]
+    data_query = data_query.limit(limit)
+    scenarios = session.exec(data_query).all()
+
     items = [ScenarioResponse(**s.__dict__) for s in scenarios]
-    return {"items": items, "total": len(items), "next_cursor": None}
+    next_cursor = scenarios[-1].id if (scenarios and len(scenarios) == limit) else None
+    return {"items": items, "total": total_count, "next_cursor": next_cursor}
 
 
 @router.get("/scenarios/{scenario_id}", response_model=ScenarioResponse)
@@ -381,6 +392,8 @@ def list_member_scenarios(
     member_id: int,
     current_user: RequiredUser,
     session: Session = Depends(get_session),
+    limit: int = Query(20, ge=1, le=100, description="每页数量"),
+    last_id: int = Query(0, ge=0, description="游标（上一页最后 ID）"),
 ):
     """获取特定成员的所有场景"""
     # 检查权限
@@ -390,18 +403,27 @@ def list_member_scenarios(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="Permission denied: read_scenario required",
         )
-    
+
     # 验证成员所有权
     check_member_ownership(session, current_user, member_id)
-    
-    # 查询该成员的所有场景
-    scenarios = session.exec(
-        select(Scenario).where(
-            (Scenario.owner_id == current_user.id) &
-            (Scenario.base_member_id == member_id) &
-            (Scenario.deleted_at.is_(None))  # type: ignore[union-attr]
-        )
-    ).all()
+
+    base_filters = [
+        Scenario.owner_id == current_user.id,
+        Scenario.base_member_id == member_id,
+        Scenario.deleted_at.is_(None),  # type: ignore[union-attr]
+    ]
+
+    # COUNT 查询
+    count_stmt = select(func.count()).select_from(Scenario).where(*base_filters)
+    total_count: int = session.exec(count_stmt).one()  # type: ignore[assignment]
+
+    # Keyset 分页
+    data_query = select(Scenario).where(*base_filters).order_by(Scenario.id)  # type: ignore[arg-type]
+    if last_id > 0:
+        data_query = data_query.where(Scenario.id > last_id)  # type: ignore[operator]
+    data_query = data_query.limit(limit)
+    scenarios = session.exec(data_query).all()
 
     items = [ScenarioResponse(**s.__dict__) for s in scenarios]
-    return {"items": items, "total": len(items), "next_cursor": None}
+    next_cursor = scenarios[-1].id if (scenarios and len(scenarios) == limit) else None
+    return {"items": items, "total": total_count, "next_cursor": next_cursor}

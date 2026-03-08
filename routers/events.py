@@ -8,6 +8,7 @@ from typing import Optional
 from pydantic import BaseModel, field_validator, ValidationError
 from fastapi import APIRouter, Depends, Request, Query
 from sqlmodel import Session, select
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from db import get_session
@@ -292,31 +293,32 @@ def list_events(
     if member_id:
         check_member_ownership(session, current_user, member_id)
     
-    # ✅ 第三步：构建查询（带过滤条件）
-    query = select(Event).where(Event.owner_id == current_user.id, Event.deleted_at.is_(None))  # type: ignore[union-attr]
-    
+    # ✅ 第三步：构建基础过滤条件（不含游标/limit）
+    base_filters = [Event.owner_id == current_user.id, Event.deleted_at.is_(None)]  # type: ignore[union-attr]
     if member_id:
-        query = query.where(Event.member_id == member_id)
-    
+        base_filters.append(Event.member_id == member_id)  # type: ignore[arg-type]
     if event_type:
-        query = query.where(Event.event_type == event_type)
-    
-    # ✅ 第四步：应用游标分页
-    if last_id > 0:
-        query = query.where(Event.id > last_id)  # type: ignore[operator]
+        base_filters.append(Event.event_type == event_type)  # type: ignore[arg-type]
 
-    query = query.order_by(Event.id).limit(limit)  # type: ignore[arg-type]
-    events = session.exec(query).all()
-    
-    # ✅ 第五步：准备响应
+    # ✅ 第四步：COUNT 查询获取真实总数（游标无关）
+    count_stmt = select(func.count()).select_from(Event).where(*base_filters)
+    total_count: int = session.exec(count_stmt).one()  # type: ignore[assignment]
+
+    # ✅ 第五步：应用游标分页，获取分页数据
+    data_query = select(Event).where(*base_filters)
+    if last_id > 0:
+        data_query = data_query.where(Event.id > last_id)  # type: ignore[operator]
+    data_query = data_query.order_by(Event.id).limit(limit)  # type: ignore[arg-type]
+    events = session.exec(data_query).all()
+
+    # ✅ 第六步：准备响应
     event_responses = [EventResponse(**e.__dict__) for e in events]
-    # next_cursor: 仅当返回满页时才有下一页，否则返回 None 表示末页
     next_cursor = events[-1].id if (events and len(events) == limit) else None
-    
+
     result = {
         "items": event_responses,
         "next_cursor": next_cursor,
-        "total": len(events),
+        "total": total_count,
     }
     
     # ✅ 第六步：缓存结果 5 分钟
