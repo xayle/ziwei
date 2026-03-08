@@ -249,6 +249,7 @@ def test_case(db_session: SQLModelSession, test_user: User) -> Case:
         solar_time_enabled=False,
         notes="Test case for unit testing",
         tags="test,unit",
+        owner_id=test_user.id,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -534,6 +535,7 @@ def bulk_test_cases(db_session: SQLModelSession, bulk_test_users: list[User]) ->
             city="Shanghai",
             lon=121.47,
             solar_time_enabled=False,
+            owner_id=user.id,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
