@@ -93,6 +93,7 @@ from routers import scenarios as scenarios_router
 from routers import static_data as static_data_router
 from routers import quickstart as quickstart_router
 from routers import v2 as v2_router_module  # N6.01: API v2 路由
+from routers import ziwei as ziwei_router_module  # 紫微斗数路由
 from services.normalize_input import validate_lon_strict, warn_lon_cn_range
 from services.bazi_full_service import (
 	build_dayun,
@@ -370,6 +371,7 @@ app.include_router(scenarios_router.router)
 app.include_router(static_data_router.router)
 app.include_router(quickstart_router.router)
 app.include_router(v2_router_module.router, prefix="/api/v2")  # N6.01: API v2，ENGINE_V2=false时返回501
+app.include_router(ziwei_router_module.router)  # 紫微斗数
 
 # ⚙️ 0.13: 统一认证依赖 — 直接从 app.dependencies.auth 引用，run.py 不重复定义
 # get_current_user / require_user 已在 app/dependencies/auth.py 实现
