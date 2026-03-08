@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional
-from pydantic import BaseModel, field_validator, ValidationError
+from pydantic import BaseModel, ConfigDict, field_validator, ValidationError
 from fastapi import APIRouter, Depends, Request, Query
 from sqlmodel import Session, select
 from sqlalchemy import func
@@ -123,6 +123,7 @@ class EventUpdateRequest(BaseModel):
 
 class EventResponse(BaseModel):
     """事件响应"""
+    model_config = ConfigDict(from_attributes=True)
     id: int
     owner_id: int
     member_id: int
@@ -248,7 +249,7 @@ def create_event(
 
     # 写操作后立即使缓存失效
     _events_cache.clear(pattern=f"events:{current_user.id}")
-    return EventResponse(**new_event.__dict__)
+    return EventResponse.model_validate(new_event)
 
 
 @router.get("/events")
@@ -314,7 +315,7 @@ def list_events(
     events = session.exec(data_query).all()
 
     # ✅ 第六步：准备响应
-    event_responses = [EventResponse(**e.__dict__) for e in events]
+    event_responses = [EventResponse.model_validate(e) for e in events]
     next_cursor = events[-1].id if (events and len(events) == limit) else None
 
     result = {
@@ -365,7 +366,7 @@ def get_event(
             message="You don't have permission to access this event",
         )
     
-    return EventResponse(**event.__dict__)
+    return EventResponse.model_validate(event)
 
 
 @router.patch("/events/{event_id}")
@@ -431,7 +432,7 @@ def patch_event(
     )
 
     _events_cache.clear(pattern=f"events:{current_user.id}")
-    return EventResponse(**event.__dict__)
+    return EventResponse.model_validate(event)
 
 
 @router.put("/events/{event_id}")
@@ -508,7 +509,7 @@ def update_event(
     )
 
     _events_cache.clear(pattern=f"events:{current_user.id}")
-    return EventResponse(**event.__dict__)
+    return EventResponse.model_validate(event)
 
 
 @router.delete("/events/{event_id}", status_code=204)
@@ -598,7 +599,7 @@ def list_member_events(
     
     next_cursor = events[-1].id if (events and len(events) == limit) else None
     return {
-        "events": [EventResponse(**e.__dict__) for e in events],
+        "events": [EventResponse.model_validate(e) for e in events],
         "next_cursor": next_cursor,
         "has_more": next_cursor is not None,
         "total_returned": len(events),

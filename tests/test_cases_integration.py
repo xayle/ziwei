@@ -12,6 +12,16 @@ from fastapi.testclient import TestClient
 from app.models import Case, Member, Snapshot, Event
 from sqlmodel import Session
 
+# 通过 EventJsonValidator 验证的最小合法 bazi_json（BaziResultModel 要求 pillars_primary + ten_gods）
+MINIMAL_VALID_BAZI_JSON = (
+    '{"pillars_primary": {'
+    '"year_pillar": {"heavenly_stem": "甲", "earthly_branch": "子"},'
+    '"month_pillar": {"heavenly_stem": "丙", "earthly_branch": "寅"},'
+    '"day_pillar":   {"heavenly_stem": "戊", "earthly_branch": "午"},'
+    '"time_pillar":  {"heavenly_stem": "庚", "earthly_branch": "申"}'
+    '}, "ten_gods": {}}'
+)
+
 
 @pytest.mark.api
 class TestCaseAPI:
@@ -39,12 +49,15 @@ class TestCaseAPI:
             assert data["gender"] == payload["gender"]
     
     def test_list_cases(self, client_with_auth: TestClient, test_case: Case):
-        """Test listing all user's cases"""
+        """Test listing all user's cases — response envelope is {items, total, next_cursor}"""
         response = client_with_auth.get("/api/v1/cases")
-        
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list) or isinstance(data, dict)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data, f"list_cases envelope missing 'items': {data}"
+        assert "total" in data, f"list_cases envelope missing 'total': {data}"
+        assert isinstance(data["items"], list)
+        assert isinstance(data["total"], int)
     
     def test_get_case_by_id(self, client_with_auth: TestClient, test_case: Case):
         """Test retrieving a specific case by ID"""
@@ -120,12 +133,17 @@ class TestMemberAPI:
             assert data["name"] == payload["name"]
     
     def test_list_members(self, client_with_auth: TestClient, test_member: Member):
-        """Test listing all user's members"""
+        """Test listing all user's members — response envelope is {items, total, next_cursor}"""
         response = client_with_auth.get("/api/v1/members")
-        
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, (list, dict))
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data, f"list_members envelope missing 'items': {data}"
+        assert "total" in data, f"list_members envelope missing 'total': {data}"
+        assert isinstance(data["items"], list)
+        assert isinstance(data["total"], int)
+        # 预置了 test_member，total 至少为 1
+        assert data["total"] >= 1
     
     def test_get_member_by_id(self, client_with_auth: TestClient, test_member: Member):
         """Test retrieving a specific member"""
@@ -146,30 +164,35 @@ class TestEventAPI:
         client_with_auth: TestClient,
         test_member: Member,
     ):
-        """Test creating a new event"""
+        """Test creating a new event — bazi_json must satisfy BaziResultModel schema"""
         payload = {
             "member_id": test_member.id,
             "name": "Test Event",
             "event_type": "marriage",
-            "bazi_json": '{"test": "data"}',
+            "bazi_json": MINIMAL_VALID_BAZI_JSON,
             "L_level": 1,
             "confidence_score": 0.85,
         }
-        
+
         response = client_with_auth.post("/api/v1/events", json=payload)
-        
-        if response.status_code == 201:
-            data = response.json()
-            assert "id" in data
-            assert data["name"] == payload["name"]
+
+        assert response.status_code == 201, (
+            f"create_event failed {response.status_code}: {response.text[:300]}"
+        )
+        data = response.json()
+        assert "id" in data
+        assert data["name"] == payload["name"]
     
     def test_list_events(self, client_with_auth: TestClient, test_event: Event):
-        """Test listing all user's events"""
+        """Test listing all user's events — response envelope is {items, total, next_cursor}"""
         response = client_with_auth.get("/api/v1/events")
-        
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, (list, dict))
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "items" in data, f"list_events envelope missing 'items': {data}"
+        assert "total" in data, f"list_events envelope missing 'total': {data}"
+        assert isinstance(data["items"], list)
+        assert isinstance(data["total"], int)
 
 
 @pytest.mark.integration

@@ -3,7 +3,7 @@
 """
 from datetime import date, datetime, timezone
 from typing import Optional
-from pydantic import BaseModel, Field, model_validator, computed_field
+from pydantic import BaseModel, ConfigDict, Field, model_validator, computed_field
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 from sqlalchemy import func
@@ -102,6 +102,7 @@ class MemberUpdateRequest(BaseModel):
 
 class MemberResponse(BaseModel):
     """成员响应模型"""
+    model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
     birth_date: date
@@ -189,7 +190,7 @@ def create_member(
 
     # 写操作后立即使缓存失效，保证列表返回最新数据
     _members_cache.clear(pattern=f"members:{current_user.id}")
-    return MemberResponse(**new_member.__dict__)
+    return MemberResponse.model_validate(new_member)
 
 
 @router.get("/members")
@@ -241,7 +242,7 @@ def list_members(
     members = session.exec(data_query).all()
 
     # ✅ 第五步：准备响应
-    member_responses = [MemberResponse(**m.__dict__) for m in members]
+    member_responses = [MemberResponse.model_validate(m) for m in members]
     next_cursor = members[-1].id if (members and len(members) == limit) else None
 
     result = {
@@ -285,7 +286,7 @@ def get_member(
             message="You don't have permission to access this member",
         )
     
-    return MemberResponse(**member.__dict__)
+    return MemberResponse.model_validate(member)
 
 
 @router.put("/members/{member_id}")
@@ -351,7 +352,7 @@ def update_member(
     )
 
     _members_cache.clear(pattern=f"members:{current_user.id}")
-    return MemberResponse(**member.__dict__)
+    return MemberResponse.model_validate(member)
 
 
 @router.patch("/members/{member_id}")
@@ -412,7 +413,7 @@ def patch_member(
     )
 
     _members_cache.clear(pattern=f"members:{current_user.id}")
-    return MemberResponse(**member.__dict__)
+    return MemberResponse.model_validate(member)
 
 
 @router.delete("/members/{member_id}", status_code=204)

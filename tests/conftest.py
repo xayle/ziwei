@@ -32,6 +32,22 @@ import services.auth_service as auth_service_module
 
 
 # ============================================================================
+# SHARED TEST CONSTANTS
+# ============================================================================
+
+# 通过 EventJsonValidator 验证的最小合法 bazi_json 字符串
+# BaziResultModel 要求 pillars_primary(PillarsModel) + ten_gods(TenGodsModel)
+MINIMAL_VALID_BAZI_JSON = (
+    '{"pillars_primary": {'
+    '"year_pillar": {"heavenly_stem": "甲", "earthly_branch": "子"},'
+    '"month_pillar": {"heavenly_stem": "丙", "earthly_branch": "寅"},'
+    '"day_pillar":   {"heavenly_stem": "戊", "earthly_branch": "午"},'
+    '"time_pillar":  {"heavenly_stem": "庚", "earthly_branch": "申"}'
+    '}, "ten_gods": {}}'
+)
+
+
+# ============================================================================
 # DATABASE CONFIGURATION
 # ============================================================================
 
@@ -113,7 +129,7 @@ def test_user_data() -> Dict[str, Any]:
         "username": "testuser",
         "email": "test@example.com",
         "password": "test_password_123!",
-        "role": "user",
+        "role": "owner",
         "is_active": True,
         "is_admin": False,
     }
@@ -126,7 +142,7 @@ def admin_user_data() -> Dict[str, Any]:
         "username": "admin",
         "email": "admin@example.com",
         "password": "admin_password_123!",
-        "role": "admin",
+        "role": "owner",  # owner 拥有全部权限，admin 在 Role 枚举中不存在
         "is_active": True,
         "is_admin": True,
     }
