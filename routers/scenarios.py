@@ -97,6 +97,13 @@ class ScenarioResponse(BaseModel):
     updated_at: datetime
 
 
+class ScenarioListResponse(BaseModel):
+    """场景分页列表响应"""
+    items: List[ScenarioResponse]
+    total: int
+    next_cursor: Optional[int] = None
+
+
 def check_member_ownership(session: Session, current_user: User, member_id: int) -> Member:
     """检查用户是否拥有该成员"""
     member = session.exec(
@@ -190,7 +197,7 @@ def create_scenario(
         )
 
 
-@router.get("/scenarios", response_model=None)
+@router.get("/scenarios", response_model=ScenarioListResponse)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_scenarios(
     current_user: RequiredUser,
@@ -387,7 +394,7 @@ def delete_scenario(
         )
 
 
-@router.get("/members/{member_id}/scenarios", response_model=None)
+@router.get("/members/{member_id}/scenarios", response_model=ScenarioListResponse)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_member_scenarios(
     member_id: int,

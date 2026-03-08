@@ -10,7 +10,7 @@ from sqlmodel import Session, select
 
 from db import get_session
 from app.models import Case, Snapshot, User
-from app.schemas import CaseCreate, CaseOut, CasePatch
+from app.schemas import CaseCreate, CaseOut, CasePatch, CaseListResponse
 from app.dependencies import RequiredUser
 from app.exceptions import (
     AuthorizationException,
@@ -53,7 +53,7 @@ def create_case(
     return CaseOut.model_validate(case)
 
 
-@router.get("", response_model=None)
+@router.get("", response_model=CaseListResponse)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_cases(
     current_user: RequiredUser,

@@ -243,3 +243,10 @@ class SnapshotOut(BaseModel):
     summary_engine_primary: Optional[str] = None
     note: Optional[str] = None
     created_at: datetime
+
+
+class CaseListResponse(BaseModel):
+    """Case 分页列表响应"""
+    items: List[CaseOut]
+    total: int
+    next_cursor: Optional[str] = None
