@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlmodel import Session
 
 from app.config import settings
@@ -20,6 +20,7 @@ from app.dependencies import RequiredUser
 from app.exceptions import ErrorCode, ValidationException
 from app.error_handling import handle_exceptions
 from routers.compute import _do_compute_for_case
+from constants import MIN_LON, MAX_LON
 
 router = APIRouter(prefix="/api/v1", tags=["quickstart"])
 
@@ -39,6 +40,23 @@ class QuickstartRequest(BaseModel):
     solar_time_enabled: bool = Field(default=False, description="是否启用真太阳时修正")
     notes: Optional[str] = Field(default=None, description="备注")
     tags: Optional[List[str]] = Field(default=None, description="标签列表")
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def parse_tags(cls, v) -> Optional[List[str]]:
+        """接受逗号分隔字符串或列表，统一转为 List[str]"""
+        if v is None:
+            return v
+        if isinstance(v, str):
+            parts = [t.strip() for t in v.split(",") if t.strip()]
+            return parts if parts else None
+        return v
+
+    @model_validator(mode="after")
+    def validate_lon_range(self):
+        if not (MIN_LON <= self.lon <= MAX_LON):
+            raise ValueError(f"lon must be between {MIN_LON} and {MAX_LON}")
+        return self
 
     # ── 计算选项（与 ComputeRequest 一致）──
     mode: str = Field(default="dual", description="计算模式：'dual'（双引擎）或 'single'")

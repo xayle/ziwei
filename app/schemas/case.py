@@ -225,6 +225,8 @@ class CaseOut(CaseBase):
 
 class SnapshotOut(BaseModel):
     """Snapshot 响应模型"""
+    model_config = {"from_attributes": True}
+
     id: str
     case_id: str
     kind: str

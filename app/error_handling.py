@@ -9,6 +9,7 @@ from functools import wraps
 from datetime import datetime, timezone
 
 from fastapi import Request, Response
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import status
@@ -124,6 +125,9 @@ def handle_exceptions(
             except AppException:
                 # 已处理的应用异常，直接抛出
                 raise
+            except FastAPIHTTPException:
+                # FastAPI HTTPException 直接透传，不包装为 500
+                raise
             except Exception as exc:
                 logger.error(
                     f"Error in {func.__name__}: {str(exc)}",
@@ -141,6 +145,9 @@ def handle_exceptions(
                 return func(*args, **kwargs)
             except AppException:
                 # 已处理的应用异常，直接抛出
+                raise
+            except FastAPIHTTPException:
+                # FastAPI HTTPException 直接透传，不包装为 500
                 raise
             except Exception as exc:
                 logger.error(
