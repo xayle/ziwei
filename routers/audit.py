@@ -7,6 +7,7 @@ from typing import Optional, Any
 from pydantic import BaseModel, model_validator
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
+from sqlalchemy import func
 
 from db import get_session
 from app.models import User, AuditLog
@@ -73,6 +74,20 @@ def get_user_audit_logs(
     """
     获取当前用户的审计日志（keyset 分页：传入 next_cursor 作为下次 before_id）
     """
+    # 基础过滤条件（不含游标）
+    base_filters = [
+        AuditLog.deleted_at.is_(None),  # type: ignore[union-attr]
+        AuditLog.user_id == current_user.id,
+    ]
+    if action:
+        base_filters.append(AuditLog.action == action)  # type: ignore[arg-type]
+    if resource_type:
+        base_filters.append(AuditLog.resource_type == resource_type)  # type: ignore[arg-type]
+
+    # COUNT 查询获取真实总数（游标无关）
+    count_stmt = select(func.count()).select_from(AuditLog).where(*base_filters)
+    total_count: int = session.exec(count_stmt).one()  # type: ignore[assignment]
+
     logs = get_audit_logs(
         session,
         user_id=current_user.id,
@@ -101,7 +116,7 @@ def get_user_audit_logs(
             )
             for log in logs
         ],
-        "total": len(logs),
+        "total": total_count,
         "next_cursor": next_cursor,
     }
 
@@ -127,6 +142,19 @@ def get_all_audit_logs(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="Permission denied: VIEW_AUDIT_LOG required",
         )
+
+    # 基础过滤条件（不含游标）
+    admin_base_filters: list = [AuditLog.deleted_at.is_(None)]  # type: ignore[union-attr]
+    if user_id:
+        admin_base_filters.append(AuditLog.user_id == user_id)  # type: ignore[arg-type]
+    if action:
+        admin_base_filters.append(AuditLog.action == action)  # type: ignore[arg-type]
+    if resource_type:
+        admin_base_filters.append(AuditLog.resource_type == resource_type)  # type: ignore[arg-type]
+
+    # COUNT 查询获取真实总数
+    admin_count_stmt = select(func.count()).select_from(AuditLog).where(*admin_base_filters)
+    admin_total_count: int = session.exec(admin_count_stmt).one()  # type: ignore[assignment]
 
     logs = get_audit_logs(
         session,
@@ -156,7 +184,7 @@ def get_all_audit_logs(
             )
             for log in logs
         ],
-        "total": len(logs),
+        "total": admin_total_count,
         "next_cursor": next_cursor,
     }
 
