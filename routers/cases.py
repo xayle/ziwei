@@ -18,6 +18,7 @@ from app.exceptions import (
     ResourceNotFoundException,
 )
 from app.error_handling import handle_exceptions
+from services.delegation_service import log_action
 
 router = APIRouter(prefix="/api/v1/cases", tags=["cases"])
 
@@ -41,6 +42,14 @@ def create_case(
     session.add(case)
     session.commit()
     session.refresh(case)
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="create_case",
+        resource_type="case",
+        resource_id=str(case.id),
+        details={"name": case.name},
+    )
     return CaseOut.model_validate(case)
 
 
@@ -200,6 +209,14 @@ def patch_case(
     session.add(case)
     session.commit()
     session.refresh(case)
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="patch_case",
+        resource_type="case",
+        resource_id=str(case.id),
+        details={k: str(v) for k, v in data.items()},
+    )
     co = CaseOut.model_validate(case)
     return co
 
@@ -229,3 +246,10 @@ def delete_case(
     case.updated_at = _now_utc()
     session.add(case)
     session.commit()
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="delete_case",
+        resource_type="case",
+        resource_id=str(case_id),
+    )
