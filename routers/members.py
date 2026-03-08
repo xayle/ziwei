@@ -186,7 +186,9 @@ def create_member(
             "gender": body.gender,
         }
     )
-    
+
+    # 写操作后立即使缓存失效，保证列表返回最新数据
+    _members_cache.clear(pattern=f"members:{current_user.id}")
     return MemberResponse(**new_member.__dict__)
 
 
@@ -347,7 +349,8 @@ def update_member(
         resource_id=str(member_id),
         details={"name": body.name},
     )
-    
+
+    _members_cache.clear(pattern=f"members:{current_user.id}")
     return MemberResponse(**member.__dict__)
 
 
@@ -408,6 +411,7 @@ def patch_member(
         details=updates,
     )
 
+    _members_cache.clear(pattern=f"members:{current_user.id}")
     return MemberResponse(**member.__dict__)
 
 
@@ -454,3 +458,4 @@ def delete_member(
         resource_id=str(member_id),
         details={"name": member.name}
     )
+    _members_cache.clear(pattern=f"members:{current_user.id}")

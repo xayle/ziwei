@@ -245,7 +245,9 @@ def create_event(
             "L_level": body.L_level,
         }
     )
-    
+
+    # 写操作后立即使缓存失效
+    _events_cache.clear(pattern=f"events:{current_user.id}")
     return EventResponse(**new_event.__dict__)
 
 
@@ -428,6 +430,7 @@ def patch_event(
         details=updates,
     )
 
+    _events_cache.clear(pattern=f"events:{current_user.id}")
     return EventResponse(**event.__dict__)
 
 
@@ -503,7 +506,8 @@ def update_event(
         resource_id=str(event_id),
         details={"name": body.name}
     )
-    
+
+    _events_cache.clear(pattern=f"events:{current_user.id}")
     return EventResponse(**event.__dict__)
 
 
@@ -556,6 +560,7 @@ def delete_event(
         resource_id=str(event_id),
         details={"name": event.name}
     )
+    _events_cache.clear(pattern=f"events:{current_user.id}")
 
 
 @router.get("/members/{member_id}/events")

@@ -514,7 +514,8 @@ def bazi_full(
     # Derived calculations
     wuxing_score, wuxing_breakdown = compute_wuxing(pillars_model)
     strength = compute_strength(pillars_model.day.stem, wuxing_score)
-    yongshen = compute_yongshen(wuxing_score, strength)
+    # RL#2: 传入 pillars_model 以启用完整5分支决策树（不传则退化为扶抑法 fallback）
+    yongshen = compute_yongshen(wuxing_score, strength, pillars_model)
 
     dayun_model, raw_dayun = build_dayun(dt_effective, pillars_model, methods)
     raw.day_boundary_crossed = day_boundary_crossed
