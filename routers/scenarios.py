@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime, timezone
 from typing import Optional, List
-from pydantic import BaseModel, field_validator, ValidationError
+from pydantic import BaseModel, ConfigDict, field_validator, ValidationError
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func
 from sqlmodel import Session, select
@@ -84,6 +84,7 @@ class ScenarioUpdateRequest(BaseModel):
 
 class ScenarioResponse(BaseModel):
     """场景响应"""
+    model_config = ConfigDict(from_attributes=True)
     id: int
     owner_id: int
     base_member_id: int
@@ -180,7 +181,7 @@ def create_scenario(
             },
         )
         
-        return ScenarioResponse(**new_scenario.__dict__)
+        return ScenarioResponse.model_validate(new_scenario)
     except IntegrityError as e:
         session.rollback()
         raise BusinessException(
@@ -229,7 +230,7 @@ def list_scenarios(
     data_query = data_query.limit(limit)
     scenarios = session.exec(data_query).all()
 
-    items = [ScenarioResponse(**s.__dict__) for s in scenarios]
+    items = [ScenarioResponse.model_validate(s) for s in scenarios]
     next_cursor = scenarios[-1].id if (scenarios and len(scenarios) == limit) else None
     return {"items": items, "total": total_count, "next_cursor": next_cursor}
 
@@ -266,7 +267,7 @@ def get_scenario(
             message="Permission denied: scenario not owned by current user",
         )
     
-    return ScenarioResponse(**scenario.__dict__)
+    return ScenarioResponse.model_validate(scenario)
 
 
 @router.put("/scenarios/{scenario_id}", response_model=ScenarioResponse)
@@ -324,7 +325,7 @@ def update_scenario(
             details={"updated_fields": list(update_data.keys())},
         )
         
-        return ScenarioResponse(**scenario.__dict__)
+        return ScenarioResponse.model_validate(scenario)
     except IntegrityError as e:
         session.rollback()
         raise BusinessException(
@@ -424,6 +425,6 @@ def list_member_scenarios(
     data_query = data_query.limit(limit)
     scenarios = session.exec(data_query).all()
 
-    items = [ScenarioResponse(**s.__dict__) for s in scenarios]
+    items = [ScenarioResponse.model_validate(s) for s in scenarios]
     next_cursor = scenarios[-1].id if (scenarios and len(scenarios) == limit) else None
     return {"items": items, "total": total_count, "next_cursor": next_cursor}
