@@ -34,6 +34,7 @@ from app.exceptions import (
     ValidationException,
 )
 from app.error_handling import handle_exceptions
+from services.delegation_service import log_action
 
 router = APIRouter(prefix="/api/v1/cases", tags=["compute"])
 
@@ -331,4 +332,13 @@ def compute_case(
             message="You don't have permission to compute this case",
         )
 
-    return _do_compute_for_case(session, case, payload)
+    result = _do_compute_for_case(session, case, payload)
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="compute_case",
+        resource_type="case",
+        resource_id=str(case_id),
+        details={"tasks": payload.tasks if hasattr(payload, "tasks") else None},
+    )
+    return result
