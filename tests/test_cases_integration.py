@@ -42,11 +42,11 @@ class TestCaseAPI:
         
         response = client_with_auth.post("/api/v1/cases", json=payload)
         
-        if response.status_code == 201:
-            data = response.json()
-            assert "id" in data
-            assert data["name"] == payload["name"]
-            assert data["gender"] == payload["gender"]
+        assert response.status_code == 201, response.text
+        data = response.json()
+        assert "id" in data
+        assert data["name"] == payload["name"]
+        assert data["gender"] == payload["gender"]
     
     def test_list_cases(self, client_with_auth: TestClient, test_case: Case):
         """Test listing all user's cases — response envelope is {items, total, next_cursor}"""
@@ -63,10 +63,10 @@ class TestCaseAPI:
         """Test retrieving a specific case by ID"""
         response = client_with_auth.get(f"/api/v1/cases/{test_case.id}")
         
-        if response.status_code == 200:
-            data = response.json()
-            assert data["id"] == test_case.id
-            assert data["name"] == test_case.name
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert data["id"] == test_case.id
+        assert data["name"] == test_case.name
     
     def test_update_case(self, client_with_auth: TestClient, test_case: Case):
         """Test updating case information"""
@@ -75,23 +75,23 @@ class TestCaseAPI:
             "notes": "Updated notes",
         }
         
-        response = client_with_auth.put(
+        response = client_with_auth.patch(
             f"/api/v1/cases/{test_case.id}",
             json=payload
         )
         
-        if response.status_code == 200:
-            data = response.json()
-            assert data["name"] == payload["name"]
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert data["name"] == payload["name"]
     
     def test_delete_case(self, client_with_auth: TestClient, test_case: Case):
         """Test soft-deleting a case"""
         response = client_with_auth.delete(f"/api/v1/cases/{test_case.id}")
         
-        if response.status_code == 204:
-            # Verify case is soft-deleted
-            get_response = client_with_auth.get(f"/api/v1/cases/{test_case.id}")
-            assert get_response.status_code in [404, 410]
+        assert response.status_code == 204, response.text
+        # Verify case is soft-deleted
+        get_response = client_with_auth.get(f"/api/v1/cases/{test_case.id}")
+        assert get_response.status_code in [404, 410]
     
     def test_create_case_with_invalid_data(self, client_with_auth: TestClient):
         """Test case creation fails with invalid data"""
@@ -127,10 +127,10 @@ class TestMemberAPI:
         
         response = client_with_auth.post("/api/v1/members", json=payload)
         
-        if response.status_code == 201:
-            data = response.json()
-            assert "id" in data
-            assert data["name"] == payload["name"]
+        assert response.status_code == 201, response.text
+        data = response.json()
+        assert "id" in data
+        assert data["name"] == payload["name"]
     
     def test_list_members(self, client_with_auth: TestClient, test_member: Member):
         """Test listing all user's members — response envelope is {items, total, next_cursor}"""
@@ -149,10 +149,10 @@ class TestMemberAPI:
         """Test retrieving a specific member"""
         response = client_with_auth.get(f"/api/v1/members/{test_member.id}")
         
-        if response.status_code == 200:
-            data = response.json()
-            assert data["id"] == test_member.id
-            assert data["name"] == test_member.name
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert data["id"] == test_member.id
+        assert data["name"] == test_member.name
 
 
 @pytest.mark.api
@@ -209,7 +209,7 @@ class TestCaseWorkflow:
         # Step 1: Create a case
         case_payload = {
             "name": "Workflow Test Case",
-            "gender": "M",
+            "gender": "male",
             "birth_dt_local": "2000-01-01T12:00:00",
             "tz": "Asia/Shanghai",
             "birth_dt": "2000-01-01T04:00:00Z",
@@ -222,50 +222,48 @@ class TestCaseWorkflow:
             "/api/v1/cases",
             json=case_payload
         )
-        
-        if case_response.status_code == 201:
-            case_id = case_response.json()["id"]
-            
-            # Step 2: Create a member
-            member_payload = {
-                "name": "Workflow Test Member",
-                "birth_date": "2000-01-01",
-                "gender": "M",
-                "birth_time_hour": 12,
-                "birth_time_minute": 0,
-                "birth_city": "Shanghai",
-                "birth_longitude": 121.47,
-                "solar_time_enabled": False,
-            }
-            
-            member_response = client_with_auth.post(
-                "/api/v1/members",
-                json=member_payload
-            )
-            
-            if member_response.status_code == 201:
-                member_id = member_response.json()["id"]
-                
-                # Step 3: Create an event
-                event_payload = {
-                    "member_id": member_id,
-                    "name": "Workflow Event",
-                    "event_type": "marriage",
-                    "bazi_json": '{"test": "data"}',
-                    "L_level": 1,
-                    "confidence_score": 0.85,
-                }
-                
-                event_response = client_with_auth.post(
-                    "/api/v1/events",
-                    json=event_payload
-                )
-                
-                # Verify workflow completed
-                assert case_response.status_code == 201
-                if member_response.status_code == 201:
-                    if event_response.status_code == 201:
-                        assert True  # Full workflow succeeded
+        assert case_response.status_code == 201, f"Step 1 case create failed: {case_response.text}"
+        case_id = case_response.json()["id"]
+
+        # Step 2: Create a member
+        member_payload = {
+            "name": "Workflow Test Member",
+            "birth_date": "2000-01-01",
+            "gender": "M",
+            "birth_time_hour": 12,
+            "birth_time_minute": 0,
+            "birth_city": "Shanghai",
+            "birth_longitude": 121.47,
+            "solar_time_enabled": False,
+        }
+
+        member_response = client_with_auth.post(
+            "/api/v1/members",
+            json=member_payload
+        )
+        assert member_response.status_code == 201, f"Step 2 member create failed: {member_response.text}"
+        member_id = member_response.json()["id"]
+
+        # Step 3: Create an event (valid bazi_json required)
+        event_payload = {
+            "member_id": member_id,
+            "name": "Workflow Event",
+            "event_type": "marriage",
+            "bazi_json": MINIMAL_VALID_BAZI_JSON,
+            "L_level": 1,
+            "confidence_score": 0.85,
+        }
+
+        event_response = client_with_auth.post(
+            "/api/v1/events",
+            json=event_payload
+        )
+        assert event_response.status_code == 201, f"Step 3 event create failed: {event_response.text}"
+
+        # Verify all IDs are populated
+        assert case_id
+        assert member_id
+        assert event_response.json()["id"]
 
 
 @pytest.mark.benchmark
@@ -280,7 +278,7 @@ class TestCasePerformance:
         """Benchmark case creation performance"""
         payload = {
             "name": "Perf Test Case",
-            "gender": "M",
+            "gender": "male",
             "birth_dt_local": "2000-01-01T12:00:00",
             "tz": "Asia/Shanghai",
             "birth_dt": "2000-01-01T04:00:00Z",

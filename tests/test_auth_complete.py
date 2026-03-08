@@ -75,10 +75,10 @@ class TestAuthenticationAPI:
         """Test accessing protected endpoint with valid token"""
         response = client_with_auth.get("/api/v1/auth/me")
         
-        if response.status_code == 200:
-            data = response.json()
-            assert data["email"] == test_user.email
-            assert data["username"] == test_user.username
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert data["email"] == test_user.email
+        assert data["username"] == test_user.username
     
     def test_token_refresh(self, db_session: Session, test_user: User):
         """Test refreshing access token"""
