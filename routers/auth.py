@@ -35,6 +35,7 @@ from services.auth_service import (
     revoke_access_token_jti,
 )
 from services.rate_limit import limiter
+from services.delegation_service import log_action
 
 router = APIRouter(prefix="/api/v1", tags=["auth"])
 logger = logging.getLogger(__name__)
@@ -251,7 +252,23 @@ def login(body: LoginRequest, request: Request, session: Session = Depends(get_s
         session.rollback()  # 回滚 refresh_token 创建
         # 刷新令牌是可选的，不影响登录
         pass
-    
+
+    # 记录登录审计日志
+    try:
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("User-Agent") or ""
+        log_action(
+            session,
+            user_id=user.id or 0,
+            action="login",
+            resource_type="user",
+            resource_id=str(user.id),
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+    except Exception as exc:
+        logger.warning("login: audit log failed: %s", exc)
+
     return TokenResponse(**token_data)
 
 
@@ -311,6 +328,21 @@ def register(body: RegisterRequest, request: Request, session: Session = Depends
         session.commit()  # 一次性提交所有更改
         session.refresh(new_user)
         
+        # 记录注册审计日志
+        try:
+            log_action(
+                session,
+                user_id=new_user.id or 0,
+                action="register",
+                resource_type="user",
+                resource_id=str(new_user.id),
+                ip_address=ip_address,
+                user_agent=user_agent,
+                details={"username": new_user.username},
+            )
+        except Exception as exc:
+            logger.warning("register: audit log failed: %s", exc)
+
         # 生成Token
         token_data = create_access_token(new_user.id or 0, new_user.username, role=new_user.role)
         token_data["refresh_token"] = refresh_token
@@ -529,6 +561,18 @@ def change_password(
         
         session.commit()
         
+        # 记录密码修改审计日志
+        try:
+            log_action(
+                session,
+                user_id=user.user_id,
+                action="change_password",
+                resource_type="user",
+                resource_id=str(user.user_id),
+            )
+        except Exception as exc:
+            logger.warning("change_password: audit log failed: %s", exc)
+
         return {"message": "Password changed successfully. Please login again."}
     except Exception as exc:
         session.rollback()
