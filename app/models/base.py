@@ -51,3 +51,17 @@ class RefreshToken(SQLModel, table=True):
 
     # ORM Relationship (S3)
     user: User = Relationship()
+
+
+class RevokedJti(SQLModel, table=True):
+    """Access Token JTI 黑名单 — 持久化确保重启后撤销不丢失"""
+    __tablename__: ClassVar[str] = "revoked_jtis"
+    __table_args__ = (
+        Index("idx_revoked_jtis_jti", "jti"),
+        Index("idx_revoked_jtis_expires_at", "expires_at"),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    jti: str = Field(unique=True, index=True)
+    expires_at: datetime  # 用于定期清理过期记录
+    revoked_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

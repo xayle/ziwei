@@ -31,14 +31,54 @@ REFRESH_TOKEN_EXPIRE_DAYS: int = settings.jwt_refresh_days
 # Argon2密码哈希器
 _argon2_hasher = PasswordHasher()
 
-# ============ Access Token JTI 黑名单（内存单例）============
-# 进程重启后自动清空；distributed 部署需改用 Redis
+# ============ Access Token JTI 黑名单（内存 + DB 双重持久化）============
+# 内存集合用于高速查询；DB 确保进程重启后撤销不丢失
 _revoked_jtis: set[str] = set()
 
 
-def revoke_access_token_jti(jti: str) -> None:
-    """将 Access Token 的 JTI 加入黑名单，使其立即失效。"""
+def revoke_access_token_jti(
+    jti: str,
+    expires_at: Optional[datetime] = None,
+    session=None,
+) -> None:
+    """将 Access Token 的 JTI 加入黑名单。
+    
+    - 始终写入内存集合（同步生效）。
+    - 若提供 session，同时持久化到 DB（重启后仍有效）。
+    - expires_at 用于 DB 中的过期清理；若为 None 则按 ACCESS_TOKEN_EXPIRE_MINUTES 推算。
+    """
     _revoked_jtis.add(jti)
+    if session is not None:
+        from app.models import RevokedJti
+        from sqlmodel import select as _select
+        # 避免重复插入（幂等）
+        existing = session.exec(
+            _select(RevokedJti).where(RevokedJti.jti == jti)
+        ).first()
+        if not existing:
+            exp = expires_at or datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            session.add(RevokedJti(jti=jti, expires_at=exp))
+            try:
+                session.commit()
+            except Exception:
+                session.rollback()
+
+
+def load_revoked_jtis_from_db(session) -> int:
+    """启动时将 DB 中未过期的 JTI 黑名单加载到内存集合。
+    
+    Returns:
+        加载的 JTI 数量
+    """
+    from app.models import RevokedJti
+    from sqlmodel import select as _select
+    now = datetime.now(timezone.utc)
+    rows = session.exec(
+        _select(RevokedJti).where(RevokedJti.expires_at > now)
+    ).all()
+    for row in rows:
+        _revoked_jtis.add(row.jti)
+    return len(rows)
 
 
 class TokenPayload(BaseModel):

@@ -491,7 +491,12 @@ def logout(
             )
             jti = payload.get("jti")
             if jti:
-                revoke_access_token_jti(jti)
+                from datetime import timezone as _tz
+                exp_ts = payload.get("exp")
+                expires_at = (
+                    datetime.fromtimestamp(exp_ts, tz=_tz.utc) if exp_ts else None
+                )
+                revoke_access_token_jti(jti, expires_at=expires_at, session=session)
         except Exception as exc:
             logger.warning("logout: access token JTI revoke failed: %s", exc)
 

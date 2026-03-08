@@ -158,6 +158,16 @@ async def lifespan(app: FastAPI):
 			   _env, os.environ.get("AUTH_BYPASS", "false"))
 	init_db()
 	logger.info("[STARTUP] 数据库初始化完成")
+	# 将 DB 中未过期的 JTI 黑名单加载到内存（确保重启后撤销仍有效）
+	try:
+		from db import get_engine
+		from sqlmodel import Session as _Session
+		from services.auth_service import load_revoked_jtis_from_db
+		with _Session(get_engine()) as _s:
+			_count = load_revoked_jtis_from_db(_s)
+			logger.info("[STARTUP] 已加载 %d 个 revoked JTI 到内存黑名单", _count)
+	except Exception as _exc:
+		logger.warning("[STARTUP] revoked JTI 加载失败（无阻断）: %s", _exc)
 	yield
 	# Shutdown
 

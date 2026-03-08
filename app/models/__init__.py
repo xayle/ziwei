@@ -1,6 +1,6 @@
 """数据模型包 - 集中导出所有SQLModel模型."""
 # Core models
-from .base import User, RefreshToken
+from .base import User, RefreshToken, RevokedJti
 from .case import Case, Snapshot
 from .member import Member
 from .event import Event
@@ -10,6 +10,7 @@ __all__ = [
     # Base
     "User",
     "RefreshToken",
+    "RevokedJti",
     # Cases
     "Case",
     "Snapshot",
