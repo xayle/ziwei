@@ -118,11 +118,10 @@ class TestAuthorizationRBAC:
         headers = {"Authorization": f"Bearer {token}"}
         response = client.get("/api/v1/admin/stats", headers=headers)
         
-        # Admin endpoint should exist and be accessible
-        # 接口尚未实现，跨过此测试
-        if response.status_code == 404:
-            pytest.skip("/api/v1/admin/stats 尚未实现，跳过")
-        assert response.status_code == 200
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert "total_users" in data
+        assert "active_users" in data
     
     def test_regular_user_cannot_access_admin_endpoint(
         self,
@@ -132,11 +131,9 @@ class TestAuthorizationRBAC:
         """Test regular user cannot access admin endpoints"""
         response = client_with_auth.get("/api/v1/admin/stats")
         
-        # 接口尚未实现的情况下现实返回 404，跳过以避免误报
-        # 接口创建后，此断言应改为 in [401, 403]
-        if response.status_code == 404:
-            pytest.skip("/api/v1/admin/stats 尚未实现，跳过")
-        assert response.status_code in [401, 403]
+        assert response.status_code in [401, 403], (
+            f"Non-admin should receive 401/403, got {response.status_code}: {response.text}"
+        )
 
 
 @pytest.mark.auth

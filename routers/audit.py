@@ -273,3 +273,41 @@ def log_manual_action(
         error_message=log.error_message,
         created_at=log.created_at,
     )
+
+
+@router.get("/admin/stats")
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def admin_stats(
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    管理员统计面板 — 仅限 is_admin=True 的用户
+    返回: 用户总数、活跃用户数、审计日志总数
+    """
+    if not current_user.is_admin:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="Permission denied: admin required",
+        )
+
+    total_users: int = session.exec(
+        select(func.count()).select_from(User).where(User.deleted_at.is_(None))  # type: ignore[union-attr]
+    ).one()  # type: ignore[assignment]
+
+    active_users: int = session.exec(
+        select(func.count()).select_from(User).where(
+            User.deleted_at.is_(None),  # type: ignore[union-attr]
+            User.is_active.is_(True),   # type: ignore[union-attr]
+        )
+    ).one()  # type: ignore[assignment]
+
+    total_audit_logs: int = session.exec(
+        select(func.count()).select_from(AuditLog).where(AuditLog.deleted_at.is_(None))  # type: ignore[union-attr]
+    ).one()  # type: ignore[assignment]
+
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "total_audit_logs": total_audit_logs,
+    }
