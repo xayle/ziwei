@@ -11,6 +11,7 @@ from sqlmodel import Session, select
 from app.dependencies import RequiredUser
 from app.error_handling import handle_exceptions
 from app.exceptions import (
+    AuthorizationException,
     ErrorCode,
     ResourceNotFoundException,
     ValidationException,
@@ -274,6 +275,15 @@ def compute_relation(
             message="case not found",
             details={"missing": missing},
         )
+
+    # 两个 case 都必须归属当前用户
+    for cid, case in case_map.items():
+        if case.owner_id is not None and case.owner_id != current_user.id:
+            raise AuthorizationException(
+                code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+                message="You don't have permission to access this case",
+                details={"case_id": cid},
+            )
 
     relation_request_id = str(uuid4())
 

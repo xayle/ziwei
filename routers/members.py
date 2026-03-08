@@ -319,6 +319,7 @@ def update_member(
     member.birth_longitude = body.birth_longitude
     member.solar_time_enabled = body.solar_time_enabled
     member.notes = body.notes
+    member.updated_at = datetime.now(timezone.utc)
     
     try:
         session.add(member)
@@ -330,6 +331,15 @@ def update_member(
             code=ErrorCode.BUSINESS_OPERATION_FAILED,
             message="Update failed",
         )
+
+    log_action(
+        session,
+        user_id=current_user.id or 0,
+        action="update_member",
+        resource_type="member",
+        resource_id=str(member_id),
+        details={"name": body.name},
+    )
     
     return MemberResponse(**member.__dict__)
 
@@ -366,6 +376,7 @@ def patch_member(
         )
 
     updates = body.model_dump(exclude_unset=True)
+    updates.pop("birth_time", None)  # birth_time 是便捷输入字段，不是 DB 列
     for key, value in updates.items():
         setattr(member, key, value)
     member.updated_at = datetime.now(timezone.utc)

@@ -28,6 +28,7 @@ from services.bazi_full_service import bazi_full
 from verify import verify_full
 from app.exceptions import (
     AppException,
+    AuthorizationException,
     ErrorCode,
     ResourceNotFoundException,
     ValidationException,
@@ -321,6 +322,13 @@ def compute_case(
         raise ResourceNotFoundException(
             message="case not found",
             details={"resource_type": "case", "resource_id": case_id},
+        )
+
+    # 权限检查：只有 case 的归属用户可以触发计算
+    if case.owner_id is not None and case.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to compute this case",
         )
 
     return _do_compute_for_case(session, case, payload)
