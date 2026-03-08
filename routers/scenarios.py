@@ -188,7 +188,7 @@ def create_scenario(
         )
 
 
-@router.get("/scenarios", response_model=List[ScenarioResponse])
+@router.get("/scenarios", response_model=None)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_scenarios(
     current_user: RequiredUser,
@@ -292,7 +292,7 @@ def update_scenario(
         )
     
     # 更新字段
-    update_data = body.dict(exclude_unset=True)
+    update_data = body.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(scenario, key, value)
     
@@ -375,7 +375,7 @@ def delete_scenario(
         )
 
 
-@router.get("/members/{member_id}/scenarios", response_model=List[ScenarioResponse])
+@router.get("/members/{member_id}/scenarios", response_model=None)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_member_scenarios(
     member_id: int,
