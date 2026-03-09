@@ -123,7 +123,19 @@ _DAYUN_CLASSICS = [
         "text": "用神在大运中得旺相，虽命局有瑕，亦能转危为安；用神入墓绝，则运行不济。",
     },
 ]
-
+# 日主天干大运风格短语（注入核心意象与顺逆注记）
+_STEM_DAYUN_FLAVOR: dict[str, str] = {
+    "甲": "以进取开拓之性驾驭此运",
+    "乙": "以柔韧善变之气顺应此运",
+    "丙": "以光明热情之力感召此运",
+    "丁": "以沉稳细腻之质深耕此运",
+    "戊": "以厉重包容之势稳固此运",
+    "己": "以内敛务实之道落地此运",
+    "庚": "以刚毅果决之锋突破此运",
+    "辛": "以精益敏锐之悟升华此运",
+    "壬": "以灵活通透之态把握此运",
+    "癸": "以深思熟虑之谋运筹此运",
+}
 
 def generate_dayun_narrative(
     stem: str,
@@ -137,6 +149,7 @@ def generate_dayun_narrative(
     strength_tier: str,
     wealth_tier: str,
     is_favorable: bool = True,
+    day_stem: str = "",
 ) -> str:
     """
     M3 任务3.02 — 大运叙事生成器
@@ -168,10 +181,12 @@ def generate_dayun_narrative(
     _strength_cn = _TIER_CN_N.get(strength_tier, strength_tier)
 
     # 核心意象（~40字）
+    _stem_flavor = _STEM_DAYUN_FLAVOR.get(day_stem, "")
+    _flavor_clause = f"{_stem_flavor}，" if _stem_flavor else ""
     core_image = (
         f"【{start_age}岁—{end_age}岁·{ganzhi}大运】"
         f"天干{stem}：{stem_img}；地支{branch}：{branch_img}。"
-        f"命局格局{geju_name}，日主{_strength_cn}，"
+        f"命局格局{geju_name}，日主{_strength_cn}，{_flavor_clause}"
         f"{'用神得力，气运相顺，诸事较为顺遂' if is_favorable else '用神受制，气运偏逆，诸事宜守'}。"
     )
 
@@ -191,10 +206,11 @@ def generate_dayun_narrative(
         wealth_est = "（财富积累上限估算：本阶段宜守成，以稳为主，详见财富估算模型）"
 
     # 顺逆注记
+    _flavor_note = f"{_stem_flavor}，" if _stem_flavor else ""
     if is_favorable:
-        trend_note = f"此运用神{favor_cn}气场顺旺，宜主动出击、把握机遇，努力可收事半功倍之效。"
+        trend_note = f"此运用神{favor_cn}气场顺旺，{_flavor_note}宜主动出击、把握机遇，努力可收事半功倍之效。"
     else:
-        trend_note = f"此运忌神当道，用神{favor_cn}受制，宜低调守成，积蓄实力，以待旺运。"
+        trend_note = f"此运忌神当道，用神{favor_cn}受制，{_flavor_note}宜低调守成，积蓄实力，以待旺运。"
 
     # 古籍佐证（1-2条，按干支哈希确定性选取，同一干支每次输出相同）
     _hash_val = int(hashlib.md5(ganzhi.encode("utf-8")).hexdigest(), 16)

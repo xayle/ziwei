@@ -1130,6 +1130,7 @@ def _enrich_v2_analysis(
                         strength_tier=strength_tier,
                         wealth_tier=_wealth_tier_for_narrative,
                         is_favorable=_is_fav,
+                        day_stem=ds_st,
                     )
                 except Exception as _ne:
                     logger.debug("[M3.02 narrative step %d] %s", _i, _ne)
