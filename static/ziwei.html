@@ -131,6 +131,20 @@
     .fc-mbody{display:none;padding:10px 12px;background:#fffdf8;border-top:1px solid #e8d8b0}
     .fc-mbody.open{display:block}
     .fc-divider{font-size:.8rem;font-weight:700;color:#6b5b45;margin:14px 0 6px;border-bottom:1px solid #e8d8b0;padding-bottom:4px}
+    /* ── 补充样式 ───────────────────────── */
+    .pgrid-scroll{overflow-x:auto}
+    .bln{font-size:.62rem;padding:1px 5px;border-radius:10px;font-weight:700;display:inline-block;background:#1a5a3a;color:#fff}
+    .xage{font-size:.58rem;color:#967858;margin-top:auto;padding-top:2px;line-height:1.3}
+    .atag{display:inline-block;font-size:.68rem;padding:1px 6px;border-radius:10px;background:#e8f0fe;color:#1a4a8b;border:1px solid #c2d3f5;margin:0 3px 3px 0}
+    .lylist{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}
+    .lyi{font-size:.65rem;padding:2px 5px;border-radius:4px;border:1px solid var(--border);background:var(--tag-bg);letter-spacing:.04em;text-align:center;cursor:default}
+    .lyi.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .fc-palace-tag{font-size:.72rem;background:#f0e8d8;color:#6b5b45;padding:1px 6px;border-radius:8px;font-weight:400}
+    .fc-tag-sm{font-size:.65rem;padding:1px 5px;border-radius:8px;font-weight:500}
+    .fc-tag-inline{display:flex;gap:3px;align-items:center;overflow:hidden;flex-shrink:0}
+    .fc-arr{font-size:.65rem;color:var(--muted);width:12px;flex-shrink:0;text-align:center}
+    .fc-empty{color:#6b5b45;padding:20px;font-size:.85rem}
+    .tr-cur td{background:#fff3f3}
   </style>
 </head>
 <body>
@@ -152,9 +166,10 @@
       <div class="fg"><label>时(24h)</label><input type="number" id="fh" value="14" min="0" max="23" style="width:55px"></div>
       <div class="fg"><label>分</label><input type="number" id="fmin" value="55" min="0" max="59" style="width:55px"></div>
       <div class="fg"><label>性别</label>
-        <select id="fg"><option value="女">女</option><option value="男">男</option></select>
+        <select id="fgender"><option value="女">女</option><option value="男">男</option></select>
       </div>
       <div class="fg"><label>流年</label><input type="number" id="fln" placeholder="今年" style="width:80px"></div>
+      <div class="fg"><label title="输入东经度数用于真太阳时修正，可不填">经度(可选)</label><input type="number" id="flo" placeholder="如120.3" step="0.1" style="width:90px"></div>
       <button class="btn" onclick="go()">排盘</button>
       <button class="btn btn2" onclick="demo()">演示盘</button>
     </div>
@@ -163,7 +178,7 @@
 <div class="status" id="st"></div>
 <div class="croute hid" id="cr">
   <div class="info-hdr" id="ih"></div>
-  <div class="pgrid" id="pg"></div>
+  <div class="pgrid-scroll"><div class="pgrid" id="pg"></div></div>
 </div>
 <div class="awrap hid" id="aw">
   <div class="acard">
@@ -182,15 +197,21 @@ const SS=new Set(['擎羊','陀罗','火星','铃星','地空','地劫']);
 const JS=new Set(['文昌','文曲','天魁','天钺','左辅','右弼']);
 const JC={'水二局':'jw','木三局':'jwo','金四局':'jme','土五局':'jea','火六局':'jfi'};
 const BRANCHES='子丑寅卯辰巳午未申酉戌亥';
+const DIMS={感情:'💕',财运:'💰',事业:'💼',健康:'🏥'};
+const HUACSS={化禄:'flu',化权:'fqu',化科:'fke',化忌:'fji'};
+
 function bi(b){return BRANCHES.indexOf(b)}
 function sc(n){return MS.has(n)?'main':SS.has(n)?'sha':JS.has(n)?'ji':'aux'}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function st(msg,e=false){const el=document.getElementById('st');el.textContent=msg;el.className='status'+(e?' err':'')}
+function scoreClass(s){return s>=75?'hi':s>=55?'md':'lo'}
+
 async function go(){
   const body={year:+document.getElementById('fy').value,month:+document.getElementById('fm').value,
     day:+document.getElementById('fd').value,hour:+document.getElementById('fh').value,
-    minute:+document.getElementById('fmin').value,gender:document.getElementById('fg').value};
+    minute:+document.getElementById('fmin').value,gender:document.getElementById('fgender').value};
   const ln=document.getElementById('fln').value;if(ln)body.liunian_year=+ln;
+  const lo=document.getElementById('flo').value;if(lo)body.longitude=+lo;
   st('排盘计算中…');
   try{const r=await fetch('/api/v1/ziwei/full',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!r.ok){const e=await r.json();throw new Error(e.detail||r.statusText)}
@@ -202,35 +223,46 @@ async function demo(){
     const d=await r.json();
     document.getElementById('fy').value=2002;document.getElementById('fm').value=3;
     document.getElementById('fd').value=13;document.getElementById('fh').value=14;
-    document.getElementById('fmin').value=55;document.getElementById('fg').value='女';
+    document.getElementById('fmin').value=55;document.getElementById('fgender').value='女';
     render(d);st('')}catch(e){st('演示错误: '+e.message,true)}
 }
+
 function render(data){
   const{lunar,life_palace_gz,body_palace_gz,wuxing_ju_name,dayun,liunian,gender}=data;
+  const life_ruler_star=data.life_ruler_star||'',body_ruler_star=data.body_ruler_star||'',true_solar_time=data.true_solar_time||'';
   const jc=JC[wuxing_ju_name]||'';
   const curY=liunian?liunian.year:new Date().getFullYear();
   let curD=null;
   if(dayun&&dayun.items)for(const d of dayun.items)if(curY>=d.start_year&&curY<d.start_year+10){curD=d;break}
-  // Info header
-  document.getElementById('ih').innerHTML=`
-    <div class="kv"><span class="k">生日</span><span class="v">${data.birth_solar.replace('T',' ')}</span></div>
+
+  // ── 信息头栏 ─────────────────────────
+  let ihh=`
+    <div class="kv"><span class="k">公历</span><span class="v">${data.birth_solar.replace('T',' ')}</span></div>
     <div class="kv"><span class="k">性别</span><span class="v">${gender}</span></div>
     <div class="kv"><span class="k">农历</span><span class="v">${lunar.year_gz}年${lunar.lunar_month}月${lunar.lunar_day}日${lunar.hour_branch}时</span></div>
     <div class="kv"><span class="k">命宫</span><span class="v">${life_palace_gz}</span></div>
     <div class="kv"><span class="k">身宫</span><span class="v">${body_palace_gz}</span></div>
-    <div class="kv"><span class="k">五行局</span><span class="wbadge ${jc}">${wuxing_ju_name}</span></div>
-    ${curD?`<div class="kv"><span class="k">当前大运</span><span class="v">${curD.ganzhi}(${curD.start_age}岁)</span></div>`:''}`;
-  // Grid
+    <div class="kv"><span class="k">五行局</span><span class="wbadge ${jc}">${wuxing_ju_name}</span></div>`;
+  if(life_ruler_star)ihh+=`<div class="kv"><span class="k">命主</span><span class="v">${life_ruler_star}</span></div>`;
+  if(body_ruler_star)ihh+=`<div class="kv"><span class="k">身主</span><span class="v">${body_ruler_star}</span></div>`;
+  if(curD)ihh+=`<div class="kv"><span class="k">当前大运</span><span class="v">${curD.ganzhi}(${curD.start_age}岁)</span></div>`;
+  if(true_solar_time)ihh+=`<div class="kv"><span class="k">真太阳时</span><span class="v">${true_solar_time}</span></div>`;
+  document.getElementById('ih').innerHTML=ihh;
+
+  // ── 宫位格盘 ─────────────────────────
   const g=document.getElementById('pg');g.innerHTML='';
-  // Find body palace branch from body_palace_gz (last char)
   const bodyB=body_palace_gz.slice(-1);
+  const lnLifeB=liunian?liunian.life_palace_branch:-1;
   for(const p of data.palaces){
     const bid=bi(p.branch);const pos=BP[bid];if(!pos)continue;
     const c=document.createElement('div');c.className='pal';
     c.style.gridColumn=pos.c;c.style.gridRow=pos.r;
-    const isL=(p.name==='命宫');const isB=(p.branch===bodyB);
-    let h=`<div class="pname">${p.name}${isL?` <span class="blife">命</span>`:''}${isB?` <span class="bbody">身</span>`:''}</div>`;
-    h+=`<div class="db">${p.stem}${p.branch}</div><div class="stars">`;
+    const isL=(p.name==='命宫'),isB=(p.branch===bodyB),isLN=(lnLifeB>=0&&bid===lnLifeB);
+    let h=`<div class="pname">${p.name}`;
+    if(isL)h+=` <span class="blife">命</span>`;
+    if(isB)h+=` <span class="bbody">身</span>`;
+    if(isLN)h+=` <span class="bln">年</span>`;
+    h+=`</div><div class="db">${p.stem}${p.branch}</div><div class="stars">`;
     for(const s of p.main_stars){
       const sia=s.transforms&&s.transforms.length?s.transforms.map(t=>`<span class="shan">${t}</span>`).join(''):'';
       h+=`<div class="sl"><span class="sn ${sc(s.name)}">${s.name}</span><span class="sbr">${s.brightness}</span>${sia}</div>`;
@@ -238,116 +270,198 @@ function render(data){
     for(const ax of p.aux_stars){
       h+=`<div class="sl"><span class="sn ${sc(ax)}" style="font-size:.7rem">${ax}</span></div>`;
     }
-    h+=`</div><div class="compass">${CP[bid]||''}</div>`;
+    h+=`</div>`;
+    if(p.xiaoxian_ages&&p.xiaoxian_ages.length)h+=`<div class="xage">${p.xiaoxian_ages.join('·')}岁</div>`;
+    h+=`<div class="compass">${CP[bid]||''}</div>`;
     c.innerHTML=h;g.appendChild(c);
   }
-  // Center
+
+  // ── 中宫 ─────────────────────────────
   const ctr=document.createElement('div');ctr.className='pcenter';
   ctr.style.gridColumn='2/4';ctr.style.gridRow='2/4';
   let dyh='';
   if(dayun&&dayun.items){
     const dir=dayun.forward?'顺行':'逆行';
-    dyh=`<div class="cs"><h3>大运 (${dir}·起运${dayun.start_age}岁)</h3><div class="dylist">`;
+    dyh=`<div class="cs"><h3>大运（${dir}·起运${dayun.start_age}岁）</h3><div class="dylist">`;
     for(const d of dayun.items)dyh+=`<div class="dyi${curD&&d.index===curD.index?' cur':''}" title="${d.start_year}年起">${d.ganzhi}<br><small>${d.start_age}岁</small></div>`;
     dyh+=`</div></div>`;
   }
   let lnh='';
   if(liunian){
-    const sia=Object.entries(liunian.sihua||{}).map(([s,v])=>`${s}${v}`).join(' · ');
+    const sia=Object.entries(liunian.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' · ');
     lnh=`<div class="cs"><h3>流年 ${liunian.year_gz}(${liunian.year}年)</h3><div class="lnrow">${sia||'—'}</div></div>`;
   }
+  let lyh='';
+  if(data.liuyue&&data.liuyue.length){
+    const today=new Date(),todayM=today.getMonth()+1,lnY=liunian?liunian.year:today.getFullYear();
+    lyh=`<div class="cs"><h3>流月一览</h3><div class="lylist">`;
+    for(const lm of data.liuyue){
+      const isCM=(lnY===today.getFullYear()&&lm.month===todayM);
+      lyh+=`<div class="lyi${isCM?' cur':''}" title="${lm.palace_name}·${lm.month_gz}">${lm.month_name}</div>`;
+    }
+    lyh+=`</div></div>`;
+  }
+  const rulerLine=life_ruler_star?`<br>命主：<b>${life_ruler_star}</b>　身主：<b>${body_ruler_star}</b>`:'';
   ctr.innerHTML=`<div class="ct">命盘中宫</div>
     <div class="cs"><h3>命盘信息</h3>
-      <div style="font-size:.82rem;line-height:1.9">命宫：<b>${life_palace_gz}</b>　身宫：<b>${body_palace_gz}</b>　<span class="wbadge ${jc}">${wuxing_ju_name}</span></div>
-    </div>${dyh}${lnh}`;
+      <div style="font-size:.82rem;line-height:1.9">命宫：<b>${life_palace_gz}</b>　身宫：<b>${body_palace_gz}</b>　<span class="wbadge ${jc}">${wuxing_ju_name}</span>${rulerLine}</div>
+    </div>${dyh}${lnh}${lyh}`;
   g.appendChild(ctr);
   document.getElementById('cr').classList.remove('hid');
   renderAna(data);
 }
+
 function renderAna(data){
   const aw=document.getElementById('aw');aw.classList.remove('hid');
-  const at=document.getElementById('at');
-  const tds=[{id:'sum',l:'命盘摘要'},{id:'pal',l:'逐宫解读'},{id:'dy',l:'大运列表'},{id:'fly',l:'飞星分析'},{id:'fc',l:'运势预测'}];
-  at.innerHTML=tds.map((t,i)=>`<button class="tbtn${i===0?' act':''}" onclick="swt('${t.id}')">${t.l}</button>`).join('');
-  let h=`<div id="tc-sum" class="tc act"><div class="sumcard">${esc(data.summary||'')}</div></div>`;
-  h+=`<div id="tc-pal" class="tc">`;
-  for(const p of data.palaces)if(p.analysis)h+=`<div class="pana"><h4>${p.name}·${p.stem}${p.branch}</h4><p>${esc(p.analysis)}</p></div>`;
+  const tds=[{id:'sum',l:'命盘摘要'},{id:'pal',l:'逐宫解读'},{id:'dy',l:'大运流月'},{id:'fly',l:'飞星分析'},{id:'fc',l:'运势预测'}];
+  document.getElementById('at').innerHTML=tds.map((t,i)=>
+    `<button class="tbtn${i===0?' act':''}" data-tid="${t.id}" onclick="swt('${t.id}')">${t.l}</button>`).join('');
+
+  // ── 命盘摘要 ──────────────────────────
+  let h=`<div id="tc-sum" class="tc act"><div class="sumcard">${esc(data.summary||'')}</div>`;
+  if(data.analysis&&Object.keys(data.analysis).length){
+    h+=`<div style="margin-top:12px">`;
+    for(const[k,v]of Object.entries(data.analysis))if(v)h+=`<div class="pana"><h4>${esc(k)}</h4><p>${esc(v)}</p></div>`;
+    h+=`</div>`;
+  }
   h+=`</div>`;
-  h+=`<div id="tc-dy" class="tc"><table class="ftable"><tr><th>#</th><th>干支</th><th>年龄</th><th>起运年</th></tr>`;
-  if(data.dayun&&data.dayun.items)for(const d of data.dayun.items)h+=`<tr><td>${d.index}</td><td>${d.ganzhi}</td><td>${d.start_age}-${d.end_age}岁</td><td>${d.start_year}</td></tr>`;
-  h+=`</table></div>`;
-  h+=`<div id="tc-fly" class="tc">`;
-  if(data.flying&&data.flying.palaces){
-    h+=`<table class="ftable"><tr><th>宫位</th><th>宫干</th><th class="flu">化禄</th><th class="fqu">化权</th><th class="fke">化科</th><th class="fji">化忌</th></tr>`;
-    for(const fp of data.flying.palaces){
-      const fo=fp.flying_out||{};
-      h+=`<tr><td>${fp.palace_name}</td><td>${fp.stem_name}</td><td class="flu">${fo['化禄']||'—'}</td><td class="fqu">${fo['化权']||'—'}</td><td class="fke">${fo['化科']||'—'}</td><td class="fji">${fo['化忌']||'—'}</td></tr>`;
+
+  // ── 逐宫解读 ──────────────────────────
+  h+=`<div id="tc-pal" class="tc">`;
+  for(const p of data.palaces){
+    if(!p.analysis)continue;
+    h+=`<div class="pana"><h4>${p.name}·${p.stem}${p.branch}`;
+    if(p.opposition_name)h+=` <span style="font-size:.72rem;color:var(--muted);font-weight:400">│ 对宫：${p.opposition_name}</span>`;
+    h+=`</h4>`;
+    if(p.analysis_tags&&p.analysis_tags.length){
+      h+=`<div style="margin-bottom:5px">`;
+      for(const t of p.analysis_tags)h+=`<span class="atag">${esc(t)}</span>`;
+      h+=`</div>`;
+    }
+    h+=`<p>${esc(p.analysis)}</p></div>`;
+  }
+  h+=`</div>`;
+
+  // ── 大运流月 ──────────────────────────
+  const curY2=data.liunian?data.liunian.year:new Date().getFullYear();
+  h+=`<div id="tc-dy" class="tc">`;
+  h+=`<div class="fc-divider">大运列表</div>`;
+  h+=`<table class="ftable"><tr><th>#</th><th>干支</th><th>年龄</th><th>起运年</th><th>大运四化</th></tr>`;
+  if(data.dayun&&data.dayun.items)for(const d of data.dayun.items){
+    const ic=curY2>=d.start_year&&curY2<d.start_year+10;
+    const siaStr=Object.entries(d.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' ');
+    h+=`<tr${ic?' class="tr-cur"':''}><td>${d.index}</td><td><b>${d.ganzhi}</b></td><td>${d.start_age}–${d.end_age}岁</td><td>${d.start_year}</td><td style="font-size:.75rem">${siaStr||'—'}</td></tr>`;
+  }
+  h+=`</table>`;
+  if(data.liuyue&&data.liuyue.length){
+    const today2=new Date(),todayM2=today2.getMonth()+1,lnY2=data.liunian?data.liunian.year:today2.getFullYear();
+    h+=`<div class="fc-divider" style="margin-top:14px">流月一览（${lnY2}年）</div>`;
+    h+=`<table class="ftable"><tr><th>月</th><th>月名</th><th>干支</th><th>流月命宫</th><th>四化</th></tr>`;
+    for(const lm of data.liuyue){
+      const isCM=(lnY2===today2.getFullYear()&&lm.month===todayM2);
+      const msiaStr=Object.entries(lm.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' ');
+      h+=`<tr${isCM?' class="tr-cur"':''}><td>${lm.month}</td><td>${lm.month_name}</td><td>${lm.month_gz}</td><td>${lm.palace_name}</td><td style="font-size:.75rem">${msiaStr||'—'}</td></tr>`;
     }
     h+=`</table>`;
   }
   h+=`</div>`;
+
+  // ── 飞星分析 ──────────────────────────
+  h+=`<div id="tc-fly" class="tc">`;
+  if(data.flying&&data.flying.palaces){
+    h+=`<div class="fc-divider">各宫飞出四化</div>`;
+    h+=`<table class="ftable"><tr><th>宫位</th><th>宫干</th><th class="flu">化禄</th><th class="fqu">化权</th><th class="fke">化科</th><th class="fji">化忌</th><th>自化</th></tr>`;
+    for(const fp of data.flying.palaces){
+      const fo=fp.flying_out||{};
+      const stArr=fp.self_transforms&&fp.self_transforms.length?fp.self_transforms.join(' · '):'—';
+      h+=`<tr><td>${fp.palace_name}${fp.opposition_palace?`<br><span style="font-size:.7rem;color:var(--muted)">↔ ${fp.opposition_palace}</span>`:''}</td>`;
+      h+=`<td>${fp.stem_name}</td><td class="flu">${fo['化禄']||'—'}</td><td class="fqu">${fo['化权']||'—'}</td><td class="fke">${fo['化科']||'—'}</td><td class="fji">${fo['化忌']||'—'}</td>`;
+      h+=`<td style="font-size:.72rem;color:var(--muted)">${stArr}</td></tr>`;
+    }
+    h+=`</table>`;
+    if(data.flying.received&&Object.keys(data.flying.received).length){
+      h+=`<div class="fc-divider" style="margin-top:14px">各宫接收四化汇总</div>`;
+      h+=`<table class="ftable"><tr><th>宫位</th><th>接收的四化</th></tr>`;
+      for(const[pal,list]of Object.entries(data.flying.received)){
+        if(!list||!list.length)continue;
+        h+=`<tr><td>${pal}</td><td style="font-size:.75rem;line-height:1.8">${list.map(esc).join('　')}</td></tr>`;
+      }
+      h+=`</table>`;
+    }
+    if(data.flying.self_transforms&&data.flying.self_transforms.length){
+      h+=`<div class="fc-divider" style="margin-top:14px">全局自化列表</div>`;
+      h+=`<div style="font-size:.82rem;line-height:2;padding:6px 0">${data.flying.self_transforms.map(esc).join('　')}</div>`;
+    }
+  }else{h+=`<p class="fc-empty">暂无飞星数据</p>`;}
+  h+=`</div>`;
+
+  // ── 运势预测 ──────────────────────────
   h+=`<div id="tc-fc" class="tc">${renderForecastTab(data.forecast)}</div>`;
+
   document.getElementById('ab').innerHTML=h;
 }
+
 function swt(id){
-  const m={'sum':'命盘摘要','pal':'逐宫解读','dy':'大运列表','fly':'飞星分析','fc':'运势预测'};
-  document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('act',b.textContent===m[id]));
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('act',b.dataset.tid===id));
   ['sum','pal','dy','fly','fc'].forEach(t=>{const el=document.getElementById('tc-'+t);if(el)el.classList.toggle('act',t===id)});
 }
-function scoreClass(s){return s>=75?'hi':s>=55?'md':'lo'}
-function togMonth(i){const el=document.getElementById('fc-mb-'+i);if(el)el.classList.toggle('open')}
-function fmtPeriod(pf){
-  let h=`<div class="fc-section${pf._cur?' fc-cur':''}">`;
-  h+=`<h3>${esc(pf.period)}（${esc(pf.ganzhi)}）宫位：${esc(pf.palace_name)}<span class="fc-score ${scoreClass(pf.score)}">${pf.score}分</span></h3>`;
+
+function togMonth(i){
+  const el=document.getElementById('fc-mb-'+i),arr=document.getElementById('fc-arr-'+i);
+  if(el){el.classList.toggle('open');if(arr)arr.textContent=el.classList.contains('open')?'▼':'▶';}
+}
+
+function fmtPeriod(pf,isCur){
+  let h=`<div class="fc-section${isCur?' fc-cur':''}">`;
+  h+=`<h3>${esc(pf.period)}（${esc(pf.ganzhi)}）<span class="fc-palace-tag">${esc(pf.palace_name)}</span> <span class="fc-score ${scoreClass(pf.score)}">${pf.score}分</span></h3>`;
   h+=`<div class="fc-overall">${esc(pf.overall)}</div>`;
   if(pf.events&&pf.events.length){
     h+=`<div class="fc-tags">`;
     for(const ev of pf.events)h+=`<span class="fc-tag lv-${esc(ev.level)}" title="${esc(ev.description)}（${esc(ev.source)}）">${esc(ev.category)}【${esc(ev.level)}】</span>`;
     h+=`</div>`;
   }
-  const ICONS={感情:'💕',财运:'💰',事业:'💼',健康:'🏥'};
   h+=`<div class="fc-grid">`;
-  for(const [k,v] of Object.entries(pf.details||{}))h+=`<div class="fc-dim"><b>${ICONS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
+  for(const[k,v]of Object.entries(pf.details||{}))h+=`<div class="fc-dim"><b>${DIMS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
   h+=`</div>`;
   h+=`<div class="fc-advice">${esc(pf.advice)}</div>`;
   h+=`</div>`;
   return h;
 }
+
 function renderForecastTab(fc){
-  if(!fc)return'<p style="color:#6b5b45;padding:20px">暂无运势数据，请先排盘</p>';
+  if(!fc)return`<p class="fc-empty">暂无运势数据，请先排盘</p>`;
+  const curPeriod=fc.current_month?fc.current_month.period:null;
   let h='';
   // 年运总览
   h+=`<div class="fc-divider">🗓 ${fc.year}年 年运总览</div>`;
-  h+=fmtPeriod(fc.yearly);
-  // 当前月高亮
+  h+=fmtPeriod(fc.yearly,false);
+  // 本月高亮
   if(fc.current_month){
     h+=`<div class="fc-divider">📅 本月运势（${esc(fc.current_month.period)}）</div>`;
-    fc.current_month._cur=true;
-    h+=fmtPeriod(fc.current_month);
+    h+=fmtPeriod(fc.current_month,true);
   }
-  // 12流月折叠列表
-  h+=`<div class="fc-divider">📆 全年十二流月</div>`;
-  h+=`<div class="fc-months">`;
+  // 十二流月折叠
+  h+=`<div class="fc-divider">📆 全年十二流月</div><div class="fc-months">`;
   for(let i=0;i<fc.monthly.length;i++){
     const m=fc.monthly[i];
-    const isCur=fc.current_month&&m.period===fc.current_month.period;
+    const isCur=(curPeriod&&m.period===curPeriod);
+    const topEvs=m.events&&m.events.length?m.events.slice(0,3).map(e=>`<span class="fc-tag fc-tag-sm lv-${esc(e.level)}">${esc(e.category)}</span>`).join(''):'';
     h+=`<div class="fc-month${isCur?' fc-cur':''}">`;
     h+=`<div class="fc-mhdr" onclick="togMonth(${i})">`;
-    h+=`<span class="mn">${esc(m.period)}（${esc(m.ganzhi)}）${esc(m.palace_name)}</span>`;
+    h+=`<span class="fc-arr" id="fc-arr-${i}">${isCur?'▼':'▶'}</span>`;
+    h+=`<span class="mn">${esc(m.period)}（${esc(m.ganzhi)}）<span class="fc-palace-tag">${esc(m.palace_name)}</span></span>`;
+    h+=`<span class="fc-tag-inline">${topEvs}</span>`;
     h+=`<div class="fc-bar"><div class="fc-bar-fill" style="width:${m.score}%"></div></div>`;
-    h+=`<span class="ms">${m.score}分</span>`;
-    h+=`</div>`;
+    h+=`<span class="ms">${m.score}分</span></div>`;
     h+=`<div class="fc-mbody${isCur?' open':''}" id="fc-mb-${i}">`;
     if(m.events&&m.events.length){
       h+=`<div class="fc-tags" style="margin-bottom:7px">`;
       for(const ev of m.events)h+=`<span class="fc-tag lv-${esc(ev.level)}" title="${esc(ev.description)}">${esc(ev.category)}【${esc(ev.level)}】</span>`;
       h+=`</div>`;
     }
-    const ICONS={感情:'💕',财运:'💰',事业:'💼',健康:'🏥'};
     h+=`<div class="fc-grid">`;
-    for(const [k,v] of Object.entries(m.details||{}))h+=`<div class="fc-dim"><b>${ICONS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
-    h+=`</div>`;
-    h+=`<div class="fc-advice">${esc(m.advice)}</div>`;
+    for(const[k,v]of Object.entries(m.details||{}))h+=`<div class="fc-dim"><b>${DIMS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
+    h+=`</div><div class="fc-advice">${esc(m.advice)}</div>`;
     h+=`</div></div>`;
   }
   h+=`</div>`;
