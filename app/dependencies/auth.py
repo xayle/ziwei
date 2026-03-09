@@ -57,11 +57,12 @@ def get_current_user(
     Returns:
         User 对象或 None（如果未认证）
     """
-    if _auth_bypass_enabled():
-        return _local_dummy_user()
-
     auth_header = request.headers.get("Authorization")
+
+    # 绕过鉴权：仅当 Authorization header 缺失时才启用（有真实 JWT 则正常验证）
     if not auth_header:
+        if _auth_bypass_enabled():
+            return _local_dummy_user()
         return None
     
     try:
@@ -70,8 +71,6 @@ def get_current_user(
             return None
     except ValueError:
         return None
-    
-    # 验证token
     payload = verify_token(token)
     if not payload:
         return None
@@ -107,8 +106,8 @@ def require_user(
     Raises:
         AuthenticationException: 如果未认证
     """
-    if _auth_bypass_enabled():
-        return _local_dummy_user()
+    # user is None only when no auth header was provided (get_current_user returns None or dummy)
+    # _local_dummy_user() has id=0 - that dummy is already returned by get_current_user when bypassing
     if user is None:
         raise AuthenticationException(
             code=ErrorCode.AUTH_MISSING_TOKEN,

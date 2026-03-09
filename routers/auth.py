@@ -49,11 +49,11 @@ def get_current_user_from_token(
     ✅ 从 Authorization header 提取并验证 JWT Token
     返回 TokenPayload 对象，如果验证失败返回 401
     """
-    # 本地联调直接绕过鉴权，保持接口可用
-    if _auth_bypass_enabled():
-        return TokenPayload(user_id=0, username="local", role="owner")
-
     auth_header = request.headers.get("Authorization")
+
+    # 本地联调绕过鉴权：仅当 Authorization header 缺失时才启用（有真实 JWT 则正常验证）
+    if not auth_header and _auth_bypass_enabled():
+        return TokenPayload(user_id=0, username="local", role="owner")
     if not auth_header:
         raise AuthenticationException(
             code=ErrorCode.AUTH_MISSING_TOKEN,
@@ -85,8 +85,6 @@ async def require_user(
     user: TokenPayload = Depends(get_current_user_from_token)
 ) -> TokenPayload:
     """强制认证的依赖函数"""
-    if _auth_bypass_enabled():
-        return TokenPayload(user_id=0, username="local", role="owner")
     # NOTE: get_current_user_from_token 从不返回 None（始终 raise 或 return payload）
     return user
 
