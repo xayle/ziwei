@@ -215,9 +215,15 @@ def compute_relationship(
     _noble_str = "；".join(noble_people[:3])
     _kin_summary_parts = []
     for _k, _v in list(liu_qin.items())[:4]:
-        if any(kw in _v for kw in ("缘极深", "缘分深厚", "情分深厚", "缘深，", "手足情深")):
+        if any(kw in _v for kw in (
+            "缘极深", "缘分深厚", "情分深厚", "缘深，", "手足情深",
+            "才气相通", "缘分强烈",
+        )):
             _kin_summary_parts.append(f"{_k}（缘深）")
-        elif any(kw in _v for kw in ("关系平和", "关系平顺", "关系中等", "关系正常", "关系中规")):
+        elif any(kw in _v for kw in (
+            "关系平和", "关系平顺", "关系中等", "关系正常", "关系中规",
+            "关系有起伏", "关系温和",
+        )):
             _kin_summary_parts.append(f"{_k}（平和）")
         else:
             _kin_summary_parts.append(f"{_k}（缘淡）")

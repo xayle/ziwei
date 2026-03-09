@@ -579,7 +579,7 @@ window.runVerify = async function() {
     ts: new Date().toLocaleTimeString(),
     summary: {
       day_stem: json.pillars_primary?.day?.stem || null,
-      geju: json.geju?.geju_name || json.geju?.name || null,
+      geju: json.geju?.geju_name || null,
       yongshen: (json.yongshen?.favor||[]).join('/') || null,
       annual_score: (json.liunian_detail||[]).find(l=>l.year===_thisYear)?.annual_score ?? null,
     },
