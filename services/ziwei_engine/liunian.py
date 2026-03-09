@@ -67,3 +67,43 @@ def calc_liuyue(liunian_life_branch: int, month: int) -> int:
     month: 1-12 (农历月)
     """
     return (liunian_life_branch + month - 1) % 12
+
+
+# 农历月份名称（对应公历约+1月：正月≈2月，依次顺推）
+_LUNAR_MONTH_NAMES: list[str] = [
+    '正月(寅)', '二月(卯)', '三月(辰)', '四月(巳)', '五月(午)', '六月(未)',
+    '七月(申)', '八月(酉)', '九月(戌)', '十月(亥)', '十一月(子)', '十二月(丑)',
+]
+# 农历月份对应地支索引（寅=2起）
+_MONTH_BRANCHES: list[int] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1]
+
+# 五虎遁年：年干 → 正月天干起始索引（甲己→丙(2)，乙庚→戊(4)，丙辛→庚(6)，丁壬→壬(8)，戊癸→甲(0)）
+_WUHU_M1: list[int] = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0]
+
+
+def calc_liuyue_list(
+    liunian: 'LiunianInfo',
+    branch_to_palace_name: dict[int, str],
+) -> list[dict]:
+    """
+    计算流年12个流月数据列表。
+    每项: {month, month_name, month_gz, life_palace_branch, palace_name}
+    """
+    from .tables import STEMS, BRANCHES
+    items: list[dict] = []
+    m1_stem = _WUHU_M1[liunian.year_stem_idx]
+    for i in range(12):
+        month = i + 1
+        mo_stem_idx = (m1_stem + i) % 10
+        mo_branch_idx = _MONTH_BRANCHES[i]
+        mo_gz = STEMS[mo_stem_idx] + BRANCHES[mo_branch_idx]
+        life_b = calc_liuyue(liunian.life_palace_branch, month)
+        palace_name = branch_to_palace_name.get(life_b, '—')
+        items.append({
+            'month': month,
+            'month_name': _LUNAR_MONTH_NAMES[i],
+            'month_gz': mo_gz,
+            'life_palace_branch': life_b,
+            'palace_name': palace_name,
+        })
+    return items

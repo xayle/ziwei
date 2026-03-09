@@ -15,7 +15,7 @@ from .stars_main import place_main_stars, StarPosition
 from .stars_aux import place_aux_stars
 from .transforms import apply_sihua, STEMS
 from .dayun import calc_dayun, DayunResult
-from .liunian import calc_liunian, LiunianInfo
+from .liunian import calc_liunian, LiunianInfo, calc_liuyue_list
 from .flying import calc_flying, FlyingStarChart
 from .analysis import (
     generate_palace_analysis,
@@ -76,6 +76,9 @@ class ZiweiChart:
 
     # ── 飞星盘 ────────────────────────────────────────────────
     flying: Optional[FlyingStarChart] = None
+
+    # ── 流月列表（12项） ──────────────────────────────────────
+    liuyue_data: list[dict] = field(default_factory=list)
 
     # ── 文字摘要 ─────────────────────────────────────────────
     summary: str = ""
@@ -221,6 +224,10 @@ def ziwei_full(
         pa.analysis = analysis_texts.get(pa.name, "")
         pa.analysis_tags = generate_palace_tags(pa.branch_idx, main_stars, aux_stars)
 
+    # 12. 流月列表
+    branch_to_name = {pa.branch_idx: pa.name for pa in palaces_info}
+    liuyue_data = calc_liuyue_list(liunian, branch_to_name)
+
     return ZiweiChart(
         birth_solar=f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}",
         gender=gender,
@@ -236,6 +243,7 @@ def ziwei_full(
         dayun=dayun,
         liunian=liunian,
         flying=flying,
+        liuyue_data=liuyue_data,
         summary=summary,
         analysis=analysis_texts,
     )

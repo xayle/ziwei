@@ -458,28 +458,42 @@ function _zw_liunian_html(data){
 }
 function _zw_liuyue_html(data){
   if(!data.liunian)return '<div style="color:var(--muted);font-size:.85rem;padding:10px">暂无流月数据</div>';
-  const{year,year_gz,life_palace_branch}=data.liunian;
-  const TG=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
-  const DZ=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-  const MO_NAMES=['正月(寅)','二月(卯)','三月(辰)','四月(巳)','五月(午)','六月(未)','七月(申)','八月(酉)','九月(戌)','十月(亥)','十一月(子)','十二月(丑)'];
-  const MB=[2,3,4,5,6,7,8,9,10,11,0,1];
-  const YINMO=[2,4,6,8,0,2,4,6,8,0];
-  const ynTG=TG.indexOf(year_gz[0]);const yinTGI=YINMO[ynTG]??0;
+  const{year,year_gz}=data.liunian;
   const curMo=new Date().getMonth()+1;const curYr=new Date().getFullYear();
   let h=`<div style='margin-bottom:8px;font-size:.88rem;font-weight:700;color:var(--accent)'>${year_gz}年（${year}）流月参考</div>`;
-  h+=`<p style='font-size:.75rem;color:var(--muted);margin-bottom:8px'>流月命宫以流年命宫为起点，每月顺推一宫（近似参考）</p>`;
-  h+=`<table class='zw-lm-table'><tr><th>月份</th><th>干支</th><th>流月命宫</th><th>备注</th></tr>`;
-  for(let i=0;i<12;i++){
-    const mTG=(yinTGI+i)%10;const mDZ=MB[i];
-    const mGZ=TG[mTG]+DZ[mDZ];
-    const lifeB=BRANCHES[(life_palace_branch+i)%12];
-    const lifePal=data.palaces&&data.palaces.find(p=>p.branch===lifeB);
-    const palName=lifePal?lifePal.name:'—';
-    const approxSolar=i+2>12?i+2-12:i+2;
-    const isCur=year===curYr&&approxSolar===curMo;
-    h+=`<tr class='${isCur?"zw-lm-cur":""}'><td>${MO_NAMES[i]}</td><td><b>${mGZ}</b></td><td>${palName}</td><td style='font-size:.74rem;color:var(--muted)'>${isCur?'← 当前月':''}</td></tr>`;
+  if(data.liuyue&&data.liuyue.length){
+    // 使用后端精确计算数据
+    h+=`<p style='font-size:.75rem;color:var(--muted);margin-bottom:8px'>流月命宫以流年命宫为基点，每月顺推一宫</p>`;
+    h+=`<table class='zw-lm-table'><tr><th>月份</th><th>干支</th><th>流月命宫</th><th>备注</th></tr>`;
+    for(const row of data.liuyue){
+      const approxSolar=row.month+1>12?row.month+1-12:row.month+1;
+      const isCur=year===curYr&&approxSolar===curMo;
+      h+=`<tr class='${isCur?"zw-lm-cur":""}'><td>${_zw_esc(row.month_name)}</td><td><b>${_zw_esc(row.month_gz)}</b></td><td>${_zw_esc(row.palace_name)}</td><td style='font-size:.74rem;color:var(--muted)'>${isCur?'← 当前月':''}</td></tr>`;
+    }
+    h+=`</table>`;
+  } else {
+    // 本地近似计算（兜底）
+    const TG=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+    const DZ=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    const MO_NAMES=['正月(寅)','二月(卯)','三月(辰)','四月(巳)','五月(午)','六月(未)','七月(申)','八月(酉)','九月(戌)','十月(亥)','十一月(子)','十二月(丑)'];
+    const MB=[2,3,4,5,6,7,8,9,10,11,0,1];
+    const YINMO=[2,4,6,8,0,2,4,6,8,0];
+    const{life_palace_branch}=data.liunian;
+    const ynTG=TG.indexOf(year_gz[0]);const yinTGI=YINMO[ynTG]??0;
+    h+=`<p style='font-size:.75rem;color:var(--muted);margin-bottom:8px'>流月命宫以流年命宫为起点，每月顺推一宫（近似参考）</p>`;
+    h+=`<table class='zw-lm-table'><tr><th>月份</th><th>干支</th><th>流月命宫</th><th>备注</th></tr>`;
+    for(let i=0;i<12;i++){
+      const mTG=(yinTGI+i)%10;const mDZ=MB[i];
+      const mGZ=TG[mTG]+DZ[mDZ];
+      const lifeB=BRANCHES[(life_palace_branch+i)%12];
+      const lifePal=data.palaces&&data.palaces.find(p=>p.branch===lifeB);
+      const palName=lifePal?lifePal.name:'—';
+      const approxSolar=i+2>12?i+2-12:i+2;
+      const isCur=year===curYr&&approxSolar===curMo;
+      h+=`<tr class='${isCur?"zw-lm-cur":""}'><td>${MO_NAMES[i]}</td><td><b>${mGZ}</b></td><td>${palName}</td><td style='font-size:.74rem;color:var(--muted)'>${isCur?'← 当前月':''}</td></tr>`;
+    }
+    h+=`</table>`;
   }
-  h+=`</table>`;
   return h;
 }
 function _zw_renderAna(data){

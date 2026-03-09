@@ -19,6 +19,7 @@ from app.schemas.ziwei import (
     LiunianResponse,
     FlyingChartResponse,
     FlyingPalaceResponse,
+    LiuyueItem,
 )
 from services.ziwei_engine import ziwei_full, ZiweiChart
 
@@ -99,6 +100,17 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
             received=chart.flying.received,
         )
 
+    liuyue_resp = [
+        LiuyueItem(
+            month=d['month'],
+            month_name=d['month_name'],
+            month_gz=d['month_gz'],
+            life_palace_branch=d['life_palace_branch'],
+            palace_name=d['palace_name'],
+        )
+        for d in chart.liuyue_data
+    ]
+
     return ZiweiResponse(
         birth_solar=chart.birth_solar,
         gender=chart.gender,
@@ -111,6 +123,7 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
         dayun=dayun_resp,
         liunian=liunian_resp,
         flying=flying_resp,
+        liuyue=liuyue_resp,
         summary=chart.summary,
         analysis=chart.analysis,
     )

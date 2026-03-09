@@ -76,6 +76,14 @@ class LiunianResponse(BaseModel):
     sihua: dict[str, str]
 
 
+class LiuyueItem(BaseModel):
+    month: int
+    month_name: str
+    month_gz: str
+    life_palace_branch: int
+    palace_name: str
+
+
 class FlyingPalaceResponse(BaseModel):
     palace_name: str
     stem_name: str
@@ -112,6 +120,9 @@ class ZiweiResponse(BaseModel):
 
     # 飞星
     flying: Optional[FlyingChartResponse] = None
+
+    # 流月
+    liuyue: list[LiuyueItem] = []
 
     # 文字
     summary: str = ""
