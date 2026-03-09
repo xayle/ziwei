@@ -339,6 +339,6 @@ def compute_case(
         action="compute_case",
         resource_type="case",
         resource_id=str(case_id),
-        details={"tasks": payload.tasks if hasattr(payload, "tasks") else None},
+        details={"tasks": getattr(payload, "tasks", None)},  # type: ignore[misc]
     )
     return result

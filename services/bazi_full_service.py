@@ -536,5 +536,6 @@ def bazi_full(
         wuxing_breakdown=wuxing_breakdown,
         day_master_strength=strength,
         yongshen=yongshen,
+        start_dayun_age=None,
         raw=raw,
     )

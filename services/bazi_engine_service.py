@@ -381,7 +381,7 @@ def _calculate_v1(
         if _love_tg:
             item.love_hint = _love_tg
         elif not item.love_hint:
-            hints_l = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
+            hints_l = _dayun_build_hints(item.stem or "", item.branch or "", rp.day.stem or "")
             item.love_hint = hints_l.get("love_hint", "")
 
         # ── 子女 hint（深化版，按十神判断亲子关系）──────────────────────
@@ -401,7 +401,7 @@ def _calculate_v1(
         if _child_hint_val:
             item.child_hint = _child_hint_val
         elif not item.child_hint:
-            hints_c = _dayun_build_hints(item.stem, item.branch or "", rp.day.stem or "")
+            hints_c = _dayun_build_hints(item.stem or "", item.branch or "", rp.day.stem or "")
             item.child_hint = hints_c.get("child_hint", "")
 
         # refs（古籍引用）
