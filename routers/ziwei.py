@@ -55,6 +55,7 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
             aux_stars=p.aux_stars,
             flying_out=p.flying_out,
             analysis=p.analysis,
+            analysis_tags=p.analysis_tags,
         )
         for p in chart.palaces
     ]

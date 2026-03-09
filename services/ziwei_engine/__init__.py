@@ -19,6 +19,7 @@ from .liunian import calc_liunian, LiunianInfo
 from .flying import calc_flying, FlyingStarChart
 from .analysis import (
     generate_palace_analysis,
+    generate_palace_tags,
     generate_full_analysis,
     generate_summary,
 )
@@ -42,6 +43,7 @@ class PalaceInfo:
     aux_stars: list[str]     # 辅星/杂曜名称列表
     flying_out: dict[str, str] = field(default_factory=dict)
     analysis: str = ""
+    analysis_tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -214,9 +216,10 @@ def ziwei_full(
     )
     summary = generate_summary(main_stars, aux_stars, lp_b)
 
-    # 写入宫位解读
+    # 写入宫位解读 + 标签
     for pa in palaces_info:
         pa.analysis = analysis_texts.get(pa.name, "")
+        pa.analysis_tags = generate_palace_tags(pa.branch_idx, main_stars, aux_stars)
 
     return ZiweiChart(
         birth_solar=f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}",

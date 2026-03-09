@@ -81,6 +81,46 @@ def _stars_in_palace(
     return mains, auxes
 
 
+# ─────────────────────────────────────────────────────────────
+# 吉星集合 / 煞星集合（用于 tags 生成）
+# ─────────────────────────────────────────────────────────────
+_JI_STARS = {"文昌", "文曲", "天魁", "天钺", "左辅", "右弼", "禄存", "天马"}
+_SHA_STARS = {"擎羊", "陀罗", "火星", "铃星", "地空", "地劫"}
+
+
+def generate_palace_tags(
+    palace_branch: int,
+    main_stars: dict[str, StarPosition],
+    aux_stars: dict[str, int],
+) -> list[str]:
+    """
+    为宫位生成简短语义标签列表。
+    例：["紫微·庙·化禄", "天相·旺", "天魁", "⚡擎羊"]
+    """
+    tags: list[str] = []
+    mains = [pos for pos in main_stars.values() if pos.branch_idx == palace_branch]
+
+    if not mains:
+        tags.append("空宫")
+    else:
+        for pos in mains:
+            label = pos.name
+            if pos.brightness in ("庙", "旺", "陷"):
+                label += f"·{pos.brightness}"
+            for t in pos.transforms:
+                label += f"·{t}"
+            tags.append(label)
+
+    ji = [s for s in _JI_STARS if s in aux_stars and aux_stars[s] == palace_branch]
+    tags.extend(ji)
+
+    sha = [s for s in _SHA_STARS if s in aux_stars and aux_stars[s] == palace_branch]
+    if sha:
+        tags.append("⚡" + "·".join(sha))
+
+    return tags
+
+
 def generate_palace_analysis(
     palace_idx: int,
     palace_branch: int,

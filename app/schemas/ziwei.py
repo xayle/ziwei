@@ -41,6 +41,7 @@ class PalaceResponse(BaseModel):
     aux_stars: list[str]
     flying_out: dict[str, str] = {}
     analysis: str = ""
+    analysis_tags: list[str] = []
 
 
 class LunarResponse(BaseModel):
