@@ -87,6 +87,7 @@
 
   let _parsedRows = [];
   let _results    = [];
+  let _rows       = [];
 
   /* ══════════ 工具函数 ══════════════════════════ */
   const $ = id => document.getElementById(id);
@@ -252,6 +253,7 @@
       return { item, status: 'ok', result: r, error: null };
     });
 
+    _rows = rows;
     let html = `<div style="overflow-x:auto"><table>
       <thead><tr>
         <th>#</th><th>状态</th><th>出生时间</th><th>日主</th><th>格局</th><th>用神</th><th>本年运势</th><th>错误</th>
@@ -285,19 +287,19 @@
 
   /* ══════════ 下载结果 CSV ══════════════════════ */
   $('btnDownload').addEventListener('click', () => {
-    if (!_results.length && !_parsedRows.length) return;
+    if (!_rows.length && !_parsedRows.length) return;
     const thisYear = new Date().getFullYear();
     const header = 'index,dt,day_stem,geju,yongshen,annual_score,request_id\r\n';
-    const lines = _parsedRows.map((row, i) => {
-      const r = _results[i];
-      if (!r) return `${i+1},${row.dt},,,,失败,`;
+    const lines = _rows.map((row, i) => {
+      const r = row.result;
+      if (!r) return `${i+1},"${row.item?.dt || ''}",,,,"${row.error || '失败'}",`;
       const dayStem = r.pillars_primary?.day?.stem || '';
       const gejuName = r.geju?.geju_name || r.geju?.name || '';
       const yongshen = (r.yongshen?.favor || []).join('/');
       const lnNow = (r.liunian_detail || []).find(l => l.year === thisYear);
       const annualScore = lnNow?.annual_score != null ? lnNow.annual_score : '';
       const reqId = r.request_id || '';
-      return `${i+1},"${row.dt}","${dayStem}","${gejuName}","${yongshen}",${annualScore},"${reqId}"`;
+      return `${i+1},"${row.item?.dt || ''}","${dayStem}","${gejuName}","${yongshen}",${annualScore},"${reqId}"`;
     });
     const csv = '\uFEFF' + header + lines.join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -311,7 +313,7 @@
   /* ══════════ 清空 ══════════════════════════════ */
   $('btnClear').addEventListener('click', () => {
     $('fileInput').value = '';
-    _parsedRows = []; _results = [];
+    _parsedRows = []; _results = []; _rows = [];
     $('previewCard').style.display = 'none';
     $('resultCard').style.display = 'none';
     $('btnRun').disabled = true;

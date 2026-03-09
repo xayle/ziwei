@@ -220,14 +220,9 @@ async function loadPending() {
   try {
     /* 尝试调用管理员全量查询；若无则 fallback 到 incoming */
     let rows = [];
-    try {
-      const data = await apiFetch('/api/v1/delegations/pending');
-      rows = data.delegations || [];
-    } catch {
-      /* fallback: 在 incoming 中筛选 pending */
-      const data = await apiFetch('/api/v1/delegations/incoming');
-      rows = (data.delegations || []).filter(d => d.status === 'pending');
-    }
+    /* 直接通过 /incoming 过滤 pending 状态（无独立 /pending 端点） */
+    const _pd = await apiFetch('/api/v1/delegations/incoming');
+    rows = (_pd.delegations || []).filter(d => d.status === 'pending');
     if (!rows.length) { el.innerHTML = '<p class="empty">暂无待审批申请</p>'; return; }
     el.innerHTML = `<table>
       <thead><tr><th>ID</th><th>申请人</th><th>权限</th><th>申请时间</th><th>操作</th></tr></thead>

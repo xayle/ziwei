@@ -756,9 +756,6 @@ function bindFormEvents() {
     saveInputs();
   });
   $('btn-demo')?.addEventListener('click', () => {
-    if($('userName'))  $('userName').value='张三';
-    if($('userGender')) $('userGender').value='male';
-    if($('birthPlace')) $('birthPlace').value='上海市浦东新区';
     if($('dt'))  $('dt').value='2002-03-13T14:36';
     if($('tz'))  $('tz').value='Asia/Shanghai';
     if($('lon')) $('lon').value='121.4737';

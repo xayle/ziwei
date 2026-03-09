@@ -256,9 +256,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalHistCompare" role="dialog" aria-modal="true" aria-labelledby="modalHistCompareTitle">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalHistCompareTitle">历史命盘对比</h3>
+      <button class="modal-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="modal-body hist-compare-body"></div>
+  </div>
+</div>
+
 <aside class="history-drawer" id="historyDrawer" role="complementary" aria-label="历史命盘">
   <div class="history-drawer-title">
     历史命盘（最近5次）
+    <button id="btn-clear-hist" style="font-size:11px;padding:2px 8px;margin-right:4px;border-radius:6px;" aria-label="清空历史">清空</button>
     <button class="drawer-close" aria-label="关闭历史抽屉">✕</button>
   </div>
   <div class="history-drawer-content" id="histDrawerContent">
@@ -612,5 +623,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </div>
 
 <!-- N5.05 PWA: ServiceWorker 注册由 verify-init.js 统一处理，符合 CSP script-src 'self' -->
+<div id="ariaLiveStatus" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0"></div>
 </body>
 </html>
