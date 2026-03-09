@@ -103,6 +103,34 @@
     .ftable th,.ftable td{border:1px solid var(--border);padding:5px 8px;text-align:left}
     .ftable th{background:var(--tag-bg);font-weight:700}
     .flu{color:#14532d}.fqu{color:#1e3a8a}.fke{color:#6b21a8}.fji{color:#7f1d1d}
+    /* ── 运势预测 ─────────────────────────────── */
+    .fc-section{background:#fff9f0;border:1px solid #e8d8b0;border-radius:8px;padding:14px 16px;margin-bottom:14px}
+    .fc-section.fc-cur{border-color:#8b1a1a;box-shadow:0 0 0 2px rgba(139,26,26,.15)}
+    .fc-section h3{font-size:.93rem;font-weight:700;color:#8b1a1a;margin-bottom:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+    .fc-score{display:inline-block;font-size:.85rem;font-weight:700;padding:2px 10px;border-radius:10px}
+    .fc-score.hi{background:#dcfce7;color:#14532d}.fc-score.md{background:#fef9c3;color:#713f12}.fc-score.lo{background:#fee2e2;color:#7f1d1d}
+    .fc-overall{font-size:.85rem;line-height:1.75;color:#1a1208;margin:6px 0 8px}
+    .fc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+    .fc-tag{font-size:.72rem;padding:2px 8px;border-radius:10px;font-weight:600;cursor:default}
+    .lv-强{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
+    .lv-中{background:#fef3c7;color:#78350f;border:1px solid #fcd34d}
+    .lv-弱{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+    .fc-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+    .fc-dim{background:#faf5ea;border-radius:5px;padding:7px 9px;font-size:.8rem;line-height:1.6}
+    .fc-dim b{color:#8b1a1a;display:block;margin-bottom:2px;font-size:.78rem}
+    .fc-advice{background:#eff6ff;border-left:3px solid #3b82f6;padding:8px 10px;border-radius:0 5px 5px 0;font-size:.8rem;line-height:1.6;white-space:pre-wrap}
+    .fc-months{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+    .fc-month{border:1px solid #e8d8b0;border-radius:6px;overflow:hidden}
+    .fc-month.fc-cur{border-color:#8b1a1a}
+    .fc-mhdr{display:flex;align-items:center;gap:8px;padding:7px 11px;cursor:pointer;background:#faf5ea;user-select:none}
+    .fc-mhdr:hover{background:#f0e8d0}
+    .fc-mhdr .mn{font-size:.82rem;font-weight:700;color:#2c1810;flex:1}
+    .fc-mhdr .ms{font-size:.75rem;color:#6b5b45;white-space:nowrap}
+    .fc-bar{height:5px;border-radius:3px;background:#e0d4bc;width:54px;flex-shrink:0}
+    .fc-bar-fill{height:100%;border-radius:3px;background:#c9963a}
+    .fc-mbody{display:none;padding:10px 12px;background:#fffdf8;border-top:1px solid #e8d8b0}
+    .fc-mbody.open{display:block}
+    .fc-divider{font-size:.8rem;font-weight:700;color:#6b5b45;margin:14px 0 6px;border-bottom:1px solid #e8d8b0;padding-bottom:4px}
   </style>
 </head>
 <body>
@@ -239,7 +267,7 @@ function render(data){
 function renderAna(data){
   const aw=document.getElementById('aw');aw.classList.remove('hid');
   const at=document.getElementById('at');
-  const tds=[{id:'sum',l:'命盘摘要'},{id:'pal',l:'逐宫解读'},{id:'dy',l:'大运列表'},{id:'fly',l:'飞星分析'}];
+  const tds=[{id:'sum',l:'命盘摘要'},{id:'pal',l:'逐宫解读'},{id:'dy',l:'大运列表'},{id:'fly',l:'飞星分析'},{id:'fc',l:'运势预测'}];
   at.innerHTML=tds.map((t,i)=>`<button class="tbtn${i===0?' act':''}" onclick="swt('${t.id}')">${t.l}</button>`).join('');
   let h=`<div id="tc-sum" class="tc act"><div class="sumcard">${esc(data.summary||'')}</div></div>`;
   h+=`<div id="tc-pal" class="tc">`;
@@ -258,12 +286,72 @@ function renderAna(data){
     h+=`</table>`;
   }
   h+=`</div>`;
+  h+=`<div id="tc-fc" class="tc">${renderForecastTab(data.forecast)}</div>`;
   document.getElementById('ab').innerHTML=h;
 }
 function swt(id){
-  const m={'sum':'命盘摘要','pal':'逐宫解读','dy':'大运列表','fly':'飞星分析'};
+  const m={'sum':'命盘摘要','pal':'逐宫解读','dy':'大运列表','fly':'飞星分析','fc':'运势预测'};
   document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('act',b.textContent===m[id]));
-  ['sum','pal','dy','fly'].forEach(t=>{const el=document.getElementById('tc-'+t);if(el)el.classList.toggle('act',t===id)});
+  ['sum','pal','dy','fly','fc'].forEach(t=>{const el=document.getElementById('tc-'+t);if(el)el.classList.toggle('act',t===id)});
+}
+function scoreClass(s){return s>=75?'hi':s>=55?'md':'lo'}
+function togMonth(i){const el=document.getElementById('fc-mb-'+i);if(el)el.classList.toggle('open')}
+function fmtPeriod(pf){
+  let h=`<div class="fc-section${pf._cur?' fc-cur':''}">`;
+  h+=`<h3>${esc(pf.period)}（${esc(pf.ganzhi)}）宫位：${esc(pf.palace_name)}<span class="fc-score ${scoreClass(pf.score)}">${pf.score}分</span></h3>`;
+  h+=`<div class="fc-overall">${esc(pf.overall)}</div>`;
+  if(pf.events&&pf.events.length){
+    h+=`<div class="fc-tags">`;
+    for(const ev of pf.events)h+=`<span class="fc-tag lv-${esc(ev.level)}" title="${esc(ev.description)}（${esc(ev.source)}）">${esc(ev.category)}【${esc(ev.level)}】</span>`;
+    h+=`</div>`;
+  }
+  const ICONS={感情:'💕',财运:'💰',事业:'💼',健康:'🏥'};
+  h+=`<div class="fc-grid">`;
+  for(const [k,v] of Object.entries(pf.details||{}))h+=`<div class="fc-dim"><b>${ICONS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
+  h+=`</div>`;
+  h+=`<div class="fc-advice">${esc(pf.advice)}</div>`;
+  h+=`</div>`;
+  return h;
+}
+function renderForecastTab(fc){
+  if(!fc)return'<p style="color:#6b5b45;padding:20px">暂无运势数据，请先排盘</p>';
+  let h='';
+  // 年运总览
+  h+=`<div class="fc-divider">🗓 ${fc.year}年 年运总览</div>`;
+  h+=fmtPeriod(fc.yearly);
+  // 当前月高亮
+  if(fc.current_month){
+    h+=`<div class="fc-divider">📅 本月运势（${esc(fc.current_month.period)}）</div>`;
+    fc.current_month._cur=true;
+    h+=fmtPeriod(fc.current_month);
+  }
+  // 12流月折叠列表
+  h+=`<div class="fc-divider">📆 全年十二流月</div>`;
+  h+=`<div class="fc-months">`;
+  for(let i=0;i<fc.monthly.length;i++){
+    const m=fc.monthly[i];
+    const isCur=fc.current_month&&m.period===fc.current_month.period;
+    h+=`<div class="fc-month${isCur?' fc-cur':''}">`;
+    h+=`<div class="fc-mhdr" onclick="togMonth(${i})">`;
+    h+=`<span class="mn">${esc(m.period)}（${esc(m.ganzhi)}）${esc(m.palace_name)}</span>`;
+    h+=`<div class="fc-bar"><div class="fc-bar-fill" style="width:${m.score}%"></div></div>`;
+    h+=`<span class="ms">${m.score}分</span>`;
+    h+=`</div>`;
+    h+=`<div class="fc-mbody${isCur?' open':''}" id="fc-mb-${i}">`;
+    if(m.events&&m.events.length){
+      h+=`<div class="fc-tags" style="margin-bottom:7px">`;
+      for(const ev of m.events)h+=`<span class="fc-tag lv-${esc(ev.level)}" title="${esc(ev.description)}">${esc(ev.category)}【${esc(ev.level)}】</span>`;
+      h+=`</div>`;
+    }
+    const ICONS={感情:'💕',财运:'💰',事业:'💼',健康:'🏥'};
+    h+=`<div class="fc-grid">`;
+    for(const [k,v] of Object.entries(m.details||{}))h+=`<div class="fc-dim"><b>${ICONS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
+    h+=`</div>`;
+    h+=`<div class="fc-advice">${esc(m.advice)}</div>`;
+    h+=`</div></div>`;
+  }
+  h+=`</div>`;
+  return h;
 }
 </script>
 </body>
