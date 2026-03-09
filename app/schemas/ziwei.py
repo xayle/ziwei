@@ -16,6 +16,7 @@ class ZiweiRequest(BaseModel):
     minute: int = Field(0, ge=0, le=59, description="出生分钟")
     gender: str = Field(..., description="性别：男/女")
     liunian_year: Optional[int] = Field(None, description="流年年份（不填默认当年）")
+    longitude: Optional[float] = Field(None, ge=-180, le=180, description="出生地经度（东经正数），用于真太阳时修正")
 
     model_config = {"json_schema_extra": {"example": {
         "year": 2002, "month": 3, "day": 13,
@@ -42,6 +43,7 @@ class PalaceResponse(BaseModel):
     flying_out: dict[str, str] = {}
     analysis: str = ""
     analysis_tags: list[str] = []
+    xiaoxian_ages: list[int] = []  # 该宫小限对应年龄
 
 
 class LunarResponse(BaseModel):
@@ -60,6 +62,8 @@ class DayunItemResponse(BaseModel):
     start_age: int
     end_age: int
     start_year: int
+    sihua: dict[str, str] = {}       # 大运四化 {星名: "化禄"/"化权"/"化科"/"化忧"}
+    boshi_stars: dict[str, str] = {} # 博士十二流曜 {星名: 地支}
 
 
 class DayunResponse(BaseModel):
@@ -127,3 +131,10 @@ class ZiweiResponse(BaseModel):
     # 文字
     summary: str = ""
     analysis: dict[str, str] = {}
+
+    # 命主/身主
+    life_ruler_star: str = ""   # 命主
+    body_ruler_star: str = ""   # 身主
+
+    # 真太阳时
+    true_solar_time: str = ""   # ""表示未传经度，"HH:MM"表示已修正

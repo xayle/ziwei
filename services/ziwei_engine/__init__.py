@@ -44,6 +44,7 @@ class PalaceInfo:
     flying_out: dict[str, str] = field(default_factory=dict)
     analysis: str = ""
     analysis_tags: list[str] = field(default_factory=list)
+    xiaoxian_ages: list[int] = field(default_factory=list)  # 该宫小限所对应的年龄列表
 
 
 @dataclass
@@ -84,6 +85,13 @@ class ZiweiChart:
     summary: str = ""
     analysis: dict[str, str] = field(default_factory=dict)
 
+    # ── 命主/身主 ─────────────────────────────────────────────
+    life_ruler_star: str = ""   # 命主（六星循环法）
+    body_ruler_star: str = ""   # 身主（年支查表法）
+
+    # ── 真太阳时 ─────────────────────────────────────────────
+    true_solar_time: str = ""   # "" = 未修正；"HH:MM" = 已修正真太阳时
+
 
 # ──────────────────────────────────────────────────────────────
 # 宫干序列（从命宫天干顺数十二宫）
@@ -103,6 +111,7 @@ def ziwei_full(
     minute: int,
     gender: str,
     liunian_year: Optional[int] = None,
+    longitude: Optional[float] = None,
 ) -> ZiweiChart:
     """
     计算完整紫微斗数命盘。
@@ -115,12 +124,27 @@ def ziwei_full(
 
     返回 ZiweiChart 数据对象。
     """
-    import datetime
+    import datetime as _dt
     if liunian_year is None:
-        liunian_year = datetime.date.today().year
+        liunian_year = _dt.date.today().year
+
+    # ── 真太阳时修正 ──────────────────────────────────────────
+    _true_solar_time = ""
+    _calc_hour, _calc_minute = hour, minute
+    if longitude is not None:
+        try:
+            from services.bazi_engine.solar_time_v2 import apply_solar_correction
+            _corrected = apply_solar_correction(
+                _dt.datetime(year, month, day, hour, minute), longitude
+            )
+            _calc_hour   = _corrected.hour
+            _calc_minute = _corrected.minute
+            _true_solar_time = f"{_corrected.hour:02d}:{_corrected.minute:02d}"
+        except Exception:
+            pass
 
     # 1. 农历信息
-    lunar = solar_to_lunar(year, month, day, hour, minute)
+    lunar = solar_to_lunar(year, month, day, _calc_hour, _calc_minute)
 
     # 2. 命宫/身宫/五行局
     layout = calc_palaces(lunar)
@@ -131,6 +155,19 @@ def ziwei_full(
 
     # 3. 十四主星
     main_stars = place_main_stars(lunar.lunar_day, layout.wuxing_ju)
+
+    # ── 命主/身主 ──────────────────────────────────────────────
+    # 命主：贪狼宫起顺数到命宫，按六星周期 [贪狼巨门禄存文曲廉贞武曲] 定星
+    _LIFE_RULER_CYCLE = ["贪狼", "巨门", "禄存", "文曲", "廉贞", "武曲"]
+    # 身主：年支查表 子/午→火星 丑/未→天相 寅/申→天梁 卯/酉→天同 辰/戌→文昌 巳/亥→武曲
+    _BODY_RULER_TABLE = [
+        "火星", "天相", "天梁", "天同", "文昌", "武曲",
+        "火星", "天相", "天梁", "天同", "文昌", "武曲",
+    ]
+    _tanlang_b = main_stars["贪狼"].branch_idx
+    _life_steps = (lp_b - _tanlang_b) % 12
+    _life_ruler = _LIFE_RULER_CYCLE[_life_steps % 6]
+    _body_ruler = _BODY_RULER_TABLE[lunar.year_branch_idx]
 
     # 4. 辅星/杂曜
     aux_stars = place_aux_stars(lunar)
@@ -151,6 +188,29 @@ def ziwei_full(
 
     # 6. 宫干序列
     pal_stems = _palace_stems_list(lp_s)
+
+    # ── 小限（每宫对应年龄列表，男顺女逆，由年支三合决定起宫）────────────
+    # 三合火 寅午戌(2,6,10)：男起寅(2)，女起申(8)
+    # 三合水 申子辰(8,0,4)：男起申(8)，女起寅(2)
+    # 三合金 巳酉丑(5,9,1)：男起巳(5)，女起亥(11)
+    # 三合木 亥卯未(11,3,7)：男起亥(11)，女起巳(5)
+    _XIAOXIAN_GROUPS = [
+        (frozenset([2, 6, 10]),  2,  8),
+        (frozenset([8, 0, 4]),   8,  2),
+        (frozenset([5, 9, 1]),   5, 11),
+        (frozenset([11, 3, 7]), 11,  5),
+    ]
+    _is_male = gender.upper() in ("M", "男", "MALE")
+    _xx_start = 2
+    for _grp, _ms, _fs in _XIAOXIAN_GROUPS:
+        if lunar.year_branch_idx in _grp:
+            _xx_start = _ms if _is_male else _fs
+            break
+    _xx_dir = 1 if _is_male else -1
+    _xx_by_branch: dict[int, list[int]] = {i: [] for i in range(12)}
+    for _age in range(1, 121):
+        _b = (_xx_start + (_age - 1) * _xx_dir) % 12
+        _xx_by_branch[_b].append(_age)
 
     # 7. 构建12宫信息
     palaces_info: list[PalaceInfo] = []
@@ -192,11 +252,33 @@ def ziwei_full(
             main_stars=ms_list,
             aux_stars=ax_list,
             flying_out=fly_out,
+            xiaoxian_ages=_xx_by_branch.get(b, []),
         )
         palaces_info.append(pa)
 
     # 8. 大运
     dayun = calc_dayun(lunar, gender, year, month, day)
+
+    # ── 大运四化 + 博士十二流曜 ──────────────────────────────
+    # 博士在大运干对应的禄存宫，阳干顺数，阴干逆数，共12曜
+    # 四化解析同时纳入辅星（文昌文曲左辅右弼等可参与四化）
+    _star_branches_map = {nm: pos.branch_idx for nm, pos in main_stars.items()}
+    _star_branches_map.update({
+        nm: b for nm, b in aux_stars.items()
+        if not nm.endswith("placeholder")
+    })
+    _LUZUN_B = [2, 3, 5, 5, 7, 7, 8, 9, 11, 0]  # 甲乙丙丁戊己庚辛壬癸 禄存地支
+    _BOSHI_12 = ["博士", "力士", "青龙", "小耗", "将军", "奏书",
+                 "飞廉", "喜神", "病符", "大耗", "伏兵", "官府"]
+    for _item in dayun.items:
+        _item.sihua = apply_sihua(_star_branches_map, STEMS[_item.stem_idx])
+        _luzun_b = _LUZUN_B[_item.stem_idx]
+        _yang_dy = (_item.stem_idx % 2 == 0)
+        _boshi: dict[str, str] = {}
+        for _i, _sn in enumerate(_BOSHI_12):
+            _bi = (_luzun_b + _i) % 12 if _yang_dy else (_luzun_b - _i) % 12
+            _boshi[_sn] = BRANCHES[_bi]
+        _item.boshi_stars = _boshi
 
     # 9. 流年
     liunian = calc_liunian(liunian_year, year, lp_b)
@@ -246,4 +328,7 @@ def ziwei_full(
         liuyue_data=liuyue_data,
         summary=summary,
         analysis=analysis_texts,
+        life_ruler_star=_life_ruler,
+        body_ruler_star=_body_ruler,
+        true_solar_time=_true_solar_time,
     )

@@ -57,6 +57,7 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
             flying_out=p.flying_out,
             analysis=p.analysis,
             analysis_tags=p.analysis_tags,
+            xiaoxian_ages=p.xiaoxian_ages,
         )
         for p in chart.palaces
     ]
@@ -72,6 +73,8 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
                 start_age=d.start_age,
                 end_age=d.end_age,
                 start_year=d.start_year,
+                sihua=d.sihua,
+                boshi_stars=d.boshi_stars,
             )
             for d in chart.dayun.items
         ],
@@ -126,6 +129,9 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
         liuyue=liuyue_resp,
         summary=chart.summary,
         analysis=chart.analysis,
+        life_ruler_star=chart.life_ruler_star,
+        body_ruler_star=chart.body_ruler_star,
+        true_solar_time=chart.true_solar_time,
     )
 
 
@@ -146,6 +152,7 @@ async def compute_ziwei(req: ZiweiRequest) -> ZiweiResponse:
             minute=req.minute,
             gender=req.gender,
             liunian_year=req.liunian_year,
+            longitude=req.longitude,
         )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

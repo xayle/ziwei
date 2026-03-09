@@ -35,6 +35,8 @@ class DayunItem:
     start_age: int        # 起运虚岁
     end_age: int          # 终运虚岁
     start_year: int       # 起运公历年
+    sihua: dict[str, str] = field(default_factory=dict)       # 大运四化 {星名: "化禄"/"化权"/"化科"/"化忌"}
+    boshi_stars: dict[str, str] = field(default_factory=dict) # 博士十二流曜 {星名: 地支名}
 
 
 @dataclass

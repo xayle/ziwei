@@ -167,3 +167,129 @@ class TestZiweiFull:
     def test_liunian_present(self):
         assert self.chart.liunian is not None
         assert self.chart.liunian.year_gz != ""
+
+
+# ──────────────────────────────────────────────────────────────
+# 命主 / 身主
+# ──────────────────────────────────────────────────────────────
+class TestLifeBodyRuler:
+    """
+    黄金案例: 壬午年 女, 水二局, 命宫未(7)
+    贪狼在寅(2)，命宫在未(7)，步数=(7-2)=5，六星周期[0贪狼…5武曲]→ 命主武曲
+    身主: 年支午(6) → 火星
+    """
+    def setup_method(self):
+        self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                                GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+
+    def test_life_ruler_star(self):
+        assert self.chart.life_ruler_star == "武曲", \
+            f"命主应为武曲，实得 {self.chart.life_ruler_star}"
+
+    def test_body_ruler_star(self):
+        assert self.chart.body_ruler_star == "火星", \
+            f"身主应为火星，实得 {self.chart.body_ruler_star}"
+
+
+# ──────────────────────────────────────────────────────────────
+# 小限
+# ──────────────────────────────────────────────────────────────
+class TestXiaoXian:
+    """
+    黄金案例: 女命壬午年(午支=6, 三合火)
+    女命从申(8)起, 逆数:
+      申(8)=1岁, 未(7=命宫)=2岁, 午(6)=3岁 ...
+    """
+    def setup_method(self):
+        self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                                GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+
+    def _palace_by_branch(self, branch_idx: int):
+        return next(p for p in self.chart.palaces if p.branch_idx == branch_idx)
+
+    def test_start_palace_has_age1(self):
+        # 女命壬午: 小限1岁在申(8)宫
+        shen = self._palace_by_branch(8)
+        assert 1 in shen.xiaoxian_ages, f"申宫应含小限1岁，实得 {shen.xiaoxian_ages[:5]}"
+
+    def test_start_palace_has_age13(self):
+        shen = self._palace_by_branch(8)
+        assert 13 in shen.xiaoxian_ages, f"申宫应含小限13岁"
+
+    def test_life_palace_has_age2(self):
+        # 命宫在未(7): 2岁
+        wei = self._palace_by_branch(7)
+        assert 2 in wei.xiaoxian_ages, f"命宫(未)应含小限2岁，实得 {wei.xiaoxian_ages[:5]}"
+
+    def test_life_palace_has_age14(self):
+        wei = self._palace_by_branch(7)
+        assert 14 in wei.xiaoxian_ages, "命宫(未)应含小限14岁"
+
+    def test_life_palace_has_age26(self):
+        wei = self._palace_by_branch(7)
+        assert 26 in wei.xiaoxian_ages, "命宫(未)应含小限26岁"
+
+    def test_all_palaces_have_xiaoxian(self):
+        # 每宫都应分有小限年龄
+        for p in self.chart.palaces:
+            assert len(p.xiaoxian_ages) > 0, f"{p.name}({p.branch})小限年龄列表不应为空"
+
+    def test_total_xiaoxian_count(self):
+        total = sum(len(p.xiaoxian_ages) for p in self.chart.palaces)
+        assert total == 120, f"全部小限应覆盖1-120岁共120个，实得 {total}"
+
+
+# ──────────────────────────────────────────────────────────────
+# 大运四化 + 博士流曜
+# ──────────────────────────────────────────────────────────────
+class TestDayunEnrichment:
+    def setup_method(self):
+        self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                                GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+
+    def test_dayun_sihua_nonempty(self):
+        for d in self.chart.dayun.items:
+            assert len(d.sihua) > 0, f"第{d.index}柱大运({d.ganzhi})应有四化"
+
+    def test_dayun_sihua_count(self):
+        # 每柱大运恰好有4条四化
+        for d in self.chart.dayun.items:
+            assert len(d.sihua) == 4, \
+                f"第{d.index}柱大运({d.ganzhi})四化应有4条，实得 {len(d.sihua)}"
+
+    def test_dayun_boshi_12_stars(self):
+        for d in self.chart.dayun.items:
+            assert len(d.boshi_stars) == 12, \
+                f"第{d.index}柱大运博士流曜应有12颗，实得 {len(d.boshi_stars)}"
+
+    def test_dayun_boshi_keys(self):
+        expected = {"博士", "力士", "青龙", "小耗", "将军", "奏书",
+                    "飞廉", "喜神", "病符", "大耗", "伏兵", "官府"}
+        for d in self.chart.dayun.items:
+            assert set(d.boshi_stars.keys()) == expected, \
+                f"博士流曜名称不符: {set(d.boshi_stars.keys()) - expected}"
+
+
+# ──────────────────────────────────────────────────────────────
+# 真太阳时
+# ──────────────────────────────────────────────────────────────
+class TestTrueSolarTime:
+    def test_no_longitude_empty(self):
+        chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                           GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+        assert chart.true_solar_time == "", "不传经度时 true_solar_time 应为空"
+
+    def test_with_longitude_has_value(self):
+        # 东经116.4度（北京附近）
+        chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                           GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER, longitude=116.4)
+        assert chart.true_solar_time != "", "传入经度后 true_solar_time 不应为空"
+        assert ":" in chart.true_solar_time, "true_solar_time 格式应为 HH:MM"
+
+    def test_solar_time_format(self):
+        chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                           GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER, longitude=121.5)
+        parts = chart.true_solar_time.split(":")
+        assert len(parts) == 2
+        assert int(parts[0]) in range(24)
+        assert int(parts[1]) in range(60)
