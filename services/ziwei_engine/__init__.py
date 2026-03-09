@@ -23,6 +23,7 @@ from .analysis import (
     generate_full_analysis,
     generate_summary,
 )
+from .forecast import generate_forecast, ForecastResult
 from .tables import PALACE_NAMES, BRANCHES
 
 
@@ -92,7 +93,8 @@ class ZiweiChart:
 
     # ── 真太阳时 ─────────────────────────────────────────────
     true_solar_time: str = ""   # "" = 未修正；"HH:MM" = 已修正真太阳时
-
+    # ── 运势预测 ───────────────────────────────────────────────
+    forecast: Optional[ForecastResult] = None   # 年运+月运预测
 
 # ──────────────────────────────────────────────────────────────
 # 宫干序列（从命宫天干顺数十二宫）
@@ -312,7 +314,8 @@ def ziwei_full(
     branch_to_name = {pa.branch_idx: pa.name for pa in palaces_info}
     liuyue_data = calc_liuyue_list(liunian, branch_to_name)
 
-    return ZiweiChart(
+    # 13. 先构建 chart，再计算运势预测（forecast 需要完整 chart 对象）
+    chart = ZiweiChart(
         birth_solar=f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}",
         gender=gender,
         lunar=lunar,
@@ -334,3 +337,5 @@ def ziwei_full(
         body_ruler_star=_body_ruler,
         true_solar_time=_true_solar_time,
     )
+    chart.forecast = generate_forecast(chart, liunian_year)
+    return chart

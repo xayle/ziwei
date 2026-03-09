@@ -146,3 +146,69 @@ class ZiweiResponse(BaseModel):
 
     # 真太阳时
     true_solar_time: str = ""   # ""表示未传经度，"HH:MM"表示已修正
+
+    # 运势预测
+    forecast: Optional["ForecastResultResponse"] = None
+
+
+# ── 运势预测 Schema ──────────────────────────────────────────────────────────
+
+class EventTagResponse(BaseModel):
+    """单个事件/警示标签。"""
+    category: str    # 桃花/姻缘、灾祸/健康、财运、事业/官运、变动/迁移、贵人/助力
+    level: str       # 强 / 中 / 弱
+    description: str
+    source: str      # 触发依据
+
+
+class PeriodForecastResponse(BaseModel):
+    """一段时期（年/月）的运势摘要。"""
+    period: str              # 如 "2026年" / "2026年正月(寅)"
+    ganzhi: str              # 干支
+    palace_name: str         # 流年/月命宫对应本命宫位名
+    overall: str             # 综合一句话
+    details: dict[str, str]  # {感情/财运/事业/健康: 详解文字}
+    events: list[EventTagResponse]
+    advice: str
+    score: int               # 综合运势 1-100
+
+
+class ForecastResultResponse(BaseModel):
+    """完整运势预测结果。"""
+    year: int
+    yearly: PeriodForecastResponse           # 年运
+    monthly: list[PeriodForecastResponse]    # 12个流月
+    current_month: PeriodForecastResponse    # 当前月
+
+    # 运势预测
+    forecast: Optional["ForecastResultResponse"] = None
+
+
+# ── 运势预测 Schema ────────────────────────────────────────────────────────
+
+class EventTagResponse(BaseModel):
+    """单个事件/警示标签。"""
+    category: str    # 桃花/姻缘、灾祸/健康、财运、事业/官运、变动/迁移、贵人/助力
+    level: str       # 强 / 中 / 弱
+    description: str
+    source: str      # 触发依据
+
+
+class PeriodForecastResponse(BaseModel):
+    """一段时期（年/月）的运势摘要。"""
+    period: str              # 如 "2026年" / "2026年正月(寅)"
+    ganzhi: str              # 干支
+    palace_name: str         # 流年/月命宫对应本命宫位名
+    overall: str             # 综合一句话
+    details: dict[str, str]  # {感情/财运/事业/健康: 详细文字}
+    events: list[EventTagResponse]
+    advice: str
+    score: int               # 综合运势 1-100
+
+
+class ForecastResultResponse(BaseModel):
+    """完整运势预测结果。"""
+    year: int
+    yearly: PeriodForecastResponse           # 年运
+    monthly: list[PeriodForecastResponse]    # 12个流月
+    current_month: PeriodForecastResponse    # 当前月

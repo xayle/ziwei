@@ -20,6 +20,9 @@ from app.schemas.ziwei import (
     FlyingChartResponse,
     FlyingPalaceResponse,
     LiuyueItem,
+    ForecastResultResponse,
+    PeriodForecastResponse,
+    EventTagResponse,
 )
 from services.ziwei_engine import ziwei_full, ZiweiChart
 
@@ -120,6 +123,41 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
         for d in chart.liuyue_data
     ]
 
+    # ── forecast 映射 ────────────────────────────────────────
+    forecast_resp = None
+    if chart.forecast:
+        fc = chart.forecast
+
+        def _map_events(events) -> list[EventTagResponse]:
+            return [
+                EventTagResponse(
+                    category=e.category,
+                    level=e.level,
+                    description=e.description,
+                    source=e.source,
+                )
+                for e in events
+            ]
+
+        def _map_period(p) -> PeriodForecastResponse:
+            return PeriodForecastResponse(
+                period=p.period,
+                ganzhi=p.ganzhi,
+                palace_name=p.palace_name,
+                overall=p.overall,
+                details=p.details,
+                events=_map_events(p.events),
+                advice=p.advice,
+                score=p.score,
+            )
+
+        forecast_resp = ForecastResultResponse(
+            year=fc.year,
+            yearly=_map_period(fc.yearly),
+            monthly=[_map_period(m) for m in fc.monthly],
+            current_month=_map_period(fc.current_month),
+        )
+
     return ZiweiResponse(
         birth_solar=chart.birth_solar,
         gender=chart.gender,
@@ -140,6 +178,7 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
         life_ruler_star=chart.life_ruler_star,
         body_ruler_star=chart.body_ruler_star,
         true_solar_time=chart.true_solar_time,
+        forecast=forecast_resp,
     )
 
 

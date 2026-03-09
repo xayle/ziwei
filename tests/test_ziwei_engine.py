@@ -472,3 +472,119 @@ class TestOppositionName:
         for p in empty_palaces:
             assert "借" in p.analysis or "空宫" in p.analysis, \
                 f"空宫{p.name}的analysis应包含'借'或'空宫'字样"
+
+
+# ──────────────────────────────────────────────────────────────
+# 综合运势预测 (ForecastResult)
+# ──────────────────────────────────────────────────────────────
+class TestForecast:
+    """验证运势预测引擎基本正确性。"""
+
+    def setup_method(self):
+        self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                                GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+        self.fc = self.chart.forecast
+
+    def test_forecast_not_none(self):
+        """forecast 字段不应为 None。"""
+        assert self.fc is not None, "ZiweiChart.forecast 不应为 None"
+
+    def test_yearly_has_palace_name(self):
+        """年运 palace_name 应为有效本命宫位名。"""
+        from services.ziwei_engine.tables import PALACE_NAMES
+        assert self.fc.yearly.palace_name in PALACE_NAMES, \
+            f"年运宫位名不合法: {self.fc.yearly.palace_name}"
+
+    def test_yearly_score_in_range(self):
+        """年运评分应在 1-100 之间。"""
+        score = self.fc.yearly.score
+        assert 1 <= score <= 100, f"年运评分应在1-100，实得{score}"
+
+    def test_yearly_has_overall(self):
+        """年运 overall 不应为空。"""
+        assert self.fc.yearly.overall != "", "年运 overall 不应为空"
+
+    def test_yearly_has_ganzhi(self):
+        """年运 ganzhi 不应为空。"""
+        assert self.fc.yearly.ganzhi != "", "年运 ganzhi 不应为空"
+
+    def test_yearly_has_advice(self):
+        """年运 advice 不应为空。"""
+        assert self.fc.yearly.advice != "", "年运 advice 不应为空"
+
+    def test_yearly_details_keys(self):
+        """年运 details 应有感情/财运/事业/健康四个维度。"""
+        expected = {"感情", "财运", "事业", "健康"}
+        actual = set(self.fc.yearly.details.keys())
+        assert actual >= expected, f"年运 details 缺少维度: {expected - actual}"
+
+    def test_monthly_count(self):
+        """月运列表应有12项。"""
+        assert len(self.fc.monthly) == 12, \
+            f"月运列表应有12项，实得{len(self.fc.monthly)}"
+
+    def test_monthly_all_have_ganzhi(self):
+        """每个月运都应有 ganzhi。"""
+        for m in self.fc.monthly:
+            assert m.ganzhi != "", f"{m.period} 月运 ganzhi 不应为空"
+
+    def test_monthly_score_in_range(self):
+        """每个月运评分应在 1-100 之间。"""
+        for m in self.fc.monthly:
+            assert 1 <= m.score <= 100, \
+                f"{m.period} 月运评分应在1-100，实得{m.score}"
+
+    def test_monthly_palace_names_valid(self):
+        """每个月运的 palace_name 应为有效本命宫位名。"""
+        from services.ziwei_engine.tables import PALACE_NAMES
+        for m in self.fc.monthly:
+            assert m.palace_name in PALACE_NAMES, \
+                f"{m.period} 月运宫位名不合法: {m.palace_name}"
+
+    def test_current_month_not_none(self):
+        """current_month 不应为 None。"""
+        assert self.fc.current_month is not None
+
+    def test_current_month_in_monthly(self):
+        """current_month 应与 monthly 中对应月份一致。"""
+        import datetime
+        cur = datetime.date.today().month
+        # monthly 按农历月排列，正月=1
+        matching = [m for m in self.fc.monthly
+                    if self.fc.current_month.ganzhi == m.ganzhi]
+        assert len(matching) >= 1, "current_month 应能在 monthly 中找到"
+
+    def test_events_have_valid_level(self):
+        """所有事件 level 应为 强/中/弱 之一。"""
+        valid_levels = {"强", "中", "弱"}
+        for e in self.fc.yearly.events:
+            assert e.level in valid_levels, \
+                f"事件 level 不合法: {e.level}"
+        for m in self.fc.monthly:
+            for e in m.events:
+                assert e.level in valid_levels, \
+                    f"{m.period} 事件 level 不合法: {e.level}"
+
+    def test_events_have_source(self):
+        """所有事件 source 不应为空。"""
+        for e in self.fc.yearly.events:
+            assert e.source != "", f"年运事件 source 不应为空: {e.category}"
+
+    def test_forecast_from_engine_integration(self):
+        """从引擎直接测试 generate_forecast 函数。"""
+        from services.ziwei_engine.forecast import generate_forecast
+        fc2 = generate_forecast(self.chart, 2026)
+        assert fc2.year == 2026
+        assert fc2.yearly is not None
+        assert len(fc2.monthly) == 12
+
+    def test_forecast_different_years(self):
+        """不同流年应产生不同的运势预测（不同大运/流年四化）。"""
+        from services.ziwei_engine.forecast import generate_forecast
+        fc_2026 = generate_forecast(self.chart, 2026)
+        fc_2027 = generate_forecast(self.chart, 2027)
+        # 年份不同
+        assert fc_2026.year != fc_2027.year
+        # 干支不同（2026=丙午, 2027=丁未）
+        assert fc_2026.yearly.ganzhi != fc_2027.yearly.ganzhi, \
+            f"2026与2027年干支应不同，均为{fc_2026.yearly.ganzhi}"
