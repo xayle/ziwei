@@ -136,17 +136,67 @@ def generate_palace_analysis(
 
     if mains:
         lines.append("主星：" + "、".join(mains))
-        # 添加每颗主星的性质描述
+        # 添加每颗主星的性质描述（按亮度/四化分层）
         for pos in main_stars.values():
             if pos.branch_idx == palace_branch and pos.name in STAR_DESC:
-                lines.append(f"  {STAR_DESC[pos.name]}")
+                base = STAR_DESC[pos.name]
+                # 亮度附注
+                if pos.brightness == "庙":
+                    bri_note = "（入庙，力量充分，吉性倍增）"
+                elif pos.brightness == "旺":
+                    bri_note = "（旺地，发挥七八成，整体正面）"
+                elif pos.brightness == "陷":
+                    bri_note = "（落陷，力量最弱，吉星难发力，需注意）"
+                else:
+                    bri_note = ""
+                # 四化附注
+                hua_notes = []
+                for t in pos.transforms:
+                    if "化禄" in t:
+                        hua_notes.append("逢化禄，财运/贵气大增")
+                    elif "化权" in t:
+                        hua_notes.append("逢化权，权势/决断力强")
+                    elif "化科" in t:
+                        hua_notes.append("逢化科，名声/文采显扬")
+                    elif "化忌" in t:
+                        hua_notes.append("逢化忌，需防是非/损耗")
+                hua_str = "；".join(hua_notes)
+                note = bri_note + (f"；{hua_str}" if hua_str else "")
+                lines.append(f"  {base}{note}")
     else:
-        lines.append("主星：（空宫，借对宫星曜论命）")
+        # 空宫：借对宫星曜论命
+        opp_branch = _opposite_branch(palace_branch, main_stars)
+        opp_mains = [
+            pos for pos in main_stars.values()
+            if pos.branch_idx == opp_branch
+        ] if opp_branch is not None else []
+
+        if opp_mains:
+            opp_names = "、".join(p.name for p in opp_mains)
+            lines.append(f"主星：（空宫，借对宫 {opp_names} 论命）")
+            for pos in opp_mains:
+                if pos.name in STAR_DESC:
+                    lines.append(f"  [借] {STAR_DESC[pos.name]}")
+        else:
+            lines.append("主星：（空宫，借对宫论命）")
 
     if auxes:
         lines.append("辅星：" + "、".join(auxes))
+        for ax in auxes:
+            if ax in AUX_STAR_DESC:
+                lines.append(f"  {AUX_STAR_DESC[ax]}")
 
     return "\n".join(lines)
+
+
+def _opposite_branch(
+    palace_branch: int,
+    main_stars: dict[str, StarPosition],
+) -> int | None:
+    """返回对宫的地支索引（+6），确保该宫有星存在。"""
+    opp = (palace_branch + 6) % 12
+    has_star = any(pos.branch_idx == opp for pos in main_stars.values())
+    return opp if has_star else None
 
 
 def generate_full_analysis(

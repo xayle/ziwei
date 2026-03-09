@@ -87,9 +87,10 @@ def calc_liuyue_list(
 ) -> list[dict]:
     """
     计算流年12个流月数据列表。
-    每项: {month, month_name, month_gz, life_palace_branch, palace_name}
+    每项: {month, month_name, month_gz, life_palace_branch, palace_name, sihua}
     """
     from .tables import STEMS, BRANCHES
+    from .transforms import SIHUA_TABLE
     items: list[dict] = []
     m1_stem = _WUHU_M1[liunian.year_stem_idx]
     for i in range(12):
@@ -99,11 +100,15 @@ def calc_liuyue_list(
         mo_gz = STEMS[mo_stem_idx] + BRANCHES[mo_branch_idx]
         life_b = calc_liuyue(liunian.life_palace_branch, month)
         palace_name = branch_to_palace_name.get(life_b, '—')
+        # 流月四化（月干四化）
+        mo_sihua_raw = SIHUA_TABLE.get(STEMS[mo_stem_idx], {})
+        mo_sihua = {star: f"化{hua}" for hua, star in mo_sihua_raw.items()}
         items.append({
             'month': month,
             'month_name': _LUNAR_MONTH_NAMES[i],
             'month_gz': mo_gz,
             'life_palace_branch': life_b,
             'palace_name': palace_name,
+            'sihua': mo_sihua,
         })
     return items

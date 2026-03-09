@@ -44,6 +44,7 @@ class PalaceResponse(BaseModel):
     analysis: str = ""
     analysis_tags: list[str] = []
     xiaoxian_ages: list[int] = []  # 该宫小限对应年龄
+    opposition_name: str = ""      # 对宫名称
 
 
 class LunarResponse(BaseModel):
@@ -86,17 +87,22 @@ class LiuyueItem(BaseModel):
     month_gz: str
     life_palace_branch: int
     palace_name: str
+    sihua: dict[str, str] = {}  # 流月四化（月干四化）
 
 
 class FlyingPalaceResponse(BaseModel):
     palace_name: str
     stem_name: str
     flying_out: dict[str, str]
+    opposition_palace: str = ""       # 对冲宫位名
+    self_transforms: list[str] = []  # 自化描述列表
 
 
 class FlyingChartResponse(BaseModel):
     palaces: list[FlyingPalaceResponse]
     received: dict[str, list[str]]
+    chonged: dict[str, list[str]] = {}          # 被对冲汇总
+    self_transforms: list[str] = []             # 全局自化列表
 
 
 class ZiweiResponse(BaseModel):
@@ -110,6 +116,8 @@ class ZiweiResponse(BaseModel):
     # 命盘格局
     life_palace_gz: str
     body_palace_gz: str
+    life_palace_branch_idx: int = 0   # 命宫地支索引（子=0…亥=11）
+    body_palace_branch_idx: int = 0   # 身宫地支索引
     wuxing_ju: int
     wuxing_ju_name: str
 

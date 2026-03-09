@@ -58,6 +58,7 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
             analysis=p.analysis,
             analysis_tags=p.analysis_tags,
             xiaoxian_ages=p.xiaoxian_ages,
+            opposition_name=p.opposition_name,
         )
         for p in chart.palaces
     ]
@@ -97,10 +98,14 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
                     palace_name=fp.palace_name,
                     stem_name=fp.stem_name,
                     flying_out=fp.flying_out,
+                    opposition_palace=fp.opposition_palace,
+                    self_transforms=fp.self_transforms,
                 )
                 for fp in chart.flying.palaces
             ],
             received=chart.flying.received,
+            chonged=chart.flying.chonged,
+            self_transforms=chart.flying.self_transforms,
         )
 
     liuyue_resp = [
@@ -110,6 +115,7 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
             month_gz=d['month_gz'],
             life_palace_branch=d['life_palace_branch'],
             palace_name=d['palace_name'],
+            sihua=d.get('sihua', {}),
         )
         for d in chart.liuyue_data
     ]
@@ -120,6 +126,8 @@ def _chart_to_response(chart: ZiweiChart) -> ZiweiResponse:
         lunar=lunar_resp,
         life_palace_gz=chart.life_palace_gz,
         body_palace_gz=chart.body_palace_gz,
+        life_palace_branch_idx=chart.life_palace_branch,
+        body_palace_branch_idx=chart.body_palace_branch,
         wuxing_ju=chart.wuxing_ju,
         wuxing_ju_name=chart.wuxing_ju_name,
         palaces=palaces_resp,

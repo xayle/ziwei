@@ -45,6 +45,7 @@ class PalaceInfo:
     analysis: str = ""
     analysis_tags: list[str] = field(default_factory=list)
     xiaoxian_ages: list[int] = field(default_factory=list)  # 该宫小限所对应的年龄列表
+    opposition_name: str = ""      # 对宫名称（+6宫）
 
 
 @dataclass
@@ -253,6 +254,7 @@ def ziwei_full(
             aux_stars=ax_list,
             flying_out=fly_out,
             xiaoxian_ages=_xx_by_branch.get(b, []),
+            opposition_name=PALACE_NAMES[(i + 6) % 12],
         )
         palaces_info.append(pa)
 

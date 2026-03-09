@@ -54,18 +54,14 @@ def _place_ziwei(day: int, ju: int) -> int:
     if r == 0:
         return (2 + q - 1) % 12   # 寅(2) + q - 1
 
-    # 奇数步+，偶数步-
-    step = 1
-    while step <= 30:
-        d_plus  = day + step
-        d_minus = day - step
-        if d_plus > 0 and d_plus % ju == 0:
-            q2 = d_plus // ju
-            return (2 + q2 - 1) % 12
-        if d_minus > 0 and d_minus % ju == 0:
-            q2 = d_minus // ju
-            return (2 + q2 - 1) % 12
-        step += 1
+    # 奇数步向前加，偶数步向后减（奇加偶减正统算法）
+    for step in range(1, 31):
+        if step % 2 == 1:          # 奇数步：day + step
+            candidate = day + step
+        else:                       # 偶数步：day - step
+            candidate = day - step
+        if candidate > 0 and candidate % ju == 0:
+            return (2 + candidate // ju - 1) % 12
 
     # 安全兜底：不应到达此处
     return (2 + (day // ju) - 1) % 12  # pragma: no cover
