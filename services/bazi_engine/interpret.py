@@ -472,12 +472,13 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     )
 
     # ── 8. 通论 ──────────────────────────────────────────────────────────────
+    _gen_stem_trait = _DAY_STEM_TRAIT.get(inp.day_stem, "均衡中正")
     if inp.strength_tier in ("极旺", "偏旺"):
-        result.general_text = _GENERAL_TMPL["strong_day_master"]
+        result.general_text = _GENERAL_TMPL["strong_day_master"].format(stem_trait=_gen_stem_trait)
     elif inp.strength_tier in ("极弱", "偏弱"):
-        result.general_text = _GENERAL_TMPL["weak_day_master"]
+        result.general_text = _GENERAL_TMPL["weak_day_master"].format(stem_trait=_gen_stem_trait)
     else:
-        result.general_text = _GENERAL_TMPL["balanced"]
+        result.general_text = _GENERAL_TMPL["balanced"].format(stem_trait=_gen_stem_trait)
 
     if inp.dayun_trend == "上升":
         result.general_text += "\n" + _GENERAL_TMPL["favorable_dayun"]
