@@ -1,10 +1,10 @@
 # BaZi Service
 
-项目版本: **v8.0.8**
+项目版本: **v8.0.10**
 状态: 🚀 生产就绪 (Production Ready)
-发布日期: 2026-03-04
+发布日期: 2026-03-09
 贡献者: GitHub Copilot
-测试覆盖: **865 tests passed** · Docker: `bazi:v8.0`
+测试覆盖: **910 tests passed** · Docker: `bazi:v8.0`
 
 ---
 
@@ -21,14 +21,15 @@
 | N4 | 数据持久化 | PostgreSQL 支持, soft-delete, Alembic 版本管理 |
 | N5 | UX 增强 | 历史 FIFO-5, 分享卡片 PNG, 批量 CSV, 五行环图, 大运展开, 移动端响应式, 暗黑模式 |
 | N6 | API v2 | `/api/v2` 路由, v2 Schema, v1 弃用 header, SDK 示例, Locust 压测 |
-| N7 | 测试与发布 | 865 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`,  git tag |
+| N7 | 测试与发布 | 910 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`,  git tag |
+| 紫微斗数 | 第三方占星引擎 | 完整命宫/主星/四化/流月引擎，Tab20 集成于 verify.html |
 
 ### 测试指标
 
 | 指标 | 数值 |
 |------|------|
-| 总测试数 | **854 passed** |
-| 引擎测试基线 (N2) | 333 |
+| 总测试数 | **910 passed** |
+| 引擎测试基线 (N2) | 379 |
 | bandit MEDIUM/HIGH | **0 / 0** |
 | 核心引擎覆盖率 | **99%** |
 | `/api/v1/verify` P95 | **< 200ms** (concurrency=1) |

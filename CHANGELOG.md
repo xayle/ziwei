@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v8.0.10] - 2026-03-09
+
+### 紫微斗数引擎集成 & AUTH_BYPASS 安全修复
+
+**紫微斗数完整引擎（第 20 个 Tab）**
+- **feat(ziwei)**: 实现完整紫微斗数推算引擎（`services/ziwei_engine/`）：命宫/身宫/十二宫排布、主星/副星落宫、四化飞星（禄权科忌）、流年/流月宫位推算
+- **feat(ziwei)**: `GET /api/v1/ziwei` 端点，接受与八字相同输入参数，返回 `ZiweiResponse`（宫格分析 + 流年/流月 + 分析标签）
+- **feat(ziwei)**: 紫微斗数 Tab（Tab20）内嵌于 `verify.html`，与八字表单数据互通，一键切换
+- **feat(ziwei/UX P0-P2)**: 修复重排逻辑 bug、添加 ARIA 无障碍属性、五行星级系统（⬟ 庙/得/平/陷）、闰月支持、移动端底导
+- **feat(ziwei/UX P3-P4)**: CSS 提取至 `verify.css`（61 条 `.zw-*` 规则）+ 暗色模式覆盖、`PalaceResponse.analysis_tags` 语义化标签 chips、`calc_liuyue_list()` 流月后端精确计算（五虎遁年起月法）
+
+**AUTH_BYPASS 安全修复**
+- **fix(auth)**: `AUTH_BYPASS=true` 仅在 `Authorization` header **缺失**时启用绕过，不再覆盖携带真实 JWT 的请求
+  - 根因：`get_current_user_from_token` 和 `get_current_user` 无条件返回 `dummy(id=0)`，导致认证测试 403/404
+  - 修复范围：`routers/auth.py`、`app/dependencies/auth.py`
+  - 影响：事件/用例/成员等所有带权限检查的端点在测试环境均已恢复正确行为
+
+**测试基线更新**
+- 916 tests collected；910 passed / 6 skipped（E2E）
+- `test_geju_v2.py` 32 cases（化气格 5 种 / confidence 规则 / 三合局）
+- `test_golden.py` 36 cases 全部通过
+
+---
+
 ## [v8.0.9] - 2026-03-05
 
 ### UI 完善 & PWA 启用 & 发布门控通过
