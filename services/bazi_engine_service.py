@@ -918,7 +918,7 @@ def _enrich_v2_analysis(
         verify_response.career = compute_career(
             geju_name=geju_name, yongshen_favor=favor, yongshen_avoid=avoid,
             shishen_scores=shishen_scores, strength_score=strength_score,
-            dayun_list=dayun_list, day_branch=ds_br,
+            dayun_list=dayun_list, day_branch=ds_br, day_stem=ds_st,
         )
     except Exception as exc:
         logger.debug("[M2 career] %s", exc)
@@ -1178,6 +1178,15 @@ def _enrich_v2_analysis(
             verify_response.wealth_analysis.interpretation_text = interp_result.lifestyle_text[:80]
         if verify_response.health and not verify_response.health.interpretation_text:
             verify_response.health.interpretation_text = interp_result.lifestyle_text[80:160]
+        # 将 full_summary (400-600字唖先洟) 写入 bazi_summary
+        if interp_result.full_summary and not verify_response.bazi_summary:
+            verify_response.bazi_summary = interp_result.full_summary
+        # 将用神解读写入 yongshen.interpretation_text
+        if verify_response.yongshen and not getattr(verify_response.yongshen, "interpretation_text", ""):
+            try:
+                verify_response.yongshen.interpretation_text = interp_result.yongshen_text  # type: ignore[attr-defined]
+            except AttributeError:
+                pass
     except Exception as exc:
         logger.debug("[M3 interpret] %s", exc)
 

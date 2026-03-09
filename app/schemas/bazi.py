@@ -392,8 +392,8 @@ class VerifyResponse(BaseModel):
     # ── N2.07 流年运势 ───────────────────────────────────────────────────────
     yearly_fortune: Optional[list[dict]] = Field(None, description="流年运势列表（当前大运覆盖的年份）")
     # ── N5.07 起运年龄 ────────────────────────────────────────────────────────
-    start_dayun_age: Optional[float] = Field(None, description="大运起运年龄（精确到0.1岁，N5.07）")
-
+    start_dayun_age: Optional[float] = Field(None, description="大运起运年龄（精确到0.1岁，N5.07）")    # ── 命局综合总评（400-600字六段结构） ──────────────────────────────────
+    bazi_summary: str = Field(default="", description="命局综合总评（400-600字六段结构，已纳入日主天干特征、格局、应用神等维度）")
 
 class BaziFullRequest(BaseModel):
     """完整BaZi分析请求"""
