@@ -196,7 +196,7 @@
         <span id="zw-forminfo" style="color:var(--muted);flex:1">数据来自左侧八字表单 · 请先填写出生时间与性别</span>
         <label style="display:flex;align-items:center;gap:5px;font-size:.82rem;color:var(--muted)">流年<input type="number" id="zw-ln" placeholder="今年" style="width:70px;border:1px solid var(--line);border-radius:5px;padding:3px 7px;font-size:.82rem;background:#fff"></label>
         <button id="zw-go-btn" onclick="_zw_go()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:.88rem;font-family:inherit;font-weight:700">☆ 排紫微盘</button>
-        <button id="zw-view-btn" onclick="_zw_toggle_view()" style="background:var(--bg);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.82rem;font-family:inherit">简化视图</button>
+        <button id="zw-view-btn" onclick="_zw_toggle_view()" role="switch" aria-checked="false" style="background:var(--bg);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.82rem;font-family:inherit">简化视图</button>
       </div>
       <div id="zw-st" style="font-size:.84rem;color:var(--muted);min-height:18px;margin-bottom:6px"></div>
       <div style="overflow-x:auto">
@@ -346,6 +346,10 @@
 .zw-lm-table th,.zw-lm-table td{border:1px solid var(--line);padding:5px 8px}
 .zw-lm-table th{background:var(--bg);font-weight:700}
 .zw-lm-cur td{background:#fef9c3;font-weight:700}
+.zw-loc-btn{float:right;background:transparent;border:1px solid var(--line);border-radius:3px;padding:0 4px;font-size:.68rem;cursor:pointer;color:var(--muted);margin-left:4px;line-height:1.5;font-family:inherit}
+.zw-loc-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.zw-bstar{font-size:.5rem;color:var(--accent-gold);letter-spacing:-1px;vertical-align:middle;margin-right:2px}
+@media(max-width:680px){.zw-pgrid{grid-template-columns:repeat(3,1fr)!important;grid-template-rows:repeat(4,100px)!important}.zw-pal .zw-sl:not(.zw-main-row){display:none}.zw-compass,.zw-dayage,.zw-fobadges{display:none}}
 </style>
 <script>
 (function(){
@@ -399,7 +403,8 @@ function _zw_render(data){
   if(dayun&&dayun.items)for(const d of dayun.items){const _b=d.ganzhi[1];if(!dayunByBranch[_b])dayunByBranch[_b]=d;}
   // 更新顶部表单信息
   const forminfo=document.getElementById('zw-forminfo');
-  if(forminfo)forminfo.innerHTML=`<b>${data.birth_solar.replace('T',' ')}</b> &nbsp;${gender} &nbsp;·&nbsp; ${lunar.year_gz}年${lunar.lunar_month}月${lunar.lunar_day}日${lunar.hour_branch}时 &nbsp;·&nbsp; <span class='zw-wbadge ${jc}'>${wuxing_ju_name}</span>`;
+  const _lmStr=`${lunar.lunar_month}${lunar.is_leap_month?'<span class="zw-blife" style="font-size:.55rem;margin-left:2px">闰</span>':''}`;
+  if(forminfo)forminfo.innerHTML=`<b>${data.birth_solar.replace('T',' ')}</b> &nbsp;${gender} &nbsp;·&nbsp; ${lunar.year_gz}年${_lmStr}月${lunar.lunar_day}日${lunar.hour_branch}时（${lunar.month_gz}月）&nbsp;·&nbsp; <span class='zw-wbadge ${jc}'>${wuxing_ju_name}</span>`;
   // Info header
   document.getElementById('zw-ih').innerHTML=
     `<div class='zw-kv'><span class='zw-k'>命宫</span><span class='zw-v'>${life_palace_gz}</span></div>`+
@@ -415,13 +420,15 @@ function _zw_render(data){
     const bid=_zw_bi(p.branch);const pos=_ZW_BP[bid];if(!pos)continue;
     const c=document.createElement('div');c.className='zw-pal';
     c.style.gridColumn=pos.c;c.style.gridRow=pos.r;
+    c.dataset.branch=p.branch;
     const isL=(p.name==='命宫');const isB=(p.branch===bodyB);
     const isN=!!(liunian&&BRANCHES[liunian.life_palace_branch]===p.branch);
     let h=`<div class='zw-pname'>${p.name}${isL?` <span class='zw-blife'>命</span>`:''}${isB?` <span class='zw-bbody'>身</span>`:''}</div>`;
     h+=`<div class='zw-db'>${p.stem}${p.branch}</div><div>`;
     for(const s of p.main_stars){
-      const sia=s.transforms&&s.transforms.length?s.transforms.map(t=>`<span class='zw-shan'>${t}</span>`).join(''):''
-      h+=`<div class='zw-sl'><span class='zw-sn ${_zw_sc(s.name)}'>${s.name}</span><span class='zw-sbr'>${s.brightness}</span>${sia}</div>`
+      const sia=s.transforms&&s.transforms.length?s.transforms.map(t=>`<span class='zw-shan'>${t}</span>`).join(''):'';
+      const _bv=(typeof s.brightness_val==='number'&&_ZW_MS.has(s.name))?s.brightness_val:0;
+      const _bs=_bv>0?`<span class='zw-bstar' title='${s.brightness}'>${'★'.repeat(_bv)}</span>`:'';      h+=`<div class='zw-sl zw-main-row'>${_bs}<span class='zw-sn ${_zw_sc(s.name)}'>${s.name}</span><span class='zw-sbr'>${s.brightness}</span>${sia}</div>`
     }
     for(const ax of p.aux_stars)h+=`<div class='zw-sl'><span class='zw-sn ${_zw_sc(ax)}' style='font-size:.7rem'>${ax}</span></div>`;
     h+=`</div>`;
@@ -431,6 +438,10 @@ function _zw_render(data){
     const _bd=dayunByBranch[p.branch];if(_bd)h+=`<div class='zw-dayage'>运${_bd.start_age}–${_bd.end_age}岁</div>`;
     h+=`<div class='zw-compass'>${_ZW_CP[bid]||''}</div>`;
     c.innerHTML=h;
+    c.setAttribute('role','button');c.setAttribute('tabindex','0');
+    c.setAttribute('aria-label',`${p.name} ${p.stem}${p.branch}，主星：${(p.main_stars||[]).map(s=>s.name).join('、')||'无'}，点击查看解读`);
+    c.title=p.name+'：'+(_ZW_PAREA[p.name]||'');
+    c.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();c.click();}});
     if(isN){const _pn=c.querySelector('.zw-pname');if(_pn)_pn.insertAdjacentHTML('afterbegin',"<span class='zw-today-b'>今</span> ");}
     const _pi=data.palaces.indexOf(p);
     c.addEventListener('click',function(){
@@ -457,6 +468,7 @@ function _zw_render(data){
   g.appendChild(ctr);
   document.getElementById('zw-cr').style.display='block';
   _zw_renderAna(data);
+  if(localStorage.getItem('_zw_simple')==='1'){const _vb=document.getElementById('zw-view-btn');if(!_vb||_vb.dataset.simple!=='1')_zw_toggle_view();}
 }
 function _zw_pal_html_extra(p){
   let out='';
@@ -523,8 +535,16 @@ function _zw_renderAna(data){
   document.getElementById('zw-aw').style.display='block';
   const at=document.getElementById('zw-at');
   const tabs=[{id:'sum',l:'命盘概览'},{id:'ln',l:'流年解读'},{id:'lm',l:'流月参考'},{id:'pal',l:'逐宫解读'},{id:'dy',l:'大运列表'},{id:'fly',l:'飞星四化'}];
-  at.innerHTML=tabs.map((t,i)=>`<button class='zw-tbtn${i===0?' zw-act':''}' onclick='_zw_swt("${t.id}")'>${t.l}</button>`).join('');
-  let h=`<div id='zw-tc-sum' class='zw-tc zw-act'><div class='zw-sumcard'>${_zw_esc(data.summary||'（暂无摘要）')}</div></div>`;
+  at.setAttribute('role','tablist');
+  at.innerHTML=tabs.map((t,i)=>`<button class='zw-tbtn${i===0?' zw-act':''}' data-id='${t.id}' role='tab' aria-selected='${i===0}' onclick='_zw_swt("${t.id}")'>${t.l}</button>`).join('');
+  at.addEventListener('keydown',function(ev){const bs=[...at.querySelectorAll('.zw-tbtn')];const ci=bs.indexOf(document.activeElement);if(ev.key==='ArrowRight'&&ci<bs.length-1){bs[ci+1].focus();_zw_swt(bs[ci+1].dataset.id);}else if(ev.key==='ArrowLeft'&&ci>0){bs[ci-1].focus();_zw_swt(bs[ci-1].dataset.id);}});
+  let _anaExtra='';
+  if(data.analysis&&Object.keys(data.analysis).length){
+    _anaExtra='<div style="margin-top:10px">';
+    for(const[k,v]of Object.entries(data.analysis)){if(v)_anaExtra+=`<div class='zw-pana' style='border-left-color:var(--accent)'><h4 style='color:var(--accent-gold);font-size:.85rem'>${_zw_esc(k)}</h4><p>${_zw_esc(v)}</p></div>`;}
+    _anaExtra+='</div>';
+  }
+  let h=`<div id='zw-tc-sum' class='zw-tc zw-act'><div class='zw-sumcard'>${_zw_esc(data.summary||'（暂无摘要）')}</div>${_anaExtra}</div>`;
   h+=`<div id='zw-tc-ln' class='zw-tc'>${_zw_liunian_html(data)}</div>`;
   h+=`<div id='zw-tc-lm' class='zw-tc'>${_zw_liuyue_html(data)}</div>`;
   h+=`<div id='zw-tc-pal' class='zw-tc'>`;
@@ -532,7 +552,7 @@ function _zw_renderAna(data){
     const HM={'化禄':'zw-hlu','化权':'zw-hqu','化科':'zw-hke','化忌':'zw-hji'};
     const fo=p.flying_out||{};
     let badges='';for(const[hua,sn]of Object.entries(fo))badges+=` <span class='zw-hbadge ${HM[hua]||""}'>${hua.slice(1)}·${_zw_esc(sn)}</span>`;
-    h+=`<div class='zw-pana'><h4>${p.name} · ${p.stem}${p.branch}${badges}</h4>${_zw_pal_html_extra(p)}</div>`;
+    h+=`<div class='zw-pana'><h4>${p.name} · ${p.stem}${p.branch}${badges}<button class='zw-loc-btn' onclick="_zw_locate('${p.branch}')" title='定位到命盘宫格' aria-label='定位到${p.name}宫格'>⬡</button></h4>${_zw_pal_html_extra(p)}</div>`;
   }
   h+=`</div>`;
   h+=`<div id='zw-tc-dy' class='zw-tc'><table class='zw-ftable'><tr><th>#</th><th>干支</th><th>年龄段</th><th>起运年</th></tr>`;
@@ -555,8 +575,9 @@ function _zw_renderAna(data){
       h+=`<h4 style='margin-top:12px;font-size:.85rem;font-weight:700;color:var(--accent)'>各宫接收四化</h4>`;
       h+=`<table class='zw-ftable'><tr><th>宫位</th><th>接收四化</th></tr>`;
       for(const[pn,sia]of Object.entries(data.flying.received)){
-        const sv=Object.entries(sia).map(([h2,s])=>`<span class='zw-hbadge ${(_ZW_HUA[h2]||{}).cls||""}'>${h2.slice(1)}·${_zw_esc(s)}</span>`).join(' ');
-        h+=`<tr><td>${pn}</td><td>${sv}</td></tr>`;
+        if(!sia||!sia.length)continue;
+        const sv=(Array.isArray(sia)?sia:[]).map(s=>`<span style='font-size:.76rem;display:block;line-height:1.7'>${_zw_esc(s)}</span>`).join('');
+        h+=`<tr><td>${pn}</td><td>${sv||'—'}</td></tr>`;
       }
       h+=`</table>`;
     }
@@ -565,15 +586,21 @@ function _zw_renderAna(data){
   document.getElementById('zw-ab').innerHTML=h;
 }
 window._zw_swt=function(id){
-  const lm={sum:'命盘概览',ln:'流年解读',lm:'流月参考',pal:'逐宫解读',dy:'大运列表',fly:'飞星四化'};
-  document.querySelectorAll('.zw-tbtn').forEach(b=>b.classList.toggle('zw-act',b.textContent===lm[id]));
+  document.querySelectorAll('.zw-tbtn').forEach(b=>{const a=b.dataset.id===id;b.classList.toggle('zw-act',a);b.setAttribute('aria-selected',String(a));});
   ['sum','ln','lm','pal','dy','fly'].forEach(t=>{const el=document.getElementById('zw-tc-'+t);if(el)el.classList.toggle('zw-act',t===id)});
 };
-// Phase3: 简化/详细视图切换
+window._zw_locate=function(branch){
+  const el=document.querySelector('.zw-pal[data-branch="'+branch+'"]');
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.classList.add('zw-highlight');
+  setTimeout(function(){el.classList.remove('zw-highlight')},2000);
+};
+// 简化/详细视图切换
 window._zw_toggle_view=function(){
   const btn=document.getElementById('zw-view-btn');
   const nextSimple=!(btn&&btn.dataset.simple==='1');
-  if(btn){btn.dataset.simple=nextSimple?'1':'0';btn.textContent=nextSimple?'详细视图':'简化视图';btn.style.background=nextSimple?'var(--accent)':'var(--bg)';btn.style.color=nextSimple?'#fff':'var(--muted)';}
+  if(btn){btn.dataset.simple=nextSimple?'1':'0';btn.textContent=nextSimple?'详细视图':'简化视图';btn.style.background=nextSimple?'var(--accent)':'var(--bg)';btn.style.color=nextSimple?'#fff':'var(--muted)';btn.setAttribute('aria-checked',String(nextSimple));}
   document.querySelectorAll('.zw-pal .zw-sl').forEach(el=>{
     const sn=el.querySelector('.zw-sn');
     if(sn&&!(sn.classList.contains('zw-main')||sn.classList.contains('zw-sha')))el.style.display=nextSimple?'none':'';
