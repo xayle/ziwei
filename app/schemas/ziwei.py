@@ -45,6 +45,11 @@ class PalaceResponse(BaseModel):
     analysis_tags: list[str] = []
     xiaoxian_ages: list[int] = []  # 该宫小限对应年龄
     opposition_name: str = ""      # 对宫名称
+    # 三段式结构化解读
+    conclusion: str = ""    # 一句话结论
+    explanation: str = ""   # 2-3行详细解释（\n分隔）
+    suggestion: str = ""    # 1行可操作建议
+    tooltip: str = ""       # 20-40字宫格悉浮摘要
 
 
 class LunarResponse(BaseModel):

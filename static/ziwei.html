@@ -145,6 +145,16 @@
     .fc-arr{font-size:.65rem;color:var(--muted);width:12px;flex-shrink:0;text-align:center}
     .fc-empty{color:#6b5b45;padding:20px;font-size:.85rem}
     .tr-cur td{background:#fff3f3}
+    /* ── 三段式宫位解读 ───────────────────────────── */
+    .pca-c{background:#fffbf0;border-left:3px solid #c9963a;padding:7px 11px;border-radius:0 6px 6px 0;font-size:.82rem;line-height:1.7;margin-bottom:5px}
+    .pca-c .lbl{font-size:.63rem;font-weight:700;color:#713f12;background:#fde68a;padding:1px 5px;border-radius:6px;margin-right:5px;vertical-align:middle}
+    .pca-exp{font-size:.8rem;line-height:1.8;color:var(--text);margin:7px 0;white-space:pre-line}
+    .pca-sug{background:#eff6ff;border-left:3px solid #3b82f6;padding:7px 11px;border-radius:0 6px 6px 0;font-size:.79rem;line-height:1.65;margin-top:5px}
+    .pca-sug .lbl{font-size:.63rem;font-weight:700;color:#1d4ed8;margin-right:4px;vertical-align:middle}
+    details.pca-d{margin-top:6px}
+    details.pca-d summary{font-size:.78rem;color:var(--muted);cursor:pointer;user-select:none;padding:2px 0;list-style:none}
+    details.pca-d summary::-webkit-details-marker{display:none}
+    details.pca-d summary:hover{color:var(--accent)}
   </style>
 </head>
 <body>
@@ -239,7 +249,7 @@ function render(data){
   let ihh=`
     <div class="kv"><span class="k">公历</span><span class="v">${data.birth_solar.replace('T',' ')}</span></div>
     <div class="kv"><span class="k">性别</span><span class="v">${gender}</span></div>
-    <div class="kv"><span class="k">农历</span><span class="v">${lunar.year_gz}年${lunar.lunar_month}月${lunar.lunar_day}日${lunar.hour_branch}时</span></div>
+    <div class="kv"><span class="k">农历</span><span class="v">${lunar.year_gz}年${lunar.is_leap_month?'<span class="blife" style="font-size:.52rem;padding:1px 3px;margin:0 2px">闰</span>':''}${lunar.lunar_month}月${lunar.lunar_day}日${lunar.hour_branch}时</span></div>
     <div class="kv"><span class="k">命宫</span><span class="v">${life_palace_gz}</span></div>
     <div class="kv"><span class="k">身宫</span><span class="v">${body_palace_gz}</span></div>
     <div class="kv"><span class="k">五行局</span><span class="wbadge ${jc}">${wuxing_ju_name}</span></div>`;
@@ -265,7 +275,9 @@ function render(data){
     h+=`</div><div class="db">${p.stem}${p.branch}</div><div class="stars">`;
     for(const s of p.main_stars){
       const sia=s.transforms&&s.transforms.length?s.transforms.map(t=>`<span class="shan">${t}</span>`).join(''):'';
-      h+=`<div class="sl"><span class="sn ${sc(s.name)}">${s.name}</span><span class="sbr">${s.brightness}</span>${sia}</div>`;
+      const _bv=(typeof s.brightness_val==='number'&&MS.has(s.name))?s.brightness_val:0;
+      const _bs=_bv>0?`<span style="font-size:.5rem;color:#c9963a;letter-spacing:-1px;vertical-align:middle;margin-right:1px" title="${s.brightness}">${'★'.repeat(_bv)}</span>`:'';
+      h+=`<div class="sl">${_bs}<span class="sn ${sc(s.name)}">${s.name}</span><span class="sbr">${s.brightness}</span>${sia}</div>`;
     }
     for(const ax of p.aux_stars){
       h+=`<div class="sl"><span class="sn ${sc(ax)}" style="font-size:.7rem">${ax}</span></div>`;
@@ -273,7 +285,9 @@ function render(data){
     h+=`</div>`;
     if(p.xiaoxian_ages&&p.xiaoxian_ages.length)h+=`<div class="xage">${p.xiaoxian_ages.join('·')}岁</div>`;
     h+=`<div class="compass">${CP[bid]||''}</div>`;
-    c.innerHTML=h;g.appendChild(c);
+    c.innerHTML=h;
+    if(p.tooltip)c.title=p.tooltip;
+    g.appendChild(c);
   }
 
   // ── 中宫 ─────────────────────────────
@@ -329,7 +343,7 @@ function renderAna(data){
   // ── 逐宫解读 ──────────────────────────
   h+=`<div id="tc-pal" class="tc">`;
   for(const p of data.palaces){
-    if(!p.analysis)continue;
+    if(!p.conclusion&&!p.analysis)continue;
     h+=`<div class="pana"><h4>${p.name}·${p.stem}${p.branch}`;
     if(p.opposition_name)h+=` <span style="font-size:.72rem;color:var(--muted);font-weight:400">│ 对宫：${p.opposition_name}</span>`;
     h+=`</h4>`;
@@ -338,7 +352,18 @@ function renderAna(data){
       for(const t of p.analysis_tags)h+=`<span class="atag">${esc(t)}</span>`;
       h+=`</div>`;
     }
-    h+=`<p>${esc(p.analysis)}</p></div>`;
+    if(p.conclusion){
+      h+=`<div class="pca-c"><span class="lbl">结论</span>${esc(p.conclusion)}</div>`;
+    }
+    if(p.explanation){
+      h+=`<details class="pca-d" open><summary>详细解释 ▸</summary>`;
+      h+=`<div class="pca-exp">${esc(p.explanation)}</div>`;
+      if(p.suggestion)h+=`<div class="pca-sug"><span class="lbl">💡 建议</span>${esc(p.suggestion)}</div>`;
+      h+=`</details>`;
+    } else if(p.analysis){
+      h+=`<p style="font-size:.83rem;line-height:1.7">${esc(p.analysis)}</p>`;
+    }
+    h+=`</div>`;
   }
   h+=`</div>`;
 
@@ -346,11 +371,12 @@ function renderAna(data){
   const curY2=data.liunian?data.liunian.year:new Date().getFullYear();
   h+=`<div id="tc-dy" class="tc">`;
   h+=`<div class="fc-divider">大运列表</div>`;
-  h+=`<table class="ftable"><tr><th>#</th><th>干支</th><th>年龄</th><th>起运年</th><th>大运四化</th></tr>`;
+  h+=`<table class="ftable"><tr><th>#</th><th>干支</th><th>年龄</th><th>起运年</th><th>大运四化</th><th>博士十二流曜</th></tr>`;
   if(data.dayun&&data.dayun.items)for(const d of data.dayun.items){
     const ic=curY2>=d.start_year&&curY2<d.start_year+10;
     const siaStr=Object.entries(d.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' ');
-    h+=`<tr${ic?' class="tr-cur"':''}><td>${d.index}</td><td><b>${d.ganzhi}</b></td><td>${d.start_age}–${d.end_age}岁</td><td>${d.start_year}</td><td style="font-size:.75rem">${siaStr||'—'}</td></tr>`;
+    const boshiStr=Object.entries(d.boshi_stars||{}).map(([sn,bz])=>`${sn}(${bz})`).join(' ');
+    h+=`<tr${ic?' class="tr-cur"':''}><td>${d.index}</td><td><b>${d.ganzhi}</b></td><td>${d.start_age}–${d.end_age}岁</td><td>${d.start_year}</td><td style="font-size:.75rem">${siaStr||'—'}</td><td style="font-size:.7rem;color:var(--muted)">${boshiStr||'—'}</td></tr>`;
   }
   h+=`</table>`;
   if(data.liuyue&&data.liuyue.length){
@@ -391,6 +417,15 @@ function renderAna(data){
     if(data.flying.self_transforms&&data.flying.self_transforms.length){
       h+=`<div class="fc-divider" style="margin-top:14px">全局自化列表</div>`;
       h+=`<div style="font-size:.82rem;line-height:2;padding:6px 0">${data.flying.self_transforms.map(esc).join('　')}</div>`;
+    }
+    if(data.flying.chonged&&Object.keys(data.flying.chonged).length){
+      h+=`<div class="fc-divider" style="margin-top:14px">被对冲汇总（冲入）</div>`;
+      h+=`<table class="ftable"><tr><th>宫位</th><th>被冲的四化来源</th></tr>`;
+      for(const[pal,list]of Object.entries(data.flying.chonged)){
+        if(!list||!list.length)continue;
+        h+=`<tr><td>${pal}</td><td style="font-size:.75rem;line-height:1.8">${list.map(esc).join('　')}</td></tr>`;
+      }
+      h+=`</table>`;
     }
   }else{h+=`<p class="fc-empty">暂无飞星数据</p>`;}
   h+=`</div>`;

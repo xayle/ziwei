@@ -248,9 +248,10 @@ async def add_security_headers(request: Request, call_next):
 	# 其余路径保持严格 'self' only
 	_is_docs_path = _req_path in ("/docs", "/redoc", "/openapi.json")
 	# /static/*.html 页面含内联脚本和事件处理器，需要 'unsafe-inline'
+	# /verify 和 /dashboard 是 FileResponse 返回的 HTML 页面，等同 /static/*.html
 	_is_static_html = (
-		_req_path.startswith("/static/")
-		and _req_path.endswith(".html")
+		(_req_path.startswith("/static/") and _req_path.endswith(".html"))
+		or _req_path in ("/verify", "/dashboard", "/")
 	)
 	if _is_docs_path or _is_static_html:
 		# Swagger UI / ReDoc / 静态 HTML 工具页：允许内联脚本，img-src 含 blob: 供 html2canvas 导出
@@ -258,7 +259,7 @@ async def add_security_headers(request: Request, call_next):
 			"default-src 'self'; "
 			"connect-src 'self'; "
 			"style-src 'self' 'unsafe-inline'; "
-			"script-src 'self' 'unsafe-inline'; "
+			"script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
 			"img-src 'self' data: blob:; "
 			"font-src 'self'; "
 			"object-src 'none'; "

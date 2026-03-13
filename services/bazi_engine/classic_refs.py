@@ -1,9 +1,10 @@
 """
-services/bazi_engine/classic_refs.py — 古籍引用数据库（首批40条）
+services/bazi_engine/classic_refs.py — 古籍引用数据库（当前 120 条，目标 120 条 ✅ N2.01 已达标）
 
-M1 任务 1.12: 首批40条古籍引用 [H4/R12/P1]
-  - 含附录A已有20条 + 新增20条，覆盖大运/格局/神煞/用神
-  - 余40条在 M3 任务3.01 补全至80+条
+M1 任务 1.12: 首拸40条古籍引用 [H4/R12/P1]
+  - 含附录A已20条 + 新墒20条，覆盖大运/格局/神煞/用神
+M3 任务 3.01: 补全轳80条
+N2.01 任务: 扩展至 120 条 —— 已完成（实测 2026-03-13）
 
 引用格式: {"id": str, "source": str, "text": str, "category": str, "tags": list[str]}
 category: 大运/格局/神煞/用神/日主/五行/婚姻/健康/通论
@@ -891,6 +892,10 @@ def get_refs_by_category(category: str) -> list[dict]:
 
 def get_refs_by_tag(tag: str) -> list[dict]:
     return [r for r in CLASSIC_REFS if tag in r.get("tags", [])]
+
+
+# 模块常量，供测试断言使用，避免手动数条数
+CLASSIC_REFS_COUNT: int = len(CLASSIC_REFS)
 
 
 def self_check() -> None:

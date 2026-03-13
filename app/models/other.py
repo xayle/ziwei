@@ -50,7 +50,8 @@ class Delegation(SQLModel, table=True):
     deleted_at: Optional[datetime] = None
     # ── N3.00 工作流状态字段 ─────────────────────────────────────────────────
     # status 取值：pending / approved / rejected / revoked
-    status: str = Field(default="approved", max_length=20)
+    # ⚠️ 默认 pending：所有新建委托须经工作流审批；直接授权端点需显式传 status="approved"
+    status: str = Field(default="pending", max_length=20)
     requested_by: Optional[int] = Field(default=None, foreign_key="users.id")
     approved_by: Optional[int] = Field(default=None, foreign_key="users.id")
     approved_at: Optional[datetime] = None

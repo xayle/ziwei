@@ -5,8 +5,8 @@
  * - API请求：网络优先，失败则从缓存恢复
  */
 
-const CACHE_VERSION = 'bazi-v8.0.8';
-const RUNTIME_CACHE = 'bazi-runtime-v8.0.8';
+const CACHE_VERSION = 'bazi-v8.1.1';
+const RUNTIME_CACHE = 'bazi-runtime-v8.1.1';
 
 const STATIC_ASSETS = [
   '/static/sw.js'
@@ -109,32 +109,15 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 静态资源：缓存优先（但 manifest/HTML 强制走网络，避免旧 CSP）
+  // 静态资源：始终走网络（no-store），彻底杜绝旧版 JS/CSS 被缓存命中
   if (url.pathname.startsWith('/static/')) {
-    const isHtml = url.pathname.endsWith('.html');
-    const isManifest = url.pathname.endsWith('/manifest.json') || url.pathname === '/static/manifest.json';
-    if (isHtml || isManifest) {
-      // HTML / manifest 必须绕过缓存以避免复用旧 CSP 头
-      event.respondWith(fetch(request, { cache: 'reload' }));
-      return;
-    }
     event.respondWith(
-      caches.match(request).then(cached => {
-        if (cached) {
-          console.log('[SW] Static from cache:', request.url);
-          return cached;
+      fetch(request, { cache: 'no-store' }).then(response => {
+        if (!response || response.status !== 200 || response.type === 'error') {
+          return caches.match(request).then(r => r || response);
         }
-        return fetch(request).then(response => {
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-          const responseClone = response.clone();
-          caches.open(CACHE_VERSION).then(cache => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        });
-      })
+        return response;
+      }).catch(() => caches.match(request))
     );
     return;
   }

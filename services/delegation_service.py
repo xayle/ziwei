@@ -162,6 +162,7 @@ def create_delegation(
         member_scope=member_scope,
         is_active=True,
         expires_at=expires_at,
+        status="approved",  # 直接委托（管理员授权），绕过工作流，显式设为 approved
     )
     
     session.add(delegation)

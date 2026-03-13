@@ -895,99 +895,143 @@ def _enrich_v2_analysis(
     except Exception as exc:
         logger.debug("[M2 palace] %s", exc)
 
-    # ── 7 分析引擎 ────────────────────────────────────────────────────
+    # ── 7 分析引擎（ThreadPoolExecutor 并行执行）─────────────────────
     # P1-A: M2 各引擎失败时统一写入 warnings（§4.5）
+    # PR-09: 7 个纯 Python 分析引擎均为 CPU-bound 但互相独立，
+    #        使用 ThreadPoolExecutor(max_workers=4) 并发化；
+    #        sxtwl 已在本函数上层完成调用，此处引擎不再调用 sxtwl，线程安全。
     def _m2_warn(code: str, msg: str) -> None:
         if hasattr(verify_response, "validation") and verify_response.validation:
             verify_response.validation.warnings.append(
                 WarningModel(code=code, message=msg)
             )
 
-    try:
-        verify_response.wealth_analysis = compute_wealth(
-            yongshen_favor=favor, yongshen_avoid=avoid,
+    # 月运引擎所需当前年干支（提前计算，供闭包捕获）
+    from datetime import date as _date_now
+    _cur_yr_int = _date_now.today().year
+    _CUR_STEMS    = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
+    _CUR_BRANCHES = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+    _cur_yr_stem   = _CUR_STEMS[(_cur_yr_int - 4) % 10]
+    _cur_yr_branch = _CUR_BRANCHES[(_cur_yr_int - 4) % 12]
+    _month_ganzhis = _build_month_ganzhis(_cur_yr_stem)
+    _dayun_stem    = _get_current_dayun_stem(dayun_list, dt.year, dt.month, dt.day)
+
+    # 定义各引擎任务（参数全部为不可变 / 已快照的局部变量，线程安全）
+    _favor_snap    = list(favor)
+    _avoid_snap    = list(avoid)
+    _dayun_snap    = list(dayun_list)
+    _shensha_snap  = list(shensha_items_raw)
+
+    def _run_wealth() -> object:
+        return compute_wealth(
+            yongshen_favor=_favor_snap, yongshen_avoid=_avoid_snap,
             wuxing_scores=wx_scores, shishen_scores=shishen_scores,
-            strength_score=strength_score, dayun_list=dayun_list,
+            strength_score=strength_score, dayun_list=_dayun_snap,
             day_branch=ds_br,
         )
-    except Exception as exc:
-        logger.debug("[M2 wealth] %s", exc)
-        _m2_warn("M2_WEALTH_FAIL", "财运分析计算失败，结果可能不完整")
 
-    try:
-        verify_response.career = compute_career(
-            geju_name=geju_name, yongshen_favor=favor, yongshen_avoid=avoid,
+    def _run_career() -> object:
+        return compute_career(
+            geju_name=geju_name, yongshen_favor=_favor_snap, yongshen_avoid=_avoid_snap,
             shishen_scores=shishen_scores, strength_score=strength_score,
-            dayun_list=dayun_list, day_branch=ds_br, day_stem=ds_st,
+            dayun_list=_dayun_snap, day_branch=ds_br, day_stem=ds_st,
         )
-    except Exception as exc:
-        logger.debug("[M2 career] %s", exc)
-        _m2_warn("M2_CAREER_FAIL", "事业分析计算失败，结果可能不完整")
 
-    try:
-        verify_response.marriage_analysis = compute_marriage(
+    def _run_marriage() -> object:
+        return compute_marriage(
             all_branches=all_branches, day_branch=ds_br,
-            shishen_scores=shishen_scores, shensha_items=shensha_items_raw,
-            gender=gender or "male", yongshen_favor=favor, yongshen_avoid=avoid,
-            dayun_list=dayun_list, strength_score=strength_score,
+            shishen_scores=shishen_scores, shensha_items=_shensha_snap,
+            gender=gender or "male", yongshen_favor=_favor_snap, yongshen_avoid=_avoid_snap,
+            dayun_list=_dayun_snap, strength_score=strength_score,
         )
-    except Exception as exc:
-        logger.debug("[M2 marriage] %s", exc)
-        _m2_warn("M2_MARRIAGE_FAIL", "婚姻分析计算失败，结果可能不完整")
 
-    try:
-        verify_response.health = compute_health(
-            wuxing_scores=wx_scores, yongshen_favor=favor,
-            yongshen_avoid=avoid, day_stem=ds_st,
+    def _run_health() -> object:
+        return compute_health(
+            wuxing_scores=wx_scores, yongshen_favor=_favor_snap,
+            yongshen_avoid=_avoid_snap, day_stem=ds_st,
         )
-    except Exception as exc:
-        logger.debug("[M2 health] %s", exc)
-        _m2_warn("M2_HEALTH_FAIL", "健康分析计算失败，结果可能不完整")
 
-    try:
-        verify_response.relationship = compute_relationship(
-            shishen_scores=shishen_scores, shensha_items=shensha_items_raw,
-            gender=gender or "male", day_stem=ds_st, dayun_list=dayun_list,
+    def _run_relationship() -> object:
+        return compute_relationship(
+            shishen_scores=shishen_scores, shensha_items=_shensha_snap,
+            gender=gender or "male", day_stem=ds_st, dayun_list=_dayun_snap,
         )
-    except Exception as exc:
-        logger.debug("[M2 relationship] %s", exc)
-        _m2_warn("M2_RELATIONSHIP_FAIL", "人际关系分析计算失败，结果可能不完整")
 
-    try:
-        verify_response.personality = compute_personality(
+    def _run_personality() -> object:
+        return compute_personality(
             day_stem=ds_st, strength_tier=strength_tier,
             strength_score=strength_score, geju_name=geju_name,
         )
-    except Exception as exc:
-        logger.debug("[M2 personality] %s", exc)
-        _m2_warn("M2_PERSONALITY_FAIL", "性格分析计算失败，结果可能不完整")
 
-    try:
+    def _run_monthly() -> object:
         # P1-F: 月运 year_branch 使用当前年地支（而非出生年地支）
-        # P2-C: 月干支基于当前年天干（而非出生年天干）
-        from datetime import date as _date_now
-        _cur_yr_int = _date_now.today().year
-        _CUR_STEMS   = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
-        _CUR_BRANCHES= ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
-        _cur_yr_stem   = _CUR_STEMS[(_cur_yr_int - 4) % 10]
-        _cur_yr_branch = _CUR_BRANCHES[(_cur_yr_int - 4) % 12]
-        _month_ganzhis = _build_month_ganzhis(_cur_yr_stem)
-        _dayun_stem = _get_current_dayun_stem(
-            dayun_list, dt.year, dt.month, dt.day
-        )
-        verify_response.monthly_fortune = compute_monthly(
-            day_branch=ds_br, yongshen_favor=favor, yongshen_avoid=avoid,
+        # P2-C: 月干支基于当前年天干
+        return compute_monthly(
+            day_branch=ds_br, yongshen_favor=_favor_snap, yongshen_avoid=_avoid_snap,
             year_branch=_cur_yr_branch, mode=mode,
             month_ganzhis=_month_ganzhis,
             current_dayun_stem=_dayun_stem,
             day_stem=ds_st,   # N2.03 十神关系
         )
-    except Exception as exc:
-        logger.debug("[M2 monthly] %s", exc)
-        if hasattr(verify_response, "validation") and verify_response.validation:
-            verify_response.validation.warnings.append(
-                WarningModel(code="M2_MONTHLY_FAIL", message="月运模块计算失败，结果可能不完整")
-            )
+
+    _engine_tasks: list[tuple[str, object]] = [
+        ("wealth",       _run_wealth),
+        ("career",       _run_career),
+        ("marriage",     _run_marriage),
+        ("health",       _run_health),
+        ("relationship", _run_relationship),
+        ("personality",  _run_personality),
+        ("monthly",      _run_monthly),
+    ]
+    _engine_warn_map: dict[str, str] = {
+        "wealth":       "M2_WEALTH_FAIL",
+        "career":       "M2_CAREER_FAIL",
+        "marriage":     "M2_MARRIAGE_FAIL",
+        "health":       "M2_HEALTH_FAIL",
+        "relationship": "M2_RELATIONSHIP_FAIL",
+        "personality":  "M2_PERSONALITY_FAIL",
+        "monthly":      "M2_MONTHLY_FAIL",
+    }
+    _engine_msg_map: dict[str, str] = {
+        "wealth":       "财运分析计算失败，结果可能不完整",
+        "career":       "事业分析计算失败，结果可能不完整",
+        "marriage":     "婚姻分析计算失败，结果可能不完整",
+        "health":       "健康分析计算失败，结果可能不完整",
+        "relationship": "人际关系分析计算失败，结果可能不完整",
+        "personality":  "性格分析计算失败，结果可能不完整",
+        "monthly":      "月运模块计算失败，结果可能不完整",
+    }
+
+    import concurrent.futures as _cf
+
+    with _cf.ThreadPoolExecutor(max_workers=4, thread_name_prefix="m2-engine") as _pool:
+        _futures = {name: _pool.submit(fn) for name, fn in _engine_tasks}  # type: ignore[arg-type]
+
+    # 收集结果（executor 已退出，所有 future 必然 done）
+    _engine_results: dict[str, object] = {}
+    for _name, _fut in _futures.items():
+        try:
+            _engine_results[_name] = _fut.result()
+        except Exception as _exc:
+            logger.debug("[M2 %s parallel] %s", _name, _exc)
+            _m2_warn(_engine_warn_map[_name], _engine_msg_map[_name])
+            _engine_results[_name] = None
+
+    # 回写结果到 verify_response（主线程操作，无并发竞争）
+    if _engine_results.get("wealth") is not None:
+        verify_response.wealth_analysis = _engine_results["wealth"]  # type: ignore[assignment]
+    if _engine_results.get("career") is not None:
+        verify_response.career = _engine_results["career"]  # type: ignore[assignment]
+    if _engine_results.get("marriage") is not None:
+        verify_response.marriage_analysis = _engine_results["marriage"]  # type: ignore[assignment]
+    if _engine_results.get("health") is not None:
+        verify_response.health = _engine_results["health"]  # type: ignore[assignment]
+    if _engine_results.get("relationship") is not None:
+        verify_response.relationship = _engine_results["relationship"]  # type: ignore[assignment]
+    if _engine_results.get("personality") is not None:
+        verify_response.personality = _engine_results["personality"]  # type: ignore[assignment]
+    if _engine_results.get("monthly") is not None:
+        verify_response.monthly_fortune = _engine_results["monthly"]  # type: ignore[assignment]
 
     # ── M2.5: lifestyle/里程碑 ────────────────────────────────────────
     try:
@@ -1173,12 +1217,12 @@ def _enrich_v2_analysis(
         )
         interp_result = interpret_bazi(interp_inp)
         # 将解读文本写入已有模型的 interpretation_text
-        if verify_response.geju and not verify_response.geju.interpretation_text:
-            verify_response.geju.interpretation_text = interp_result.geju_text
-        if verify_response.wealth_analysis and not verify_response.wealth_analysis.interpretation_text:
-            verify_response.wealth_analysis.interpretation_text = interp_result.lifestyle_text[:80]
-        if verify_response.health and not verify_response.health.interpretation_text:
-            verify_response.health.interpretation_text = interp_result.lifestyle_text[80:160]
+        if verify_response.geju and not verify_response.geju.interpretation_text:  # type: ignore[union-attr]
+            verify_response.geju.interpretation_text = interp_result.geju_text  # type: ignore[union-attr]
+        if verify_response.wealth_analysis and not verify_response.wealth_analysis.interpretation_text:  # type: ignore[union-attr]
+            verify_response.wealth_analysis.interpretation_text = interp_result.lifestyle_text[:80]  # type: ignore[union-attr]
+        if verify_response.health and not verify_response.health.interpretation_text:  # type: ignore[union-attr]
+            verify_response.health.interpretation_text = interp_result.lifestyle_text[80:160]  # type: ignore[union-attr]
         # 将 full_summary (400-600字唖先洟) 写入 bazi_summary
         if interp_result.full_summary and not verify_response.bazi_summary:
             verify_response.bazi_summary = interp_result.full_summary
@@ -1196,19 +1240,19 @@ def _enrich_v2_analysis(
         _wa = verify_response.wealth_analysis
         _w  = verify_response.wealth
         if _w is not None:
-            if not _w.interpretation_text:
-                if _wa and _wa.interpretation_text:
-                    _w.interpretation_text = _wa.interpretation_text
+            if not _w.interpretation_text:  # type: ignore[union-attr]
+                if _wa and _wa.interpretation_text:  # type: ignore[union-attr]
+                    _w.interpretation_text = _wa.interpretation_text  # type: ignore[union-attr]
                 else:
                     # fallback: 结合财富得分生成简要解读
                     _score = _w.wealth_score or 50.0
                     _tags  = "、".join(_w.industry_tags[:2]) if _w.industry_tags else "综合"
-                    _w.interpretation_text = (
+                    _w.interpretation_text = (  # type: ignore[union-attr]
                         f"综合财富评分 {_score:.1f}，推荐关注 {_tags} 等领域。"
                     )
-            if not _w.inference_tags:
+            if not _w.inference_tags:  # type: ignore[union-attr]
                 if _wa and getattr(_wa, "inference_tags", None):
-                    _w.inference_tags = list(_wa.inference_tags)[:3]
+                    _w.inference_tags = list(_wa.inference_tags)[:3]  # type: ignore[union-attr]
                 else:
                     _w.inference_tags = [f"用神{f}" for f in favor[:2]] + ["wealth_v2"]
     except Exception as exc:
@@ -1265,9 +1309,19 @@ def _enrich_v2_analysis(
         }
         _life_optimal = _tier_action_map.get(_arc.overall_tier, "顺运积极，逆运守成，量力而行")
         if _arc.peak_periods and "暂无" not in str(_arc.peak_periods[0]):
-            _life_optimal += f"；重点把握【{_arc.peak_periods[0]}】为核心发展窗口"
-        if _arc.caution_periods:
-            _life_optimal += f"；【{'、'.join(_arc.caution_periods[:2])}】大运宜保守"
+            # 只取「起止岁·干支」短标签，避免完整描述使文本过长
+            _peak0 = str(_arc.peak_periods[0])
+            # 提取「X-Y岁·干支」前缀，去掉括号内的详细说明
+            _peak_short = _peak0.split("（")[0].split("大运")[0].strip()
+            if _peak_short:
+                _life_optimal += f"；重点把握【{_peak_short}大运】为核心发展窗口"
+        _cautions_short = [
+            c.split("（")[0].split("大运")[0].strip() + "大运"
+            for c in _arc.caution_periods[:2]
+            if "暂无" not in c
+        ]
+        if _cautions_short:
+            _life_optimal += f"；【{'、'.join(_cautions_short)}】期间宜保守"
 
         verify_response.life_arc = _LifeArcSchema(
             overall_tier=_arc.overall_tier,  # type: ignore[arg-type]

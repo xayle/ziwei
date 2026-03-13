@@ -8,6 +8,11 @@ Phase 2 优化工具 - 批量操作、缓存、查询优化
 
 已移除（无使用者）:
   PaginationOptimizer, RedisCache, PerformanceMonitor
+
+⚠️  多进程缓存警告：
+  QueryCache 是进程内内存单例。生产环境使用 --workers N 部署时，
+  每个进程各自维护独立缓存，命中率接近于零。
+  要实现共享缓存，请在 .env 中设置 REDIS_URL + REDIS_ENABLED=true。
 """
 import time
 import logging

@@ -126,6 +126,8 @@ class Settings:
                     "http://localhost:5173",
                     "http://127.0.0.1:3000",
                     "http://127.0.0.1:5173",
+                    "http://localhost:8765",
+                    "http://127.0.0.1:8765",
                 ]
             elif self.app_env == "staging":
                 self.allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else []

@@ -62,6 +62,64 @@ AUX_STAR_DESC: dict[str, str] = {
     "地劫": "煞星，劫财破耗，意外损失",
 }
 
+# ──────────────────────────────────────────────────────────────
+# 三段式结构化解读数据表
+# ──────────────────────────────────────────────────────────────
+STAR_TRAIT: dict[str, str] = {
+    "紫微": "尊贵自主、领导力强",   "天机": "聪敏机变、善于谋划",
+    "太阳": "光明热情、公众导向",   "武曲": "务实果断、财务强势",
+    "天同": "温和享福、贵人多助",   "廉贞": "多才多艺、是非较多",
+    "天府": "稳健保守、积累财富",   "太阴": "感性细腻、内敛财聚",
+    "贪狼": "多才多欲、桃花丰沛",   "巨门": "口才出众、明暗是非",
+    "天相": "忠厚助人、服务协调",   "天梁": "清高孤傲、长辈缘深",
+    "七杀": "勇猛果断、开创冲劲",   "破军": "变动不休、破旧立新",
+}
+
+STAR_CONCERN_SHORT: dict[str, str] = {
+    "紫微": "注意高傲孤立、过度自我要求",  "天机": "防情感多变、过度谋算",
+    "太阳": "防好面子、情绪起伏",          "武曲": "防感情强硬、冲突加剧",
+    "天同": "防过度安逸、进取不足",        "廉贞": "防口舌是非、感情纠缠",
+    "天府": "防过度保守、错失机遇",        "太阴": "防情绪化、优柔寡断",
+    "贪狼": "防欲望泛滥、定力不足",        "巨门": "防是非缠身、多疑难信",
+    "天相": "防依赖过强、决断力弱",        "天梁": "防清高孤僻、不合群",
+    "七杀": "防冲劲过猛、伤及自他",        "破军": "防变动耗散、难以积累",
+}
+
+SHA_SHORT: dict[str, str] = {
+    "擎羊": "刀伤血光与是非竞争",  "陀罗": "拖延纠缠与暗中阻力",
+    "火星": "暴烈冲动与突发变化",  "铃星": "暗耗纠缠与迟缓变化",
+    "地空": "空想耗散与思路发散",  "地劫": "劫财破耗与意外损失",
+}
+
+HUA_SHORT: dict[str, str] = {
+    "化禄": "财运贵气增旺、贵人多助",
+    "化权": "权势决断力强、主导局面",
+    "化科": "名声文采显扬、有利名誉",
+    "化忌": "宜防是非损耗、进展受阻",
+}
+
+PALACE_DOMAIN: dict[str, str] = {
+    "命宫": "性格格局", "兄弟宫": "兄弟财库", "夫妻宫": "婚恋感情",
+    "子女宫": "子嗣下属", "财帛宫": "财运进财", "疾厄宫": "健康体质",
+    "迁移宫": "外出社交", "奴仆宫": "交友合作", "官禄宫": "事业仕途",
+    "田宅宫": "家宅资产", "福德宫": "精神享乐", "父母宫": "父母上司",
+}
+
+PALACE_SUGGESTION: dict[str, str] = {
+    "命宫":  "充分了解自身先天优势与局限，以主动成长代替宿命论，将命宫特质转化为事业与人际的核心竞争力。",
+    "兄弟宫":"与手足及同辈合作时务必以书面约定权责与财务，感情再好也应保持清晰边界。",
+    "夫妻宫":"感情上主动而不强势，尊重对方节奏；婚前了解核心价值观，婚后保持各自独立空间。",
+    "子女宫":"对子女或下属以引导代替控制，容许失败与成长；创意类短期投资小额分散，做好止损预案。",
+    "财帛宫":"建立多元进财渠道，制定理财计划，避免冲动决策；遭遇财务波动时优先保住本金。",
+    "疾厄宫":"养成规律作息与运动习惯，定期体检；做好心理压力管理，关注先天易发病部位。",
+    "迁移宫":"主动把握出行与展示机会，拓宽视野与人脉；出行前做好风险预案与应急准备。",
+    "奴仆宫":"与合作伙伴建立清晰规则与契约，以长期信任代替短期利益；冲突时优先协商而非对抗。",
+    "官禄宫":"选择与命盘星性契合的职业方向，稳步积累专业声望；职场争议中以实力说话，避免过早锋芒毕露。",
+    "田宅宫":"用心维护家庭关系，不动产决策宜稳健；改善居家环境有助身心与运势共同提升。",
+    "福德宫":"培养内在充实感，减少向外寻求认可；精神投资（学习、兴趣、信仰）回报最为持久。",
+    "父母宫":"主动改善与父母、上司的沟通方式；争取支持时选择恰当时机与情绪平稳的表达方式。",
+}
+
 
 def _stars_in_palace(
     palace_branch: int,
@@ -197,6 +255,126 @@ def _opposite_branch(
     opp = (palace_branch + 6) % 12
     has_star = any(pos.branch_idx == opp for pos in main_stars.values())
     return opp if has_star else None
+
+
+# ──────────────────────────────────────────────────────────────
+# 三段式结构化解读（结论 / 解释 / 建议 / 短摘tooltip）
+# ──────────────────────────────────────────────────────────────
+def generate_palace_structured(
+    palace_idx: int,
+    palace_branch: int,
+    main_stars: dict[str, StarPosition],
+    aux_stars: dict[str, int],
+) -> tuple[str, str, str, str]:
+    """
+    为宫位生成三段式结构化解读。
+    返回 (conclusion, explanation, suggestion, tooltip)。
+      conclusion : 一句话结论（40–70字）
+      explanation: 逐星+辅星分段解释（换行符分隔，2–3段）
+      suggestion : 一行可操作建议（30–60字）
+      tooltip    : 20–40字宫格悬浮摘要
+    """
+    palace_name = PALACE_NAMES[palace_idx % 12]
+    domain = PALACE_DOMAIN.get(palace_name, "宫位特质")
+
+    mains = [pos for pos in main_stars.values() if pos.branch_idx == palace_branch]
+    aux_in = [name for name, b in aux_stars.items() if b == palace_branch]
+    sha_in = [s for s in SHA_SHORT if s in aux_in]
+    ji_in  = [s for s in _JI_STARS if s in aux_in]
+
+    # ── 结论 ─────────────────────────────────────────────────
+    if mains:
+        star_part = "、".join(pos.name for pos in mains)
+        traits = "、".join(
+            dict.fromkeys(STAR_TRAIT.get(pos.name, pos.name) for pos in mains)
+        )
+        all_hua = []
+        for pos in mains:
+            for t in pos.transforms:
+                if t in HUA_SHORT:
+                    all_hua.append(f"{t}（{HUA_SHORT[t][:7]}）")
+        hua_part = "，".join(all_hua)
+        sha_part = "，".join(SHA_SHORT[s][:9] for s in sha_in[:2]) if sha_in else ""
+        concern = STAR_CONCERN_SHORT.get(mains[0].name, "")
+
+        prefix = f"{palace_name}以{star_part}为主，{traits}"
+        if hua_part:
+            prefix += f"；{hua_part}"
+        if sha_part:
+            prefix += f"，应防{sha_part}"
+        elif concern:
+            prefix += f"，{concern}"
+        conclusion = prefix.rstrip("，；") + "。"
+    else:
+        opp = (palace_branch + 6) % 12
+        opp_mains = [pos for pos in main_stars.values() if pos.branch_idx == opp]
+        opp_str = "、".join(p.name for p in opp_mains) if opp_mains else "对宫"
+        conclusion = f"{palace_name}为空宫，借{opp_str}照射论命，{domain}以外显方式呈现，特质较为隐性。"
+
+    # ── 解释 ─────────────────────────────────────────────────
+    exp_lines: list[str] = []
+    if mains:
+        for pos in mains:
+            base = STAR_DESC.get(pos.name, f"{pos.name}为主星")
+            if pos.brightness in ("庙", "旺"):
+                bri = f"（{pos.brightness}·力量充分）"
+            elif pos.brightness == "陷":
+                bri = "（陷·力量受限，需谨慎）"
+            elif pos.brightness in ("平", "不"):
+                bri = f"（{pos.brightness}·力量平淡）"
+            else:
+                bri = ""
+            hua_items = [
+                f"{t}→{HUA_SHORT[t]}" for t in pos.transforms if t in HUA_SHORT
+            ]
+            hua_s = "；".join(hua_items)
+            line = f"■ {pos.name}{bri}：{base}"
+            if hua_s:
+                line += f"；{hua_s}"
+            exp_lines.append(line + "。")
+    else:
+        exp_lines.append(
+            f"■ {palace_name}无主星入宫（空宫），以对宫星曜照射，宫位特质延迟或隐性显现。"
+        )
+
+    aux_parts: list[str] = []
+    for ax in aux_in[:5]:
+        if ax in AUX_STAR_DESC:
+            aux_parts.append(f"{ax}（{AUX_STAR_DESC[ax][:12]}）")
+        elif ax in SHA_SHORT:
+            aux_parts.append(f"⚠{ax}（{SHA_SHORT[ax]}）")
+    if aux_parts:
+        exp_lines.append("辅星：" + "；".join(aux_parts) + "。")
+
+    if ji_in:
+        exp_lines.append(f"贵人星{' 、'.join(ji_in)}同宫，名誉与贵人层面获助。")
+
+    explanation = "\n".join(exp_lines)
+
+    # ── 建议 ─────────────────────────────────────────────────
+    base_sug = PALACE_SUGGESTION.get(palace_name, f"深入了解{domain}特质，积极趋吉避凶。")
+    if sha_in:
+        sha_names = "、".join(sha_in[:2])
+        suggestion = base_sug.rstrip("。") + f"；留意煞星{sha_names}带来的变数与耗损。"
+    else:
+        suggestion = base_sug
+
+    # ── Tooltip ───────────────────────────────────────────────
+    if mains:
+        star_tt = "，".join(
+            pos.name + ("·" + pos.transforms[0] if pos.transforms else "")
+            for pos in mains
+        )
+        trait_tt = STAR_TRAIT.get(mains[0].name, "")
+        sha_tt = f"；注意{SHA_SHORT[sha_in[0]][:8]}" if sha_in else ""
+        tooltip = f"{star_tt}：{trait_tt}{sha_tt}。"
+    else:
+        tooltip = f"{palace_name}空宫，{domain}隐性，借对宫照射观察。"
+
+    if len(tooltip) > 45:
+        tooltip = tooltip[:43] + "…"
+
+    return conclusion, explanation, suggestion, tooltip
 
 
 def generate_full_analysis(

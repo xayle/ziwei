@@ -390,6 +390,7 @@ class TestFlyingOppositionSelfTransform:
         """命宫(0)对冲迁移宫(6)，兄弟宫(1)对冲交友宫(7)等。"""
         from services.ziwei_engine.tables import PALACE_NAMES
         fly = self.chart.flying
+        assert fly is not None
         for fp in fly.palaces:
             opp_idx = (fp.palace_idx + 6) % 12
             expected_opp = PALACE_NAMES[opp_idx]
@@ -400,12 +401,14 @@ class TestFlyingOppositionSelfTransform:
         """chonged 字典应包含全部12宫名。"""
         from services.ziwei_engine.tables import PALACE_NAMES
         fly = self.chart.flying
+        assert fly is not None
         for name in PALACE_NAMES:
             assert name in fly.chonged, f"chonged 中缺失 {name}"
 
     def test_chonged_symmetric_with_received(self):
         """飞化落入X宫时，X的对面宫Y应在chonged[Y]有对应条目数。"""
         fly = self.chart.flying
+        assert fly is not None
         from services.ziwei_engine.tables import PALACE_NAMES
         pname_to_idx = {n: i for i, n in enumerate(PALACE_NAMES)}
         total_received = sum(len(v) for v in fly.received.values())
@@ -417,6 +420,7 @@ class TestFlyingOppositionSelfTransform:
     def test_self_transforms_list_exists(self):
         """self_transforms 字段应存在（可为空列表）。"""
         fly = self.chart.flying
+        assert fly is not None
         assert isinstance(fly.self_transforms, list)
 
 
@@ -479,11 +483,13 @@ class TestOppositionName:
 # ──────────────────────────────────────────────────────────────
 class TestForecast:
     """验证运势预测引擎基本正确性。"""
+    from services.ziwei_engine.forecast import ForecastResult as _FR
+    fc: _FR  # narrowed type; setup assigns Optional[ForecastResult] with type: ignore
 
     def setup_method(self):
         self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
                                 GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
-        self.fc = self.chart.forecast
+        self.fc = self.chart.forecast  # type: ignore[assignment]
 
     def test_forecast_not_none(self):
         """forecast 字段不应为 None。"""

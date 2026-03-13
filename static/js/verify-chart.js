@@ -252,33 +252,11 @@ window.tenGodCN = code => TEN_GOD_CN[code] || code || '—';
 window.tenGodType = code => TEN_GOD_TYPE[code] || 'other';
 window.wxCN = wx => ({ wood:'木',fire:'火',earth:'土',metal:'金',water:'水' }[wx] || wx || '—');
 
-window.GAN_WUXING = {
-  '甲':'wood','乙':'wood','丙':'fire','丁':'fire','戊':'earth',
-  '己':'earth','庚':'metal','辛':'metal','壬':'water','癸':'water',
-};
-window.GAN_CSS = {
-  '甲':'wx-wood','乙':'wx-wood','丙':'wx-fire','丁':'wx-fire','戊':'wx-earth',
-  '己':'wx-earth','庚':'wx-metal','辛':'wx-metal','壬':'wx-water','癸':'wx-water',
-};
-window.GAN_DESC = {
-  '甲':'甲木，阳木，栋梁之材，性正直','乙':'乙木，阴木，花草之灵',
-  '丙':'丙火，阳火，太阳之象','丁':'丁火，阴火，烛灯之光',
-  '戊':'戊土，阳土，厚重城墙','己':'己土，阴土，沃土田园',
-  '庚':'庚金，阳金，铸剑之器','辛':'辛金，阴金，珠宝饰品',
-  '壬':'壬水，阳水，江海奔腾','癸':'癸水，阴水，雨露甘霖',
-};
-
-window.translateRationale = tier => ({
-  extremely_strong:'极强', strong:'强', balanced:'中和', neutral:'中和',
-  weak:'弱', extremely_weak:'极弱',
-}[tier]||tier||'—');
-
-window.translateFactorName = name => ({
-  gan_root:'天干根',         zhi_root:'地支自根',       same_opp_gang:'刑冲克合',
-  month_stem:'月令天干',     month_branch:'月令地支',   dayun_stem:'大运天干',
-  dayun_branch:'大运地支',   seasonal_bonus:'季节加成', transparency:'透干',
-  same_element_support:'同类加成', parent_element_support:'生我加成',
-}[name]||name||'—');
+/* ── GAN_WUXING / GAN_CSS / GAN_DESC / translateRationale / translateFactorName / tenGodDesc ──
+   以上全局变量已在 verify-core.js 中完整定义，此处不再重复覆盖。
+   verify-chart.js 只负责定义 verify-core.js 未包含的视觉映射常量：
+   ZHI_CSS, ZHI_HIDDEN, NAYIN, copyText（chart 专用副本）
+── */
 
 /* ── 地支五行 CSS 映射 & 藏干（供 Tab2 命盘使用） ── */
 window.ZHI_CSS = {
@@ -292,21 +270,7 @@ window.ZHI_HIDDEN = {
   '辰':['戊','乙','癸'],'巳':['丙','庚','戊'], '午':['丁','己'],      '未':['己','乙','丁'],
   '申':['庚','壬','戊'],'酉':['辛'],            '戌':['戊','辛','丁'], '亥':['壬','甲'],
 };
-/* 十神提示文字（鼠标悬停 title） */
-window.tenGodDesc = code => ({
-  zheng_guan:'【正官】克我（异性），代表规则、职权、贵人，身强逢官则贵',
-  pian_guan: '【偏官·七杀】克我（同性），霸道冲劲，逢印化煞则贵，无制则凶',
-  qi_sha:    '【七杀】偏官别名，主攻克竞争，逢制化可化杀为权',
-  zheng_yin: '【正印】生我（异性），庇护、学业、文书，印制煞护主为吉',
-  pian_yin:  '【偏印·枭神】生我（同性），偏才艺、异路功名，过多则孤僻',
-  bi_jian:   '【比肩】同我（同性），代表兄弟、竞争，旺命多比则分财，弱命得比则有助',
-  jie_cai:   '【劫财】同我（异性），夺财之星，主竞争、破财',
-  shang_guan:'【伤官】我生（异性），才华、口才、创新，克正官，宜有印制衡',
-  shi_shen:  '【食神】我生（同性），衣食、才艺、福禄，食神制煞则贵',
-  zheng_cai: '【正财】我克（异性），正当收入、妻财（男命），日主有力方能驭财',
-  pian_cai:  '【偏财】我克（同性），横财、父（男命）、流动资金',
-  ri_zhu:    '【日主】命局核心，代表命主本人，一切分析以此为基准',
-}[code]||'');
+/* ── tenGodDesc 已在 verify-core.js 完整定义，此处不再重复 ── */
 
 window.copyText = function(text, btn) {
   navigator.clipboard?.writeText(text).then(()=>{

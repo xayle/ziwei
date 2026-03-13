@@ -28,7 +28,6 @@ jobs:
 
       - name: Type check (pyright)
         run: pyright --project pyrightconfig.json
-        continue-on-error: true   # 类型检查不阻断流水线，仅报警
 
   test:
     runs-on: ubuntu-latest

@@ -22,6 +22,7 @@ from .analysis import (
     generate_palace_tags,
     generate_full_analysis,
     generate_summary,
+    generate_palace_structured,
 )
 from .forecast import generate_forecast, ForecastResult
 from .tables import PALACE_NAMES, BRANCHES
@@ -47,6 +48,11 @@ class PalaceInfo:
     analysis_tags: list[str] = field(default_factory=list)
     xiaoxian_ages: list[int] = field(default_factory=list)  # 该宫小限所对应的年龄列表
     opposition_name: str = ""      # 对宫名称（+6宫）
+    # N7.05 pyright: structured analysis fields (generate_palace_structured output)
+    conclusion: str = ""
+    explanation: str = ""
+    suggestion: str = ""
+    tooltip: str = ""
 
 
 @dataclass
@@ -309,6 +315,8 @@ def ziwei_full(
     for pa in palaces_info:
         pa.analysis = analysis_texts.get(pa.name, "")
         pa.analysis_tags = generate_palace_tags(pa.branch_idx, main_stars, aux_stars)
+        pa.conclusion, pa.explanation, pa.suggestion, pa.tooltip = \
+            generate_palace_structured(pa.index, pa.branch_idx, main_stars, aux_stars)
 
     # 12. 流月列表
     branch_to_name = {pa.branch_idx: pa.name for pa in palaces_info}

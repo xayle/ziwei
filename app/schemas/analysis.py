@@ -66,7 +66,7 @@ class GejuModel(BaseModel):
     confidence:          float = Field(default=0.0, ge=0.0, le=1.0, description="格局判断置信度 0-1")
     geju_detail:         Optional[str] = None   # 判断依据文字说明
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -98,7 +98,7 @@ class PalaceModel(BaseModel):
     disclaimer:      str = "仅供学术研究参考"
     fact_data:       Optional[dict] = None
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -142,7 +142,7 @@ class WealthAnalysisModel(BaseModel):
     financial_taboos:            Optional[str] = None   # 理财禁忌（忌神方向）
     wealth_accumulation_phases:  Optional[str] = None   # 财富积累三阶段
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -173,7 +173,7 @@ class CareerAnalysisModel(BaseModel):
     five_year_roadmap:           Optional[str] = None   # 五年职业路线图
     collaboration_style:         Optional[str] = None   # 最佳合作方式
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -206,7 +206,7 @@ class MarriageAnalysisModel(BaseModel):
     emotional_pitfalls:         Optional[str] = None   # 感情雷区与禁忌
     second_marriage_indicator:  Optional[str] = None   # 再婚/感情波折指标
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -240,7 +240,7 @@ class HealthAnalysisModel(BaseModel):
     mental_health_advice:  Optional[str] = None   # 心理健康建议
     constitution_type:     Optional[str] = None   # 五行体质类型
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -267,7 +267,7 @@ class RelationshipAnalysisModel(BaseModel):
     disclaimer:      str = "仅供学术研究参考"
     fact_data:       Optional[dict] = None
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -296,7 +296,7 @@ class PersonalityModel(BaseModel):
     stress_coping_mode:    Optional[str] = None   # 压力应对模式
     potential_activation:  Optional[str] = None   # 潜能激活时机建议
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {

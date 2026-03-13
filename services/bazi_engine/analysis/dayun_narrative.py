@@ -413,7 +413,8 @@ def generate_dayun_narrative(
         trend_note = f"此运忌神当道，用神{favor_cn}受制，{_flavor_note}宜低调守成，积蓄实力，以待旺运。"
 
     # 古籍佐证（1-2条，按干支哈希确定性选取，同一干支每次输出相同）
-    _hash_val = int(hashlib.md5(ganzhi.encode("utf-8")).hexdigest(), 16)
+    # usedforsecurity=False: MD5 仅用于确定性索引，不作密码学用途（N7.05 bandit B324）
+    _hash_val = int(hashlib.md5(ganzhi.encode("utf-8"), usedforsecurity=False).hexdigest(), 16)
     _idx0 = _hash_val % len(_DAYUN_CLASSICS)
     chosen = [
         _DAYUN_CLASSICS[_idx0],

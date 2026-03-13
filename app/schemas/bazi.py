@@ -106,7 +106,7 @@ class MarriageModel(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {
@@ -131,7 +131,7 @@ class WealthModel(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    @model_validator(mode="after")
+    @model_validator(mode="after")  # type: ignore[misc]
     def _fill_fact_data(self) -> Self:
         if self.fact_data is None:
             self.fact_data = {

@@ -373,7 +373,7 @@ function fillFromShareParams() {
     if ($('dt')) $('dt').value = dtVal;
   }
   const lng=qp.get('lng'); if(lng && $('lon')) $('lon').value=lng;
-  const sex=qp.get('sex'); if(sex && $('userGender')) $('userGender').value=sex;
+  const sex=qp.get('sex'); if(sex && $('sex')) $('sex').value=sex;
   const solar=qp.get('solar'); if(solar && $('solar_time_enabled')) $('solar_time_enabled').checked=solar==='1';
   saveInputs();
   // 自动运行
@@ -735,7 +735,7 @@ window.translateRationale = function(text) {
 ═══════════════════════════════════════════════════ */
 window.makeCurl = function(p) {
   const j = JSON.stringify(p);
-  const base = window.location.origin||'http://127.0.0.1:8000';
+  const base = window.location.origin||'http://127.0.0.1:8765';
   return `curl -sS -X POST ${base}/api/v1/verify -H "Content-Type: application/json" -d '${j.replaceAll("'","'\\''")}' `;
 };
 
@@ -760,9 +760,15 @@ function bindFormEvents() {
     if($('tz'))  $('tz').value='Asia/Shanghai';
     if($('lon')) $('lon').value='121.4737';
     if($('mode')) $('mode').value='dual';
+    if($('sex'))  $('sex').value='F';
     if($('solar_time_enabled')) $('solar_time_enabled').checked=false;
+    if($('city_tier')) $('city_tier').value='新一线';
+    if($('industry'))  $('industry').value='金融IT';
+    // 自动展开高级选项，让用户看到已填入的值
+    const adv = document.getElementById('advancedSection');
+    if(adv) adv.open = true;
     saveInputs();
-    setStatus('示例已填入，点击"开始排盘"','muted');
+    setStatus('示例已填入（女命 2002-03-13 上海），可直接点击"开始排盘"','muted');
   });
   $('btn-curl')?.addEventListener('click', async () => {
     let p; try{p=buildPayload();}catch(e){setStatus(e.message,'warn');return;}

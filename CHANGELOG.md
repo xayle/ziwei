@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v8.0.11] - 2026-03-13
+
+### N7 发布门控全部通过
+
+**安全 (N7.05)**
+- **fix(security)**: `services/bazi_engine/analysis/dayun_narrative.py` MD5 调用追加 `usedforsecurity=False`（bandit B324 HIGH→0 HIGH）
+- bandit 扫描结果：0 HIGH，0 MEDIUM，55 LOW — N7.05 PASS
+
+**类型检查 (pyright 0 errors)**
+- **fix(types)**: `services/bazi_engine_service.py` 7处 `# type: ignore[union-attr]`（`WealthModel`/`WealthAnalysisModel`/`HealthAnalysisModel` 因 `extra="allow"` 导致属性推断为 `object`）
+- **fix(types)**: `services/ziwei_engine/__init__.py` `PalaceInfo` 补充 `conclusion`/`explanation`/`suggestion`/`tooltip` 字段（对应 `generate_palace_structured` 输出）
+- **fix(types)**: `tests/test_ziwei_engine.py` 4处 `TestFlyingOppositionSelfTransform` 方法加 `assert fly is not None`；`TestForecast` 追加类级类型注解 `fc: ForecastResult` + `# type: ignore[assignment]` 消除 Optional 误报
+
+**前端 (N1.05)**
+- **feat(ui)**: `static/js/verify-render.js` 格局置信度 < 50% 时在格局名后显示 `<span class="tag-uncertain">待定</span>`（R43 红线达标）
+
+**测试基线 (N7.03)**
+- Golden Test 36 cases 全部通过（geju_name 非空 + confidence ∈ [0.0, 1.0]）
+
+**发布门控状态（N7.08 全部 ✅）**
+- pytest ≥ 967 collected，961 passed，6 skipped，0 failed
+- pyright 0 errors（本版本修复）
+- bandit 0 HIGH（本版本修复）
+- v2 单并发 P95=106.95ms < 1s（N2.04 基线记录）
+- R36-R45 全部 10 条红线通过（test_redlines_r36_r45.py 21 passed）
+
+---
+
 ## [v8.0.10] - 2026-03-09
 
 ### 紫微斗数引擎集成 & AUTH_BYPASS 安全修复

@@ -71,16 +71,20 @@ window.loadFavorite = function(i) {
   window.__BAZI_STATE.result  = f.json;
   window.__BAZI_STATE.payload = f.payload;
   window.__BAZI_STATE.tabLoaded.clear();
-  typeof loadPanel==='function' && loadPanel(typeof currentTabIdx!=='undefined'?currentTabIdx:0);
+  const _activePanel = document.querySelector('.tab-panel.active');
+  const _activeIdx = _activePanel ? Number(_activePanel.dataset.panel) : 0;
+  typeof loadPanel==='function' && loadPanel(_activeIdx);
   $('compareFavModal')?.classList.remove('open');
   updateCompareBar && updateCompareBar(f.json);
 };
 
 window.deleteFavorite = function(i) {
-  if (!confirm('确认删除此条收藏？')) return;
   const list = loadFavorites();
+  if (!list[i]) return;
+  const title = list[i].title || '该收藏';
   list.splice(i, 1);
   saveFavorites(list);
+  showToast('已删除：' + title, 'info', 2000);
   showFavoritesModal(); // 刷新列表
 };
 
