@@ -426,8 +426,11 @@ def refresh_token(
             message="Invalid or revoked refresh token",
         )
     
-    # 检查刷新令牌是否过期
-    if datetime.now(timezone.utc) > refresh_token_obj.expires_at:
+    # 检查刷新令牌是否过期（SQLite 返回 naive datetime，需兼容处理）
+    _expires = refresh_token_obj.expires_at
+    if _expires.tzinfo is None:
+        _expires = _expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > _expires:
         raise AuthenticationException(
             code=ErrorCode.AUTH_TOKEN_EXPIRED,
             message="Refresh token expired",
