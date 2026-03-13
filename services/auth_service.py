@@ -323,8 +323,14 @@ def verify_refresh_token(session, user_id: int, token: str) -> bool:
                 message="Refresh token not found or revoked",
             )
         
-        # 检查是否过期
-        if datetime.now(timezone.utc) > refresh_token.expires_at:
+        # 检查是否过期（兼容 SQLite 返回 naive datetime 和 aware datetime）
+        expires = refresh_token.expires_at
+        now_utc = datetime.now(timezone.utc)
+        if expires.tzinfo is None:
+            # SQLite 剥离了 tzinfo，视为 UTC 进行比较
+            from datetime import timezone as _tz
+            expires = expires.replace(tzinfo=_tz.utc)
+        if now_utc > expires:
             raise AuthenticationException(
                 code=ErrorCode.AUTH_TOKEN_EXPIRED,
                 message="Refresh token has expired",

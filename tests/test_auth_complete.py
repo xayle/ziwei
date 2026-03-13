@@ -274,3 +274,186 @@ class TestAuthPerformance:
         
         # Token verification should be very fast
         assert benchmark_timer.elapsed_ms < 100  # 20 verifications in < 100ms
+
+
+@pytest.mark.services
+class TestPasswordCompatibility:
+    """Tests for SHA256 backward-compatible password verification."""
+
+    def test_verify_sha256_password_correct(self):
+        """SHA256 hash (legacy format) should verify correctly."""
+        import hashlib
+        raw = "legacy_password_abc"
+        sha256_hash = hashlib.sha256(raw.encode()).hexdigest()
+        assert auth_service_module.verify_password(raw, sha256_hash) is True
+
+    def test_verify_sha256_password_wrong(self):
+        """Wrong password against SHA256 hash should return False."""
+        import hashlib
+        raw = "legacy_password_abc"
+        sha256_hash = hashlib.sha256(raw.encode()).hexdigest()
+        assert auth_service_module.verify_password("wrong_pass", sha256_hash) is False
+
+    def test_verify_unknown_hash_format(self):
+        """Completely unknown hash format should return False, not raise."""
+        result = auth_service_module.verify_password("any_password", "unknownhashformat123")
+        assert result is False
+
+    def test_validate_token_exists_and_valid_true(self):
+        """validate_token_exists_and_valid returns True for a valid token."""
+        token_dict = auth_service_module.create_access_token(
+            user_id=99, username="validuser", role="user",
+            expires_delta=timedelta(minutes=15)
+        )
+        assert auth_service_module.validate_token_exists_and_valid(token_dict["access_token"]) is True
+
+    def test_validate_token_exists_and_valid_empty(self):
+        """validate_token_exists_and_valid raises for an empty token."""
+        with pytest.raises(Exception):
+            auth_service_module.validate_token_exists_and_valid("")
+
+
+@pytest.mark.services
+class TestJtiRevocation:
+    """Tests for Access Token JTI revocation (blacklist)."""
+
+    def test_revoke_jti_in_memory(self):
+        """Revoked JTI should be detected on next verify_token call."""
+        import uuid
+        # Create token and extract its JTI
+        token_dict = auth_service_module.create_access_token(
+            user_id=7, username="revoketest", role="user",
+            expires_delta=timedelta(minutes=30)
+        )
+        import os
+        from jose import jwt as jose_jwt
+        _secret = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
+        payload = jose_jwt.decode(
+            token_dict["access_token"],
+            _secret,
+            algorithms=["HS256"],
+        )
+        jti = payload.get("jti")
+        assert jti is not None
+
+        # Token should be valid before revocation
+        result = auth_service_module.verify_token(token_dict["access_token"])
+        assert result is not None
+
+        # Revoke the JTI
+        auth_service_module.revoke_access_token_jti(jti)
+
+        # Token should now be invalid
+        from app.exceptions import AuthenticationException
+        with pytest.raises(AuthenticationException):
+            auth_service_module.verify_token(token_dict["access_token"])
+
+        # Clean up: remove from set to avoid affecting other tests
+        auth_service_module._revoked_jtis.discard(jti)
+
+    def test_revoke_jti_idempotent(self):
+        """Calling revoke_access_token_jti twice should not raise."""
+        fake_jti = "fake-jti-idempotency-test"
+        auth_service_module.revoke_access_token_jti(fake_jti)
+        auth_service_module.revoke_access_token_jti(fake_jti)  # should not raise
+        auth_service_module._revoked_jtis.discard(fake_jti)
+
+
+@pytest.mark.services
+class TestRefreshTokenDB:
+    """Tests for refresh token DB operations."""
+
+    def test_create_and_verify_refresh_token(self, db_session):
+        """create_refresh_token_record + verify_refresh_token round-trip."""
+        # Need a user
+        from app.models import User as _User
+        user = _User(
+            username=f"rt_user_{id(db_session)}",
+            email=f"rt_{id(db_session)}@test.com",
+            password_hash=auth_service_module.hash_password("pw"),
+            role="user",
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+
+        token = auth_service_module.create_refresh_token_record(
+            db_session, user_id=user.id  # type: ignore[arg-type]
+        )
+        assert isinstance(token, str) and len(token) > 0
+
+        result = auth_service_module.verify_refresh_token(
+            db_session, user_id=user.id, token=token  # type: ignore[arg-type]
+        )
+        assert result is True
+
+    def test_verify_refresh_token_missing(self, db_session):
+        """verify_refresh_token raises when token not found."""
+        from app.exceptions import AuthenticationException
+        with pytest.raises(AuthenticationException):
+            auth_service_module.verify_refresh_token(
+                db_session, user_id=9999, token="nonexistent_token"
+            )
+
+    def test_verify_refresh_token_empty_raises(self, db_session):
+        """verify_refresh_token raises for empty token."""
+        from app.exceptions import AuthenticationException
+        with pytest.raises(AuthenticationException):
+            auth_service_module.verify_refresh_token(db_session, user_id=1, token="")
+
+    def test_revoke_refresh_token(self, db_session):
+        """revoke_refresh_token marks token as revoked."""
+        from app.models import User as _User
+        user = _User(
+            username=f"rv_user_{id(db_session)}",
+            email=f"rv_{id(db_session)}@test.com",
+            password_hash=auth_service_module.hash_password("pw"),
+            role="user",
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+
+        token = auth_service_module.create_refresh_token_record(
+            db_session, user_id=user.id  # type: ignore[arg-type]
+        )
+        auth_service_module.revoke_refresh_token(db_session, token)
+
+        # After revoking, verify should fail
+        from app.exceptions import AuthenticationException
+        with pytest.raises(AuthenticationException):
+            auth_service_module.verify_refresh_token(
+                db_session, user_id=user.id, token=token  # type: ignore[arg-type]
+            )
+
+    def test_revoke_nonexistent_token(self, db_session):
+        """revoke_refresh_token on unknown token should not raise."""
+        auth_service_module.revoke_refresh_token(db_session, "totally_fake_token")
+
+    def test_revoke_all_user_tokens(self, db_session):
+        """revoke_all_user_tokens revokes all active tokens for a user."""
+        from app.models import User as _User
+        user = _User(
+            username=f"ra_user_{id(db_session)}",
+            email=f"ra_{id(db_session)}@test.com",
+            password_hash=auth_service_module.hash_password("pw"),
+            role="user",
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+
+        t1 = auth_service_module.create_refresh_token_record(
+            db_session, user_id=user.id  # type: ignore[arg-type]
+        )
+        t2 = auth_service_module.create_refresh_token_record(
+            db_session, user_id=user.id  # type: ignore[arg-type]
+        )
+        auth_service_module.revoke_all_user_tokens(db_session, user_id=user.id)  # type: ignore[arg-type]
+
+        from app.exceptions import AuthenticationException
+        for tok in [t1, t2]:
+            with pytest.raises(AuthenticationException):
+                auth_service_module.verify_refresh_token(
+                    db_session, user_id=user.id, token=tok  # type: ignore[arg-type]
+                )
