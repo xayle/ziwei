@@ -124,7 +124,7 @@ docker-compose -f docker-compose-monitoring.yml up -d
 receivers:
   - name: 'oncall-critical'
     slack_configs:
-      - api_url: '<slack-webhook-removed>'
+         - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
         channel: '#critical-alerts'
         title: '🚨 Critical Alert: {{ .GroupLabels.alertname }}'
         color: 'danger'

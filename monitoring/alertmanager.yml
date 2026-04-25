@@ -146,7 +146,7 @@ inhibit_rules:
 #
 # Slack 配置：
 #   slack_configs:
-#     - api_url: '<slack-webhook-removed>'
+#     - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
 #       channel: '#alerts'
 #       title: '{{ .GroupLabels.service }}: {{ .GroupLabels.alertname }}'
 #       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'

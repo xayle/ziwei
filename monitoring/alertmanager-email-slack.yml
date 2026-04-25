@@ -116,7 +116,7 @@ receivers:
           {{ end }}
     
     slack_configs:
-      - api_url: '<slack-webhook-removed>'  # 修改为您的 Webhook URL
+      - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'  # 修改为您的 Webhook URL
         channel: '#critical-alerts'
         title: '🚨 Critical Alert: {{ .GroupLabels.alertname }}'
         title_link: 'http://alertmanager:9093'
@@ -149,7 +149,7 @@ receivers:
           Subject: '[WARNING] BaZi Service Alert'
     
     slack_configs:
-      - api_url: '<slack-webhook-removed>'
+      - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
         channel: '#warnings'
         title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
         text: |
@@ -177,7 +177,7 @@ receivers:
           Subject: '[DATABASE] Performance Alert'
     
     slack_configs:
-      - api_url: '<slack-webhook-removed>'
+      - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
         channel: '#database-alerts'
         title: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
         color: 'warning'
@@ -192,7 +192,7 @@ receivers:
           Subject: '[SECURITY] Urgent: {{ .GroupLabels.alertname }}'
     
     slack_configs:
-      - api_url: '<slack-webhook-removed>'
+      - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
         channel: '#security-alerts'
         title: '🔐 Security Alert: {{ .GroupLabels.alertname }}'
         text: |
@@ -214,7 +214,7 @@ receivers:
       - to: 'dev-team@yourcompany.com'
     
     slack_configs:
-      - api_url: '<slack-webhook-removed>'
+      - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
         channel: '#api-alerts'
         title: '🔧 API Performance: {{ .GroupLabels.alertname }}'
         color: 'warning'

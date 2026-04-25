@@ -287,7 +287,7 @@ rule_files:
 
 global:
   resolve_timeout: 5m
-  slack_api_url: '<slack-webhook-removed>'
+  slack_api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
   smtp_from: 'alerts@example.com'
   smtp_smarthost: 'smtp.gmail.com:587'
   smtp_auth_username: 'alerts@example.com'

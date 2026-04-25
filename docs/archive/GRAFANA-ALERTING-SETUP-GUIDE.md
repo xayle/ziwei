@@ -175,7 +175,7 @@ services:
 
 **Webhook URL 格式**:
 ```
-<slack-webhook-removed>
+<slack-webhook-removed><workspace>/<channel>/<secret>
 ```
 
 #### 步骤 2: 配置 AlertManager Slack 通知
