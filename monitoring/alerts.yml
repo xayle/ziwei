@@ -166,11 +166,8 @@ groups:
 # 注意：路由配置在 alertmanager.yml 中，而不是这里
 
 # AlertManager 接收器配置示例：
-# 可以配置：
-#   - Email 通知
-#   - Slack 通知
-#   - PagerDuty 集成
-#   - Webhook 回调
+# 当前默认不配置 Email / Slack 推送。
+# 告警统一在 Grafana / AlertManager UI 中查看。
 
 # 使用说明：
 #

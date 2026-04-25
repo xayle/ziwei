@@ -35,7 +35,7 @@
 
 第5阶段: Priority 1 - 高级监控 ✅
   ├─ Grafana 仪表板创建 (9 个监控面板)
-  ├─ Email/Slack 告警配置
+  ├─ 无外部推送的告警查看配置
   ├─ 高级 Docker Compose 配置
   └─ 完整部署文档和快速参考
 
@@ -272,7 +272,7 @@ tests/test_request_validation.py         6/6   PASSED  [100%]  ✅
 | 文件 | 行数 | 用途 |
 |------|------|------|
 | [grafana-dashboard.json](grafana-dashboard.json) | - | Grafana 仪表板 (9 面板) |
-| [alertmanager-email-slack.yml](alertmanager-email-slack.yml) | - | Email/Slack 告警配置 |
+| [alertmanager.yml](alertmanager.yml) | - | 无外部推送的告警路由配置 |
 | [GRAFANA-ALERTING-SETUP-GUIDE.md](GRAFANA-ALERTING-SETUP-GUIDE.md) | 700+ | 完整部署指南 |
 | [PRIORITY-1-QUICK-REFERENCE.md](PRIORITY-1-QUICK-REFERENCE.md) | - | 快速参考手册 |
 

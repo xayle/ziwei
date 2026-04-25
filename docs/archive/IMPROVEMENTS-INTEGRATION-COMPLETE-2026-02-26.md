@@ -385,7 +385,7 @@ curl http://localhost:8000/metrics | grep -E "http_requests|db_operation"
 ### 下一步建议
 1. **部署到测试环境** - 验证监控栈运行
 2. **创建 Grafana 仪表板** - 可视化关键指标
-3. **配置告警通知** - Email/Slack 集成
+3. **配置告警查看** - 仅使用 Grafana / AlertManager UI
 4. **性能基准测试** - 建立性能基线
 5. **代码审计** - 安全审查
 

@@ -2,12 +2,8 @@
 # 用于告警路由和通知管理
 
 global:
-  # 全局 SMTP 配置（用于邮件通知，可选）
+  # 仅保留全局超时；不启用 SMTP / Email / Slack 推送
   resolve_timeout: 5m
-  # smtp_smarthost: 'smtp.example.com:587'
-  # smtp_auth_username: 'alerting@example.com'
-  # smtp_auth_password: 'password'
-  # smtp_from: 'alerting@example.com'
 
 # 告警路由配置
 route:
@@ -68,35 +64,15 @@ route:
 receivers:
   # 默认接收器（可选）
   - name: 'default'
-    # 可配置为邮件、Slack 等
+    # 仅在 AlertManager UI 中查看，不做外部推送
   
   # 严重告警接收器
   - name: 'critical-alerts'
-    # email_configs:
-    #   - to: 'oncall@example.com'
-    #     smarthost: 'smtp.example.com:587'
-    #     auth_username: 'alerting@example.com'
-    #     auth_password: 'password'
-    #     from: 'alerting@example.com'
-    #     headers:
-    #       Subject: '[CRITICAL] {{ .GroupLabels.alertname }}'
-    # 
-    # slack_configs:
-    #   - api_url: '<slack-webhook-removed>'
-    #     channel: '#critical-alerts'
-    #     title: 'Critical Alert: {{ .GroupLabels.alertname }}'
-    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-    #     send_resolved: true
-    # 
-    # pagerduty_configs:
-    #   - service_key: 'YOUR_SERVICE_KEY'
-    #     description: '{{ .GroupLabels.alertname }}: {{ .Alerts.Firing | len }} alert(s)'
+    # 当前不配置外部接收器
   
   # 警告告警接收器
   - name: 'warning-alerts'
-    # webhook_configs:
-    #   - url: 'http://localhost:5000/alert'
-    #     send_resolved: true
+    # 当前不配置外部接收器
   
   # 信息告警接收器
   - name: 'info-alerts'
@@ -104,16 +80,11 @@ receivers:
   
   # 数据库告警接收器
   - name: 'database-alerts'
-    # email_configs:
-    #   - to: 'dba@example.com'
+    # 当前不配置外部接收器
   
   # 安全告警接收器
   - name: 'security-alerts'
-    # email_configs:
-    #   - to: 'security@example.com'
-    # slack_configs:
-    #   - api_url: '<slack-webhook-removed>'
-    #     channel: '#security-alerts'
+    # 当前不配置外部接收器
 
 # 抑制规则（用于防止告警风暴）
 inhibit_rules:
@@ -133,42 +104,10 @@ inhibit_rules:
       alertname: 'HighRequestLatency'
     equal: ['service']
 
-# 具体的接收器配置示例
-#
-# Email 配置：
-#   email_configs:
-#     - to: 'devops@example.com'
-#       from: 'alertmanager@example.com'
-#       smarthost: 'smtp.gmail.com:587'
-#       auth_username: 'alertmanager@gmail.com'
-#       auth_password: 'app_password'
-#       require_tls: true
-#
-# Slack 配置：
-#   slack_configs:
-#     - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
-#       channel: '#alerts'
-#       title: '{{ .GroupLabels.service }}: {{ .GroupLabels.alertname }}'
-#       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-#       color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
-#       send_resolved: true
-#
-# PagerDuty 配置：
-#   pagerduty_configs:
-#     - service_key: 'YOUR_SERVICE_KEY'
-#       description: '{{ .GroupLabels.alertname }}: {{ (index .Alerts 0).Annotations.description }}'
-#       details:
-#         firing: '{{ template "pagerduty.default.instances" .Alerts.Firing }}'
-#
-# Webhook 配置：
-#   webhook_configs:
-#     - url: 'http://localhost:5001/alert'
-#       send_resolved: true
-#
 # 使用说明：
 #
-# 1. 根据您的需求配置接收器
+# 1. 当前默认不做任何外部推送
 # 2. 将此文件放在容器中：/etc/alertmanager/alertmanager.yml
 # 3. Prometheus 会自动将告警发送到 AlertManager
-# 4. AlertManager 会根据路由规则和接收器配置转发通知
+# 4. AlertManager 负责路由、分组、抑制与状态维护
 # 5. 访问 http://localhost:9093 查看告警管理界面

@@ -71,77 +71,21 @@ docker-compose -f docker-compose-monitoring.yml up -d
 
 ---
 
-### ✅ Task 3: 配置告警通知 (Email/Slack)
+### ✅ Task 3: 配置告警查看（无 Email / Slack）
 
 **状态**: ✅ 完成
 
-**已创建文件**:
-- [alertmanager-email-slack.yml](alertmanager-email-slack.yml) - Email & Slack 完整配置
+**已保留文件**:
+- [alertmanager.yml](alertmanager.yml) - 基础告警路由（无外部推送）
 - [GRAFANA-ALERTING-SETUP-GUIDE.md](GRAFANA-ALERTING-SETUP-GUIDE.md) - 部署指南
 - [docker-compose-monitoring-advanced.yml](docker-compose-monitoring-advanced.yml) - 增强型 Docker 编排
 
-#### Email 通知配置
+#### 当前策略
 
-**Gmail 设置步骤**:
-1. 获取 Google App Password:
-   - 访问 https://myaccount.google.com/security
-   - 启用 2-Step Verification
-   - 生成 App Password (16 位)
-
-2. 更新 alertmanager-email-slack.yml:
-   ```yaml
-   global:
-     smtp_auth_username: 'your-email@gmail.com'
-     smtp_auth_password: 'your-app-password'
-     smtp_from: 'alerts@baziservice.com'
-   ```
-
-3. 配置接收器:
-   ```yaml
-   receivers:
-     - name: 'oncall-critical'
-       email_configs:
-         - to: 'oncall@yourcompany.com'
-   ```
-
-4. 重启 AlertManager:
-   ```bash
-   docker-compose -f docker-compose-monitoring.yml restart alertmanager
-   ```
-
-#### Slack 通知配置
-
-**Slack Webhook 获取步骤**:
-1. 访问 https://api.slack.com/apps
-2. Create New App → From scratch
-3. App Name: BaZi-Alerts
-4. 选择工作区和频道
-5. Incoming Webhooks → Add New Webhook to Workspace
-6. 复制生成的 Webhook URL
-
-**更新配置**:
-```yaml
-receivers:
-  - name: 'oncall-critical'
-    slack_configs:
-         - api_url: '<slack-webhook-removed><workspace>/<channel>/<secret>'
-        channel: '#critical-alerts'
-        title: '🚨 Critical Alert: {{ .GroupLabels.alertname }}'
-        color: 'danger'
-```
-
-#### Grafana 邮件配置
-
-**docker-compose-monitoring.yml 中的 Grafana 环境变量**:
-```yaml
-grafana:
-  environment:
-    GF_SMTP_ENABLED: "true"
-    GF_SMTP_HOST: "smtp.gmail.com:587"
-    GF_SMTP_USER: "your-email@gmail.com"
-    GF_SMTP_PASSWORD: "your-app-password"
-    GF_SMTP_FROM_ADDRESS: "alerts@baziservice.com"
-```
+1. 不配置 SMTP
+2. 不配置 Slack Webhook
+3. 告警仅在 Grafana / AlertManager UI 查看
+4. 如需调整，仅编辑 `alertmanager.yml` 的路由与分组策略
 
 ---
 
@@ -171,15 +115,14 @@ curl http://127.0.0.1:8000/health
 # 确保以下文件位于项目根目录:
 #   - docker-compose-monitoring.yml
 #   - prometheus.yml
-#   - alertmanager.yml (或 alertmanager-email-slack.yml)
+#   - alertmanager.yml
 #   - alerts.yml
 #   - grafana-dashboard.json
 
-# 2. 修改告警配置
-# 编辑 alertmanager-email-slack.yml:
-#   - 修改 SMTP 用户名和密码 (Gmail 或公司邮箱)
-#   - 修改 Slack Webhook URL
-#   - 修改邮件收件人地址
+# 2. 检查告警配置
+# 编辑 alertmanager.yml:
+#   - 调整路由、分组和抑制规则
+#   - 不配置 SMTP / Slack Webhook
 
 # 3. 启动监控栈
 docker-compose -f docker-compose-monitoring.yml up -d
@@ -196,8 +139,8 @@ docker-compose -f docker-compose-monitoring.yml ps
 # 6. 导入 Grafana 仪表板
 # Grafana → Dashboards → Import → Upload grafana-dashboard.json
 
-# 7. 配置告警通知
-# 查看 GRAFANA-ALERTING-SETUP-GUIDE.md 中的详细步骤
+# 7. 查看告警状态
+# Grafana → Alerting / AlertManager UI
 ```
 
 ---
@@ -221,7 +164,7 @@ docker-compose -f docker-compose-monitoring.yml ps
 - [prometheus.yml](prometheus.yml) - Prometheus 抓取配置
 - [alerts.yml](alerts.yml) - 告警规则定义
 - [alertmanager.yml](alertmanager.yml) - 基础告警路由
-- [alertmanager-email-slack.yml](alertmanager-email-slack.yml) - 完整的通知配置 ⭐
+- [alertmanager.yml](alertmanager.yml) - 基础告警路由 ⭐
 
 **仪表板和编排**:
 - [grafana-dashboard.json](grafana-dashboard.json) - Grafana 仪表板配置 ⭐
@@ -236,7 +179,7 @@ docker-compose -f docker-compose-monitoring.yml ps
 
 ## 🔍 故障排除
 
-### Grafana 无法发送邮件
+### Grafana / AlertManager 中看不到告警
 
 **问题**: 邮件未送达
 **原因**: 
@@ -338,8 +281,8 @@ docker logs baziservice_prometheus
 |------|------|------|
 | 应用验证 | run.py | ✅ 完成 |
 | Grafana 仪表板 | grafana-dashboard.json | ✅ 完成 |
-| Email 配置 | alertmanager-email-slack.yml | ✅ 完成 |
-| Slack 配置 | alertmanager-email-slack.yml | ✅ 完成 |
+| 告警路由配置 | alertmanager.yml | ✅ 完成 |
+| 外部推送禁用 | docker-compose-monitoring-advanced.yml | ✅ 完成 |
 | 部署指南 | GRAFANA-ALERTING-SETUP-GUIDE.md | ✅ 完成 |
 | Docker 编排 | docker-compose-monitoring-advanced.yml | ✅ 完成 |
 
@@ -347,5 +290,5 @@ docker logs baziservice_prometheus
 
 ---
 
-**下一步**: 按照上述"完整快速启动指南"中的方案 B 启动 Docker 监控栈并配置告警通知。
+**下一步**: 按照上述"完整快速启动指南"中的方案 B 启动 Docker 监控栈，并在 Grafana / AlertManager UI 中查看告警状态。
 

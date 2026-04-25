@@ -113,113 +113,45 @@ URL: http://localhost:3000
 
 ---
 
-## 🔔 Part 2: 告警通知配置
+## 🔔 Part 2: 告警查看配置（不启用 Slack / Email）
 
-### Email 通知设置
+当前仓库已改为**不使用 Slack 通知，也不使用邮箱推送**。
 
-#### 步骤 1: 配置 Grafana 邮件设置
+默认策略：
 
-编辑 `docker-compose-monitoring.yml` 中的 Grafana 环境变量：
+- Grafana 不配置 SMTP
+- AlertManager 不配置 `email_configs` / `slack_configs`
+- 告警仅在 **Grafana Alerting** 和 **AlertManager UI** 中查看
+
+### 步骤 1: 保持 Grafana 无外部推送配置
+
+`docker-compose-monitoring.yml` / `docker-compose-monitoring-advanced.yml` 中只保留 AlertManager 地址，不启用 SMTP：
 
 ```yaml
 services:
   grafana:
     environment:
-      # SMTP 设置
-      GF_SMTP_ENABLED: "true"
-      GF_SMTP_HOST: smtp.gmail.com:587
-      GF_SMTP_USER: your-email@gmail.com
-      GF_SMTP_PASSWORD: your-app-password  # 使用 Google App Password
-      GF_SMTP_FROM_ADDRESS: alerts@baziservice.com
-      GF_SMTP_SKIP_VERIFY: "false"
-      
-      # 告警管理器地址
-      GF_ALERTMANAGER_ALERTS_URL: http://alertmanager:9093
+      GF_SMTP_ENABLED: "false"
+      GF_ALERTMANAGER_ALERT_MANAGER_URLS: "http://alertmanager:9093"
 ```
 
-#### Gmail App Password 获取步骤
+### 步骤 2: 使用基础 `alertmanager.yml`
 
-1. 访问 https://myaccount.google.com
-2. **Security** 选项卡
-3. **App & Device Passwords** (需要启用 2FA)
-4. 生成 16 位密码
-5. 复制密码到 `GF_SMTP_PASSWORD`
+当前基础配置只负责：
 
-#### 步骤 2: 创建 Email 通知渠道
+- 告警分组
+- 告警去重
+- 严重度路由
+- 在 AlertManager UI 中统一查看状态
 
-1. Grafana 左侧菜单 → **Alerting** → **Notification channels**
-2. **New channel** 按钮
-3. 填写信息:
-   ```
-   名称: Email Support Team
-   类型: Email
-   收件人: alerts@your-company.com
-   是否默认: 勾选
-   ```
-4. **Test** 发送测试邮件
-5. **Save**
+不再配置任何外部发送渠道。
 
----
+### 步骤 3: 在 Grafana 中查看而不是推送
 
-### Slack 通知设置
-
-#### 步骤 1: 创建 Slack Webhook
-
-1. 访问 https://api.slack.com/apps
-2. **Create New App** → **From scratch**
-3. 输入应用名称 (如: BaZi-Alerts)
-4. **Left Sidebar** → **Incoming Webhooks**
-5. **Add New Webhook to Workspace**
-6. 选择通知频道 (如: #alerts)
-7. **Authorize** 后复制 Webhook URL
-
-**Webhook URL 格式**:
-```
-<slack-webhook-removed><workspace>/<channel>/<secret>
-```
-
-#### 步骤 2: 配置 AlertManager Slack 通知
-
-编辑 `alertmanager.yml`:
-
-```yaml
-global:
-  resolve_timeout: 5m
-
-route:
-  receiver: 'slack-notifications'
-  group_by: ['alertname']
-  group_wait: 10s
-  group_interval: 10s
-  repeat_interval: 12h
-
-receivers:
-  - name: 'slack-notifications'
-    slack_configs:
-      - api_url: '<slack-webhook-removed>'
-        channel: '#alerts'
-        title: 'BaZi Service Alert'
-        text: '{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}'
-        send_resolved: true
-        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
-```
-
-#### 步骤 3: 在 Grafana 中创建 Slack 通知渠道
-
-1. Grafana 左侧菜单 → **Alerting** → **Notification channels**
-2. **New channel** 按钮
-3. 填写信息:
-   ```
-   名称: Slack Engineering Team
-   类型: Slack
-   Webhook URL: <粘贴你的 Webhook URL>
-   频道: #alerts
-   用户名: BaZi-Alerts
-   ```
-4. **Test** 发送测试消息到 Slack
-5. **Save**
-
----
+1. Grafana 左侧菜单 → **Alerting** → **Alert Rules**
+2. 查看规则状态：`Normal` / `Pending` / `Firing`
+3. 需要排查时，再进入 **Alerting** → **Alert instances**
+4. 如需查看路由与分组结果，打开 AlertManager：`http://localhost:9093`
 
 ### Grafana 告警规则配置
 
@@ -247,10 +179,10 @@ Current value: {{ .Values.B }}
 
 #### 步骤 2: 通知策略
 
-1. **Send to** 选择通知渠道
-2. **Notification settings**:
-   - 通知频道: Email Support Team + Slack Engineering Team
-   - 标签 (可选): severity:high
+1. 保持规则本身开启
+2. 不绑定 Email / Slack 渠道
+3. 通过 Grafana Alerting 页面直接查看告警状态
+4. 可保留标签（如 `severity:high`）用于筛选和分组
 
 #### 步骤 3: 保存和测试
 
@@ -262,7 +194,7 @@ Current value: {{ .Values.B }}
 
 ## 🧪 Part 3: 测试告警功能
 
-### 测试 1: Email 告警
+### 测试 1: 触发告警
 
 ```bash
 # 在另一个终端中，模拟高请求速率
@@ -272,21 +204,20 @@ done
 wait
 
 # 等待 Prometheus 抓取数据 (15-30 秒)
-# 如果触发告警，检查邮箱是否收到邮件
+# 如果触发告警，检查 Grafana / AlertManager UI 状态
 ```
 
-### 测试 2: Slack 告警
-
-```bash
-# AlertManager 将自动发送 Slack 消息
-# 查看 #alerts 频道中的通知
-```
-
-### 测试 3: Grafana UI 告警
+### 测试 2: Grafana UI 告警
 
 1. Grafana 左侧菜单 → **Alerting** → **Alert Rules**
 2. 查看所有活跃告警
-3. 点击告警查看详情和通知状态
+3. 点击告警查看详情、分组与状态变化
+
+### 测试 3: AlertManager UI
+
+1. 打开 `http://localhost:9093`
+2. 确认告警已进入对应路由
+3. 查看分组、抑制和已解决状态
 
 ---
 
@@ -300,19 +231,12 @@ wait
 - [x] 仪表板已导入 (grafana-dashboard.json)
 - [x] 所有面板数据已显示
 
-### Email 通知配置
+### 外部推送策略
 
-- [x] SMTP 配置已设置
-- [x] Email 通知渠道已创建
-- [x] 测试邮件已发送
-- [x] 告警规则已绑定 Email 渠道
-
-### Slack 通知配置
-
-- [x] Slack Webhook 已获取
-- [x] AlertManager 配置已更新
-- [x] Slack 通知渠道已创建
-- [x] 测试消息已发送到 Slack
+- [x] SMTP 未启用
+- [x] Slack Webhook 未配置
+- [x] AlertManager 未配置 Email / Slack 接收器
+- [x] 告警仅在 Grafana / AlertManager UI 查看
 
 ### 告警规则配置
 
@@ -339,9 +263,9 @@ python -m uvicorn run:app --host 0.0.0.0 --port 8000
 # 4. 导入仪表板
 # 使用 grafana-dashboard.json 文件
 
-# 5. 配置告警通知
-# Email: Configuration → Notification Channels → Email Support Team
-# Slack: Configuration → Notification Channels → Slack Engineering Team
+# 5. 查看告警状态
+# Grafana: Alerting → Alert Rules
+# AlertManager: http://localhost:9093
 
 # 6. 停止监控栈
 docker-compose -f docker-compose-monitoring.yml down
@@ -364,28 +288,17 @@ docker-compose -f docker-compose-monitoring.yml logs prometheus
 curl http://localhost:9090/-/healthy
 ```
 
-### 邮件不发送
+### 未看到告警
 
 ```bash
-# 检查 SMTP 设置
-# 1. Gmail 需要 App Password (不是普通密码)
-# 2. 需要启用"不安全应用访问"或使用 App Password
-# 3. 检查防火墙是否阻止 SMTP 端口 (587)
-
-# 在 docker-compose.yml 中查看 Grafana 日志
-docker logs <grafana_container_id> | grep -i smtp
-```
-
-### Slack 消息不发送
-
-```bash
-# 检查 Webhook URL 是否正确
-curl -X POST -H 'Content-type: application/json' \
-  --data '{"text":"Test message"}' \
-  YOUR_WEBHOOK_URL
-
 # 检查 AlertManager 配置
 docker-compose -f docker-compose-monitoring.yml exec alertmanager cat /etc/alertmanager/alertmanager.yml
+
+# 检查 Prometheus 规则是否加载
+curl http://localhost:9090/api/v1/rules
+
+# 查看 AlertManager 当前告警
+curl http://localhost:9093/api/v2/alerts
 ```
 
 ---
@@ -405,4 +318,4 @@ docker-compose -f docker-compose-monitoring.yml exec alertmanager cat /etc/alert
 
 ---
 
-**配置完成！🎉 您现在可以通过 Grafana 仪表板和告警通知监控 BaZi Service。**
+**配置完成！🎉 您现在可以通过 Grafana 仪表板、Grafana Alerting 和 AlertManager UI 监控 BaZi Service。**

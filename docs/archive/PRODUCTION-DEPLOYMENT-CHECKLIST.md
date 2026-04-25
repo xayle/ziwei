@@ -316,22 +316,10 @@ route:
 
 receivers:
   - name: 'ops-team'
-    email_configs:
-      - to: 'ops@example.com'
-        headers:
-          Subject: 'BaZi Alert: {{ .GroupLabels.alertname }}'
-    slack_configs:
-      - channel: '#alerts'
-        title: '{{ .GroupLabels.alertname }}'
-        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    # 不配置 Email / Slack 推送
 
   - name: 'critical-team'
-    email_configs:
-      - to: 'critical@example.com'
-    slack_configs:
-      - channel: '#critical-alerts'
-        title: 'CRITICAL: {{ .GroupLabels.alertname }}'
-        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    # 不配置 Email / Slack 推送
 ```
 
 ---
