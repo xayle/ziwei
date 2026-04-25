@@ -1,0 +1,1 @@
+import{a as i}from"./index-ComUcIAH.js";async function e(a){const{data:t}=await i.post("/api/v1/bazi/full",a);return t}async function s(a){const{data:t}=await i.get("/api/v1/bazi/jieqi",{params:{year:a}});return t}async function o(a){const{data:t}=await i.get("/api/v1/bazi/golden-cases",{params:a});return t}export{s as a,e as c,o as g};
