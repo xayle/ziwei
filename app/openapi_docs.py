@@ -2,7 +2,7 @@
 OpenAPI 文档增强和自动生成
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 from fastapi.openapi.utils import get_openapi
 from fastapi import FastAPI
 from pydantic import BaseModel

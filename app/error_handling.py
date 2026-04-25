@@ -3,10 +3,9 @@
 """
 
 import logging
-import json
 from typing import Callable, Any, Optional
 from functools import wraps
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import Request, Response
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
@@ -18,10 +17,31 @@ from app.exceptions import (
     AppException,
     ErrorDetail,
     ErrorCode,
-    DatabaseException,
 )
 
 logger = logging.getLogger(__name__)
+
+# W7: 错误分类 Prometheus Counter（按 error_category / endpoint 计数）
+try:
+    from services.prometheus_monitoring import ERROR_COUNT as _PROM_ERROR_COUNT
+
+    def _record_error(error_code_str: str, endpoint: str) -> None:
+        """将错误码前缀映射为大类，记录到 Prometheus ERROR_COUNT。"""
+        prefix = error_code_str.split("_")[0] if "_" in error_code_str else error_code_str
+        _category_map = {
+            "AUTH":       "auth",
+            "AUTHZ":      "authz",
+            "VALIDATION": "validation",
+            "RESOURCE":   "resource",
+            "BUSINESS":   "business",
+            "SERVICE":    "service",
+            "SYSTEM":     "system",
+        }
+        category = _category_map.get(prefix, "unknown")
+        _PROM_ERROR_COUNT.labels(error_type=category, endpoint=endpoint).inc()
+except Exception:
+    def _record_error(error_code_str: str, endpoint: str) -> None:  # type: ignore[misc]
+        pass
 
 
 # ============================================================================
@@ -46,6 +66,8 @@ class ExceptionHandlingMiddleware(BaseHTTPMiddleware):
                     "error_code": exc.code.value,
                 }
             )
+            # W7: 记录分类计数
+            _record_error(exc.code.value, request.url.path)
             
             error_detail = ErrorDetail(
                 code=exc.code.value,
@@ -77,6 +99,8 @@ class ExceptionHandlingMiddleware(BaseHTTPMiddleware):
                     "exception_type": type(exc).__name__,
                 }
             )
+            # W7: 记录未知错误分类
+            _record_error("SYSTEM_999", request.url.path)
             
             from datetime import timezone as _tz
             error_detail = ErrorDetail(
