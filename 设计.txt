@@ -1,0 +1,5588 @@
+
+
+------------------------------
+优化建议与执行优先级
+------------------------------
+
+一、建议优先优化的项目
+
+1. 后端启动与装配层
+优先级：高
+目标：
+- 拆分主入口职责
+- 降低启动文件复杂度
+- 让应用初始化、路由注册、静态资源挂载、调度任务彼此独立
+
+建议动作：
+- 拆分应用创建逻辑
+- 拆分生命周期管理
+- 拆分调度与后台任务注册
+- 保持业务逻辑不变，先做结构整理
+
+预期收益：
+- 启动链路更清晰
+- 后续改动风险更低
+- 更利于排查线上与本地环境问题
+
+2. 前端超大页面拆分
+优先级：高
+目标：
+- 降低单文件复杂度
+- 提高复用性与可维护性
+- 为后续功能扩展留空间
+
+建议动作：
+- 按功能区拆分页面
+  - 输入表单区
+  - 结果展示区
+  - 图表区
+  - 分析区
+  - 操作区
+- 抽离纯展示子组件
+- 抽离组合式逻辑或 store
+- 优先处理工作台，其次紫微，再次八字
+
+预期收益：
+- 页面维护难度下降
+- 局部修改风险更低
+- 更适合逐步补测试
+
+3. 数据库初始化与迁移策略
+优先级：高
+目标：
+- 统一数据库结构管理方式
+- 降低建表与迁移冲突风险
+
+建议动作：
+- 明确开发环境与生产环境初始化策略
+- 逐步减少运行时建表和补列逻辑
+- 长期收敛到迁移系统为主
+
+预期收益：
+- 避免数据库结构漂移
+- 部署更稳定
+- 更利于版本管理
+
+4. 新旧前端边界治理
+优先级：高
+目标：
+- 明确 SPA 与 legacy 页面边界
+- 避免两套前端长期并行失控
+
+建议动作：
+- 做一份 legacy 页面清单
+- 标记：
+  - 保留
+  - 迁移中
+  - 可下线
+- 以后新增功能统一进入 SPA
+- 逐步收敛旧入口
+
+预期收益：
+- 减少重复维护
+- 避免功能分叉
+- 提升整体一致性
+
+5. 前端权限与路由保护
+优先级：中高
+目标：
+- 提高权限控制一致性
+- 优化未登录、已登录、管理员等状态体验
+
+建议动作：
+- 细分页面访问权限
+- 增强前端路由守卫
+- 与后端权限结果对齐
+- 明确匿名态和受限态页面行为
+
+预期收益：
+- 页面行为更稳定
+- 权限问题更容易排查
+- 用户体验更统一
+
+6. 文档口径统一
+优先级：中高
+目标：
+- 区分当前现状与历史记录
+- 降低认知混乱
+
+建议动作：
+- 将文档分成以下几类：
+  - 当前现状
+  - 历史复盘
+  - 路线图
+  - 已完成记录
+- README 仅保留当前真实状态
+- 历史数字不再直接作为当前依据
+
+预期收益：
+- 团队协作判断更准确
+- 计划推进更清晰
+- 避免被旧文档误导
+
+7. 测试与质量门禁
+优先级：中高
+目标：
+- 建立重构护栏
+- 保证结构调整不破坏已有功能
+
+建议动作：
+- 固定最小质量门禁：
+  - 后端测试
+  - 前端类型检查
+  - 前端构建
+  - 契约检查
+- 将关键链路纳入回归范围
+
+预期收益：
+- 整理和重构更有安全感
+- 回归风险可控
+- 接口漂移更容易发现
+
+8. 报告书与跨模块数据编排
+优先级：中
+目标：
+- 降低复杂模块之间的耦合
+- 提高章节加载稳定性
+
+建议动作：
+- 梳理每个章节的数据依赖
+- 明确加载顺序
+- 增加失败兜底
+- 减少页面直接感知多模块细节
+
+预期收益：
+- 报告书更稳定
+- 新增章节更容易
+- 更利于后续扩展
+
+二、推荐执行顺序
+
+第一批：立即执行
+1. 拆分后端主入口设计
+2. 拆分工作台大页面
+3. 梳理 legacy 与 SPA 边界
+4. 统一文档口径
+5. 建立最小质量门禁清单
+
+第二批：紧接着执行
+1. 收敛数据库初始化与迁移策略
+2. 拆分紫微页面和八字页面
+3. 整理前端权限与路由保护
+4. 梳理报告书数据编排
+
+第三批：长期治理
+1. lint 分层治理
+2. 公共组件和逻辑复用
+3. 审核流、LLM、案例流平台化整理
+4. 持续优化模块边界
+
+三、当前最值得先做的三个项目
+
+1. 后端主入口拆分
+原因：
+- 影响面最大
+- 是后续后端维护效率的关键
+
+2. 工作台页面拆分
+原因：
+- 是前端复杂度最高的热点区域之一
+- 改动收益非常直接
+
+3. legacy 与 SPA 统一入口治理
+原因：
+- 能尽快减少双线维护成本
+- 对整体架构一致性帮助最大
+
+四、执行原则补充
+1. 每次优化都先明确影响范围
+2. 每次结构整理都要保留回归验证
+3. 不在未梳理清楚边界前直接大规模重写
+4. 优先做高收益、低风险、可渐进落地的优化
+
+五、执行进度
+2026-04-22
+
+已开始执行：后端启动与装配层优化
+
+本轮已完成：
+1. 将应用创建流程从主入口抽离
+2. 新增 app/bootstrap.py，集中处理：
+  - FastAPI 应用创建
+  - 中间件注册
+  - 静态资源挂载
+  - 路由统一挂载
+  - 健康检查路由装配
+3. 新增 app/lifecycle.py，集中处理：
+  - 启动安全检查
+  - 数据库初始化
+  - revoked JTI 加载
+  - 定时备份任务注册
+  - 过期委托清理任务注册
+  - 关闭阶段调度回收
+4. run.py 已改为保留主入口与业务接口定义，入口职责已降低
+5. 已完成应用导入验证，当前可正常导入，路由数量校验通过
+
+本轮结果：
+- 后端主入口拆分已正式开始
+- 当前属于“低风险结构整理”阶段
+- 业务接口未改动，优先保证兼容性
+
+下一步建议：
+1. 继续清理 run.py 中剩余可抽离的通用辅助函数
+2. 开始梳理 WorkbenchView.vue 拆分边界
+3. 同步整理 legacy 与 SPA 边界清单
+
+2026-04-22（第二轮）
+
+已开始执行：前端超大页面拆分（Workbench）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchCaseList.vue
+  - 抽离左侧案例列表
+  - 抽离搜索输入与案例选择交互
+  - 保留当前大运 / 紫微摘要 / 八字摘要展示
+2. 新增 frontend/src/components/workbench/WorkbenchGuideCard.vue
+  - 抽离新手三步引导卡片
+  - 保留步骤切换、自动演示、关闭、定位能力
+3. WorkbenchView.vue 已完成首轮瘦身：
+  - 左侧案例列表模板已替换为子组件
+  - 引导卡片模板已替换为子组件
+  - 父组件补充 currentCaseDayunLabel 统一计算，减少模板内重复逻辑
+4. 已完成前端构建验证，build 通过
+
+本轮结果：
+- Workbench 首轮拆分已开始落地
+- 当前属于“低风险 UI/模板拆分”阶段
+- 功能保持兼容，未改变已有交互路径
+
+下一步建议：
+1. 继续抽离 Workbench 顶部信息栏与错误/空态展示
+2. 再拆一轮 Workbench 的八字速览区或紫微速览区
+3. 开始整理 SPA / legacy 页面边界清单
+
+2026-04-22（第三轮）
+
+已继续执行：前端超大页面拆分（Workbench 顶部信息栏）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchInfoBar.vue
+  - 抽离案例顶部信息栏
+  - 抽离基础信息展示（阳历 / 时区 / 经度 / 真太阳时）
+  - 抽离顶部快捷操作按钮
+  - 抽离分享链接展示
+2. WorkbenchView.vue 已完成父子组件接入
+  - 保留原有事件处理函数
+  - 通过事件向上派发，未改变既有业务行为
+3. 已完成前端构建验证，build 继续通过
+
+本轮结果：
+- Workbench 顶部信息栏已完成组件化
+- 当前仍属于“低风险 UI 结构拆分”阶段
+- 页面功能保持兼容
+
+下一步建议：
+1. 继续拆 Workbench 的错误/空态区域
+2. 再拆 Workbench 的八字速览卡片区
+3. 开始补一轮 Workbench 组件级测试
+
+2026-04-22（第四轮）
+
+已继续执行：前端超大页面拆分（Workbench 错误 / 空态区）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchStateBlock.vue
+  - 统一承载 loading / error / empty 三种状态展示
+  - 统一重试按钮行为与骨架屏样式
+  - 补充打印场景下的状态显示控制
+2. WorkbenchView.vue 已完成三处状态区替换
+  - 顶部全局空态已改为复用状态组件
+  - 中央命盘区的加载 / 报错 / 空态已改为复用状态组件
+  - 合并视图中的八字加载 / 报错 / 空态已改为复用状态组件
+3. 已清理 WorkbenchView.vue 中对应重复样式定义
+
+本轮结果：
+- Workbench 错误 / 空态区已完成组件化
+- 页面重复模板进一步下降
+- 当前仍保持“低风险 UI 状态拆分”节奏
+
+下一步建议：
+1. 继续拆 Workbench 的八字速览卡片区
+2. 再拆 Workbench 的紫微速览区或双盘对照区
+3. 开始补一轮 Workbench 状态组件与父页面联动测试
+
+2026-04-23（第五轮）
+
+已继续执行：前端超大页面拆分（Workbench 八字速览区）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziSummary.vue
+  - 抽离八字顶部速览卡片区
+  - 统一承载当前大运、流年、流月、五行平衡 4 张概览卡
+  - 在子组件内收口卡片色阶、趋势文案与响应式样式
+2. WorkbenchView.vue 已完成父子组件接入
+  - 顶部八字速览模板已替换为独立组件
+  - 仍保留原有 chartSummaryCards 计算结果，未改变业务取数路径
+3. 已完成前端错误检查与构建验证，build 继续通过
+
+本轮结果：
+- Workbench 八字速览区已完成组件化
+- Workbench 主视图模板继续瘦身
+- 当前仍保持“先拆低风险展示区，再推进复杂业务区”的节奏
+
+下一步建议：
+1. 继续拆 Workbench 的紫微速览区
+2. 或拆双盘大运对照区，进一步降低主模板长度
+3. 开始补一轮 Workbench 概览组件的展示级测试
+
+2026-04-23（第六轮）
+
+已继续执行：前端超大页面拆分（Workbench 紫微速览区）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchZiweiSummary.vue
+  - 抽离紫微顶部速览卡片区
+  - 统一承载命宫/身宫、五行局/命主身主、当前大限/流年、本月流月 4 张概览卡
+  - 在子组件内收口紫微概览卡片的展示与响应式样式
+2. WorkbenchView.vue 已完成父子组件接入
+  - 紫微速览模板已替换为独立组件
+  - 保留原有 ziweiSummaryCards 计算逻辑，未改动取数路径
+3. 已清理 WorkbenchView.vue 中对应的概览样式残留
+4. 已完成前端错误检查与构建验证，build 继续通过
+
+本轮结果：
+- Workbench 紫微速览区已完成组件化
+- Workbench 主视图进一步瘦身
+- 八字 / 紫微两套顶部速览区已都完成独立封装
+
+下一步建议：
+1. 继续拆 Workbench 的双盘大运对照区
+2. 再拆紫微十二宫焦点区或大限/流月选择区
+3. 开始补一轮 Workbench 概览组件与工作台联动测试
+
+2026-04-23（第七轮）
+
+已继续执行：前端超大页面拆分（Workbench 双盘大运对照区）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchDualDayunAxis.vue
+  - 抽离双盘大运对照轴展示
+  - 统一承载“今年标记线”、八字大运条、紫微大限条
+  - 在子组件内收口对照轴的交互与响应式样式
+2. WorkbenchView.vue 已完成父子组件接入
+  - 双盘对照模板已替换为独立组件
+  - 保留原有 dualDayunAxis 计算结果与选择逻辑，未改动业务路径
+3. 已清理 WorkbenchView.vue 中对应的双盘对照样式残留
+4. 已完成前端错误检查与构建验证，build 继续通过
+
+本轮结果：
+- Workbench 双盘大运对照区已完成组件化
+- Workbench 主视图继续缩短
+- 当前已把顶部概览与跨盘对照这类低风险展示区基本拆完
+
+下一步建议：
+1. 继续拆紫微十二宫焦点区
+2. 或拆紫微大限 / 流月选择区
+3. 开始补一轮 Workbench 拆分组件的展示级测试
+
+2026-04-23（第八轮）
+
+已继续执行：前端超大页面拆分（Workbench 紫微大限 / 流月选择区）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchZiweiSelectors.vue
+  - 抽离紫微大限选择列表
+  - 抽离流月选择 chips
+  - 抽离当前选择摘要展示
+  - 在子组件内收口对应交互样式
+2. WorkbenchView.vue 已完成父子组件接入
+  - 使用 activeZiweiDayunSummary / activeZiweiLiuyueSummary 计算属性收口摘要文本
+  - 保留原有 selectZiweiDayun / selectZiweiLiuyue 业务行为不变
+3. 已清理 WorkbenchView.vue 中对应的选择区样式残留
+4. 顺手修复了 WorkbenchView.vue 弹窗表单里缺失的 select 结束标签，避免构建报错
+5. 已完成前端错误检查与构建验证，build 继续通过
+
+本轮结果：
+- Workbench 紫微大限 / 流月选择区已完成组件化
+- Workbench 主视图长度继续下降
+- 构建链路中顺带暴露并修复了一个原有模板闭合问题
+
+下一步建议：
+1. 继续拆紫微十二宫焦点区
+2. 或开始补一轮 Workbench 已拆组件的展示级测试
+3. 再评估是否把紫微关系图区域继续拆成独立子组件
+
+2026-04-23（第九轮）
+
+已继续执行：前端超大页面拆分（Workbench 紫微十二宫焦点区）
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchZiweiFocus.vue
+  - 抽离十二宫宫位网格
+  - 抽离当前宫位焦点面板
+  - 抽离宫位关系图、对宫 / 飞出 / 流入关系展示
+  - 在子组件内收口宫位区交互与响应式样式
+2. WorkbenchView.vue 已完成父子组件接入
+  - 保留原有 ziweiPalaces / activeZiweiPalace / activeZiweiRelations / activeZiweiRelationGraph 计算结果
+  - 保留 selectZiweiPalace 交互路径不变
+3. 已清理 WorkbenchView.vue 中对应的紫微焦点区样式残留
+4. 已同步修正新手引导中的目标选择器，适配拆分后的焦点区 DOM 类名
+5. 已完成前端错误检查与构建验证，build 继续通过
+
+本轮结果：
+- Workbench 紫微十二宫焦点区已完成组件化
+- 紫微核心浏览区已基本完成拆分
+- Workbench 主视图进一步收敛到“数据编排 + 组件接线”模式
+
+下一步建议：
+1. 开始补一轮 Workbench 已拆组件的展示级测试
+2. 或继续拆紫微建议与调理区 / 紫微基础概览卡区
+3. 再评估是否把紫微关系图进一步细拆为纯图形子组件
+
+2026-04-23（第十轮）
+
+已继续执行：Workbench 已拆组件展示级测试补充
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/__tests__/WorkbenchZiweiFocus.spec.ts
+  - 覆盖紫微十二宫网格渲染
+  - 覆盖当前宫位主星 / 建议 / 关系区渲染
+  - 覆盖宫位按钮、关系按钮、关系图节点的 selectPalace 事件发出
+2. 新增 frontend/src/components/workbench/__tests__/WorkbenchStateBlock.spec.ts
+  - 覆盖 loading 骨架条数量渲染
+  - 覆盖 error 消息与 retry 事件
+  - 覆盖 empty 标题 / 说明 / 按钮与 retry 事件
+3. 已运行新增测试，全部通过
+
+本轮结果：
+- Workbench 拆分后的基础展示组件开始具备可回归验证能力
+- 紫微焦点区与通用状态区已补到第一轮单元测试
+- 后续继续拆分时，能更早发现模板接线和交互回归
+
+已验证：
+- vitest 运行 2 个测试文件，共 6 项用例，全部通过
+
+下一步建议：
+1. 继续补 WorkbenchZiweiSummary / WorkbenchZiweiSelectors / WorkbenchDualDayunAxis 的展示级测试
+2. 或继续拆紫微建议与调理区
+3. 条件成熟后补一层 WorkbenchView 组合级测试
+
+2026-04-23（第十一轮）
+
+已继续执行：Workbench 紫微概览 / 选择器 / 双盘对照轴测试补充
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/__tests__/WorkbenchZiweiSummary.spec.ts
+  - 覆盖四张紫微概览卡渲染
+  - 覆盖流年 / 流月分数徽标与趋势 class
+  - 覆盖无分数时的降级展示
+2. 新增 frontend/src/components/workbench/__tests__/WorkbenchZiweiSelectors.spec.ts
+  - 覆盖大限列表与流月 chips 渲染
+  - 覆盖 active 状态
+  - 覆盖 selectDayun / selectLiuyue 事件
+  - 覆盖无流月数据时的降级展示
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchDualDayunAxis.spec.ts
+  - 覆盖双盘标题、年份范围、当前时间刻度渲染
+  - 覆盖八字 / 紫微分段点击行为
+  - 覆盖 active / past / selected / is-zw 等 class 状态
+4. 已运行新增 3 个测试文件，全部通过
+
+本轮结果：
+- Workbench 紫微概览链路已有更完整的基础回归测试
+- 已覆盖“概览卡 + 选择器 + 双盘轴 + 焦点区 + 状态区”五类核心展示组件
+- 后续继续拆 WorkbenchView 时，紫微主线展示区已有较好的测试托底
+
+已验证：
+- vitest 运行 3 个测试文件，共 9 项用例，全部通过
+
+下一步建议：
+1. 继续补 WorkbenchBaziSummary / WorkbenchInfoBar / WorkbenchCaseList 的展示级测试
+2. 或开始补一层 WorkbenchView 组合级测试，验证父子接线
+3. 之后再继续拆紫微建议与调理区
+
+2026-04-23（第十二轮）
+
+已继续执行：Workbench 八字概览 / 信息栏 / 案例列表测试补充
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziSummary.spec.ts
+  - 覆盖八字四张概览卡渲染
+  - 覆盖流年分数、流月吉凶、五行平衡 tone / trend 展示
+  - 覆盖缺省分数、缺省剩余年数时的降级展示
+2. 新增 frontend/src/components/workbench/__tests__/WorkbenchInfoBar.spec.ts
+  - 覆盖案例基础信息、阳历时间、经度、真太阳时状态展示
+  - 覆盖分享链接展示
+  - 覆盖 toggleView / syncProfile / openReport / deleteCase 等事件
+  - 覆盖 simpleView=false 与 solar_time_enabled=false 时的降级展示
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchCaseList.spec.ts
+  - 覆盖案例列表、选中态、同步标记、摘要信息渲染
+  - 覆盖搜索输入 update:modelValue、create、selectCase 事件
+  - 覆盖空列表与搜索无结果文案
+4. 首次运行时发现 WorkbenchInfoBar 测试断言错误
+  - 原因：simpleView=false 时按钮不应带 is-active
+  - 已修正测试断言后重新运行
+5. 已运行新增 3 个测试文件，全部通过
+
+本轮结果：
+- Workbench 左侧案例列表、顶部信息栏、八字概览区已有基础回归测试
+- Workbench 关键展示组件测试覆盖面进一步扩大
+- 当前已具备继续推进 WorkbenchView 组合级测试的基础
+
+已验证：
+- vitest 运行 3 个测试文件，共 9 项用例，全部通过
+
+下一步建议：
+1. 开始补一层 WorkbenchView 组合级测试，验证父子组件接线
+2. 或继续补 WorkbenchGuideCard 的展示级测试
+3. 组合级测试稳定后，再继续拆紫微建议与调理区
+
+2026-04-23（第十三轮）
+
+已继续执行：WorkbenchView 组合级测试
+
+本轮已完成：
+1. 新增 frontend/src/views/__tests__/WorkbenchView.spec.ts
+  - 使用模块 mock 隔离 router、stores、report API、节气 / 西占辅助 API
+  - 以真实组件挂载方式验证 WorkbenchView 父子接线
+2. 已覆盖的组合级场景：
+  - 进入紫微工作台时自动选中首个案例，并并行加载八字 / 紫微数据
+  - 点击左侧案例列表后切换当前案例，并重新加载命盘
+  - 点击顶部信息栏切换视图，验证父组件状态驱动界面变化
+  - 点击紫微焦点区宫位按钮，验证父组件选择状态回流到焦点卡
+3. 首次运行时发现 Vitest mock 提升问题
+  - 原因：vi.mock 工厂引用了未完成初始化的顶层变量
+  - 已改为 vi.hoisted + mockCtx 统一管理 mock 依赖
+  - 修复后测试通过
+
+本轮结果：
+- Workbench 已从“单组件测试”推进到“页面组合级测试”阶段
+- 关键父子接线（案例选择、视图切换、紫微宫位选择）已有回归保障
+- 后续继续拆 WorkbenchView 时，页面级联动回归风险进一步下降
+
+已验证：
+- WorkbenchView.spec.ts 共 3 项用例，全部通过
+- 测试文件编辑器诊断：无错误
+
+下一步建议：
+1. 继续补 WorkbenchGuideCard 的展示级测试
+2. 或补一个 WorkbenchView 的错误态 / 空态组合测试
+3. 然后再继续拆紫微建议与调理区
+
+2026-04-23（第十四轮）
+
+已继续执行：WorkbenchView 空态 / 错误态组合测试
+
+本轮已完成：
+1. 扩展 frontend/src/views/__tests__/WorkbenchView.spec.ts
+  - 覆盖紫微计算失败时的页面级错误态展示
+  - 覆盖错误态点击重试后的重新加载行为
+  - 覆盖八字 section 在“无结果但无错误”时的空态卡片展示
+2. 首次运行时发现空态断言命中了页面顶部全局空态卡片
+  - 已改为精确定位 `.wb-bazi-hotfix .wb-empty-card`
+  - 修正后重新运行通过
+
+本轮结果：
+- WorkbenchView 组合级测试已开始覆盖降级路径
+- 页面在正常态、切换态、错误态、空态下均已有基础回归保障
+- 后续继续拆 WorkbenchView 或调整加载逻辑时，风险更可控
+
+已验证：
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 测试文件编辑器诊断：无错误
+
+下一步建议：
+1. 继续补 WorkbenchGuideCard 的展示级测试
+2. 或开始把紫微“建议与调理”区抽离成独立组件
+3. 如果继续做测试，可再补一个“点击错误态重试后恢复展示”的更细粒度断言
+
+2026-04-23（第十五轮）
+
+已继续执行：WorkbenchGuideCard 展示级测试
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/__tests__/WorkbenchGuideCard.spec.ts
+  - 覆盖标题、进度文案、进度条宽度与步骤内容渲染
+  - 覆盖 currentStep 对 active 步骤与“上一步 / 下一步”禁用状态的影响
+  - 覆盖 prev / next / play / close / focusStep 事件发出
+2. 已运行新增测试，全部通过
+
+本轮结果：
+- Workbench 新手引导组件已具备基础回归测试
+- 当前 Workbench 的核心展示型子组件基本都已覆盖到首轮单元测试
+- 后续可以更自然地转向“继续拆组件”而不是只补测试
+
+已验证：
+- WorkbenchGuideCard.spec.ts 共 3 项用例，全部通过
+
+下一步建议：
+1. 开始把紫微“建议与调理”区抽离成独立组件
+2. 或补一个“错误态重试后恢复展示”的更细粒度组合测试
+3. 之后再评估是否拆紫微基础数据卡区
+
+2026-04-23（第十六轮）
+
+已继续执行：Workbench 紫微建议与调理区组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchZiweiAdvice.vue
+  - 抽离紫微 remedies 列表展示
+  - 抽离 life_suggestions 标签展示
+  - 增加“无建议数据”时的空态文案
+  - 在子组件内收口卡片、列表、标签样式
+2. WorkbenchView.vue 已接入 WorkbenchZiweiAdvice
+  - 原有数据来源仍保持 localZiwei.remedies / localZiwei.life_suggestions
+  - 父组件继续只负责数据编排与子组件接线
+3. 已完成错误检查与前端构建验证，build 通过
+
+本轮结果：
+- 紫微底部区域进一步组件化
+- WorkbenchView 在紫微主线部分继续向“编排层”收敛
+- 后续若继续拆紫微基础数据卡区，边界会更清晰
+
+已验证：
+- WorkbenchView.vue 与 WorkbenchZiweiAdvice.vue 编辑器诊断均无错误
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续拆紫微基础数据卡区 / 紫微盘概览区
+2. 或为 WorkbenchZiweiAdvice 补一组展示级测试
+3. 再评估是否继续收缩 WorkbenchView 中的紫微概览模板残留
+
+2026-04-23（第十七轮）
+
+已继续执行：Workbench 紫微盘概览区组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchZiweiOverview.vue
+  - 抽离“总论”卡
+  - 抽离 patterns 标签区
+  - 抽离“基础数据”卡（农历 / 四化版本 / 真太阳时 / 引擎版本）
+  - 在子组件内收口概览网格、卡片、行布局与响应式样式
+2. WorkbenchView.vue 已接入 WorkbenchZiweiOverview
+  - 父组件改为只传递 summary / patterns / lunarText / templateVersion / trueSolarTime / engineVersion
+3. 已清理 WorkbenchView.vue 中对应的紫微概览样式残留
+4. 已完成错误检查与前端构建验证，build 通过
+
+本轮结果：
+- 紫微顶部概览区已完成组件化
+- WorkbenchView 在紫微主线中的模板残留继续减少
+- 紫微主线当前基本只剩页面编排、状态切换与少量桥接逻辑
+
+已验证：
+- WorkbenchView.vue 与 WorkbenchZiweiOverview.vue 编辑器诊断均无错误
+- 前端 build 继续通过
+
+下一步建议：
+1. 为 WorkbenchZiweiOverview / WorkbenchZiweiAdvice 补展示级测试
+2. 或继续检查 WorkbenchView 是否还有适合抽离的紫微展示残留
+3. 稳定后再评估是否回到八字主线继续拆分
+
+2026-04-23（第十八轮）
+
+已继续执行：Workbench 紫微概览 / 建议组件测试补充
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/__tests__/WorkbenchZiweiOverview.spec.ts
+  - 覆盖紫微概览标题、总论文案与基础数据渲染
+  - 覆盖 patterns 标签最多展示 6 项的截断行为
+  - 覆盖 summary / templateVersion / trueSolarTime / engineVersion 缺省时的降级展示
+2. 新增 frontend/src/components/workbench/__tests__/WorkbenchZiweiAdvice.spec.ts
+  - 覆盖 remedies 列表最多展示 4 项的截断行为
+  - 覆盖 suggestions 标签最多展示 6 项的截断行为
+  - 覆盖 remedies / suggestions 同时为空时的空态文案
+3. 已完成新增测试文件的错误检查，编辑器诊断无错误
+4. 已运行新增 2 个测试文件，全部通过
+
+本轮结果：
+- 紫微新拆出的顶部概览区与底部建议区都已具备首轮展示级测试
+- Workbench 紫微主线从“可拆分”进一步进入“可稳定回归”阶段
+- 后续继续收缩 WorkbenchView 时，已有更完整的测试护栏
+
+已验证：
+- vitest 运行 2 个测试文件，共 4 项用例，全部通过
+
+下一步建议：
+1. 继续检查 WorkbenchView 是否还有适合抽离的展示残留
+2. 或开始回到八字主线，挑选下一块低风险展示区继续拆分
+3. 如需进一步稳固，可补一轮包含新组件的 WorkbenchView 组合级断言
+
+2026-04-23（第十九轮）
+
+已继续执行：Workbench 八字命盘可视化区组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziChart.vue
+  - 抽离四柱主表
+  - 抽离日主强度条
+  - 抽离当前柱详情卡
+  - 抽离五行横条与五行雷达图
+  - 在子组件内收口该区域的表格、详情卡与响应式样式
+2. WorkbenchView.vue 已接入 WorkbenchBaziChart
+  - 父组件改为传递 pillars / activePillarKey / activePillarDetail / strength / wuxing / wuxingRadar 等现有计算结果
+  - 保留原有 selectPillar 行为不变
+3. 已清理 WorkbenchView.vue 中对应的八字命盘可视化样式残留
+4. 已完成错误检查、WorkbenchView 组合级测试与前端构建验证，全部通过
+
+本轮结果：
+- Workbench 八字主线中最大的一块展示区之一已完成组件化
+- WorkbenchView 继续向“数据编排 + 状态切换 + 子组件接线”收敛
+- 八字与紫微两条主线都已经进入更明确的模块边界阶段
+
+已验证：
+- WorkbenchView.vue 与 WorkbenchBaziChart.vue 编辑器诊断均无错误
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续拆八字时间轴相关展示区（大运时间轴 / 流年网格 / 流月热力）
+2. 或补 WorkbenchBaziChart 的展示级测试，进一步稳固四柱主表交互
+3. 再评估 WorkbenchView 中是否还有适合统一抽离的八字分析卡区
+
+2026-04-24（第四十四轮）
+
+已继续执行：ZiweiView 案例数据流包（保存命盘 / 案例库）
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue
+  - 新增“保存命盘”按钮
+  - 新增“案例库”按钮
+  - 新增 savedCaseId / savedCaseName 状态
+  - 新增保存命盘逻辑：
+    - 调用 /api/v1/cases 创建案例
+    - 调用 /api/v1/cases/:id/snapshots 创建紫微快照
+    - 静默调用 /api/v1/similarity/index 建立相似盘索引
+  - 新增案例库面板：
+    - 支持搜索
+    - 支持分页
+    - 支持载入最新快照
+    - 支持删除案例
+2. 对 ZiweiView 的结果流做了兼容处理
+  - 新排盘 / 演示盘 / 重置时会清空上一次已保存案例状态
+  - 从案例库载入时会回填表单字段并恢复命盘结果
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“保存命盘创建案例与快照”测试
+  - 新增“打开案例库并显示列表”测试
+  - 新增“从案例库载入最新快照”测试
+4. 修正 ZiweiView 测试夹具中的宫位地支数据
+  - 为 12 宫补齐唯一 branch
+  - 消除宫位网格映射导致的测试渲染异常
+
+本轮结果：
+- Ziwei 的“案例数据流包”已从文档拆解进入首个可用闭环
+- 目前 SPA 已可完成：排盘 → 保存命盘 → 进入案例库 → 载入历史命盘
+- 相似盘索引已在保存链路中自动补上，为下一轮“相似盘检索”做了数据准备
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，共 16 项用例，全部通过
+- ZiweiView.vue 与 ZiweiView.spec.ts 编辑器诊断均无错误
+
+下一步建议：
+1. 继续补 ZiweiView 的“相似盘检索”面板，承接 legacy 的 similarity search
+2. 然后回到“案例数据流包”补全案例详情 / 快照切换等增强项
+3. 稳定后再进入下一包：审核 / AI 草稿联动
+
+2026-04-24（第四十五轮）
+
+已继续执行：ZiweiView 案例数据流包（相似盘检索）
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue
+  - 新增“相似盘”按钮
+  - 新增相似盘检索面板
+  - 新增相似盘查询摘要、结果状态与结果列表渲染
+  - 接入 /api/v1/similarity/search
+  - 支持设置返回数量 top_k
+  - 支持“当前命盘入库”，直接调用 /api/v1/similarity/index
+2. 在相似盘结果展示中补齐最小阅读信息
+  - 相似度百分比
+  - 高 / 中 / 低相似标签
+  - 出生时间
+  - 来源标签
+  - 格局摘要
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“打开相似盘面板并触发检索”测试
+  - 新增“当前命盘单独加入相似盘索引库”测试
+
+本轮结果：
+- Ziwei 的“案例数据流包”已进一步补到“保存命盘 / 案例库 / 相似盘检索”三段闭环
+- 当前 SPA 已可完成：排盘 → 保存 → 案例库回看 → 相似盘检索
+- 后续可把重点从案例基础流转向“案例详情 / 快照增强”或直接切入“审核 / AI 草稿联动”
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，共 18 项用例，全部通过
+- ZiweiView.vue 与 ZiweiView.spec.ts 编辑器诊断均无错误
+
+下一步建议：
+1. 回到 Ziwei 的案例流，补“案例详情 / 快照切换 / 快照对比”增强项
+2. 或直接进入下一高优先级任务包：审核 / AI 草稿联动
+3. 若继续做低风险增量，优先补“快照切换 + 快照对比”会更顺滑
+
+2026-04-24（第四十六轮）
+
+已继续执行：ZiweiView 案例数据流包（快照切换 / 快照对比）
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue
+  - 新增“快照”按钮
+  - 新增快照历史面板
+  - 支持读取当前案例最近 10 条快照
+  - 支持从快照直接恢复命盘与表单输入
+  - 记录 currentSnapshotId，区分当前正在查看的快照
+2. 接入快照对比能力
+  - 接入 /api/v1/snapshots/diff
+  - 支持选择快照 A / B 进行对比
+  - 展示总变更数
+  - 展示 changed_fields 摘要
+  - 展示新增字段 / 移除字段摘要
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“打开快照面板并显示快照列表”测试
+  - 新增“对比两个快照并显示差异摘要”测试
+
+本轮结果：
+- Ziwei 的案例数据流已进一步补到“保存命盘 / 案例库 / 相似盘 / 快照历史 / 快照对比”
+- 当前 SPA 已具备一条更完整的命盘归档与回看链路
+- 低风险的案例流增强阶段可以暂时视为完成度较高
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，共 20 项用例，全部通过
+- ZiweiView.vue 与 ZiweiView.spec.ts 编辑器诊断均无错误
+
+下一步建议：
+1. 正式切入 Ziwei 下一高优先级任务包：审核 / AI 草稿联动
+2. 若仍想沿案例流继续做增强，可补快照删除 / 快照详情 / 差异高亮
+3. 但从当前收益看，优先进入“审核 / AI 草稿联动”更合适
+
+2026-04-23（第二十轮）
+
+已继续执行：Workbench 八字大运时间轴组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziDayunTimeline.vue
+  - 抽离当前大运焦点卡
+  - 抽离大运时间轴单元列表
+  - 抽离大运状态徽标、进度条与响应式样式
+2. WorkbenchView.vue 已接入 WorkbenchBaziDayunTimeline
+  - 父组件改为传递 dayunTimelineItems / activeDayunTimelineItem
+  - 保留原有 selectDayun 行为不变
+3. 已为新组件新增 frontend/src/components/workbench/__tests__/WorkbenchBaziDayunTimeline.spec.ts
+  - 覆盖当前大运详情渲染
+  - 覆盖时间轴单元点击后的 selectDayun 事件
+4. 已清理 WorkbenchView.vue 中对应的大运时间轴样式残留
+5. 在验证过程中补回了 WorkbenchView.vue 内缺失的五行颜色辅助函数与天干地支五行映射，确保颜色计算与测试运行稳定
+6. 已完成新增组件测试、WorkbenchView 组合级测试与前端构建验证，全部通过
+
+本轮结果：
+- 八字时间轴链路已开始组件化落地
+- WorkbenchView 在八字主线中继续收缩为编排层
+- 当前八字可继续按“时间轴 → 流年 → 流月”顺序渐进拆分
+
+已验证：
+- WorkbenchBaziDayunTimeline.spec.ts 共 2 项用例，全部通过
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续拆八字流年网格区
+2. 再拆八字流月热力区
+3. 或补 WorkbenchBaziChart 的展示级测试，进一步稳固八字主表交互
+
+2026-04-23（第二十一轮）
+
+已继续执行：Workbench 八字流年网格区组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziLiunianGrid.vue
+  - 抽离当前流年焦点卡
+  - 抽离流年分值 sparkline
+  - 抽离流年卡片网格
+  - 抽离“所处大运”联动信息与流年领域摘要展示
+2. WorkbenchView.vue 已接入 WorkbenchBaziLiunianGrid
+  - 父组件改为传递 liunianTimelineItems / activeLiunianTimelineItem / activeLiunianDayunInfo / liunianSparkline
+  - 保留原有 toggleLiunianDetail 交互不变
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziLiunianGrid.spec.ts
+  - 覆盖当前流年焦点内容渲染
+  - 覆盖流年卡片点击后的 selectYear 事件
+4. 已清理 WorkbenchView.vue 中对应的流年网格、sparkline、联动信息样式残留
+5. 在验证过程中顺手修复了 WorkbenchView.vue 顶部脚本区与样式区的历史残留问题，确保测试编译与构建恢复稳定
+6. 已完成新增组件测试、WorkbenchView 组合级测试与前端构建验证，全部通过
+
+本轮结果：
+- 八字时间轴链路中的“流年”部分已完成组件化
+- WorkbenchView 在八字主线中继续向编排层收敛
+- 当前八字主线剩余的下一块最自然目标是“流月热力区”
+
+已验证：
+- WorkbenchBaziLiunianGrid.spec.ts 共 2 项用例，全部通过
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续拆八字流月热力区
+2. 或补 WorkbenchBaziChart 的展示级测试
+3. 再评估八字解读区是否适合按卡组继续下沉为子组件
+
+2026-04-23（第二十二轮）
+
+已继续执行：Workbench 八字流月热力区组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziLiuyueHeatmap.vue
+  - 抽离流月热力标题、吉/平/凶图例与趋势折线
+  - 抽离 12 月热力网格与月份点击交互
+  - 抽离当前流月详情卡、关键月提示与免责声明展示
+2. WorkbenchView.vue 已接入 WorkbenchBaziLiuyueHeatmap
+  - 父组件改为传递 liuyueHeatmapData / liuyueTrendSvg / activeLiuyueDetail / linkedLiuyueMonths
+  - 保留原有 selectLiuyue 交互不变
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziLiuyueHeatmap.spec.ts
+  - 覆盖趋势图、热力网格与流月详情渲染
+  - 覆盖月份点击后的 selectMonth 事件
+4. 已清理 WorkbenchView.vue 中对应的流月热力样式残留
+5. 在构建验证过程中修复了 WorkbenchView.vue 样式区的历史残留闭合问题，确保 CSS 重新可解析
+6. 已完成新增组件测试、WorkbenchView 组合级测试与前端构建验证，全部通过
+
+本轮结果：
+- 八字时间轴链路中的“流月热力”部分已完成组件化
+- WorkbenchView 在八字主线中继续向编排层收敛
+- 当前八字主线的时间轴展示区已形成“大运 → 流年 → 流月”三段式组件边界
+
+已验证：
+- WorkbenchBaziLiuyueHeatmap.spec.ts 共 2 项用例，全部通过
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 补 WorkbenchBaziChart 的展示级测试，完善八字主线测试覆盖
+2. 评估八字解读区是否适合继续拆成卡组子组件
+3. 继续清理 WorkbenchView.vue 中未使用的历史类型与计算属性
+
+2026-04-23（第二十三轮）
+
+已继续执行：Workbench 八字命盘可视化区测试补强
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziChart.spec.ts
+  - 覆盖四柱主表、日主强度条、当前柱详情卡与五行分布渲染
+  - 覆盖五行雷达图显示
+  - 覆盖柱位点击后的 selectPillar 事件
+  - 覆盖缺少详情卡与雷达图时的降级展示
+2. 已完成新增组件测试与 WorkbenchView 组合级测试，全部通过
+3. 已完成前端构建验证，build 继续通过
+
+本轮结果：
+- WorkbenchBaziChart 的展示级测试已补齐，八字主线测试覆盖继续完善
+- 当前 Workbench 八字主线已覆盖“概览 / 命盘主表 / 大运 / 流年 / 流月”主要展示组件
+- 后续继续拆八字解读区时，已有更稳固的回归护栏
+
+已验证：
+- WorkbenchBaziChart.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 前端 build 继续通过
+
+2026-04-24（第五十一轮）
+
+已继续执行：ZiweiView 收口增强（词汇 / 合盘 / 风水可视化）
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的词汇工具面板
+  - 新增“命盘联想”推荐词条
+  - 新增词条快捷复制
+  - 新增基于当前结果集的相关词条跳转
+  - 优化空态文案，未命中时给出更明确提示
+2. 增强多人合盘展示
+  - 新增最佳组合摘要条
+  - 为缘分矩阵补充分档高亮
+  - 为最佳配对单元格增加强调边框
+  - 为配对卡增加等级色彩映射
+3. 增强风水布局评估展示
+  - 新增九宫格总览板
+  - 将各方位房间、吉凶标签与评分映射到可视化格子
+  - 保留原有列表说明，形成“总览 + 细项”双层展示
+4. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增词汇复制与相关词条跳转测试
+  - 补强多人合盘最佳组合高亮断言
+  - 补强风水九宫格结果渲染断言
+
+本轮结果：
+- Ziwei 已从“工具面板可用”进入“阅读与操作体验增强”阶段
+- 词汇、合盘、风水三个收口项已完成一轮可见度较高的前端增强
+- 后续可继续把重点放在统一提示反馈与更细的运营流 polish
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 继续统一 Ziwei 各浮层的成功提示、空态和动作文案
+2. 评估审核 / AI 草稿面板是否补复制、批量处理等轻量增强
+3. 若继续打磨体验，可补多人合盘矩阵 hover 提示与风水图例说明
+
+2026-04-24（第五十二轮）
+
+已继续执行：ZiweiView 浮层反馈与文案统一
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue
+  - 新增统一浮层反馈横幅 `overlayFeedback`
+  - 为审核、AI 草稿、运营、词汇、多人合盘、风水面板补统一成功/提示反馈
+  - 将词汇复制从 `alert` 改为面板内反馈
+2. 统一多处动作引导文案
+  - 为审核、AI 草稿、运营、批量、词汇、多人合盘、风水面板增加操作提示条
+  - 统一“先做什么、再做什么”的动作顺序说明
+3. 统一多处空态文案
+  - 审核记录、历史草稿、实验列表、多人合盘未计算态等空态统一改为带动作建议的表达
+4. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 增加词汇复制后的浮层反馈断言
+  - 增加多人合盘提示文案断言
+
+本轮结果：
+- Ziwei 各主要工具浮层已具备更一致的反馈方式与引导语气
+- 成功操作不再只依赖浏览器弹窗，面板内可直接看到反馈
+- 当前体验已从“功能可用”进一步收敛到“操作路径更清晰”阶段
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 继续补 AI 草稿复制、reviewer notes 与批量审核等轻量增强
+2. 给多人合盘矩阵增加 hover 说明和颜色图例
+3. 给风水九宫格补方向图例与推荐房型说明
+
+2026-04-24（第五十三轮）
+
+已继续执行：ZiweiView AI 草稿面板增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的 AI 草稿面板
+  - 新增“复制草稿”按钮
+  - 新增 reviewer notes 输入区
+  - 新增“保存备注”动作
+  - 在打开历史草稿、生成草稿、流式保存后自动同步 reviewer notes
+  - 草稿通过 / 驳回时会带上当前 reviewer notes 一并提交
+2. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“复制当前草稿并保存 reviewer notes”测试
+3. 保持现有统一浮层反馈风格
+  - 复制草稿与保存备注均复用面板内反馈横幅
+
+本轮结果：
+- AI 草稿面板已从“只生成/审核”增强为“可复制、可记录审核依据”的可操作状态
+- reviewer 在通过或驳回前可先沉淀备注，减少审核链路信息丢失
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 继续补多人合盘矩阵 hover 说明与图例
+2. 给风水九宫格增加方向图例与推荐房型提示
+3. 评估审核面板是否需要批量处理入口
+
+2026-04-24（第五十四轮）
+
+已继续执行：ZiweiView 合盘 / 风水说明增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的多人合盘面板
+  - 新增矩阵分档图例说明
+  - 为各矩阵单元格补 `title` 提示文案
+  - 将“高契合 / 良好 / 中等 / 观察”四档解释显式展示在面板内
+2. 扩展 frontend/src/views/ZiweiView.vue 的风水面板
+  - 新增四吉方 / 四凶方的方位图例区
+  - 新增布局评估后的“推荐房型”摘要
+  - 将高分房型建议以 chip 形式集中展示，降低用户逐格阅读成本
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充多人合盘图例断言
+  - 补充风水方位图例断言
+  - 补充风水推荐房型摘要断言
+
+本轮结果：
+- 多人合盘矩阵已从“只看数字”增强为“数字 + 图例 + 悬停解释”的可读状态
+- 风水布局评估已从“逐格细项”增强为“图例 + 推荐摘要 + 九宫格”的三层阅读结构
+- `ziwei` 剩余差异继续向细节说明层收敛
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 评估审核面板是否需要批量处理入口
+2. 若继续打磨体验，可为多人合盘补当前最佳组合的行动建议文案
+3. 若继续打磨风水面板，可补“推荐房型优先级”与“避开房型”双向提示
+
+2026-04-24（第五十五轮）
+
+已继续执行：ZiweiView 合盘 / 风水建议增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的多人合盘面板
+  - 基于最佳组合分数新增“行动建议”区
+  - 按高契合 / 良好 / 中等 / 观察四档给出不同协作建议
+  - 让最佳组合不只停留在“识别出来”，还能直接指导后续安排
+2. 扩展 frontend/src/views/ZiweiView.vue 的风水布局评估
+  - 新增“避开房型”摘要
+  - 从低分结果中提炼不宜放置的房型方向
+  - 与“推荐房型”形成双向提示，减少用户只看高分不看风险的问题
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充多人合盘行动建议断言
+  - 补充风水避开房型摘要断言
+
+本轮结果：
+- 多人合盘已从“看矩阵”进一步增强为“看矩阵 + 给安排建议”
+- 风水布局结果已从“推荐摘要”增强为“推荐 + 避开”双向决策提示
+- `ziwei` 剩余差异继续收口到更细粒度的运营增强层
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续推进 Ziwei，可开始评估审核面板的批量处理入口
+2. 若继续打磨风水面板，可补推荐优先级排序说明与图例
+3. 若准备切换主线，可回到入口治理 / legacy 下线条件复盘
+
+2026-04-24（第五十六轮）
+
+已继续执行：ZiweiView 审核面板批量处理入口
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核面板
+  - 新增本页全选 / 清空选择
+  - 新增批量备注输入区
+  - 新增批量通过 / 批量修订 / 批量拒绝按钮
+  - 支持在审核列表中勾选多条记录后统一处理
+2. 接入 frontend/src/api/admin.ts 中现有的 `bulkReviewAction()`
+  - 直接复用后端 reviews 批量能力
+  - 批量动作执行后自动刷新列表与统计
+  - 成功后复用统一浮层反馈横幅
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“可批量通过审核记录”测试
+  - 覆盖多选、批量备注、批量接口调用与成功提示
+
+本轮结果：
+- 审核面板已从“单条处理”增强为“单条 + 批量”双轨操作
+- Ziwei 的审核流进一步贴近运营侧真实处理场景
+- `ziwei` 剩余能力继续向高收益低风险的运营增强项收口
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续补运营能力，可评估审核分配 / 我的队列入口是否需要进入 Ziwei
+2. 若准备收口 Ziwei，可开始回到 legacy 下线条件复盘
+3. 若继续做体验增强，可统一审核列表勾选态与状态徽标样式
+
+2026-04-24（第五十七轮）
+
+已继续执行：ZiweiView 审核队列 / 我的队列增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核面板模式切换
+  - 新增“全部 / 待审队列 / 我的队列”三种视图
+  - 待审队列直接复用后端 FIFO queue
+  - 我的队列直接复用后端 my-queue 能力
+2. 增加“领取当前”动作
+  - 对 pending 且未归属当前 reviewer 的审核单显示领取按钮
+  - 领取后写回 reviewer，并保留原有单条处理路径
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“可切到待审队列并领取当前审核单”测试
+  - 覆盖队列切换、领取动作与我的队列加载
+
+本轮结果：
+- 审核面板已从“列表 + 批量处理”进一步增强为“列表 / 公共队列 / 我的队列”三层工作流
+- Ziwei 审核能力更接近实际运营分单、认领、处理的使用场景
+- 后续若继续扩展，可直接在此基础上做 reviewer 归属和队列分配策略
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做审核增强，可补 reviewer 快速切换 / 指派下拉
+2. 若继续做体验收口，可统一审核状态徽标、领取态和批量勾选的视觉层级
+3. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+
+2026-04-24（第五十八轮）
+
+已继续执行：ZiweiView 审核 reviewer 快速指派增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核详情区
+  - 新增 reviewer 快速指派区
+  - 新增预设 reviewer chip
+  - 新增自定义 reviewer 输入框与“指派”按钮
+2. 复用现有 assignReview 能力
+  - 支持把当前 pending 审核单直接指派给指定 reviewer
+  - 指派后同步更新当前详情与反馈横幅
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“可快速指派给指定 reviewer”测试
+  - 覆盖输入 reviewer、调用指派接口与成功反馈
+
+本轮结果：
+- 审核面板已从“领取当前”增强为“领取 + 定向指派”双路径
+- Ziwei 审核流进一步具备轻量分单能力
+- 后续若继续增强，可再补 reviewer 来源、权限和视觉层级统一
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做体验收口，可统一审核状态徽标、领取态和批量勾选的视觉层级
+2. 若继续做运营增强，可补 reviewer 最近使用记录或候选来源
+3. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+
+2026-04-24（第五十九轮）
+
+已继续执行：ZiweiView 审核状态徽标与归属视觉层级统一
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核列表样式表达
+  - 为待审 / 通过 / 拒绝 / 修订中补充状态徽标样式
+  - 为待领取 / 已归我 / 已指派补充归属标签样式
+  - 为批量勾选态补充独立高亮边框
+2. 扩展审核详情区状态展示
+  - 详情头部改为状态徽标 + 归属标签组合
+  - 与左侧审核列表形成统一口径
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充状态徽标类名断言
+  - 补充批量勾选态断言
+  - 补充领取后“已归我”视觉态断言
+
+本轮结果：
+- 审核面板已从“功能齐全”进一步收口到“状态清晰、归属清晰、选择态清晰”
+- 审核列表的视觉层级更贴近运营处理时的快速扫读需求
+- 后续若继续增强，可继续在 reviewer 来源和最近使用记录上补体验
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可补 reviewer 最近使用记录或候选来源
+2. 若继续做体验收口，可评估审核历史区是否需要 change_type / 操作类型徽标
+3. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+
+2026-04-24（第六十轮）
+
+已继续执行：ZiweiView 审核历史操作类型徽标增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核历史区
+  - 为创建 / 状态更新 / 批量操作 / 指派 / 删除补充操作类型徽标
+  - 历史列表改为“时间 + 操作人 + 操作类型”组合展示
+2. 统一历史区视觉表达
+  - 让审核历史与列表/详情中的状态徽标体系保持一致
+  - 提升运营侧查看变更轨迹时的快速扫读效率
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充历史操作类型徽标文案与类名断言
+
+本轮结果：
+- 审核面板已从“列表、详情、分配、批量”进一步收口到“历史轨迹也可快速辨识”
+- Ziwei 审核流的操作闭环更完整，后续继续做 reviewer 候选来源会更顺滑
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可补 reviewer 最近使用记录或候选来源
+2. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+3. 若继续收口体验，可评估审核统计区是否需要加入“当前视图数量”提示
+
+2026-04-24（第六十一轮）
+
+已继续执行：ZiweiView reviewer 最近使用记录与当前视图数量增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核统计区
+  - 新增“当前视图数量”提示
+  - 让全部 / 待审队列 / 我的队列切换后更容易感知当前列表规模
+2. 扩展 reviewer 指派体验
+  - 新增最近使用 reviewer 本地缓存
+  - 打开审核面板时自动读取最近使用记录
+  - 指派成功后自动写回最近 reviewer 候选
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充当前视图数量断言
+  - 补充 reviewer 最近使用记录写入与读取断言
+
+本轮结果：
+- 审核面板已补齐 reviewer 候选来源的第一层能力
+- 当前视图规模在切换不同队列时更直观
+- 后续若继续增强，可进一步接入服务端 reviewer 列表或最近使用来源
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若继续做体验收口，可评估审核统计区是否需要加入当前模式标题或空态分流文案
+3. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+
+2026-04-24（第六十二轮）
+
+已继续执行：ZiweiView 审核模式标题与空态分流增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核面板顶部信息
+  - 新增当前模式标题（全部审核记录 / 待审队列 / 我的队列）
+  - 新增当前模式下的条目数量提示
+2. 细化空态文案
+  - 全部记录为空时提示提交审核单
+  - 待审队列为空时提示稍后刷新或提交新单
+  - 我的队列为空时提示先从待审队列领取
+3. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充模式标题断言
+  - 补充我的队列空态分流文案断言
+
+本轮结果：
+- 审核面板在不同模式下的上下文更清晰
+- 空态提示已从统一文案升级为按场景分流
+- 运营侧在切换不同队列时更容易理解当前页面意图和下一步动作
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+3. 若继续收口体验，可评估批量区是否需要按模式自动禁用或调整提示
+
+2026-04-24（第六十三轮）
+
+已继续执行：ZiweiView 审核批量区模式感知增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的批量处理区
+  - 在待审队列模式下自动禁用批量处理按钮与备注输入
+  - 新增按模式变化的批量操作提示文案
+  - 保持全部记录 / 我的队列仍可执行批量处理
+2. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“待审队列模式下禁用批量处理并显示提示”测试
+  - 覆盖按钮禁用、输入框禁用和提示文案
+
+本轮结果：
+- 审核面板在不同模式下的动作约束更清晰
+- 待审队列不再误导用户直接对未领取任务执行批量处理
+- 我的队列与全部记录仍保留高效率批处理路径
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+3. 若继续收口体验，可评估批量区在我的队列模式下是否需要补“仅处理已归我”强化提示
+
+2026-04-24（第六十四轮）
+
+已继续执行：ZiweiView 我的队列批量处理强化提示
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的批量区提示
+  - 在我的队列模式下补充“仅处理已归我审核单”的主提示
+  - 增加一层绿色强化提示，提醒优先处理已归我记录
+2. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“我的队列模式下显示仅处理已归我记录的强化提示”测试
+  - 覆盖普通提示与强化提示两层文案
+
+本轮结果：
+- 审核批量区在我的队列模式下的操作边界更加明确
+- 进一步降低运营侧切模式后误解批量范围的风险
+- 当前审核面板已接近阶段性收口，只剩 reviewer 候选来源接服务端这类增强项
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+3. 若继续做轻量收口，可评估审核统计区是否需要加“最后刷新时间”提示
+
+2026-04-24（第六十五轮）
+
+已继续执行：ZiweiView 审核面板最后刷新时间增强
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核面板顶部信息
+  - 新增“最后刷新”时间显示
+  - 每次加载全部记录 / 待审队列 / 我的队列后自动更新时间
+2. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 补充“最后刷新”文案断言
+
+本轮结果：
+- 审核面板顶部信息已进一步完整，运营侧可直接感知当前列表的新鲜度
+- 该增强属于轻量收口项，未改变现有审核动作路径
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+3. 若继续做轻量收口，可评估审核列表是否需要“手动刷新”按钮
+
+2026-04-24（第六十六轮）
+
+已继续执行：ZiweiView 审核面板手动刷新按钮
+
+本轮已完成：
+1. 扩展 frontend/src/views/ZiweiView.vue 的审核面板工具栏
+  - 新增“刷新”按钮
+  - 支持手动刷新当前模式下的审核列表
+  - 刷新过程中复用现有加载状态，避免重复触发
+2. 扩展 frontend/src/views/__tests__/ZiweiView.spec.ts
+  - 新增“可手动刷新当前审核视图”测试
+  - 覆盖刷新按钮触发二次加载与列表内容更新
+
+本轮结果：
+- 审核面板已补齐轻量收口阶段里最自然的最后一个操作按钮
+- 当前模式、刷新时间、刷新动作三者已经形成完整闭环
+- 这条审核面板主线已非常接近阶段性完成，后续主要是服务端 reviewer 候选来源类增强项
+
+已验证：
+- vitest 运行 frontend/src/views/__tests__/ZiweiView.spec.ts，回归通过
+
+下一步建议：
+1. 若继续做运营增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若准备切换主线，可回到 legacy 下线条件与文档口径复盘
+3. 若继续做轻量 polish，可评估刷新按钮是否需要旋转图标或更细的 loading 文案
+
+2026-04-24（第六十七轮）
+
+已继续执行：legacy / SPA 下线评估口径整理
+
+本轮已完成：
+1. 更新 docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 将 `ziwei.html` 的迁移状态从“仍大量缺口”修正为“进入条件下线评估阶段”
+  - 明确 `bazi.html`、`admin.html` 已接近可评估下线
+  - 补充 `ziwei.html` 的下线评估条件
+  - 将当前真正剩余缺口收敛到 reviewer 候选来源、`batch.html` 去向与运营回归
+2. 更新 README.md
+  - 修正旧的“verify.html 承载紫微 Tab20”口径
+  - 统一为“SPA 主入口 + legacy 兼容页共同承载”的现状表述
+
+本轮结果：
+- 主线已从功能补洞切到“文档口径与下线条件收口”
+- legacy / SPA 的当前状态描述与代码现状更一致
+- 后续若继续推进，可直接围绕 reviewer 服务端候选来源或 `batch.html` 去向做决策
+
+已验证：
+- 本轮为文档口径整理，无需新增前端测试
+
+下一步建议：
+1. 若继续做产品能力增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若继续做架构收口，可评估 `batch.html` 是迁入 SPA 还是长期保留独立工具页
+3. 若准备阶段总结，可基于迁移矩阵整理一版“哪些 legacy 已接近可下线”的清单
+
+2026-04-24（第六十八轮）
+
+已继续执行：`batch.html` 去向评估
+
+本轮已完成：
+1. 复核 `static/batch.html` 的实际职责
+  - 确认该页面面向“CSV 批量核验 / 八字 verify”
+  - 核心接口仍是 `/api/v2/verify`
+  - 输出是逐行核验结果表与导出 CSV
+2. 对照 `frontend/src/views/ZiweiView.vue`
+  - 确认 SPA 中已有的是“紫微批量排盘”面板
+  - 核心接口为 `/api/v1/ziwei/batch`
+  - 输出是 ZIP 下载
+  - 两者虽然都叫“批量”，但不是同一类业务能力
+3. 更新 docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 明确 `batch.html` 当前应视为独立工具页，而不是 `ZiweiView` 的遗留缺口
+  - 明确短期建议：继续保留独立 legacy 工具页
+  - 明确长期方向：如需迁移，应新建独立 SPA 工具页，而不是并入 Ziwei 主工作台
+
+本轮结果：
+- legacy / SPA 主线的剩余判断进一步收敛
+- `batch.html` 已从“待迁移缺口”调整为“独立工具页去向待决”
+- 当前最合理策略是：继续保留 `batch.html`，避免为统一而错误并页
+
+已验证：
+- 本轮为文档与架构判断整理，无需新增前端测试
+
+下一步建议：
+1. 若继续做产品能力增强，可评估 reviewer 候选来源是否接入服务端或用户列表
+2. 若继续做架构收口，可开始整理“接近可下线的 legacy 页面清单”
+3. 若准备阶段总结，可基于迁移矩阵输出一版整体收口摘要
+
+2026-04-24（第六十九轮）
+
+已继续执行：legacy 页面下线 / 保留清单收口
+
+本轮已完成：
+1. 更新 docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 新增“下线 / 保留清单（2026-04-24）”汇总表
+  - 将 `bazi.html`、`admin.html`、`ziwei.html`、`batch.html` 的当前判定、阻塞条件与下一步动作集中列清
+  - 明确当前收口结论与推荐执行顺序，避免后续继续按过时缺口推进
+2. 更新 docs/README-DELIVERY.md
+  - 在交付入口文档中为各 legacy 页面补充当前状态标签
+  - 统一“接近可评估下线 / 条件下线评估 / 独立保留”的口径
+
+本轮结果：
+- legacy / SPA 主线已从“逐页描述”进一步收口为“可执行的页面去向清单”
+- 后续如果继续推进，可直接按页面状态分流：
+  - `bazi.html` / `admin.html` 先做人工回归与 legacy 入口清点
+  - `ziwei.html` 先补 reviewer 服务端候选来源
+  - `batch.html` 继续独立保留
+
+已验证：
+- 本轮为文档收口整理，无需新增前端测试
+
+下一步建议：
+1. 先整理 `bazi.html` / `admin.html` 的人工回归清单与 legacy 入口清点项
+2. 再评估 `ziwei.html` 的 reviewer 候选来源服务端化方案
+3. 如需阶段汇报，可直接基于新的“下线 / 保留清单”输出摘要
+
+2026-04-24（第七十轮）
+
+已继续执行：`bazi.html` / `admin.html` 人工回归清单与 legacy 入口清点
+
+本轮已完成：
+1. 更新 docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 新增 `bazi.html` → `BaziView` 人工回归清单，覆盖基础排盘、保存→AI→原始数据链路、周边联动与通过标准
+  - 新增 `admin.html` → `AdminView` 人工回归清单，覆盖核心后台页签、新补齐模块、运营常用路径与通过标准
+  - 新增 `bazi.html` / `admin.html` 的 legacy 入口清点表，明确文档引用与旧静态导航残留位置
+2. 更新 README.md
+  - 将 `/static/ziwei.html`、`/static/bazi.html`、`/static/admin.html`、`/static/batch.html` 的状态标签与迁移矩阵口径对齐
+
+本轮结果：
+- `bazi.html` / `admin.html` 已从“接近可下线”的判断，进一步落到“可直接执行的人工回归与入口治理清单”
+- 当前两页的主要剩余风险已更明确地收敛为：
+  - 功能人工回归是否通过
+  - legacy 文档入口与静态导航是否完成改写或重定向
+
+已验证：
+- 本轮为文档与入口清点整理，无需新增前端测试
+
+下一步建议：
+1. 继续为 `bazi.html` / `admin.html` 产出一版“下线前改跳转 / 重定向清单”
+2. 或切回 `ziwei.html`，开始 reviewer 候选来源服务端化方案盘点
+3. 如需阶段汇报，可直接引用本轮新增的人工回归清单
+
+2026-04-24（第七十一轮）
+
+已继续执行：`bazi.html` / `admin.html` 下线前改跳转 / 重定向清单整理
+
+本轮已完成：
+1. 更新 docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 新增“下线前改跳转 / 重定向清单”章节
+  - 将待处理项拆为：服务端路由层、静态页面导航层、文档与交付口径层
+  - 明确 `app/static_routes_setup.py`、`static/ziwei.html`、`static/batch.html`、`README.md`、`docs/api.md` 等后续需要收口的位置
+  - 补充落地执行顺序与完成判定，便于后续直接进入实施阶段
+
+本轮结果：
+- `bazi.html` / `admin.html` 的下线准备已从“回归 + 入口清点”进一步收敛到“具体哪些入口要改、哪些路由要加、哪些文档要改”
+- 后续若进入真正实施阶段，可按清单逐项修改，而不需要再次做大范围排查
+
+已验证：
+- 本轮为文档收口与实施清单整理，无需新增前端测试
+
+下一步建议：
+1. 若继续按下线主线推进，可开始实际修改 `static/ziwei.html` / `static/batch.html` 导航到 SPA 入口
+2. 若希望先完成服务端兼容，可先在 `app/static_routes_setup.py` 设计 `/bazi`、`/admin` 的重定向策略
+3. 若切回 Ziwei 主线，则开始 reviewer 候选来源服务端化方案盘点
+
+2026-04-24（第七十二轮）
+
+已继续执行：`static/ziwei.html` / `static/batch.html` 导航切换到 SPA 入口
+
+本轮已完成：
+1. 更新 `static/ziwei.html`
+  - 将顶部导航中的“八字排盘”从 `/static/bazi.html` 改到 `/static/app/bazi`
+  - 将顶部导航中的“管理后台”从 `/static/admin.html` 改到 `/static/app/admin`
+2. 更新 `static/batch.html`
+  - 将顶部导航中的“八字排盘”从 `/static/bazi.html` 改到 `/static/app/bazi`
+  - 将顶部导航中的“管理后台”从 `/static/admin.html` 改到 `/static/app/admin`
+
+本轮结果：
+- 已先清掉两个仍会被继续使用的 legacy 页面中的显性旧入口残留
+- 后续用户从 `ziwei.html` 与 `batch.html` 跳转到八字/管理后台时，会优先进入 SPA，而不是回到待下线 legacy 页
+
+已验证：
+- 本轮为静态导航链接调整，无需新增前端测试
+
+下一步建议：
+1. 继续在 `app/static_routes_setup.py` 中补 `/bazi`、`/admin` 的兼容重定向策略
+2. 再评估 `static/bazi.html` / `static/admin.html` 自身是保留过渡跳转页，还是直接退役
+3. 若切回 Ziwei 主线，则开始 reviewer 候选来源服务端化方案盘点
+
+2026-04-24（第七十三轮）
+
+已继续执行：`/bazi`、`/admin` 兼容重定向落地
+
+本轮已完成：
+1. 更新 `app/static_routes_setup.py`
+  - 新增 `/bazi` 路由
+  - 当 SPA 存在时，301 跳转到 `/static/app/bazi`
+  - 当 SPA 不存在时，301 回退到 `/static/bazi.html`
+  - 新增 `/admin` 路由
+  - 当 SPA 存在时，301 跳转到 `/static/app/admin`
+  - 当 SPA 不存在时，301 回退到 `/static/admin.html`
+
+本轮结果：
+- `bazi` / `admin` 已具备与 `/verify` 类似的兼容入口语义
+- 后续无论用户从短路径还是历史收藏进入，都将优先落到 SPA，而不是直接依赖 legacy 页
+- 下线主线已从“静态导航改写”进一步推进到“服务端兼容入口落地”
+
+已验证：
+- 已完成路由文件修改，待继续统一文档口径或决定 `static/bazi.html` / `static/admin.html` 的退役形态
+
+下一步建议：
+1. 更新 `README.md` / `docs/api.md` / `docs/README-DELIVERY.md`，补充 `/bazi`、`/admin` 兼容入口口径
+2. 再决定 `static/bazi.html` / `static/admin.html` 是保留过渡跳转页还是直接退役
+3. 若切回 Ziwei 主线，则开始 reviewer 候选来源服务端化方案盘点
+
+2026-04-24（第七十四轮）
+
+已继续执行：`/bazi`、`/admin` 兼容入口文档口径统一
+
+本轮已完成：
+1. 更新 `README.md`
+  - 在 Pages 列表中补充 `/bazi`、`/admin` 两个兼容别名入口
+  - 明确其行为为“SPA 优先，legacy 回退”
+2. 更新 `docs/api.md`
+  - 在 Overview 中补充 bazi / admin 兼容别名入口说明
+  - 统一 API 文档与服务端路由的实际行为口径
+3. 更新 `docs/README-DELIVERY.md`
+  - 在 UI 入口导航中补充八字与管理后台的兼容入口说明
+  - 使交付文档与 README / 路由行为保持一致
+
+本轮结果：
+- `/verify`、`/bazi`、`/admin` 三类兼容入口已在代码与文档层形成统一描述
+- 后续若继续推进下线主线，重点可转向 `static/bazi.html` / `static/admin.html` 的退役形态，而不必再补入口文档
+
+已验证：
+- 本轮为文档口径统一，无需新增前端测试
+
+下一步建议：
+1. 开始决定 `static/bazi.html` / `static/admin.html` 是保留过渡跳转页还是直接退役
+2. 若走稳妥路线，可先将两页改成轻量跳转页，再观察一轮
+3. 若切回 Ziwei 主线，则开始 reviewer 候选来源服务端化方案盘点
+
+2026-04-24（第七十五轮）
+
+已继续执行：`static/bazi.html` / `static/admin.html` 轻量兼容跳转页落地
+
+本轮已完成：
+1. 更新 `static/bazi.html`
+  - 在页面头部加入 SPA 可用性探测脚本
+  - 默认优先跳转到 `/static/app/bazi`
+  - 支持通过 `?legacy=1` 保持停留在旧版八字页
+  - 增加顶部兼容提示条，明确当前页为兼容入口
+2. 更新 `static/admin.html`
+  - 在页面头部加入 SPA 可用性探测脚本
+  - 默认优先跳转到 `/static/app/admin`
+  - 支持通过 `?legacy=1` 保持停留在旧版管理页
+  - 增加顶部兼容提示条，明确当前页为兼容入口
+3. 更新 README / docs/README-DELIVERY.md / docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 将 `static/bazi.html`、`static/admin.html` 的状态从“接近可评估下线”进一步更新为“兼容跳转观察阶段”
+  - 明确 legacy 保留方式与 `?legacy=1` 使用方式
+4. 更新 `docs/api.md`
+  - 将原先笼统的 Legacy pages 说明细化为 Compatibility pages 与 Retained legacy pages
+  - 使 API 文档对 `bazi.html` / `admin.html` 的当前角色描述与实际行为一致
+
+本轮结果：
+- `bazi.html` / `admin.html` 已不再是默认入口，而是“SPA 优先、legacy 可显式保留”的兼容页
+- 这为后续真正下线提供了一个更低风险的观察阶段，无需立即硬删除旧页
+
+已验证：
+- 本轮为静态兼容页与文档口径调整，无需新增前端测试
+
+下一步建议：
+1. 观察一轮后，再决定是否彻底退役 `static/bazi.html` / `static/admin.html`
+2. 若继续推进文档收口，可把 `docs/api.md` 中 legacy 页面说明同步细化到 compat / retained 两类
+3. 若切回 Ziwei 主线，则开始 reviewer 候选来源服务端化方案盘点
+
+2026-04-24（第七十六轮）
+
+已继续执行：Ziwei 审核员候选来源服务端化首轮落地
+
+本轮已完成：
+1. 更新 `routers/reviews.py` / `app/schemas/review.py`
+  - 新增 `GET /api/v1/reviews/assignees`
+  - 从服务端返回当前登录用户与可选审核员列表
+  - 候选源改为数据库中的 active 用户，而不再只依赖前端本地 recent
+2. 更新 `frontend/src/api/admin.ts`
+  - 新增审核员候选类型定义与 `getReviewAssignees()`
+3. 更新 `frontend/src/views/ZiweiView.vue`
+  - 审核面板加载时同步拉取服务端候选
+  - 指派快捷候选改为“服务端候选 + 当前 reviewer + 本地 recent”混合源
+  - 默认领取 / 指派人优先使用登录用户名或服务端标记的当前用户
+4. 更新 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 为新接口补 mock
+  - 新增“读取服务端候选并用于默认领取人”的测试覆盖
+
+本轮结果：
+- `ZiweiView` 的审核员候选来源已从“纯本地 recent”推进到“服务端用户列表优先，本地 recent 兜底”
+- 这使 `ziwei.html` 下线评估中的关键阻塞项得到第一轮实质推进
+
+已验证：
+- 已完成前后端代码修改；下一步建议跑 `ZiweiView.spec.ts` 做定向回归
+
+下一步建议：
+1. 运行 `frontend/src/views/__tests__/ZiweiView.spec.ts`，确认审核面板新增逻辑无回归
+2. 若继续收口，可在审核员候选接口中进一步按角色过滤或补展示标签
+3. 若继续下线主线，可把迁移矩阵中的 reviewer 阻塞项状态同步更新为“已进入服务端候选阶段”
+
+2026-04-24（第七十七轮）
+
+已继续执行：Ziwei 审核员候选服务端化回归验证与迁移矩阵同步
+
+本轮已完成：
+1. 运行前端定向测试
+  - 执行 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 结果 42/42 通过
+  - 新增的“服务端候选 → 默认领取人”场景通过
+2. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 将 reviewer 阻塞项从“仍主要依赖本地 recent”修正为“已进入服务端 active 用户列表阶段”
+  - 将后续动作收敛为“按角色继续过滤 / 展示策略收口”
+
+本轮结果：
+- Ziwei 审核面板的新候选来源逻辑已通过前端回归验证
+- `ziwei.html` 下线评估中的 reviewer 阻塞项已从“是否服务端化”推进到“服务端化后二次收口”阶段
+
+已验证：
+- `ZiweiView.spec.ts` 42/42 通过
+
+下一步建议：
+1. 若继续做 Ziwei 收口，可为审核员候选补角色过滤、排序或标签展示
+2. 若继续做下线主线，可基于当前 reviewer 进展重写一版 `ziwei.html` 下线条件清单
+3. 若准备切换主题，可回到 Workbench 或其它结构优化主线
+
+2026-04-25（第七十八轮）
+
+已继续执行：Ziwei 审核员候选的角色过滤 / 排序 / 标签展示
+
+本轮已完成：
+1. 更新 `routers/reviews.py`
+  - 为审核员候选增加角色优先级与过滤逻辑
+  - 当前用户、管理员与 reviewer / qa / ops / editor / owner 等角色优先进入候选列表
+  - 返回顺序改为“当前用户优先 → 管理/审核角色优先 → 用户名排序”
+2. 更新 `frontend/src/views/ZiweiView.vue`
+  - 前端继续对候选做二次过滤与排序兜底
+  - 快速指派区从单纯用户名列表升级为“用户名 + 标签”展示
+  - 当前用户、管理员、编辑、审核、QA、运营、最近、预设等来源会显示不同标签
+3. 更新 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 新增断言：非审核角色不会出现在快捷候选中
+  - 新增断言：服务端候选会显示角色 / 当前标签
+
+本轮结果：
+- 审核员候选已从“仅能用”进一步提升到“可理解、可辨识、可控”的阶段
+- reviewer 服务端化主线已进入体验收口，而不再只是接口可用性阶段
+
+已验证：
+- 已完成代码修改；建议继续运行 `ZiweiView.spec.ts` 进行一次定向回归
+
+下一步建议：
+1. 继续跑 `ZiweiView.spec.ts`，确认角色过滤与标签展示无回归
+2. 若继续做 Ziwei 收口，可同步把迁移矩阵中的 reviewer 阶段描述更新为“体验收口阶段”
+3. 若准备切换主线，可开始重写 `ziwei.html` 下线条件清单
+
+补充验证：
+- 已运行 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+- 结果 42 / 42 全部通过
+
+补充收口：
+- 已同步更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+- reviewer 阶段描述已从“继续服务端化 / 角色过滤”进一步收敛为“体验收口阶段”
+
+2026-04-25（第七十九轮）
+
+已继续执行：重写 `ziwei.html` 下线条件清单
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 保留原有“下线评估条件”段落
+  - 追加“`ziwei.html` 下线条件清单（2026-04-25 重写）”
+  - 将条件拆为可核对表格：功能承接、reviewer 候选、`batch.html` 脱钩、人工回归、入口文档口径、退役形态决策
+  - 明确当前判断：`ziwei.html` 已进入“下线前回归 + 退役形态决策”阶段
+
+本轮结果：
+- `ziwei.html` 的下线判断已从抽象条件，收敛为可逐项核对的执行清单
+- 后续继续推进时，不再需要反复回忆“还差什么”，而是可直接围绕回归清单与退役策略展开
+
+已验证：
+- 本轮为文档收口整理，无需新增前端测试
+
+下一步建议：
+1. 继续为 `ziwei.html` 产出一版运营场景人工回归清单
+2. 或直接评估 `ziwei.html` 是否转为兼容跳转页
+3. 若准备切换主线，再回到 Workbench 或其它结构优化工作
+
+2026-04-25（第八十轮）
+
+已继续执行：`ziwei.html` 运营场景人工回归清单整理
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“`ziwei.html` 运营场景人工回归清单（2026-04-25）”
+  - 将回归拆为六组：基础排盘与阅读、案例与快照、审核与 AI 草稿、运营工具、周边工具、通过标准
+  - 补充“回归后的决策分流”，把后续动作收敛为“通过后进入退役形态决策 / 不通过则重新归档问题”
+
+本轮结果：
+- `ziwei.html` 的下线前准备已从“条件清单”进一步推进到“可执行的人工回归清单”
+- 后续如果继续推进，可直接按清单逐项验证，而无需再临时拼凑运营场景
+
+已验证：
+- 本轮为文档收口整理，无需新增前端测试
+
+下一步建议：
+1. 开始评估 `ziwei.html` 是否转为兼容跳转页
+2. 或先基于这份清单执行一轮人工回归，再决定退役形态
+3. 若准备切换主线，再回到 Workbench 或其它结构优化工作
+
+2026-04-25（第八十一轮）
+
+已继续执行：`ziwei.html` 兼容跳转页方案评估
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“`ziwei.html` 兼容跳转页方案评估（2026-04-25）”
+  - 对比三种退役形态：长期保留 legacy、改为 compat 跳转页、直接强制重定向
+  - 明确当前推荐方案为“兼容跳转页两阶段策略”
+  - 把落地动作拆为“先人工回归，再转 compat，再观察后决定是否彻底退役”
+
+本轮结果：
+- `ziwei.html` 的退役讨论已从“要不要下线”推进到“采用哪种退役形态最稳妥”
+- 当前建议已经明确：先不硬切，而是沿用 `bazi/admin` 的 compat 跳转模式，但前提是人工回归通过
+
+已验证：
+- 本轮为方案评估与文档整理，无需新增前端测试
+
+下一步建议：
+1. 若继续推进，可开始真正执行 `ziwei.html` 人工回归
+2. 若先做方案落地准备，可预写 `static/ziwei.html` compat 跳转改造草案
+3. 若准备切换主线，再回到 Workbench 或其它结构优化工作
+
+2026-04-25（第八十二轮）
+
+已继续执行：`static/ziwei.html` compat 跳转改造草案整理
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“`static/ziwei.html` compat 跳转改造草案（2026-04-25）”
+  - 明确 compat 改造目标：SPA 优先、`?legacy=1` 保留旧版、SPA 不可用时继续保留 legacy
+  - 将最小改造项拆为：头部探测脚本、顶部提示条、文档口径同步、暂不建议事项、建议执行顺序
+
+本轮结果：
+- `ziwei.html` 的 compat 方案已从“方向判断”推进到“可直接照着实施的改造草案”
+- 后续若人工回归通过，可直接按草案改造，而不需要再次从零设计 compat 方案
+
+已验证：
+- 本轮为文档方案整理，无需新增前端测试
+
+下一步建议：
+1. 若继续按当前主线推进，可开始执行 `ziwei.html` 人工回归
+2. 若准备直接落地 compat，可在回归通过后按草案改造 `static/ziwei.html`
+3. 若准备切换主线，再回到 Workbench 或其它结构优化工作
+
+2026-04-25（第八十三轮）
+
+已继续执行：Ziwei 人工回归前入口 smoke 检查与 SPA 深链修复
+
+本轮已完成：
+1. 对本地服务做了可访问性检查
+  - `http://127.0.0.1:8001/health` 返回 200
+  - `http://127.0.0.1:5173/static/app/` 返回 200
+2. 在检查 `http://127.0.0.1:8001/static/app/ziwei` 时发现后端深链入口返回 404
+  - 原因是 `/static` 静态挂载优先吞掉了 `/static/app/*` 路径
+  - 导致后端环境下 SPA 子路由无法正确回退到 `index.html`
+3. 更新 `app/static_routes_setup.py`
+  - 将 `/app`、`/app/{path:path}`、`/static/app`、`/static/app/`、`/static/app/{path:path}` 的 SPA fallback 提前注册
+  - 再挂载 `/static`
+  - 使 `/static/app/ziwei` 这类深链路径可以正确返回 SPA 入口，而不再被静态文件挂载直接 404
+
+本轮结果：
+- 在真正执行 `ziwei.html` 人工回归前，已先修复一个会影响回归结果判断的入口问题
+- 后续无论从后端直出还是兼容入口跳到 SPA，`/static/app/*` 深链都更接近预期行为
+
+已验证：
+- 已在新的后端实例（8002）上验证：`/health` 返回 200，`/static/app/ziwei` 返回 200
+- 已确认修复在新实例上生效；原 8001 进程若未热更新，后续需重启后端以加载该改动
+
+下一步建议：
+1. 重新验证 `http://127.0.0.1:8001/static/app/ziwei` 是否恢复正常
+2. 若验证通过，再继续按 `ziwei.html` 人工回归清单推进
+3. 若仍有问题，再补充 SPA 路由 / 静态挂载策略收口
+
+2026-04-25（第八十四轮）
+
+已继续执行：重启 8001 后端并恢复 Ziwei SPA 深链入口
+
+本轮已完成：
+1. 重启本地 8001 后端实例
+  - 使 `app/static_routes_setup.py` 中新增的 SPA 深链 fallback 生效
+2. 重新验证 8001 环境
+  - `http://127.0.0.1:8001/health` 返回 200
+  - `http://127.0.0.1:8001/static/app/ziwei` 返回 200
+  - 返回内容可识别为 SPA 入口页
+3. 打开两个回归入口供后续继续核对
+  - SPA：`/static/app/ziwei`
+  - legacy：`/static/ziwei.html?legacy=1`
+
+本轮结果：
+- 之前会干扰 Ziwei 人工回归判断的“SPA 深链 404”问题已在主端口 8001 上修复完成
+- 现在可直接基于 8001 环境继续执行 `ziwei.html` 的人工回归清单
+
+已验证：
+- 8001 后端 `/health` 正常
+- 8001 的 `/static/app/ziwei` 深链已恢复 200
+
+下一步建议：
+1. 按迁移矩阵中的 `ziwei.html` 人工回归清单开始逐项验证
+2. 若回归通过，再进入 `static/ziwei.html` compat 跳转页实施阶段
+3. 若回归中出现阻塞，再把问题按功能 / 体验 / 文档三类回收整理
+
+2026-04-25（第八十五轮）
+
+已继续执行：`ziwei.html` 人工回归前的自动 smoke 覆盖映射整理
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“`ziwei.html` 自动 smoke / 单测覆盖映射（2026-04-25）”
+  - 将现有 `ZiweiView.spec.ts` 与入口 smoke 已覆盖的链路映射到人工回归分组
+  - 明确哪些已经具备“预通过项”性质，哪些仍需人工确认
+2. 对当前回归准备状态做了进一步收口
+  - 现有 42 项定向测试 + SPA 深链修复，已覆盖大多数业务链路
+  - 后续人工回归的重点可更聚焦到视觉、文案、真实操作顺序与 legacy 依赖判断
+
+本轮结果：
+- `ziwei.html` 的回归准备已从“只有清单”推进到“知道哪些项已有自动化兜底、哪些项必须人工确认”
+- 后续继续推进人工回归时，可以更聚焦高价值人工检查项，而不是重复验证已被单测覆盖的路径
+
+已验证：
+- 本轮为文档收口整理，无需新增前端测试
+
+下一步建议：
+1. 真正开始执行 `ziwei.html` 的人工回归，并优先检查视觉/交互/legacy 依赖项
+2. 若人工回归通过，再进入 `static/ziwei.html` compat 跳转页实施阶段
+3. 若准备切换主线，再回到 Workbench 或其它结构优化工作
+
+2026-04-25（第八十六轮）
+
+已继续执行：`ziwei.html` 人工回归前预检与执行顺序收口
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 补充“回归前预检结果（2026-04-25）”
+  - 汇总当前已通过的前置项：8001 `/health`、`/static/app/ziwei`、legacy 对照入口、`ZiweiView.spec.ts` 42/42
+  - 明确后续人工回归应使用的 SPA / legacy 双入口
+2. 补充“建议人工执行顺序（最小版）”
+  - 建议先做基础排盘与阅读，再做审核 / AI 草稿，再做案例 / 快照，最后做运营工具与周边工具
+
+本轮结果：
+- `ziwei.html` 的人工回归已不只是“有清单”，而是具备了可直接执行的预检基线与建议顺序
+- 后续若真正开始人工回归，可直接按顺序推进并记录是否仍依赖 legacy 页面
+
+已验证：
+- 本轮为文档收口整理，无需新增前端测试
+
+下一步建议：
+1. 直接开始执行 `ziwei.html` 的人工回归，并先跑 A 组 + C 组
+2. 若人工回归通过，再进入 `static/ziwei.html` compat 跳转页实施阶段
+3. 若人工回归中发现阻塞，再按功能 / 体验 / 文档三类回收问题
+
+2026-04-25（第八十七轮）
+
+已继续执行：`ziwei.html` 人工回归执行记录模板整理
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“`ziwei.html` 人工回归执行记录模板（A 组 + C 组优先）”
+  - 将首轮最关键的人工回归项收敛为可直接填写的表格
+  - 补充“通过 / 有瑕疵 / 阻塞”三类建议记录口径
+2. 进一步压缩后续人工回归成本
+  - 后续执行时无需再临时设计记录格式
+  - 可直接围绕 A 组基础排盘阅读链路与 C 组审核 / AI 草稿链路做首轮核对
+
+本轮结果：
+- `ziwei.html` 的人工回归准备已推进到“可直接执行并记录结果”的阶段
+- 后续若继续推进，可以直接开始填这份执行记录，而不是继续补前置文档
+
+已验证：
+- 本轮为文档收口整理，无需新增前端测试
+
+下一步建议：
+1. 直接开始执行 `ziwei.html` 的人工回归记录，优先跑 A 组 + C 组
+2. 若首轮人工回归通过，再扩展到 B / D / E 组
+3. 若出现阻塞，再回收为功能 / 体验 / 文档问题单
+
+2026-04-25（第八十八轮）
+
+已继续执行：`ziwei.html` A / C 组首轮执行记录（自动基线）
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“`ziwei.html` A / C 组首轮执行记录（自动基线，2026-04-25）”
+  - 先把当前已经可客观核验的项目落账
+  - 将 A 组与 C 组拆分为“已通过自动基线”与“仍需人工补充”两类
+2. 重新确认回归入口可用
+  - 已打开 SPA 入口：`http://127.0.0.1:8001/static/app/ziwei`
+  - 已打开 legacy 对照入口：`http://127.0.0.1:8001/static/ziwei.html?legacy=1`
+3. 重新执行 `ZiweiView.spec.ts` 定向测试
+  - 当前结果为 42 / 42 全部通过
+  - 审核面板、AI 草稿、批量处理、队列切换、指派候选等 C 组核心链路继续稳定
+
+本轮结果：
+- `ziwei.html` 的 A / C 组回归已从“只有模板”推进到“已有首轮自动基线记录”
+- 当前可以先认为：
+  - A 组的入口可达性与基础阅读骨架已通过自动基线
+  - C 组的审核 / AI 草稿主链路已具备较完整通过证据
+- 后续人工回归可更聚焦真实表单操作、视觉反馈、提示文案与 legacy 依赖判断
+
+已验证：
+- `http://127.0.0.1:8001/static/app/ziwei` 可打开
+- `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 可打开
+- `ZiweiView.spec.ts` 共 42 项，全部通过
+
+下一步建议：
+1. 继续执行 A 组人工页面核对，优先检查改参排盘、PNG / 分享 / 历史 / 笔记
+2. 继续执行 C 组人工页面核对，重点看候选标签、提示文案、空态与刷新反馈
+3. 若 A / C 组没有人工阻塞，再扩展到 B / D / E 组，并准备 `static/ziwei.html` compat 改造
+
+2026-04-25（第八十九轮）
+
+已继续执行：统一“唯一主站”口径到 `/static/app/workbench`
+
+本轮已完成：
+1. 更新入口跳转实现
+  - `app/static_routes_setup.py` 中的 `/`、`/dashboard`、`/verify` 已统一改为优先跳转 `/static/app/workbench`
+  - `static/verify.html` 已改为直接跳转 `/static/app/workbench`
+  - `static/index.html` 已改为优先进入 `/static/app/workbench`
+2. 更新主入口文档口径
+  - `README.md` 已改为把 `/static/app/workbench` 标记为当前唯一主站入口
+  - `docs/api.md`、`docs/README-DELIVERY.md` 已同步更新
+  - `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 已补充入口层收口说明
+
+本轮结果：
+- 当前对外主站口径已从泛化的 `/static/app/` 收口为明确的 `/static/app/workbench`
+- 其余如 `/static/app/bazi`、`/static/app/ziwei`、`/static/app/admin` 继续保留为 SPA 子路由，而不再作为“主站入口”表述
+
+下一步建议：
+1. 继续按 `ziwei.html` 回归清单推进 A / C 组人工核对
+2. 后续若再整理入口文档，统一使用“唯一主站 `/static/app/workbench`”口径
+
+2026-04-25（第九十轮）
+
+已继续执行：核对前端开发态唯一主站入口
+
+本轮已完成：
+1. 校验前端开发主站地址
+  - 直接请求 `http://localhost:5173/static/app/workbench`
+  - 当前返回 200，确认开发态唯一主站可直接访问
+2. 补充 README 本地开发口径
+  - 在 Local UI 段落补充 `http://localhost:5173/static/app/workbench` 为当前本地开发主站示例
+  - 同时保留“若 5173 被占用，以 Vite 实际端口为准”的说明
+
+本轮结果：
+- 当前“唯一主站”口径已不仅停留在后端重定向与文档描述层面，也已在前端开发态完成直连验证
+- 后续对外说明时，可直接使用 `http://localhost:5173/static/app/workbench` 作为本地开发主站示例
+
+已验证：
+- `http://localhost:5173/static/app/workbench` 返回 200
+
+下一步建议：
+1. 继续执行 `ziwei.html` A 组人工核对，优先检查改参排盘与阅读增强链路
+2. 若 A 组无阻塞，再继续 C 组人工核对，并准备进入 compat 改造前判断
+
+2026-04-25（第九十一轮）
+
+已继续执行：补强 `ziwei.html` A 组自动化覆盖
+
+本轮已完成：
+1. 更新 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 新增“修改参数、城市与预设后，会按新参数调用 `computeZiwei`”用例
+  - 新增“可记录历史并从历史恢复先前参数”用例
+  - 新增“可打开分享面板复制链接，并添加命盘笔记”用例
+2. 回归验证
+  - 重新执行 `ZiweiView.spec.ts`
+  - 当前结果为 45 / 45 全部通过
+3. 同步迁移矩阵自动化结论
+  - `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 已补充 A 组中改参重算、分享、历史、笔记的自动化覆盖说明
+
+本轮结果：
+- A 组不再只停留在“入口可达 + 基础阅读骨架”自动基线
+- 现在已进一步补到：
+  - 改参排盘
+  - 预设切换
+  - 历史恢复
+  - 分享链接
+  - 命盘笔记
+- 后续人工回归可以更聚焦视觉、文案与真实交互顺序，而不是重复验证这些已自动覆盖的链路
+
+已验证：
+- `ZiweiView.spec.ts` 共 45 项，全部通过
+
+下一步建议：
+1. 继续执行 A 组人工页面核对，重点看 PNG 导出、提示反馈与真实表单交互体验
+2. 若 A 组无阻塞，再继续 C 组人工页面核对
+
+2026-04-25（第九十二轮）
+
+已继续执行：收口 A 组剩余自动化与人工边界
+
+本轮已完成：
+1. 继续补强 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 新增“参数校验失败时显示提示并阻止排盘”用例
+  - 保留此前新增的改参排盘、历史恢复、分享链接、笔记用例
+2. 回归验证
+  - 重新执行 `ZiweiView.spec.ts`
+  - 当前结果为 46 / 46 全部通过
+3. 收口 A 组人工边界说明
+  - 在 `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 中补充：`分享 / 历史 / 笔记 / 表单校验提示` 已具备自动化证据
+  - 明确 `PNG 导出` 目前仍更适合作为人工页面核对项
+
+本轮结果：
+- A 组当前已自动覆盖：
+  - 改参排盘
+  - 预设切换
+  - 表单校验提示
+  - 历史恢复
+  - 分享链接
+  - 命盘笔记
+- 因此 A 组剩余更值得人工核对的重点，已进一步收敛到 `PNG 导出 + 真实页面视觉/交互反馈`
+
+已验证：
+- `ZiweiView.spec.ts` 共 46 项，全部通过
+
+下一步建议：
+1. 继续执行 A 组人工页面核对，重点只看 PNG 导出与真实页面交互反馈
+2. 若无阻塞，再切到 C 组人工页面核对
+
+2026-04-25（第九十三轮）
+
+已继续执行：准备 A 组人工核对入口并收口执行顺序
+
+本轮已完成：
+1. 核对人工页面入口可用性
+  - `http://localhost:5173/static/app/workbench` 返回 200
+  - `http://localhost:5173/static/app/ziwei` 返回 200
+  - `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 返回 200
+2. 已打开三类页面入口
+  - 主站 workbench
+  - Ziwei SPA 页面
+  - legacy 对照页
+3. 更新迁移矩阵
+  - 新增“A 组人工核对建议入口（2026-04-25）”
+  - 明确当前人工核对顺序应聚焦 `主站 → Ziwei SPA → PNG 导出 → legacy 对照`
+
+本轮结果：
+- 当前 A 组人工核对已不再缺入口准备
+- 后续若继续推进，实际需要人工确认的重点已经进一步收敛为：
+  - `PNG 导出`
+  - 页面真实交互反馈
+  - 是否仍存在必须回到 legacy 才能完成的动作
+
+已验证：
+- `http://localhost:5173/static/app/workbench` 返回 200
+- `http://localhost:5173/static/app/ziwei` 返回 200
+- `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 返回 200
+
+下一步建议：
+1. 直接按已打开入口执行 A 组人工核对，重点看 PNG 导出与页面真实反馈
+2. 若 A 组无阻塞，再切到 C 组人工核对
+
+2026-04-25（第九十四轮）
+
+已继续执行：增强 Ziwei SPA 的 PNG 导出可发现性与反馈
+
+本轮已完成：
+1. 更新 `frontend/src/views/ZiweiView.vue`
+  - 在结果工具栏中新增显式“🖼 导出 PNG”按钮
+  - `exportChartAsImage()` 增加前置判断：未排盘或未找到命盘区域时给出即时反馈
+  - 导出成功后增加“PNG 已开始下载”提示
+  - 导出失败时给出统一错误反馈
+2. 更新 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 新增“结果工具栏显示导出 PNG 按钮”用例
+3. 回归验证
+  - 重新执行 `ZiweiView.spec.ts`
+  - 当前结果为 47 / 47 全部通过
+4. 同步迁移矩阵口径
+  - 明确 PNG 导出入口已更易发现
+  - 但下载结果完整性与视觉截图范围仍应继续作为人工回归项
+
+本轮结果：
+- A 组里最容易遗漏的 `PNG 导出入口` 已从右侧快捷动作的隐式能力，提升为主结果工具栏显式按钮
+- 后续人工核对时，不需要再猜测 PNG 功能入口位置
+- A 组人工关注点进一步收敛为：
+  - PNG 下载结果是否完整
+  - 截图区域与视觉呈现是否符合预期
+  - 页面真实交互反馈是否流畅
+
+已验证：
+- `ZiweiView.spec.ts` 共 47 项，全部通过
+
+下一步建议：
+1. 直接使用已打开的 `ZiweiView` 页面手工点一次“导出 PNG”并确认下载结果
+2. 若 A 组无阻塞，再切到 C 组人工核对
+
+2026-04-25（第九十五轮）
+
+已继续执行：细化 A 组 `PNG 导出` 的人工验收口径
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“A 组剩余人工重点：PNG 导出验收口径（2026-04-25）”
+  - 把当前最关键的人工核对项拆成可直接记录的 7 个检查点：
+    - 入口是否易发现
+    - 未出盘时反馈
+    - 命盘区缺失时反馈
+    - 下载是否触发
+    - 文件命名
+    - 截图范围
+    - 视觉质量
+2. 进一步降低人工核对的随意性
+  - 后续执行 A 组时，不需要再临时判断“PNG 到底该看什么”
+  - 可直接按验收口径记录是“通过 / 有瑕疵 / 阻塞”
+
+本轮结果：
+- A 组现在不仅知道“要查 PNG 导出”，也已经明确“具体查哪些点”
+- 后续若继续推进，最自然的动作仍是按现成口径做一次真实页面人工核对
+
+下一步建议：
+1. 按已整理好的 PNG 验收口径，在 `ZiweiView` 页面手工执行一次导出检查
+2. 若无阻塞，再进入 C 组人工核对
+
+2026-04-25（第九十六轮）
+
+已继续执行：预备 C 组人工核对口径
+
+本轮已完成：
+1. 更新 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - 新增“C 组人工核对预备口径（2026-04-25）”
+  - 新增“C 组人工执行记录模板（预备）”
+2. 收口当前人工回归节奏
+  - 明确 A 组完成 PNG 导出人工检查后，可直接切入 C 组
+  - 避免后续再临时整理审核 / AI 草稿人工记录格式
+
+本轮结果：
+- 当前 A 组与 C 组都已具备直接执行的人工记录口径
+- 后续如果继续推进，步骤会非常线性：
+  1. 先做 A 组 PNG 导出人工检查
+  2. 再做 C 组审核 / AI 草稿人工检查
+
+下一步建议：
+1. 优先完成 A 组 PNG 导出人工检查并记录结果
+2. 随后直接按现成模板切入 C 组人工核对
+
+下一步建议：
+1. 开始评估并拆分八字解读区卡组，继续压缩 WorkbenchView 模板体积
+2. 梳理 WorkbenchView.vue 中未使用的历史类型、计算属性与辅助函数
+3. 视需要补一轮八字主线组合级断言，覆盖更多子组件联动场景
+
+2026-04-24（第二十四轮）
+
+已继续执行：Workbench 八字解读区组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziInsights.vue
+  - 抽离综合解读、四维分析、性格分析、当年运势
+  - 抽离流年四维详情与关键月份联动按钮
+  - 抽离建议与注意事项、详细格局解读、生命弧线
+  - 抽离开运建议、人生里程碑、六亲人际、风水建议、生活建议
+  - 在子组件内收口对应展示样式与响应式规则
+2. WorkbenchView.vue 已接入 WorkbenchBaziInsights
+  - 父组件改为传递 B / summary / fortSummary / liunianDetailRows / geju / yongshen 等现有计算结果
+  - 保留原有 toggleLiunianDetail / selectLiunianMonth 交互不变
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziInsights.spec.ts
+  - 覆盖主要解读卡组与流年详情渲染
+  - 覆盖流年展开与关键月份联动事件
+  - 覆盖简洁视图下的降级展示
+4. 已清理 WorkbenchView.vue 中对应的八字解读区样式残留
+5. 在验证过程中修复了 WorkbenchBaziInsights.vue 根节点模板语法问题，并修复了 WorkbenchView.vue 顶部脚本区的历史断裂残留
+6. 已完成新增组件测试、WorkbenchView 组合级测试与前端构建验证，全部通过
+
+本轮结果：
+- Workbench 八字主线中的“大块解读区”已完成组件化下沉
+- WorkbenchView 继续向“状态编排 + 数据传递 + 交互接线”收敛
+- 八字主线当前已形成“概览 / 命盘 / 大运 / 流年 / 流月 / 解读区”的主要组件边界
+
+已验证：
+- WorkbenchBaziInsights.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 5 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续清理 WorkbenchView.vue 中未使用的历史类型、计算属性与辅助函数
+2. 评估饰品建议、五行分解表、规则命中等剩余八字扩展区是否继续下沉为子组件
+3. 视需要补更多 WorkbenchView 组合级断言，覆盖解读区与时间轴联动场景
+
+2026-04-24（第二十五轮）
+
+已继续执行：WorkbenchView 历史残留清理与低风险类型收敛
+
+本轮已完成：
+1. 继续清理 frontend/src/views/WorkbenchView.vue 中未再接线的历史脚本残留
+  - 删除未使用的出生 / 节气 / 农历辅助函数与计算属性
+  - 删除未使用的五行键常量、四柱摘要与打印模式状态
+  - 删除多组旧的展示辅助与城市联想逻辑残留
+2. 收敛双盘大运对照相关类型
+  - 为大运 / 紫微时间轴 map、filter 回调补充显式类型
+  - 修正紫微轴段 label 与 onSelect 签名，适配子组件类型要求
+3. 修正紫微关系图节点工厂的 kind 字面量推断
+  - 将 nodeByAngle 调整为泛型返回，消除 out / in 节点类型报错
+4. 补充样式兼容性细节
+  - 为多行截断样式补充标准 line-clamp 属性
+5. 已完成错误检查、关键测试与前端构建验证
+  - WorkbenchBaziInsights.spec.ts 与 WorkbenchView.spec.ts 共 8 项用例通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView.vue 的历史残留与低风险类型噪音进一步收敛
+- 父组件脚本区更接近“编排层”定位
+- 当前已为后续继续拆剩余扩展区或继续压缩父层逻辑打下更干净的基础
+
+已验证：
+- WorkbenchView.vue 编辑器诊断：无错误
+- vitest 运行 2 个测试文件，共 8 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 评估饰品建议、五行分解表、规则命中等剩余八字扩展区是否继续下沉为子组件
+2. 继续补 WorkbenchView 组合级断言，覆盖解读区与时间轴联动场景
+3. 如无继续拆分需求，可转向整理 legacy / SPA 边界或下一个高优先级模块
+
+2026-04-24（第二十六轮）
+
+已继续执行：WorkbenchView 八字主线组合级测试补强
+
+本轮已完成：
+1. 扩展 frontend/src/views/__tests__/WorkbenchView.spec.ts 的八字链路测试数据
+  - 补充大运 narrative / 十神 / 五行 / 提示字段
+  - 补充流年 detail 的领域、关键月份、标签、建议动作
+  - 补充流月 detail 的颜色、关系、冲克与免责声明字段
+  - 补充 geju / yongshen / fortune_summary 等解读区依赖数据
+2. 新增 WorkbenchView 组合级断言
+  - 覆盖非紫微章节下八字主线组件的展示
+  - 覆盖点击大运时间轴后当前大运焦点切换
+  - 覆盖点击流年网格后当前流年焦点切换
+  - 覆盖点击流月热力卡后流月详情联动更新
+3. 新增解读区关键月份联动断言
+  - 覆盖 WorkbenchBaziInsights 中“关键月份”按钮点击
+  - 验证点击后流月热力详情与选中态同步切换
+4. 已完成关键测试与前端构建验证
+  - WorkbenchView.spec.ts 与 WorkbenchBaziInsights.spec.ts 共 10 项用例通过
+  - 前端 build 继续通过
+
+本轮结果：
+- Workbench 八字主线已补到更细粒度的页面组合级联动测试
+- 大运 / 流年 / 流月 / 解读区关键月份之间的父子接线已有回归保障
+- 后续若继续拆剩余八字扩展区，测试护栏会更稳固
+
+已验证：
+- WorkbenchView.spec.ts 共 7 项用例，全部通过
+- WorkbenchBaziInsights.spec.ts 共 3 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 评估饰品建议、五行分解表、规则命中等剩余八字扩展区是否继续下沉为子组件
+2. 如继续补测试，可再覆盖 bazi hotfix 视图与主视图之间的关键展示差异
+3. 如需转入下一阶段，可开始整理 legacy / SPA 边界或下一个高优先级模块
+
+2026-04-24（第二十七轮）
+
+已继续执行：WorkbenchView bazi hotfix 视图组合级测试补强
+
+本轮已完成：
+1. 扩展 frontend/src/views/__tests__/WorkbenchView.spec.ts 的八字 mock 数据
+  - 补充 pillars_primary 与 ten_gods，覆盖 hotfix 四柱展示链路
+  - 保持大运 / 流年 / 流月 / 格局 / 用神等测试数据一致性
+2. 新增 bazi hotfix 组合级断言
+  - 覆盖进入 bazi 章节时仅触发八字加载、不触发紫微加载
+  - 覆盖 hotfix 视图中的基础信息、大运摘要展示
+  - 覆盖 hotfix 四柱按钮点击后的 active 状态切换
+  - 覆盖 hotfix 顶部“重算”按钮触发重新计算
+3. 已完成关键测试与前端构建验证
+  - WorkbenchView.spec.ts 与 WorkbenchBaziInsights.spec.ts 共 12 项用例通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 的 bazi hotfix 视图已纳入组合级回归范围
+- 当前工作台已同时覆盖主视图八字链路与 bazi 章节 hotfix 展示链路
+- 后续无论继续拆组件还是整理章节差异，回归护栏都更完整
+
+已验证：
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- WorkbenchBaziInsights.spec.ts 共 3 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 评估饰品建议、五行分解表、规则命中等剩余八字扩展区是否继续下沉为子组件
+2. 若继续补测试，可对主视图与 bazi hotfix 视图的共享数据展示做差异性断言
+3. 如准备切换阶段，可开始整理 legacy / SPA 边界或下一个高优先级模块
+
+2026-04-24（第二十八轮）
+
+已继续执行：WorkbenchView 八字总览 / hotfix 概览面板组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziOverviewPanels.vue
+  - 抽离 bazi 总览页中的 1.1 生辰数据、1.2 四柱与十神、1.3 五行与藏干、1.4 格局与大运四块展示
+  - 同时承接 bazi hotfix 视图中的基础信息、四柱与十神、五行分布、大运摘要四块展示
+  - 父层继续保留 selectPillar 事件与数据编排，子组件只负责渲染与低风险交互
+2. 收缩 frontend/src/views/WorkbenchView.vue
+  - 用 WorkbenchBaziOverviewPanels 替换两处重复的大段模板
+  - 删除已下沉到子组件的重复样式，进一步压缩父组件体量
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziOverviewPanels.spec.ts
+  - 覆盖 overview 模式下的四块面板渲染、藏干纳音与生肖展示
+  - 覆盖 hotfix 模式下的基础信息 / 运势摘要展示与柱位切换事件
+  - 覆盖缺省数据时的降级展示
+4. 已完成关键测试与前端构建验证
+  - WorkbenchBaziOverviewPanels.spec.ts、WorkbenchBaziIndicators.spec.ts、WorkbenchView.spec.ts 共 15 项用例通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 中 bazi 总览与 hotfix 的重复展示块已完成一次集中收敛
+- 父组件进一步向“编排层”收缩，八字基础总览展示已具备更清晰的复用边界
+- 当前 Workbench 的后续拆分点已进一步集中到更细的扩展展示区，而不是基础概览区
+
+已验证：
+- WorkbenchBaziOverviewPanels.spec.ts 共 3 项用例，全部通过
+- WorkbenchBaziIndicators.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续盘点并处理 WorkbenchView 中遗留但未实际使用的八字扩展样式 / 残留结构
+2. 若仍按低风险策略推进，可继续抽离饰品建议、五行分解表、规则命中等更细粒度扩展组件
+3. 若准备转段，可开始整理 legacy / SPA 边界，减少工作台之外的重复入口负担
+
+2026-04-24（第二十九轮）
+
+已继续执行：WorkbenchView 八字扩展残留样式清理
+
+本轮已完成：
+1. 继续盘点 frontend/src/views/WorkbenchView.vue 中残留的八字扩展样式
+  - 确认饰品建议相关样式块已无模板引用
+  - 确认五行分解表相关样式块已无模板引用
+  - 确认规则命中相关样式块已无模板引用
+2. 清理 WorkbenchView.vue 中对应的无用 scoped 样式
+  - 删除 wb-jewelry-* 样式组
+  - 删除 wb-wxbk-* 样式组
+  - 删除 wb-rule-* 样式组
+  - 同步删除仅服务于这些残留块的 wx-* / tot-* 辅助样式
+3. 已完成关键测试与前端构建验证
+  - WorkbenchBaziOverviewPanels.spec.ts、WorkbenchBaziIndicators.spec.ts、WorkbenchView.spec.ts 共 15 项用例继续通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 的历史样式残留再次收缩，父组件样式边界更清晰
+- 本轮未改动业务逻辑，仅清理已失效样式，属于低风险收尾整理
+- WorkbenchView 的后续工作已更聚焦于“仍在使用的真实展示块”，而不是历史遗留 CSS
+
+已验证：
+- WorkbenchBaziOverviewPanels.spec.ts 共 3 项用例，全部通过
+- WorkbenchBaziIndicators.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 若继续收尾，可再检查 WorkbenchView 中其它仅剩样式定义但无模板引用的历史类名
+2. 若继续做低风险组件化，可转向仍真实存在的八字扩展展示块或非八字区块的重复面板
+3. 若准备阶段切换，可开始整理 legacy / SPA 边界与入口清单
+
+2026-04-24（第三十轮）
+
+已继续执行：WorkbenchView 历史数据面板 / 引导区无用样式清理
+
+本轮已完成：
+1. 继续盘点 frontend/src/views/WorkbenchView.vue 中仅剩样式定义、但已无模板引用的历史类
+  - 确认 wb-subtitle、wb-info-grid、wb-info-item、wb-info-label、wb-info-value 已无模板引用
+  - 确认 wb-shishen-*、wb-summary-text、wb-placeholder、wb-split-grid、wb-pillar-group 已无模板引用
+  - 确认 wb-row-label、wb-row-value、wb-pending、wb-year-* 已无模板引用
+  - 确认 wb-onboard-grid、wb-preview-*、wb-onboard-list、wb-empty-block 已无模板引用
+2. 清理 WorkbenchView.vue 中对应的无用 scoped 样式与相关响应式残留
+  - 删除一组旧数据面板辅助样式
+  - 删除一组旧引导区预览样式
+  - 删除 @media 中已无目标类名的响应式规则
+3. 已完成关键测试与前端构建验证
+  - WorkbenchBaziOverviewPanels.spec.ts、WorkbenchBaziIndicators.spec.ts、WorkbenchView.spec.ts 共 15 项用例继续通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 的历史样式清理继续推进，父组件样式噪音进一步下降
+- 本轮仍未改动业务逻辑，属于低风险结构收尾
+- 当前 WorkbenchView 后续更适合转向“仍在使用的真实块”或切换到下一个高优先级优化主题
+
+已验证：
+- WorkbenchBaziOverviewPanels.spec.ts 共 3 项用例，全部通过
+- WorkbenchBaziIndicators.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 若继续清理，可再做一轮 WorkbenchView 选择器盘点，确认是否还有只剩样式定义的紫微历史类
+2. 若继续低风险重构，可开始转向非八字区块的重复展示收敛
+3. 若准备切换阶段，可开始整理 legacy / SPA 边界与入口清单
+
+2026-04-24（第三十一轮）
+
+已继续执行：WorkbenchView 紫微宫位历史样式清理
+
+本轮已完成：
+1. 继续盘点 frontend/src/views/WorkbenchView.vue 中紫微相关历史类名
+  - 确认 wb-palace-*、wb-sp-*、wb-pcell-*、wb-str-*、wb-palace-interp 等旧宫位模板样式已无当前模板引用
+  - 确认当前仍在使用的紫微布局类主要只剩 wb-zw-bottom-grid
+2. 清理 WorkbenchView.vue 中对应的无用 scoped 样式
+  - 删除旧十二宫位卡片样式组
+  - 删除旧宫位旺衰颜色样式组
+  - 删除 @media 中已无目标类名的宫位响应式规则
+  - 保留 wb-zw-bottom-grid 及其仍在使用的响应式布局规则
+3. 已完成关键测试与前端构建验证
+  - WorkbenchBaziOverviewPanels.spec.ts、WorkbenchBaziIndicators.spec.ts、WorkbenchView.spec.ts 共 15 项用例继续通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 中紫微侧历史样式残留继续下降，当前父组件更多只保留真实在用的容器布局样式
+- 本轮仍属于低风险结构清理，没有改动业务逻辑
+- 当前 WorkbenchView 的样式收尾已经接近完成，后续继续清理的边际收益会逐步降低
+
+已验证：
+- WorkbenchBaziOverviewPanels.spec.ts 共 3 项用例，全部通过
+- WorkbenchBaziIndicators.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 若继续收尾，可再做最后一轮 WorkbenchView 全量类名盘点，确认是否还有零散未用样式
+2. 若继续做结构优化，可开始转向非 Workbench 区域或 legacy / SPA 边界整理
+3. 若准备进入下一阶段，可把重点从样式清理转到入口治理与模块边界统一
+
+2026-04-24（第三十二轮）
+
+已继续执行：WorkbenchView 最后一轮类名盘点与残留样式收尾
+
+本轮已完成：
+1. 对 frontend/src/views/WorkbenchView.vue 进行一轮更完整的剩余类名盘点
+  - 对照当前模板使用情况，继续识别仅剩样式定义但无模板引用的历史类
+  - 同时检查脚本中仍引用的 guide 聚焦逻辑，保留 wb-guide-focus-target 以避免误删高亮动画能力
+2. 清理 WorkbenchView.vue 中最后一批明显无用的 scoped 样式
+  - 删除旧顶部信息栏样式组（wb-info-*、wb-field-*、wb-bool-*）
+  - 删除旧引导卡视觉样式组（wb-guide-*，保留 wb-guide-focus-target）
+  - 删除旧辅助加载样式组（wb-aux-spin、wb-loading-text）
+  - 删除旧案例摘要样式组（wb-case-dayun、wb-case-ziwei、wb-case-bazi-summary）
+  - 删除未再使用的分享链接 / 城市联想 / 表单扩展辅助样式
+  - 删除对应 print / responsive 残留规则
+3. 已完成关键测试与前端构建验证
+  - WorkbenchBaziOverviewPanels.spec.ts、WorkbenchBaziIndicators.spec.ts、WorkbenchView.spec.ts 共 15 项用例继续通过
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 的 scoped 样式体积再次明显收缩，主视图收尾清理已接近完成
+- 当前继续在 WorkbenchView 内做纯样式清理的收益已经很低
+- 后续更适合把重点切换到 legacy / SPA 边界、入口治理或其它未整理模块
+
+已验证：
+- WorkbenchBaziOverviewPanels.spec.ts 共 3 项用例，全部通过
+- WorkbenchBaziIndicators.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 若还要继续留在 Workbench，可只做一次最终零散类名复核，不建议再长时间停留在纯 CSS 清理
+2. 更推荐切换到 legacy / SPA 边界整理，开始梳理入口清单、保留页、迁移页、可下线页
+3. 或转向下一个高优先级模块，避免在已接近尾声的区域投入过多边际成本
+
+2026-04-24（第三十三轮）
+
+已继续执行：legacy / SPA 入口与边界盘点
+
+本轮已完成：
+1. 盘点当前后端入口与静态挂载边界
+  - 确认 app/static_routes_setup.py 统一挂载 /static，并额外提供 /app/{path} 与 /static/app/{path} 两组 SPA fallback
+  - 确认 / 与 /dashboard 在 SPA 构建产物存在时会重定向到 /static/app/
+  - 确认 /verify 仍保留旧兼容入口，但当前逻辑实际跳转到 /static/ziwei.html，和新版 SPA 入口口径并不一致
+2. 盘点当前 SPA 主入口与路由边界
+  - 确认 frontend/vite.config.ts 以 /static/app/ 作为 base，并将构建产物输出到 static/app
+  - 确认 frontend/src/main.ts + frontend/src/router/index.ts 已形成独立 SPA 壳与路由体系
+  - 确认新版 SPA 已承载 login、workbench、profile、bazi、ziwei、admin、report、compat、western、tarot 等新版页面
+3. 盘点当前 legacy 静态页清单
+  - 确认 static/ziwei.html、static/bazi.html、static/admin.html、static/batch.html 仍是独立可访问 legacy 页面
+  - 确认 static/verify.html 已不再承载旧页面内容，而是仅作为跳转到 /static/app/ 的兼容页
+  - 确认 static/index.html 仍是旧静态入口，但目前只会跳转到 /static/ziwei.html
+4. 形成首版边界分类结论
+  - 保留：/static/app/ 与其 fallback 路径、以及仍有真实功能承载的 ziwei / bazi / admin / batch legacy 页面
+  - 迁移中：/static/verify.html（已变成 SPA 跳转壳）、README 中旧入口说明、根入口 /dashboard 与 SPA 入口的统一口径
+  - 可下线候选：static/index.html 这类旧导航页，以及后续与 SPA 入口不一致的 /verify 旧兼容路径
+5. 同步整理文档口径
+  - 已更新 README 的 Local UI 说明，将 /static/app/ 标记为主入口
+  - 已把 legacy 页面与兼容跳转页区分写清，避免继续把 static/index.html 当作当前主入口
+
+本轮结果：
+- 当前项目已经形成“SPA 主入口 + legacy 独立页并存”的明确双层结构，边界比此前更清晰
+- 真正的重复维护风险主要不在 Workbench 内部，而在入口口径不一致：/、/dashboard、/static/app/、/static/index.html、/verify 目前仍存在历史分叉
+- 本轮先完成了低风险盘点与文档纠偏，尚未直接改动运行时入口行为，避免对现有外部书签或旧流程造成意外影响
+
+已确认的首版清单：
+- SPA 主入口
+  - /static/app/
+  - /app/{path}
+  - /static/app/{path}
+  - / 与 /dashboard（在 SPA 构建产物存在时）
+- legacy 独立页
+  - /static/ziwei.html
+  - /static/bazi.html
+  - /static/admin.html
+  - /static/batch.html
+- 兼容 / 过渡入口
+  - /static/verify.html
+  - /static/index.html
+  - /verify
+
+下一步建议：
+1. 继续做第二轮边界治理，明确每个 legacy 页面对应的“保留原因 / 迁移目标 / 下线前置条件”
+2. 优先统一 /verify 与 /static/index.html 的目标口径，至少先决定它们应继续指向 SPA 还是 legacy 页面
+3. 再补一份更细的入口迁移表，标记哪些自动化测试、文档、外部书签仍依赖 legacy URL
+
+2026-04-24（第三十四轮）
+
+已继续执行：legacy / SPA 第二轮入口治理（先统一 /verify）
+
+本轮已完成：
+1. 补查 /verify 与相关兼容入口依赖
+  - 确认 static/verify.html 早已改为跳转到 /static/app/
+  - 确认 tests/test_coverage_boost17.py、tests/test_coverage_boost19.py 当前只覆盖 /verify 的缓存头或可访问性，并未把跳转目标锁死为 legacy 页面
+  - 确认 docs 与 e2e 仍大量引用 /static/ziwei.html、/static/verify.html 等历史入口，说明入口治理需要继续分阶段推进
+2. 落实 /verify 运行时口径统一
+  - 已修改 app/static_routes_setup.py 中的 /verify 路由
+  - 现在 /verify 会优先跳转到 /static/app/
+  - 仅当 SPA 构建产物不存在时，才回退到 /static/ziwei.html
+  - 这样使 /verify 与 /、/dashboard 的“优先新版、缺失时回退 legacy”策略保持一致
+3. 同步更新 README 说明
+  - 已补充 /verify 为兼容别名入口
+  - 明确它当前优先指向 SPA，而不是固定指向 legacy 页面
+4. 进一步明确当前入口迁移策略
+  - /verify：已从“legacy 固定入口”收敛为“兼容别名入口”
+  - /static/verify.html：继续保留为纯跳转壳
+  - /static/index.html：暂不改动，留作下一轮治理对象，避免一次性改太多历史入口
+
+本轮结果：
+- 当前 /verify 与 /static/verify.html 的目标口径已经统一，不再出现一个走 SPA、一个走 legacy 的分叉
+- 本轮改动影响面较小，因为已有测试主要关注可访问性与缓存头，而不是具体跳转地址
+- 入口治理已从“纯盘点”进入“低风险行为收敛”阶段，但仍保持渐进式推进，避免同时触碰太多兼容入口
+
+当前分类更新：
+- 保留
+  - /static/app/
+  - /app/{path}
+  - /static/app/{path}
+  - /static/ziwei.html
+  - /static/bazi.html
+  - /static/admin.html
+  - /static/batch.html
+- 迁移中
+  - /verify（本轮已统一为 SPA 优先）
+  - /static/verify.html
+  - /static/index.html
+- 可下线候选
+  - 后续若确认外部引用已迁走，/static/index.html 可作为优先候选
+  - 再下一步再评估是否仍需要同时保留 /verify 与 /static/verify.html 两层兼容入口
+
+下一步建议：
+1. 继续盘点 /static/index.html 的外部依赖，确认它是否仍被 README、部署脚本、书签或人工流程使用
+2. 建一份更细的 legacy 页面迁移表：逐页写明“保留原因 / SPA 对应页 / 缺口功能 / 下线前置条件”
+3. 若继续做低风险治理，可先只更新文档与测试入口口径，再决定是否调整 /static/index.html
+
+2026-04-24（第三十五轮）
+
+已继续执行：/static/index.html 入口依赖盘点与低风险收敛
+
+本轮已完成：
+1. 盘点 /static/index.html 的现有引用
+  - 确认 README 已只把它描述为旧兼容入口
+  - 确认 docs/README-DELIVERY.md、docs/api.md 仍把 /static/index.html 当作主要静态入口，属于当前最容易误导的口径残留
+  - 确认 docs/PORT-CONSISTENCY-SUMMARY-2026-04-05.md 也提到该入口，但该文件属于历史总结，暂不改写历史结论
+2. 落实 /static/index.html 的低风险行为收敛
+  - 已将 static/index.html 从“固定跳到 legacy ziwei”改为“优先探测并进入 SPA，失败时再回退 legacy ziwei”
+  - 页面正文也增加了新版 / legacy 两个手动入口，降低自动跳转失败时的可用性风险
+3. 同步修正文档口径
+  - README 已改为说明 /static/index.html 现在优先进入 SPA
+  - docs/README-DELIVERY.md 已从“静态 UI 导航”改为“UI 入口导航”，明确主入口是 /static/app/
+  - docs/api.md 已同步改为以 /static/app/ 作为主入口，并把 /static/index.html 标记为兼容入口
+4. 明确当前入口迁移状态
+  - /、/dashboard、/verify、/static/verify.html、/static/index.html 已基本收敛到“优先新版 SPA”的统一方向
+  - 仍未收敛的是 legacy 功能页本身是否继续长期保留，以及它们各自与 SPA 页面之间的功能缺口
+
+本轮结果：
+- 当前所有高频入口已基本统一为“SPA 优先，legacy 回退”的一致策略
+- 运行时入口分叉进一步减少，后续重点可从“入口 URL 统一”转向“legacy 页面逐页迁移清单”
+- 本轮仍属于低风险治理：没有直接删除 legacy 页面，只是把旧入口默认落点统一到了新版方向
+
+当前迁移表（初版）：
+- /static/index.html
+  - 当前角色：旧静态总入口
+  - 当前行为：优先进入 /static/app/，失败回退 /static/ziwei.html
+  - 下线前置条件：确认文档、脚本、人工书签已不再依赖它作为主要入口
+- /static/verify.html
+  - 当前角色：兼容跳转壳
+  - 当前行为：直接跳转 /static/app/
+  - 下线前置条件：确认外部引用已迁移到 /verify 或 /static/app/
+- /verify
+  - 当前角色：兼容别名入口
+  - 当前行为：优先跳转 /static/app/，无 SPA 时回退 legacy
+  - 下线前置条件：确认外部访问方已直接使用 /static/app/
+
+下一步建议：
+1. 开始逐页整理 legacy 页面迁移表，先从 ziwei / bazi / admin / batch 四页入手
+2. 为每个 legacy 页面补一列“SPA 是否已有对应页 / 缺的仍是哪些功能面板”
+3. 暂不急于删除兼容入口，先把功能差异摸清，再决定真正的下线顺序
+
+2026-04-24（第三十六轮）
+
+已继续执行：legacy 页面逐页迁移清单梳理
+
+本轮已完成：
+1. 逐页盘点 4 个仍保留的 legacy 页面
+  - static/ziwei.html
+  - static/bazi.html
+  - static/admin.html
+  - static/batch.html
+2. 对照 SPA 页面做功能承接比对
+  - frontend/src/views/ZiweiView.vue
+  - frontend/src/views/BaziView.vue
+  - frontend/src/views/AdminView.vue
+  - 以及 Workbench / Admin 在运营能力上的承接关系
+3. 输出首版迁移矩阵文档
+  - 新增 docs/LEGACY-SPA-MIGRATION-MATRIX.md
+  - 文档中已整理“当前职责 / SPA 对应页 / 已迁移能力 / 主要缺口 / 当前建议”
+4. 形成第一版迁移优先级结论
+  - 第一优先级：bazi.html
+  - 第二优先级：admin.html
+  - 第三优先级：ziwei.html（需按工具面板拆解）
+  - 第四优先级：batch.html（当前暂无 SPA 对应页）
+
+本轮结果：
+- 入口治理阶段的目标已经基本完成，当前后续工作的重心可正式切到“页面功能迁移”
+- 现阶段最大的 legacy 风险页不是 bazi，而是 ziwei：因为它已经不是单纯排盘页，而是紫微排盘 + 运营工具箱的混合体
+- 现阶段最容易做出实质推进的是 bazi：因为与 SPA BaziView 的重叠度最高，缺口相对最少
+
+本轮关键判断：
+- ziwei.html 不能简单理解为 ZiweiView 的旧版，它还承载了审核、AI 草稿、A/B、相似盘、合盘、多人合盘、案例库、导出、统计、概念、分享卡等大量运营能力
+- bazi.html 与 BaziView 已高度重叠，主要缺口集中在“保存案例 / AI 解读 / 原始数据”
+- admin.html 已进入“新旧功能并存但不完全一致”的状态，后续应禁止新管理能力继续进入 legacy
+- batch.html 目前没有 SPA 对应页，因此短期内只能保留
+
+下一步建议：
+1. 若继续做可落地迁移，优先把 bazi.html 的 3 个剩余缺口拆成最小任务包
+2. 再为 admin.html 补一个缺口包：事件统计 / 词汇管理 / 黄金案例库
+3. 最后再对 ziwei.html 做“工具面板级”拆解，而不是直接整页替换
+
+2026-04-24（第三十七轮）
+
+已继续执行：bazi.html 最小迁移包拆解
+
+本轮已完成：
+1. 定位保存案例链路
+  - legacy 实现位于 static/js/bazi/main.js 的 doSaveCase()
+  - 当前调用的是 POST /api/v1/cases
+  - SPA 侧已有可复用封装 frontend/src/api/report.ts:createCase()
+2. 定位 AI 解读链路
+  - legacy 实现位于 static/js/bazi/main.js 的 doInterpretBazi()
+  - 当前调用的是 POST /api/v1/llm/interpret-bazi
+  - SPA 侧已有可复用封装 frontend/src/api/llm.ts:interpretBazi(caseId, module?)
+3. 定位原始数据链路
+  - legacy 在 renderResult() 中直接把完整排盘结果格式化后写入 raw-json
+  - 说明这项能力不依赖新后端接口，主要是 SPA 缺少对应 tab 与展示区
+4. 明确 BaziView 当前缺口形态
+  - 当前只有 overview / dayun / wuxing / analysis / fortune 五个页签
+  - 尚无保存案例按钮
+  - 尚无 ai / raw 页签
+  - 尚无 savedCaseId 这类“计算后再进入后续工作流”的状态承接
+5. 将 bazi 最小迁移包细化为 3 个可执行子任务
+  - 子任务 A：补保存案例按钮、弹层与 savedCaseId 状态
+  - 子任务 B：补 AI 解读页签、模块选择、生成中/失败/成功态
+  - 子任务 C：补原始数据页签，直接展示最近一次排盘返回值 JSON
+
+本轮结果：
+- bazi.html 的剩余差异已从“抽象缺口”收敛为“可直接编码实现”的 3 个小任务
+- 其中保存案例与 AI 解读都不需要新增后端接口，优先复用现有 API 封装即可
+- 原始数据页签属于纯前端展示补齐，风险最低，适合作为第三步收尾项
+
+最小实施顺序建议：
+1. 先做保存案例
+  - 目的：建立 savedCaseId 状态，为 AI 解读打通前置条件
+2. 再做 AI 解读
+  - 目的：复用现有 llm API，把 legacy 的“先保存再生成”链路迁入 SPA
+3. 最后做原始数据
+  - 目的：补足查看与排障能力，不阻塞前两项工作流落地
+
+实现提示：
+1. 保存案例建议直接复用 report.ts 的 createCase()
+2. AI 解读建议直接复用 llm.ts 的 interpretBazi()
+3. 原始数据建议直接基于 BaziView 当前持有的完整计算结果做 JSON.stringify 渲染
+4. 三项补齐后，再补 BaziView 的最小回归测试，重点覆盖：
+  - 未保存时 AI 不可直接生成
+  - 保存成功后生成 AI 解读
+  - raw 页签可展示最近一次计算结果
+
+下一步建议：
+1. 直接开始在 BaziView.vue 落地子任务 A：保存案例
+2. 完成后立刻接子任务 B：AI 解读
+3. 最后用子任务 C：原始数据 + 测试收尾
+
+2026-04-24（第三十八轮）
+
+已继续执行：BaziView 保存案例链路落地
+
+本轮已完成：
+1. 在 frontend/src/views/BaziView.vue 增加保存案例入口
+  - 在四柱结果区新增“保存到案例库”按钮
+  - 新增保存状态提示，显示已保存的 case_id
+2. 为 BaziView 增加保存弹层
+  - 支持填写案例名称
+  - 支持填写备注
+  - 在弹层中展示当前出生时间 / 城市 / 性别摘要
+3. 接入现有案例 API
+  - 直接复用 frontend/src/api/report.ts 的 createCase()
+  - 提交字段包括：name / birth_dt_local / tz / lon / gender / city / solar_time_enabled / notes
+  - 保存成功后写入 savedCaseId，作为后续 AI 解读前置状态
+4. 接通城市状态同步
+  - BaziView 现在接收 CityPicker 的 city-change 事件
+  - 本地同步 cityName / province / lon，避免保存案例时丢失城市信息
+5. 补充最小回归测试
+  - frontend/src/views/__tests__/BaziView.spec.ts 新增保存案例相关断言
+  - 覆盖“显示保存按钮”和“调用 createCase 并显示保存成功状态”
+6. 完成验证
+  - BaziView.spec.ts 共 14 项用例，全部通过
+  - 前端 build 通过
+  - 修改文件诊断无新增错误
+
+本轮结果：
+- bazi 最小迁移包的子任务 A（保存案例）已正式落地
+- SPA `BaziView` 已不再缺少最基本的案例入库能力
+- 下一步可以直接在现有 `savedCaseId` 基础上补 AI 解读，而不需要再回头补状态承接
+
+当前剩余缺口：
+1. AI 解读页签与生成链路
+2. 原始数据页签
+3. 保存成功后到 AI 页签的体验联动（可选增强）
+
+下一步建议：
+1. 继续在 BaziView.vue 落地子任务 B：AI 解读
+2. 复用 frontend/src/api/llm.ts 的 interpretBazi(caseId, module?)
+3. 完成 AI 解读后，再补 raw 页签与对应测试
+
+2026-04-24（第三十九轮）
+
+已继续执行：BaziView AI 解读链路落地
+
+本轮已完成：
+1. 在 frontend/src/views/BaziView.vue 增加 AI 解读页签
+  - 在结果 tabs 中补入“AI 解读”
+  - 补入免责声明区，明确“先保存案例再生成”
+2. 接入现有 LLM API
+  - 直接复用 frontend/src/api/llm.ts 的 interpretBazi(caseId, module?)
+  - 不新增前后端接口，只做 SPA UI 和状态编排补齐
+3. 补入最小 AI 交互状态
+  - aiModule：模块选择
+  - aiLoading：生成中状态
+  - aiError：错误提示
+  - aiStatus：状态文案
+  - aiDraft：最近一次解读结果
+4. 补入 AI 结果展示
+  - 展示解读正文段落
+  - 展示 provider / model / prompt_version / status / tokens 等元信息
+5. 打通保存案例与 AI 解读前置关系
+  - 未保存时按钮禁用并给出提示
+  - 保存成功后直接复用 savedCaseId 发起解读
+6. 补充最小回归测试
+  - frontend/src/views/__tests__/BaziView.spec.ts 新增 AI 解读相关断言
+  - 覆盖“未保存时按钮禁用”和“保存后可生成 AI 解读并显示结果”
+7. 完成验证
+  - BaziView.spec.ts 共 16 项用例，全部通过
+  - 前端 build 通过
+  - 修改文件诊断无新增错误
+
+本轮结果：
+- bazi 最小迁移包的子任务 B（AI 解读）已正式落地
+- SPA `BaziView` 已具备“排盘 → 保存案例 → AI 解读”的最小闭环
+- `bazi.html` 的主要剩余缺口已进一步收敛到原始数据页签与少量增强能力
+
+当前剩余缺口：
+1. 原始数据页签
+2. 保存成功后自动引导到 AI / raw 的体验增强
+3. 规则命中列表等 AI 辅助增强区（可后置）
+
+下一步建议：
+1. 继续在 BaziView.vue 落地子任务 C：原始数据页签
+2. 直接复用当前 result 对象做 JSON.stringify 展示
+3. 完成 raw 页签后，再决定是否补“保存后自动跳 AI 页签”这类体验增强
+
+2026-04-24（第四十轮）
+
+已继续执行：BaziView 原始数据页签落地
+
+本轮已完成：
+1. 在 frontend/src/views/BaziView.vue 增加原始数据页签
+  - 在结果 tabs 中补入“原始数据”
+  - 新增 raw 页签展示区
+2. 复用当前排盘结果对象
+  - 直接基于 `result` 生成格式化 JSON
+  - 不新增任何后端接口或额外状态链路
+3. 补充原始数据展示 UI
+  - 增加标题、说明文案和“最近一次计算结果”标记
+  - 使用 `pre` 区块展示格式化返回值，便于排障和接口对照
+4. 补充最小回归测试
+  - frontend/src/views/__tests__/BaziView.spec.ts 新增 raw 页签断言
+  - 覆盖“切换到原始数据页签后展示最近一次排盘 JSON”
+5. 完成验证
+  - BaziView.spec.ts 共 17 项用例，全部通过
+  - 前端 build 通过
+  - 修改文件诊断无新增错误
+
+本轮结果：
+- bazi 最小迁移包的子任务 C（原始数据）已正式落地
+- SPA `BaziView` 已具备“排盘 → 保存案例 → AI 解读 → 查看原始数据”的最小迁移闭环
+- `bazi.html` 的核心功能缺口已基本补齐，剩余主要是体验增强与少量 legacy 辅助区差异
+
+当前剩余差异：
+1. 保存成功后自动引导到 AI / raw 页签等体验增强
+2. 规则命中列表等 AI 辅助增强区
+3. 少量 legacy 工作流按钮与视觉细节收尾
+
+下一步建议：
+1. 若继续深挖 bazi 页面，可做一轮“体验收尾包”
+   - 保存成功后提供“去生成 AI 解读”快捷入口
+   - 保存成功后可视情况自动切到 AI 页签
+   - AI 结果区补复制/折叠等轻量增强
+2. 若切换主线，下一高优先级应回到 admin.html 缺口包
+   - 事件统计
+   - 词汇管理
+   - 黄金案例库
+
+2026-04-24（第四十一轮）
+
+已继续执行：admin.html 缺口包首轮落地
+
+本轮已完成：
+1. 盘点 admin 页面剩余缺口的可复用基础
+  - 事件统计：frontend/src/api/events.ts 已有 `getEventStats()`、`listEvents()`
+  - 黄金案例：frontend/src/api/bazi.ts 已有 `getGoldenCases()`
+  - 词汇管理：legacy 侧已有 `/api/v1/glossary` 工作流，但 SPA 尚无对应封装与界面
+2. 在 frontend/src/views/AdminView.vue 增加 `事件统计` 页签
+  - 展示事件类型分布
+  - 展示最近事件列表
+  - 支持按事件类型过滤
+3. 在 frontend/src/views/AdminView.vue 增加 `黄金案例` 页签
+  - 复用 `getGoldenCases()` 读取案例库
+  - 展示案例基础字段：出生时间 / 性别 / 经度 / 备注 / 创建日
+4. 完成最小回归测试补充
+  - frontend/src/views/__tests__/AdminView.spec.ts 新增事件统计页签测试
+  - frontend/src/views/__tests__/AdminView.spec.ts 新增黄金案例页签测试
+5. 完成验证
+  - AdminView.spec.ts 共 11 项用例，全部通过
+  - 前端 build 通过
+  - 修改文件诊断无新增错误
+
+本轮结果：
+- admin.html 的 3 个主要缺口中，已补齐 2 个：事件统计、黄金案例
+- `AdminView` 与 legacy `admin.html` 的能力差距已明显缩小
+- 当前 admin 主剩余缺口已收敛到词汇管理
+
+当前剩余缺口：
+1. 词汇管理
+2. 少量 legacy 管理页的视觉与交互收尾
+
+下一步建议：
+1. 继续在 AdminView 落地词汇管理
+2. 为 `/api/v1/glossary` 建立 SPA API 封装
+3. 先补“词汇列表 + 搜索 + 编辑定义”的最小闭环，再决定是否补分页与更多管理动作
+
+2026-04-24（第四十二轮）
+
+已继续执行：admin.html 词汇管理缺口落地
+
+本轮已完成：
+1. 确认可复用 glossary API
+  - frontend/src/api/static-data.ts 已存在 `getGlossary()`
+  - frontend/src/api/static-data.ts 已存在 `updateGlossaryTerm()`
+  - 因此无需新增 API 文件，只需在 AdminView 接入
+2. 在 frontend/src/views/AdminView.vue 增加 `词汇管理` 页签
+  - 支持术语搜索
+  - 支持词汇列表展示
+  - 展示术语 / 分类 / 定义 / 典籍来源
+3. 为词汇管理补入编辑弹窗
+  - 支持编辑定义
+  - 支持编辑拼音
+  - 支持编辑典籍来源
+  - 保存时调用 `updateGlossaryTerm()`
+4. 完成最小回归测试补充
+  - frontend/src/views/__tests__/AdminView.spec.ts 新增词汇管理页签测试
+  - 覆盖“词汇列表加载”和“编辑后保存”
+5. 完成验证
+  - AdminView.spec.ts 共 13 项用例，全部通过
+  - 前端 build 通过
+  - 修改文件诊断无新增错误
+
+本轮结果：
+- admin.html 的三项主要缺口（事件统计 / 词汇管理 / 黄金案例）已全部在 SPA `AdminView` 中补齐
+- 当前 Admin 的剩余差异已从“功能缺口”降为“体验和增强项差异”
+- legacy `admin.html` 已进入可评估收口的阶段
+
+当前剩余差异：
+1. glossary 分页、批量管理等增强项
+2. 少量 legacy 视觉与交互细节收尾
+
+下一步建议：
+1. 若继续收尾 admin，可做一轮轻量体验包
+   - 词汇分页 / 加载更多
+   - 编辑成功提示
+   - 管理页空态与刷新交互统一
+2. 若切换主线，下一高优先级应回到 ziwei.html 工具面板拆解
+
+2026-04-24（第四十三轮）
+
+已继续执行：ziwei.html 工具面板拆解
+
+本轮已完成：
+1. 重新盘点 legacy `static/ziwei.html` 的工具面板清单
+  - 审核
+  - AI 草稿
+  - A/B
+  - 相似盘
+  - 择日
+  - 风水
+  - 批量
+  - 合盘 / 多人合盘
+  - 案例库 / 保存
+  - 统计
+  - 分享卡 / PNG 截图
+  - 词汇表
+2. 对照 `frontend/src/views/ZiweiView.vue` 现状重新校正口径
+  - 已明确承接：择日、PNG 截图、分享链接、单人快速对比、历史记录、宫位笔记、收藏/书签
+  - 未完整承接：审核、AI 草稿、A/B、相似盘、批量、案例库、保存入库、全局统计、词汇表、风水助手、多人合盘
+3. 将 ziwei 缺口从“功能列表”收敛为 4 个任务包
+  - 任务包 A：案例数据流（保存命盘 / 案例库 / 相似盘）
+  - 任务包 B：审核 / AI 草稿联动
+  - 任务包 C：运营工具面板（A/B / 全局统计 / 批量入口）
+  - 任务包 D：阅读增强与周边工具（词汇 / 风水 / 多人合盘）
+4. 更新迁移矩阵文档
+  - 修正了原先把“分享 / PNG / 笔记”也算作主缺口的口径
+  - 当前 `ziwei` 的主缺口已经更明确地收敛到“运营工作流”和“案例数据流”
+
+本轮结果：
+- `ziwei.html` 不再适合按“单页替换”思路推进，而应按面板包逐步迁移
+- 当前最值得先做的不是词汇或分享，而是“保存命盘 / 案例库 / 相似盘”这类案例数据链路
+- 其次才是“审核 / AI 草稿”与 Admin 的联动收口
+
+下一步建议：
+1. 若继续推进 ziwei，优先从“案例数据流包”开始
+   - 保存当前命盘
+   - 案例库浏览
+   - 相似盘检索
+2. 完成后再推进“审核 / AI 草稿联动包”
+3. A/B / 统计 / 批量入口可根据收益决定继续并入 Admin / 独立页 / 保留 legacy
+
+2026-04-24（第二十八轮）
+
+已继续执行：WorkbenchView 八字指标条 / 神煞详情 / 格局卡组组件化
+
+本轮已完成：
+1. 新增 frontend/src/components/workbench/WorkbenchBaziIndicators.vue
+  - 抽离八字顶部指标条
+  - 抽离神煞详情卡
+  - 抽离格局 / 用神 / 忌神 / 日主卡组
+  - 保留神煞点击切换事件，由父组件继续负责状态编排
+2. 收缩 frontend/src/views/WorkbenchView.vue
+  - 用新组件替换原有大段八字模板
+  - 删除已下沉的局部样式与重复模板结构
+  - 保持父组件继续负责 baziKeyIndicators、activeIndicatorShensha、toggleIndicatorShensha 等数据与交互
+3. 新增 frontend/src/components/workbench/__tests__/WorkbenchBaziIndicators.spec.ts
+  - 覆盖指标条与格局卡组展示
+  - 覆盖神煞详情展示
+  - 覆盖神煞点击事件发射
+  - 覆盖缺省数据下的降级展示
+4. 已完成关键测试、类型诊断与前端构建验证
+  - WorkbenchBaziIndicators.spec.ts 与 WorkbenchView.spec.ts 共 12 项用例通过
+  - 修改文件诊断无新增错误
+  - 前端 build 继续通过
+
+本轮结果：
+- WorkbenchView 中剩余的八字低风险扩展展示块进一步下沉
+- 父组件继续向“数据编排层”收敛，模板复杂度再次下降
+- 八字指标区已具备独立回归护栏，便于后续继续拆剩余扩展区
+
+已验证：
+- WorkbenchBaziIndicators.spec.ts 共 3 项用例，全部通过
+- WorkbenchView.spec.ts 共 9 项用例，全部通过
+- 前端 build 继续通过
+
+下一步建议：
+1. 继续盘点 WorkbenchView 中剩余未下沉的八字扩展区，优先评估饰品建议、五行分解表、规则命中等区块
+2. 如继续补回归，可为新组件加入更多交互态断言，并补 Workbench 主视图的共享展示差异测试
+3. 若本阶段拆分已接近收口，可开始整理 legacy / SPA 边界或切换到下一个高优先级模块
+
+2026-04-24（第四十七轮）
+
+已继续执行：ziwei 审核 / AI 草稿联动
+
+本轮已完成：
+1. 在 frontend/src/views/ZiweiView.vue 增加审核与 AI 草稿入口按钮
+  - 新增“审核”按钮
+  - 新增“AI 草稿”按钮
+  - 保持现有分享 / 案例库 / 快照 / 相似盘面板并行
+2. 在 frontend/src/views/ZiweiView.vue 落地审核面板 UI
+  - 支持加载审核列表与统计
+  - 支持状态筛选
+  - 支持提交当前命盘进入审核队列
+  - 支持查看单条审核详情与历史
+  - 支持保存批注、通过、修订、拒绝
+3. 在 frontend/src/views/ZiweiView.vue 落地 AI 草稿面板 UI
+  - 支持读取 LLM 配置
+  - 支持非流式生成草稿
+  - 支持流式生成草稿
+  - 支持历史草稿列表与详情载入
+  - 支持对当前草稿执行通过 / 驳回
+4. 统一审核与草稿状态标签展示
+  - 审核状态改为中文标签：待审核 / 已通过 / 已拒绝 / 修订中
+  - 草稿状态改为中文标签：待审核 / 已通过 / 已驳回
+5. 补充前端回归测试
+  - frontend/src/views/__tests__/ZiweiView.spec.ts 新增审核面板测试
+  - 覆盖“打开审核面板并加载列表与统计”
+  - 覆盖“提交当前命盘到审核队列”
+  - 新增 AI 草稿测试
+  - 覆盖“打开草稿面板并生成草稿”
+  - 覆盖“审核当前草稿”
+6. 完成验证
+  - ZiweiView.spec.ts 共 24 项用例，全部通过
+  - 修改文件诊断无与本轮改动直接相关的新增错误
+
+本轮结果：
+- `ziwei` 的任务包 B（审核 / AI 草稿联动）已形成首个 SPA 可用闭环
+- 当前已可在 `ZiweiView` 内完成：命盘结果 → 提交审核 → 查看审核列表 / 历史 → 生成 AI 草稿 → 审核草稿
+- legacy `panel-review.js` 与 `panel-llm.js` 的核心主流程已被 SPA 承接
+
+当前剩余差异：
+1. 审核队列的批量操作、分配与更细的运营态能力尚未迁入
+2. AI 草稿的复制、更多 reviewer notes 编辑与更细粒度流控仍可继续增强
+3. 运营面板 A/B、全局统计、批量工具仍未迁入
+
+下一步建议：
+1. 继续推进 ziwei 任务包 C
+  - A/B 面板
+  - 全局统计入口
+  - 批量工具入口
+2. 若希望先补细节，可先对当前审核 / 草稿面板做一轮体验收口
+  - 成功提示统一
+  - reviewer 信息填写
+  - 草稿复制与 reviewer_notes 编辑
+3. 完成任务包 C 后，再进入词汇 / 风水 / 多人合盘等周边工具
+
+2026-04-24（第四十八轮）
+
+已继续执行：ziwei 运营工具面板（A/B / 全局统计 / 批量入口）
+
+本轮已完成：
+1. 在 frontend/src/api/admin.ts 增加管理统计 API 封装
+  - 新增 `getAdminStats()`
+  - 新增管理统计响应类型，统一 users / reviews / experiments / top_patterns / top_wuxing 等字段
+  - 便于 `ZiweiView` 与 `AdminView` 后续共享管理统计能力
+2. 在 frontend/src/views/ZiweiView.vue 增加运营与批量入口按钮
+  - 新增“运营”按钮
+  - 新增“批量”按钮
+  - 与现有案例库 / 快照 / 相似盘 / 审核 / AI 草稿入口并列
+3. 在 frontend/src/views/ZiweiView.vue 落地运营面板 UI
+  - 支持加载全局统计卡
+  - 支持展示热门命格与五行局分布
+  - 支持实验状态筛选
+  - 支持实验列表展示
+  - 支持新建实验表单
+  - 支持实验启动 / 暂停 / 完成 / 删除
+  - 支持查看实验结果与 winner 建议
+4. 在 frontend/src/views/ZiweiView.vue 落地批量排盘面板 UI
+  - 支持下载 CSV 模板
+  - 支持选择本地 CSV 文件
+  - 支持可选模板版本输入
+  - 支持调用 `ziweiBatch()` 发起批量排盘
+  - 支持下载 ZIP 结果包
+5. 补充前端回归测试
+  - frontend/src/views/__tests__/ZiweiView.spec.ts 新增运营面板测试
+  - 覆盖“打开运营面板并加载统计与实验列表”
+  - 覆盖“创建实验并查看结果”
+  - 新增批量排盘测试
+  - 覆盖“上传 CSV 并触发批量排盘”
+6. 完成验证
+  - ZiweiView.spec.ts 共 27 项用例，全部通过
+  - 修改文件诊断无与本轮改动直接相关的新增错误
+
+本轮结果：
+- `ziwei` 的任务包 C 已完成首轮 SPA 承接：A/B 实验、全局统计入口、批量工具入口都已进入 `ZiweiView`
+- 当前可在紫微页内完成：查看核心运营统计 → 管理实验 → 查看实验结果 → 下载 CSV 模板 → 发起批量排盘
+- legacy `panel-stats-ab.js` 与 `panel-review-ext.js` 中最核心的运营入口已被 SPA 承接
+
+当前剩余差异：
+1. 实验分配 / 事件回传等更深层 A/B 运行态能力仍可继续补齐
+2. 批量排盘当前以文件上传与 ZIP 下载为主，缺少更多进度可视化与结果摘要
+3. 词汇 / 风水 / 多人合盘等任务包 D 仍未迁入
+
+下一步建议：
+1. 进入 ziwei 任务包 D
+  - 词汇工具入口
+  - 风水助手
+  - 多人合盘 / 合盘增强
+2. 若希望先收口任务包 C，可补一轮体验增强
+  - 实验操作成功提示统一
+  - 结果卡片更细的转化说明
+  - 批量任务结果摘要与失败兜底提示
+3. 若继续压缩 legacy 依赖，可优先挑词汇与多人合盘这两个用户可感知差异更大的模块
+
+2026-04-24（第四十九轮）
+
+已继续执行：ziwei 阅读增强与周边工具（词汇 / 多人合盘）
+
+本轮已完成：
+1. 在 frontend/src/views/ZiweiView.vue 增加周边工具入口按钮
+  - 新增“词汇”按钮
+  - 新增“多人合盘”按钮
+  - 与现有运营 / 批量 / 审核 / AI 草稿等入口统一收敛到信息栏
+2. 在 frontend/src/views/ZiweiView.vue 落地词汇工具面板 UI
+  - 支持关键字搜索
+  - 支持按分类筛选（格局 / 神煞 / 五行 / 十神 / 大运 / 其他）
+  - 支持展示术语、拼音、定义、典籍来源
+  - 复用 frontend/src/api/static-data.ts 中的 `getGlossary()`
+3. 在 frontend/src/views/ZiweiView.vue 落地多人合盘面板 UI
+  - 以当前命盘作为甲方
+  - 支持追加最多 3 位额外成员
+  - 支持填写出生年月日时分、性别、经度
+  - 支持调用 `ziweiMultiCompat()` 计算缘分矩阵
+  - 支持展示团队和谐指数、矩阵表格、两两配对结果
+4. 补充前端回归测试
+  - frontend/src/views/__tests__/ZiweiView.spec.ts 新增词汇工具测试
+  - 覆盖“打开词汇工具并加载术语列表”
+  - 新增多人合盘测试
+  - 覆盖“提交多人合盘并显示缘分矩阵”
+5. 完成验证
+  - ZiweiView.spec.ts 共 29 项用例，全部通过
+  - 修改文件诊断无与本轮改动直接相关的新增错误
+
+本轮结果：
+- `ziwei` 的任务包 D 已完成首轮 SPA 承接中的两项高感知能力：词汇工具与多人合盘
+- 当前可在 `ZiweiView` 内完成：术语查询 / 分类筛选 / 典籍查看，以及基于当前命盘发起多人合盘分析
+- legacy `glossary.js` 与 `compat.js` 中最核心的两项用户侧功能已被 SPA 承接
+
+当前剩余差异：
+1. 风水助手尚未迁入 SPA
+2. 双人合盘的完整增强展示和多人合盘更细的说明仍可继续补充
+3. 词汇工具当前以只读检索为主，尚未接入更深的联想或交叉引用
+
+下一步建议：
+1. 继续完成任务包 D 的最后一项：风水助手
+  - 八宅方位分析
+  - 室内布局评估
+  - 人宅相合说明
+2. 若先收口当前能力，可补一轮体验增强
+  - 词汇条目快速复制
+  - 多人合盘颜色分组与矩阵高亮
+  - 基于当前宫位 / 格局自动推荐相关词汇
+3. 完成风水助手后，再评估 legacy `ziwei.html` 是否只剩少量增强项和视觉差异
+
+2026-04-24（第五十轮）
+
+已继续执行：ziwei 风水助手
+
+本轮已完成：
+1. 修正 frontend/src/api/fengshui.ts 类型定义
+  - 将 `RoomLayoutRequest.rooms` 注释口径修正为“方位 → 房间类型”
+  - 将 `ZoneAssessmentResponse` 对齐后端实际字段
+  - 便于前端准确展示布局评估结果
+2. 在 frontend/src/views/ZiweiView.vue 增加风水入口按钮
+  - 新增“风水”按钮
+  - 与词汇 / 多人合盘 / 运营 / 批量等入口并列
+3. 在 frontend/src/views/ZiweiView.vue 落地风水助手面板 UI
+  - 支持自动带入当前命盘出生年与性别
+  - 支持加载风水选项（朝向 / 房型）
+  - 支持命卦分析
+  - 支持展示四吉方 / 四凶方
+  - 支持展示床头 / 书桌 / 大门建议
+  - 支持展示人宅相合说明
+4. 在 frontend/src/views/ZiweiView.vue 落地九宫格布局评估
+  - 支持设置 8 个方位的房间类型
+  - 支持可选房屋朝向
+  - 支持调用 `analyzeRoomLayout()` 发起布局评估
+  - 支持展示整体评分、等级、逐格结果、改善建议
+5. 补充前端回归测试
+  - frontend/src/views/__tests__/ZiweiView.spec.ts 新增风水助手测试
+  - 覆盖“打开风水面板并加载命卦分析”
+  - 覆盖“提交房间布局评估”
+6. 完成验证
+  - ZiweiView.spec.ts 共 31 项用例，全部通过
+  - 修改文件诊断无与本轮改动直接相关的新增错误
+
+本轮结果：
+- `ziwei` 的任务包 D 已完成首轮 SPA 承接闭环：词汇工具 / 多人合盘 / 风水助手均已进入 `ZiweiView`
+- 当前可在紫微页内完成：术语检索、多人合盘、八宅命卦分析、房间布局评估
+- legacy `panel-fengshui.js` 的核心用户路径已被 SPA 承接
+
+当前剩余差异：
+1. 词汇工具、多人合盘、风水助手仍有体验增强空间
+2. 双人合盘的更细粒度展示仍可继续收口
+3. legacy `ziwei.html` 剩余差异已进一步收敛到增强项与细节交互层面
+
+下一步建议：
+1. 开始收口 `ziwei` 剩余增强项
+  - 词汇快捷复制 / 交叉引用
+  - 多人合盘矩阵高亮与颜色映射
+  - 风水布局结果的更直观九宫格可视化
+2. 若希望切换主线，可开始重新盘点 legacy `ziwei.html` 的残余差异并评估收口策略
+3. 若继续做体验包，建议优先统一所有浮层面板的提示、空态、成功反馈和动作文案
+
+2026-04-25（第九十七轮）
+
+已继续执行：工作区收口第一步（ZiweiView 前端诊断清零）
+
+本轮已完成：
+1. 修正 `frontend/src/api/ziwei.ts`
+  - 为 `LifeSuggestionResponse` 补充可选字段 `evidence` / `notes` / `disclaimer`
+  - 使建议面板模板与 API 类型口径一致，消除字段缺失诊断
+2. 修正 `frontend/src/views/ZiweiView.vue` 的类型模型与视图辅助函数
+  - 新增 `StarLike` / `FlyingReceivedItem` 等局部类型
+  - 新增统一辅助函数：
+    - `getStarName()`
+    - `getStarTransforms()`
+    - `getStarBrightnessValue()`
+    - `getAuxStars()`
+    - `getPalaceTransforms()`
+    - `getReceivedTransformTexts()`
+    - `getReceivedTransformLabels()`
+  - 将原本把 `aux_stars` 当作对象数组使用的多处逻辑统一改为兼容处理
+3. 修正 Ziwei 关键类型与接线问题
+  - 修复飞星 `received` 的错误断言
+  - 修复命宫旺星统计中的可空问题
+  - 修复保存快照时 `null` / `undefined` 类型不一致问题
+  - 将流年年份选择改为直接回写 `liunianYear` 并触发重算，移除丢失的 `onLiunianYearChange()` 引用
+  - 修复 AI 解读处 `pattern_summary` 可能落成对象的问题，改为安全回退到文本摘要
+4. 清理模板与脚本中的无效诊断源
+  - 修复十神面板中 `v-for + v-if` 导致的模板作用域报错
+  - 修复飞星接收四化区域的渲染类型问题
+  - 清理一批已未使用的变量与历史辅助逻辑：
+    - `liunianInsightTags`
+    - `PALACE_ORDER`
+    - 若干只声明未使用的局部变量
+    - 未接入的快捷笔记分组辅助函数
+5. 完成验证
+  - `frontend/src/views/ZiweiView.vue` 诊断错误已清零
+  - `frontend/src/api/ziwei.ts` 诊断错误已清零
+  - 执行 `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - 当前结果为 `47 / 47` 全部通过
+
+本轮结果：
+- 工作区问题中最现实的阻塞项已从“ZiweiView 存在大量前端诊断错误”推进到“当前文件诊断已清零”
+- `ZiweiView` 的类型口径、模板作用域与辅助星/飞化数据处理已明显收口
+- 当前代码状态终于与文档中的“可继续回归”前提更接近，不再是文档领先代码过多的状态
+
+下一步建议：
+1. 继续做工作区收口第二步
+  - 回收 `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 中过度超前的“下线评估 / 人工回归阶段”表述
+  - 明确“诊断清零 + 定向回归通过”后再继续人工回归
+2. 再做工作区改动分层
+  - 区分应提交的功能/修复改动
+  - 区分临时覆盖率产物与大批新增测试文件
+3. 完成口径收口后，再恢复 A 组 PNG 与 C 组审核 / AI 草稿人工核对
+
+2026-04-25（第九十八轮）
+
+已继续执行：工作区收口第二步（文档口径回收）
+
+本轮已完成：
+1. 回收 `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 中偏超前的 `ziwei.html` 阶段口径
+  - 将“条件下线评估”“下线前回归 + 退役形态决策”等表述回收为“人工回归准备”
+  - 将 reviewer 候选描述改回当前真实状态：已完成服务端候选接线，后续仍可继续优化展示与角色过滤
+  - 同步更新 `ziwei.html` 在下线 / 保留清单中的当前判定与下一步动作
+2. 同步修正文档中的回归基线
+  - 将 `ZiweiView.spec.ts` 定向测试结果由 `42 / 42` 更新为当前实际的 `47 / 47`
+3. 收紧 `README.md` 中的入口说明
+  - 保留 `/static/app/workbench` 作为唯一主站入口口径
+  - 将 `/static/ziwei.html` 明确为当前人工回归对照与兜底入口，而不是提前写成下线评估阶段
+
+本轮结果：
+- 代码真实状态与迁移文档的阶段判断重新对齐
+- 当前口径已回收到“先完成人工回归，再决定 compat / 下线策略”
+- 后续继续推进时，文档不再领先代码与回归事实过多
+
+下一步建议：
+1. 继续复核 README、迁移矩阵与实际入口代码的一致性
+2. 完成工作区改动分层，区分正式改动与临时产物
+3. 恢复 A 组 PNG 与 C 组审核 / AI 草稿人工核对
+
+2026-04-25（第九十九轮）
+
+已继续执行：工作区收口第三步（改动分层与临时产物降噪）
+
+本轮已完成：
+1. 基于 `git status --short` 对当前工作区改动做了分层盘点
+  - 当前工作区不是单一功能批次，而是“长期结构改动 + 当前 Ziwei 收口 + 大量测试补强 + 临时产物”混在一起
+  - 其中与当前收口主线直接相关、应优先单独成批的文件，已明确收敛为：
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/api/ziwei.ts`
+    - `README.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `设计.txt`
+2. 明确了当前工作区建议拆分的 4 个批次
+  - 批次 A：当前正式收口批
+    - `ZiweiView` 诊断清零
+    - 主站 / legacy 文档口径回收
+    - 与当前回归前置直接相关的说明文档
+  - 批次 B：前期已积累的结构/迁移批
+    - 后端装配层、路由拆分、legacy / SPA 入口治理、SPA 子页迁移等大批量改动
+  - 批次 C：覆盖率/质量护栏批
+    - `tests/test_coverage_boost*.py`
+    - `tests/test_openapi_sync.py`
+    - `tests/test_property_bazi.py`
+    - `tests/test_golden_regression.py`
+    - 以及其它本轮无直接关系但属于测试补强的新增测试
+  - 批次 D：本地临时产物 / 噪音批
+    - `tmp_cov.json`
+    - `.hypothesis/`
+    - `.vite/`
+    - 以及当前 git 状态中的若干扫描、输出和覆盖率快照残留
+3. 先做了最小降噪处理
+  - 更新 `.gitignore`
+  - 新增忽略：`.hypothesis/`、`.vite/`
+  - 使本地属性测试缓存与前端构建缓存不再继续污染工作区视图
+
+本轮结果：
+- 当前“工作区问题”已从单纯的文档/诊断问题，进一步收口到“改动批次边界不清”这一真实工程问题
+- 现在已经可以把当前主线明确视为：
+  - 先围绕 `ZiweiView` 与入口文档口径形成最小正式批次
+  - 其余结构改动、测试补强与临时产物分别独立处理
+- 后续继续推进时，不必再把所有未提交改动当成同一批次处理
+
+下一步建议：
+1. 继续做工作区收口第四步
+  - 只围绕当前正式收口批复核实际改动文件与一致性
+  - 避免把覆盖率冲刺测试与历史结构改动混进当前批次判断
+2. 完成当前正式收口批复核后，再恢复 A 组 PNG 与 C 组审核 / AI 草稿人工核对
+3. 后续若进入提交阶段，应优先按 A / B / C / D 四批拆开，而不是一次性处理整个工作区
+
+2026-04-25（第一百轮）
+
+已继续执行：工作区收口第四步（当前正式批一致性复核）
+
+本轮已完成：
+1. 复核当前正式收口批与实际入口代码的一致性
+  - 检查 `app/static_routes_setup.py`
+  - 检查 `README.md`
+  - 检查 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+2. 确认当前真实入口口径已经对齐
+  - `/static/app/workbench` 仍是唯一主站入口
+  - `/verify`、`/bazi`、`/admin` 当前都已是“SPA 优先、legacy 回退”的兼容别名入口
+  - `/static/ziwei.html` 当前仍作为人工回归对照与兜底入口保留
+3. 修正文档中的一个遗留不一致点
+  - `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 中旧表述仍写成“当前只对 `/`、`/dashboard`、`/verify` 做了 SPA 优先跳转”
+  - 已修正为当前真实状态：`/`、`/dashboard`、`/verify`、`/bazi`、`/admin` 都已落地兼容重定向
+
+本轮结果：
+- 当前正式收口批中，README、迁移矩阵与实际入口代码的主口径已重新对齐
+- 工作区收口主线已从“诊断清零 → 文档回收 → 改动分层”进一步推进到“当前正式批一致性复核完成”
+- 后续继续推进时，可不再把入口口径问题视为当前主阻塞项
+
+下一步建议：
+1. 恢复 A 组 PNG 人工核对
+2. 随后恢复 C 组审核 / AI 草稿人工核对
+3. 人工回归若无阻塞，再决定 `ziwei.html` 是否进入 compat 改造观察阶段
+
+2026-04-25（第一百零一轮）
+
+已继续执行：恢复 A 组人工核对入口
+
+本轮已完成：
+1. 复核 A 组人工核对依赖入口
+  - `http://localhost:5173/static/app/workbench` 返回 200
+  - `http://localhost:5173/static/app/ziwei` 返回 200
+  - `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 返回 200
+2. 处理中途发现的本地环境问题
+  - 首次检查时，8001 的 legacy 对照入口不可达
+  - 已重新拉起 `backend:dev`
+  - 后端恢复后再次验证，legacy 对照入口已恢复正常
+3. 已重新打开人工核对页面
+  - Ziwei SPA：`http://localhost:5173/static/app/ziwei`
+  - legacy 对照页：`http://127.0.0.1:8001/static/ziwei.html?legacy=1`
+  - 主站入口：`http://localhost:5173/static/app/workbench`
+
+本轮结果：
+- A 组 PNG 人工核对所需的主站、Ziwei SPA 与 legacy 对照入口都已恢复到可直接使用状态
+- 当前阻塞已从“入口可用性”切换回“实际页面人工核对”本身
+- 后续可以直接在已打开页面上做 PNG 导出与真实交互核对，而不需要再重复准备环境
+
+下一步建议：
+1. 在已打开的 Ziwei SPA 页面执行一次 `导出 PNG` 人工检查
+2. 若 A 组无阻塞，再继续 C 组审核 / AI 草稿人工核对
+
+2026-04-25（第一百零二轮）
+
+已继续执行：恢复 C 组人工核对基线
+
+本轮已完成：
+1. 对 C 组审核链路做最小 API smoke
+  - `POST /api/v1/reviews` 成功创建审核单
+  - `GET /api/v1/reviews/stats` 返回统计正常
+  - `GET /api/v1/reviews/queue` 返回待审队列正常
+  - `GET /api/v1/reviews/assignees` 返回当前用户与候选列表正常
+  - `POST /api/v1/reviews/{id}/assign` 成功完成指派
+2. 对 C 组 AI 草稿链路做最小 API smoke
+  - `GET /api/v1/llm/config` 返回当前 `mock` provider 正常
+  - `POST /api/v1/llm/interpret` 成功生成草稿
+  - `GET /api/v1/llm/drafts?chart_hash=...` 成功返回草稿列表
+  - `PATCH /api/v1/llm/drafts/{id}` 成功完成审核通过
+3. 收口当前 C 组人工核对前置状态
+  - 当前已确认：审核创建、队列、候选、指派、草稿生成、草稿列表、草稿审核这些主链路在本地环境中都可直接工作
+  - 因此 C 组当前不再卡在接口或环境前置，而是可直接进入页面级人工核对
+
+本轮结果：
+- C 组人工核对所依赖的审核与 AI 草稿主链路已恢复到可直接执行的状态
+- 当前人工回归前置基线已形成：
+  - A 组入口已恢复
+  - C 组接口链路已恢复
+- 后续若继续推进，优先级仍应保持为：先完成 A 组 PNG 人工检查，再进入 C 组页面人工核对
+
+下一步建议：
+1. 优先完成 A 组 `导出 PNG` 人工检查
+2. 随后在 Ziwei SPA 页面实际核对 C 组：队列切换、领取 / 指派、批量处理、草稿生成、草稿审核、notes 保存与复制反馈
+
+2026-04-25（第一百零三轮）
+
+已继续执行：收口 A 组 PNG 导出阻塞并补回归护栏
+
+本轮已完成：
+1. 修复 Ziwei SPA 的 PNG 导出区域定位
+  - `frontend/src/views/ZiweiView.vue` 中 `exportChartAsImage()` 不再依赖已失效的 `.palace-container`
+  - 已改为优先查找当前真实命盘容器 `.palace-grid-wrap`，并以 `.chart-tab-panel` 作为兜底
+  - 当用户当前不在命盘页签时，会先自动切回 `chart` 再执行导出
+2. 同步修复宫位跳转滚动定位
+  - `selectPalaceByIndex()` 已复用同一套命盘区域查找逻辑
+  - 避免书签 / 相关跳转仍继续使用旧 selector
+3. 补齐导出场景回归测试
+  - `frontend/src/views/__tests__/ZiweiView.spec.ts` 新增用例：在非命盘页签点击 `导出 PNG` 时，会自动切回命盘并执行导出
+  - 当前 Ziwei 定向回归已更新为 `48 / 48` 通过
+
+本轮结果：
+- A 组 PNG 核对的真实阻塞点已从“旧 selector 失效”转为“可直接继续页面侧观察截图效果”
+- `ZiweiView.vue` 当前导出链路与宫位跳转链路已重新对齐到现有模板结构
+- 当前工作区收口已把 PNG 导出这类运行态回归补进测试护栏，后续再次重构时更不容易回退
+
+下一步建议：
+1. 继续在 Ziwei SPA 页面做 A 组最终人工核对，重点看 PNG 截图范围、清晰度、命名与高亮态是否符合预期
+2. 若 A 组页面侧效果确认无误，再切入 C 组页面级人工核对
+
+2026-04-25（第一百零四轮）
+
+已继续执行：收口 C 组页面级核对的代码侧护栏
+
+本轮已完成：
+1. 复核 Ziwei 审核 / AI 草稿页面链路的前端测试覆盖
+  - `frontend/src/views/__tests__/ZiweiView.spec.ts` 中已覆盖：审核面板加载、提交审核、手动刷新、快速指派、AI 草稿生成、AI 草稿审核、reviewer notes 保存与复制反馈
+2. 执行前端完整构建回归
+  - `frontend` 下 `npm run build` 已通过
+  - 当前 `ZiweiView`、`AdminView`、`BaziView` 相关产物均可正常完成打包
+3. 复核当前相关文件诊断状态
+  - `frontend/src/views/ZiweiView.vue` 无前端诊断错误
+  - `frontend/src/views/__tests__/ZiweiView.spec.ts` 无前端诊断错误
+
+本轮结果：
+- C 组页面级核对在“代码护栏”层面已继续收紧：关键审核 / 草稿链路已有自动化用例覆盖，且前端完整构建通过
+- 当前若继续推进，剩余工作将主要收敛为浏览器里的最终人工观察，而不再是代码层未验证状态
+- A 组 PNG 导出与 C 组审核 / AI 草稿这两条主线，当前都已具备较完整的自动化与构建护栏
+
+下一步建议：
+1. 在浏览器中继续做最终人工核对，优先看 C 组的队列切换、领取 / 指派、批量处理、草稿审核与 notes 保存反馈
+2. 若页面侧观察无阻塞，可把当前工作区收口主线转入“待提交改动整理与分批提交”阶段
+
+2026-04-25（第一百零五轮）
+
+已继续执行：待提交改动整理与分批提交预案
+
+本轮已完成：
+1. 重新盘点当前 git 工作区改动规模
+  - 当前不是单一修复批次，而是“长期结构改动 + SPA 迁移 + 大量新增后端能力 + 测试补强 + 临时/本地文件”混合状态
+  - `git status --short` 显示：
+    - 大量后端路由、schema、service、migration、新模型文件
+    - 大量前端 `frontend/` 新增与改动
+    - 多个 static legacy 页面与兼容入口改动
+    - 大量测试补强文件新增
+    - 少量临时/扫描/输出文件删除或新增
+2. 收敛“当前正式收口批”的最小边界
+  - 当前最适合独立成批的文件仍应优先限定在：
+    - `.gitignore`
+    - `README.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/views/__tests__/ZiweiView.spec.ts`
+    - `frontend/src/api/ziwei.ts`
+    - `设计.txt`
+  - 这一批对应的是：
+    - Ziwei PNG 导出修复
+    - 宫位跳转定位修复
+    - PNG 回归测试补强
+    - 主站 / 回归文档口径收口
+    - 忽略本地缓存目录
+3. 明确当前不应混入首批提交的内容
+  - 大量后端新增能力（如 reviews / llm / name / fengshui / experiments / compatibility 等）
+  - 前期 Workbench / Bazi / Admin / static legacy 迁移大批改动
+  - 覆盖率冲刺与大规模新增测试文件
+  - 本地扫描/中间产物与历史输出文件删除
+4. 给出建议提交顺序
+  - 批次 A：Ziwei 当前正式收口批
+  - 批次 B：前端 SPA 迁移与页面承接批（Workbench / Bazi / Admin / Ziwei 大功能迁移）
+  - 批次 C：后端能力与迁移表批（router / schema / service / migration）
+  - 批次 D：测试补强批（coverage boost / openapi / golden / property / engine tests）
+  - 批次 E：临时文件清理批（若仍需保留删除记录，再单独处理）
+
+本轮结果：
+- 当前工作区已经明确不适合“一次性整体提交”
+- 若后续进入实际提交阶段，最稳妥策略是先提交当前 Ziwei 收口最小批，再逐步拆分历史累积改动
+- 这样可以避免把“已验证的 PNG 导出修复”与“尚未统一审阅的大批后端/测试改动”绑在一起
+
+下一步建议：
+1. 若继续当前收口主线，优先把“当前正式收口批”从整体工作区里单独摘出
+2. 若继续做工程整理，可进一步把批次 B / C / D 的具体文件名单落成清单
+3. 若用户要开始提交，再按上述 A → B → C → D → E 的顺序处理
+
+2026-04-25（第一百零六轮）
+
+已继续执行：细化当前正式收口批与后续批次框架
+
+本轮已完成：
+1. 复核“批次 A”精确文件范围
+  - 已单独核对以下文件的 git 状态：
+    - `.gitignore`
+    - `README.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `frontend/src/api/ziwei.ts`
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/views/__tests__/ZiweiView.spec.ts`
+    - `设计.txt`
+  - 当前状态结论：
+    - `.gitignore`、`README.md` 为已跟踪修改
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`、`frontend/src/api/ziwei.ts`、`frontend/src/views/ZiweiView.vue`、`frontend/src/views/__tests__/ZiweiView.spec.ts`、`设计.txt` 当前为未跟踪文件
+2. 明确“批次 A”的实际操作注意点
+  - 由于 `frontend/` 当前在 git 视角下仍表现为未跟踪目录，后续若进入实际暂存阶段，不能直接按目录级操作
+  - 必须显式只选中本轮正式收口相关文件，否则容易把整个 `frontend/` 目录的一并新增混入首批提交
+3. 按顶层目录统计当前改动分布
+  - `docs`：62 项
+  - `tests`：42 项
+  - `services`：40 项
+  - `static`：36 项
+  - `app`：34 项
+  - `routers`：28 项
+  - `migrations`：8 项
+  - `scripts`：6 项
+  - 其余为 root 级与零散工具文件
+4. 进一步收口后续批次框架
+  - 批次 B 更适合以前端 / static 迁移主线为核心
+    - `frontend/`
+    - `static/`
+    - 与入口迁移直接相关的文档
+  - 批次 C 更适合以后端能力主线为核心
+    - `app/`
+    - `routers/`
+    - `services/`
+    - `migrations/`
+  - 批次 D 更适合以测试与契约护栏为核心
+    - `tests/`
+    - `.coveragerc`
+    - 以及相关质量门禁配置文件
+
+本轮结果：
+- 当前“批次 A”已经从抽象建议，收敛为可直接照着挑选的精确文件清单
+- 同时也明确了一个关键事实：当前最小收口批之所以需要小心处理，是因为它夹在一个尚未被整体拆分提交的大型未跟踪前端目录里
+- 后续若真的进入提交阶段，最重要的不是再继续讨论批次名称，而是严格按精确文件路径做选择
+
+下一步建议：
+1. 若继续推进提交前整理，下一步就把批次 B / C / D 进一步细化到具体文件名单
+2. 若准备开始提交，优先只处理“批次 A 精确文件清单”，不要按目录级一次性选择
+3. 批次 A 稳定后，再分别整理前端迁移批、后端能力批与测试补强批
+
+2026-04-25（第一百零七轮）
+
+已继续执行：细化批次 B / C / D 的具体文件范围
+
+本轮已完成：
+1. 细化批次 B（前端 SPA 迁移 / legacy 入口收口）
+  - 已明确包含：
+    - `frontend/` 整体前端工程
+    - `static/` 下 legacy 页面、兼容入口、静态资源、构建产物
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `docs/README-DELIVERY.md`
+    - `docs/api.md`
+    - `README.md`
+  - 当前实际命中内容包括：
+    - `frontend/src/views/*.vue` 与对应 `__tests__`
+    - `frontend/src/components/workbench/*`
+    - `frontend/src/api/*`
+    - `frontend/src/router/*`
+    - `frontend/src/stores/*`
+    - `static/admin.html`、`static/bazi.html`、`static/ziwei.html`、`static/verify.html`、`static/index.html`
+    - `static/js/admin/*`、`static/js/bazi/*`、`static/js/ziwei/*`
+    - `static/app/` 构建产物
+  - 额外注意：`static/app/` 属于构建输出，是否纳入正式提交，应在批次 B 内再单独决策
+2. 细化批次 C（后端能力 / schema / router / service / migration）
+  - 已明确包含：
+    - `app/`
+    - `routers/`
+    - `services/`
+    - `migrations/`
+    - `scripts/`
+    - `run.py`
+    - `backends.py`
+    - `constants.py`
+    - `boundary.py`
+    - `verify.py`
+    - `requirements*.txt`
+    - `pytest.ini`
+    - `Dockerfile`
+    - `deploy.ps1`
+    - `start-local.ps1`
+    - `CHANGELOG.md`
+  - 当前实际命中内容包括：
+    - 新增 `app/bootstrap.py`、`app/lifecycle.py`、`app/static_routes_setup.py`
+    - 新增 reviews / llm / name / fengshui / western / zeri / experiments / api_keys / similarity 等 router
+    - 新增 name / llm / fengshui / similarity / evidence / compatibility / templates 等 service 能力
+    - 新增多张 migration 版本文件
+3. 细化批次 D（测试补强 / 契约护栏）
+  - 已明确包含：
+    - `tests/` 下新增与修改的测试文件
+    - `.coveragerc`
+  - 当前实际命中内容包括：
+    - `tests/test_coverage_boost*.py`
+    - `tests/test_openapi_sync.py`
+    - `tests/test_property_bazi.py`
+    - `tests/test_golden_regression.py`
+    - `tests/test_db_index.py`
+    - `tests/test_evidence_chain.py`
+    - `tests/test_name_engine.py`
+    - `tests/test_llm_evidence_integration.py`
+    - `tests/test_ziwei_api.py`
+    - `tests/e2e/test_ui_interactions.py`
+4. 同步明确批次 E（临时产物 / 本地输出）边界
+  - 这一批不应并入测试补强批，当前单独包括：
+    - `tmp_cov.json`
+    - `coverage.json`
+    - `coverage_engine.json`
+    - `__scan.json`
+    - `_test_out.txt`
+    - `err.txt`
+    - `out.txt`
+  - 这类文件应最后单独决定：保留删除记录、恢复、还是直接忽略/丢弃
+
+本轮结果：
+- 现在不仅“批次 A”已有精确清单，批次 B / C / D / E 的边界也已经可以直接落到文件路径级别
+- 后续若进入真实提交阶段，已经具备从小到大逐批拆分的基础，而不需要再重新做目录排查
+- 当前真正需要谨慎处理的主要是两点：
+  - `frontend/` 整体仍是大批未跟踪内容
+  - `static/app/` 构建产物是否应入库，需要与批次 B 分开判断
+
+下一步建议：
+1. 若继续推进整理，下一步优先单独判断 `static/app/` 是否应归入批次 B
+2. 若准备开始提交，仍应先只处理批次 A，再进入批次 B 的前端/静态迁移主线
+3. 批次 D 与批次 E 不要混提，测试护栏与本地输出必须分开处理
+
+2026-04-25（第一百零八轮）
+
+已继续执行：判断 `static/app/` 构建产物是否应归入批次 B
+
+本轮已完成：
+1. 核对 `static/app/` 的 git 历史与当前状态
+  - `git ls-files static/app` 当前无输出
+  - `git log -- static/app` 当前无历史记录
+  - 说明 `static/app/` 在当前仓库里并不是一个长期已跟踪的稳定目录，而是本轮前端构建后出现的大批未跟踪产物
+2. 核对前端构建方式
+  - `frontend/package.json` 中 `build` 脚本为 `vue-tsc && vite build`
+  - 前端构建产物直接输出到 `static/app`
+3. 核对部署链路是否会自动构建前端
+  - 当前 `Dockerfile` 只安装 Python 依赖并 `COPY . .`
+  - 当前 `deploy.ps1` 与 `start-local.ps1` 也没有自动执行 `frontend` 构建
+  - README 当前还明确写着：主 SPA 入口依赖 `static/app` 下已有已构建资源
+4. 形成 `static/app/` 的归属判断
+  - 结论不是“简单忽略”
+  - 也不适合直接与前端源码一起混进同一个源码迁移批
+  - 当前更合理的处理方式是：
+    - 将 `frontend/` 源码视为批次 B1
+    - 将 `static/app/` 构建产物视为批次 B2（发布产物子批）
+  - 只有在未来补上“部署时自动构建前端”的链路后，`static/app/` 才适合彻底从版本提交策略中剥离
+
+本轮结果：
+- `static/app/` 当前不应和前端源码混在同一批做代码审阅
+- 但在现有部署脚本与 Docker 镜像不自动构建前端的前提下，若希望 `/static/app/workbench` 在纯后端部署环境中可直接工作，`static/app/` 仍不能被简单当作可丢弃缓存
+- 因此批次 B 现已更准确拆成：
+  - 批次 B1：前端源码 / static 兼容页 / 迁移文档
+  - 批次 B2：`static/app/` 构建产物（单独判断、单独处理）
+
+下一步建议：
+1. 若继续推进提交整理，批次 B 应先只整理 B1，不要先碰 `static/app/`
+2. 若之后要减少构建产物入库压力，可单独开一条主线：给 Docker / 部署脚本补前端自动构建
+3. 在现阶段未改部署链路前，`static/app/` 最稳妥的策略仍是“单独子批处理”，而不是直接忽略
+
+2026-04-25（第一百零九轮）
+
+已继续执行：把批次 B 拆细到 B1 / B2 可执行层级
+
+本轮已完成：
+1. 将批次 B 进一步拆成可执行子桶
+  - B1-docs：4 项
+    - `README.md`
+    - `docs/README-DELIVERY.md`
+    - `docs/api.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - B1-frontend-src：142 项
+    - `frontend/package.json` / `package-lock.json` / `vite.config.ts` / `tsconfig*.json`
+    - `frontend/src/api/*`
+    - `frontend/src/components/*`
+    - `frontend/src/router/*`
+    - `frontend/src/stores/*`
+    - `frontend/src/views/*`
+    - 以及对应前端单测
+  - B1-static-legacy：51 项
+    - `static/admin.html`
+    - `static/bazi.html`
+    - `static/ziwei.html`
+    - `static/verify.html`
+    - `static/index.html`
+    - `static/js/admin/*`
+    - `static/js/bazi/*`
+    - `static/js/ziwei/*`
+    - 若干旧静态文件删除记录与兼容资源调整
+  - B2-static-app：42 项
+    - `static/app/index.html`
+    - `static/app/assets/*` 全量哈希产物
+2. 明确 B2 的实际处理原则
+  - `static/app/assets/*` 为哈希命名构建文件，彼此强关联
+  - 不适合逐个文件挑选或零散提交
+  - 若决定保留 B2，应将 `static/app/` 视为“一次构建生成的原子快照”整体处理
+  - 若不保留 B2，则必须先补上部署时自动构建前端的链路，否则纯后端部署环境会失去 SPA 主站资源
+3. 形成批次 B 的最终建议结构
+  - 批次 B1：源码与 legacy 兼容页迁移批
+  - 批次 B2：发布产物快照批（`static/app/`）
+  - B1 与 B2 不应混成一个代码审阅批次
+
+本轮结果：
+- 批次 B 现在已经不是一个模糊的“前端相关改动”集合，而是：
+  - 可审阅的源码/页面迁移批（B1）
+  - 可发布但不适合细审的构建产物批（B2）
+- 这意味着后续如果要真正分批提交，B1 可以按源码逻辑审，B2 则必须按“构建快照是否需要入库”单独决策
+
+下一步建议：
+1. 若继续整理，可把 B1 再拆成 `frontend-src` / `static-legacy` / `docs` 三个更小子批
+2. 若准备实际提交，优先级仍应是 A → B1 → B2，而不是直接整体处理 B
+3. 若未来要简化版本管理，建议单独立项补“部署时自动构建前端”，从根上把 B2 从提交策略中剥离
+
+2026-04-25（第一百一十轮）
+
+已继续执行：把 B1 再拆成更小的可提交子批
+
+本轮已完成：
+1. 继续拆分 B1 的前端源码批
+  - B1-frontend-core：10 项
+    - `frontend/package.json`
+    - `frontend/package-lock.json`
+    - `frontend/index.html`
+    - `frontend/src/App.vue`
+    - `frontend/src/main.ts`
+    - `frontend/vite.config.ts`
+    - `frontend/tsconfig*.json`
+  - B1-frontend-api：28 项
+    - `frontend/src/api/*`
+    - 对应 `frontend/src/api/__tests__/*`
+  - B1-frontend-components：66 项
+    - `frontend/src/components/*`
+    - 含 report / workbench 组件与对应单测
+  - B1-frontend-router：2 项
+    - `frontend/src/router/index.ts`
+    - `frontend/src/router/__tests__/router.spec.ts`
+  - B1-frontend-stores：10 项
+    - `frontend/src/stores/*`
+    - 及对应 store 单测
+  - B1-frontend-views：21 项
+    - `frontend/src/views/*.vue`
+    - `frontend/src/views/__tests__/*`
+  - B1-frontend-assets / other：5 项
+    - `frontend/src/assets/*`
+    - `frontend/.env.example`
+    - `frontend/.gitignore`
+    - `frontend/src/env.d.ts`
+2. 继续拆分 B1 的 static legacy 批
+  - B1-static-html：11 项
+    - `static/admin.html`
+    - `static/bazi.html`
+    - `static/ziwei.html`
+    - `static/verify.html`
+    - `static/index.html`
+    - 以及若干旧 html 删除记录
+  - B1-static-ziwei-js：17 项
+    - `static/js/ziwei/*`
+  - B1-static-admin-js：1 项
+    - `static/js/admin/main.js`
+  - B1-static-bazi-js：1 项
+    - `static/js/bazi/main.js`
+  - B1-static-css：6 项
+    - `static/css/admin.css`
+    - `static/css/base.css`
+    - `static/css/bazi.css`
+    - `static/css/ziwei.css`
+    - 以及旧 `verify*.css` 删除记录
+  - B1-static-pwa：2 项
+    - `static/manifest.json`
+    - `static/sw.js`
+  - B1-static-other：13 项
+    - 旧 `verify-*`、`cases-*`、`xlsx`、`html2canvas.min.js` 等 legacy 脚本删除记录
+    - `static/js/auth.js`
+3. 继续确认文档批
+  - B1-docs：4 项
+    - `README.md`
+    - `docs/README-DELIVERY.md`
+    - `docs/api.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+
+本轮结果：
+- B1 现在已经可以进一步拆成“前端核心 / API / 组件 / 视图 / static-legacy / docs”等更小单元
+- 后续如果不想一次提交 197 项 B1 内容，已经具备继续拆分的基础
+- 当前最容易先独立拿出来审的 B1 子批通常是：
+  - B1-docs
+  - B1-static-html
+  - B1-frontend-views
+  - B1-frontend-components
+
+下一步建议：
+1. 若继续推进提交前整理，可直接把 B1 再分成“docs / static-html / frontend-views / frontend-components+api / 其余支撑文件”
+2. 若准备开始实际提交，仍应先从 A 批开始，再决定 B1 里先拿哪一小批
+3. B2 `static/app/` 继续保持单独处理，不要和这些源码子批混合
+
+2026-04-25（第一百一十一轮）
+
+已继续执行：形成建议实际提交顺序最终版
+
+本轮已完成：
+1. 基于当前所有分层结果，整理出更稳妥的实际提交顺序
+  - 第 1 批：A（当前正式收口最小批）
+    - `.gitignore`
+    - `README.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `frontend/src/api/ziwei.ts`
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/views/__tests__/ZiweiView.spec.ts`
+    - `设计.txt`
+  - 第 2 批：B1-docs
+    - `README.md`（若未在 A 中完全收口，则以实际差异处理）
+    - `docs/README-DELIVERY.md`
+    - `docs/api.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`（若未在 A 中完全收口，则以剩余差异处理）
+  - 第 3 批：B1-static-html
+    - `static/admin.html`
+    - `static/bazi.html`
+    - `static/ziwei.html`
+    - `static/verify.html`
+    - `static/index.html`
+    - 以及相关旧 html 删除记录
+  - 第 4 批：B1-frontend-views
+    - `frontend/src/views/*.vue`
+    - `frontend/src/views/__tests__/*`
+  - 第 5 批：B1-frontend-components + B1-frontend-api
+    - `frontend/src/components/*`
+    - `frontend/src/api/*`
+    - 及对应组件/API 单测
+  - 第 6 批：B1-frontend-core + router + stores + assets
+    - `frontend/package*.json`
+    - `frontend/vite.config.ts`
+    - `frontend/tsconfig*.json`
+    - `frontend/src/main.ts`
+    - `frontend/src/App.vue`
+    - `frontend/src/router/*`
+    - `frontend/src/stores/*`
+    - `frontend/src/assets/*`
+  - 第 7 批：B1-static-js / css / pwa / other
+    - `static/js/ziwei/*`
+    - `static/js/bazi/*`
+    - `static/js/admin/*`
+    - `static/css/*`
+    - `static/manifest.json`
+    - `static/sw.js`
+    - 以及旧 `verify-*` / `cases-*` / `xlsx` / `html2canvas.min.js` 删除记录
+  - 第 8 批：B2-static-app
+    - `static/app/index.html`
+    - `static/app/assets/*` 全量构建快照
+  - 第 9 批：C（后端能力批）
+    - 建议内部再按“装配/入口 → 新模型与 schema → router → service → migration → 配置与部署”顺序处理
+  - 第 10 批：D（测试护栏批）
+    - `tests/`
+    - `.coveragerc`
+  - 第 11 批：E（临时产物与本地输出）
+    - `tmp_cov.json`
+    - `coverage*.json`
+    - `__scan*.json`
+    - `_test_out.txt` / `err.txt` / `out.txt`
+2. 明确这个顺序的核心原则
+  - 先提交“已验证、范围小、风险低”的收口批
+  - 再提交“可读性强、便于审阅”的文档与入口页批
+  - 再提交前端源码迁移主线
+  - 构建产物单独放到前端源码之后
+  - 后端能力与大规模测试补强放在更后面，避免把当前 Ziwei 修复淹没在大批历史累积改动里
+3. 明确执行时的两个操作规则
+  - 规则一：始终按精确文件路径或已确认的子批范围选择，不按顶层大目录一把全选
+  - 规则二：B2 与 E 都不能抢跑
+    - B2 必须在 B1 稳定后再决定是否纳入
+    - E 必须最后处理，避免把本地输出噪音误当成功能改动提交
+
+本轮结果：
+- 当前已经有一版可直接执行的“建议实际提交顺序”
+- 后续如果用户要正式开始分批处理，不再需要继续做抽象分层讨论，只需要按顺序落地
+- 这也意味着当前工作区整理主线已经基本完成，后续动作可直接切入实际提交或暂存策略
+
+下一步建议：
+1. 若准备正式开始处理提交，第一步就只针对 A 批精确文件清单操作
+2. 若还不提交，可把这版顺序当作工作区收口结论，先停在这里
+3. 若之后继续整理，可再为 C 批单独拆出后端子顺序，但这已不再是当前必要前置
+
+2026-04-25（第一百一十三轮）
+
+已继续执行：隔离 B1-docs 的剩余文档差异
+
+本轮已完成：
+1. 复核 B1-docs 当前状态
+  - `README.md` 与 `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 的相关差异已随 A 批进入暂存区
+  - B1-docs 剩余未隔离部分实际只剩：
+    - `docs/README-DELIVERY.md`
+    - `docs/api.md`
+2. 单独暂存了这两份文档
+  - `docs/README-DELIVERY.md`
+  - `docs/api.md`
+3. 复核 B1-docs 新增暂存内容规模
+  - `docs/README-DELIVERY.md`：67 行差异
+  - `docs/api.md`：11 行差异
+  - 合计为 2 个文件，`46` 行新增、`32` 行删除
+
+本轮结果：
+- B1-docs 现在已经被成功拆成两部分：
+  - 随 A 批暂存的主站 / 迁移矩阵口径文件
+  - 单独补充暂存的交付文档与 API 文档文件
+- 这意味着当前除了 A 批以外，已经有了第一个额外的“小批次”被明确隔离出来
+- 后续若继续沿同样方法推进，可以直接处理下一个最小子批，而不需要再从头做文档范围排查
+
+下一步建议：
+1. 若继续按小批推进，下一步最自然的是处理 `B1-static-html`
+2. 若暂时不想继续扩大暂存集合，现在也可以停在“A 批 + B1-docs 已隔离”的状态
+3. 后续继续处理任何新子批时，仍应保持“先复核范围，再精确暂存”的节奏
+
+2026-04-25（第一百一十二轮）
+
+已继续执行：按精确路径隔离 A 批文件状态
+
+本轮已完成：
+1. 按精确文件路径暂存了 A 批文件
+  - `.gitignore`
+  - `README.md`
+  - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+  - `frontend/src/api/ziwei.ts`
+  - `frontend/src/views/ZiweiView.vue`
+  - `frontend/src/views/__tests__/ZiweiView.spec.ts`
+  - `设计.txt`
+2. 复核暂存结果
+  - 当前这些文件已与其它未提交改动隔离到暂存区
+  - 状态表现为：
+    - `.gitignore`、`README.md` 为已跟踪修改
+    - 其余文件在 git 视角下表现为新增文件
+3. 复核暂存内容规模
+  - `git diff --cached --stat` 显示 A 批当前共 7 个文件
+  - 之所以体量仍大，不是因为混入了其它目录，而是因为：
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `frontend/src/api/ziwei.ts`
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/views/__tests__/ZiweiView.spec.ts`
+    - `设计.txt`
+    这些文件此前都未被 git 跟踪，因此在首个提交批次里会以“整文件新增”出现
+
+本轮结果：
+- A 批已经成功从整体工作区中隔离出来
+- 这意味着后续若要继续做分批提交，当前可以明确地把“已暂存的 A 批”与“其余未暂存的历史累积改动”分开处理
+- 同时也确认了一个现实情况：A 批虽然路径边界最小，但在 git 视角下并不一定小，因为其中包含多个此前未跟踪的大文件
+
+下一步建议：
+1. 若继续推进提交主线，现在已经可以把 A 批视为独立完成的暂存集合
+2. 若还不准备提交，可暂时停在这一状态，不必继续扰动其它批次
+3. 若要继续整理未暂存部分，再从 B1-docs 或 B1-static-html 这类更小子批开始
+
+2026-04-25（第一百一十四轮）
+
+已继续执行：隔离 B1-static-html 的 legacy 入口页改动
+
+本轮已完成：
+1. 复核 B1-static-html 的目标范围
+  - 本轮仅处理以下 HTML 入口页与删除记录：
+    - `static/404.html`
+    - `static/admin.html`
+    - `static/batch.html`
+    - `static/bazi.html`
+    - `static/case.html`
+    - `static/cases.html`
+    - `static/dashboard.html`
+    - `static/delegation.html`
+    - `static/index.html`
+    - `static/verify.html`
+    - `static/ziwei.html`
+  - 复核结果显示这批改动此前尚未进入暂存区，且工作区差异集中在 legacy HTML 入口收口
+2. 按精确路径暂存了 B1-static-html
+  - 新增：`static/admin.html`、`static/bazi.html`
+  - 修改：`static/404.html`、`static/batch.html`、`static/index.html`、`static/verify.html`、`static/ziwei.html`
+  - 删除：`static/case.html`、`static/cases.html`、`static/dashboard.html`、`static/delegation.html`
+3. 复核 B1-static-html 的暂存规模
+  - `git diff --cached --stat` 显示本轮共 11 个文件
+  - 合计为 `1393` 行新增、`2888` 行删除
+  - 体量较大的原因主要来自：
+    - `static/ziwei.html` 的大幅重写与收口
+    - `static/verify.html` 的兼容入口整理
+    - 多个历史 legacy 页面直接删除
+
+本轮结果：
+- B1-static-html 已被成功从整体工作区中单独隔离出来
+- 当前暂存区已经不再只有 A 批与 B1-docs，还额外包含了一组独立的 legacy HTML 入口页收口批次
+- 这说明当前“按小批精确隔离”的方法可继续沿用到其它前端源码子批，而不需要重新设计分批策略
+
+下一步建议：
+1. 若继续推进，可优先处理 `B1-frontend-views` 或 `B1-components` 这类源码子批
+2. 若准备先停一下，当前也可以把暂存区视为“`A + B1-docs + B1-static-html` 已隔离完成”的阶段性结果
+3. `B2-static-app` 仍应保持单独处理，不要与源码批次混合暂存
+
+2026-04-25（第一百一十五轮）
+
+已继续执行：隔离 legacy 静态资源清理批次
+
+本轮已完成：
+1. 复核静态资源清理范围
+  - 本轮单独处理以下 legacy 资源与壳层文件：
+    - `static/css/verify-print.css`
+    - `static/css/verify.css`
+    - `static/js/cases-app.js`
+    - `static/js/cases-redirect.js`
+    - `static/js/html2canvas.min.js`
+    - `static/js/relation-shared.js`
+    - `static/js/verify-chart.js`
+    - `static/js/verify-compare.js`
+    - `static/js/verify-core.js`
+    - `static/js/verify-export.js`
+    - `static/js/verify-guide.js`
+    - `static/js/verify-init.js`
+    - `static/js/verify-render.js`
+    - `static/js/xlsx.mini.min.js`
+    - `static/manifest.json`
+    - `static/sw.js`
+  - 复核结果显示：这批改动与刚完成的 HTML 入口页收口相邻，但边界仍然独立，适合作为单独的小批继续隔离
+2. 按精确路径暂存了这批静态资源改动
+  - 删除了旧的 `verify` / `cases` 相关 CSS、JS 资源
+  - 同步纳入 `static/manifest.json` 与 `static/sw.js` 的配套调整
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示本轮共 16 个文件
+  - 合计为 `17` 行新增、`7373` 行删除
+  - 该批次的主体是 legacy 资源下线，因此体量主要表现为大规模删除而非新增
+
+本轮结果：
+- 又新增了一组独立的可提交小批，可暂命名为 `B1-static-assets`
+- 当前暂存区已经形成连续的 legacy 收口链条：HTML 入口页、静态资源、以及前面的文档批次
+- 这样后续如果继续推进前端源码子批，边界会更清晰，不容易与 legacy 清理动作混在一起
+
+下一步建议：
+1. 若继续沿“先小后大”的节奏推进，可优先处理 `B1-frontend-views`
+2. 若更希望先把 SPA 基础设施单独拎出，也可先处理 `frontend/src/api` 或 `frontend/src/router` 一类更窄的源码目录
+3. `static/app/` 仍继续保留到 B2 单独处理
+
+2026-04-25（第一百一十六轮）
+
+已继续执行：隔离 SPA 基础设施源码批次
+
+本轮已完成：
+1. 复核前端基础目录的边界
+  - 本轮选择先处理：
+    - `frontend/src/api`
+    - `frontend/src/router`
+    - `frontend/src/stores`
+  - 判断依据是：这三组目录共同构成 SPA 的基础接线层，比直接处理视图层更容易保持边界清晰
+2. 按目录精确暂存了前端基础源码
+  - 已纳入 API 封装文件与其测试
+  - 已纳入路由定义与路由测试
+  - 已纳入 Pinia store 与其测试
+  - 其中此前已在 A 批中的 `frontend/src/api/ziwei.ts` 继续保留在同一前端基础设施批次链路中
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示本轮共 40 个文件
+  - 合计为 `5801` 行新增
+  - 该批次以新增的 SPA 基座源码为主，因此体量主要表现为整文件新增
+
+本轮结果：
+- 当前已经成功隔离出一组可独立命名为 `B1-frontend-core` 的 SPA 基础源码批次
+- 暂存区结构已进一步清晰：
+  - A：当前 Ziwei 收口主批
+  - B1-docs：补充文档批次
+  - B1-static-html：legacy HTML 入口页批次
+  - B1-static-assets：legacy CSS / JS / manifest / sw 批次
+  - B1-frontend-core：SPA API / router / stores 批次
+- 后续若继续推进，剩余最自然的前端子批会落到 `frontend/src/views` 与 `frontend/src/components`
+
+下一步建议：
+1. 若继续拆小批，下一步优先处理 `frontend/src/views`
+2. 若希望把展示层再切得更细，也可先只处理 `frontend/src/components`
+3. `static/app/` 仍保持为 B2，继续不要混入源码批次
+
+2026-04-25（第一百一十七轮）
+
+已继续执行：隔离 SPA 视图层批次
+
+本轮已完成：
+1. 复核 `frontend/src/views` 的边界
+  - 除已在 A 批中的 `ZiweiView` 相关文件外，其余视图文件此前仍处于未跟踪状态
+  - 本轮将剩余视图页与视图测试统一视为展示层批次处理
+2. 按目录精确暂存了 `frontend/src/views`
+  - 已纳入 `AdminView`、`BaziView`、`WorkbenchView`、`CompatibilityView`、`ReportView` 等页面
+  - 已纳入对应的视图级测试文件
+  - 同时保留 `ZiweiView.vue` 与 `ZiweiView.spec.ts` 在该批次链路中一并呈现
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示本轮共 21 个文件
+  - 合计为 `28772` 行新增
+  - 该批次体量较大，主要因为多个核心视图与测试文件此前都未被 git 跟踪
+
+本轮结果：
+- 已成功隔离出一组独立的 `B1-frontend-views` 批次
+- 当前前端展示层已不再只停留在基础接线层，视图层也已经被单独抽离出来
+- 后续如果继续推进，剩余最自然的前端子批会落到 `frontend/src/components`
+
+下一步建议：
+1. 若继续沿当前节奏推进，下一步直接处理 `frontend/src/components`
+2. 若想先停一下，当前也已经形成一条完整的 SPA 分层链：`core + views`
+3. `static/app/` 继续保留为 B2，暂不混入
+
+2026-04-25（第一百一十八轮）
+
+已继续执行：隔离 SPA 组件层批次
+
+本轮已完成：
+1. 复核 `frontend/src/components` 的目录规模
+  - 当前组件目录共 66 个文件
+  - 包含通用壳层组件、报告书组件、Workbench 子组件及其测试
+2. 按目录精确暂存了 `frontend/src/components`
+  - 已纳入通用组件与测试
+  - 已纳入 `report` 组件簇与章节组件
+  - 已纳入 `workbench` 组件簇与其测试
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示本轮共 66 个文件
+  - 合计为 `16318` 行新增
+  - 该批次同样以整目录新增为主，符合“组件层独立提交”的预期
+
+本轮结果：
+- 已成功隔离出 `B1-components` 批次
+- 当前前端源码已基本按层拆开：`frontend-core`、`views`、`components`
+- 这意味着后续若继续处理剩余前端内容，边界已经明显收窄到应用壳层文件与 B2 构建产物
+
+下一步建议：
+1. 继续复核 `frontend/` 根层文件（如 `package.json`、`vite.config.ts`、入口文件）是否适合再拆一个 `frontend-shell` 小批
+2. `static/app/` 仍单独保留到 B2
+3. 若准备阶段性收口，当前可把暂存区视为“legacy 收口 + 前端源码分层”已基本完成
+
+2026-04-25（第一百一十九轮）
+
+已继续执行：隔离前端壳层与构建配置批次
+
+本轮已完成：
+1. 复核剩余 `frontend/` 根层文件
+  - 本轮处理了：
+    - `.env.example`
+    - `.gitignore`
+    - `index.html`
+    - `package.json`
+    - `package-lock.json`
+    - `src/App.vue`
+    - `src/main.ts`
+    - `src/env.d.ts`
+    - `src/assets/*`
+    - `tsconfig*.json`
+    - `vite.config.ts`
+  - 这些文件共同构成 SPA 的入口壳层、依赖锁定与构建配置，边界清晰，适合作为单独小批
+2. 按精确路径暂存了上述文件
+  - 已将前端入口、构建配置、依赖清单与本地静态资源纳入暂存区
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示本轮共 15 个文件
+  - 合计为 `4174` 行新增
+  - 体量主要来自 `package-lock.json`，符合“依赖锁文件单独纳入壳层批次”的预期
+
+本轮结果：
+- 已成功再拆出一组 `B1-frontend-shell` 批次
+- 到目前为止，前端源码层已基本被完整拆开：
+  - `B1-frontend-core`
+  - `B1-frontend-views`
+  - `B1-components`
+  - `B1-frontend-shell`
+- 这意味着前端侧剩余最明确需要单独保留的，仅剩 `static/app/` 构建产物 B2
+
+下一步建议：
+1. 若继续推进分批整理，可开始单独复核 `static/app/`，作为 B2 构建快照批次处理
+2. 若暂不处理 B2，当前也已经可以把“legacy 收口 + SPA 源码分层”视为一轮完整阶段成果
+3. 后续若再进入后端批次，应继续避免与 B2 混提
+
+2026-04-25（第一百二十轮）
+
+已继续执行：隔离 B2 构建快照批次 `static/app`
+
+本轮已完成：
+1. 复核 `static/app` 目录范围
+  - 当前目录共 `42` 个文件
+  - 总体量约 `1474732` 字节
+  - 目录内容由 `index.html` 与 `assets/*` 哈希构建产物组成，属于明确的前端构建快照
+2. 按目录精确暂存了 `static/app`
+  - 已将全部构建产物作为单独批次纳入暂存
+  - 继续保持它与前面的源码批次分离，不与 `frontend/` 源码层混提
+3. 复核该批次的暂存表现
+  - `git diff --cached --stat` 显示共 `42` 个文件
+  - 由于多数构建产物是压缩后的单行文件，`diff --stat` 的行数参考意义有限，但文件边界与目录边界清晰
+  - 暂存过程中出现了 LF/CRLF 提示，当前仅为 git 行尾转换提示，不影响本轮批次边界判断
+
+本轮结果：
+- `B2-static-app` 已成功从其余源码改动中单独隔离出来
+- 至此，前端相关改动已经形成完整分层：
+  - legacy HTML
+  - legacy 静态资源
+  - SPA core
+  - SPA views
+  - SPA components
+  - SPA shell
+  - SPA build snapshot（B2）
+- 后续如果继续进入后端批次，已经不需要再担心把 `static/app` 混入源码提交
+
+下一步建议：
+1. 开始按同样方式盘点并拆分后端批次
+2. 优先考虑后端入口 / 路由 / schema / service 的边界是否能先拆成较小子批
+3. 若准备阶段性收口，当前也可以把“前端与构建产物分批整理”视为已完成
+
+2026-04-25（第一百二十一轮）
+
+已继续执行：隔离后端入口与装配层批次
+
+本轮已完成：
+1. 复核后端入口批次边界
+  - 本轮先处理：
+    - `run.py`
+    - `app/bootstrap.py`
+    - `app/lifecycle.py`
+    - `app/router_setup.py`
+    - `app/static_routes_setup.py`
+    - `app/docs_routes_setup.py`
+    - `app/health_routes_setup.py`
+    - `app/http_middleware_setup.py`
+    - `app/middleware_setup.py`
+    - `app/openapi_docs.py`
+    - `app/error_handling.py`
+  - 这些文件共同构成应用启动、装配、路由注册与基础中间件边界，适合作为首个后端小批
+2. 按精确路径暂存了该批次
+  - 已将新增的装配层文件与 `run.py` 的瘦身改动单独纳入暂存区
+  - 同步包含 `openapi_docs` 与 `error_handling` 的配套调整
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `11` 个文件
+  - 合计为 `662` 行新增、`434` 行删除
+  - 该结果符合“入口拆分 + 主入口瘦身”的预期
+
+本轮结果：
+- 已成功隔离出一个可独立命名为 `backend-bootstrap` 的后端入口批次
+- 当前分批整理已经正式从前端阶段推进到后端阶段
+- 后续最自然的后端子批会落到 `app/models` / `app/schemas` / `routers` / `services`
+
+下一步建议：
+1. 继续先处理 `app/models` 与 `app/schemas` 这类边界较清晰的定义层
+2. 再处理 `routers`，把接口层与服务层分开
+3. `services` 仍建议单独成批，不与入口层或 schema 层混提
+
+2026-04-25（第一百二十二轮）
+
+已继续执行：隔离后端模型层与 schema 层批次
+
+本轮已完成：
+1. 复核 `app/models` 与 `app/schemas` 的边界
+  - `app/models` 包含已有模型补充与新增实体文件
+  - `app/schemas` 包含已有 schema 扩展与新增功能模块 schema
+  - 两者都属于定义层，依赖方向清晰，适合合并为一个后端子批处理
+2. 按目录精确暂存了该批次
+  - 已纳入新增模型：`api_key`、`chart_case`、`experiment`、`llm`、`review`、`review_history`
+  - 已纳入新增 schema：`api_key`、`experiment`、`fengshui`、`llm`、`name`、`review`、`western`、`zeri`
+  - 同步包含已有模型与 schema 文件的配套修改
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `22` 个文件
+  - 合计为 `1350` 行新增、`9` 行删除
+  - 该结果符合“定义层扩充 + 少量已有类型补口”的预期
+
+本轮结果：
+- 已成功隔离出 `backend-models-schemas` 批次
+- 当前后端分批已至少形成：
+  - `backend-bootstrap`
+  - `backend-models-schemas`
+- 后续若继续推进，最自然的下一批会是 `routers`
+
+下一步建议：
+1. 继续隔离 `routers`，把接口层先从服务层剥离
+2. 再单独处理 `services`
+3. 若后面需要补迁移，可把 `migrations/versions` 再独立成一批
+
+2026-04-25（第一百二十三轮）
+
+已继续执行：隔离后端接口层 `routers` 批次
+
+本轮已完成：
+1. 复核 `routers` 目录边界
+  - 目录中同时包含已有接口文件的扩展与多组新增路由模块
+  - 作为统一的 HTTP 接口层，边界独立，适合单独成批
+2. 按目录精确暂存了 `routers`
+  - 已纳入新增路由：`analytics`、`api_keys`、`compat`、`experiments`、`export`、`fengshui`、`llm`、`name`、`privacy`、`reviews`、`rules_admin`、`similarity`、`western`、`zeri`
+  - 同步纳入已有路由文件的增量修改，如 `bazi`、`ziwei`、`snapshots`、`static_data` 等
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `28` 个文件
+  - 合计为 `5549` 行新增、`95` 行删除
+  - 暂存时出现部分 LF/CRLF 提示，当前仍只是 git 行尾转换提示，不影响批次边界
+
+本轮结果：
+- 已成功隔离出 `backend-routers` 批次
+- 当前后端已形成较清晰的三层批次：
+  - `backend-bootstrap`
+  - `backend-models-schemas`
+  - `backend-routers`
+- 后续继续推进时，服务层与迁移层会更容易独立整理
+
+下一步建议：
+1. 继续单独处理 `services`
+2. 再将 `migrations/versions` 与 `migrations/env.py` 分开判断是否要合并或拆开
+3. 测试批次继续放在服务层与路由层之后处理
+
+2026-04-25（第一百二十四轮）
+
+已继续执行：隔离后端服务层 `services` 批次
+
+本轮已完成：
+1. 复核 `services` 目录边界
+  - 目录中同时包含已有引擎扩展、新增服务模块、模板文件与子目录引擎
+  - 作为统一的服务层，仍然具备清晰的边界，适合整体单独成批
+2. 按目录精确暂存了 `services`
+  - 已纳入新增服务：`api_cache`、`api_key_service`、`bazi_rule_engine`、`bazi_template_renderer`、`classics_search`、`compatibility`、`db_backup`、`evidence_retriever`、`llm_service`、`pdf_exporter`、`similarity_service`、`western_astrology` 等
+  - 已纳入新增子模块：`fengshui_engine/*`、`name_engine/*`、`ziwei_engine/*` 的多个文件
+  - 同步纳入已有 `bazi_engine`、`ziwei_engine`、监控与限流服务的配套修改
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `46` 个文件
+  - 合计为 `7979` 行新增、`332` 行删除
+  - 暂存时出现少量 LF/CRLF 提示，当前仍只是 git 行尾转换提示，不影响批次边界
+
+本轮结果：
+- 已成功隔离出 `backend-services` 批次
+- 当前后端主干已基本拆成四个核心层次：
+  - `backend-bootstrap`
+  - `backend-models-schemas`
+  - `backend-routers`
+  - `backend-services`
+- 后续剩余最自然的后端批次将落到 `migrations` 与 `tests`
+
+下一步建议：
+1. 继续单独处理 `migrations`
+2. 再处理 `tests`
+3. 其余临时输出与本地文件继续放在最后单独判断
+
+2026-04-25（第一百二十五轮）
+
+已继续执行：隔离后端迁移层 `migrations` 批次
+
+本轮已完成：
+1. 复核迁移层边界
+  - 本轮包含 `migrations/env.py` 与 `migrations/versions/*`
+  - 这些文件都属于数据库迁移边界，适合单独成批
+2. 按目录精确暂存了 `migrations`
+  - 已纳入 7 个新增迁移脚本
+  - 同步纳入 `migrations/env.py` 的配套改动
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `8` 个文件
+  - 合计为 `381` 行新增、`1` 行删除
+  - 暂存时出现少量 LF/CRLF 提示，当前仍只是 git 行尾转换提示，不影响批次边界
+
+本轮结果：
+- 已成功隔离出 `backend-migrations` 批次
+- 当前数据库结构变更已经不再与服务层或路由层混在一起
+
+下一步建议：
+1. 继续单独处理 `tests`
+2. 测试完成后，再回头判断根目录与文档剩余改动
+
+2026-04-25（第一百二十六轮）
+
+已继续执行：隔离后端测试层 `tests` 批次
+
+本轮已完成：
+1. 复核测试层边界
+  - 本轮包括 `tests/e2e`、`tests/legacy` 以及多组单元/集成测试文件
+  - 同时包含旧的 `test_verify_flow.py` 删除与新的 UI 交互测试补充
+2. 按目录精确暂存了 `tests`
+  - 已纳入新增测试，如 `test_ziwei_api.py`、`test_name_engine.py`、`test_openapi_sync.py`、`test_life_suggestions_engine.py` 等
+  - 已纳入多组 coverage boost 测试与既有测试文件的增量修改
+  - 已纳入 `tests/e2e/test_verify_flow.py` 删除与新的 `tests/e2e/test_ui_interactions.py`
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `42` 个文件
+  - 合计为 `8489` 行新增、`594` 行删除
+  - 暂存时出现少量 LF/CRLF 提示，当前仍只是 git 行尾转换提示，不影响批次边界
+
+本轮结果：
+- 已成功隔离出 `backend-tests` 批次
+- 至此，后端主要结构层已经形成连续批次：
+  - `backend-bootstrap`
+  - `backend-models-schemas`
+  - `backend-routers`
+  - `backend-services`
+  - `backend-migrations`
+  - `backend-tests`
+- 后续剩余需要处理的已不再是主干层，而是根目录杂项、补充文档与本地临时输出
+
+下一步建议：
+1. 开始收口根目录剩余文件与杂项脚本
+2. 单独判断未处理文档是否还要再拆一个 docs 补充批
+3. 临时文件、zip、coverage 输出继续放在最后处理
+
+2026-04-25（第一百二十七轮）
+
+已继续执行：隔离补充文档批次
+
+本轮已完成：
+1. 复核剩余 `docs` 范围
+  - 本轮处理了除已提前隔离的主站口径文档外，其余剩余的 `docs/*` 与 `docs/archive/*` 修改
+  - 同时纳入新增文档：
+    - `docs/CODEBASE-OPTIMIZATION-ROADMAP-2026-04-01.md`
+    - `docs/PORT-CONSISTENCY-SUMMARY-2026-04-05.md`
+2. 按精确路径暂存了这批补充文档
+  - 涵盖架构、部署、权限、安全、优化、周计划与 archive 下历史交付文档的批量收口
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `61` 个文件
+  - 合计为 `2210` 行新增、`1002` 行删除
+
+本轮结果：
+- 已成功隔离出一个额外的 `docs-supplemental` 批次
+- 当前文档侧已不再只停留在 A / B1-docs，而是形成“主口径文档 + 补充历史文档”两层结构
+
+下一步建议：
+1. 继续处理 legacy 未构建静态源码
+2. 再处理工具脚本与根目录杂项
+
+2026-04-25（第一百二十八轮）
+
+已继续执行：隔离 legacy 未构建静态源码批次
+
+本轮已完成：
+1. 复核 `static/css` 与 `static/js` 的剩余源码边界
+  - 本轮纳入新增的 `admin` / `bazi` / `ziwei` 源码资源
+  - 与此前已经隔离的 legacy 静态资源删除批次衔接，但保留为单独一层“未构建源码”批次
+2. 按精确路径暂存了 legacy 静态源码
+  - 已纳入 `static/css/admin.css`、`base.css`、`bazi.css`、`ziwei.css`
+  - 已纳入 `static/js/admin/main.js`、`static/js/bazi/main.js`、`static/js/auth.js`
+  - 已纳入 `static/js/ziwei/*` 整组源码文件
+3. 复核该批次的暂存表现
+  - 当前 `static/css` 与 `static/js` 已形成“旧 verify/cases 资源删除 + 新 legacy 源码加入”的连续收口链条
+  - 该批次核心意义在于把 legacy 静态页的源码侧也单独抽离出来
+
+本轮结果：
+- 已形成可单独理解的 `legacy-static-source` 批次
+- 当前 legacy 相关内容已覆盖：HTML、资源删除、源码资源三层
+
+下一步建议：
+1. 继续处理工具链脚本与工作记录
+2. 再收口根目录配置与临时产物
+
+2026-04-25（第一百二十九轮）
+
+已继续执行：隔离工具链脚本与工作记录批次
+
+本轮已完成：
+1. 复核根目录与 `scripts/` 下的辅助工具范围
+  - 包含 `_check*`、`_compare*`、`_cross_validate.py`、`_run_pytest.ps1`、`_split_ziwei.ps1`、`_tmp_check.js`
+  - 包含 `scripts/build_yijing_json.py`、`gen_yijing_refs.py`、`repair_classic_refs.py`、`sync_frontend_env.ps1`、`validate_batch_csv.py`
+  - 同时纳入 `.coveragerc`、`.vscode/tasks.json`、`bazi_section.txt`、`计划.txt`、`test_dbg.py`
+2. 按精确路径暂存了上述文件
+  - 将辅助排查、数据构建、批处理校验与工作记录文件从主业务代码中独立出来
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `22` 个文件
+  - 合计为 `4724` 行新增
+
+本轮结果：
+- 已成功隔离出 `tooling-notes` 批次
+- 当前工具脚本、辅助排查脚本与工作记录文件已不再与业务主干混在一起
+
+下一步建议：
+1. 继续收口根目录配置与核心杂项
+2. 最后再处理临时输出与归档 zip
+
+2026-04-25（第一百三十轮）
+
+已继续执行：隔离根目录配置与核心杂项批次
+
+本轮已完成：
+1. 复核剩余根目录与少量核心文件边界
+  - 本轮纳入：`CHANGELOG.md`、`Dockerfile`、`deploy.ps1`、`start-local.ps1`、`pytest.ini`、`requirements*.txt`
+  - 同时纳入：`app/config.py`、`app/dependencies/auth.py`、`backends.py`、`boundary.py`、`constants.py`、`verify.py`、`scripts/seed_data.py`
+  - 以及数据文件 `data/ground_truth_cases.json`
+2. 按精确路径暂存了这批根层配置改动
+3. 复核该批次的暂存规模
+  - `git diff --cached --stat` 显示共 `16` 个文件
+  - 合计为 `878` 行新增、`266` 行删除
+
+本轮结果：
+- 已成功隔离出 `root-core-config` 批次
+- 当前剩余未处理内容已基本收敛到临时输出删除与归档 artefact 调整
+
+下一步建议：
+1. 最后处理临时输出、coverage 与 zip 归档变更
+2. 复核是否还存在未暂存文件
+
+2026-04-25（第一百三十一轮）
+
+已继续执行：隔离临时输出与归档 artefact 批次，并完成工作区收口
+
+本轮已完成：
+1. 复核剩余删除项与归档文件
+  - 已纳入临时输出删除：`__scan.json`、`_test_out.txt`、`coverage.json`、`coverage_engine.json`、`err.txt`、`out.txt`
+  - 已纳入旧根目录 zip 向 `docs/archive/` 的归档迁移
+  - 已补齐两个中文命名旧文本文件的删除记录
+2. 按精确路径暂存了上述残余杂项
+3. 复核收口结果
+  - 再次执行 `git diff --name-status` 与 `git ls-files --others --exclude-standard` 后，结果均为空
+  - 说明当前工作区已不存在未暂存或未跟踪的剩余改动
+
+本轮结果：
+- 已成功隔离出 `temp-artifacts` 批次
+- 当前整个工作区已经完成从前端、后端、文档、工具链到临时产物的分批收口
+- 后续如需正式提交，已经可以基于这些批次直接进入提交顺序安排，而不需要继续做工作区清理
+
+下一步建议：
+1. 开始输出最终的批次清单与建议提交顺序
+2. 若需要，也可以继续按批次生成建议提交信息
+
+2026-04-25（第一百三十二轮）
+
+已继续执行：整理最终提交顺序与建议提交信息
+
+本轮已完成：
+1. 汇总当前已隔离完成的批次清单
+  - `A`
+  - `B1-docs`
+  - `B1-static-html`
+  - `B1-static-assets`
+  - `legacy-static-source`
+  - `B1-frontend-core`
+  - `B1-frontend-views`
+  - `B1-components`
+  - `B1-frontend-shell`
+  - `B2-static-app`
+  - `backend-bootstrap`
+  - `backend-models-schemas`
+  - `backend-routers`
+  - `backend-services`
+  - `backend-migrations`
+  - `backend-tests`
+  - `docs-supplemental`
+  - `tooling-notes`
+  - `root-core-config`
+  - `temp-artifacts`
+2. 形成建议提交顺序
+  - 先提交当前直接修复用户问题与主口径收口的批次
+  - 再提交 legacy → SPA 迁移链路
+  - 再提交前端源码层与构建快照
+  - 随后提交后端主干各层
+  - 最后提交补充文档、工具链、根目录配置与临时产物收口
+3. 形成可直接使用的建议提交信息
+  - 01 `fix(ziwei): stabilize png export and align main entry docs`
+  - 02 `docs(delivery): split delivery and api handoff updates`
+  - 03 `refactor(legacy-html): isolate compatibility html entry pages`
+  - 04 `refactor(legacy-assets): remove verify assets and update manifest shell`
+  - 05 `feat(legacy-static): add source css/js for admin bazi and ziwei pages`
+  - 06 `feat(frontend-core): add api router and store foundation`
+  - 07 `feat(frontend-views): add spa page views and view tests`
+  - 08 `feat(frontend-components): add shared report and workbench components`
+  - 09 `build(frontend-shell): add vite app shell configs and root assets`
+  - 10 `build(static-app): snapshot compiled spa assets`
+  - 11 `refactor(backend-bootstrap): split app bootstrap lifecycle and route setup`
+  - 12 `feat(backend-models): add models and schemas for new domains`
+  - 13 `feat(backend-routers): add api routers for extended modules`
+  - 14 `feat(backend-services): add domain services and engine extensions`
+  - 15 `feat(db): add migration set for reviews llm cases and api keys`
+  - 16 `test(backend): expand api engine and regression coverage`
+  - 17 `docs(archive): sync supplemental architecture deploy and roadmap docs`
+  - 18 `chore(tooling): add investigation scripts and workspace helpers`
+  - 19 `chore(root): sync root configs runtime scripts and requirements`
+  - 20 `chore(cleanup): remove temp artifacts and archive legacy outputs`
+
+本轮结果：
+- 当前已经不只是完成工作区分批隔离，还具备了可直接执行的提交顺序与提交信息草案
+- 如果后续要正式提交，可以直接沿这 20 个批次顺序推进
+- 若需要进一步压缩提交数量，也可以再把相邻的小批做有限合并，但已经不是必须动作
+
+下一步建议：
+1. 若继续推进，可直接开始按批次执行实际 commit
+2. 若暂不提交，当前 `设计.txt` 已足够作为完整交接记录
+
+2026-04-25（第一百三十三轮）
+
+已继续执行：整理实际 commit 执行顺序说明
+
+本轮已完成：
+1. 给出“建议保持独立”的批次
+  - `A`
+  - `B1-static-html`
+  - `B1-static-assets`
+  - `legacy-static-source`
+  - `B2-static-app`
+  - `backend-bootstrap`
+  - `backend-models-schemas`
+  - `backend-routers`
+  - `backend-services`
+  - `backend-migrations`
+  - `backend-tests`
+  - `temp-artifacts`
+  - 这些批次边界清晰、风险不同或回滚诉求明显，建议不要再合并
+2. 给出“可视情况合并”的批次
+  - `B1-docs` 可与 `docs-supplemental` 合并为一个文档批
+  - `B1-frontend-core`、`B1-frontend-views`、`B1-components`、`B1-frontend-shell` 可在不强调分层历史时，合并成一个 `frontend-spa` 大批
+  - `root-core-config` 与 `tooling-notes` 可在偏运维/辅助提交视角下合并
+  - 但如果目标是保留最清晰的演进轨迹，仍建议保持拆开
+3. 给出两套实际提交顺序
+  - 细粒度顺序（推荐保留历史）：
+    1) `A`
+    2) `B1-docs`
+    3) `B1-static-html`
+    4) `B1-static-assets`
+    5) `legacy-static-source`
+    6) `B1-frontend-core`
+    7) `B1-frontend-views`
+    8) `B1-components`
+    9) `B1-frontend-shell`
+    10) `B2-static-app`
+    11) `backend-bootstrap`
+    12) `backend-models-schemas`
+    13) `backend-routers`
+    14) `backend-services`
+    15) `backend-migrations`
+    16) `backend-tests`
+    17) `docs-supplemental`
+    18) `tooling-notes`
+    19) `root-core-config`
+    20) `temp-artifacts`
+  - 压缩版顺序（更适合快速提交）：
+    1) `A`
+    2) `docs-all` = `B1-docs + docs-supplemental`
+    3) `legacy-static` = `B1-static-html + B1-static-assets + legacy-static-source`
+    4) `frontend-spa` = `B1-frontend-core + B1-frontend-views + B1-components + B1-frontend-shell`
+    5) `B2-static-app`
+    6) `backend-bootstrap`
+    7) `backend-models-schemas`
+    8) `backend-routers`
+    9) `backend-services`
+    10) `backend-migrations`
+    11) `backend-tests`
+    12) `tooling-root` = `tooling-notes + root-core-config`
+    13) `temp-artifacts`
+
+本轮结果：
+- 当前不仅有提交标题，还已经有“哪些该独立、哪些可合并、两套实际执行顺序”的说明
+- 后续如果直接开始提交，可以按细粒度或压缩版任一方案执行
+- 若团队更重视可读历史，优先使用细粒度顺序；若更重视效率，优先使用压缩版顺序
+
+下一步建议：
+1. 若继续推进，可直接开始执行第一批 commit
+2. 若提交前还想再做一步保险，可先导出一份 staged 文件清单留档
+
+2026-04-25（第一百三十四轮）
+
+已继续执行：整理实际提交操作说明
+
+本轮已完成：
+1. 明确提交前置原则
+  - 当前工作区已经全部进入暂存区
+  - 如果要真正按批次提交，不能直接一次性提交全部暂存内容
+  - 实际执行时应先把暂存区回到未暂存状态，再按既定批次顺序逐批加入并提交
+2. 明确细粒度提交操作节奏
+  - 节奏应固定为：
+    - 清空当前暂存区
+    - 按某一批的精确文件范围重新加入暂存
+    - 复核该批次的 `git diff --cached --stat`
+    - 使用对应提交信息提交
+    - 再进入下一批
+  - 这样可以保证提交历史与当前分批规划一一对应
+3. 明确压缩版提交操作节奏
+  - 如果采用压缩版方案，则把预先定义好的可合并批次视为一个大批重新暂存
+  - 其中最值得合并的是：
+    - `docs-all`
+    - `legacy-static`
+    - `frontend-spa`
+    - `tooling-root`
+4. 明确不建议合并的关键批次
+  - `A`：直接对应当前用户问题修复与主入口口径收口
+  - `B2-static-app`：构建快照必须独立，避免与源码层混淆
+  - `backend-bootstrap`：入口拆分应保留独立历史
+  - `backend-migrations`：数据库迁移必须独立
+  - `backend-tests`：测试扩展建议独立，便于回滚和审阅
+  - `temp-artifacts`：清理类提交应始终放在最后
+5. 明确推荐执行方案
+  - 若以“后续 review 最清晰”为目标：使用细粒度方案
+  - 若以“尽快完成一轮安全提交”为目标：使用压缩版方案
+  - 就当前仓库规模与改动跨度而言，推荐优先使用压缩版方案；若关键批次需要保留更清楚的演进历史，则对关键批次继续保持独立即可
+
+本轮结果：
+- 当前不仅有提交顺序与提交标题，也已经形成了实际提交时的操作原则
+- 后续真正开始提交时，不需要再重新讨论“先 reset 还是先 commit”、“哪些能合并、哪些不能合并”
+- 整条“工作区分批整理”主线到此可以视为完整闭环
+
+下一步建议：
+1. 若继续推进，可直接开始第一批实际 commit
+2. 若暂时不提交，当前 `设计.txt` 已足够作为最终交接记录
+
+2026-04-25（第一百三十五轮）
+
+已继续执行：整理压缩版提交清单
+
+本轮已完成：
+1. 给出压缩版提交分组
+  - `01-A`
+    - 对应：当前用户问题修复、主入口口径、Ziwei PNG 导出与最小回归
+  - `02-docs-all`
+    - 对应：`B1-docs + docs-supplemental`
+  - `03-legacy-static`
+    - 对应：`B1-static-html + B1-static-assets + legacy-static-source`
+  - `04-frontend-spa`
+    - 对应：`B1-frontend-core + B1-frontend-views + B1-components + B1-frontend-shell`
+  - `05-static-app`
+    - 对应：`B2-static-app`
+  - `06-backend-bootstrap`
+  - `07-backend-models-schemas`
+  - `08-backend-routers`
+  - `09-backend-services`
+  - `10-backend-migrations`
+  - `11-backend-tests`
+  - `12-tooling-root`
+    - 对应：`tooling-notes + root-core-config`
+  - `13-temp-artifacts`
+2. 给出压缩版提交标题
+  - `01-A` → `fix(ziwei): stabilize png export and align main entry docs`
+  - `02-docs-all` → `docs(repo): sync delivery architecture roadmap and archive docs`
+  - `03-legacy-static` → `refactor(legacy): consolidate html assets and source static pages`
+  - `04-frontend-spa` → `feat(frontend): add spa foundation views components and shell`
+  - `05-static-app` → `build(static-app): snapshot compiled spa assets`
+  - `06-backend-bootstrap` → `refactor(backend): split bootstrap lifecycle and route setup`
+  - `07-backend-models-schemas` → `feat(backend): add models and schemas for extended domains`
+  - `08-backend-routers` → `feat(api): add routers for extended modules`
+  - `09-backend-services` → `feat(services): add domain services and engine extensions`
+  - `10-backend-migrations` → `feat(db): add migration set for new backend modules`
+  - `11-backend-tests` → `test(backend): expand regression and api coverage`
+  - `12-tooling-root` → `chore(repo): sync tooling scripts root configs and runtime helpers`
+  - `13-temp-artifacts` → `chore(cleanup): remove temp outputs and archive legacy artifacts`
+3. 给出压缩版适用场景
+  - 适合当前这类跨度大、目录层次多、但已经完成工作区分批梳理的场景
+  - 既能保留关键边界，又能显著减少 commit 数量
+  - 对外 review 时也比 20 个细粒度提交更容易浏览
+
+本轮结果：
+- 当前已经同时具备：细粒度方案、压缩版方案、提交标题、执行原则
+- 如果后续直接开始实操，压缩版方案已经足够落地
+
+下一步建议：
+1. 若继续推进，优先按压缩版 13 批执行实际 commit
+2. 仅当某一批 review 压力过大时，再退回细粒度方案
+
+2026-04-26（第一百三十六轮）
+
+已继续执行：整理压缩版 13 批的实际执行顺序说明
+
+本轮已完成：
+1. 明确压缩版提交前的统一前置动作
+  - 先确认当前工作区内容都已在暂存区
+  - 若开始真正分批提交，应先把暂存区回退到未暂存状态
+  - 之后严格按“单批重新暂存 → 复核 → 提交”的节奏执行
+2. 明确压缩版 13 批的实际执行顺序
+  - 第 1 批：`01-A`
+  - 第 2 批：`02-docs-all`
+  - 第 3 批：`03-legacy-static`
+  - 第 4 批：`04-frontend-spa`
+  - 第 5 批：`05-static-app`
+  - 第 6 批：`06-backend-bootstrap`
+  - 第 7 批：`07-backend-models-schemas`
+  - 第 8 批：`08-backend-routers`
+  - 第 9 批：`09-backend-services`
+  - 第 10 批：`10-backend-migrations`
+  - 第 11 批：`11-backend-tests`
+  - 第 12 批：`12-tooling-root`
+  - 第 13 批：`13-temp-artifacts`
+3. 明确每批执行时的复核点
+  - 复核该批次是否只包含预期目录与文件
+  - 复核 `git diff --cached --stat` 是否与该批边界一致
+  - 复核提交信息是否匹配该批主题
+  - 提交完成后再进入下一批，避免跨批混入
+4. 明确压缩版方案的关键边界
+  - `05-static-app` 仍必须独立，不与 `04-frontend-spa` 合并
+  - `10-backend-migrations` 仍必须独立，不与服务层或模型层合并
+  - `11-backend-tests` 仍建议独立，避免功能改动与测试扩展绑定过深
+  - `13-temp-artifacts` 始终放最后，避免清理类改动干扰主干 review
+
+本轮结果：
+- 当前压缩版 13 批已经不仅有标题，还有可直接照着执行的顺序说明
+- 后续若进入实操阶段，只需要按这 13 批顺序逐批重新暂存并提交即可
+- 到此为止，“压缩版提交规划”也已经形成完整闭环
+
+下一步建议：
+1. 若继续推进，可直接开始第 1 批实际 commit
+2. 若还不准备提交，当前 `设计.txt` 已同时覆盖细粒度与压缩版两套执行方案
+
+2026-04-26（第一百三十七轮）
+
+已继续执行：整理第三批 `legacy-static` 的实际提交说明
+
+本轮已完成：
+1. 明确第三批的合并范围
+  - `03-legacy-static` =
+    - `B1-static-html`
+    - `B1-static-assets`
+    - `legacy-static-source`
+  - 也就是把 legacy 页面相关的 HTML、静态资源删除、以及未构建源码资源一次性作为一个大批提交
+2. 明确第三批建议纳入的内容类型
+  - `static/*.html` 兼容入口页与删除记录
+  - `static/css/*` 与 `static/js/*` 的 legacy 资源变更
+  - `static/manifest.json`
+  - `static/sw.js`
+  - `static/admin.html`、`static/bazi.html`、`static/ziwei.html`、`static/verify.html`、`static/index.html`、`static/404.html`、`static/batch.html`
+  - 以及旧 `verify/cases/dashboard/delegation` 相关页面与资源的删除
+3. 明确第三批不要混入的内容
+  - `frontend/` 源码
+  - `static/app/` 构建快照
+  - 后端代码
+  - 文档、工具脚本、根目录杂项
+4. 明确第三批提交信息
+  - `refactor(legacy): consolidate html assets and source static pages`
+5. 明确第三批复核重点
+  - 只包含 legacy 静态页面链路
+  - 能看出“旧入口收口 + 旧资源删除 + 新源码补齐”的完整迁移轨迹
+  - 不与 SPA 构建快照或前端源码层混合
+
+本轮结果：
+- 当前压缩版前 3 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第四批 `frontend-spa`
+
+下一步建议：
+1. 若继续推进，直接整理第四批 `frontend-spa` 的实际提交说明
+2. 若开始实操，第三批提交完成后再进入第四批
+
+2026-04-26（第一百三十八轮）
+
+已继续执行：整理第四批 `frontend-spa` 的实际提交说明
+
+本轮已完成：
+1. 明确第四批的合并范围
+  - `04-frontend-spa` =
+    - `B1-frontend-core`
+    - `B1-frontend-views`
+    - `B1-components`
+    - `B1-frontend-shell`
+  - 也就是把 SPA 的 API、router、stores、views、components、入口壳层与 Vite 配置作为一个完整前端源码批次提交
+2. 明确第四批建议纳入的内容类型
+  - `frontend/src/api/*`
+  - `frontend/src/router/*`
+  - `frontend/src/stores/*`
+  - `frontend/src/views/*`
+  - `frontend/src/components/*`
+  - `frontend/src/App.vue`
+  - `frontend/src/main.ts`
+  - `frontend/src/env.d.ts`
+  - `frontend/src/assets/*`
+  - `frontend/package.json`
+  - `frontend/package-lock.json`
+  - `frontend/index.html`
+  - `frontend/tsconfig*.json`
+  - `frontend/vite.config.ts`
+  - `frontend/.env.example`
+  - `frontend/.gitignore`
+3. 明确第四批不要混入的内容
+  - `static/app/` 构建快照
+  - `static/*.html` 与 `static/css|js` 的 legacy 资源
+  - 后端代码、迁移、测试
+  - 文档、工具链、根目录杂项
+4. 明确第四批提交信息
+  - `feat(frontend): add spa foundation views components and shell`
+5. 明确第四批复核重点
+  - 只包含前端 SPA 源码层，不含构建产物
+  - 能看出从 API → 状态管理 → 视图 → 组件 → 壳层配置的一整条源码链
+  - 不与 `05-static-app` 混合，否则源码层和构建快照边界会被冲淡
+
+本轮结果：
+- 当前压缩版前 4 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第五批 `static-app`
+
+下一步建议：
+1. 若继续推进，直接整理第五批 `static-app` 的实际提交说明
+2. 若开始实操，第四批提交完成后再进入第五批
+
+2026-04-26（第一百三十九轮）
+
+已继续执行：整理第五批 `static-app` 的实际提交说明
+
+本轮已完成：
+1. 明确第五批的范围
+  - `05-static-app` = `B2-static-app`
+  - 这一批只对应 `static/app/` 下的前端构建快照
+  - 包括：
+    - `static/app/index.html`
+    - `static/app/assets/*`
+2. 明确第五批建议纳入的内容类型
+  - 所有已构建的 hash 产物
+  - 构建后的入口 `index.html`
+  - 与前一批 `frontend-spa` 相对应的编译输出结果
+3. 明确第五批不要混入的内容
+  - `frontend/` 下任何源码文件
+  - `static/*.html` legacy 入口页
+  - `static/css/*`、`static/js/*` 的未构建源码资源
+  - 后端代码、迁移、测试、文档、工具链与根目录杂项
+4. 明确第五批提交信息
+  - `build(static-app): snapshot compiled spa assets`
+5. 明确第五批复核重点
+  - 只包含 `static/app/` 目录
+  - 主题是“构建产物快照”，不是源码修改
+  - 必须与第四批 `frontend-spa` 分离，保证 review 时能明确区分“源码变化”和“编译结果”
+  - 若后续需要回滚构建产物或重建快照，这一批也更便于单独处理
+
+本轮结果：
+- 当前压缩版前 5 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第六批 `backend-bootstrap`
+
+下一步建议：
+1. 若继续推进，直接整理第六批 `backend-bootstrap` 的实际提交说明
+2. 若开始实操，第五批提交完成后再进入第六批
+
+2026-04-26（第一百四十轮）
+
+已继续执行：整理第六批 `backend-bootstrap` 的实际提交说明
+
+本轮已完成：
+1. 明确第六批的范围
+  - `06-backend-bootstrap` = `backend-bootstrap`
+  - 这一批只对应后端应用入口、装配层、生命周期与基础路由注册的拆分
+  - 主要包括：
+    - `run.py`
+    - `app/bootstrap.py`
+    - `app/lifecycle.py`
+    - `app/router_setup.py`
+    - `app/static_routes_setup.py`
+    - `app/docs_routes_setup.py`
+    - `app/health_routes_setup.py`
+    - `app/http_middleware_setup.py`
+    - `app/middleware_setup.py`
+    - `app/openapi_docs.py`
+    - `app/error_handling.py`
+2. 明确第六批建议纳入的内容类型
+  - 应用创建与装配逻辑拆分
+  - 生命周期与启动/关闭逻辑下沉
+  - 基础路由、静态路由、文档路由与健康检查装配
+  - 主入口 `run.py` 的瘦身与职责收口
+3. 明确第六批不要混入的内容
+  - `app/models/*`
+  - `app/schemas/*`
+  - `routers/*`
+  - `services/*`
+  - `migrations/*`
+  - `tests/*`
+  - 前端、legacy 静态资源、文档与工具链
+4. 明确第六批提交信息
+  - `refactor(backend): split bootstrap lifecycle and route setup`
+5. 明确第六批复核重点
+  - 只包含后端入口与装配层
+  - 能清楚看出 `run.py` 职责减少、装配逻辑外移
+  - 不混入业务模型、接口实现或服务层逻辑
+  - review 时应把它看作“结构重组批”，而不是“功能扩展批”
+
+本轮结果：
+- 当前压缩版前 6 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第七批 `backend-models-schemas`
+
+下一步建议：
+1. 若继续推进，直接整理第七批 `backend-models-schemas` 的实际提交说明
+2. 若开始实操，第六批提交完成后再进入第七批
+
+2026-04-26（第一百四十一轮）
+
+已继续执行：整理第七批 `backend-models-schemas` 的实际提交说明
+
+本轮已完成：
+1. 明确第七批的范围
+  - `07-backend-models-schemas` = `backend-models-schemas`
+  - 这一批只对应后端定义层扩展，包括模型层与 schema 层
+  - 主要包括：
+    - `app/models/__init__.py`
+    - `app/models/case.py`
+    - `app/models/api_key.py`
+    - `app/models/chart_case.py`
+    - `app/models/experiment.py`
+    - `app/models/llm.py`
+    - `app/models/review.py`
+    - `app/models/review_history.py`
+    - `app/schemas/__init__.py`
+    - `app/schemas/analysis.py`
+    - `app/schemas/bazi.py`
+    - `app/schemas/case.py`
+    - `app/schemas/compute.py`
+    - `app/schemas/ziwei.py`
+    - `app/schemas/api_key.py`
+    - `app/schemas/experiment.py`
+    - `app/schemas/fengshui.py`
+    - `app/schemas/llm.py`
+    - `app/schemas/name.py`
+    - `app/schemas/review.py`
+    - `app/schemas/western.py`
+    - `app/schemas/zeri.py`
+2. 明确第七批建议纳入的内容类型
+  - 新增领域模型定义
+  - 新增请求/响应 schema 与类型补口
+  - 现有模型、schema 的增量扩展
+  - 这批应被视作“数据结构与契约层”提交
+3. 明确第七批不要混入的内容
+  - `routers/*`
+  - `services/*`
+  - `migrations/*`
+  - `tests/*`
+  - 入口装配层文件
+  - 前端、legacy 静态资源、文档与工具链
+4. 明确第七批提交信息
+  - `feat(backend): add models and schemas for extended domains`
+5. 明确第七批复核重点
+  - 只包含定义层，不包含接口实现
+  - 能清楚看出新增领域：`api_key`、`chart_case`、`experiment`、`llm`、`review` 等
+  - review 时应重点看命名、字段、契约一致性，而不是业务流程
+  - 不应混入迁移脚本，否则“定义层”和“数据库落地层”边界会变模糊
+
+本轮结果：
+- 当前压缩版前 7 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第八批 `backend-routers`
+
+下一步建议：
+1. 若继续推进，直接整理第八批 `backend-routers` 的实际提交说明
+2. 若开始实操，第七批提交完成后再进入第八批
+
+2026-04-26（第一百四十二轮）
+
+已继续执行：整理第八批 `backend-routers` 的实际提交说明
+
+本轮已完成：
+1. 明确第八批的范围
+  - `08-backend-routers` = `backend-routers`
+  - 这一批只对应 HTTP 接口层，也就是 `routers/` 目录下的路由文件
+  - 主要包括：
+    - `routers/audit.py`
+    - `routers/auth.py`
+    - `routers/bazi.py`
+    - `routers/cases.py`
+    - `routers/compute.py`
+    - `routers/delegation.py`
+    - `routers/events.py`
+    - `routers/members.py`
+    - `routers/quickstart.py`
+    - `routers/relations.py`
+    - `routers/scenarios.py`
+    - `routers/snapshots.py`
+    - `routers/static_data.py`
+    - `routers/ziwei.py`
+    - `routers/analytics.py`
+    - `routers/api_keys.py`
+    - `routers/compat.py`
+    - `routers/experiments.py`
+    - `routers/export.py`
+    - `routers/fengshui.py`
+    - `routers/llm.py`
+    - `routers/name.py`
+    - `routers/privacy.py`
+    - `routers/reviews.py`
+    - `routers/rules_admin.py`
+    - `routers/similarity.py`
+    - `routers/western.py`
+    - `routers/zeri.py`
+2. 明确第八批建议纳入的内容类型
+  - 新增业务模块的路由入口
+  - 已有路由的接口扩展与兼容调整
+  - 路由层参数、响应组织与 endpoint 接线
+  - 这批应被视作“接口层扩展批”
+3. 明确第八批不要混入的内容
+  - `app/models/*`、`app/schemas/*`
+  - `services/*`
+  - `migrations/*`
+  - `tests/*`
+  - 入口装配层文件
+  - 前端、legacy 静态资源、文档与工具链
+4. 明确第八批提交信息
+  - `feat(api): add routers for extended modules`
+5. 明确第八批复核重点
+  - 只包含路由层，不包含底层服务实现
+  - 能清楚看出新增接口模块与已有接口扩展
+  - review 时应重点看 endpoint 边界、权限接线、参数与响应契约是否合理
+  - 不应混入服务层，否则 API 接口层与业务实现层的边界会被打散
+
+本轮结果：
+- 当前压缩版前 8 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第九批 `backend-services`
+
+下一步建议：
+1. 若继续推进，直接整理第九批 `backend-services` 的实际提交说明
+2. 若开始实操，第八批提交完成后再进入第九批
+
+2026-04-26（第一百四十三轮）
+
+已继续执行：整理第九批 `backend-services` 的实际提交说明
+
+本轮已完成：
+1. 明确第九批的范围
+  - `09-backend-services` = `backend-services`
+  - 这一批只对应服务层与引擎层实现，也就是 `services/` 目录下的业务实现文件
+  - 主要包括：
+    - `services/bazi_engine/*`
+    - `services/ziwei_engine/*`
+    - `services/api_cache.py`
+    - `services/api_key_service.py`
+    - `services/bazi_rule_engine.py`
+    - `services/bazi_template_renderer.py`
+    - `services/classics_search.py`
+    - `services/compatibility.py`
+    - `services/db_backup.py`
+    - `services/evidence_retriever.py`
+    - `services/llm_service.py`
+    - `services/pdf_exporter.py`
+    - `services/similarity_service.py`
+    - `services/western_astrology.py`
+    - `services/fengshui_engine/*`
+    - `services/name_engine/*`
+    - `services/templates/*`
+    - 以及监控、限流、中间件相关服务补充
+2. 明确第九批建议纳入的内容类型
+  - 新增业务服务与规则引擎
+  - 现有八字/紫微引擎的能力扩展
+  - 模板渲染、证据检索、相似度、导出、备份等服务实现
+  - 这一批应被视作“业务实现层扩展批”
+3. 明确第九批不要混入的内容
+  - `routers/*`
+  - `app/models/*`、`app/schemas/*`
+  - `migrations/*`
+  - `tests/*`
+  - 入口装配层文件
+  - 前端、legacy 静态资源、文档与工具链
+4. 明确第九批提交信息
+  - `feat(services): add domain services and engine extensions`
+5. 明确第九批复核重点
+  - 只包含服务实现层，不包含接口层与数据库迁移层
+  - 能清楚看出新增能力集中在规则引擎、服务编排、模板、检索与引擎扩展
+  - review 时应重点看：
+    - 服务边界是否清晰
+    - 现有引擎改动是否与新增服务职责一致
+    - 是否混入了接口路由或测试代码
+
+本轮结果：
+- 当前压缩版前 9 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第十批 `backend-migrations`
+
+下一步建议：
+1. 若继续推进，直接整理第十批 `backend-migrations` 的实际提交说明
+2. 若开始实操，第九批提交完成后再进入第十批
+
+2026-04-26（第一百四十四轮）
+
+已继续执行：整理第十批 `backend-migrations` 的实际提交说明
+
+本轮已完成：
+1. 明确第十批的范围
+  - `10-backend-migrations` = `backend-migrations`
+  - 这一批只对应数据库迁移层，也就是 `migrations/` 下的环境文件与版本脚本
+  - 主要包括：
+    - `migrations/env.py`
+    - `migrations/versions/45214759c8f9_add_chart_reviews_table.py`
+    - `migrations/versions/a2b3c4d5e6f7_add_indexes_and_share_token.py`
+    - `migrations/versions/b1c2d3e4f5a6_add_experiments_and_experiment_events_tables.py`
+    - `migrations/versions/c2d3e4f5a6b7_add_llm_drafts_table.py`
+    - `migrations/versions/d3e4f5a6b7c8_add_chart_cases_table.py`
+    - `migrations/versions/e4f5a6b7c8d9_add_api_keys_table.py`
+    - `migrations/versions/f5a6b7c8d9e0_add_chart_review_history_table.py`
+2. 明确第十批建议纳入的内容类型
+  - Alembic 环境接线调整
+  - 新领域模型对应的数据库表迁移
+  - 索引、令牌、案例、评论、API Key、LLM 草稿等数据库结构落地脚本
+  - 这一批应被视作“数据库落地层批次”
+3. 明确第十批不要混入的内容
+  - `app/models/*`、`app/schemas/*`
+  - `routers/*`
+  - `services/*`
+  - `tests/*`
+  - 入口装配层与前端相关内容
+  - 文档、工具链、根目录杂项
+4. 明确第十批提交信息
+  - `feat(db): add migration set for new backend modules`
+5. 明确第十批复核重点
+  - 只包含迁移层，不包含模型、路由、服务实现
+  - 应能看出每个新增领域都有对应数据库落地脚本
+  - review 时应重点看：
+    - 迁移命名是否清晰
+    - 迁移顺序是否合理
+    - `env.py` 接线是否与当前模型注册保持一致
+  - 这一批必须保持独立，便于单独执行迁移、回滚迁移与排查数据库问题
+
+本轮结果：
+- 当前压缩版前 10 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第十一批 `backend-tests`
+
+下一步建议：
+1. 若继续推进，直接整理第十一批 `backend-tests` 的实际提交说明
+2. 若开始实操，第十批提交完成后再进入第十一批
+
+2026-04-26（第一百四十五轮）
+
+已继续执行：整理第十一批 `backend-tests` 的实际提交说明
+
+本轮已完成：
+1. 明确第十一批的范围
+  - `11-backend-tests` = `backend-tests`
+  - 这一批只对应测试层，也就是 `tests/` 目录下的新增、修改与删除
+  - 主要包括：
+    - `tests/e2e/*`
+    - `tests/legacy/test_core.py`
+    - `tests/test_auth_complete.py`
+    - `tests/test_bazi_engine_service_utils.py`
+    - `tests/test_prometheus_extended.py`
+    - `tests/test_redlines_r36_r45.py`
+    - `tests/test_ziwei_engine.py`
+    - 多组 `tests/test_coverage_boost*.py`
+    - 新增的 `tests/test_ziwei_api.py`
+    - 新增的 `tests/test_name_engine.py`
+    - 新增的 `tests/test_openapi_sync.py`
+    - 新增的 `tests/test_life_suggestions_engine.py`
+    - 新增的 `tests/test_llm_evidence_integration.py`
+    - 新增的 `tests/test_db_index.py`
+    - 新增的 `tests/test_evidence_chain.py`
+    - 新增的 `tests/test_golden_regression.py`
+    - 新增的 `tests/test_leap_month.py`
+    - 新增的 `tests/test_property_bazi.py`
+    - 新增的 `tests/test_remedies_engine.py`
+    - 新增的 `tests/test_concurrency.py`
+2. 明确第十一批建议纳入的内容类型
+  - 单元测试、集成测试、e2e 测试与回归测试扩展
+  - 旧测试删除与新测试替换
+  - coverage boost 护栏补强
+  - 这一批应被视作“测试护栏批”
+3. 明确第十一批不要混入的内容
+  - `app/models/*`、`app/schemas/*`
+  - `routers/*`
+  - `services/*`
+  - `migrations/*`
+  - 入口装配层文件
+  - 前端、legacy 静态资源、文档与工具链
+4. 明确第十一批提交信息
+  - `test(backend): expand regression and api coverage`
+5. 明确第十一批复核重点
+  - 只包含测试层，不包含生产代码实现
+  - 能清楚看出 API、引擎、规则、证据链、并发、迁移同步等护栏扩展
+  - review 时应重点看：
+    - 是否覆盖了新增领域能力
+    - 老测试删除是否有对应新测试承接
+    - coverage boost 是否仍聚焦关键路径
+  - 这一批建议保持独立，便于单独审阅测试增量与必要时回滚测试改动
+
+本轮结果：
+- 当前压缩版前 11 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最自然的下一批就是第十二批 `tooling-root`
+
+下一步建议：
+1. 若继续推进，直接整理第十二批 `tooling-root` 的实际提交说明
+2. 若开始实操，第十一批提交完成后再进入第十二批
+
+2026-04-26（第一百四十六轮）
+
+已继续执行：整理第十二批 `tooling-root` 的实际提交说明
+
+本轮已完成：
+1. 明确第十二批的范围
+  - `12-tooling-root` = `tooling-notes + root-core-config`
+  - 这一批对应仓库根层配置、运行脚本、辅助排查脚本、数据构建脚本与工作记录文件
+  - 主要包括：
+    - `.coveragerc`
+    - `.vscode/tasks.json`
+    - `_check_db.py`、`_check_split.ps1`
+    - `_compare_deep.py`、`_compare_deep2.py`、`_compare_from_img.py`、`_compare_full.py`、`_compare_ziwei.py`、`_compare_ziwei2.py`
+    - `_cross_validate.py`、`_run_pytest.ps1`、`_split_ziwei.ps1`、`_tmp_check.js`
+    - `scripts/build_yijing_json.py`
+    - `scripts/gen_yijing_refs.py`
+    - `scripts/repair_classic_refs.py`
+    - `scripts/sync_frontend_env.ps1`
+    - `scripts/validate_batch_csv.py`
+    - `scripts/seed_data.py`
+    - `CHANGELOG.md`
+    - `Dockerfile`
+    - `deploy.ps1`
+    - `start-local.ps1`
+    - `pytest.ini`
+    - `requirements*.txt`
+    - `app/config.py`
+    - `app/dependencies/auth.py`
+    - `backends.py`
+    - `boundary.py`
+    - `constants.py`
+    - `verify.py`
+    - `data/ground_truth_cases.json`
+    - `bazi_section.txt`
+    - `计划.txt`
+    - `test_dbg.py`
+2. 明确第十二批建议纳入的内容类型
+  - 仓库运行配置与依赖清单
+  - 本地/部署脚本与辅助检查脚本
+  - 少量与主业务功能弱耦合的根层支持代码
+  - 这一批应被视作“仓库运维与工具链批”
+3. 明确第十二批不要混入的内容
+  - `frontend/` 源码与 `static/app/`
+  - legacy 静态页面与资源
+  - `app/models/*`、`app/schemas/*`
+  - `routers/*`
+  - `services/*`
+  - `migrations/*`
+  - `tests/*`
+  - 文档批与临时产物清理批
+4. 明确第十二批提交信息
+  - `chore(repo): sync tooling scripts root configs and runtime helpers`
+5. 明确第十二批复核重点
+  - 只包含工具链、根配置、辅助脚本与运行支持文件
+  - 不混入主业务层、迁移层或测试层
+  - review 时重点看运行方式、依赖、辅助脚本边界是否一致
+
+本轮结果：
+- 当前压缩版前 12 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最后一批就是第十三批 `temp-artifacts`
+
+2026-04-26（第一百四十七轮）
+
+已继续执行：整理第十三批 `temp-artifacts` 的实际提交说明
+
+本轮已完成：
+1. 明确第十三批的范围
+  - `13-temp-artifacts` = `temp-artifacts`
+  - 这一批只对应临时输出、覆盖率中间产物、历史 artefact 清理与归档迁移
+  - 主要包括：
+    - `__scan.json`
+    - `_test_out.txt`
+    - `coverage.json`
+    - `coverage_engine.json`
+    - `err.txt`
+    - `out.txt`
+    - 根目录旧 zip 迁移到 `docs/archive/`
+    - 两个中文命名旧文本文件的删除记录
+2. 明确第十三批建议纳入的内容类型
+  - 临时扫描输出
+  - 覆盖率缓存与中间文件
+  - 空输出文件
+  - 历史 artefact 的归档迁移与清理
+  - 这一批应被视作“纯清理批”
+3. 明确第十三批不要混入的内容
+  - 任意功能代码
+  - 任意测试代码
+  - 任意前后端源码、构建产物、文档与工具链变更
+4. 明确第十三批提交信息
+  - `chore(cleanup): remove temp outputs and archive legacy artifacts`
+5. 明确第十三批复核重点
+  - 只包含删除、迁移、归档与清理动作
+  - 不能混入任何功能性改动
+  - 必须放在最后，避免清理类提交干扰前面主干 review
+
+本轮结果：
+- 压缩版 13 批的实际提交说明现已全部补齐
+- 到此为止，从批次设计、压缩方案、执行顺序到每一批的实际提交边界都已经形成完整闭环
+
+下一步建议：
+1. 若继续推进，可直接开始实际 commit 操作
+2. 若不立即提交，当前 `设计.txt` 已可作为最终执行手册
+
+2026-04-26（第一百四十六轮）
+
+已继续执行：整理第十二批 `tooling-root` 的实际提交说明
+
+本轮已完成：
+1. 明确第十二批的范围
+  - `12-tooling-root` =
+    - `tooling-notes`
+    - `root-core-config`
+  - 这一批对应工具链脚本、仓库根层配置、运行脚本、依赖清单与少量根层辅助代码
+  - 主要包括：
+    - `.coveragerc`
+    - `.vscode/tasks.json`
+    - `_check*`、`_compare*`、`_cross_validate.py`、`_run_pytest.ps1`、`_split_ziwei.ps1`、`_tmp_check.js`
+    - `scripts/build_yijing_json.py`
+    - `scripts/gen_yijing_refs.py`
+    - `scripts/repair_classic_refs.py`
+    - `scripts/sync_frontend_env.ps1`
+    - `scripts/validate_batch_csv.py`
+    - `scripts/seed_data.py`
+    - `CHANGELOG.md`
+    - `Dockerfile`
+    - `deploy.ps1`
+    - `start-local.ps1`
+    - `pytest.ini`
+    - `requirements.txt`
+    - `requirements-dev.txt`
+    - `requirements-lock.txt`
+    - `app/config.py`
+    - `app/dependencies/auth.py`
+    - `backends.py`
+    - `boundary.py`
+    - `constants.py`
+    - `verify.py`
+    - `bazi_section.txt`
+    - `计划.txt`
+    - `test_dbg.py`
+    - `data/ground_truth_cases.json`
+2. 明确第十二批建议纳入的内容类型
+  - 仓库根层配置与运行脚本
+  - 辅助排查、数据构建、批量校验与本地工具脚本
+  - 少量与主干功能关联较弱、但属于仓库运行与维护配套的根层代码
+  - 这一批应被视作“仓库运维与工具链批”
+3. 明确第十二批不要混入的内容
+  - `frontend/` 源码与 `static/app/`
+  - `static/*.html` 与 legacy 静态资源
+  - `app/models/*`、`app/schemas/*`
+  - `routers/*`
+  - `services/*`
+  - `migrations/*`
+  - `tests/*`
+  - 文档批与临时产物清理批
+4. 明确第十二批提交信息
+  - `chore(repo): sync tooling scripts root configs and runtime helpers`
+5. 明确第十二批复核重点
+  - 只看工具链、根配置和辅助脚本
+  - 不混入主业务层代码与测试层
+  - review 时应重点看：
+    - 这些文件是否都属于仓库运维/辅助性质
+    - 根配置变更是否与当前运行方式一致
+    - 辅助脚本是否与前面业务批次保持边界隔离
+
+本轮结果：
+- 当前压缩版前 12 批都已经有了明确的实际提交说明
+- 后续如果继续推进，最后一批就是第十三批 `temp-artifacts`
+
+下一步建议：
+1. 若继续推进，直接整理第十三批 `temp-artifacts` 的实际提交说明
+2. 若开始实操，第十二批提交完成后再进入第十三批
+
+2026-04-26（第一百四十七轮）
+
+已继续执行：整理第十三批 `temp-artifacts` 的实际提交说明
+
+本轮已完成：
+1. 明确第十三批的范围
+  - `13-temp-artifacts` = `temp-artifacts`
+  - 这一批只对应临时输出删除、旧 artefact 清理与历史压缩包归档迁移
+  - 主要包括：
+    - `__scan.json`
+    - `_test_out.txt`
+    - `coverage.json`
+    - `coverage_engine.json`
+    - `err.txt`
+    - `out.txt`
+    - 根目录旧 zip 迁移到 `docs/archive/`
+    - 两个中文命名旧文本文件的删除记录
+2. 明确第十三批建议纳入的内容类型
+  - 临时扫描输出
+  - 覆盖率中间产物
+  - 空输出文件
+  - 历史 artefact 归档迁移与清理
+  - 这一批应被视作“纯清理批”
+3. 明确第十三批不要混入的内容
+  - 任意功能代码
+  - 任意测试代码
+  - 任意前后端源码、构建产物、文档与工具链变更
+4. 明确第十三批提交信息
+  - `chore(cleanup): remove temp outputs and archive legacy artifacts`
+5. 明确第十三批复核重点
+  - 只包含删除、迁移、归档与清理动作
+  - 不能混入任何功能性改动
+  - 必须放在最后，避免清理类提交干扰前面主干 review
+
+本轮结果：
+- 压缩版 13 批的实际提交说明现已全部补齐
+- 到此为止，从批次设计、压缩方案、执行顺序到每一批的实际提交边界都已经形成完整闭环
+
+下一步建议：
+1. 若继续推进，可直接开始实际 commit 操作
+2. 若不立即提交，当前 `设计.txt` 已可作为最终执行手册

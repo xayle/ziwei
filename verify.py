@@ -6,7 +6,7 @@ from datetime import timedelta
 from typing import Optional, Literal, Any, cast
 from zoneinfo import ZoneInfo
 
-from backends import BackendUnavailable, CnlunarBackend, SxtwlBackend
+from backends import BackendUnavailable, CnlunarBackend, SxtwlBackend, get_sxtwl_backend
 from boundary import Pillars, RiskFlags, Validation, compute_risk_flags, compute_validation
 from constants import MAX_LON, MIN_LON
 from services.bazi_engine.solar_time_v2 import compute_solar_correction_minutes
@@ -66,7 +66,7 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
     primary = None
     secondary = None
     try:
-        primary = SxtwlBackend()
+        primary = get_sxtwl_backend()  # B1: 复用单例，避免每请求重建 C 库对象
     except BackendUnavailable:
         primary = None
 
@@ -92,7 +92,19 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
     if primary is None:
         raise BackendUnavailable("No available backend (sxtwl/cnlunar)")
 
-    pillars_primary = primary.get_pillars(dt_effective)
+    # B3: sxtwl 合理性断言 — 失败时降级 cnlunar 并记 warning
+    _sxtwl_fallback_warnings: list[str] = []
+    try:
+        pillars_primary = primary.get_pillars(dt_effective)
+    except (ValueError, IndexError, AssertionError) as _b3_err:
+        _sxtwl_fallback_warnings.append("sxtwl_fallback")
+        try:
+            _fallback = CnlunarBackend()
+            pillars_primary = _fallback.get_pillars(dt_effective)
+            primary = _fallback  # 后续 jieqi_ctx 也用 fallback（CnlunarBackend 不支持，返回 None）
+        except (BackendUnavailable, Exception):
+            raise BackendUnavailable(f"sxtwl 断言失败且 cnlunar 降级也失败: {_b3_err}") from _b3_err
+
     pillars_secondary: Optional[Pillars] = secondary.get_pillars(dt_effective) if secondary else None
 
     jieqi_ctx = None
@@ -112,6 +124,9 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
         risk_flags=risk_flags,
         mode=mode_effective,
     )
+    # B3: 追加降级警告
+    if _sxtwl_fallback_warnings:
+        validation.warnings.extend(_sxtwl_fallback_warnings)
 
     return VerifyOutput(
         validation=validation,

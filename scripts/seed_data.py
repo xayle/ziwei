@@ -31,7 +31,7 @@ from services.auth_service import hash_password
 ADMIN_CONFIG = {
     "username": "admin",
     "email": "admin@bazi.local",
-    "password": "BaZi@2025!",
+    "password": "cad123qwe",
     "role": "admin",
     "is_admin": True,
     "is_active": True,

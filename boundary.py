@@ -33,6 +33,7 @@ class RiskFlags:
     jieqi_boundary_status: Literal["ok", "unavailable"]
     minutes_to_shichen_boundary: Optional[float]
     minutes_to_jieqi_boundary: Optional[float]
+    leap_month_ambiguous: bool = False  # B4: 已知闰月窗口内，双库月柱可能不一致
 
 
 @dataclass
@@ -47,6 +48,22 @@ class Validation:
     boundary_risk_shichen: bool
     boundary_risk_jieqi: bool
     warnings: list[str]
+
+
+# B4: 已知闰月表（solar month 为公历对应月份）
+# 格式: (公历年, 闰月的公历月份, 闰月结束的公历月份)
+# 当出生月份处于闰月窗口时，sxtwl 与 cnlunar 月柱可能不一致
+_KNOWN_LEAP_MONTH_WINDOWS: list[tuple[int, int, int]] = [
+    (1957, 8, 9),   # 农历闰八月
+    (1968, 7, 8),   # 农历闰七月
+    (1976, 8, 9),   # 农历闰八月
+    (1984, 10, 11), # 农历闰十月
+    (1993, 3, 4),   # 农历闰三月
+    (2004, 2, 3),   # 农历闰二月
+    (2012, 4, 5),   # 农历闰四月
+    (2020, 4, 5),   # 农历闰四月
+    (2023, 2, 3),   # 农历闰二月
+]
 
 
 def compute_risk_flags(
@@ -76,12 +93,20 @@ def compute_risk_flags(
         minutes_to_jieqi = min(delta_prev, delta_next)
         near_jieqi = minutes_to_jieqi <= JIEQI_THRESHOLD_MIN
 
+    # B4: 闰月窗口检测
+    leap_ambiguous = False
+    for year, m_start, m_end in _KNOWN_LEAP_MONTH_WINDOWS:
+        if dt_utc8.year == year and m_start <= dt_utc8.month <= m_end:
+            leap_ambiguous = True
+            break
+
     return RiskFlags(
         near_shichen_boundary=near_shi,
         near_jieqi_boundary=near_jieqi,
         jieqi_boundary_status=jieqi_status,
         minutes_to_shichen_boundary=minutes_to_shi,
         minutes_to_jieqi_boundary=minutes_to_jieqi,
+        leap_month_ambiguous=leap_ambiguous,
     )
 
 
@@ -162,7 +187,7 @@ def compute_validation(
         risk_flags=risk_flags,
         boundary_risk_shichen=boundary_risk_shi,
         boundary_risk_jieqi=boundary_risk_jie,
-        warnings=[],
+        warnings=["leap_month_ambiguous"] if risk_flags.leap_month_ambiguous else [],
     )
 
 

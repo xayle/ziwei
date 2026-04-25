@@ -109,7 +109,7 @@
         "hour": "辛未"
       },
       "recorded_geju": "羊刃格",
-      "recorded_yongshen": ["metal", "fire", "earth"],
+      "recorded_yongshen": ["earth", "metal"],
       "recorded_dayun_comment": "男阳年顺排大运",
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",

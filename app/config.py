@@ -90,6 +90,12 @@ class Settings:
     prometheus_enabled: bool = os.getenv("PROMETHEUS_ENABLED", "true").lower() == "true"
     metrics_port: int = int(os.getenv("METRICS_PORT", "8001"))
     
+    # ===== 引擎功能开关（O9）=====
+    # ENGINE_V2=true 时走新四柱计算路径（当前与 v1 行为相同，保留用于未来切换）
+    engine_v2: bool = os.getenv("ENGINE_V2", "false").lower() == "true"
+    # SANDBOX_ENABLED=true 时请求头 X-Sandbox: true 返回固定样本（C2）
+    sandbox_enabled: bool = os.getenv("SANDBOX_ENABLED", "false").lower() == "true"
+
     # ===== 速率限制 =====
     rate_limit_enabled: bool = os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
     rate_limit_requests: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))

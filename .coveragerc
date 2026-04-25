@@ -1,0 +1,23 @@
+[run]
+# 只度量应用代码（排除测试、迁移、虚拟环境等）
+source = .
+omit =
+    .venv/*
+    tests/*
+    migrations/*
+    scripts/*
+    monitoring/*
+    */__pycache__/*
+
+[report]
+# 排除无需覆盖的模式
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == "__main__":
+    ^\s*pass\s*$
+    ^\s*\.\.\.\s*$
+
+[html]
+directory = coverage/htmlcov

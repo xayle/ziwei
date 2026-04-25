@@ -2,6 +2,453 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v10.7.0] - 2026-03-31
+
+### 新增 — Phase B P5: 四柱合婚 + 塔罗牌
+
+#### §5.1 四柱合婚
+- 新增后端服务 `services/compatibility.py`：四维评分算法（日主五行生克 40分 + 年支六合/冲 30分 + 五行互补 20分 + 天干合化 10分），满分 100
+- 新增路由 `routers/compat.py`：`GET /api/v1/compat/bazi`（无鉴权），返回 `CompatResponse`（分数/等级/详情/双方四柱与五行）
+- 新增前端 `CompatibilityView.vue`（`/compat`）：双人输入表单、综合评分横幅、SVG 五行雷达对比图、四柱对照表、五维进度条详情
+- 新增前端 API 客户端 `frontend/src/api/compat.ts`
+
+#### §7.2 塔罗牌
+- 新增前端 `TarotView.vue`（`/tarot`）：大阿尔卡那 22 张、出生牌计算（数字加法归约）、单张抽牌、三牌阵（过去/现在/未来）、22 张牌库浏览 + 详情蒙层
+- 无后端依赖，全部在浏览器端计算
+
+#### 公共更新
+- `frontend/src/router/index.ts` 新增 `/compat` 和 `/tarot` 路由
+- `frontend/src/components/AppNav.vue` 导航栏新增「合婚」「塔罗」入口
+- `run.py` 注册 `compat_router`
+
+## [v10.5.0] - 2026-03-29
+
+### 新增 — Phase B P3: 西方占星出生盘 + AI 助手增强
+
+**后端**
+- `services/western_astrology.py` — 纯 Python 天文算法（Jean Meeus）计算西方占星出生盘
+  - 太阳黄经 ±0.01°（Meeus Ch.25 低精度视黄经）
+  - 月亮黄经 ±1°（简化 Brown 理论，Meeus Ch.47）
+  - 7 颗行星地心黄经（简化开普勒轨道，精度 ±2-5°，判星座足够）
+  - 上升点（ASC）/中天（MC）精度 ±0.1°（格林尼治恒星时 + 黄赤交角）
+  - 逆行检测（前后1天黄经差比较）
+  - 5 种主要相位：合相/六分相/四分相/三分相/对冲相（带容许度）
+  - 元素（火/土/风/水）和模式（本位/固定/变动）统计
+- `app/schemas/western.py` — Pydantic 响应模型 (`WesternChartResponse`)
+- `routers/western.py` — `GET /api/v1/western/chart` 出生盘端点（无需登录）
+- `run.py` — 注册西方占星路由
+
+**前端**
+- `frontend/src/api/western.ts` — API 类型定义 + `getWesternChart()` 客户端
+- `frontend/src/views/WesternView.vue` — 全新西方占星页面 `/western`
+  - 出生数据表单（日期/时间/纬度/经度/时区）+ 8 城市快捷按钮
+  - SVG 出生星盘圆轮：12 星座扇形（元素配色）、行星符号（r=136）、相位连线、ASC/MC 轴线
+  - 行星位置表（星座/度数/元素/逆行标记）
+  - 相位列表 + 相位矩阵（全行星交叉表）
+  - 元素分布卡片 + 模式分布
+  - 响应式布局，URL query 参数预填
+- `frontend/src/router/index.ts` — 添加 `/western` 路由
+- `frontend/src/components/AppNav.vue` — 添加「西方占星」导航项
+- `frontend/src/views/ZiweiView.vue` — 添加「🤖 AI 解读」按钮（触发 AppRightPanel AI 流式解读）
+  - 注入 `useUiStore` / `useAiStore`，一键展开右侧 AI 面板并发起命盘解读
+- `frontend/src/components/AppRightPanel.vue` — AI 快捷模板新增「西方占星解读」
+
+## [v10.4.0] - 2026-03-29
+
+### Phase B P2 — 择日引擎前端 + PDF 打印样式
+
+#### 新增文件
+- **`frontend/src/api/zeri.ts`** — 择日 API 客户端（`ZeriDayItem`、`ZeriMonthResult`、`recommendZeri()`、`getZeriPurposes()`）
+- **`frontend/src/views/ZeriView.vue`** — 全新择日推荐页面
+  - 表单：命宫地支/五行局/本命年支/用途/年月（支持 URL query 预填）
+  - 月历日历网格（7列 Mon-Sun），吉/大吉/中/凶 四色染底
+  - 点击日期展开详情面板（干支/农历/评分/依据列表/德日/破日标记）
+  - 本月推荐吉日汇总卡片（最多8天）
+  - 翻月导航（自动重新查询）
+  - 响应式布局，移动端适配
+
+#### 路由 & 导航
+- **`router/index.ts`** — 新增 `/zeri` 路由
+- **`AppNav.vue`** — 导航栏添加"择日"链接
+
+#### 跨页联动
+- **`ZiweiView.vue`**
+  - 新增 `gotoZeri()` 函数（提取命宫地支+五行局）及"📅 择日"按钮
+  - 初始化 `useRouter`；新增 `.btn-zeri` 样式
+- **`BaziView.vue`**
+  - 新增 `gotoZeri()` 函数（传入年柱地支作为本命年支）及"📅 择日"按钮
+  - 新增 `.btn-zeri-link` 样式
+  - 新增 **`@media print`** 打印样式（隐藏导航/表单/tabs，展开所有 section）
+
+---
+
+## [v10.3.0] - 2026-03-29
+
+### Phase B P1 — 大运时间轴 + 姓名五格增强
+
+#### 前端变更
+- **BaziView.vue — 大运时间轴（Phase B P1-A）**
+  - 新增 `dayunSelected` ref（点击展开详情）、`dayunActiveIdx` computed（当前大运索引）
+  - 大运 tab 从卡片瀑布流改为**可横向滚动时间轴**：dot 节点 + 连接线 + 下方卡片
+  - 当前大运节点脉冲动画（`@keyframes dy-ring-pulse`）、干支大字 + 十神彩色 chip
+  - 卡片显示年龄区间（15–25岁）及起始年份
+  - 点击卡片展开详情面板（含叙述、财/健/情提示），再次点击收起，fade+slide 过渡
+  - 已过大运节点降低透明度，当前大运高亮渐变背景
+- **NameView.vue — 五格增强（Phase B P1-B）**
+  - 五格表格按吉凶着色：大吉=绿框、吉=蓝框、凶=红框、注意=黄框
+  - 新增 `gridScoreClass()` 函数（依据 hint 文本匹配大吉/吉/大凶/凶）
+  - 新增**幸运数字**展示行（圆形 chip，来自 `analyzeResult.lucky_numbers`）
+
+---
+
+## [v10.2.0] - 2026-03-29
+
+### 八字排盘 UI 完善（Phase B P0）
+
+#### 后端变更
+
+| 文件 | 变更 |
+|------|------|
+| `services/bazi_full_service.py` | `ten_god()` 改为直接返回中文十神（比肩/劫财/食神/伤官/正财/偏财/正官/七杀/正印/偏印） |
+| `services/bazi_full_service.py` | `bazi_full()` 新增 `_geju_model` 构建并填充 `BaziFullResponse.geju`（格局名 + 置信度 + 破格详情） |
+| `services/bazi_full_service.py` | 导入 `GejuModel` |
+
+#### 前端变更（`frontend/src/views/BaziView.vue`）
+
+| 项目 | 变更 |
+|------|------|
+| 四柱表格 | 重构为 HTML `<table>` 布局，含天干/地支/藏干/纳音/十神五行，藏干各干按五行着色 |
+| 十神 | 从 `ganzhi.ts` 复用 `stemColor()`，十神按颜色字典高亮显示，日柱固定显示「日主」（accent色） |
+| 藏干 | 导入 `CANG_GAN`/`NAYIN_MAP`（`@/data/ganzhi`），前端自算无需后端新字段 |
+| 五行格局 | 新增 SVG 五边形雷达图（木/火/土/金/水 五顶点），与横条图并排展示 |
+| CSS | 新增 `.pillars-tbl*`/`.tg-chip`/`.cang-stem`/`.wx-chart-row`/`.wx-radar-*` 样式 |
+
+
+
+### 紫微安星设置 Phase A 全量完成（8项）
+
+实现 `紫薇3.txt` Phase A 方案的全部 8 项剩余安星选项，与参考应用「文墨天机 pro 2.5.9」对齐。
+
+#### 引擎层（`services/ziwei_engine/`）
+
+| 文件 | 变更 |
+|------|------|
+| `stars_aux.py` | A1 天马：新增 `tianma_method='year'/'month'`（依据年支/月支三合查表） |
+| `stars_aux.py` | A2 天空：新增 `天空` 星曜 + `tiankong_method='standard'/'shun'`（常规/顺加生时） |
+| `stars_aux.py` | A4 截空旬空：新增 `jiukong_method='dual'/'single'/'zhanyan'`（正副双星/常规单星/占验截路空亡） |
+| `stars_aux.py` | A5 天使天伤：新增 `天伤`/`天使` 两星 + `tianshang_method='standard'/'zhongzhou'` |
+| `stars_aux.py` | 新参数 `lp_b`（命宫支）供天使天伤定位使用 |
+| `tables.py` | A3 亮度：新增 `_BRIGHTNESS_OVERRIDES` dict，含 `zhongzhou`/`mod1`/`mod2` 三套覆盖；`get_brightness()` 新增 `brightness_method` 参数 |
+| `stars_main.py` | A3 亮度：`place_main_stars()` 新增 `brightness_method` 参数，透传至 `get_brightness()` |
+| `decorative.py` | A8 长生十二神：`place_changsheng12()` 新增 `changsheng_method='standard'/'water_earth'/'fire_earth'`（区分阴阳顺逆/水土共长生/火土共长生） |
+| `__init__.py` | A6 命主：新增 `mingzhu_method='quanshu'/'zhongzhou'`；中州派使用年支查表（12星循环） |
+| `__init__.py` | A7 流年四化：新增 `liunian_sihua_method='year_stem'/'life_palace_stem'`（依流年天干/依流年命宫天干） |
+| `__init__.py` | 缓存 key 纳入全部 8 个新参数；各子函数调用均透传新参数 |
+
+#### API 层
+- `app/schemas/ziwei.py`：`ZiweiRequest` 新增 8 个字段，含校验逻辑  
+- `routers/ziwei.py`：`ziwei_full()` 调用透传全部 8 个新参数  
+
+#### 前端层（`frontend/src/`）
+- `api/ziwei.ts`：`ZiweiRequest` 接口新增 8 个可选字段  
+- `views/ZiweiView.vue`：
+  - 新增 8 个 ref（`algoTianma`/`algoTiankong`/`algoBrightness`/`algoJiukong`/`algoTianshang`/`algoMingzhu`/`algoLiunianSihua`/`algoChangsheng`）
+  - `resetAlgoSettings()` 重置新增字段  
+  - `doCalculate()` 传递新增参数  
+  - 「安星设置」面板扩展 A1~A8 新增选项 Radio 组  
+  - 「已自定义」徽章检测扩展至全部 12 个安星设置  
+
+#### 测试验证
+- **pytest**: 2602 passed, 1 pre-existing failure (c1 workspace leak), 2 skipped — **0 regressions**  
+- **前端构建**: 1.59s ✓ (0 TypeScript/Vue errors)  
+- Python 片段验证：A1~A8 所有参数变体均正确输出不同结果  
+
+---
+## [v9.2.0] - 2026-03-21
+
+### 命盘摘要分享卡（Share Summary Card）
+
+**前端（ziwei.html）**
+- **feat(ui)**: 工具栏新增 **「🃏 分享卡」** 按钮，点击后弹出 §22 命盘摘要分享卡面板
+- **feat(ui)**: 分享卡内容自动由当前排盘数据（`_lastData`）生成，包含：
+  - 命主姓名 + 出生日期（Solar）+ 性别
+  - 命宫 / 身宫干支 + 五行局徽章
+  - 宫力 TOP-3（调用 `palScore()`，带颜色分级：绿 / 金 / 红）
+  - 所有检测到的格局（含大吉 / 吉 / 凶 / 大凶 颜色标签）
+  - 优先级最高（`立即` / `高`）的前 3 条生活建议
+  - 系统生成日期 + 免责声明页脚
+- **feat(action)**: 三种导出方式：
+  - 「📋 复制 HTML」— `navigator.clipboard` 写入完整独立 HTML（内嵌 CSS），可直接粘贴保存
+  - 「📷 截图 PNG」— 复用已有 `html2canvas` 库，2× 高清截图下载
+  - 「🖨 打印 / PDF」— 弹出独立打印窗口，调用 `window.print()`
+- **feat(css)**: 新增 `.share-modal`、`#share-card-preview`、`.sc-*`（分享卡内容样式）、`.share-action-btn`、`#share-status` 等样式
+- **feat(js)**: 新增 §22 函数：`openShareCard()`、`closeShareCard()`、`_renderShareCard(data)`、`copyShareHTML(btn)`、`screenshotShareCard(btn)`、`printShareCard()`
+
+---
+
+## [v9.1.0] - 2026-03-21
+
+### 破局建议 evidence 宫位跳转 + 宫格宫力迷你进度条
+
+**前端（ziwei.html）**
+- **feat(ui)**: 破局建议（化劫建议）每条 `evidence` 依据文字末尾新增 **「→ 定位XXX宫」** 跳转按钮（复用 `.lsug-jump-btn` 样式）
+  - 复用 §19 `lsugExtractPalace()` + §20 `patJumpToPalace()` 实现跳转 + 脉冲高亮
+  - 效果与生活建议 evidence 跳转（v8.9.0）完全一致
+- **feat(ui)**: 所有宫格底部新增 **3 px 宫力迷你进度条**（`.pal-score-bar` / `.pal-score-fill`）
+  - 分数 ≥ 75 → 绿色，≥ 55 → 金/棕，< 55 → 红色
+  - 调用已有 `palScore(p)` 函数（0–100 分），悬浮显示具体分值
+  - 使用 `position:absolute; bottom:0` 贴底显示，不占宫格内容空间
+- **feat(css)**: 新增 `.pal-score-bar` / `.pal-score-fill`（`transition:width .4s ease`）
+
+**测试基线**
+- pytest **1963 passed**, 17 skipped，2 failed（预存，与本次无关）
+
+---
+## [v9.0.0] - 2026-03-21
+
+### 格局宫位自动标注 + 跳转高亮
+
+**前端（ziwei.html）**
+- **feat(ui)**: 命盘宫格底部自动注入 **格局徽章**（`.pat-pal-badge`），排盘后即时呈现每个宫格与哪些格局相关
+  - 大吉（绿）/ 吉（金）/ 凶（红）/ 大凶（深红）四色区分
+  - 同名格局去重，badge 悬浮（`title`）显示等级 + 完整说明
+  - 点击 badge → 触发宫格脉冲高亮动画（复用 `pal-highlight-pulse`）
+- **feat(ui)**: 格局列表（`格局检测·吉凶总览`）每条格局末尾新增 **📍 涉及宫位跳转按钮**（`.pat-jump-btn`）
+  - 点击 → 平滑滚动至命盘区域 + 对应宫格 0.8s×3 脉冲高亮
+  - 按钮颜色跟随格局 level（大吉/吉/凶/大凶）
+- **feat(css)**: 新增格局相关样式块（§20 前缀）
+  - `.pat-jump-pals` / `.pat-jump-btn` — 跳转按钮行
+  - `.pat-pal-badge-wrap` / `.pat-pal-badge` / `.ppb-daji` … `.ppb-daxiong` — 宫格徽章
+- **feat(js)**: 新增 §20 函数块
+  - `annotatePatternPalaces(patterns)` — 在宫格 DOM 上注入格局徽章，`render()` 排盘完成后自动调用
+  - `patJumpToPalace(palaceName)` — 滚动 + 高亮目标宫格（与 §19 `lsugJumpToPalace` 同逻辑独立实现）
+- **refactor(ui)**: 格局列表不再显示右侧 `pat-pals` 纯文本宫位，改为交互式跳转按钮（信息量不变，可操作性更强）
+- **dep**: 依赖 v8.9.0 为宫格追加的 `data-pname` 属性
+
+**测试基线**
+- pytest **1963 passed**, 17 skipped，2 failed（预存 `test_api_verify.py` request_id，与本次无关）
+
+---
+## [v8.9.0] - 2026-03-20
+
+### 生活建议用户偏好设置 + 证据高亮跳转
+
+**前端（ziwei.html）**
+- **feat(ui)**: 生活化建议区域顶部新增 **偏好设置栏**（`.lsug-prefs-bar`）
+  - 四项偏好可持久化至 `localStorage`（key：`ziwei_lsug_prefs_v1`）
+  - 🐾 家中有宠物 · 🌸 植物过敏 · 🚫 不宜移动大件 · 💰 预算档位（全部/仅低/低+中）
+  - 勾选后立即刷新各条目的偏好警告标签，无需重新排盘
+- **feat(ui)**: 每条生活建议 item 在关联偏好触发时显示 **黄色警告条**（`.lsug-pref-warn`）
+  - 宠物：仅 `plants` 类且 notes 含"宠"字的条目
+  - 过敏：所有 `plants` 类条目
+  - 不宜大件：所有 `bed` 类条目
+  - 预算：cost_level === '高' 时显示超预算提示
+- **feat(ui)**: 每条证据文字（`evidence`）末尾新增 **「→ 定位XXX宫」**按钮（`.lsug-jump-btn`）
+  - 点击后平滑滚动至命盘区，并对目标宫格执行 **0.8s×3 脉冲高亮动画**（`.pal-highlight-pulse`）
+  - 宫名通过正则从 evidence 文本提取（支持 12 个标准宫名）
+- **feat(dom)**: 命盘宫格渲染时新增 `data-pname` 属性，供 `lsugJumpToPalace()` 定位查询
+- **feat(css)**: 新增 `§19 生活建议偏好 + 证据跳转` 样式块
+  - `.lsug-prefs-bar` / `.lsug-pref-check` / `.lsug-pref-sel`
+  - `.lsug-pref-warn`（黄色警告条）
+  - `.lsug-jump-btn`（outline 按钮）
+  - `@keyframes lsug-pulse` + `.pal-highlight-pulse`
+  - `@media print` 中追加 `.lsug-prefs-bar { display:none }`
+- **feat(js)**: 新增 §19 函数块
+  - `lsugGetPrefs()` — 读取偏好（localStorage）
+  - `lsugSavePrefs()` — 保存偏好并实时更新已渲染 item 的警告标签
+  - `lsugExtractPalace(evidence)` — 正则提取宫位名
+  - `lsugJumpToPalace(palaceName)` — 滚动 + 脉冲高亮宫格
+
+**测试基线**
+- pytest **1963 passed**, 17 skipped，2 failed（预存 `test_api_verify.py` request_id，与本次无关）
+
+---
+## [v8.8.0] - 2026-03-20
+
+### 风水九宫格房间布局评估（Fengshui Room Layout）
+
+**后端**
+- **feat(service)**: 新增 `services/fengshui_engine/room_layout.py`：11 种房间类型（主卧/次卧/书房/儿童房/客厅/玄关/餐厅/厨房/卫生间/储藏室/不设置）+ 基于八宅法的吉凶匹配规则
+- **feat(api)**: 新增 `POST /api/v1/fengshui/room-layout` 端点：接受 `birth_year`/`gender`/`house_facing`/`rooms` → 返回逐区评估 + 整体加权评分（0-100）+ 等级（优秀/良好/一般/较差/待改善）+ 改善建议列表
+- **feat(schema)**: `app/schemas/fengshui.py` 新增 `RoomLayoutRequest`、`ZoneAssessmentResponse`、`RoomLayoutResponse`
+- **feat(api)**: `GET /api/v1/fengshui/options` 返回新增 `room_type_options` 字段（房间类型中英文对照）
+
+**前端（ziwei.html）**
+- **feat(ui)**: 风水面板计算结果下方新增交互式 **九宫格房间布局评估** 区域
+- **feat(ui)**: 3×3 网格，每格显示方位（NW/N/NE/W/中/E/SW/S/SE）、吉凶标签（生气/天医/…/绝命）、颜色与房间类型下拉选择器，中心格显示命卦名
+- **feat(ui)**: 「🔍 评估布局」按钮调用 `POST /api/v1/fengshui/room-layout`
+- **feat(ui)**: 评估结果：评分卡（分数 + 等级）+ 逐区彩色徽章（悬停显示评估详情）+ 改善建议列表
+- **feat(css)**: 新增 `§18 风水九宫格房间布局` 样式块（`.fs-room-grid`、`.fs-room-cell`、`.fs-assess-*`、`.fs-cb`、`.fs-suggestions` 等）
+- **feat(js)**: 新增 `§18 fsEvalRooms()` 函数，含评估逻辑与结果渲染
+
+**测试基线**
+- pytest **1963 passed**, 17 skipped，2 failed（预存 `test_api_verify.py` request_id 问题，与本次无关）
+
+---
+
+## [v8.7.0] - 2026-03-19
+
+### 案例库浏览面板（Cases Browser Panel）
+
+**前端（ziwei.html，纯前端）**
+- **feat(ui)**: 工具栏新增「📂 案例库」按钮（`cases-btn`），位于「💾 保存」前，点击打开案例库浏览面板
+- **feat(ui)**: 新增全屏遮罩面板 `#cases-panel`（z-index:982），支持点击遮罩关闭
+- **feat(ui)**: 案例库面板含搜索栏（300ms 防抖）、排序下拉（最近更新 / 创建时间 / 姓名）、刷新按钮
+- **feat(ui)**: 案例列表渲染为表格，显示姓名、性别、出生时间、最近更新、标签；行悬停高亮，点击整行即可载入
+- **feat(ui)**: 每行提供「载入」按钮快速重载命盘，以及「🗑 删除」按钮（调用 `DELETE /api/v1/cases/{id}`，带确认弹窗）
+- **feat(ui)**: 底部分页栏：上一页 / 下一页，每页 15 条，显示当前页码和总条数
+- **feat(ui)**: `casesLoadChart(caseId, caseName)` 函数：获取最新 Snapshot → 填充表单所有输入字段 → 调用 `render()` 重绘命盘 → 设置 `_savedCaseId` / `window._lastCaseId` → 保存按钮变「✅ 已保存」
+- **feat(ui)**: `casesDelete(caseId, caseName)` 函数：confirm 确认后发 DELETE 请求，删除成功后刷新列表
+- **feat(css)**: 新增 `§17 案例库浏览面板` 样式块（`.cases-modal`、`.cases-table`、`.cases-tag`、`.cases-load-btn`、`.cases-del-btn`、`.cases-empty` 等）
+
+**测试基线**
+- pytest **1963 passed**, 17 skipped，2 failed（预存 `test_api_verify.py` request_id 问题，与本次无关）
+
+---
+
+## [v8.6.0] - 2026-03-19
+
+### 命盘一键保存到案例库（Save Chart to Case）
+
+**后端（新增 POST Snapshot 接口）**
+- **feat(api)**: 新增 `POST /api/v1/cases/{case_id}/snapshots` 端点（`routers/snapshots.py`），允许为已有 Case 创建新快照（保存排盘结果 JSON），权限验证 owner_id，同步更新 `Case.last_snapshot_at`
+- **feat(api)**: `SnapshotCreate` Pydantic 模型支持 `input_json`、`output_json`、`api_version` 等全字段
+
+**前端（ziwei.html）**
+- **feat(ui)**: 工具栏新增「💾 保存」按钮（`save-chart-btn`），调用 `saveChart()` 函数
+- **feat(ui)**: `saveChart(silent?)` 自动完成三步流程：① 创建 Case（来自当前排盘输入）→ ② 创建 Snapshot（存储完整 output_json）→ ③ 静默索引到 `/api/v1/similarity/index`（相似盘检索自动更新）
+- **feat(ui)**: 保存成功后按钮变为「✅ 已保存」（绿色），排盘新命盘时自动重置
+- **feat(ui)**: `window._lastCaseId` 在保存后设置，供导出面板 (`exportFull`/`exportMeta`) 使用
+- **feat(ui)**: `openExportPanel()` 打开时若无 `_lastCaseId`，自动静默触发 `saveChart(true)` 以尝试获取 Case ID
+- **feat(ui)**: `gender` 字段自动转换（前端 `男/女` → API `male/female`）
+
+**测试基线**
+- pytest **1965 passed**, 17 skipped, 0 failed
+
+---
+## [v8.5.0] - 2026-03-20
+
+### 审核版本历史 + 全文搜索 + CSV 导出
+
+**审核变更历史 (Review Audit History)**
+- **feat(db)**: 新增 `chart_review_history` 表（Alembic 迁移 `f5a6b7c8d9e0`），记录每次审核状态/批注变更，字段：`review_id`、`status`、`reviewer`、`notes`、`reject_reason`、`change_type`（status_change / notes_update / bulk_action）、`changed_at`
+- **feat(api)**: `PATCH /api/v1/reviews/{id}` 在每次更新后自动写入历史记录，`change_type` 根据状态是否变化区分
+- **feat(api)**: `POST /api/v1/reviews/bulk` 批量操作每条成功记录均写入历史（`change_type=bulk_action`）
+- **feat(api)**: 新增 `GET /api/v1/reviews/{id}/history` 端点，返回 `ReviewHistoryResponse`（含 `items` 列表和 `total`）
+- **feat(ui)**: 审核详情展开行底部新增「🕐 变更历史」时间轴，实时 `fetch` 历史记录并渲染：状态徽章、操作类型、审核员、时间戳、批注摘要
+
+**全文搜索 (Review Search)**
+- **feat(ui)**: 工具栏与统计卡片之间新增搜索栏，输入关键词实时过滤列表；搜索字段：命宫（life_palace_gz）、五行局、审核员、格局、report_hash、批注
+- **feat(ui)**: 统计栏数量实时同步，筛选时显示「共 N 条（已筛选 M 条）」
+
+**CSV 导出 (Export)**
+- **feat(ui)**: 「📥 导出 CSV」按钮，UTF-8 BOM 编码，导出当前可见列表 14 列（ID、哈希、命宫、五行局、格局、状态、审核员、批注、拒绝原因、算法版本、模板、修订次数、提交时间、审核时间），文件名含日期
+
+**Schema 新增**
+- `ReviewHistoryItem`：history 条目 Pydantic schema
+- `ReviewHistoryResponse`：`{ review_id, items, total }`
+
+**测试基线**
+- pytest **1965 passed**, 17 skipped, 0 failed（新功能由 alembic + 运行时覆盖，无测试退化）
+
+---
+## [v8.4.0] - 2026-03-18
+
+### 审核面板：详情展开行 + 批注内联编辑 + 多项修复
+
+**审核详情展开 (Review Detail Row)**
+- **feat(ui)**: 审核列表每行点击（非复选框/按钮区域）可内联展开详情行，显示：
+  - 出生信息（解析 JSON → 人类可读格式：年月日时分 · 性别 · 经度 · 流年）
+  - 算法版本、模板版本、修订次数、审核时间
+  - 格局列表（蓝色标签气泡）
+  - 拒绝原因（若有，红色显示）
+- **feat(ui)**: 展开行内置批注编辑器，「💾 保存批注」按钮调用 `PATCH /api/v1/reviews/{id}` 更新 `notes` 字段，不改变当前审核状态
+- **feat(ui)**: 「收起」按钮折叠详情行；点击同一行再次折叠
+- **feat(ui)**: 同一时刻最多展开一行（点击其他行自动折叠已展开的行）
+
+**审核列表表格 (Review Table)**
+- **feat(ui)**: 新增「批注」列，显示 `notes` 或 `reject_reason` 的前 16 字，鼠标悬停 `title` 显示完整内容
+- **feat(ui)**: 「状态」列新增修订次数徽章（`revision > 1` 时展示 `v{N}` 蓝色小标签）
+- **feat(ui)**: 表格行 `cursor:pointer`，操作列和复选框通过 `stopPropagation` 阻止冒泡
+
+**Bug 修复**
+- **fix(ui)**: `rvSubmitCurrent()` 中 `template_version` 从硬编码 `'standard'` 改为读取 `_lastData.template_version`，与当前排盘保持一致
+- **fix(ui)**: `colspan="10"` → `colspan="11"` 修复（覆盖加载失败提示和未登录提示两处）
+
+**测试基线**
+- pytest **1965 passed**, 17 skipped, 0 failed
+
+---
+## [v8.3.0] - 2026-03-19
+
+### 打印页脚动态化 + 审核面板内联注释模态
+
+**打印导出 (Print Fix)**
+- **fix(ui)**: `body::after` CSS `content` 改用 `attr(data-algo-ver)` / `attr(data-tpl-ver)` 动态属性，替换硬编码的 `"引擎版本：2.1.0"`
+- **fix(ui)**: `beforeprint` 事件监听器新增注入：从 `_lastData.algorithm_version` 和 `_lastData.template_version` 读取实际值，并分别写入 `body` 的 `data-algo-ver` / `data-tpl-ver` 属性，确保打印页脚始终与当前排盘版本一致
+
+**审核面板 (Review Panel)**
+- **feat(ui)**: 新增 `<div id="rv-act-dialog">` 内联注释模态框，替换原有 `prompt()` 浏览器对话框  
+  - 支持通过 / 拒绝 / 修订三种操作
+  - 含"审核员昵称"输入框（自动读写 `localStorage.rv_reviewer`，记住上次填写值）
+  - 含"备注/拒绝原因"多行文本域（拒绝时标签自动更新为"拒绝原因"）
+  - 点击遮罩层可取消；Enter 键快捷确认
+  - 批量操作（批量通过/拒绝/修订）同样通过此模态收集审核信息
+  - 批量删除保留简单 `confirm()` 对话框（不可恢复操作）
+- **refactor(ui)**: `rvAct()` 现在打开内联模态而非调用 `prompt()`
+- **refactor(ui)**: `rvBulkAct()` 重构：删除操作单独处理，其余状态操作通过内联模态收集信息，再调用公共 `_rvBulkSend()` 提交
+- **feat(ui)**: 提交成功使用 `showToast()` 通知（替代 `alert()`），不打断操作流程
+
+**测试基线**
+- pytest **1965 passed**, 17 skipped, 0 failed
+
+---
+
+## [v8.2.0] - 2026-03-18
+
+### 报告模板三档切换（simple / standard / pro）
+
+**API (ZiweiRequest)**
+- **feat(schema)**: `ZiweiRequest` 新增 `template_version: Literal["simple","standard","pro"] = "standard"` 字段，422 校验无效值
+- **feat(router)**: `_chart_to_response(chart, template)` 接受模板参数，在 `simple` 档位跳过 `forecast / flying / liuyue / analysis / remedies / life_suggestions`，减少响应体积
+- **feat(router)**: `/full` 端点将请求中的 `template_version` 传给 `_chart_to_response` 并回显在响应体内
+- **feat(router)**: `/batch` 端点新增 `template_version` 查询参数（默认 `standard`），作用同 `/full`
+
+**前端 (ziwei.html)**
+- **feat(ui)**: `fetch('/api/v1/ziwei/full')` 请求体中加入 `template_version: currentTpl`，三档按钮真正影响后端返回量
+- **feat(ui)**: 模拟对比 fetch 固定使用 `template_version:'standard'` 以保证字段完整性
+
+**测试 (Tests)**
+- **test**: `test_ziwei_api.py` 新增 `TestTemplateVersion`（18 用例）：
+  - `simple` 档：forecast/flying/liuyue/analysis/remedies/life_suggestions 均为空/null
+  - `simple` 档：palaces/patterns/summary 仍保留
+  - `standard`/`pro` 档：forecast/flying 均非 null，建议列表完整
+  - 非法 template_version → 422
+- **fix(tests)**: `test_ziwei_api.py` 新增 module-level `_disable_rate_limit` fixture（AUTH_BYPASS=true），解决多类大量命中 `/full` 端点时的跨类 429 问题
+
+**测试基线**
+- pytest **1965 passed**, 17 skipped, 0 failed
+
+---
+
+## [v8.1.0] - 2026-03-18
+
+### 治理字段 + 引擎单元测试 + API 集成测试覆盖
+
+**治理字段 (Governance)**
+- **feat(schema)**: `ZiweiResponse` 新增 `algorithm_version: str = "2.1.0"` 和 `template_version: str = "standard"` 字段，便于回溯历史排盘差异
+- **feat(ui)**: `exportJSON()` 导出 payload 包含 `algorithm_version` 和 `template_version`
+
+**测试 (Tests)**
+- **test**: 新增 `tests/test_life_suggestions_engine.py`（35 用例），覆盖生活化建议引擎全部触发类型（palace_star / palace_transform / pattern / wuxing_ju）
+- **test**: 新增 `tests/test_remedies_engine.py`（31 用例），覆盖破局建议引擎全部触发类型（palace_hua / pattern / pattern_and_liunian）
+- **test**: `tests/test_ziwei_api.py` 追加 `TestNewResponseFields`（12 用例），覆盖 `algorithm_version`、`template_version`、`patterns`、`remedies`、`life_suggestions` 字段结构
+
+**测试基线**
+- pytest 1947 passed, 17 skipped, 0 failed
+
+---
+
 ## [v8.0.11] - 2026-03-13
 
 ### N7 发布门控全部通过
@@ -330,6 +777,36 @@ All notable changes to this project will be documented in this file.
 ---
 
 ## [Unreleased]
+
+## [10.6.0] — 2026-03-29
+
+### Phase B P4 — 数字学 + 太阳回归年盘（§7.1 + §6.2）
+
+#### 后端
+
+- `services/western_astrology.py` — 新增 `jd_to_datetime()` 儒略日→UTC datetime 工具；新增 `solar_return_chart()` 太阳回归年盘算法（Newton 迭代，40步内收敛至精度 < 1e-8°，误差< 0.01秒）
+- `app/schemas/western.py` — 新增 `SolarReturnResponse`（继承 `WesternChartResponse`，附加 `sr_dt_utc`/`sr_year`/`natal_sun_lon`）
+- `routers/western.py` — 新增 `GET /api/v1/western/solar-return` 端点；参数：出生时间/地点/时区 + 回归年 + 回归所在地坐标
+
+#### 前端
+
+- `frontend/src/api/western.ts` — 新增 `SolarReturnParams`/`SolarReturnResponse` 类型，新增 `getSolarReturn()` API 函数
+- `frontend/src/views/WesternView.vue` — 在出生盘结果下方新增「太阳回归年盘」区域：年份/地点输入→精确回归时刻（UTC）→ASC/MC→出生盘 vs 回归年盘行星对比表（含逆行、星座变化标注）
+- `frontend/src/views/NumerologyView.vue` — **新建** 数字学页面（纯前端，无需后端）：  
+  - 皮达哥拉斯字母-数字映射（A=1…Z=8/9）  
+  - 计算：生命路径数 / 表达数 / 灵魂冲动数 / 性格数 / 生日数  
+  - 保留主命数 11/22/33  
+  - 出生日期数字拆解视图（年/月/日颜色区分）  
+  - 名字字母元音/辅音高亮视图  
+  - 每个数字：大圆数字显示 + 标题/别名 + 关键词标签 + 段落解释  
+- `frontend/src/router/index.ts` — 新增 `/numerology` 路由
+- `frontend/src/components/AppNav.vue` — 新增「数字学」导航项
+
+#### 验证
+
+- 构建：1.71s，NumerologyView 10.60 kB，WesternView 17.62 kB
+- 测试：2591 passed，2 skipped（基线不变）
+- 太阳回归算法：1990-01-15 北京→2026年回归时刻 2026-01-14T21:42:56Z，回归太阳 = 出生太阳 摩羯24°44'（完全一致 ✓）
 
 
 ## [v5.1.0] - 2026-02-25

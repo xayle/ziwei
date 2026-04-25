@@ -48,6 +48,12 @@ COPY --chown=appuser:appuser . .
 # 创建数据目录
 RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
 
+# 安装 Playwright Chromium 浏览器（§14 PDF 导出依赖）
+# PLAYWRIGHT_BROWSERS_PATH 指向系统级目录，appuser 可读
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN playwright install chromium --with-deps && \
+    chmod -R 755 /ms-playwright
+
 # 切换到非root用户
 USER appuser
 

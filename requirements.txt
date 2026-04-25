@@ -9,8 +9,12 @@ tzdata>=2023.3
 sqlmodel>=0.0.22,<0.0.23
 prometheus-client>=0.17.0
 alembic>=1.13,<2
+apscheduler>=3.10,<4     # O1: 数据库定时备份
+structlog>=24.0,<25      # O7: 结构化 JSON 日志
+cachetools>=5.3,<6       # O4: ziwei_full TTL 缓存
 swagger-ui-bundle>=1.1.0  # 本地化 Swagger UI 资源，离线环境 /docs 加载
 # 认证依赖（P83：之前缺失导致全新环境启动失败）
 python-jose[cryptography]>=3.3,<4
 argon2-cffi>=23.1,<24
 python-dotenv>=1.0,<2
+playwright>=1.40,<2        # §14 PDF 导出依赖 Chromium 无头渲染

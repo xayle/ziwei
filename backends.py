@@ -17,6 +17,26 @@ class BackendUnavailable(RuntimeError):
     """Raised when a backend library is missing or cannot initialize."""
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# B1: SxtwlBackend 模块级单例（DCL + threading.Lock）
+# 避免每请求重建 C 库对象（~15ms × 并发数 额外开销）
+# ──────────────────────────────────────────────────────────────────────────────
+import threading as _threading
+
+_SXTWL_BACKEND_LOCK: _threading.Lock = _threading.Lock()
+_SXTWL_BACKEND_INSTANCE: "Optional[SxtwlBackend]" = None
+
+
+def get_sxtwl_backend() -> "SxtwlBackend":
+    """返回全局单例 SxtwlBackend；首次调用时构造，后续复用。"""
+    global _SXTWL_BACKEND_INSTANCE
+    if _SXTWL_BACKEND_INSTANCE is None:
+        with _SXTWL_BACKEND_LOCK:
+            if _SXTWL_BACKEND_INSTANCE is None:
+                _SXTWL_BACKEND_INSTANCE = SxtwlBackend()
+    return _SXTWL_BACKEND_INSTANCE
+
+
 @dataclass
 class JieqiContext:
     """Optional jieqi context returned by sxtwl (prev/next 12-jie markers)."""
@@ -93,6 +113,31 @@ class SxtwlBackend:
         branch = self.BRANCHES[gz.dz]
         return Pillar(stem=stem, branch=branch, ganzhi=f"{stem}{branch}")
 
+    def _assert_pillars_sane(self, pillars: Pillars, dt_local) -> None:
+        """B3: 合理性断言层 — 检测 sxtwl 静默错误（越界/跨年错位）。
+
+        断言规则:
+          1. 天干索引 0-9，地支索引 0-11（防止 C 层越界返回乱值）
+          2. 年柱天干与输入年份对应的干支年差 ≤ 1（防跨年边界错位）
+        失败时抛 ValueError，调用方捕获后降级 cnlunar。
+        """
+        for pillar_name in ("year", "month", "day", "hour"):
+            p = getattr(pillars, pillar_name)
+            if p.stem not in self.STEMS:
+                raise ValueError(f"B3: {pillar_name}.stem={p.stem!r} 不在天干列表，sxtwl 返回越界值")
+            if p.branch not in self.BRANCHES:
+                raise ValueError(f"B3: {pillar_name}.branch={p.branch!r} 不在地支列表，sxtwl 返回越界值")
+        # 年柱年干与输入年份干支差 ≤ 1
+        expected_stem_idx = (dt_local.year - 4) % 10
+        actual_stem_idx = self.STEMS.index(pillars.year.stem)
+        diff = abs(actual_stem_idx - expected_stem_idx)
+        diff = min(diff, 10 - diff)  # 循环距离
+        if diff > 1:
+            raise ValueError(
+                f"B3: 年柱天干={pillars.year.stem} 与输入年份 {dt_local.year} 不符"
+                f"（期望下标≈{expected_stem_idx}，实际={actual_stem_idx}，差={diff}）"
+            )
+
     def get_pillars(self, dt_utc8) -> Pillars:
         dt_local = _ensure_tz(dt_utc8)
         day = self.sxtwl.fromSolar(dt_local.year, dt_local.month, dt_local.day)
@@ -102,12 +147,14 @@ class SxtwlBackend:
         gz_day = day.getDayGZ()
         gz_hour = self.sxtwl.getShiGz(gz_day.tg, dt_local.hour)
 
-        return Pillars(
+        pillars = Pillars(
             year=self._build_pillar(gz_year),
             month=self._build_pillar(gz_month),
             day=self._build_pillar(gz_day),
             hour=self._build_pillar(gz_hour),
         )
+        self._assert_pillars_sane(pillars, dt_local)  # B3: 静默错误检测
+        return pillars
 
     def get_jieqi_context(self, dt_utc8) -> Optional[JieqiContext]:
         dt_local = _ensure_tz(dt_utc8)

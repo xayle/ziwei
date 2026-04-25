@@ -40,6 +40,40 @@ def _local_dummy_user() -> User:
     )
 
 
+def _get_or_create_bypass_user(session: Session) -> User:
+    """返回可持久化写入的本地 bypass 用户（不存在则自动创建）。"""
+    # 优先读取已存在账号，避免重复创建
+    existing = session.exec(
+        select(User).where(
+            User.username == "local_bypass",
+            User.deleted_at.is_(None),  # type: ignore
+        )
+    ).first()
+    if existing:
+        if not existing.is_active:
+            existing.is_active = True
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+        return existing
+
+    now = datetime.now(timezone.utc)
+    user = User(
+        username="local_bypass",
+        email="local_bypass@example.com",
+        password_hash="",
+        is_active=True,
+        role="owner",
+        is_admin=True,
+        created_at=now,
+        updated_at=now,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
 def get_current_user(
     request: Request,
     session: Session = Depends(get_session)
@@ -62,7 +96,11 @@ def get_current_user(
     # 绕过鉴权：仅当 Authorization header 缺失时才启用（有真实 JWT 则正常验证）
     if not auth_header:
         if _auth_bypass_enabled():
-            return _local_dummy_user()
+            try:
+                return _get_or_create_bypass_user(session)
+            except Exception:
+                # 兜底：极端情况下（例如数据库瞬时不可用）仍返回内存用户，避免开发流程完全阻断
+                return _local_dummy_user()
         return None
     
     try:

@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "frontend:dev",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev",
+				"--prefix",
+				"frontend"
+			],
+			"isBackground": true
+		},
+		{
+			"label": "backend:dev",
+			"type": "shell",
+			"command": "./start-local.ps1",
+			"args": [
+				"-Port",
+				"8001"
+			],
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}
