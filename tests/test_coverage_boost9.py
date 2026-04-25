@@ -585,7 +585,8 @@ class TestVerifyModule:
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
 
-        with patch("verify.SxtwlBackend", side_effect=BackendUnavailable("no sxtwl")):
+        # verify_full 调用 get_sxtwl_backend() 而非直接实例化 SxtwlBackend
+        with patch("verify.get_sxtwl_backend", side_effect=BackendUnavailable("no sxtwl")):
             with patch("verify.CnlunarBackend", side_effect=BackendUnavailable("no cnlunar")):
                 with pytest.raises(BackendUnavailable, match="No available backend"):
                     verify_full(dt, 120.0, False, mode="single")
@@ -826,7 +827,7 @@ class TestBaziFullServiceExtra:
     def test_compute_yongshen_fallback_balanced(self):
         """compute_yongshen: pillars=None, tier='balanced' → 均衡 fallback（L229-233）"""
         from services.bazi_full_service import compute_yongshen
-        from schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
+        from app.schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
 
         score = WuXingScoreModel(wood=2.0, fire=2.0, earth=2.0, metal=2.0, water=2.0)
         strength = DayMasterStrengthModel(score=0.5, tier="balanced", factors=[])
@@ -836,7 +837,7 @@ class TestBaziFullServiceExtra:
     def test_compute_yongshen_fallback_strong(self):
         """compute_yongshen: pillars=None, tier='strong' with day_elem → L216-220"""
         from services.bazi_full_service import compute_yongshen
-        from schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
+        from app.schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
 
         score = WuXingScoreModel(wood=4.0, fire=1.0, earth=1.0, metal=1.0, water=1.0)
         factor = StrengthFactorModel(name="same_element_support", score=1.0, reason="wood strong")
@@ -847,7 +848,7 @@ class TestBaziFullServiceExtra:
     def test_compute_yongshen_fallback_weak(self):
         """compute_yongshen: pillars=None, tier='weak' with day_elem → L223-226"""
         from services.bazi_full_service import compute_yongshen
-        from schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
+        from app.schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
 
         score = WuXingScoreModel(wood=0.5, fire=0.5, earth=0.5, metal=2.0, water=2.0)
         factor = StrengthFactorModel(name="same_element_support", score=0.3, reason="metal weak")
@@ -858,7 +859,7 @@ class TestBaziFullServiceExtra:
     def test_compute_yongshen_no_day_elem_falls_to_balanced(self):
         """compute_yongshen: pillars=None, tier='strong' but no same_element factor → L229-233"""
         from services.bazi_full_service import compute_yongshen
-        from schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
+        from app.schemas import WuXingScoreModel, DayMasterStrengthModel, StrengthFactorModel
 
         score = WuXingScoreModel(wood=3.0, fire=1.0, earth=1.0, metal=1.0, water=1.0)
         # No factor with "same" in name → day_elem=None → L229-233 fallback
@@ -870,7 +871,7 @@ class TestBaziFullServiceExtra:
     def test_build_dayun_no_jieqi_returns_empty(self):
         """build_dayun: get_jieqi_context returns None → empty DaYunModel（L269-270）"""
         from services.bazi_full_service import build_dayun
-        from schemas import BaziMethodsModel, PillarsModel, PillarModel
+        from app.schemas import BaziMethodsModel, PillarsModel, PillarModel
         from zoneinfo import ZoneInfo
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
@@ -906,7 +907,7 @@ class TestBaziFullServiceExtra:
         """bazi_full: verify_full 抛出 RuntimeError → ServiceException（L469-474）"""
         from services.bazi_full_service import bazi_full
         from app.exceptions import ServiceException
-        from schemas import BaziFullRequest
+        from app.schemas import BaziFullRequest
         from zoneinfo import ZoneInfo
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))

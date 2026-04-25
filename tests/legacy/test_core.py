@@ -146,7 +146,12 @@ def test_force_sxtwl_unavailable_downgrades(monkeypatch):
     class Boom(Exception):
         pass
 
+    import backends as _backends
     from backends import SxtwlBackend
+
+    # Reset the module-level singleton cache so get_sxtwl_backend() tries to
+    # instantiate a fresh SxtwlBackend (which we are about to patch to raise).
+    monkeypatch.setattr(_backends, "_SXTWL_BACKEND_INSTANCE", None)
 
     def boom_init(*args, **kwargs):
         raise BackendUnavailable("forced missing")

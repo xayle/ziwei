@@ -111,23 +111,27 @@ class TestEngineV2Enabled:
     """ENGINE_V2 flag 读取"""
 
     def test_default_is_false(self):
-        """未设环境变量时返回 False"""
-        with patch.dict(os.environ, {"ENGINE_V2": "false"}):
+        """settings.engine_v2=False 时返回 False"""
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, 'engine_v2', False):
             assert _engine_v2_enabled() is False
 
     def test_true_when_set(self):
-        """ENGINE_V2=true 时返回 True"""
-        with patch.dict(os.environ, {"ENGINE_V2": "true"}):
+        """settings.engine_v2=True 时返回 True"""
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, 'engine_v2', True):
             assert _engine_v2_enabled() is True
 
     def test_case_insensitive(self):
-        """大写 TRUE 也识别"""
-        with patch.dict(os.environ, {"ENGINE_V2": "TRUE"}):
+        """settings.engine_v2=True（等同旧 ENGINE_V2=TRUE）返回 True"""
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, 'engine_v2', True):
             assert _engine_v2_enabled() is True
 
     def test_spaces_stripped(self):
-        """带前后空白也识别"""
-        with patch.dict(os.environ, {"ENGINE_V2": "  true  "}):
+        """settings.engine_v2=True（等同旧带空白的 true）返回 True"""
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, 'engine_v2', True):
             assert _engine_v2_enabled() is True
 
 

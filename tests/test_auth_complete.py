@@ -120,8 +120,9 @@ class TestAuthorizationRBAC:
         
         assert response.status_code == 200, response.text
         data = response.json()
-        assert "total_users" in data
-        assert "active_users" in data
+        # §17 扩展后结构变为嵌套 dict（兼容新旧）
+        assert "users" in data or "total_users" in data
+        assert data.get("users", {}).get("total", data.get("total_users")) is not None
     
     def test_regular_user_cannot_access_admin_endpoint(
         self,

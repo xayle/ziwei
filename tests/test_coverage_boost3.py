@@ -173,7 +173,8 @@ class TestV2VerifyEndpoint:
 
     def test_engine_v2_disabled_returns_501(self):
         """ENGINE_V2=false → 501 Not Implemented (lines 44-45)"""
-        with patch.dict(os.environ, {"ENGINE_V2": "false"}):
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, "engine_v2", False):
             client = self._client()
             resp = client.post("/api/v2/verify", json=self._base_payload())
         assert resp.status_code == 501
@@ -266,7 +267,8 @@ class TestV2BatchVerify:
 
     def test_engine_v2_disabled_returns_501(self):
         """ENGINE_V2=false → 501 (lines 43-44)"""
-        with patch.dict(os.environ, {"ENGINE_V2": "false"}):
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, "engine_v2", False):
             client = self._client()
             resp = client.post("/api/v2/batch/verify", json={"items": [self._item()]})
         assert resp.status_code == 501
@@ -327,11 +329,7 @@ class TestSnapshotsRouter:
         with patch.dict(os.environ, {"AUTH_BYPASS": "true"}):
             yield
 
-    @pytest.fixture
-    def client(self):
-        from fastapi.testclient import TestClient
-        from run import app
-        return TestClient(app)
+    # 使用 conftest 的 client fixture（含 test DB 覆盖，tables 已创建）
 
     def test_list_snapshots_case_not_found_returns_404(self, client):
         """Case 不存在 → 404 (lines 32,35-36)"""

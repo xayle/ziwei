@@ -12,7 +12,29 @@ prometheus_monitoring.py 扩展覆盖测试
 - _normalize_path：路径参数归一化
 """
 import pytest
+
+import threading
 import asyncio
+
+def _sync_run(coro):
+    """在新线程中运行协程，避免事件循环冲突。"""
+    res_box = []
+    exc_box = []
+    def worker():
+        try:
+            res = asyncio.run(coro)
+            res_box.append(res)
+        except BaseException as e:
+            exc_box.append(e)
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+    t.join(timeout=15)  # 最多等待15秒
+    if t.is_alive():
+        raise TimeoutError("_sync_run 超时（15s）")  # 让测试失败而非永久挂起
+    if exc_box:
+        raise exc_box[0]
+    return res_box[0] if res_box else None
+
 from unittest.mock import MagicMock, AsyncMock, patch
 
 from services.prometheus_monitoring import (
@@ -305,7 +327,7 @@ class TestPrometheusMiddleware:
         async def call_next(req):
             return mock_response
 
-        result = asyncio.run(prometheus_middleware(request, call_next))
+        result = _sync_run(prometheus_middleware(request, call_next))
         assert result is mock_response
 
     def test_exception_in_call_next_reraises(self):
@@ -319,7 +341,7 @@ class TestPrometheusMiddleware:
             return await prometheus_middleware(request, call_next_fail)
 
         with pytest.raises(RuntimeError, match="downstream error"):
-            asyncio.run(run_middleware())
+            _sync_run(run_middleware())
 
     def test_path_with_id_is_normalized(self):
         """路径参数被归一化（不会为每个 ID 创建独立标签）"""
@@ -331,4 +353,4 @@ class TestPrometheusMiddleware:
             return mock_response
 
         # 不应抛出异常，路径应被归一化处理
-        asyncio.run(prometheus_middleware(request, call_next))
+        _sync_run(prometheus_middleware(request, call_next))

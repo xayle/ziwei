@@ -1008,100 +1008,8 @@ class TestV2VerifyExtra:
 
 
 # ============================================================================
-# TestZiweiEngineDayunExtra — services/ziwei_engine/dayun.py
-# 覆盖: L22-23 (sxtwl import fail), L78, L86-87, L96-97, L114, L123,
-#       L135-136, L138 (fallback 30.0s)
+# TestZiweiEngineDayunExtra — (已清理: dayun.py 中八字死代码已移除)
 # ============================================================================
-class TestZiweiEngineDayunExtra:
-    """ziwei_engine/dayun.py 缺失分支"""
-
-    def test_sxtwl_none_path(self):
-        """sxtwl=None → _get_jieqi_jds 返回 [] (L22-23, L78)"""
-        import services.ziwei_engine.dayun as _dayun
-        original_sxtwl = _dayun.sxtwl
-        _dayun.sxtwl = None
-        try:
-            result = _dayun._get_jieqi_jds(2000)
-            assert result == []
-        finally:
-            _dayun.sxtwl = original_sxtwl
-
-    def test_get_jieqi_jds_exception_path(self):
-        """_get_jieqi_jds 调用异常 → 返回 [] (L86-87)"""
-        import services.ziwei_engine.dayun as _dayun
-        mock_sxtwl = MagicMock()
-        mock_sxtwl.getJieQiByYear.side_effect = Exception("sxtwl error")
-
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_jieqi_jds(2000)
-            assert result == []
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_sxtwl_none(self):
-        """sxtwl=None → _get_solar_term_days 返回 30.0 (L114)"""
-        import services.ziwei_engine.dayun as _dayun
-        original = _dayun.sxtwl
-        _dayun.sxtwl = None
-        try:
-            result = _dayun._get_solar_term_days(1990, 7, 17, forward=True)
-            assert result == 30.0
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_empty_allJq(self):
-        """getJieQiByYear 返回空列表 → fallback 30.0 (L123)"""
-        import services.ziwei_engine.dayun as _dayun
-        mock_sxtwl = MagicMock()
-        mock_sxtwl.getJieQiByYear.return_value = []  # empty → all_jq=[] → L123
-
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_solar_term_days(1990, 7, 17, forward=True)
-            assert result == 30.0
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_exception_fallback(self):
-        """_get_solar_term_days 中 exception → fallback 30.0 (L135-136, L138)"""
-        import services.ziwei_engine.dayun as _dayun
-        mock_sxtwl = MagicMock()
-        # Make getJieQiByYear raise after first call to trigger exception in the try block
-        mock_sxtwl.getJieQiByYear.side_effect = Exception("calc error")
-
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_solar_term_days(1990, 7, 17, forward=False)
-            assert result == 30.0
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_forward_no_candidates(self):
-        """forward=True 但 all_jq 中无 jd > b_jd → fallback 30.0"""
-        import services.ziwei_engine.dayun as _dayun
-
-        class FakeJQ:
-            def __init__(self, idx, jd):
-                self.jqIndex = idx
-                self.jd = jd
-
-        mock_sxtwl = MagicMock()
-        # Return ancient dates (jd very small) so all jd < b_jd
-        mock_sxtwl.getJieQiByYear.return_value = [
-            FakeJQ(3, 1.0), FakeJQ(5, 2.0), FakeJQ(7, 3.0),
-        ]
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_solar_term_days(1990, 7, 17, forward=True)
-            # No candidates forward → fallback
-            assert result == 30.0
-        finally:
-            _dayun.sxtwl = original
 
 
 # ============================================================================
@@ -1157,13 +1065,8 @@ class TestZiweiForecastExtra:
 
         # Try to build a real chart via the engine
         try:
-            from services.ziwei_engine import build_chart
-            chart = build_chart(
-                lunar_year=1990, lunar_month=6, lunar_day=17,
-                is_leap_month=False, hour=12, minute=0,
-                gender="男",
-                birth_year=1990, birth_month_solar=7, birth_day_solar=17,
-            )
+            from services.ziwei_engine import ziwei_full
+            chart = ziwei_full(year=1990, month=7, day=17, hour=12, minute=0, gender="男")
             return chart
         except Exception:
             return None

@@ -41,7 +41,7 @@ def _make_pillars():
     from app.schemas import PillarsModel
     from app.schemas.bazi import PillarModel
     def _p(s, b):
-        return PillarModel(stem=s, branch=b, ten_god="比肩", strength=50.0, element="wood", yin_yang="阳")
+        return PillarModel(stem=s, branch=b, ganzhi=f"{s}{b}")
     return PillarsModel(
         year=_p("甲", "子"), month=_p("丙", "寅"),
         day=_p("甲", "午"), hour=_p("壬", "申"),
@@ -55,7 +55,7 @@ def _make_yongshen():
 
 def _make_strength():
     from app.schemas import DayMasterStrengthModel
-    return DayMasterStrengthModel(score=55.0, tier="中和", label="中和", description="")
+    return DayMasterStrengthModel(score=55.0, tier="中和")
 
 
 def _make_wuxing_score():
@@ -67,7 +67,7 @@ def _make_dayun():
     from app.schemas import DaYunModel
     from app.schemas.bazi import DaYunItemModel
     item = DaYunItemModel(
-        stem="庚", branch="申", start_age=30, end_age=40,
+        stem="庚", branch="申", start_age=30,
         ten_god=None, flow_wuxing="metal",
         love_hint="", child_hint="",
     )
@@ -258,7 +258,7 @@ class TestNarrativeExcepts:
         from app.schemas.bazi import DaYunItemModel
 
         item_with_narrative = DaYunItemModel(
-            stem="庚", branch="申", start_age=30, end_age=40,
+            stem="庚", branch="申", start_age=30,
             ten_god=None, flow_wuxing="metal",
             narrative="已设置叙事",  # 非空 → 触发 L1160 continue
         )
@@ -274,7 +274,7 @@ class TestNarrativeExcepts:
         from app.schemas.bazi import DaYunItemModel
 
         item_no_nar = DaYunItemModel(
-            stem="庚", branch="申", start_age=30, end_age=40,
+            stem="庚", branch="申", start_age=30,
             ten_god=None, flow_wuxing="metal",
             narrative=None,  # 无 narrative → 进入 generate 调用
         )

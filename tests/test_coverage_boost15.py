@@ -479,9 +479,8 @@ class TestBaziEngineServiceWuxing:
         def patched_calc(*args, **kwargs):
             result = original_calc(*args, **kwargs)
             # 注入无 weights 的 wuxing_breakdown，让 L193-195 路径执行
-            if hasattr(result, 'verify_response') and hasattr(result.verify_response, 'wuxing'):
-                if result.verify_response.wuxing:
-                    result.verify_response.wuxing.breakdown = fake_wx
+            if hasattr(result, 'verify_response') and hasattr(result.verify_response, 'wuxing_breakdown'):
+                result.verify_response.wuxing_breakdown = fake_wx
             return result
 
         try:

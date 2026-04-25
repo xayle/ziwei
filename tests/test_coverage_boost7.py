@@ -5,7 +5,29 @@ Coverage Boost #7 — app/error_handling.py, routers/scenarios.py,
 
 目标：覆盖五个文件的缺失分支，预计将整体覆盖率从 93.9% 推向 95%+。
 """
+
+import threading
 import asyncio
+
+def _sync_run(coro):
+    """在新线程中运行协程，避免事件循环冲突。"""
+    res_box = []
+    exc_box = []
+    def worker():
+        try:
+            res = asyncio.run(coro)
+            res_box.append(res)
+        except BaseException as e:
+            exc_box.append(e)
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+    t.join(timeout=15)  # 最多等待15秒
+    if t.is_alive():
+        raise TimeoutError("_sync_run 超时（15s）")  # 让测试失败而非永久挂起
+    if exc_box:
+        raise exc_box[0]
+    return res_box[0] if res_box else None
+
 import time
 import pytest
 from uuid import uuid4
@@ -35,7 +57,7 @@ class TestErrorHandlingUtils:
             raise FastAPIHTTPException(status_code=404, detail="not found")
 
         with pytest.raises(FastAPIHTTPException):
-            asyncio.run(endpoint_that_raises_http())
+            _sync_run(endpoint_that_raises_http())
 
     def test_handle_exceptions_async_wraps_generic_exception(self):
         """async_wrapper: 通用 Exception → AppException（line 130）"""
@@ -47,7 +69,7 @@ class TestErrorHandlingUtils:
             raise RuntimeError("unexpected crash")
 
         with pytest.raises(AppException) as exc_info:
-            asyncio.run(endpoint_that_raises_runtime())
+            _sync_run(endpoint_that_raises_runtime())
         assert exc_info.value.code == ErrorCode.SYSTEM_INTERNAL_ERROR
 
     # ── handle_exceptions sync_wrapper ─────────────────────────────────────
@@ -87,7 +109,7 @@ class TestErrorHandlingUtils:
             raise ValidationException(code=ErrorCode.VALIDATION_INVALID_INPUT, message="val err")
 
         with pytest.raises(ValidationException):
-            asyncio.run(raises_app_exc())
+            _sync_run(raises_app_exc())
 
     # ── safe_execute ───────────────────────────────────────────────────────
     def test_safe_execute_reraises_app_exception(self):

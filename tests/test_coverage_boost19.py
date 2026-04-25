@@ -65,7 +65,9 @@ class TestStaticFileMissing404:
     def test_l351_dashboard_html_not_found(self, run_client: TestClient):
         """L351 — dashboard.html 不存在 → raise 404"""
         _nonexistent = Path("/nonexistent_dir_does_not_exist_xyz")
-        with patch("run._static_dir", new=_nonexistent):
+        _nonexistent_index = Path("/nonexistent_dir_does_not_exist_xyz/index.html")
+        with patch("run._static_dir", new=_nonexistent), \
+             patch("run._spa_index", new=_nonexistent_index):
             resp = run_client.get("/dashboard")
             assert resp.status_code == 404
 

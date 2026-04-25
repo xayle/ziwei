@@ -14,7 +14,29 @@ tests/test_coverage_boost22.py — Coverage Boost 22
 
 from __future__ import annotations
 
+
+import threading
 import asyncio
+
+def _sync_run(coro):
+    """在新线程中运行协程，避免事件循环冲突。"""
+    res_box = []
+    exc_box = []
+    def worker():
+        try:
+            res = asyncio.run(coro)
+            res_box.append(res)
+        except BaseException as e:
+            exc_box.append(e)
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+    t.join(timeout=15)  # 最多等待15秒
+    if t.is_alive():
+        raise TimeoutError("_sync_run 超时（15s）")  # 让测试失败而非永久挂起
+    if exc_box:
+        raise exc_box[0]
+    return res_box[0] if res_box else None
+
 import hashlib
 import os
 import types
@@ -118,7 +140,7 @@ class TestLifespanWeakKey:
                     pass  # pragma: no cover
 
         with patch.dict(os.environ, {"SECRET_KEY": "changeme"}):
-            asyncio.run(_run())
+            _sync_run(_run())
 
     def test_l151_154_empty_key_raises(self):
         """SECRET_KEY='' → RuntimeError（not _secret 为 True）"""
@@ -130,7 +152,7 @@ class TestLifespanWeakKey:
                     pass  # pragma: no cover
 
         with patch.dict(os.environ, {"SECRET_KEY": ""}):
-            asyncio.run(_run())
+            _sync_run(_run())
 
 
 class TestLifespanProdAuthBypass:
@@ -150,7 +172,7 @@ class TestLifespanProdAuthBypass:
             "ENVIRONMENT": "production",
             "AUTH_BYPASS": "true",
         }):
-            asyncio.run(_run())
+            _sync_run(_run())
 
 
 class TestLifespanHappyPath:
@@ -175,7 +197,7 @@ class TestLifespanHappyPath:
                  "ENVIRONMENT": "development",
                  "AUTH_BYPASS": "false",
              }):
-            asyncio.run(_run())
+            _sync_run(_run())
 
     def test_l163_169_success_path(self):
         """
@@ -197,7 +219,7 @@ class TestLifespanHappyPath:
                  "SECRET_KEY": _STRONG_KEY,
                  "ENVIRONMENT": "development",
              }):
-            asyncio.run(_run())
+            _sync_run(_run())
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -317,15 +339,15 @@ class TestCacheHitExceptionPatchObject:
         BAZI_CACHE_HITS.inc() side_effect=RuntimeError → except pass (L576-577)
         """
         import services.bazi_engine_service as svc
-        from services.bazi_engine_service import CalculateResult
+        from services.bazi_engine_service import CalculateResult, _make_cache_key
 
         dt = datetime(1992, 8, 10, 6, 0)
         lon = 108.0
         mode = "single"
         gender = None
 
-        raw = f"{dt.isoformat()}|{lon:.4f}|{mode}|{gender or ''}"
-        real_key = hashlib.sha256(raw.encode()).hexdigest()
+        # 必须用 _make_cache_key 计算，因为 key 包含 _CURRENT_RULE_VERSION
+        real_key = _make_cache_key(dt, lon, mode, gender)
 
         mock_vr = MagicMock()
         mock_cr = CalculateResult(verify_response=mock_vr, engine_version="v1")

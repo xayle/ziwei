@@ -222,7 +222,8 @@ class TestR40EngineV2Flag:
         self, client_with_auth: TestClient
     ):
         """ENGINE_V2=false → POST /api/v2/verify 返回 501"""
-        with patch.dict(os.environ, {"ENGINE_V2": "false"}):
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, "engine_v2", False):
             resp = client_with_auth.post("/api/v2/verify", json=BASE_ITEM)
         assert resp.status_code == 501, (
             f"R40 违反: ENGINE_V2=false 时 v2/verify 返回 {resp.status_code}，期望 501"
@@ -232,7 +233,8 @@ class TestR40EngineV2Flag:
         self, client_with_auth: TestClient
     ):
         """ENGINE_V2=false → POST /api/v2/batch/verify 返回 501"""
-        with patch.dict(os.environ, {"ENGINE_V2": "false"}):
+        import services.bazi_engine_service as _svc
+        with patch.object(_svc.settings, "engine_v2", False):
             resp = client_with_auth.post(
                 "/api/v2/batch/verify", json={"items": [BASE_ITEM]}
             )

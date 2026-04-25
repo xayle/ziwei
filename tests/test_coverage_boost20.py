@@ -37,7 +37,7 @@ def _make_pillars_model():
     from app.schemas import PillarsModel
     from app.schemas.bazi import PillarModel
     def _pillar(stem, branch):
-        return PillarModel(stem=stem, branch=branch, ten_god="比肩", strength=50.0, element="wood", yin_yang="阳")
+        return PillarModel(stem=stem, branch=branch, ganzhi=f"{stem}{branch}")
     return PillarsModel(
         year=_pillar("甲", "子"),
         month=_pillar("丙", "寅"),
@@ -53,7 +53,7 @@ def _make_yongshen():
 
 def _make_strength():
     from app.schemas import DayMasterStrengthModel
-    return DayMasterStrengthModel(score=55.0, tier="中和", label="中和", description="")
+    return DayMasterStrengthModel(score=55.0, tier="中和")
 
 
 def _make_wuxing_score():
@@ -65,7 +65,7 @@ def _make_dayun_model():
     from app.schemas import DaYunModel
     from app.schemas.bazi import DaYunItemModel
     item = DaYunItemModel(
-        stem="庚", branch="申", start_age=30, end_age=40,
+        stem="庚", branch="申", start_age=30,
         ten_god=None, flow_wuxing="metal",
         love_hint="", child_hint="",
     )
@@ -486,7 +486,7 @@ class TestDayunHintElif:
         from app.schemas import DaYunModel
 
         dayun_item_unknown_tg = DaYunItemModel(
-            stem=None, branch="子", start_age=20, end_age=30,
+            stem=None, branch="子", start_age=20,
             ten_god=None,    # stem=None 跳过重算，ten_god 保持 None → 不在 map
             flow_wuxing="wood",
             love_hint=None,  # None → not item.love_hint=True → 触发 L383
@@ -528,7 +528,7 @@ class TestDayunHintElif:
         from app.schemas import DaYunModel
 
         dayun_item = DaYunItemModel(
-            stem=None, branch="申", start_age=30, end_age=40,
+            stem=None, branch="申", start_age=30,
             ten_god=None,        # stem=None 跳过重算，ten_god 保持 None → 不在 map
             flow_wuxing="metal",
             love_hint="已有提示",  # 非空 → 不走 love elif

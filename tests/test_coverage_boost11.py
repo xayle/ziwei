@@ -308,12 +308,8 @@ class TestZiweiAnalysisExtra:
 
     def _make_chart_or_skip(self):
         try:
-            from services.ziwei_engine import build_chart
-            chart = build_chart(
-                lunar_year=1990, lunar_month=6, lunar_day=17,
-                is_leap_month=False, hour=12, minute=0, gender="男",
-                birth_year=1990, birth_month_solar=7, birth_day_solar=17,
-            )
+            from services.ziwei_engine import ziwei_full
+            chart = ziwei_full(year=1990, month=7, day=17, hour=12, minute=0, gender="男")
             return chart
         except Exception:
             return None
@@ -678,119 +674,6 @@ class TestOpenApiDocsExtra11:
 
 
 # ============================================================================
-# TestZiweiDayunExtra11 — services/ziwei_engine/dayun.py
-# 覆盖: L22-23 (ImportError), L96-97 (pass/except), L134-135 (backward path)
+# TestZiweiDayunExtra11 — (已清理: dayun.py 中八字死代码已移除)
 # ============================================================================
-class TestZiweiDayunExtra11:
-    """剩余 dayun.py 缺失分支"""
 
-    def test_get_jieqi_jds_with_filter(self):
-        """_get_jieqi_jds: jqIndex 在 _TWELVE_JIE_IDX 中才入列表，其余过滤"""
-        import services.ziwei_engine.dayun as _dayun
-        from services.ziwei_engine.dayun import _TWELVE_JIE_IDX
-
-        class FakeJQ:
-            def __init__(self, idx, jd):
-                self.jqIndex = idx
-                self.jd = jd
-
-        # Provide both a matching and non-matching index
-        not_in_set = 0  # 0 不在 _TWELVE_JIE_IDX 中
-        in_set = next(iter(_TWELVE_JIE_IDX))
-
-        mock_sxtwl = MagicMock()
-        mock_sxtwl.getJieQiByYear.return_value = [
-            FakeJQ(not_in_set, 100.0),  # 不在集合中 → 过滤
-            FakeJQ(in_set, 200.0),      # 在集合中 → 编入列表
-        ]
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_jieqi_jds(2000)
-            assert 100.0 not in result  # 不在集合中的过滤掉
-            assert 200.0 in result
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_jieqi_jds_exception(self):
-        """_get_jieqi_jds: getJieQiByYear 抛异常 → return [] (L96-97)"""
-        import services.ziwei_engine.dayun as _dayun
-
-        mock_sxtwl = MagicMock()
-        mock_sxtwl.getJieQiByYear.side_effect = Exception("sxtwl fail")
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_jieqi_jds(2000)
-            assert result == []  # exception returns empty
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_backward_no_candidates(self):
-        """forward=False 且 all_jq 中无 jd < b_jd → fallback 30.0 (L134)"""
-        import services.ziwei_engine.dayun as _dayun
-
-        class FakeJQ2:
-            def __init__(self, jd):
-                self.jd = jd
-
-        mock_sxtwl = MagicMock()
-        # Return future dates only (jd > birth_jd)
-        mock_sxtwl.getJieQiByYear.return_value = [
-            FakeJQ2(9999999.0),  # far future
-            FakeJQ2(9999998.0),
-        ]
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_solar_term_days(1990, 7, 17, forward=False)
-            assert result == 30.0  # no backward candidates
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_backward_success(self):
-        """forward=False 有 jd < b_jd 候选 → 返回真实天数 (L134)"""
-        import services.ziwei_engine.dayun as _dayun
-
-        class FakeJQ3:
-            def __init__(self, jd):
-                self.jd = jd
-
-        mock_sxtwl = MagicMock()
-        # b_jd for 1990-07-17 should be around 2448080
-        BIG_JD = 2448080.0
-        mock_sxtwl.getJieQiByYear.return_value = [
-            FakeJQ3(BIG_JD - 30.0),  # 30 days before birth
-            FakeJQ3(BIG_JD - 45.0),  # 45 days before birth
-        ]
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            result = _dayun._get_solar_term_days(1990, 7, 17, forward=False)
-            assert isinstance(result, float)
-        finally:
-            _dayun.sxtwl = original
-
-    def test_get_solar_term_days_exception_in_backward(self):
-        """backward 路径中写 exception → fallback 30.0 (L135)"""
-        import services.ziwei_engine.dayun as _dayun
-
-        class FakeJQ4:
-            def __init__(self, jd):
-                self.jd = jd
-            @property
-            def jd_broken(self):
-                raise AttributeError("broken")
-
-        mock_sxtwl = MagicMock()
-        # This mock will cause an exception inside the backward computation
-        mock_sxtwl.getJieQiByYear.return_value = [FakeJQ4(100.0)]
-        # Now patch _birth_jd to raise
-        original = _dayun.sxtwl
-        _dayun.sxtwl = mock_sxtwl
-        try:
-            with patch.object(_dayun, "_birth_jd", side_effect=Exception("jd fail")):
-                result = _dayun._get_solar_term_days(1990, 7, 17, forward=False)
-            assert result == 30.0
-        finally:
-            _dayun.sxtwl = original

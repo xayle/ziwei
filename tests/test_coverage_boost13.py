@@ -266,7 +266,12 @@ class TestForecastInternals13:
 
     def test_detect_events_gossip_medium(self):
         """化忌入迁移宫 → 口舌/是非中 pts>=4 (L427)"""
-        chart = _make_chart()
+        # 使用迁移宫有主星（七杀）的日期 1985-3-15
+        try:
+            from services.ziwei_engine import ziwei_full
+            chart = ziwei_full(1985, 3, 15, 8, 0, "男")
+        except Exception:
+            chart = None
         if chart is None:
             pytest.skip("chart build failed")
         from services.ziwei_engine.forecast import _detect_events

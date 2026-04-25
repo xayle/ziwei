@@ -83,8 +83,8 @@ class TestMainStars:
     def test_tianfu_in_zi(self):
         assert self._branch("天府") == 0, "天府应在子(交友宫)"
 
-    def test_lianzheng_in_si(self):
-        assert self._branch("廉贞") == 5, "廉贞应在巳(夫妻宫)"
+    def test_lianzheng_in_shen(self):
+        assert self._branch("廉贞") == 8, "廉贞应在申(迁移宫)，紫微逆行8位"
 
     def test_tianji_in_mao(self):
         assert self._branch("天机") == 3, "天机应在卯(财帛宫)"
@@ -108,13 +108,13 @@ class TestMainStars:
         assert self._branch("巨门") == 3, "巨门应在卯(财帛宫), 与天机同宫"
 
     def test_tainliang_in_si(self):
-        assert self._branch("天梁") == 5, "天梁应在巳(夫妻宫), 与廉贞同宫"
+        assert self._branch("天梁") == 5, "天梁应在巳(夹妻宫)"
 
     def test_qisha_in_wu(self):
         assert self._branch("七杀") == 6, "七杀应在午(兄弟宫)"
 
-    def test_pojun_in_shen(self):
-        assert self._branch("破军") == 8, "破军应在申(父母宫)"
+    def test_pojun_in_xu(self):
+        assert self._branch("破军") == 10, "破军应在戌(福德宫)，天府顺行10位"
 
     def test_taiyin_in_chou(self):
         assert self._branch("太阴") == 1, "太阴应在丑(迁移宫), 与太阳同宫"
@@ -142,13 +142,13 @@ class TestZiweiFull:
         assert not self.chart.dayun.forward, "壬午年女命大运应逆行"
 
     def test_dayun_start_age(self):
-        # 起运虚岁约3岁
-        assert self.chart.dayun.start_age == 3, f"起运虚岁应为3, 实得 {self.chart.dayun.start_age}"
+        # 紫微大限起运虚岁 = 五行局数（水二局=2）
+        assert self.chart.dayun.start_age == 2, f"起运虚岁应为2(水二局), 实得 {self.chart.dayun.start_age}"
 
     def test_dayun_first_cycle_year(self):
-        # 第一组大运起运年份 2004
+        # 紫微大限：第一组大运起运年份 = 出生年 + 起运虚岁 - 1 = 2002 + 2 - 1 = 2003
         first = self.chart.dayun.items[0]
-        assert first.start_year == 2004, f"第一组大运起运年应为2004, 实得 {first.start_year}"
+        assert first.start_year == 2003, f"第一组大运起运年应为2003, 实得 {first.start_year}"
 
     def test_all_main_stars_placed(self):
         all_stars = {"紫微","天机","太阳","武曲","天同","廉贞",
