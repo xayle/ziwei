@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional, cast
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import func
 from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import Session, select
 
 from db import get_session
-from app.models import Case, Snapshot, User
+from app.models import Case, Snapshot
 from app.schemas import CaseCreate, CaseOut, CasePatch, CaseListResponse
 from app.dependencies import RequiredUser
 from app.exceptions import (
@@ -35,7 +36,12 @@ def create_case(
     session: Session = Depends(get_session)
 ):
     case = Case(**payload.model_dump())
-    case.owner_id = current_user.id  # 所有权归属当前用户
+    # 本地 bypass 兜底场景下，current_user.id 可能为空或无效。
+    # 仅在用户 ID 有效时写入 owner_id，避免外键约束导致 500。
+    if isinstance(current_user.id, int) and current_user.id > 0:
+        case.owner_id = current_user.id  # 所有权归属当前用户
+    else:
+        case.owner_id = None
     now = _now_utc()
     case.created_at = now
     case.updated_at = now
@@ -253,3 +259,70 @@ def delete_case(
         resource_type="case",
         resource_id=str(case_id),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# B6: 隐私分享链接
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/{case_id}/share-token", status_code=status.HTTP_201_CREATED)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def create_share_token(
+    case_id: str,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """B6: 生成 24h 匹名分享 token，返回链接（不含出生日期原始数据）"""
+    case = session.exec(
+        select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore
+    ).first()
+    if not case:
+        raise ResourceNotFoundException(
+            message="case not found",
+            details={"resource_type": "case", "resource_id": case_id},
+        )
+    if case.owner_id is not None and case.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="You don't have permission to share this case",
+        )
+    token = str(uuid4())
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    case.share_token = token
+    case.share_expires_at = expires_at
+    case.updated_at = _now_utc()
+    session.add(case)
+    session.commit()
+    return {"share_url": f"/api/v1/share/{token}", "expires_at": expires_at.isoformat()}
+
+
+# NOTE: 公开分享路由（无需 token），路由前缀不同，单独注册
+_share_router = APIRouter(prefix="/api/v1/share", tags=["cases"])
+
+
+@_share_router.get("/{token}")
+def get_shared_case(token: str, session: Session = Depends(get_session)):
+    """B6: 凭 token 返回脆敏命盘（不含出生日期原始值）。token 过期 → 404"""
+    case = session.exec(
+        select(Case).where(Case.share_token == token, Case.deleted_at.is_(None))  # type: ignore
+    ).first()
+    if not case:
+        raise ResourceNotFoundException(
+            message="share token not found or expired",
+            details={"token": token[:8] + "..."},
+        )
+    if case.share_expires_at and case.share_expires_at < datetime.now(timezone.utc):
+        raise ResourceNotFoundException(
+            message="share token has expired",
+            details={"token": token[:8] + "..."},
+        )
+    # 返回脆敏命盘：排除 birth_dt_local / lon / tz / notes
+    return {
+        "id": case.id,
+        "name": case.name,
+        "gender": case.gender,
+        "city": case.city,
+        "tags": case.tags,
+        "schema_version": case.schema_version,
+        "created_at": case.created_at.isoformat() if case.created_at else None,
+    }

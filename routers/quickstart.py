@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlmodel import Session
 
-from app.config import settings
 from db import get_session
 from app.models import Case
 from app.schemas import CaseOut, ComputeRequest, ComputeResponse

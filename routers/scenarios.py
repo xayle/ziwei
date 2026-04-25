@@ -6,14 +6,14 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, field_validator, ValidationError
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 
 from db import get_session
 from app.models import User, Member, Scenario
-from app.dependencies import require_user, RequiredUser
+from app.dependencies import RequiredUser
 from services.permission_service import Permission, has_permission, Role
 from services.delegation_service import log_action
 from services.json_validators import ScenarioJsonValidator
@@ -145,11 +145,11 @@ def create_scenario(
     try:
         # 验证 variations（如果提供）
         if body.variations:
-            variations_data = ScenarioJsonValidator.validate_variations(body.variations)
+            ScenarioJsonValidator.validate_variations(body.variations)
         
         # 验证 results（如果提供）
         if body.results:
-            results_data = ScenarioJsonValidator.validate_results(body.results)
+            ScenarioJsonValidator.validate_results(body.results)
         
         logger.info(f"Scenario JSON validation passed for member_id={body.base_member_id}, type={body.scenario_type}")
     except (ValueError, ValidationError) as e:
@@ -435,3 +435,115 @@ def list_member_scenarios(
     items = [ScenarioResponse.model_validate(s) for s in scenarios]
     next_cursor = scenarios[-1].id if (scenarios and len(scenarios) == limit) else None
     return {"items": items, "total": total_count, "next_cursor": next_cursor}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# W5  场景模拟  POST /api/v1/scenarios/{id}/simulate
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SimulateRequest(BaseModel):
+    """W5 场景模拟请求：可选覆盖 birth_dt / longitude，触发重新计算并回写 results。"""
+    birth_dt_override: Optional[str] = None
+    longitude_override: Optional[float] = None
+    gender_override: Optional[str] = None
+    note: Optional[str] = None
+
+
+class SimulateResponse(BaseModel):
+    scenario_id: int
+    geju_name: str = ""
+    yongshen_favor: list[str] = []
+    yongshen_avoid: list[str] = []
+    wuxing_scores: dict[str, float] = {}
+    note: str = ""
+    simulated_at: str
+
+
+@router.post(
+    "/scenarios/{scenario_id}/simulate",
+    response_model=SimulateResponse,
+    summary="W5 场景模拟（What-If 推演）",
+    description=(
+        "对已有场景执行 What-If 推演：可临时覆盖出生时间/经度/性别，"
+        "重新计算八字关键指标并将结果回写到 scenario.results，不修改原始成员数据。"
+    ),
+)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def simulate_scenario(
+    scenario_id: int,
+    payload: SimulateRequest,
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """W5: What-If 场景模拟，回写 results，返回轻量对比快照。"""
+    scenario = session.get(Scenario, scenario_id)
+    if not scenario or scenario.deleted_at is not None:
+        raise ResourceNotFoundException(
+            message="场景不存在",
+            details={"resource_id": str(scenario_id)},
+        )
+    if scenario.owner_id != current_user.id:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="Permission denied: scenario not owned by current user",
+        )
+
+    member = session.get(Member, scenario.base_member_id)
+    if not member:
+        raise ResourceNotFoundException(
+            message="基础成员不存在",
+            details={"resource_id": str(scenario.base_member_id)},
+        )
+
+    from datetime import datetime as _dt
+    from services.bazi_engine_service import calculate
+    import json as _json
+
+    birth_dt_str = payload.birth_dt_override or getattr(member, "birth_dt", None) or getattr(member, "birth_date", None)
+    if not birth_dt_str:
+        raise ValidationException(
+            code=ErrorCode.VALIDATION_MISSING_FIELD,
+            message="成员缺少出生时间，无法模拟",
+        )
+    birth_dt = _dt.fromisoformat(str(birth_dt_str))
+    lon = float(payload.longitude_override if payload.longitude_override is not None else (getattr(member, "longitude", None) or 116.4))
+    gender = payload.gender_override or getattr(member, "gender", None) or "男"
+    tz_name = getattr(member, "timezone", None) or "Asia/Shanghai"
+
+    result = calculate(birth_dt, lon, tz_name, gender=gender)
+    vr = result.verify_response
+    favor = list(getattr(vr.yongshen, "favor", []))
+    avoid = list(getattr(vr.yongshen, "avoid", []))
+    geju = getattr(vr.geju, "geju_name", "") if vr.geju else ""
+    wx_raw = getattr(vr, "wuxing", None)
+    wx_scores: dict[str, float] = {}
+    if wx_raw:
+        for el in ("wood", "fire", "earth", "metal", "water"):
+            v = getattr(wx_raw, el, None)
+            if v is not None:
+                wx_scores[el] = float(v)
+
+    simulated_at = _dt.utcnow().replace(microsecond=0).isoformat() + "Z"
+    scenario.results = _json.dumps({
+        "geju_name": geju, "yongshen_favor": favor, "yongshen_avoid": avoid,
+        "wuxing_scores": wx_scores, "simulated_at": simulated_at,
+        "overrides": {"birth_dt": payload.birth_dt_override,
+                      "longitude": payload.longitude_override,
+                      "gender": payload.gender_override},
+    }, ensure_ascii=False)
+    if payload.note:
+        scenario.description = payload.note
+    scenario.updated_at = _dt.now(timezone.utc)
+    session.add(scenario)
+    session.commit()
+
+    log_action(session, user_id=current_user.id or 0, action="simulate_scenario",
+               resource_type="scenario", resource_id=str(scenario_id),
+               details={"geju": geju, "favor": favor})
+
+    return SimulateResponse(
+        scenario_id=scenario_id, geju_name=geju,
+        yongshen_favor=favor, yongshen_avoid=avoid,
+        wuxing_scores=wx_scores, note=payload.note or "",
+        simulated_at=simulated_at,
+    )

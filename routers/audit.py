@@ -11,7 +11,7 @@ from sqlalchemy import func
 
 from db import get_session
 from app.models import User, AuditLog
-from app.dependencies import require_user, RequiredUser
+from app.dependencies import RequiredUser
 from services.delegation_service import get_audit_logs, log_action
 from services.permission_service import Permission, Role, has_permission
 from app.exceptions import (
@@ -283,7 +283,7 @@ def admin_stats(
 ):
     """
     管理员统计面板 — 仅限 is_admin=True 的用户
-    返回: 用户总数、活跃用户数、审计日志总数
+    返回: 用户、审计日志、案例、快照、审核、相似盘库、API Key、实验等统计
     """
     if not current_user.is_admin:
         raise AuthorizationException(
@@ -291,23 +291,98 @@ def admin_stats(
             message="Permission denied: admin required",
         )
 
-    total_users: int = session.exec(
-        select(func.count()).select_from(User).where(User.deleted_at.is_(None))  # type: ignore[union-attr]
-    ).one()  # type: ignore[assignment]
+    from app.models.case import Case, Snapshot
+    from app.models.chart_case import ChartCase
+    from app.models.review import ChartReview
+    from app.models.api_key import ApiKey
+    from app.models.experiment import Experiment, ExperimentEvent
+    from datetime import timezone
 
-    active_users: int = session.exec(
-        select(func.count()).select_from(User).where(
-            User.deleted_at.is_(None),  # type: ignore[union-attr]
-            User.is_active.is_(True),   # type: ignore[union-attr]
-        )
-    ).one()  # type: ignore[assignment]
+    def _count(model, *filters):
+        stmt = select(func.count()).select_from(model)
+        for f in filters:
+            stmt = stmt.where(f)
+        return session.exec(stmt).one() or 0
 
-    total_audit_logs: int = session.exec(
-        select(func.count()).select_from(AuditLog).where(AuditLog.deleted_at.is_(None))  # type: ignore[union-attr]
-    ).one()  # type: ignore[assignment]
+    total_users: int   = _count(User, User.deleted_at.is_(None))  # type: ignore[attr-defined]
+    active_users: int  = _count(User, User.deleted_at.is_(None), User.is_active.is_(True))  # type: ignore[attr-defined]
+    total_audit_logs: int = _count(AuditLog, AuditLog.deleted_at.is_(None))  # type: ignore[attr-defined]
+    total_cases:     int  = _count(Case,      Case.deleted_at.is_(None))  # type: ignore[attr-defined]
+    total_snapshots: int  = _count(Snapshot,  Snapshot.deleted_at.is_(None))  # type: ignore[attr-defined]
+    total_chart_cases: int = _count(ChartCase, ChartCase.deleted_at.is_(None))  # type: ignore[attr-defined]
+
+    # 审核统计
+    review_pending:  int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "pending")  # type: ignore[attr-defined]
+    review_approved: int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "approved")  # type: ignore[attr-defined]
+    review_rejected: int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "rejected")  # type: ignore[attr-defined]
+    review_revised:  int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "revised")  # type: ignore[attr-defined]
+
+    # API Key 统计
+    total_api_keys:  int = _count(ApiKey, ApiKey.revoked_at.is_(None))  # type: ignore[attr-defined]
+
+    # 实验统计
+    total_experiments: int          = _count(Experiment)
+    running_experiments: int        = _count(Experiment, Experiment.status == "running")  # type: ignore[attr-defined]
+    total_experiment_events: int    = _count(ExperimentEvent)
+
+    # 最活跃格局（前 5）
+    top_patterns: list[dict] = []
+    try:
+        pattern_rows = session.exec(
+            select(ChartCase.pattern_summary)
+            .where(ChartCase.deleted_at.is_(None))  # type: ignore[attr-defined]
+            .where(ChartCase.pattern_summary != "")
+        ).all()
+        from collections import Counter
+        pctr: Counter = Counter()
+        for row in pattern_rows:
+            for pn in row.split(","):
+                pn = pn.strip()
+                if pn:
+                    pctr[pn] += 1
+        top_patterns = [{"name": n, "count": c} for n, c in pctr.most_common(5)]
+    except Exception:
+        pass
+
+    # 最活跃五行局（前 6）
+    top_wuxing: list[dict] = []
+    try:
+        wj_rows = session.exec(
+            select(ChartCase.wuxing_ju_name, func.count(ChartCase.id).label("cnt"))
+            .where(ChartCase.deleted_at.is_(None))  # type: ignore[attr-defined]
+            .where(ChartCase.wuxing_ju_name != "")
+            .group_by(ChartCase.wuxing_ju_name)
+            .order_by(func.count(ChartCase.id).desc())
+            .limit(6)
+        ).all()
+        top_wuxing = [{"name": row[0], "count": row[1]} for row in wj_rows]
+    except Exception:
+        pass
 
     return {
-        "total_users": total_users,
-        "active_users": active_users,
-        "total_audit_logs": total_audit_logs,
+        "users": {
+            "total": total_users,
+            "active": active_users,
+            "inactive": total_users - active_users,
+        },
+        "audit_logs": {"total": total_audit_logs},
+        "cases": {"total": total_cases},
+        "snapshots": {"total": total_snapshots},
+        "chart_cases": {"total": total_chart_cases},
+        "reviews": {
+            "pending": review_pending,
+            "approved": review_approved,
+            "rejected": review_rejected,
+            "revised": review_revised,
+            "total": review_pending + review_approved + review_rejected + review_revised,
+        },
+        "api_keys": {"total": total_api_keys},
+        "experiments": {
+            "total": total_experiments,
+            "running": running_experiments,
+            "total_events": total_experiment_events,
+        },
+        "top_patterns": top_patterns,
+        "top_wuxing": top_wuxing,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }

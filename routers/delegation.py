@@ -5,12 +5,12 @@
 from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 
 from db import get_session
 from app.models import User, Delegation
-from app.dependencies import require_user, RequiredUser
+from app.dependencies import RequiredUser
 from services.delegation_service import (
     create_delegation,
     revoke_delegation,
@@ -567,3 +567,23 @@ def revoke_approved_permission(
         "status": delegation.status,
         "message": "Permission successfully revoked",
     }
+
+
+@router.post("/admin/expire-delegations", status_code=200)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def admin_expire_delegations(
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+):
+    """
+    [ADMIN] O12 — 手动触发过期委托清理。
+    仅 is_admin=True 的用户可调用。
+    """
+    if not current_user.is_admin:
+        raise AuthorizationException(
+            code=ErrorCode.AUTHZ_PERMISSION_DENIED,
+            message="Permission denied: admin required",
+        )
+    from services.permission_cascade_service import auto_revoke_expired_delegations
+    n = auto_revoke_expired_delegations(session)
+    return {"revoked": n, "message": f"已撤销 {n} 个过期委托"}

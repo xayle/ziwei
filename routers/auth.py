@@ -15,7 +15,6 @@ from app.dependencies.auth import _auth_bypass_enabled
 from app.exceptions import (
     AuthenticationException,
     ValidationException,
-    AuthorizationException,
     ResourceNotFoundException,
     ResourceConflictException,
     BusinessException,

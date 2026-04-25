@@ -5,14 +5,14 @@ from typing import Any, Dict, Optional, Sequence, Union
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 
 from app.config import settings
 from constants import API_VERSION, RULE_VERSION
 from db import get_session
-from app.models import Case, Snapshot, User
-from app.dependencies import require_user, RequiredUser
+from app.models import Case, Snapshot
+from app.dependencies import RequiredUser
 from app.schemas import (
     BaziFullRequest,
     BackendInfo,

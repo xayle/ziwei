@@ -6,22 +6,18 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, field_validator, ValidationError
-from fastapi import APIRouter, Depends, Request, Query
+from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from db import get_session
 from app.models import User, Member, Event
-from app.dependencies import require_user, RequiredUser
+from app.dependencies import RequiredUser
 from services.permission_service import Permission, has_permission, Role
 from services.delegation_service import log_action
 from services.json_validators import EventJsonValidator
 from services.optimization_tools import QueryCache
-
-# [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
-_events_cache = QueryCache(cache_seconds=300)
-
 from app.exceptions import (
     AuthorizationException,
     BusinessException,
@@ -30,6 +26,9 @@ from app.exceptions import (
     ValidationException,
 )
 from app.error_handling import handle_exceptions
+
+# [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
+_events_cache = QueryCache(cache_seconds=300)
 
 logger = logging.getLogger(__name__)
 
@@ -187,15 +186,15 @@ def create_event(
     # ✅ 验证 JSON 字段的结构和内容
     try:
         # 验证 bazi_json
-        bazi_data = EventJsonValidator.validate_bazi_json(body.bazi_json)
+        EventJsonValidator.validate_bazi_json(body.bazi_json)
         
         # 验证 recommendation（如果提供）
         if body.recommendation:
-            recommendation_data = EventJsonValidator.validate_recommendation(body.recommendation)
+            EventJsonValidator.validate_recommendation(body.recommendation)
         
         # 验证 five_elements（如果提供）
         if body.five_elements:
-            five_elements_data = EventJsonValidator.validate_five_elements(body.five_elements)
+            EventJsonValidator.validate_five_elements(body.five_elements)
         
         logger.info(f"Event JSON validation passed for member_id={body.member_id}")
     except (ValueError, ValidationError) as e:
@@ -328,6 +327,46 @@ def list_events(
     cache.set(cache_key, result)
     
     return result
+
+
+@router.get("/events/stats", summary="事件类型分布统计")
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+def get_events_stats(
+    current_user: RequiredUser,
+    session: Session = Depends(get_session),
+    date_from: Optional[str] = Query(None, description="起始日期 YYYY-MM-DD（含）"),
+    date_to: Optional[str] = Query(None, description="截止日期 YYYY-MM-DD（含）"),
+):
+    """
+    D5: 统计当前用户的事件按 event_type 分组数量。
+    可选通过 date_from / date_to 过滤 created_at 范围（闭区间）。
+    返回 { total, by_type: [{event_type, count}] }
+    """
+    from sqlalchemy import func as sa_func
+    from datetime import datetime as _dt
+
+    stmt = (
+        select(Event.event_type, sa_func.count(Event.id).label("count"))
+        .where(Event.owner_id == current_user.id)
+        .where(Event.deleted_at.is_(None))  # type: ignore[union-attr]
+    )
+    if date_from:
+        try:
+            df = _dt.strptime(date_from, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            stmt = stmt.where(Event.created_at >= df)  # type: ignore[operator]
+        except ValueError:
+            raise BusinessException(code=ErrorCode.VALIDATION_FAILED, message="date_from 格式错误，请使用 YYYY-MM-DD")
+    if date_to:
+        try:
+            from datetime import timedelta as _td
+            dt_ = _dt.strptime(date_to, "%Y-%m-%d").replace(tzinfo=timezone.utc) + _td(days=1)
+            stmt = stmt.where(Event.created_at < dt_)  # type: ignore[operator]
+        except ValueError:
+            raise BusinessException(code=ErrorCode.VALIDATION_FAILED, message="date_to 格式错误，请使用 YYYY-MM-DD")
+    stmt = stmt.group_by(Event.event_type).order_by(sa_func.count(Event.id).desc())  # type: ignore[arg-type]
+    rows = session.exec(stmt).all()
+    by_type = [{"event_type": r[0], "count": r[1]} for r in rows]
+    return {"total": sum(r["count"] for r in by_type), "by_type": by_type}
 
 
 @router.get("/events/{event_id}")
