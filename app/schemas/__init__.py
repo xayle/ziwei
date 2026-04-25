@@ -63,6 +63,7 @@ from .bazi import (
     BatchVerifyResponse,
     BaziFullRequest,
     BaziFullResponse,
+    RuleMatchModel,
 )
 
 # Cases
@@ -148,6 +149,7 @@ __all__ = [
     "BatchVerifyResponse",
     "BaziFullRequest",
     "BaziFullResponse",
+    "RuleMatchModel",
     # Cases
     "CaseBase",
     "CaseCreate",

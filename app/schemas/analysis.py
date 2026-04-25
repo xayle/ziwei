@@ -313,6 +313,7 @@ class PersonalityModel(BaseModel):
 class MonthlyFortuneModel(BaseModel):
     """月运模型 §4.11-G"""
     month:         int = Field(..., ge=1, le=12)
+    lunar_month:   int = Field(..., ge=1, le=12, description="农历月份（1-12）")
     month_dizhi:   str
     luck_level:    Literal["吉", "平", "凶"]
     color_hint:    str    # CSS色值
@@ -375,6 +376,8 @@ class LuckyModel(BaseModel):
     lucky_direction: str
     lucky_item:      str
     interpretation_text: str
+    avoid_colors:    list[str] = []
+    avoid_direction: str = ""
     disclaimer:      str = "仅供学术研究参考"
 
 

@@ -33,6 +33,9 @@ class Case(SQLModel, table=True):
     rule_version_last: Optional[str] = None
     schema_version: Optional[str] = "case@5.0"
     deleted_at: Optional[datetime] = None
+    # B6: 隐私分享 token
+    share_token: Optional[str] = Field(default=None, index=True)  # UUID 一次性分享凭证
+    share_expires_at: Optional[datetime] = None  # 过期时间，None=未开启
 
 
 class Snapshot(SQLModel, table=True):

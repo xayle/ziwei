@@ -5,6 +5,12 @@ from .case import Case, Snapshot
 from .member import Member
 from .event import Event
 from .other import Scenario, Delegation, AuditLog
+from .review import ChartReview
+from .review_history import ChartReviewHistory
+from .experiment import Experiment, ExperimentEvent
+from .llm import LlmDraft
+from .chart_case import ChartCase
+from .api_key import ApiKey
 
 __all__ = [
     # Base
@@ -22,4 +28,16 @@ __all__ = [
     "Scenario",
     "Delegation",
     "AuditLog",
+    # Review
+    "ChartReview",
+    "ChartReviewHistory",
+    # Experiment
+    "Experiment",
+    "ExperimentEvent",
+    # LLM
+    "LlmDraft",
+    # Similarity
+    "ChartCase",
+    # API Keys
+    "ApiKey",
 ]

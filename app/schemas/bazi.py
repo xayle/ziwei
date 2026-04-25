@@ -395,6 +395,17 @@ class VerifyResponse(BaseModel):
     start_dayun_age: Optional[float] = Field(None, description="大运起运年龄（精确到0.1岁，N5.07）")    # ── 命局综合总评（400-600字六段结构） ──────────────────────────────────
     bazi_summary: str = Field(default="", description="命局综合总评（400-600字六段结构，已纳入日主天干特征、格局、应用神等维度）")
 
+class RuleMatchModel(BaseModel):
+    """单条规则命中结果，由 bazi_rule_engine 生成，注入 BaziFullResponse。"""
+
+    rule_id: str = Field(..., description="规则唯一标识，如 BRULE_001")
+    name: str = Field(..., description="规则名称")
+    flags: list[str] = Field(default_factory=list, description="语义标签列表")
+    evidence_text: str = Field(..., description="填充占位符后的规则文本，用于 LLM 提示词")
+    classic_hint: str = Field(default="", description="来源古籍参考，如 '神峰通考'")
+    disclaimer: str = Field(default="仅供学术研究参考", description="免责声明")
+
+
 class BaziFullRequest(BaseModel):
     """完整BaZi分析请求"""
     dt: datetime = Field(..., description="Input datetime; aware or naive ISO-8601")
@@ -415,7 +426,7 @@ class BaziFullResponse(BaseModel):
     """完整的八字分析响应"""
     api_version: str
     rule_version: str
-    schema_version: str = "bazi_full@5.0"
+    schema_version: str = "bazi_full@5.1"
     request_id: str
     warnings: list[WarningModel] = Field(default_factory=list)
     methods: BaziMethodsModel
@@ -449,3 +460,7 @@ class BaziFullResponse(BaseModel):
     life_arc: Optional[LifeArcModel] = None
     current_fortune_summary: Optional[CurrentFortuneSummaryModel] = None
     start_dayun_age: Optional[float] = Field(None, description="大运起运年龄（精确到0.1岁，N5.07）")
+    rule_matches: list["RuleMatchModel"] = Field(
+        default_factory=list,
+        description="规则引擎命中结果（bazi_full@5.1，用于 LLM grounding）",
+    )
