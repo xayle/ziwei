@@ -5,8 +5,8 @@
  * - API请求：网络优先，失败则从缓存恢复
  */
 
-const CACHE_VERSION = 'bazi-v8.1.1';
-const RUNTIME_CACHE = 'bazi-runtime-v8.1.1';
+const CACHE_VERSION = 'ziwei-v1.0.0';
+const RUNTIME_CACHE = 'ziwei-runtime-v1.0.0';
 
 const STATIC_ASSETS = [
   '/static/sw.js'

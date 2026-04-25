@@ -1,338 +1,192 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>批量八字排盘 — bazi-v8.0</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #f4f6fb; --panel: #fff; --text: #0f172a; --muted: #5f6b86;
-      --ok: #16a34a; --warn: #d97706; --bad: #dc2626; --accent: #2563eb;
-      --line: #e2e8f0; --input: #f8fafc;
-    }
-    body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); padding: 16px; }
-    h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-    .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-    .card { background: var(--panel); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--line); }
-    .card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
-    label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
-    input[type=file] { display: block; width: 100%; background: var(--input); border: 1px dashed var(--accent); border-radius: 8px; padding: 10px; font-size: 13px; cursor: pointer; }
-    button { border: 1px solid var(--line); background: var(--input); color: var(--text); padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .12s; margin-right: 8px; }
-    button.primary { background: linear-gradient(135deg, var(--accent), #1e40af); color: #fff; border-color: transparent; }
-    button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-    button.primary:hover { opacity: .9; color: #fff; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    #status { font-size: 13px; padding: 8px 12px; background: var(--input); border-radius: 8px; margin-top: 10px; min-height: 36px; border: 1px solid var(--line); }
-    #status.ok   { border-color: var(--ok);   background: #f0fdf4; color: var(--ok); }
-    #status.warn { border-color: var(--warn); background: #fffbeb; color: var(--warn); }
-    #status.bad  { border-color: var(--bad);  background: #fef2f2; color: var(--bad); }
-    .template-csv { font-size: 11px; color: var(--muted); margin-top: 8px; }
-    .template-csv code { background: var(--input); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { background: var(--input); padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--line); font-size: 11px; color: var(--muted); font-weight: 700; white-space: nowrap; }
-    td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-    tr.status-ok   td:first-child { border-left: 3px solid var(--ok); }
-    tr.status-fail td:first-child { border-left: 3px solid var(--bad); }
-    .badge-ok   { background: #dcfce7; color: var(--ok);   padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-    .badge-fail { background: #fee2e2; color: var(--bad);  padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-    .badge-pend { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 99px; font-size: 11px; }
-    #resultTable { overflow-x: auto; }
-    .progress { font-size: 12px; color: var(--muted); margin-top: 6px; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .hint-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; line-height: 1.7; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>批量核验 · 命理推演</title>
+  <link rel="stylesheet" href="/static/css/base.css?v=20260324" />
 </head>
 <body>
-  <h1>批量八字排盘</h1>
-  <p class="sub">上传 CSV 文件，每行一个命盘，最多 50 行 | <a href="/verify">返回单次排盘</a></p>
-
-  <div class="card">
-    <div class="card-title">上传 CSV</div>
-    <label for="fileInput">选择 CSV 文件（≤ 50 行）</label>
-    <input type="file" id="fileInput" accept=".csv,text/csv">
-    <div class="template-csv">
-      CSV 列名（与 VerifyRequest 字段严格一致）：<br>
-      <code>dt,lon,mode,solar_time_enabled,tz,gender,city_tier,industry</code><br>
-      示例行：<code>2000-01-01T08:00,116.41,dual,false,Asia/Shanghai,male,一线,金融IT</code><br>
-      <a href="#" id="downloadTemplate">下载模板 CSV</a>
+  <!-- ═══ 顶部导航 ═══ -->
+  <header class="bazi-header">
+    <div class="wrap">
+      <div class="hdr-brand">
+        <span class="hdr-icon">☰</span>
+        <span class="hdr-title">批量核验</span>
+        <span class="hdr-sub">Batch Verify</span>
+      </div>
+      <nav class="hdr-nav">
+        <a href="/static/app/bazi">八字排盘</a>
+        <a href="/static/ziwei.html">紫微斗数</a>
+        <a href="/static/batch.html" class="active">批量核验</a>
+        <a href="/static/app/admin">管理后台</a>
+      </nav>
     </div>
-    <div style="margin-top:12px;display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-      <button class="primary" id="btnRun" disabled>开始批量排盘</button>
-      <button id="btnDownload" disabled>下载结果 CSV</button>
-      <button id="btnClear">清空</button>
-    </div>
-    <div id="status">等待上传 CSV 文件…</div>
-  </div>
+  </header>
 
-  <div class="card" id="previewCard" style="display:none">
-    <div class="card-title">数据预览</div>
-    <div id="previewTable"></div>
-  </div>
+  <div id="app" class="wrap">
+    <section class="card">
+      <h2>CSV 批量核验</h2>
+      <p>
+        上传 CSV 文件，每行对应一个待核验样例。<br />
+        CSV 列名（字段顺序不限）：
+      </p>
+      <ul>
+        <li><code>dt</code> — 出生日期时间，格式 <code>YYYY-MM-DD HH:MM</code>（北京时）</li>
+        <li><code>gender</code> — 性别，取值 <code>男</code> 或 <code>女</code></li>
+        <li><code>lon</code> — 出生地经度（十进制度，东经为正）</li>
+        <li><code>tz</code> — 时区偏移（整数，如 <code>8</code> 表示 UTC+8）</li>
+        <li><code>expected_year_stem</code>（可选）— 预期年干</li>
+        <li><code>expected_year_branch</code>（可选）— 预期年支</li>
+        <li><code>expected_month_stem</code>（可选）— 预期月干</li>
+        <li><code>expected_month_branch</code>（可选）— 预期月支</li>
+        <li><code>expected_day_stem</code>（可选）— 预期日干</li>
+        <li><code>expected_day_branch</code>（可选）— 预期日支</li>
+        <li><code>expected_hour_stem</code>（可选）— 预期时干</li>
+        <li><code>expected_hour_branch</code>（可选）— 预期时支</li>
+      </ul>
 
-  <div class="card" id="resultCard" style="display:none">
-    <div class="card-title">排盘结果
-      <span id="resultSummary" style="font-size:11px;font-weight:400;color:var(--muted);margin-left:8px"></span>
-    </div>
-    <div id="resultTable"></div>
-    <div class="progress" id="progressText"></div>
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="csv-file" accept=".csv" style="display:none" />
+        <label for="csv-file" class="btn btn-primary">选择 CSV 文件</label>
+        <span id="file-name">未选择文件</span>
+      </div>
+
+      <div id="options" style="margin-top:1rem;">
+        <label>
+          <input type="checkbox" id="use-solar-time" />
+          启用真太阳时修正（需提供 lon 字段）
+        </label>
+      </div>
+
+      <button id="run-btn" class="btn btn-success" style="margin-top:1rem;" disabled>
+        开始批量核验
+      </button>
+    </section>
+
+    <section class="card" id="results-section" style="display:none;">
+      <h2>核验结果</h2>
+      <div id="summary"></div>
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>dt</th>
+            <th>gender</th>
+            <th>lon</th>
+            <th>tz</th>
+            <th>结果</th>
+            <th>详情</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+      <button id="export-btn" class="btn btn-secondary">导出结果 CSV</button>
+    </section>
   </div>
 
   <script>
-  /* ══════════ 常量 ══════════════════════════════ */
-  const CSV_COLUMNS = ['dt','lon','mode','solar_time_enabled','tz','gender','city_tier','industry'];
-  const BATCH_API   = '/api/v2/batch/verify';
-  const MAX_ROWS    = 50;
+    // ─── 文件选择 ─────────────────────────────────────────────────
+    const fileInput = document.getElementById('csv-file');
+    const fileNameSpan = document.getElementById('file-name');
+    const runBtn = document.getElementById('run-btn');
 
-  let _parsedRows = [];
-  let _results    = [];
-  let _rows       = [];
-
-  /* ══════════ 工具函数 ══════════════════════════ */
-  const $ = id => document.getElementById(id);
-  function setStatus(msg, cls) {
-    const el = $('status');
-    el.textContent = msg;
-    el.className = cls || '';
-  }
-
-  /* ══════════ CSV 解析 ══════════════════════════ */
-  /** RFC 4180 兼容的单行 CSV 解析，处理带引号的逗号和 "" 转义 */
-  function parseCSVLine(line) {
-    const result = [];
-    let cur = '', inQuote = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
-        else inQuote = !inQuote;
-      } else if (ch === ',' && !inQuote) {
-        result.push(cur.trim()); cur = '';
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileNameSpan.textContent = fileInput.files[0].name;
+        runBtn.disabled = false;
       } else {
-        cur += ch;
+        fileNameSpan.textContent = '未选择文件';
+        runBtn.disabled = true;
       }
-    }
-    result.push(cur.trim());
-    return result;
-  }
-
-  function parseCSV(text) {
-    const lines = text.trim().split(/\r?\n/);
-    if (!lines.length) return { error: 'CSV 为空' };
-    const headers = parseCSVLine(lines[0]);
-
-    // 检查必填列
-    const missing = ['dt','lon'].filter(c => !headers.includes(c));
-    if (missing.length) return { error: `CSV 缺少必填列: ${missing.join(', ')}` };
-
-    const rows = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      const vals = parseCSVLine(line);
-      const row = {};
-      headers.forEach((h, idx) => { row[h] = vals[idx] ?? ''; });
-      rows.push(row);
-    }
-    return { headers, rows };
-  }
-
-  function rowToVerifyRequest(row) {
-    // 转换 CSV 行 → VerifyRequest 对象（字段名与 VerifyRequest 严格对应）
-    const req = {
-      dt: row.dt || '',
-      lon: parseFloat(row.lon || '116.41'),
-      mode: row.mode || 'dual',
-      solar_time_enabled: (row.solar_time_enabled || '').toLowerCase() === 'true',
-      tz: row.tz || 'Asia/Shanghai',
-    };
-    if (row.gender && row.gender !== '') req.gender = row.gender;
-    if (row.city_tier && row.city_tier !== '') req.city_tier = row.city_tier;
-    if (row.industry && row.industry !== '') req.industry = row.industry;
-    return req;
-  }
-
-  function renderPreview(rows) {
-    if (!rows.length) return;
-    const MAX_PREVIEW = 5;
-    const cols = CSV_COLUMNS.filter(c => rows[0].hasOwnProperty(c));
-    let html = `<div style="overflow-x:auto"><table><thead><tr>`;
-    html += `<th>#</th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
-    rows.slice(0, MAX_PREVIEW).forEach((r, i) => {
-      html += `<tr><td>${i+1}</td>${cols.map(c=>`<td>${r[c]||''}</td>`).join('')}</tr>`;
     });
-    if (rows.length > MAX_PREVIEW) {
-      html += `<tr><td colspan="${cols.length+1}" style="text-align:center;color:var(--muted)">… 共 ${rows.length} 行</td></tr>`;
-    }
-    html += '</tbody></table></div>';
-    $('previewTable').innerHTML = html;
-    $('previewCard').style.display = '';
-  }
 
-  /* ══════════ 文件上传处理 ══════════════════════ */
-  $('fileInput').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const { error, rows } = parseCSV(ev.target.result);
-      if (error) { setStatus('❌ CSV 解析错误: ' + error, 'bad'); return; }
-      if (rows.length === 0) { setStatus('❌ CSV 没有数据行', 'bad'); return; }
-      if (rows.length > MAX_ROWS) {
-        setStatus(`❌ CSV 行数 (${rows.length}) 超出限制 ${MAX_ROWS}，请精简后重试`, 'bad');
-        $('btnRun').disabled = true;
-        return;
-      }
-      _parsedRows = rows;
-      setStatus(`✓ 已解析 ${rows.length} 行，点击"开始批量排盘"提交`, 'ok');
-      $('btnRun').disabled = false;
-      renderPreview(rows);
-    };
-    reader.readAsText(file, 'UTF-8');
-  });
-
-  /* ══════════ 批量排盘 ══════════════════════════ */
-  $('btnRun').addEventListener('click', async () => {
-    if (!_parsedRows.length) { setStatus('请先上传 CSV', 'warn'); return; }
-
-    $('btnRun').disabled = true;
-    setStatus('⏳ 排盘中，请稍候…（最多 60 秒）', 'warn');
-    $('resultCard').style.display = '';
-    $('resultTable').innerHTML = '<div style="padding:16px;color:var(--muted)">计算中…</div>';
-    $('progressText').textContent = '';
-
-    const items = _parsedRows.map(rowToVerifyRequest);
-
-    try {
-      const res = await fetch(BATCH_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
+    // ─── CSV 解析 ─────────────────────────────────────────────────
+    function parseCsv(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const vals = line.split(',').map(v => v.trim());
+        const row = {};
+        headers.forEach((h, i) => { row[h] = vals[i] ?? ''; });
+        return row;
       });
-
-      if (!res.ok) {
-        const errText = await res.text().catch(() => res.statusText);
-        setStatus(`❌ API 错误 ${res.status}: ${errText.slice(0,200)}`, 'bad');
-        $('btnRun').disabled = false;
-        return;
-      }
-
-      const data = await res.json();
-      _results = data.results || [];
-      const failed = data.failed || [];
-
-      setStatus(`✓ 完成：成功 ${_results.length} 条，失败 ${failed.length} 条`, 'ok');
-      $('resultSummary').textContent = `成功 ${_results.length} | 失败 ${failed.length}`;
-
-      renderResultTable(items, _results, failed);
-      $('btnDownload').disabled = false;
-      $('progressText').textContent = `共提交 ${items.length} 条，成功 ${_results.length} 条，失败 ${failed.length} 条`;
-    } catch (err) {
-      setStatus('❌ 请求失败: ' + err.message, 'bad');
-      $('btnRun').disabled = false;
     }
-  });
 
-  /* ══════════ 结果表格渲染 ══════════════════════ */
-  function renderResultTable(items, results, failed) {
-    // 构建 index → result/error 映射
-    const failedMap = {};
-    failed.forEach(f => { failedMap[f.index] = f.error; });
+    // ─── 批量提交 ─────────────────────────────────────────────────
+    runBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const rows = parseCsv(text);
+      if (rows.length === 0) { alert('CSV 为空或格式错误'); return; }
 
-    // results 是顺序列表，但 index 映射需根据 failed 推断
-    // 因为 results 是有序成功列表，failed 含 index
-    const successIndeces = new Set(Array.from({ length: items.length }, (_, i) => i).filter(i => !(i in failedMap)));
+      const useSolar = document.getElementById('use-solar-time').checked;
+      const tbody = document.getElementById('results-body');
+      tbody.innerHTML = '';
+      document.getElementById('results-section').style.display = '';
+      document.getElementById('summary').textContent = `共 ${rows.length} 行，处理中…`;
 
-    let rIdx = 0;
-    const rows = items.map((item, i) => {
-      if (i in failedMap) {
-        return { item, status: 'fail', error: failedMap[i], result: null };
+      let pass = 0, fail = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        // 构造请求体（仅传 VerifyRequest 核心字段: dt, gender, lon, tz）
+        const body = { dt: row.dt, gender: row.gender };
+        if (row.lon) body.lon = parseFloat(row.lon);
+        if (row.tz)  body.tz  = parseInt(row.tz, 10);
+        if (useSolar && row.lon) body.use_solar_time = true;
+        // 可选字段
+        ['expected_year_stem','expected_year_branch',
+         'expected_month_stem','expected_month_branch',
+         'expected_day_stem','expected_day_branch',
+         'expected_hour_stem','expected_hour_branch'].forEach(k => {
+          if (row[k]) body[k] = row[k];
+        });
+
+        let status = '—', detail = '';
+        try {
+          const resp = await fetch('/api/v2/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await resp.json();
+          if (resp.ok) {
+            status = data.match ? '✅ 通过' : '❌ 不符';
+            detail = JSON.stringify(data.computed ?? {});
+            data.match ? pass++ : fail++;
+          } else {
+            status = `HTTP ${resp.status}`;
+            detail = data.detail ?? '';
+            fail++;
+          }
+        } catch (e) {
+          status = '网络错误';
+          detail = String(e);
+          fail++;
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${row.dt??''}</td><td>${row.gender??''}</td>` +
+          `<td>${row.lon??''}</td><td>${row.tz??''}</td><td>${status}</td>` +
+          `<td style="font-size:0.8em;max-width:300px;word-break:break-all">${detail}</td>`;
+        tbody.appendChild(tr);
       }
-      const r = results[rIdx++] || null;
-      return { item, status: 'ok', result: r, error: null };
+      document.getElementById('summary').textContent =
+        `完成：共 ${rows.length} 行，通过 ${pass} 行，失败/不符 ${fail} 行。`;
     });
 
-    _rows = rows;
-    let html = `<div style="overflow-x:auto"><table>
-      <thead><tr>
-        <th>#</th><th>状态</th><th>出生时间</th><th>日主</th><th>格局</th><th>用神</th><th>本年运势</th><th>错误</th>
-      </tr></thead><tbody>`;
-
-    rows.forEach((row, i) => {
-      const r = row.result;
-      const dayStem = r?.pillars_primary?.day?.stem || '—';
-      const gejuName = r?.geju?.geju_name || r?.geju?.name || '—';
-      const yongshen = (r?.yongshen?.favor || []).join('/') || '—';
-      const thisYear = new Date().getFullYear();
-      const lnNow = (r?.liunian_detail || []).find(l => l.year === thisYear);
-      const annualScore = lnNow?.annual_score != null ? String(lnNow.annual_score) : '—';
-      const statusBadge = row.status === 'ok'
-        ? '<span class="badge-ok">成功</span>'
-        : '<span class="badge-fail">失败</span>';
-      html += `<tr class="status-${row.status}">
-        <td>${i+1}</td>
-        <td>${statusBadge}</td>
-        <td style="white-space:nowrap">${row.item.dt || '—'}</td>
-        <td>${dayStem}</td>
-        <td>${gejuName}</td>
-        <td>${yongshen}</td>
-        <td>${annualScore}</td>
-        <td style="font-size:11px;color:var(--bad)">${row.error || ''}</td>
-      </tr>`;
+    // ─── 导出 CSV ─────────────────────────────────────────────────
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const rows = [...document.querySelectorAll('#results-table tr')];
+      const csv = rows.map(r =>
+        [...r.cells].map(c => `"${c.textContent.replace(/"/g,'""')}"`).join(',')
+      ).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'batch_result.csv'; a.click();
     });
-    html += '</tbody></table></div>';
-    $('resultTable').innerHTML = html;
-  }
-
-  /* ══════════ 下载结果 CSV ══════════════════════ */
-  $('btnDownload').addEventListener('click', () => {
-    if (!_rows.length && !_parsedRows.length) return;
-    const thisYear = new Date().getFullYear();
-    const header = 'index,dt,day_stem,geju,yongshen,annual_score,request_id\r\n';
-    const lines = _rows.map((row, i) => {
-      const r = row.result;
-      if (!r) return `${i+1},"${row.item?.dt || ''}",,,,"${row.error || '失败'}",`;
-      const dayStem = r.pillars_primary?.day?.stem || '';
-      const gejuName = r.geju?.geju_name || r.geju?.name || '';
-      const yongshen = (r.yongshen?.favor || []).join('/');
-      const lnNow = (r.liunian_detail || []).find(l => l.year === thisYear);
-      const annualScore = lnNow?.annual_score != null ? lnNow.annual_score : '';
-      const reqId = r.request_id || '';
-      return `${i+1},"${row.item?.dt || ''}","${dayStem}","${gejuName}","${yongshen}",${annualScore},"${reqId}"`;
-    });
-    const csv = '\uFEFF' + header + lines.join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `bazi-batch-${Date.now()}.csv`;
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-  });
-
-  /* ══════════ 清空 ══════════════════════════════ */
-  $('btnClear').addEventListener('click', () => {
-    $('fileInput').value = '';
-    _parsedRows = []; _results = []; _rows = [];
-    $('previewCard').style.display = 'none';
-    $('resultCard').style.display = 'none';
-    $('btnRun').disabled = true;
-    $('btnDownload').disabled = true;
-    setStatus('等待上传 CSV 文件…');
-  });
-
-  /* ══════════ 下载模板 ══════════════════════════ */
-  $('downloadTemplate').addEventListener('click', e => {
-    e.preventDefault();
-    const csv = '\uFEFF' + CSV_COLUMNS.join(',') + '\r\n' +
-      '2000-01-01T08:00,116.41,dual,false,Asia/Shanghai,male,一线,金融IT\r\n' +
-      '1990-06-15T12:30,121.47,dual,false,Asia/Shanghai,female,新一线,教育公务\r\n';
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'bazi-batch-template.csv';
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-  });
   </script>
 </body>
 </html>

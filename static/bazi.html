@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>八字排盘 · 命理推演</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('legacy') === '1') return
+
+      const nextParams = new URLSearchParams(params)
+      nextParams.delete('legacy')
+      const query = nextParams.toString()
+      const target = `/static/app/bazi${query ? `?${query}` : ''}${window.location.hash || ''}`
+
+      fetch('/static/app/index.html', { method: 'HEAD' })
+        .then((response) => {
+          if (response.ok) {
+            window.location.replace(target)
+          }
+        })
+        .catch(() => {
+          // SPA 不存在时继续留在 legacy 页面
+        })
+    })()
+  </script>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=20260324" />
+  <link rel="stylesheet" href="/static/css/bazi.css?v=20260324" />
+</head>
+<body>
+  <div style="max-width:1200px;margin:12px auto 0;padding:0 16px;">
+    <div style="border:1px solid rgba(59,130,246,.25);background:#eff6ff;color:#1e3a8a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;">
+      当前页为兼容入口。若新版 SPA 可用，将优先自动跳转到
+      <a href="/static/app/bazi" style="color:#1d4ed8;font-weight:600;">/static/app/bazi</a>；
+      如需继续停留旧版，请使用
+      <a href="/static/bazi.html?legacy=1" style="color:#1d4ed8;font-weight:600;">legacy 模式</a>。
+    </div>
+  </div>
+  <!-- ═══ 顶部导航 ═══ -->
+  <header class="bazi-header">
+    <div class="wrap">
+      <div class="hdr-brand">
+        <span class="hdr-icon">☰</span>
+        <span class="hdr-title">八字命理推演</span>
+        <span class="hdr-sub">BaZi Calculator</span>
+      </div>
+      <nav class="hdr-nav">
+        <a href="/static/ziwei.html">紫微斗数</a>
+        <a href="/static/bazi.html" class="active">八字排盘</a>
+        <a href="/static/admin.html">管理后台</a>
+      </nav>
+    </div>
+  </header>
+
+  <div id="app" class="wrap">
+    <!-- ═══ 主内容区 ═══ -->
+
+    <!-- 输入表单卡片 -->
+    <section class="card input-card">
+      <h2 class="card-title">输入出生信息</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-lbl">出生日期时间 <span class="required">*</span></label>
+          <input type="datetime-local" id="birth-dt" class="form-ctrl" value="1990-01-15T08:30" />
+          <span class="form-hint">请输入出生时的公历日期及时辰</span>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">出生地经度 <span class="required">*</span></label>
+          <input type="number" id="lon" class="form-ctrl" value="116.4" step="0.1" min="73" max="135.1" placeholder="73.0 ~ 135.1" />
+          <span class="form-hint">东经度数（北京≈116.4，上海≈121.5）</span>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">时区</label>
+          <select id="tz" class="form-ctrl">
+            <option value="Asia/Shanghai" selected>Asia/Shanghai（东八区）</option>
+            <option value="Asia/Tokyo">Asia/Tokyo（东九区）</option>
+            <option value="Asia/Kolkata">Asia/Kolkata（IST）</option>
+            <option value="UTC">UTC（世界协调时）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">性别</label>
+          <div class="radio-row">
+            <label class="radio-opt"><input type="radio" name="gender" value="male" checked/><span>男</span></label>
+            <label class="radio-opt"><input type="radio" name="gender" value="female"/><span>女</span></label>
+            <label class="radio-opt"><input type="radio" name="gender" value=""/><span>不指定</span></label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">计算模式</label>
+          <div class="radio-row">
+            <label class="radio-opt"><input type="radio" name="mode" value="dual" checked/><span>双历（节气校正）</span></label>
+            <label class="radio-opt"><input type="radio" name="mode" value="single"/><span>单历</span></label>
+          </div>
+        </div>
+        <div class="form-group form-group--check">
+          <label class="check-opt">
+            <input type="checkbox" id="solar-time" />
+            <span>启用真太阳时修正</span>
+          </label>
+          <span class="form-hint">根据经度调整出生时辰（±约14分钟偏差）</span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="calc-btn" onclick="doCalculate()">
+          <span id="calc-btn-text">✦ 开始排盘</span>
+          <span id="calc-loading" class="loading-dot" style="display:none">计算中…</span>
+        </button>
+        <button class="btn-sec" onclick="resetForm()">重置</button>
+        <span id="calc-err" class="err-msg"></span>
+      </div>
+    </section>
+
+    <!-- 结果区（初始隐藏） -->
+    <div id="result-area" style="display:none">
+
+      <!-- 四柱宫格 -->
+      <section class="card">
+        <h2 class="card-title">四柱命盘</h2>
+        <div id="pillars-block"></div>
+        <div class="pillars-meta" id="pillars-meta"></div>
+      </section>
+
+      <!-- 操作行 -->
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:0">
+        <button class="btn-sec" onclick="openSaveModal()" style="font-size:.82rem;padding:6px 14px">💾 保存案例</button>
+        <button class="btn-sec" id="ai-quick-btn" onclick="switchTab('ai', document.querySelector('.res-tab[data-tab=ai]'))" style="font-size:.82rem;padding:6px 14px;display:none">🤖 AI解读</button>
+      </div>
+
+      <!-- Tab 导航 -->
+      <div class="res-tabs">
+        <button class="res-tab act" data-tab="overview" onclick="switchTab('overview',this)">综合概览</button>
+        <button class="res-tab" data-tab="dayun" onclick="switchTab('dayun',this)">大运</button>
+        <button class="res-tab" data-tab="liunian" onclick="switchTab('liunian',this)">流年</button>
+        <button class="res-tab" data-tab="wuxing" onclick="switchTab('wuxing',this)">五行格局</button>
+        <button class="res-tab" data-tab="ai" onclick="switchTab('ai',this)">🤖 AI解读</button>
+        <button class="res-tab" data-tab="raw" onclick="switchTab('raw',this)">原始数据</button>
+      </div>
+
+      <!-- Tab: 综合概览 -->
+      <section id="tab-overview" class="tab-body">
+        <div class="overview-grid">
+          <div class="ov-card" id="ov-yongshen">
+            <div class="ov-title">用神 / 忌神</div>
+            <div class="ov-body" id="ov-yongshen-body">—</div>
+          </div>
+          <div class="ov-card" id="ov-strength">
+            <div class="ov-title">日元强弱</div>
+            <div class="ov-body" id="ov-strength-body">—</div>
+          </div>
+          <div class="ov-card" id="ov-geju">
+            <div class="ov-title">格局</div>
+            <div class="ov-body" id="ov-geju-body">—</div>
+          </div>
+          <div class="ov-card" id="ov-palace">
+            <div class="ov-title">命宫 / 胎元</div>
+            <div class="ov-body" id="ov-palace-body">—</div>
+          </div>
+        </div>
+        <div id="ov-life-arc"></div>
+        <div id="ov-shensha"></div>
+        <!-- 规则匹配摘要（5.1新增） -->
+        <div id="ov-rule-summary"></div>
+      </section>
+
+      <!-- Tab: 大运 -->
+      <section id="tab-dayun" class="tab-body" style="display:none">
+        <div id="dayun-block"></div>
+      </section>
+
+      <!-- Tab: 流年 -->
+      <section id="tab-liunian" class="tab-body" style="display:none">
+        <div class="liunian-controls">
+          <label class="form-lbl" style="margin-right:8px">查询年份</label>
+          <input type="number" id="liunian-year" class="form-ctrl" style="width:100px" value="2025" min="1900" max="2100" />
+          <button class="btn-sec" onclick="fetchLiunianDomain()" style="margin-left:8px">查询分域预测</button>
+        </div>
+        <div id="liunian-domain-block" class="liunian-domain-block"></div>
+        <hr class="divider" />
+        <div id="liunian-block"></div>
+      </section>
+
+      <!-- Tab: 五行格局 -->
+      <section id="tab-wuxing" class="tab-body" style="display:none">
+        <div id="wuxing-block"></div>
+      </section>
+
+      <!-- Tab: AI解读 -->
+      <section id="tab-ai" class="tab-body" style="display:none">
+        <div class="ai-panel">
+          <div class="ai-disclaimer-bar">
+            ⚠️ AI生成内容基于命理学学术研究，仅供参考，不构成任何决策建议。
+            本功能需要先 <b>保存案例</b>，再点击下方按钮生成解读。
+          </div>
+
+          <!-- 规则匹配列表 -->
+          <div>
+            <div class="card-title" style="margin-bottom:10px">规则引擎命中（bazi_full@5.1）</div>
+            <div id="ai-rule-matches"><div class="rule-match-empty">排盘后自动显示命中规则</div></div>
+          </div>
+
+          <!-- AI解读触发区 -->
+          <div>
+            <div class="card-title" style="margin-bottom:10px">LLM 古籍溯源解读</div>
+            <div class="ai-actions">
+              <button class="btn-ai" id="ai-gen-btn" onclick="doInterpretBazi()" disabled
+                      title="请先排盘并保存案例">
+                ✦ 生成解读
+              </button>
+              <select id="ai-module-sel" class="form-ctrl" style="width:180px;font-size:.84rem">
+                <option value="">（全局解读）</option>
+                <option value="career_detail">事业详解</option>
+                <option value="wealth_detail">财富详解</option>
+                <option value="marriage_detail">婚恋详解</option>
+                <option value="dayun_narrative">大运叙述</option>
+                <option value="fengshui_suggestion">风水建议</option>
+              </select>
+              <span id="ai-status" class="ai-status"></span>
+            </div>
+            <div id="ai-result" class="ai-result-box" style="display:none"></div>
+            <div id="ai-result-meta" class="ai-result-meta" style="display:none"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: 原始数据 -->
+      <section id="tab-raw" class="tab-body" style="display:none">
+        <pre id="raw-json" class="raw-json"></pre>
+      </section>
+
+    </div><!-- /result-area -->
+
+    <!-- 案例保存对话框 -->
+    <div id="save-modal" class="modal" style="display:none">
+      <div class="modal-box">
+        <div class="modal-hdr">
+          保存到案例库
+          <button class="modal-close" onclick="closeSaveModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-lbl">案例备注（可选）</label>
+            <input type="text" id="save-note" class="form-ctrl" placeholder="如：张先生，1990年" />
+          </div>
+          <div id="save-err" class="err-msg"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" onclick="doSaveCase()">保存</button>
+          <button class="btn-sec" onclick="closeSaveModal()">取消</button>
+        </div>
+      </div>
+    </div>
+    <div id="save-overlay" onclick="closeSaveModal()"></div>
+
+  </div><!-- /app#wrap -->
+
+  <!-- 顶部 Toast 通知 -->
+  <div id="bazi-toast" class="bz-toast"></div>
+
+  <script src="/static/js/auth.js?v=20260324"></script>
+  <script src="/static/js/bazi/main.js?v=20260324"></script>
+</body>
+</html>

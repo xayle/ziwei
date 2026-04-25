@@ -3,16 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>八字命理系统</title>
-  <meta http-equiv="refresh" content="0;url=/static/verify.html" />
+  <title>命理系统入口</title>
   <style>
     body { font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#f7f8fb; color:#0f172a; }
-    a { color:#2563eb; }
+    .box { max-width: 520px; padding: 28px 32px; border: 1px solid #dbe3f0; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px rgba(15, 23, 42, .08); }
+    h1 { margin: 0 0 10px; font-size: 24px; }
+    p { margin: 8px 0; line-height: 1.7; color: #334155; }
+    .muted { color: #64748b; font-size: 14px; }
+    .links { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+    a { color:#2563eb; text-decoration:none; }
+    a.btn { display:inline-flex; align-items:center; justify-content:center; min-width:120px; padding:10px 16px; border-radius:10px; border:1px solid #bfdbfe; background:#eff6ff; font-weight:600; }
+    a.btn.secondary { background:#fff; border-color:#dbe3f0; color:#0f172a; }
   </style>
 </head>
 <body>
-  <div>
-    <p>正在跳转到命盘推算… 若未自动跳转，请点击 <a href="/static/verify.html">这里</a>。</p>
+  <div class="box">
+    <h1>正在进入命理系统…</h1>
+    <p id="status">默认优先进入新版主工作台；若新版资源未构建，将自动回退到 legacy 紫微页面。</p>
+    <p class="muted">如跳转未生效，可手动选择入口。</p>
+    <div class="links">
+      <a class="btn" href="/static/app/workbench">进入主工作台</a>
+      <a class="btn secondary" href="/static/ziwei.html">进入 legacy 紫微页</a>
+    </div>
   </div>
+  <script>
+    (async function () {
+      const status = document.getElementById('status')
+      try {
+        const resp = await fetch('/static/app/', { method: 'GET', redirect: 'follow' })
+        if (resp.ok) {
+          status.textContent = '已检测到新版资源，正在跳转到主工作台…'
+          window.location.replace('/static/app/workbench')
+          return
+        }
+      } catch (err) {
+        console.warn('SPA probe failed:', err)
+      }
+
+      status.textContent = '未检测到新版资源，正在回退到 legacy 紫微页面…'
+      window.location.replace('/static/ziwei.html')
+    })()
+  </script>
 </body>
 </html>

@@ -3,505 +3,753 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>紫微斗数 命盘</title>
-  <style>
-    :root {
-      --bg:#faf6ef;--panel:#fffdf8;--border:#c8b89a;
-      --hdr-bg:#2c1810;--hdr-fg:#f5e6c8;
-      --accent:#8b1a1a;--accent2:#1a4a8b;--gold:#c9963a;
-      --muted:#6b5b45;--text:#1a1208;--tag-bg:#f0e8d8;
-      --main-star:#8b1a1a;--aux-star:#1a4a8b;
-      --sha-star:#5a1a1a;--ji-star:#1a5a3a;
-      --font-cn:"Noto Serif SC","SimSun","宋体",serif;
-      --pw:158px;--ph:138px;
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:var(--font-cn);min-height:100vh}
-    .topbar{background:var(--hdr-bg);color:var(--hdr-fg);display:flex;
-      align-items:center;justify-content:space-between;padding:10px 20px;flex-wrap:wrap;gap:10px}
-    .topbar h1{font-size:1.3rem;font-weight:700;letter-spacing:.15em;color:var(--gold)}
-    .topbar-nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .topbar a{color:#c8b89a;text-decoration:none;font-size:.85rem}
-    .topbar a:hover{color:var(--gold)}
-    .topbar-nav a{color:#c8b89a;text-decoration:none;font-size:.82rem;
-      padding:4px 10px;border-radius:8px;border:1px solid rgba(200,184,154,.35);
-      transition:background .15s,color .15s}
-    .topbar-nav a:hover{background:rgba(200,184,154,.18);color:var(--gold)}
-    .form-wrap{max-width:760px;margin:18px auto 0;padding:0 14px}
-    .form-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 20px}
-    .form-title{font-size:1rem;font-weight:700;margin-bottom:12px;color:var(--accent)}
-    .form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
-    .fg{display:flex;flex-direction:column;gap:4px}
-    .fg label{font-size:.78rem;color:var(--muted);font-weight:600}
-    .fg input,.fg select{border:1px solid var(--border);border-radius:6px;
-      padding:6px 10px;font-size:.92rem;font-family:inherit;background:#fff;color:var(--text)}
-    .btn{background:var(--accent);color:#fff;border:none;border-radius:6px;
-      padding:8px 22px;font-size:.95rem;cursor:pointer;font-family:inherit}
-    .btn:hover{background:#a92020}
-    .btn2{background:var(--accent2)}
-    .btn2:hover{background:#1a3a7a}
-    .status{max-width:960px;margin:8px auto;padding:0 14px;font-size:.85rem;color:var(--muted);min-height:20px}
-    .status.err{color:#991b1b}
-    .croute{max-width:960px;margin:10px auto 20px;padding:0 14px}
-    .croute.hid{display:none}
-    .info-hdr{background:var(--hdr-bg);color:var(--hdr-fg);border-radius:8px 8px 0 0;
-      padding:10px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:.88rem}
-    .kv{display:flex;gap:4px}
-    .kv .k{color:#a89878;font-size:.78rem}
-    .kv .v{font-weight:700;color:var(--gold);letter-spacing:.05em}
-    .pgrid{
-      display:grid;
-      grid-template-columns:repeat(4,var(--pw));
-      grid-template-rows:repeat(4,var(--ph));
-      border:2px solid var(--border);border-top:none;
-      background:var(--panel);
-    }
-    .pal{border:1px solid var(--border);padding:5px 7px;overflow:hidden;
-      position:relative;display:flex;flex-direction:column;background:var(--panel);}
-    .pal:hover{background:#f5edd8}
-    .pcenter{grid-column:2/4;grid-row:2/4;display:flex;flex-direction:column;
-      border:1px solid var(--border);background:#fffdf5;padding:10px 14px;overflow:auto}
-    .compass{font-size:.62rem;color:#b0957a;position:absolute;bottom:3px;right:4px;opacity:.7}
-    .pname{font-size:.7rem;color:var(--muted);font-weight:700;margin-bottom:3px;
-      border-bottom:1px solid #e8dcc8;padding-bottom:2px}
-    .db{font-size:.68rem;color:#967858;margin-bottom:4px}
-    .stars{flex:1;display:flex;flex-direction:column;gap:1px}
-    .sl{font-size:.78rem;line-height:1.4;display:flex;align-items:center;gap:3px;flex-wrap:wrap}
-    .sn{font-weight:700}.sn.main{color:var(--main-star)}.sn.aux{color:var(--aux-star)}
-    .sn.sha{color:var(--sha-star)}.sn.ji{color:var(--ji-star)}
-    .sbr{font-size:.63rem;color:var(--muted);margin-left:1px}
-    .shan{font-size:.63rem;background:var(--gold);color:#fff;padding:1px 4px;border-radius:3px}
-    .blife,.bbody{font-size:.62rem;padding:1px 5px;border-radius:10px;font-weight:700;display:inline-block}
-    .blife{background:var(--accent);color:#fff}.bbody{background:var(--accent2);color:#fff}
-    .ct{font-size:.95rem;font-weight:700;color:var(--accent);margin-bottom:8px;
-      letter-spacing:.08em;border-bottom:1px solid #e8dcc8;padding-bottom:5px}
-    .cs{margin-bottom:8px}
-    .cs h3{font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:4px}
-    .dylist{display:flex;flex-wrap:wrap;gap:4px}
-    .dyi{font-size:.72rem;padding:3px 7px;border-radius:4px;
-      border:1px solid var(--border);background:var(--tag-bg);letter-spacing:.05em}
-    .dyi.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
-    .lnrow{font-size:.8rem;color:var(--accent2);font-weight:600}
-    .wbadge{display:inline-block;font-size:.75rem;padding:2px 9px;border-radius:12px;font-weight:700;letter-spacing:.05em}
-    .jw{background:#dbeafe;color:#1e3a8a}.jwo{background:#dcfce7;color:#14532d}
-    .jme{background:#fef9c3;color:#713f12}.jea{background:#fef3c7;color:#78350f}
-    .jfi{background:#fee2e2;color:#7f1d1d}
-    .awrap{max-width:960px;margin:16px auto 30px;padding:0 14px}
-    .awrap.hid{display:none}
-    .acard{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px 20px}
-    .acard h2{font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:12px}
-    .atabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-    .tbtn{font-size:.82rem;padding:4px 12px;border:1px solid var(--border);border-radius:20px;
-      background:var(--tag-bg);cursor:pointer;font-family:inherit}
-    .tbtn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
-    .tc{display:none}.tc.act{display:block}
-    .pana{margin-bottom:10px;padding:10px;border-radius:6px;background:#faf5ea;border-left:3px solid var(--gold)}
-    .pana h4{font-size:.88rem;font-weight:700;color:var(--accent);margin-bottom:5px}
-    .pana p{font-size:.83rem;line-height:1.7;color:var(--text);white-space:pre-wrap}
-    .sumcard{background:#faf5ea;border-radius:6px;padding:12px;font-size:.85rem;line-height:1.8;white-space:pre-wrap}
-    .ftable{width:100%;border-collapse:collapse;font-size:.8rem}
-    .ftable th,.ftable td{border:1px solid var(--border);padding:5px 8px;text-align:left}
-    .ftable th{background:var(--tag-bg);font-weight:700}
-    .flu{color:#14532d}.fqu{color:#1e3a8a}.fke{color:#6b21a8}.fji{color:#7f1d1d}
-    /* ── 运势预测 ─────────────────────────────── */
-    .fc-section{background:#fff9f0;border:1px solid #e8d8b0;border-radius:8px;padding:14px 16px;margin-bottom:14px}
-    .fc-section.fc-cur{border-color:#8b1a1a;box-shadow:0 0 0 2px rgba(139,26,26,.15)}
-    .fc-section h3{font-size:.93rem;font-weight:700;color:#8b1a1a;margin-bottom:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-    .fc-score{display:inline-block;font-size:.85rem;font-weight:700;padding:2px 10px;border-radius:10px}
-    .fc-score.hi{background:#dcfce7;color:#14532d}.fc-score.md{background:#fef9c3;color:#713f12}.fc-score.lo{background:#fee2e2;color:#7f1d1d}
-    .fc-overall{font-size:.85rem;line-height:1.75;color:#1a1208;margin:6px 0 8px}
-    .fc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
-    .fc-tag{font-size:.72rem;padding:2px 8px;border-radius:10px;font-weight:600;cursor:default}
-    .lv-强{background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5}
-    .lv-中{background:#fef3c7;color:#78350f;border:1px solid #fcd34d}
-    .lv-弱{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
-    .fc-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
-    .fc-dim{background:#faf5ea;border-radius:5px;padding:7px 9px;font-size:.8rem;line-height:1.6}
-    .fc-dim b{color:#8b1a1a;display:block;margin-bottom:2px;font-size:.78rem}
-    .fc-advice{background:#eff6ff;border-left:3px solid #3b82f6;padding:8px 10px;border-radius:0 5px 5px 0;font-size:.8rem;line-height:1.6;white-space:pre-wrap}
-    .fc-months{display:flex;flex-direction:column;gap:5px;margin-top:4px}
-    .fc-month{border:1px solid #e8d8b0;border-radius:6px;overflow:hidden}
-    .fc-month.fc-cur{border-color:#8b1a1a}
-    .fc-mhdr{display:flex;align-items:center;gap:8px;padding:7px 11px;cursor:pointer;background:#faf5ea;user-select:none}
-    .fc-mhdr:hover{background:#f0e8d0}
-    .fc-mhdr .mn{font-size:.82rem;font-weight:700;color:#2c1810;flex:1}
-    .fc-mhdr .ms{font-size:.75rem;color:#6b5b45;white-space:nowrap}
-    .fc-bar{height:5px;border-radius:3px;background:#e0d4bc;width:54px;flex-shrink:0}
-    .fc-bar-fill{height:100%;border-radius:3px;background:#c9963a}
-    .fc-mbody{display:none;padding:10px 12px;background:#fffdf8;border-top:1px solid #e8d8b0}
-    .fc-mbody.open{display:block}
-    .fc-divider{font-size:.8rem;font-weight:700;color:#6b5b45;margin:14px 0 6px;border-bottom:1px solid #e8d8b0;padding-bottom:4px}
-    /* ── 补充样式 ───────────────────────── */
-    .pgrid-scroll{overflow-x:auto}
-    .bln{font-size:.62rem;padding:1px 5px;border-radius:10px;font-weight:700;display:inline-block;background:#1a5a3a;color:#fff}
-    .xage{font-size:.58rem;color:#967858;margin-top:auto;padding-top:2px;line-height:1.3}
-    .atag{display:inline-block;font-size:.68rem;padding:1px 6px;border-radius:10px;background:#e8f0fe;color:#1a4a8b;border:1px solid #c2d3f5;margin:0 3px 3px 0}
-    .lylist{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}
-    .lyi{font-size:.65rem;padding:2px 5px;border-radius:4px;border:1px solid var(--border);background:var(--tag-bg);letter-spacing:.04em;text-align:center;cursor:default}
-    .lyi.cur{background:var(--accent);color:#fff;border-color:var(--accent)}
-    .fc-palace-tag{font-size:.72rem;background:#f0e8d8;color:#6b5b45;padding:1px 6px;border-radius:8px;font-weight:400}
-    .fc-tag-sm{font-size:.65rem;padding:1px 5px;border-radius:8px;font-weight:500}
-    .fc-tag-inline{display:flex;gap:3px;align-items:center;overflow:hidden;flex-shrink:0}
-    .fc-arr{font-size:.65rem;color:var(--muted);width:12px;flex-shrink:0;text-align:center}
-    .fc-empty{color:#6b5b45;padding:20px;font-size:.85rem}
-    .tr-cur td{background:#fff3f3}
-    /* ── 三段式宫位解读 ───────────────────────────── */
-    .pca-c{background:#fffbf0;border-left:3px solid #c9963a;padding:7px 11px;border-radius:0 6px 6px 0;font-size:.82rem;line-height:1.7;margin-bottom:5px}
-    .pca-c .lbl{font-size:.63rem;font-weight:700;color:#713f12;background:#fde68a;padding:1px 5px;border-radius:6px;margin-right:5px;vertical-align:middle}
-    .pca-exp{font-size:.8rem;line-height:1.8;color:var(--text);margin:7px 0;white-space:pre-line}
-    .pca-sug{background:#eff6ff;border-left:3px solid #3b82f6;padding:7px 11px;border-radius:0 6px 6px 0;font-size:.79rem;line-height:1.65;margin-top:5px}
-    .pca-sug .lbl{font-size:.63rem;font-weight:700;color:#1d4ed8;margin-right:4px;vertical-align:middle}
-    details.pca-d{margin-top:6px}
-    details.pca-d summary{font-size:.78rem;color:var(--muted);cursor:pointer;user-select:none;padding:2px 0;list-style:none}
-    details.pca-d summary::-webkit-details-marker{display:none}
-    details.pca-d summary:hover{color:var(--accent)}
-  </style>
+  <title>紫微斗数 · 命盘推算</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=20260324">
+  <link rel="stylesheet" href="/static/css/ziwei.css?v=20260324">
 </head>
 <body>
-<div class="topbar">
-  <h1>☆ 紫微斗数 · 命盘</h1>
-  <nav class="topbar-nav" aria-label="站内导航">
-    <a href="/static/verify.html">八字命理</a>
-    <a href="/static/cases.html">案例中心</a>
-    <a href="/static/dashboard.html">主页</a>
-  </nav>
-</div>
-<div class="form-wrap">
-  <div class="form-card">
-    <div class="form-title">输入出生信息</div>
-    <div class="form-row">
-      <div class="fg"><label>出生年</label><input type="number" id="fy" value="2002" min="1900" max="2100" style="width:75px"></div>
-      <div class="fg"><label>月</label><input type="number" id="fm" value="3" min="1" max="12" style="width:55px"></div>
-      <div class="fg"><label>日</label><input type="number" id="fd" value="13" min="1" max="31" style="width:55px"></div>
-      <div class="fg"><label>时(24h)</label><input type="number" id="fh" value="14" min="0" max="23" style="width:55px"></div>
-      <div class="fg"><label>分</label><input type="number" id="fmin" value="55" min="0" max="59" style="width:55px"></div>
-      <div class="fg"><label>性别</label>
-        <select id="fgender"><option value="女">女</option><option value="男">男</option></select>
+
+<!-- ═══ 顶部标题栏 ═══════════════════════════════════════════ -->
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-logo">紫微斗数 · 命盘推算</div>
+    <div class="hdr-tagline">传统命理 · 十四主星 · 大运流年 · 运势预测</div>
+    <div class="hdr-ver">V1.0</div>
+    <nav class="hdr-nav">
+      <a href="/static/ziwei.html" class="active">紫微斗数</a>
+      <a href="/static/app/bazi">八字排盘</a>
+      <a href="/static/app/admin">管理后台</a>
+    </nav>
+
+    <button class="btn-hist" id="hbtn" onclick="toggleHist()" title="最近5次排盘记录">历史</button>
+  </div>
+</header>
+
+<!-- ═══ 输入表单 ══════════════════════════════════════════════ -->
+<div class="wrap">
+  <div class="form-sec">
+    <div class="card">
+      <!-- 行一：出生时间 + 性别 + 操作按钮 -->
+      <div class="form-row">
+        <div class="fg"><label>出生年</label><input class="w-yr" type="number" id="fy" value="2002" min="1900" max="2100"></div>
+        <div class="fg"><label>月</label><input class="w-mo" type="number" id="fm" value="3" min="1" max="12"></div>
+        <div class="fg"><label>日</label><input class="w-dy" type="number" id="fd" value="13" min="1" max="31"></div>
+        <div class="fg"><label>时(24h)</label><input class="w-hr" type="number" id="fh" value="14" min="0" max="23"></div>
+        <div class="fg"><label>分</label><input class="w-mn" type="number" id="fmin" value="55" min="0" max="59"></div>
+        <div class="fg"><label>性别</label>
+          <select class="w-gen" id="fgender">
+            <option value="女">女</option>
+            <option value="男">男</option>
+          </select>
+        </div>
+        <div style="flex:1"></div>
+        <button class="btn" onclick="go()">排　盘</button>
+        <button class="btn btn-demo" onclick="demo()">演示盘</button>
       </div>
-      <div class="fg"><label>流年</label><input type="number" id="fln" placeholder="今年" style="width:80px"></div>
-      <div class="fg"><label title="输入东经度数用于真太阳时修正，可不填">经度(可选)</label><input type="number" id="flo" placeholder="如120.3" step="0.1" style="width:90px"></div>
-      <button class="btn" onclick="go()">排盘</button>
-      <button class="btn btn2" onclick="demo()">演示盘</button>
+      <!-- 行二：城市 + 经度 + 流年 -->
+      <div class="form-row" style="margin-top:10px">
+        <div class="fg">
+          <label title="选择出生城市，自动填入真太阳时修正经度">出生城市（自动填经度）</label>
+          <select class="w-ct" id="fcity" onchange="onCityChange()">
+            <option value="">— 选择城市 —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label title="东经度数，用于真太阳时修正，可不填">经度（可选）</label>
+          <input class="w-lo" type="number" id="flo" placeholder="如 120.3" step="0.1">
+        </div>
+        <div class="fg">
+          <label title="启用后按真太阳时修正计算（需填入经度）">真太阳时</label>
+          <input type="checkbox" id="fsolar" title="启用真太阳时修正">
+        </div>
+        <div class="fg">
+          <label title="不填默认当年">流年</label>
+          <input class="w-ln" type="number" id="fln" placeholder="今年">
+        </div>
+      </div>
     </div>
   </div>
 </div>
-<div class="status" id="st"></div>
-<div class="croute hid" id="cr">
-  <div class="info-hdr" id="ih"></div>
-  <div class="pgrid-scroll"><div class="pgrid" id="pg"></div></div>
+
+<!-- ═══ 历史记录 ══════════════════════════════════════════════ -->
+<div class="hist-bar" id="hbar">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0 2px">
+    <span style="font-size:.73rem;color:var(--muted);letter-spacing:.04em">最近5次排盘记录（仅存在本设备）</span>
+    <button class="btn-sm" style="font-size:.67rem;padding:2px 8px" onclick="clearAllHist()">清除全部</button>
+  </div>
+  <div class="hist-list" id="hlist"></div>
 </div>
-<div class="awrap hid" id="aw">
-  <div class="acard">
-    <h2>命盘解读</h2>
-    <div class="atabs" id="at"></div>
-    <div id="ab"></div>
+
+<!-- ═══ 状态栏 ════════════════════════════════════════════════ -->
+<div class="status" id="st">
+  <span class="spin" id="sp"></span>
+  <span id="st-txt"></span>
+</div>
+
+<!-- ═══ 工具栏 ═══════════════════════════════════════════════ -->
+<div class="tool-bar" id="tbar">
+  <!-- A 核心分析 -->
+  <button class="btn-sm" onclick="openReviewPanel()" id="review-btn" title="提交当前命盘进入审核队列 / 查看审核列表">📋 审核</button>
+  <button class="btn-sm" onclick="openLlmPanel()" id="llm-btn" title="AI 草稿：调用 LLM 生成命盘解读草稿，需专家复核">🤖 AI草稿</button>
+  <button class="btn-sm" onclick="openAbPanel()" id="ab-btn" title="A/B 实验管理：创建实验、分配变体、查看结果">🧪 A/B</button>
+  <button class="btn-sm" onclick="openSimSearchPanel()" id="sim-search-btn" title="相似盘检索：从已索引命盘中查找相似度最高的历史盘">🔍 相似盘</button>
+  <!-- 组间分隔符 A→B -->
+  <span class="tbtn-sep"></span>
+  <!-- B 推算工具 -->
+  <button class="btn-sm" onclick="openZeriPanel()" id="zeri-btn" title="择日推荐：根据命盘为指定月份推荐吉日">📅 择日</button>
+  <button class="btn-sm" onclick="openFsPanel()" id="fs-btn" title="风水方位助手：居家布局方位建议（八宅派）">🧭 风水</button>
+  <button class="btn-sm" onclick="openBatchPanel()" id="batch-btn" title="批量上传 CSV，一次性排多张命盘并打包下载">📦 批量</button>
+  <button class="btn-sm" onclick="openSimPanel()" id="sim-btn" title="调整出生参数，快速对比两版命盘差异">⚖ 对比</button>
+  <button class="btn-sm" onclick="toggleCompat()" id="compat-btn" title="双人合盘：输入另一方信息进行合盘分析">⊕ 合盘</button>
+  <button class="btn-sm" onclick="toggleMultiCompat()" id="mcompat-btn" title="多人合盘：最多支持 4 人合盘分析">⊕ 多合盘</button>
+  <!-- 组间分隔符 B→C -->
+  <span class="tbtn-sep"></span>
+  <!-- C 数据管理 -->
+  <button class="btn-sm" onclick="openCasesPanel()" id="cases-btn" title="浏览案例库：查看已保存命盘并重新载入">📂 案例库</button>
+  <button class="btn-sm" onclick="saveChart()" id="save-chart-btn" title="保存当前命盘到案例库（需登录），同步更新相似盘索引">💾 保存</button>
+  <button class="btn-sm" onclick="openExportPanel()" id="export-btn" title="命盘导出：下载完整 JSON 数据包 / 元数据快照">📥 导出</button>
+  <button class="btn-sm" onclick="openStatsPanel()" id="stats-btn" title="全局统计面板：系统运营指标总览（需管理员）">📊 统计</button>
+  <button class="btn-sm" onclick="openConceptsPanel()" id="concepts-btn" title="命理概念文档：八字 / 紫微术语定义与全文检索">📚 概念</button>
+  <button class="btn-sm" onclick="shareLink()" id="sbtn" title="复制当前命盘分享链接">🔗 分享链接</button>
+  <button class="btn-sm" onclick="openShareCard()" id="share-btn" title="生成命盘摘要分享卡：格局 + 宫力 + 建议，可复制 HTML / 截图">🃏 分享卡</button>
+  <button class="btn-sm" onclick="window.print()" title="打印或另存为 PDF（含全部解读）">🖨 打印</button>
+  <button class="btn-sm" onclick="exportPNG()" title="导出命盘图片（高清 PNG，2× 分辨率）">🖼 截图</button>
+  <button class="btn-sm" id="note-toggle-btn" onclick="toggleNoteMode()" title="宫位笔记模式：点击任意宫格记录标注">📝 笔记</button>
+  <!-- 模式切换（排盘后显示） -->
+  <span class="tpl-grp" id="tpl-grp" style="display:none">
+    <span class="tbar-sep" style="margin-left:4px"></span>
+    <span class="tpl-lbl">模式：</span>
+    <button class="tpl-btn" data-tpl="simple" onclick="setTpl('simple')">简版</button>
+    <button class="tpl-btn act" data-tpl="standard" onclick="setTpl('standard')">标准版</button>
+    <button class="tpl-btn" data-tpl="pro" onclick="setTpl('pro')">专业版</button>
+  </span>
+</div>
+
+<!-- ═══ 命盘结果区 ════════════════════════════════════════════ -->
+<div class="wrap">
+  <div class="croute hid" id="cr">
+    <div class="info-hdr" id="ih"></div>
+    <div class="pgrid-wrap"><div class="pgrid" id="pg"></div></div>
+  </div>
+
+  <!-- ═══ 解读 Tab 区 ══════════════════════════════════════ -->
+  <div class="awrap hid" id="aw">
+    <div class="acard">
+      <h2>命盘解读</h2>
+      <div class="atabs" id="at"></div>
+      <div id="ab"></div>
+    </div>
   </div>
 </div>
-<script>
-const BP={5:{r:1,c:1},6:{r:1,c:2},7:{r:1,c:3},8:{r:1,c:4},
-  4:{r:2,c:1},9:{r:2,c:4},3:{r:3,c:1},10:{r:3,c:4},
-  2:{r:4,c:1},1:{r:4,c:2},0:{r:4,c:3},11:{r:4,c:4}};
-const CP={5:'东南',6:'正南',7:'南偏西',8:'西南',4:'正东',9:'正西',3:'东偏北',10:'西偏北',2:'东北',1:'正北偏东',0:'正北',11:'西北'};
-const MS=new Set(['紫微','天机','太阳','武曲','天同','廉贞','天府','太阴','贪狼','巨门','天相','天梁','七杀','破军']);
-const SS=new Set(['擎羊','陀罗','火星','铃星','地空','地劫']);
-const JS=new Set(['文昌','文曲','天魁','天钺','左辅','右弼']);
-const JC={'水二局':'jw','木三局':'jwo','金四局':'jme','土五局':'jea','火六局':'jfi'};
-const BRANCHES='子丑寅卯辰巳午未申酉戌亥';
-const DIMS={感情:'💕',财运:'💰',事业:'💼',健康:'🏥'};
-const HUACSS={化禄:'flu',化权:'fqu',化科:'fke',化忌:'fji'};
 
-function bi(b){return BRANCHES.indexOf(b)}
-function sc(n){return MS.has(n)?'main':SS.has(n)?'sha':JS.has(n)?'ji':'aux'}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function st(msg,e=false){const el=document.getElementById('st');el.textContent=msg;el.className='status'+(e?' err':'')}
-function scoreClass(s){return s>=75?'hi':s>=55?'md':'lo'}
+<!-- ═══ 页脚 ═════════════════════════════════════════════════ -->
 
-async function go(){
-  const body={year:+document.getElementById('fy').value,month:+document.getElementById('fm').value,
-    day:+document.getElementById('fd').value,hour:+document.getElementById('fh').value,
-    minute:+document.getElementById('fmin').value,gender:document.getElementById('fgender').value};
-  const ln=document.getElementById('fln').value;if(ln)body.liunian_year=+ln;
-  const lo=document.getElementById('flo').value;if(lo)body.longitude=+lo;
-  st('排盘计算中…');
-  try{const r=await fetch('/api/v1/ziwei/full',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!r.ok){const e=await r.json();throw new Error(e.detail||r.statusText)}
-    render(await r.json());st('')}catch(e){st('错误: '+e.message,true)}
-}
-async function demo(){
-  st('加载演示盘…');
-  try{const r=await fetch('/api/v1/ziwei/demo');if(!r.ok)throw new Error('失败');
-    const d=await r.json();
-    document.getElementById('fy').value=2002;document.getElementById('fm').value=3;
-    document.getElementById('fd').value=13;document.getElementById('fh').value=14;
-    document.getElementById('fmin').value=55;document.getElementById('fgender').value='女';
-    render(d);st('')}catch(e){st('演示错误: '+e.message,true)}
-}
+<!-- ═══ 合盘区（默认隐藏）══════════════════════════════════ -->
+<div class="wrap" id="compat-wrap" style="display:none">
+  <div class="card" style="margin:16px 0 8px">
+    <div class="sec-title">☯ 合盘 · 第二人出生信息</div>
+    <div class="form-row">
+      <div class="fg"><label>出生年</label><input class="w-yr" type="number" id="by" value="1998" min="1900" max="2100"></div>
+      <div class="fg"><label>月</label><input class="w-mo" type="number" id="bm" value="6" min="1" max="12"></div>
+      <div class="fg"><label>日</label><input class="w-dy" type="number" id="bd" value="1" min="1" max="31"></div>
+      <div class="fg"><label>时(24h)</label><input class="w-hr" type="number" id="bh" value="10" min="0" max="23"></div>
+      <div class="fg"><label>分</label><input class="w-mn" type="number" id="bmin" value="0" min="0" max="59"></div>
+      <div class="fg"><label>性别</label>
+        <select class="w-gen" id="bgender">
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="goCompat()">计算六合度</button>
+    </div>
+    <div class="form-row" style="margin-top:10px">
+      <div class="fg">
+        <label>出生城市（自动填经度）</label>
+        <select class="w-ct" id="bcity" onchange="onBCityChange()"><option value="">— 选择城市 —</option></select>
+      </div>
+      <div class="fg">
+        <label>经度（可选）</label>
+        <input class="w-lo" type="number" id="blo" placeholder="如 121.5" step="0.1">
+      </div>
+    </div>
+    <div id="compat-err" style="font-size:.8rem;color:#991b1b;margin-top:6px;display:none"></div>
+  </div>
+</div>
+<!-- 合盘结果 -->
+<div class="wrap" id="compat-result" style="display:none">
+  <div class="card" style="margin-bottom:24px">
+    <div id="compat-content"></div>
+  </div>
+</div>
 
-function render(data){
-  const{lunar,life_palace_gz,body_palace_gz,wuxing_ju_name,dayun,liunian,gender}=data;
-  const life_ruler_star=data.life_ruler_star||'',body_ruler_star=data.body_ruler_star||'',true_solar_time=data.true_solar_time||'';
-  const jc=JC[wuxing_ju_name]||'';
-  const curY=liunian?liunian.year:new Date().getFullYear();
-  let curD=null;
-  if(dayun&&dayun.items)for(const d of dayun.items)if(curY>=d.start_year&&curY<d.start_year+10){curD=d;break}
+<!-- ═══ 多人合盘区（默认隐藏）══════════════════════════════════ -->
+<div class="wrap" id="mcompat-wrap" style="display:none">
+  <div class="card" style="margin:16px 0 8px">
+    <div class="sec-title">☯ 多人合盘 · 2–4人缘分矩阵</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">输入 2 至 4 人出生信息，计算所有两两组合六合度，并生成缘分矩阵与团队和谐指数。</div>
+    <div id="mcompat-persons">
+      <!-- 人员表单由 JS 动态生成 -->
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn-sm" onclick="addMCompatPerson()" id="mcompat-add-btn">＋ 添加第三人</button>
+      <button class="btn" onclick="goMultiCompat()">计算缘分矩阵</button>
+    </div>
+    <div id="mcompat-err" style="font-size:.8rem;color:#991b1b;margin-top:6px;display:none"></div>
+  </div>
+</div>
+<!-- 多人合盘结果 -->
+<div class="wrap" id="mcompat-result" style="display:none">
+  <div class="card" style="margin-bottom:24px">
+    <div id="mcompat-content"></div>
+  </div>
+</div>
+<footer class="footer">
+  紫微斗数推演系统 &nbsp;|&nbsp; 传统命理仅供参考，不作为任何决策依据
+</footer>
 
-  // ── 信息头栏 ─────────────────────────
-  let ihh=`
-    <div class="kv"><span class="k">公历</span><span class="v">${data.birth_solar.replace('T',' ')}</span></div>
-    <div class="kv"><span class="k">性别</span><span class="v">${gender}</span></div>
-    <div class="kv"><span class="k">农历</span><span class="v">${lunar.year_gz}年${lunar.is_leap_month?'<span class="blife" style="font-size:.52rem;padding:1px 3px;margin:0 2px">闰</span>':''}${lunar.lunar_month}月${lunar.lunar_day}日${lunar.hour_branch}时</span></div>
-    <div class="kv"><span class="k">命宫</span><span class="v">${life_palace_gz}</span></div>
-    <div class="kv"><span class="k">身宫</span><span class="v">${body_palace_gz}</span></div>
-    <div class="kv"><span class="k">五行局</span><span class="wbadge ${jc}">${wuxing_ju_name}</span></div>`;
-  if(life_ruler_star)ihh+=`<div class="kv"><span class="k">命主</span><span class="v">${life_ruler_star}</span></div>`;
-  if(body_ruler_star)ihh+=`<div class="kv"><span class="k">身主</span><span class="v">${body_ruler_star}</span></div>`;
-  if(curD)ihh+=`<div class="kv"><span class="k">当前大运</span><span class="v">${curD.ganzhi}(${curD.start_age}岁)</span></div>`;
-  if(true_solar_time)ihh+=`<div class="kv"><span class="k">真太阳时</span><span class="v">${true_solar_time}</span></div>`;
-  document.getElementById('ih').innerHTML=ihh;
+<!-- ═══ JavaScript ════════════════════════════════════════════ -->
+<script src="/static/js/auth.js?v=20260324"></script>
+<script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js" integrity="sha384-W/1Fp/LgAYO/oTn9Gs+PbeWuMuq1eQCnUMPCeg8POmMYchhzxctjEqtbiCIxDOON" crossorigin="anonymous"></script>
+<!-- ziwei 模块（P3 拆分，按依赖顺序加载） -->
+<script src="/static/js/ziwei/constants.js?v=20260324"></script>
+<script src="/static/js/ziwei/render.js?v=20260324"></script>
+<script src="/static/js/ziwei/analysis.js?v=20260324"></script>
+<script src="/static/js/ziwei/export-cases.js?v=20260324"></script>
+<script src="/static/js/ziwei/compat.js?v=20260324"></script>
+<script src="/static/js/ziwei/glossary.js?v=20260324"></script>
+<script src="/static/js/ziwei/charts-svg.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-review.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-review-ext.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-llm.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-zeri-export.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-fengshui.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-life-share.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-stats-ab.js?v=20260324"></script>
+<script src="/static/js/ziwei/panel-sim-concepts.js?v=20260324"></script>
+<script src="/static/js/ziwei/main.js?v=20260324"></script>
+<script src="/static/js/ziwei/vue-panels.js?v=20260324"></script>
 
-  // ── 宫位格盘 ─────────────────────────
-  const g=document.getElementById('pg');g.innerHTML='';
-  const bodyB=body_palace_gz.slice(-1);
-  const lnLifeB=liunian?liunian.life_palace_branch:-1;
-  for(const p of data.palaces){
-    const bid=bi(p.branch);const pos=BP[bid];if(!pos)continue;
-    const c=document.createElement('div');c.className='pal';
-    c.style.gridColumn=pos.c;c.style.gridRow=pos.r;
-    const isL=(p.name==='命宫'),isB=(p.branch===bodyB),isLN=(lnLifeB>=0&&bid===lnLifeB);
-    let h=`<div class="pname">${p.name}`;
-    if(isL)h+=` <span class="blife">命</span>`;
-    if(isB)h+=` <span class="bbody">身</span>`;
-    if(isLN)h+=` <span class="bln">年</span>`;
-    h+=`</div><div class="db">${p.stem}${p.branch}</div><div class="stars">`;
-    for(const s of p.main_stars){
-      const sia=s.transforms&&s.transforms.length?s.transforms.map(t=>`<span class="shan">${t}</span>`).join(''):'';
-      const _bv=(typeof s.brightness_val==='number'&&MS.has(s.name))?s.brightness_val:0;
-      const _bs=_bv>0?`<span style="font-size:.5rem;color:#c9963a;letter-spacing:-1px;vertical-align:middle;margin-right:1px" title="${s.brightness}">${'★'.repeat(_bv)}</span>`:'';
-      h+=`<div class="sl">${_bs}<span class="sn ${sc(s.name)}">${s.name}</span><span class="sbr">${s.brightness}</span>${sia}</div>`;
-    }
-    for(const ax of p.aux_stars){
-      h+=`<div class="sl"><span class="sn ${sc(ax)}" style="font-size:.7rem">${ax}</span></div>`;
-    }
-    h+=`</div>`;
-    if(p.xiaoxian_ages&&p.xiaoxian_ages.length)h+=`<div class="xage">${p.xiaoxian_ages.join('·')}岁</div>`;
-    h+=`<div class="compass">${CP[bid]||''}</div>`;
-    c.innerHTML=h;
-    if(p.tooltip)c.title=p.tooltip;
-    g.appendChild(c);
-  }
+<!-- 宫位笔记弹窗 -->
+<div id="note-overlay" onclick="closeNoteModal()"></div>
+<div id="note-modal" style="display:none">
+  <h4 id="note-modal-title">笔记</h4>
+  <textarea id="note-ta" placeholder="输入对此宫位的个人笔记、感悟或备居记录…"></textarea>
+  <div class="note-btns">
+    <button class="note-del" onclick="delNote()">删除笔记</button>
+    <button class="note-save" onclick="saveNote()">保存</button>
+  </div>
+</div>
+<!-- 星曜详情弹窗 -->
+<div id="star-overlay" onclick="closeStarInfo()"></div>
+<div id="star-modal" style="display:none"></div>
+<!-- 词汇表浮动按钮 -->
+<button id="gloss-fab" onclick="toggleGloss()" title="紫微词汇表">📖</button>
+<!-- 词汇表遮罩 -->
+<div id="gloss-overlay" onclick="closeGloss()"></div>
+<!-- ═══ §6 批量排盘面板 ══════════════════════════════════════ -->
+<div id="batch-panel" onclick="if(event.target===this)closeBatchPanel()">
+  <div class="batch-modal">
+    <div class="batch-hdr">
+      <h3>📦 批量排盘</h3>
+      <button class="batch-close" onclick="closeBatchPanel()">✕</button>
+    </div>
+    <div class="batch-body">
+      <div class="batch-tip">
+        上传 CSV 文件，每行一人，自动生成所有命盘并打包下载。<br>
+        <strong>必填列：</strong><code>name,year,month,day,hour,minute,gender</code><br>
+        <strong>可选列：</strong><code>liunian_year</code>、<code>longitude</code><br>
+        <strong>示例：</strong><code>张三,1990,5,20,8,30,男</code>（最多 200 行）
+        <br><a id="batch-sample-link" href="#" onclick="batchDownloadSample(); return false;" style="color:var(--accent);font-size:.7rem">📥 下载示例 CSV</a>
+      </div>
+      <div class="batch-drop" id="batch-drop"
+           onclick="document.getElementById('batch-file').click()"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="event.preventDefault();this.classList.remove('drag-over');batchFileSelected(null,event.dataTransfer.files[0])">
+        <input type="file" id="batch-file" accept=".csv,text/csv" onchange="batchFileSelected(this)">
+        <div id="batch-drop-label">📄 点击或拖放 CSV 文件至此</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="batch-run-btn" id="batch-run-btn" onclick="runBatch()" disabled>🚀 开始批量排盘</button>
+        <span id="batch-status" style="font-size:.78rem;color:var(--muted)"></span>
+      </div>
+      <div id="batch-progress-area"></div>
+      <div id="batch-result-area"></div>
+    </div>
+  </div>
+</div>
+<!-- ═══ §5 快速模拟对比面板 ══════════════════════════════════ -->
+<div id="sim-panel" onclick="if(event.target===this)closeSimPanel()">
+  <div class="sim-modal">
+    <div class="sim-hdr">
+      <h3>⚖ 快速模拟对比</h3>
+      <span style="font-size:.77rem;color:var(--muted)">调整参数后点击「开始对比」，查看两版命盘的差异</span>
+      <button class="sim-close" onclick="closeSimPanel()">✕</button>
+    </div>
+    <div class="sim-body">
+      <!-- 对比参数输入 -->
+      <div style="font-size:.8rem;font-weight:700">🔧 模拟参数（在原始出生数据基础上调整）</div>
+      <div class="sim-inputs">
+        <div class="sim-fg"><label>年</label><input type="number" id="sim-fy" min="1900" max="2100"></div>
+        <div class="sim-fg"><label>月</label><input type="number" id="sim-fm" min="1" max="12"></div>
+        <div class="sim-fg"><label>日</label><input type="number" id="sim-fd" min="1" max="31"></div>
+        <div class="sim-fg"><label>时(24h)</label><input type="number" id="sim-fh" min="0" max="23"></div>
+        <div class="sim-fg"><label>分</label><input type="number" id="sim-fmin" min="0" max="59"></div>
+        <div class="sim-fg"><label>性别</label><select id="sim-fgender"><option value="女">女</option><option value="男">男</option></select></div>
+        <div class="sim-fg"><label>流年</label><input type="number" id="sim-fln" min="1" max="2200" placeholder="可选"></div>
+        <div class="sim-fg"><label>经度</label><input type="number" id="sim-flo" step="0.1" placeholder="可选"></div>
+      </div>
+      <div class="sim-run-row">
+        <button class="sim-run-btn" onclick="runSim()">🔍 开始对比</button>
+        <span id="sim-status" style="font-size:.78rem;color:var(--muted)"></span>
+      </div>
+      <div id="sim-result-area"></div>
+    </div>
+  </div>
+</div>
 
-  // ── 中宫 ─────────────────────────────
-  const ctr=document.createElement('div');ctr.className='pcenter';
-  ctr.style.gridColumn='2/4';ctr.style.gridRow='2/4';
-  let dyh='';
-  if(dayun&&dayun.items){
-    const dir=dayun.forward?'顺行':'逆行';
-    dyh=`<div class="cs"><h3>大运（${dir}·起运${dayun.start_age}岁）</h3><div class="dylist">`;
-    for(const d of dayun.items)dyh+=`<div class="dyi${curD&&d.index===curD.index?' cur':''}" title="${d.start_year}年起">${d.ganzhi}<br><small>${d.start_age}岁</small></div>`;
-    dyh+=`</div></div>`;
-  }
-  let lnh='';
-  if(liunian){
-    const sia=Object.entries(liunian.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' · ');
-    lnh=`<div class="cs"><h3>流年 ${liunian.year_gz}(${liunian.year}年)</h3><div class="lnrow">${sia||'—'}</div></div>`;
-  }
-  let lyh='';
-  if(data.liuyue&&data.liuyue.length){
-    const today=new Date(),todayM=today.getMonth()+1,lnY=liunian?liunian.year:today.getFullYear();
-    lyh=`<div class="cs"><h3>流月一览</h3><div class="lylist">`;
-    for(const lm of data.liuyue){
-      const isCM=(lnY===today.getFullYear()&&lm.month===todayM);
-      lyh+=`<div class="lyi${isCM?' cur':''}" title="${lm.palace_name}·${lm.month_gz}">${lm.month_name}</div>`;
-    }
-    lyh+=`</div></div>`;
-  }
-  const rulerLine=life_ruler_star?`<br>命主：<b>${life_ruler_star}</b>　身主：<b>${body_ruler_star}</b>`:'';
-  ctr.innerHTML=`<div class="ct">命盘中宫</div>
-    <div class="cs"><h3>命盘信息</h3>
-      <div style="font-size:.82rem;line-height:1.9">命宫：<b>${life_palace_gz}</b>　身宫：<b>${body_palace_gz}</b>　<span class="wbadge ${jc}">${wuxing_ju_name}</span>${rulerLine}</div>
-    </div>${dyh}${lnh}${lyh}`;
-  g.appendChild(ctr);
-  document.getElementById('cr').classList.remove('hid');
-  renderAna(data);
-}
+<!-- ═══ §3 审核面板 ═══════════════════════════════════════════════ -->
+<div id="review-panel" onclick="if(event.target===this)closeReviewPanel()">
+  <div class="rv-modal">
+    <div class="rv-hdr">
+      <h3>📋 命盘审核控制台</h3>
+      <button class="rv-close" onclick="closeReviewPanel()">✕</button>
+    </div>
+    <div class="rv-toolbar">
+      <button class="rv-filter-btn act" data-rvf="all" onclick="rvFilter(this,'all')">全部</button>
+      <button class="rv-filter-btn" data-rvf="pending"  onclick="rvFilter(this,'pending')">待审 ⏳</button>
+      <button class="rv-filter-btn" data-rvf="approved" onclick="rvFilter(this,'approved')">已通过 ✅</button>
+      <button class="rv-filter-btn" data-rvf="rejected" onclick="rvFilter(this,'rejected')">已拒绝 ❌</button>
+      <button class="rv-filter-btn" data-rvf="revised"  onclick="rvFilter(this,'revised')">修订中 🔄</button>
+      <button class="btn-sm" style="margin-left:auto;font-size:.76rem;" onclick="rvSubmitCurrent()" id="rv-submit-btn">📤 提交当前命盘</button>
+    </div>
+    <!-- 搜索框 + CSV 导出 -->
+    <div class="rv-search-bar">
+      <input type="text" class="rv-search-input" id="rv-search"
+             placeholder="搜索命宫、五行局、审核员、格局、哈希…"
+             oninput="rvSearch(this.value)">
+      <button class="rv-export-btn" onclick="rvExportCsv()">📥 导出 CSV</button>
+    </div>
+    <!-- 统计卡片 -->
+    <div class="rv-stats-bar" id="rv-stats-bar">
+      <div class="rv-stat-card"><span class="rv-stat-num" id="rvs-total">—</span><span class="rv-stat-lbl">总计</span></div>
+      <div class="rv-stat-card"><span class="rv-stat-num" id="rvs-pending" style="color:#ca8a04">—</span><span class="rv-stat-lbl">待审</span></div>
+      <div class="rv-stat-card"><span class="rv-stat-num" id="rvs-approved" style="color:#16a34a">—</span><span class="rv-stat-lbl">已通过</span></div>
+      <div class="rv-stat-card"><span class="rv-stat-num" id="rvs-rejected" style="color:#dc2626">—</span><span class="rv-stat-lbl">已拒绝</span></div>
+      <div class="rv-stat-card"><span class="rv-stat-num" id="rvs-revised" style="color:#6366f1">—</span><span class="rv-stat-lbl">修订中</span></div>
+    </div>
+    <!-- 批量操作栏 -->
+    <div class="rv-bulk-bar" id="rv-bulk-bar">
+      <span class="rv-bulk-count" id="rv-bulk-count">已选 0 条</span>
+      <button class="rv-bulk-btn rvb-approve" onclick="rvBulkAct('approved')">批量通过</button>
+      <button class="rv-bulk-btn rvb-reject"  onclick="rvBulkAct('rejected')">批量拒绝</button>
+      <button class="rv-bulk-btn rvb-revise"  onclick="rvBulkAct('revised')">批量修订</button>
+      <button class="rv-bulk-btn rvb-delete"  onclick="rvBulkAct('delete')">批量删除</button>
+      <button class="btn-sm" style="margin-left:auto" onclick="rvClearSel()">取消选择</button>
+    </div>
+    <div class="rv-total" id="rv-total"></div>
+    <div id="review-list-cnt">
+      <table class="review-table">
+        <thead><tr>
+          <th><input type="checkbox" id="rv-chk-all" class="rv-sel-cb" onchange="rvToggleAll(this)" title="全选"></th>
+          <th>#</th><th>哈希</th><th>命宫</th><th>五行局</th><th>格局</th>
+          <th>状态</th><th>审核员</th><th>批注</th><th>提交时间</th><th>操作</th>
+        </tr></thead>
+        <tbody id="rv-tbody"></tbody>
+      </table>
+      <div id="rv-empty" style="display:none;padding:30px;text-align:center;color:var(--muted)">暂无记录</div>
+    </div>
+  </div>
+</div>
 
-function renderAna(data){
-  const aw=document.getElementById('aw');aw.classList.remove('hid');
-  const tds=[{id:'sum',l:'命盘摘要'},{id:'pal',l:'逐宫解读'},{id:'dy',l:'大运流月'},{id:'fly',l:'飞星分析'},{id:'fc',l:'运势预测'}];
-  document.getElementById('at').innerHTML=tds.map((t,i)=>
-    `<button class="tbtn${i===0?' act':''}" data-tid="${t.id}" onclick="swt('${t.id}')">${t.l}</button>`).join('');
+<!-- ═══ 审核操作内联模态 ══════════════════════════════════════ -->
+<div id="rv-act-dialog" onclick="if(event.target===this)rvActCancel()">
+  <div class="rv-act-modal">
+    <div class="rv-act-title" id="rv-act-title">提交审核操作</div>
+    <div class="rv-act-fg">
+      <label>审核员昵称（可留空）</label>
+      <input type="text" id="rv-act-reviewer" placeholder="例：admin" autocomplete="off"
+             onkeydown="if(event.key==='Enter')rvActConfirm()">
+    </div>
+    <div class="rv-act-fg">
+      <label id="rv-act-notes-lbl">备注说明（可留空）</label>
+      <textarea id="rv-act-notes" placeholder="请输入原因或备注…"></textarea>
+    </div>
+    <div class="rv-act-btns">
+      <button class="rv-act-cancel" onclick="rvActCancel()">取消</button>
+      <button class="rv-act-confirm" onclick="rvActConfirm()">确认</button>
+    </div>
+  </div>
+</div>
 
-  // ── 命盘摘要 ──────────────────────────
-  let h=`<div id="tc-sum" class="tc act"><div class="sumcard">${esc(data.summary||'')}</div>`;
-  if(data.analysis&&Object.keys(data.analysis).length){
-    h+=`<div style="margin-top:12px">`;
-    for(const[k,v]of Object.entries(data.analysis))if(v)h+=`<div class="pana"><h4>${esc(k)}</h4><p>${esc(v)}</p></div>`;
-    h+=`</div>`;
-  }
-  h+=`</div>`;
+<!-- ═══ §9 A/B 实验管理面板 ════════════════════════ -->
+<div id="ab-panel" onclick="if(event.target===this)closeAbPanel()">
+  <div class="ab-modal">
+    <div class="ab-hdr">
+      <h3>🧪 A/B 实验管理</h3>
+      <button class="ab-close" onclick="closeAbPanel()">✕</button>
+    </div>
+    <div class="ab-toolbar">
+      <button class="ab-status-btn act" data-abf="all" onclick="abFilter(this,'all')">全部</button>
+      <button class="ab-status-btn" data-abf="draft"     onclick="abFilter(this,'draft')">草稿</button>
+      <button class="ab-status-btn" data-abf="running"   onclick="abFilter(this,'running')">运行中</button>
+      <button class="ab-status-btn" data-abf="paused"    onclick="abFilter(this,'paused')">暂停</button>
+      <button class="ab-status-btn" data-abf="completed" onclick="abFilter(this,'completed')">已完成</button>
+      <button class="btn-sm" style="margin-left:auto;font-size:.76rem;" onclick="abShowCreateForm()">✚ 新建实验</button>
+    </div>
+    <div class="ab-body">
+      <!-- 新建实验表单 -->
+      <div class="ab-form" id="ab-create-form" style="display:none">
+        <div class="ab-form-title">➕ 创建新实验</div>
+        <div class="ab-form-row">
+          <div class="ab-fg">
+            <label>实验名称 *</label>
+            <input id="abn-name" type="text" placeholder="如：form-submit-btn-cta">
+          </div>
+          <div class="ab-fg">
+            <label>目标指标</label>
+            <select id="abn-metric">
+              <option value="chart_generated">排盘成功 (chart_generated)</option>
+              <option value="form_submitted">表单提交 (form_submitted)</option>
+              <option value="batch_uploaded">批量上传 (batch_uploaded)</option>
+              <option value="review_submitted">审核提交 (review_submitted)</option>
+            </select>
+          </div>
+        </div>
+        <div class="ab-form-row">
+          <div class="ab-fg">
+            <label>对照组权重 (control %)</label>
+            <input id="abn-weight-ctrl" type="number" value="50" min="1" max="99">
+          </div>
+          <div class="ab-fg">
+            <label>实验组权重 (variant_a %)</label>
+            <input id="abn-weight-va" type="number" value="50" min="1" max="99">
+          </div>
+        </div>
+        <div class="ab-form-row">
+          <div class="ab-fg">
+            <label>假设</label>
+            <input id="abn-hypothesis" type="text" placeholder="实验组转化率应高于对照组">
+          </div>
+          <div class="ab-fg">
+            <label>最小样本量</label>
+            <input id="abn-mss" type="number" value="100" min="1">
+          </div>
+        </div>
+        <div class="ab-fg">
+          <label>描述</label>
+          <input id="abn-desc" type="text" placeholder="实验目的综述（可留空）">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="ab-submit-btn" onclick="abCreateExperiment()">创建</button>
+          <button class="btn-sm" onclick="abHideCreateForm()">取消</button>
+        </div>
+      </div>
+      <!-- 实验列表 -->
+      <div class="ab-list" id="ab-list"><div class="ab-empty">加载中…</div></div>
+      <div class="ab-pagination" id="ab-pagination"></div>
+      <!-- 结果面板 -->
+      <div class="ab-results" id="ab-results">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="ab-results-title" id="ab-results-title">实验结果</span>
+          <button class="btn-sm" style="font-size:.72rem;" onclick="abHideResults()">关闭</button>
+        </div>
+        <div class="ab-results-note" id="ab-results-note"></div>
+        <div class="ab-variant-bar-wrap" id="ab-results-bars"></div>
+        <div class="ab-winner" id="ab-results-winner"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  // ── 逐宫解读 ──────────────────────────
-  h+=`<div id="tc-pal" class="tc">`;
-  for(const p of data.palaces){
-    if(!p.conclusion&&!p.analysis)continue;
-    h+=`<div class="pana"><h4>${p.name}·${p.stem}${p.branch}`;
-    if(p.opposition_name)h+=` <span style="font-size:.72rem;color:var(--muted);font-weight:400">│ 对宫：${p.opposition_name}</span>`;
-    h+=`</h4>`;
-    if(p.analysis_tags&&p.analysis_tags.length){
-      h+=`<div style="margin-bottom:5px">`;
-      for(const t of p.analysis_tags)h+=`<span class="atag">${esc(t)}</span>`;
-      h+=`</div>`;
-    }
-    if(p.conclusion){
-      h+=`<div class="pca-c"><span class="lbl">结论</span>${esc(p.conclusion)}</div>`;
-    }
-    if(p.explanation){
-      h+=`<details class="pca-d" open><summary>详细解释 ▸</summary>`;
-      h+=`<div class="pca-exp">${esc(p.explanation)}</div>`;
-      if(p.suggestion)h+=`<div class="pca-sug"><span class="lbl">💡 建议</span>${esc(p.suggestion)}</div>`;
-      h+=`</details>`;
-    } else if(p.analysis){
-      h+=`<p style="font-size:.83rem;line-height:1.7">${esc(p.analysis)}</p>`;
-    }
-    h+=`</div>`;
-  }
-  h+=`</div>`;
+<!-- ═══ §11 相似盘检索面板 ═══════════════════ -->
+<div id="sim-search-panel" onclick="if(event.target===this)closeSimSearchPanel()">
+  <div class="sim-modal">
+    <div class="sim-hdr">
+      <h3>🔍 相似命盘检索</h3>
+      <span class="sim-count-badge" id="sim-count-badge"></span>
+      <button class="sim-close" onclick="closeSimSearchPanel()">✕</button>
+    </div>
+    <div class="sim-body">
+      <div class="sim-query-box" id="sim-query-box">请先在主界面排盘再打开此面板。</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button onclick="simDoSearch()" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 18px;font-size:.83rem;font-weight:600;cursor:pointer">🔍 查找相似盘</button>
+        <button onclick="simIndexCurrent()" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px 14px;font-size:.8rem;cursor:pointer;color:var(--text)">⬆ 将当前命盘入库</button>
+        <span id="sim-status" style="font-size:.77rem;color:var(--muted)"></span>
+      </div>
+      <div class="sim-index-tip">&#9432; 相似度基于命宫地支、五行局、性别、出生年类型及格局分布等 21 维特征向量计算。“将当前命盘入库”后可为未来索引提供参考。</div>
+      <div class="sim-results-list" id="sim-results-list">
+        <div class="sim-empty">点击「查找相似盘」开始检索。</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  // ── 大运流月 ──────────────────────────
-  const curY2=data.liunian?data.liunian.year:new Date().getFullYear();
-  h+=`<div id="tc-dy" class="tc">`;
-  h+=`<div class="fc-divider">大运列表</div>`;
-  h+=`<table class="ftable"><tr><th>#</th><th>干支</th><th>年龄</th><th>起运年</th><th>大运四化</th><th>博士十二流曜</th></tr>`;
-  if(data.dayun&&data.dayun.items)for(const d of data.dayun.items){
-    const ic=curY2>=d.start_year&&curY2<d.start_year+10;
-    const siaStr=Object.entries(d.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' ');
-    const boshiStr=Object.entries(d.boshi_stars||{}).map(([sn,bz])=>`${sn}(${bz})`).join(' ');
-    h+=`<tr${ic?' class="tr-cur"':''}><td>${d.index}</td><td><b>${d.ganzhi}</b></td><td>${d.start_age}–${d.end_age}岁</td><td>${d.start_year}</td><td style="font-size:.75rem">${siaStr||'—'}</td><td style="font-size:.7rem;color:var(--muted)">${boshiStr||'—'}</td></tr>`;
-  }
-  h+=`</table>`;
-  if(data.liuyue&&data.liuyue.length){
-    const today2=new Date(),todayM2=today2.getMonth()+1,lnY2=data.liunian?data.liunian.year:today2.getFullYear();
-    h+=`<div class="fc-divider" style="margin-top:14px">流月一览（${lnY2}年）</div>`;
-    h+=`<table class="ftable"><tr><th>月</th><th>月名</th><th>干支</th><th>流月命宫</th><th>四化</th></tr>`;
-    for(const lm of data.liuyue){
-      const isCM=(lnY2===today2.getFullYear()&&lm.month===todayM2);
-      const msiaStr=Object.entries(lm.sihua||{}).map(([s,v])=>`<span class="${HUACSS[v]||''}">${s}${v}</span>`).join(' ');
-      h+=`<tr${isCM?' class="tr-cur"':''}><td>${lm.month}</td><td>${lm.month_name}</td><td>${lm.month_gz}</td><td>${lm.palace_name}</td><td style="font-size:.75rem">${msiaStr||'—'}</td></tr>`;
-    }
-    h+=`</table>`;
-  }
-  h+=`</div>`;
+<!-- ═══ §10 AI草稿面板 ════════════════════════════ -->
+<div id="llm-panel" onclick="if(event.target===this)closeLlmPanel()">
+  <div class="llm-modal">
+    <div class="llm-hdr">
+      <h3>🤖 AI 辅助解读</h3>
+      <span id="llm-provider-badge" class="llm-provider-badge mock">mock</span>
+      <button class="llm-close" onclick="closeLlmPanel()">✕</button>
+    </div>
+    <!-- 双Tab：紫微草稿 | 八字模块解读 -->
+    <div class="llm-tabs">
+      <button class="llm-tab act" data-tab="ziwei" onclick="switchLlmTab('ziwei',this)">紫微草稿</button>
+      <button class="llm-tab" data-tab="module" onclick="switchLlmTab('module',this)">八字模块解读</button>
+    </div>
+    <!-- Tab 1: 紫微草稿（原有内容） -->
+    <div id="llm-tab-ziwei" class="llm-body">
+      <!-- 当前命盘信息 & 生成操作 -->
+      <div class="llm-meta" id="llm-meta-box">请先在主界面排盘，再打开此面板生成 AI 解读草稿。</div>
+      <div class="llm-generate-row">
+        <button class="llm-gen-btn" id="llm-gen-btn" onclick="llmGenerateDraft()">⚡ 生成草稿（同步）</button>
+        <button class="llm-gen-btn" style="background:var(--muted)" id="llm-stream-btn" onclick="llmStreamDraft()">🌊 流式生成</button>
+        <span id="llm-gen-status" style="font-size:.77rem;color:var(--muted)"></span>
+      </div>
+      <!-- 流式输出区 -->
+      <div class="llm-stream-box" id="llm-stream-box"></div>
+      <!-- 草稿审核操作栏 -->
+      <div class="llm-draft-actions llm-draft-actions hid" id="llm-current-actions">
+        <span class="llm-status-tag pending_review" id="llm-current-status-tag">待审核</span>
+        <span id="llm-current-draft-id" style="display:none"></span>
+        <button class="llm-approve-btn" onclick="llmReviewCurrentDraft('approved')">✔ 通过</button>
+        <button class="llm-reject-btn"  onclick="llmReviewCurrentDraft('rejected')">✘ 驳回</button>
+        <button class="llm-copy-btn"    onclick="llmCopyCurrentDraft()">📋 复制</button>
+      </div>
+      <div class="llm-disclaimer" id="llm-disclaimer" style="display:none">
+        ⚠ 以上内容由 AI 辅助生成，仅供参考，不构成专业建议。请由持证命理师审核后方可对外输出。
+      </div>
+      <!-- 草稿列表 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+        <span style="font-size:.82rem;font-weight:600">历史草稿</span>
+        <div style="display:flex;gap:6px">
+          <select id="llm-list-status" onchange="llmLoadDrafts()" style="font-size:.74rem;padding:2px 6px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text)">
+            <option value="">全部</option>
+            <option value="pending_review" selected>待审核</option>
+            <option value="approved">已通过</option>
+            <option value="rejected">已驳回</option>
+          </select>
+          <button onclick="llmLoadDrafts()" style="font-size:.74rem;padding:2px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--text)">刷新</button>
+        </div>
+      </div>
+      <div class="llm-drafts-list" id="llm-drafts-list">
+        <div style="text-align:center;color:var(--muted);font-size:.8rem;padding:16px">加载中…</div>
+      </div>
+      <div id="llm-drafts-empty" style="display:none;text-align:center;color:var(--muted);font-size:.8rem;padding:16px">暂无草稿</div>
+    </div>
+    <!-- Tab 2: 八字模块解读（Vue 3 App） -->
+    <div id="llm-tab-module" class="llm-body" style="display:none">
+      <div id="llm-module-app-root"></div>
+    </div>
+  </div>
+</div>
 
-  // ── 飞星分析 ──────────────────────────
-  h+=`<div id="tc-fly" class="tc">`;
-  if(data.flying&&data.flying.palaces){
-    h+=`<div class="fc-divider">各宫飞出四化</div>`;
-    h+=`<table class="ftable"><tr><th>宫位</th><th>宫干</th><th class="flu">化禄</th><th class="fqu">化权</th><th class="fke">化科</th><th class="fji">化忌</th><th>自化</th></tr>`;
-    for(const fp of data.flying.palaces){
-      const fo=fp.flying_out||{};
-      const stArr=fp.self_transforms&&fp.self_transforms.length?fp.self_transforms.join(' · '):'—';
-      h+=`<tr><td>${fp.palace_name}${fp.opposition_palace?`<br><span style="font-size:.7rem;color:var(--muted)">↔ ${fp.opposition_palace}</span>`:''}</td>`;
-      h+=`<td>${fp.stem_name}</td><td class="flu">${fo['化禄']||'—'}</td><td class="fqu">${fo['化权']||'—'}</td><td class="fke">${fo['化科']||'—'}</td><td class="fji">${fo['化忌']||'—'}</td>`;
-      h+=`<td style="font-size:.72rem;color:var(--muted)">${stArr}</td></tr>`;
-    }
-    h+=`</table>`;
-    if(data.flying.received&&Object.keys(data.flying.received).length){
-      h+=`<div class="fc-divider" style="margin-top:14px">各宫接收四化汇总</div>`;
-      h+=`<table class="ftable"><tr><th>宫位</th><th>接收的四化</th></tr>`;
-      for(const[pal,list]of Object.entries(data.flying.received)){
-        if(!list||!list.length)continue;
-        h+=`<tr><td>${pal}</td><td style="font-size:.75rem;line-height:1.8">${list.map(esc).join('　')}</td></tr>`;
-      }
-      h+=`</table>`;
-    }
-    if(data.flying.self_transforms&&data.flying.self_transforms.length){
-      h+=`<div class="fc-divider" style="margin-top:14px">全局自化列表</div>`;
-      h+=`<div style="font-size:.82rem;line-height:2;padding:6px 0">${data.flying.self_transforms.map(esc).join('　')}</div>`;
-    }
-    if(data.flying.chonged&&Object.keys(data.flying.chonged).length){
-      h+=`<div class="fc-divider" style="margin-top:14px">被对冲汇总（冲入）</div>`;
-      h+=`<table class="ftable"><tr><th>宫位</th><th>被冲的四化来源</th></tr>`;
-      for(const[pal,list]of Object.entries(data.flying.chonged)){
-        if(!list||!list.length)continue;
-        h+=`<tr><td>${pal}</td><td style="font-size:.75rem;line-height:1.8">${list.map(esc).join('　')}</td></tr>`;
-      }
-      h+=`</table>`;
-    }
-  }else{h+=`<p class="fc-empty">暂无飞星数据</p>`;}
-  h+=`</div>`;
+<!-- ═══ §13 择日推荐面板 ════════════════════════════════ -->
+<div id="zeri-panel" onclick="if(event.target===this)closeZeriPanel()">
+  <div class="zeri-modal">
+    <div class="zeri-hdr">
+      <h3>📅 择日推荐</h3>
+      <button class="zeri-close" onclick="closeZeriPanel()">✕</button>
+    </div>
+    <div class="zeri-body">
+      <div class="zeri-form-row">
+        <div class="zeri-form-field">
+          <label>年份</label>
+          <input type="number" id="zeri-year" min="2020" max="2035" value="2026" style="width:80px">
+        </div>
+        <div class="zeri-form-field">
+          <label>月份</label>
+          <select id="zeri-month">
+            <option value="1">1月</option><option value="2">2月</option><option value="3" selected>3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+        </div>
+        <div class="zeri-form-field">
+          <label>用途</label>
+          <select id="zeri-purpose">
+            <option value="general">通用</option>
+            <option value="marriage">婚嫁</option>
+            <option value="business">开业</option>
+            <option value="travel">出行</option>
+            <option value="move">搬家</option>
+            <option value="exam">考试</option>
+            <option value="sign">签约</option>
+          </select>
+        </div>
+        <button class="zeri-run-btn" onclick="zeriLoad()">查询</button>
+      </div>
+      <div id="zeri-result"><div class="zeri-loading">请输入参数后点击查询</div></div>
+    </div>
+  </div>
+</div>
 
-  // ── 运势预测 ──────────────────────────
-  h+=`<div id="tc-fc" class="tc">${renderForecastTab(data.forecast)}</div>`;
+<!-- ═══ §17 案例库浏览面板 ══════════════════════════════ -->
+<div id="cases-panel" onclick="if(event.target===this)closeCasesPanel()">
+  <div class="cases-modal">
+    <div class="cases-hdr">
+      <h3>📂 案例库</h3>
+      <span id="cases-count" style="font-size:.75rem;color:var(--muted)"></span>
+      <button class="cases-close" onclick="closeCasesPanel()" title="关闭">✕</button>
+    </div>
+    <div class="cases-search-row">
+      <input type="text" class="cases-search-input" id="cases-search"
+             placeholder="按姓名搜索…" oninput="_casesSearchTimer()">
+      <select class="cases-sort-sel" id="cases-sort" onchange="casesLoad(0)">
+        <option value="updated_at">最近更新</option>
+        <option value="created_at">创建时间</option>
+        <option value="name">姓名</option>
+      </select>
+      <button class="cases-pg-btn" onclick="casesLoad(0)" title="刷新">🔄</button>
+    </div>
+    <div class="cases-body" id="cases-body">
+      <div class="cases-empty">点击 🔄 刷新加载案例</div>
+    </div>
+    <div class="cases-footer">
+      <button class="cases-pg-btn" id="cases-prev-btn" disabled onclick="casesPage(-1)">‹ 上一页</button>
+      <span id="cases-page-info">—</span>
+      <button class="cases-pg-btn" id="cases-next-btn" disabled onclick="casesPage(1)">下一页 ›</button>
+      <span style="margin-left:auto" id="cases-total-info"></span>
+    </div>
+  </div>
+</div>
 
-  document.getElementById('ab').innerHTML=h;
-}
+<!-- ═══ §14 命盘导出面板 ════════════════════════════════ -->
+<div id="export-panel" onclick="if(event.target===this)closeExportPanel()">
+  <div class="export-modal">
+    <div class="export-hdr">
+      <h3>📥 命盘数据导出</h3>
+      <button class="export-close" onclick="closeExportPanel()">✕</button>
+    </div>
+    <div class="export-body">
+      <div class="export-card">
+        <h4>📦 完整数据包（JSON）</h4>
+        <p>包含命盘基本信息、最新快照、五行局等所有结构化数据，适合二次开发或存档备份。</p>
+        <div class="export-btn-row">
+          <a id="export-full-link" class="export-dl-btn primary" href="#" onclick="exportFull(event)">⬇ 下载 JSON</a>
+        </div>
+      </div>
+      <div class="export-card">
+        <h4>🔖 元数据快照</h4>
+        <p>仅含命盘输入参数（姓名、生日、城市等），体积小，适合快速存档或分享。</p>
+        <div class="export-btn-row">
+          <a id="export-meta-link" class="export-dl-btn secondary" href="#" onclick="exportMeta(event)">⬇ 下载元数据</a>
+        </div>
+      </div>
+        <div class="export-card" style="border-left: 3px solid #8b5cf6;">
+          <h4>📑 高级版打印报告 (PDF)</h4>
+          <p>通过云端渲染生成高保真 A4 排版命书，包含图文结构与品牌水印。（耗时较长）</p>
+          <div class="export-btn-row">
+            <a id="export-pdf-link" class="export-dl-btn primary" style="background:#8b5cf6" href="#" onclick="exportPDF(event)">🖨️ 服务器生成高保真 PDF</a>
+          </div>
+        </div>
 
-function swt(id){
-  document.querySelectorAll('.tbtn').forEach(b=>b.classList.toggle('act',b.dataset.tid===id));
-  ['sum','pal','dy','fly','fc'].forEach(t=>{const el=document.getElementById('tc-'+t);if(el)el.classList.toggle('act',t===id)});
-}
+      <p class="export-notice">注意：导出功能需要当前命盘已保存（有 Case ID）。如未保存请先点击「保存命盘」。</p>
+      <div id="export-status" style="font-size:.78rem;color:var(--muted);min-height:20px"></div>
+    </div>
+  </div>
+</div>
 
-function togMonth(i){
-  const el=document.getElementById('fc-mb-'+i),arr=document.getElementById('fc-arr-'+i);
-  if(el){el.classList.toggle('open');if(arr)arr.textContent=el.classList.contains('open')?'▼':'▶';}
-}
+<!-- ═══ §15 风水方位助手面板 ════════════════════════════ -->
+<div id="fs-panel" onclick="if(event.target===this)closeFsPanel()">
+  <div class="fs-modal">
+    <div class="fs-hdr">
+      <h3>🧭 风水方位助手</h3>
+      <button class="fs-close" onclick="closeFsPanel()">✕</button>
+    </div>
+    <div class="fs-body">
+      <div class="fs-form-row">
+        <div class="fs-form-field">
+          <label>出生年份</label>
+          <input type="number" id="fs-year" min="1900" max="2100" value="1990" style="width:90px">
+        </div>
+        <div class="fs-form-field">
+          <label>性别</label>
+          <select id="fs-gender"><option value="男">男</option><option value="女">女</option></select>
+        </div>
+        <div class="fs-form-field">
+          <label>房屋朝向（可选）</label>
+          <select id="fs-facing">
+            <option value="">不填</option>
+            <option value="N">北（N）</option><option value="NE">东北（NE）</option>
+            <option value="E">东（E）</option><option value="SE">东南（SE）</option>
+            <option value="S">南（S）</option><option value="SW">西南（SW）</option>
+            <option value="W">西（W）</option><option value="NW">西北（NW）</option>
+          </select>
+        </div>
+        <button class="fs-run-btn" onclick="fsLoad()">计算</button>
+      </div>
+      <div id="fs-result"><div class="zeri-loading">请输入参数后点击计算</div></div>
+    </div>
+  </div>
+</div>
 
-function fmtPeriod(pf,isCur){
-  let h=`<div class="fc-section${isCur?' fc-cur':''}">`;
-  h+=`<h3>${esc(pf.period)}（${esc(pf.ganzhi)}）<span class="fc-palace-tag">${esc(pf.palace_name)}</span> <span class="fc-score ${scoreClass(pf.score)}">${pf.score}分</span></h3>`;
-  h+=`<div class="fc-overall">${esc(pf.overall)}</div>`;
-  if(pf.events&&pf.events.length){
-    h+=`<div class="fc-tags">`;
-    for(const ev of pf.events)h+=`<span class="fc-tag lv-${esc(ev.level)}" title="${esc(ev.description)}（${esc(ev.source)}）">${esc(ev.category)}【${esc(ev.level)}】</span>`;
-    h+=`</div>`;
-  }
-  h+=`<div class="fc-grid">`;
-  for(const[k,v]of Object.entries(pf.details||{}))h+=`<div class="fc-dim"><b>${DIMS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
-  h+=`</div>`;
-  h+=`<div class="fc-advice">${esc(pf.advice)}</div>`;
-  h+=`</div>`;
-  return h;
-}
+<!-- ═══ §17 全局统计面板 ════════════════════════════════ -->
+<div id="stats-panel" onclick="if(event.target===this)closeStatsPanel()">
+  <div class="stats-modal">
+    <div class="stats-hdr">
+      <h3>📊 全局统计面板</h3>
+      <button class="stats-close" onclick="closeStatsPanel()">✕</button>
+    </div>
+    <div class="stats-body">
+      <div class="stats-refresh-row">
+        <button class="stats-refresh-btn" onclick="statsLoad()">&#x21bb; 刷新</button>
+        <span class="stats-ts" id="stats-ts">请点击刷新加载数据</span>
+      </div>
+      <div id="stats-content"><div class="zeri-loading">点击刷新加载统计数据</div></div>
+    </div>
+  </div>
+</div>
 
-function renderForecastTab(fc){
-  if(!fc)return`<p class="fc-empty">暂无运势数据，请先排盘</p>`;
-  const curPeriod=fc.current_month?fc.current_month.period:null;
-  let h='';
-  // 年运总览
-  h+=`<div class="fc-divider">🗓 ${fc.year}年 年运总览</div>`;
-  h+=fmtPeriod(fc.yearly,false);
-  // 本月高亮
-  if(fc.current_month){
-    h+=`<div class="fc-divider">📅 本月运势（${esc(fc.current_month.period)}）</div>`;
-    h+=fmtPeriod(fc.current_month,true);
-  }
-  // 十二流月折叠
-  h+=`<div class="fc-divider">📆 全年十二流月</div><div class="fc-months">`;
-  for(let i=0;i<fc.monthly.length;i++){
-    const m=fc.monthly[i];
-    const isCur=(curPeriod&&m.period===curPeriod);
-    const topEvs=m.events&&m.events.length?m.events.slice(0,3).map(e=>`<span class="fc-tag fc-tag-sm lv-${esc(e.level)}">${esc(e.category)}</span>`).join(''):'';
-    h+=`<div class="fc-month${isCur?' fc-cur':''}">`;
-    h+=`<div class="fc-mhdr" onclick="togMonth(${i})">`;
-    h+=`<span class="fc-arr" id="fc-arr-${i}">${isCur?'▼':'▶'}</span>`;
-    h+=`<span class="mn">${esc(m.period)}（${esc(m.ganzhi)}）<span class="fc-palace-tag">${esc(m.palace_name)}</span></span>`;
-    h+=`<span class="fc-tag-inline">${topEvs}</span>`;
-    h+=`<div class="fc-bar"><div class="fc-bar-fill" style="width:${m.score}%"></div></div>`;
-    h+=`<span class="ms">${m.score}分</span></div>`;
-    h+=`<div class="fc-mbody${isCur?' open':''}" id="fc-mb-${i}">`;
-    if(m.events&&m.events.length){
-      h+=`<div class="fc-tags" style="margin-bottom:7px">`;
-      for(const ev of m.events)h+=`<span class="fc-tag lv-${esc(ev.level)}" title="${esc(ev.description)}">${esc(ev.category)}【${esc(ev.level)}】</span>`;
-      h+=`</div>`;
-    }
-    h+=`<div class="fc-grid">`;
-    for(const[k,v]of Object.entries(m.details||{}))h+=`<div class="fc-dim"><b>${DIMS[k]||''} ${esc(k)}</b>${esc(v)}</div>`;
-    h+=`</div><div class="fc-advice">${esc(m.advice)}</div>`;
-    h+=`</div></div>`;
-  }
-  h+=`</div>`;
-  return h;
-}
-</script>
+<!-- html2canvas：命盘 PNG 截图导出 -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- ═══ §22 命盘摘要分享卡面板 ════════════════════════════ -->
+<div id="share-panel" onclick="if(event.target===this)closeShareCard()">
+  <div class="share-modal">
+    <div class="share-hdr">
+      <h3>🃏 命盘摘要分享卡</h3>
+      <button class="share-close" onclick="closeShareCard()">✕</button>
+    </div>
+    <div class="share-body">
+      <div id="share-card-preview">
+        <div style="text-align:center;color:var(--muted);font-size:.82rem;padding:20px">请先排盘再生成分享卡</div>
+      </div>
+      <div class="share-btn-row">
+        <button class="share-action-btn" onclick="copyShareHTML(this)">📋 复制 HTML</button>
+        <button class="share-action-btn sec" onclick="screenshotShareCard(this)">📷 截图 PNG</button>
+        <button class="share-action-btn sec" onclick="printShareCard()">🖨 打印 / PDF</button>
+      </div>
+      <div id="share-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 概念文档面板 -->
+<div id="concepts-panel" class="concepts-panel">
+  <div class="cpt-hdr">
+    <span class="cpt-hdr-title">📚 命理概念文档</span>
+    <span style="font-size:.7rem;color:var(--muted);margin-left:8px">八字 · 紫微斗数术语大全</span>
+    <button class="cpt-close" onclick="closeConceptsPanel()">✕</button>
+  </div>
+  <div id="concepts-app-root"></div>
+</div>
+<div id="concepts-overlay" onclick="closeConceptsPanel()"></div>
+<!-- 词汇表面板 -->
+<div id="gloss-panel">
+  <div class="gloss-hdr">
+    <span class="gloss-hdr-title">📖 紫微词汇表</span>
+    <button class="gloss-close" onclick="closeGloss()">✕</button>
+  </div>
+  <div id="gloss-cats" class="gloss-cats"></div>
+  <input id="gloss-search" type="text" placeholder="搜索词条或释义…（TF-IDF 全文检索）" oninput="filterGlossDebounced()">  
+  <div id="gloss-cnt" class="gloss-cnt"></div>
+  <div id="gloss-list" class="gloss-list"><div style="padding:30px;text-align:center;color:var(--muted)">点击右下角 📖 按钮加载词汇</div></div>
+</div>
 </body>
 </html>

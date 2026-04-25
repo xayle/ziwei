@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理后台 · 命理系统</title>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('legacy') === '1') return
+
+      const nextParams = new URLSearchParams(params)
+      nextParams.delete('legacy')
+      const query = nextParams.toString()
+      const target = `/static/app/admin${query ? `?${query}` : ''}${window.location.hash || ''}`
+
+      fetch('/static/app/index.html', { method: 'HEAD' })
+        .then((response) => {
+          if (response.ok) {
+            window.location.replace(target)
+          }
+        })
+        .catch(() => {
+          // SPA 不存在时继续留在 legacy 页面
+        })
+    })()
+  </script>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/base.css?v=20260324" />
+  <link rel="stylesheet" href="/static/css/admin.css?v=20260324" />
+</head>
+<body>
+  <div style="max-width:1200px;margin:12px auto 0;padding:0 16px;">
+    <div style="border:1px solid rgba(59,130,246,.25);background:#eff6ff;color:#1e3a8a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;">
+      当前页为兼容入口。若新版 SPA 可用，将优先自动跳转到
+      <a href="/static/app/admin" style="color:#1d4ed8;font-weight:600;">/static/app/admin</a>；
+      如需继续停留旧版，请使用
+      <a href="/static/admin.html?legacy=1" style="color:#1d4ed8;font-weight:600;">legacy 模式</a>。
+    </div>
+  </div>
+  <!-- ═══ 顶部导航 ═══ -->
+  <header class="admin-header">
+    <div class="wrap">
+      <div class="hdr-brand">
+        <span class="hdr-icon">⚙</span>
+        <span class="hdr-title">系统管理后台</span>
+      </div>
+      <nav class="hdr-nav">
+        <a href="/static/ziwei.html">紫微斗数</a>
+        <a href="/static/bazi.html">八字排盘</a>
+        <a href="/static/admin.html" class="active">管理后台</a>
+      </nav>
+      <div class="hdr-user" id="hdr-user">
+        <span id="hdr-username">未登录</span>
+        <button class="btn-logout" id="logout-btn" onclick="doLogout()" style="display:none">登出</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ 登录面板（未认证时显示） ═══ -->
+  <div id="login-panel" class="login-overlay">
+    <div class="login-box">
+      <div class="login-title">🔐 管理员登录</div>
+      <div class="form-group">
+        <label class="form-lbl">用户名 / Email</label>
+        <input type="text" id="login-user" class="form-ctrl" placeholder="admin" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label class="form-lbl">密码</label>
+        <input type="password" id="login-pass" class="form-ctrl" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div id="login-err" class="err-msg"></div>
+      <button class="btn-primary" onclick="doLogin()" style="margin-top:14px;width:100%">登录</button>
+    </div>
+  </div>
+
+  <!-- ═══ 主内容区 ═══ -->
+  <div id="admin-main" class="wrap" style="display:none">
+
+    <!-- Tab 导航 -->
+    <div class="adm-tabs">
+      <button class="adm-tab act" onclick="switchAdmTab('stats',this)">📊 系统统计</button>
+      <button class="adm-tab" onclick="switchAdmTab('events',this)">📅 事件统计</button>
+      <button class="adm-tab" onclick="switchAdmTab('glossary',this)">📖 词汇管理</button>
+      <button class="adm-tab" onclick="switchAdmTab('audit',this)">🔍 审计日志</button>
+      <button class="adm-tab" onclick="switchAdmTab('cases',this)">🗂 黄金案例</button>
+    </div>
+
+    <!-- Tab: 系统统计 -->
+    <div id="tab-stats" class="adm-tab-body">
+      <div class="sec-hdr">
+        <span>系统概览</span>
+        <button class="btn-reload" onclick="loadStats()">↺ 刷新</button>
+      </div>
+      <div id="stats-grid" class="stats-grid">
+        <div class="stat-loading">加载中…</div>
+      </div>
+      <div id="stats-extra" class="stats-extra"></div>
+    </div>
+
+    <!-- Tab: 事件统计 -->
+    <div id="tab-events" class="adm-tab-body" style="display:none">
+      <div class="sec-hdr">
+        <span>事件类型分布</span>
+        <button class="btn-reload" onclick="loadEventStats()">↺ 刷新</button>
+      </div>
+      <div id="events-stat-block"></div>
+      <hr class="divider" />
+      <div class="sec-hdr" style="margin-top:14px">
+        <span>事件列表</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="events-search" class="form-ctrl" style="width:160px" placeholder="搜索事件名…" oninput="loadEvents()" />
+          <button class="btn-reload" onclick="loadEvents()">查询</button>
+        </div>
+      </div>
+      <div id="events-list-block"></div>
+    </div>
+
+    <!-- Tab: 词汇管理 -->
+    <div id="tab-glossary" class="adm-tab-body" style="display:none">
+      <div class="sec-hdr">
+        <span>命理词汇管理</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="gloss-search" class="form-ctrl" style="width:180px" placeholder="搜索术语…" oninput="loadGlossary()" />
+          <button class="btn-reload" onclick="loadGlossary()">查询</button>
+        </div>
+      </div>
+      <div id="glossary-block"></div>
+      <div id="gloss-more-wrap" style="display:none">
+        <button class="load-more-btn" id="gloss-load-more" onclick="loadGlossary(true)">⬇ 加载更多词汇</button>
+      </div>
+    </div>
+
+    <!-- 词汇编辑模态框 -->
+    <div id="gloss-modal" class="adm-modal" style="display:none">
+      <div class="adm-modal-box">
+        <div class="adm-modal-hdr">
+          编辑词汇定义
+          <button class="modal-close" onclick="closeGlossModal()">✕</button>
+        </div>
+        <div class="adm-modal-body">
+          <div class="form-group">
+            <label class="form-lbl">术语</label>
+            <input type="text" id="edit-term" class="form-ctrl" readonly />
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">定义</label>
+            <textarea id="edit-def" class="form-ctrl" rows="4" style="resize:vertical"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-lbl">分类</label>
+            <input type="text" id="edit-cat" class="form-ctrl" />
+          </div>
+          <div id="gloss-edit-err" class="err-msg"></div>
+        </div>
+        <div class="adm-modal-footer">
+          <button class="btn-primary" onclick="saveGlossaryEdit()">保存</button>
+          <button class="btn-sec" onclick="closeGlossModal()">取消</button>
+        </div>
+      </div>
+    </div>
+    <div id="gloss-overlay" onclick="closeGlossModal()"></div>
+
+    <!-- Tab: 审计日志 -->
+    <div id="tab-audit" class="adm-tab-body" style="display:none">
+      <div class="sec-hdr">
+        <span id="audit-hdr-label">审计日志（最近 50 条）</span>
+        <button class="btn-reload" onclick="loadAuditLogs()">↺ 刷新</button>
+      </div>
+      <div id="audit-block"></div>
+      <div id="audit-more-wrap" style="display:none">
+        <button class="load-more-btn" id="audit-load-more" onclick="loadAuditLogs(true)">⬇ 加载更多审计日志</button>
+      </div>
+    </div>
+
+    <!-- Tab: 黄金案例 -->
+    <div id="tab-cases" class="adm-tab-body" style="display:none">
+      <div class="sec-hdr">
+        <span>八字黄金案例库</span>
+        <button class="btn-reload" onclick="loadGoldenCases()">↺ 刷新</button>
+      </div>
+      <div id="golden-cases-block"></div>
+    </div>
+
+  </div><!-- /admin-main -->
+
+  <!-- Toast 通知 -->
+  <div id="adm-toast" class="adm-toast"></div>
+
+  <script src="/static/js/auth.js?v=20260324"></script>
+  <script src="/static/js/admin/main.js?v=20260324"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+/* ═══════════════════════════════════════════════════════════════
+   base.css — 全站设计 Token 中枢
+   v1.0 · 2026-03-24 · 科技极简白底配色体系
+   所有页面 <head> 中最先引入本文件
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 核心 Token ─────────────────────────────────────────────── */
+:root {
+  /* 背景层 */
+  --bg:          #f0f4f8;
+  --surface:     #ffffff;
+  --surface-2:   #f8fafc;
+
+  /* 边框 */
+  --border:      #e1e7ef;
+  --border-md:   #c8d3e1;
+
+  /* 导航（纯实色，保证无障碍对比度） */
+  --hdr-bg:      #111827;
+  --hdr-fg:      #f9fafb;    /* 对白底 15:1 ✓ */
+  --hdr-fg-2:    #9ca3af;
+
+  /* 主强调色——琥珀 */
+  --accent:      #d97706;
+  --accent-dark: #b45309;    /* 白底 4.6:1 ✓ */
+  --accent-lt:   #fef3c7;
+  --accent-glow: rgba(217,119,6,.14);
+
+  /* 正文色（全部实色，WCAG AA 合规） */
+  --text:        #111827;    /* 16:1 ✓ */
+  --text-2:      #4b5563;    /* 5.9:1 ✓ */
+  --text-3:      #9ca3af;    /* 仅 14px+ 大字体使用 */
+
+  /* 语义色 */
+  --success-dark: #15803d;
+  --danger-dark:  #dc2626;
+  --info-dark:    #4f46e5;
+
+  /* 五行语义色 */
+  --wx-wood:  #16a34a;   /* 木·绿 */
+  --wx-fire:  #dc2626;   /* 火·赤 */
+  --wx-earth: #d97706;   /* 土·黄 */
+  --wx-metal: #64748b;   /* 金·银灰 */
+  --wx-water: #2563eb;   /* 水·蓝 */
+
+  /* 字体栈 */
+  --font-ui:   "Inter","Noto Sans SC","PingFang SC",-apple-system,sans-serif;
+  --font-cn:   "Noto Serif SC","STSong","SimSun",serif;
+  --font-mono: "JetBrains Mono","Consolas",monospace;
+
+  /* 字号 8 级 */
+  --fs-2xs: 0.625rem;   /* 10px */
+  --fs-xs:  0.75rem;    /* 12px */
+  --fs-sm:  0.8125rem;  /* 13px */
+  --fs-md:  0.875rem;   /* 14px  正文基准 */
+  --fs-lg:  1rem;       /* 16px */
+  --fs-xl:  1.125rem;   /* 18px */
+  --fs-2xl: 1.375rem;   /* 22px */
+  --fs-3xl: 1.75rem;    /* 28px */
+
+  /* 间距 */
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 20px;  --sp-6: 24px;  --sp-7: 28px;  --sp-8: 32px;
+
+  /* 阴影 */
+  --shadow:    0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.07);
+  --shadow-lg: 0 4px 8px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.12);
+
+  /* 圆角 / 容器 / 过渡 */
+  --radius:    10px;
+  --radius-sm: 6px;
+  --W:         960px;
+  --dur-fast:  0.12s;
+  --dur-mid:   0.2s;
+  --dur-slow:  0.35s;
+
+  /* ── 兼容别名（平滑衔接旧 CSS 文件中的变量名） ── */
+  --paper:     var(--surface);
+  --border-lt: var(--border);
+  --gold:      var(--accent);
+  --gold-lt:   var(--accent-lt);
+  --muted:     var(--text-2);
+  --tag-bg:    var(--accent-lt);
+  --accent2:   var(--info-dark);
+}
+
+/* ─── 全局重置与基础样式 ──────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-ui);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+a { color: var(--accent-dark); text-decoration: none; }
+a:hover { color: var(--accent); }
+
+::selection { background: var(--accent-lt); color: var(--text); }
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap { max-width: var(--W); margin: 0 auto; padding: 0 16px; }
+
+/* ─── 骨架屏 Shimmer 动画 ────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skel-line {
+  height: 14px;
+  border-radius: 4px;
+  margin: 8px 0;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 400px;
+  animation: shimmer 1.2s infinite;
+}
+
+.skel-box {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 400px;
+  animation: shimmer 1.2s infinite;
+}
