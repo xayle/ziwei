@@ -155,7 +155,7 @@ def create_event(body: EventCreateRequest, ...):
 | docker-compose-monitoring.yml | 100+ | Docker 容器编排配置 |
 | prometheus.yml | 70+ | Prometheus 采集配置 |
 | alerts.yml | 200+ | 告警规则定义 |
-| alertmanager.yml | 150+ | 告警路由和通知 |
+| alertmanager.yml | 150+ | 告警路由与分组 |
 
 #### 核心指标 (15+ 指标)
 

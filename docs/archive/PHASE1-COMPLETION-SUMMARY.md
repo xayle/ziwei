@@ -338,7 +338,7 @@ ls -lh /home/baziapp/backups/
 
 ✅ **告警工作**
 ```
-Prometheus告警 → AlertManager → 邮件/Slack ✓
+Prometheus告警 → AlertManager → Grafana / AlertManager UI ✓
 ```
 
 ---

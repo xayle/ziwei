@@ -225,7 +225,7 @@ pool_pre_ping = True # 连接前检查
 ##### 监控和告警 ✅
 
 - [x] Prometheus 完整配置
-- [x] AlertManager 邮件/Slack 设置
+- [x] AlertManager UI-only 路由配置
 - [x] 告警规则模板
 
 ##### 日志管理 ✅

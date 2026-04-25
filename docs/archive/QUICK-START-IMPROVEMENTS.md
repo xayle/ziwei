@@ -239,8 +239,8 @@ curl http://localhost:8000/health
 # 1. 检查 AlertManager 是否运行
 curl http://localhost:9093/-/healthy
 
-# 2. 在 AlertManager 中检查集成配置
-#    编辑 alertmanager.yml 中的接收器配置
+# 2. 在 AlertManager 中检查路由配置
+#    查看 alertmanager.yml 中的路由、分组和抑制规则
 
 # 3. 查看 Prometheus 中的告警状态
 #    访问 http://localhost:9090/alerts

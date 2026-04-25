@@ -247,12 +247,9 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 LOG_LEVEL=INFO
 LOG_FILE=/var/log/bazi/app.log
 
-# ===== 邮件告警配置 (可选) =====
-SMTP_SERVER=your_smtp_server
-SMTP_PORT=587
-SMTP_USER=your_email@example.com
-SMTP_PASSWORD=your_app_password
-ALERT_EMAIL=admin@example.com
+# ===== 告警查看配置 (可选) =====
+# 当前默认仅通过 Grafana / AlertManager UI 查看告警
+# 不配置 SMTP / Email / Slack 推送
 
 # ===== Sentry 错误追踪 (可选) =====
 SENTRY_DSN=your_sentry_dsn_if_configured
