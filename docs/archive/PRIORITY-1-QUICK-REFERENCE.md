@@ -181,41 +181,22 @@ docker-compose -f docker-compose-monitoring.yml ps
 
 ### Grafana / AlertManager 中看不到告警
 
-**问题**: 邮件未送达
+**问题**: Grafana / AlertManager UI 中看不到告警
 **原因**: 
-- Gmail App Password 不正确
-- SMTP 端口被防火墙阻止
-- 环境变量配置错误
+- Prometheus 未成功抓取目标
+- 告警规则未加载
+- AlertManager 路由未生效
 
 **解决**:
 ```bash
-# 检查 Grafana 日志
-docker logs baziservice_grafana | grep -i smtp
-
-# 验证 SMTP 连接
-telnet smtp.gmail.com 587
-
-# 重新生成 Google App Password
-# https://myaccount.google.com/security
-```
-
-### Slack 不收到告警
-
-**问题**: Slack 频道没有收到消息
-**原因**:
-- Webhook URL 错误
-- AlertManager 未配置 Slack
-- 告警规则未激活
-
-**解决**:
-```bash
-# 测试 Webhook
-curl -X POST -H 'Content-type: application/json' \
-  --data '{"text":"Test message"}' \
-  YOUR_WEBHOOK_URL
+# 检查 Prometheus 目标
+curl http://localhost:9090/api/v1/targets
 
 # 检查 AlertManager 日志
 docker logs baziservice_alertmanager
+
+# 检查 Grafana 日志
+docker logs baziservice_grafana
 ```
 
 ### Prometheus 无数据
@@ -251,8 +232,8 @@ docker logs baziservice_prometheus
 - [x] Prometheus 数据源已添加
 - [x] 仪表板已导入
 - [x] 所有面板显示数据
-- [x] Email 通知已配置且测试通过
-- [x] Slack 通知已配置且收到消息
+- [x] 未启用 Email 推送
+- [x] 未启用 Slack 推送
 - [x] 告警规则已激活
 
 ---
@@ -264,7 +245,7 @@ docker logs baziservice_prometheus
 1. **仪表板设置问题**
    → [GRAFANA-ALERTING-SETUP-GUIDE.md](GRAFANA-ALERTING-SETUP-GUIDE.md) Part 1
 
-2. **告警通知问题**
+2. **告警查看问题**
    → [GRAFANA-ALERTING-SETUP-GUIDE.md](GRAFANA-ALERTING-SETUP-GUIDE.md) Part 2
 
 3. **项目完整信息**

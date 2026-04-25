@@ -261,8 +261,8 @@ curl http://localhost:9093/-/healthy
    - 参考文档：[IMPROVEMENTS-IMPLEMENTATION-GUIDE.md](IMPROVEMENTS-IMPLEMENTATION-GUIDE.md#step-1-在-routersevents-py-中使用验证器)
 
 2. **配置告警规则** (可选)
-   - 编辑 `alertmanager.yml` 配置邮件或 Slack 通知
-   - 为关键告警配置自动寻呼
+    - 编辑 `alertmanager.yml` 调整路由、分组和抑制规则
+    - 在 Grafana / AlertManager UI 中验证告警流转
 
 3. **创建自定义仪表板** (可选)
    - 在 Grafana 中为业务指标创建自定义面板

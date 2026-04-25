@@ -400,7 +400,7 @@ All 18 tests passed in 0.14s ✅
 - 🟡 启动 docker-compose-monitoring.yml 以获得完整监控
 
 ### 长期优化
-- 💡 为 Prometheus 配置邮件或 Slack 通知
+- 💡 持续优化告警分组、抑制和升级规则
 - 💡 在 Grafana 中创建业务指标仪表板
 - 💡 定期审查监控告警和优化规则
 

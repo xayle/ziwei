@@ -83,12 +83,9 @@ LOG_OUTPUT=stdout,file
 LOG_FILE_PATH=/var/log/bazi-service/app.log
 LOG_RETENTION_DAYS=30
 
-# ============ 邮件配置 ============
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=alerts@example.com
-SMTP_PASSWORD=<app-password>
-ALERT_EMAIL=ops@example.com
+# ============ 监控查看配置 ============
+# 当前仅通过 Grafana / AlertManager UI 查看告警
+# 不配置 SMTP / Email / Slack 推送
 
 # ============ 备份配置 ============
 BACKUP_ENABLED=true
@@ -288,10 +285,6 @@ rule_files:
 global:
   resolve_timeout: 5m
   # 不配置 slack_api_url
-  smtp_from: 'alerts@example.com'
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_auth_username: 'alerts@example.com'
-  smtp_auth_password: 'app-password'
 
 templates:
   - '/etc/alertmanager/templates/*.tmpl'
