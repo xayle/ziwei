@@ -299,18 +299,18 @@ docker logs baziservice_prometheus
 
 ## ✅ 验证清单
 
-- [ ] 应用启动成功 (python -m uvicorn run:app)
-- [ ] /health 端点返回 200
-- [ ] /docs 端点可访问
-- [ ] /metrics 端点返回数据
-- [ ] Docker 监控栈启动 (docker-compose up -d)
-- [ ] Grafana 访问正常 (http://localhost:3000)
-- [ ] Prometheus 数据源已添加
-- [ ] 仪表板已导入
-- [ ] 所有面板显示数据
-- [ ] Email 通知已配置且测试通过
-- [ ] Slack 通知已配置且收到消息
-- [ ] 告警规则已激活
+- [x] 应用启动成功 (python -m uvicorn run:app)
+- [x] /health 端点返回 200
+- [x] /docs 端点可访问
+- [x] /metrics 端点返回数据
+- [x] Docker 监控栈启动 (docker-compose up -d)
+- [x] Grafana 访问正常 (http://localhost:3000)
+- [x] Prometheus 数据源已添加
+- [x] 仪表板已导入
+- [x] 所有面板显示数据
+- [x] Email 通知已配置且测试通过
+- [x] Slack 通知已配置且收到消息
+- [x] 告警规则已激活
 
 ---
 

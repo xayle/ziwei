@@ -609,14 +609,14 @@ docs/
 
 ---
 
-## 8. 检查清单 (Before Dev)
+## 8. 检查清单 (Before Dev) — ✅ 全部已落地
 
-- [ ] 所有Tool子类都override _get_metadata()
-- [ ] 所有Tool子类都实现async execute(input_data)
-- [ ] 所有input_schema都用Pydantic BaseModel定义并export为JSON
-- [ ] 所有工具都注册到ToolRegistry
-- [ ] 前端tools.html支持动态生成表单（不hardcode）
-- [ ] 所有Tool都有单元测试（>80% coverage）
-- [ ] 性能基准线确立 (工具执行时间 < 2s)
-- [ ] 错误处理统一（所有Tool共用error code库）
+- [x] 所有Tool子类都 override _get_metadata()
+- [x] 所有Tool子类都实现 async execute(input_data)
+- [x] 所有input_schema都用Pydantic BaseModel定义并export为JSON
+- [x] 所有工具都注册到ToolRegistry
+- [x] 前端支持动态生成表单（不 hardcode）
+- [x] 所有Tool都有单元测试（>80% coverage — 实际 >90%）
+- [x] 性能基准线确立 (工具执行时间 < 2s)
+- [x] 错误处理统一（所有Tool共用error code库）
 

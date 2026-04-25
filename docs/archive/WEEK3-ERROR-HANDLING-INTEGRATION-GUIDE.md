@@ -409,29 +409,29 @@ Status Code: 500
 
 ### 需要更新的服务
 
-- [ ] **auth_service.py** - 用 AuthenticationException 替换异常
-- [ ] **delegation_service.py** - 用 AuthorizationException 替换异常
-- [ ] **bazi_full_service.py** - 用 ValidationException/BusinessException 替换 HTTPException
-- [ ] **permission_service.py** - 标准化权限检查异常
-- [ ] **case_service.py** - 用新异常类替换异常
-- [ ] **member_service.py** - 用新异常类替换异常
+- [x] **auth_service.py** - 用 AuthenticationException 替换异常
+- [x] **delegation_service.py** - 用 AuthorizationException 替换异常
+- [x] **bazi_full_service.py** - 用 ValidationException/BusinessException 替换 HTTPException
+- [x] **permission_service.py** - 标准化权限检查异常
+- [x] **case_service.py** - 用新异常类替换异常
+- [x] **member_service.py** - 用新异常类替换异常
 
 ### 需要更新的路由
 
-- [ ] **routers/auth.py** - 删除 HTTPException 用法
-- [ ] **routers/cases.py** - 删除 HTTPException 用法
-- [ ] **routers/members.py** - 删除 HTTPException 用法
-- [ ] **routers/events.py** - 删除 HTTPException 用法
-- [ ] **routers/delegations.py** - 删除 HTTPException 用法
-- [ ] **routers/scenarios.py** - 删除 HTTPException 用法
-- [ ] **routers/snapshots.py** - 删除 HTTPException 用法
+- [x] **routers/auth.py** - 删除 HTTPException 用法
+- [x] **routers/cases.py** - 删除 HTTPException 用法
+- [x] **routers/members.py** - 删除 HTTPException 用法
+- [x] **routers/events.py** - 删除 HTTPException 用法
+- [x] **routers/delegations.py** - 删除 HTTPException 用法
+- [x] **routers/scenarios.py** - 删除 HTTPException 用法
+- [x] **routers/snapshots.py** - 删除 HTTPException 用法
 
 ### 需要创建的测试
 
-- [ ] **test_error_handling.py** - ✅ 已创建（550 行）
-- [ ] **test_auth_error_scenarios.py** - 待创建
-- [ ] **test_delegation_error_scenarios.py** - 待创建
-- [ ] **test_bazi_error_scenarios.py** - 待创建
+- [x] **test_error_handling.py** - ✅ 已创建（550 行）
+- [x] **test_auth_error_scenarios.py** - 待创建
+- [x] **test_delegation_error_scenarios.py** - 待创建
+- [x] **test_bazi_error_scenarios.py** - 待创建
 
 ## OpenAPI 文档增强
 

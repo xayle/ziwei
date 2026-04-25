@@ -155,24 +155,24 @@ BASE_URL=http://127.0.0.1:8000                   # API基础URL
 根据WEEK1-SUMMARY-2026-02-26.md，Week 2的主要任务:
 
 1. **权限管理系统** (RBAC)
-   - [ ] 创建permission_service.py
-   - [ ] 实现@require_permission装饰器
-   - [ ] 成员间访问控制
+   - [x] 创建permission_service.py
+   - [x] 实现@require_permission装饰器
+   - [x] 成员间访问控制
 
 2. **多用户集成测试**
-   - [ ] 用户隔离测试
-   - [ ] 权限委托测试
-   - [ ] 成员访问模式测试
+   - [x] 用户隔离测试
+   - [x] 权限委托测试
+   - [x] 成员访问模式测试
 
 3. **安全改进**
-   - [ ] 替换SHA256为argon2
-   - [ ] 添加refresh token机制
-   - [ ] 实现rate limiting
+   - [x] 替换SHA256为argon2
+   - [x] 添加refresh token机制
+   - [x] 实现rate limiting
 
 4. **文档完善**
-   - [ ] API端点文档
-   - [ ] 数据库模式文档
-   - [ ] 部署检查清单
+   - [x] API端点文档
+   - [x] 数据库模式文档
+   - [x] 部署检查清单
 
 ## 已知问题与注意事项
 
@@ -211,10 +211,10 @@ python -c "from db import init_db; init_db()"
 ## 性能监控 (Week 2+)
 
 推荐逐步添加:
-- [ ] 请求日志记录 (JSON formatted)
-- [ ] 数据库查询计时
-- [ ] API响应时间统计
-- [ ] 错误率监控
+- [x] 请求日志记录 (JSON formatted)
+- [x] 数据库查询计时
+- [x] API响应时间统计
+- [x] 错误率监控
 
 ## 联系方式
 

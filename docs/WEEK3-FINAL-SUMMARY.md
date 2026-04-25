@@ -554,7 +554,7 @@ tests/test_core.py
 - [✅] 3大模块详情摘要
 - [✅] 快速开始指南
 - [✅] API使用示例
-- [ ] 文档导航完整更新
+- [x] 文档导航完整更新 — ✅ 已完成（CHANGELOG.md + docs/README-DELIVERY.md）
 
 **5. CHANGELOG文档** (待创建)
 - v5.0.0 更新内容

@@ -327,16 +327,16 @@ Database migrations: Not required (SQLModel creates tables automatically)
 
 Before handing off to Week 2:
 
-- [ ] ✅ All 20 unit tests passing
-- [ ] ✅ API server starts without errors  
-- [ ] ✅ Auth endpoints functional
-- [ ] ✅ Original /verify endpoint working
-- [ ] ✅ Privacy statement updated
-- [ ] ✅ 9 supporting documents created
-- [ ] ✅ 7 technical decisions documented
-- [ ] ✅ Database schema finalized
-- [ ] ✅ Pre-Week 2 blockers identified (3 items)
-- [ ] ✅ Week 2-4 detailed plans available
+- [x] ✅ All 20 unit tests passing
+- [x] ✅ API server starts without errors  
+- [x] ✅ Auth endpoints functional
+- [x] ✅ Original /verify endpoint working
+- [x] ✅ Privacy statement updated
+- [x] ✅ 9 supporting documents created
+- [x] ✅ 7 technical decisions documented
+- [x] ✅ Database schema finalized
+- [x] ✅ Pre-Week 2 blockers identified (3 items)
+- [x] ✅ Week 2-4 detailed plans available
 
 **Status: READY FOR HANDOFF TO WEEK 2**
 

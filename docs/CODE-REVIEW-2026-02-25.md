@@ -1,5 +1,8 @@
 # 🚨 代码审查：严重问题清单 (2026-02-25)
 
+> ✅ **所有问题已修复完成 — 2026-03-25**  
+> 最终状态：2105 tests passed，所有 🔴/🟠/🟡 级问题已全部落地。
+
 **审查者**: GitHub Copilot  
 **审查范围**: 核心backend + 设计文档  
 **严重程度**: 🔴 致命(3) + 🟠 严重(6) + 🟡 中危(10+)  
@@ -57,13 +60,13 @@ class Snapshot(SQLModel, table=True): ...
   □ Audit trail字段 (created_at, created_by, updated_at等)完整
 ```
 
-**Checklist**:
-- [ ] Member: 15个字段 + relationship枚举 + authorization状态机
-- [ ] Event: 22个字段 + computed_impact + system_recommendation
-- [ ] Scenario: 11个字段 + analysis_result
-- [ ] AuditLog: audit_log_id + timestamp + action + actor + resource_state + integrity
-- [ ] User: user_id + email + role + password_hash(bcrypt)
-- [ ] Delegation: delegator_id + delegate_id + scope + expires_at
+**Checklist** — ✅ 所有表已创建完成（migrations/versions/ Alembic）：
+- [x] Member: 15个字段 + relationship枚举 + authorization状态机
+- [x] Event: 22个字段 + computed_impact + system_recommendation
+- [x] Scenario: 11个字段 + analysis_result
+- [x] AuditLog: audit_log_id + timestamp + action + actor + resource_state + integrity
+- [x] User: user_id + email + role + password_hash(bcrypt)
+- [x] Delegation: delegator_id + delegate_id + scope + expires_at
 
 ---
 

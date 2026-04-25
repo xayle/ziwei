@@ -11,55 +11,55 @@
 ### Phase 1: 服务层集成 (2-3 小时)
 
 #### 1.1 auth_service.py 更新
-- [ ] 添加 AuthenticationException 和 AuthorizationException 导入
-- [ ] 更新 verify_token 异常处理
-- [ ] 更新 verify_refresh_token 异常处理
-- [ ] 更新 create_access_token 异常处理
-- [ ] 添加 @handle_exceptions 装饰器到关键函数
-- [ ] 编写和运行单元测试
+- [x] 添加 AuthenticationException 和 AuthorizationException 导入
+- [x] 更新 verify_token 异常处理
+- [x] 更新 verify_refresh_token 异常处理
+- [x] 更新 create_access_token 异常处理
+- [x] 添加 @handle_exceptions 装饰器到关键函数
+- [x] 编写和运行单元测试
 
 #### 1.2 delegation_service.py 更新
-- [ ] 替换 PermissionDelegationError 为 AppException 家族
-- [ ] 使用 AuthorizationException 处理权限检查失败
-- [ ] 使用 ValidationException 处理验证失败
-- [ ] 使用 ResourceNotFoundException 处理资源不存在
-- [ ] 编写集成测试
+- [x] 替换 PermissionDelegationError 为 AppException 家族
+- [x] 使用 AuthorizationException 处理权限检查失败
+- [x] 使用 ValidationException 处理验证失败
+- [x] 使用 ResourceNotFoundException 处理资源不存在
+- [x] 编写集成测试
 
 #### 1.3 bazi_full_service.py 更新
-- [ ] 替换 HTTPException 为标准异常
-- [ ] 使用 ValidationException 处理验证错误
-- [ ] 使用 BusinessException 处理业务逻辑错误
-- [ ] 添加 @handle_exceptions 装饰器
-- [ ] 编写业务逻辑测试
+- [x] 替换 HTTPException 为标准异常
+- [x] 使用 ValidationException 处理验证错误
+- [x] 使用 BusinessException 处理业务逻辑错误
+- [x] 添加 @handle_exceptions 装饰器
+- [x] 编写业务逻辑测试
 
 #### 1.4 其他服务更新
-- [ ] permission_service.py
-- [ ] permission_cascade_service.py
-- [ ] case_service.py (如果存在)
-- [ ] member_service.py (如果存在)
+- [x] permission_service.py
+- [x] permission_cascade_service.py
+- [x] case_service.py (如果存在)
+- [x] member_service.py (如果存在)
 
 ### Phase 2: 路由层集成 (1-2 小时)
 
 #### 2.1 认证路由 (routers/auth.py)
-- [ ] 更新异常处理
-- [ ] 使用新的异常类
-- [ ] 添加 @handle_exceptions 装饰器
-- [ ] 测试错误响应
+- [x] 更新异常处理
+- [x] 使用新的异常类
+- [x] 添加 @handle_exceptions 装饰器
+- [x] 测试错误响应
 
 #### 2.2 其他关键路由
-- [ ] routers/cases.py
-- [ ] routers/members.py
-- [ ] routers/events.py
-- [ ] routers/delegations.py
-- [ ] routers/scenarios.py
-- [ ] routers/snapshots.py
+- [x] routers/cases.py
+- [x] routers/members.py
+- [x] routers/events.py
+- [x] routers/delegations.py
+- [x] routers/scenarios.py
+- [x] routers/snapshots.py
 
 ### Phase 3: 测试和验证 (1-2 小时)
 
-- [ ] 运行完整测试套件
-- [ ] 验证错误响应格式
-- [ ] 性能基准测试
-- [ ] 集成测试
+- [x] 运行完整测试套件
+- [x] 验证错误响应格式
+- [x] 性能基准测试
+- [x] 集成测试
 
 ---
 

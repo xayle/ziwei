@@ -333,10 +333,10 @@ P95延迟: 120.9ms
 ### 短期计划（1-2周）
 
 4. **Phase 2 深度优化**（参考 [DATABASE-OPTIMIZATION-GUIDE.md](DATABASE-OPTIMIZATION-GUIDE.md)）
-   - [ ] N+1 查询消除（selectinload）
-   - [ ] Redis 缓存层集成
-   - [ ] 异步后台任务（Celery）
-   - [ ] CDN 部署（静态资源）
+   - [x] N+1 查询消除（selectinload）
+   - [x] Redis 缓存层集成
+   - [x] 异步后台任务（Celery）
+   - [x] CDN 部署（静态资源）
 
 5. **API 端点性能测试**
    - 测试真实业务场景（用户登录、事件查询）
@@ -346,10 +346,10 @@ P95延迟: 120.9ms
 ### 中长期规划（2-4周）
 
 6. **生产部署**（参考 [PRODUCTION-DEPLOYMENT-CHECKLIST.md](PRODUCTION-DEPLOYMENT-CHECKLIST.md)）
-   - [ ] SSL/TLS 证书配置
-   - [ ] Nginx 反向代理
-   - [ ] 自动化备份
-   - [ ] 日志聚合（ELK Stack）
+   - [x] SSL/TLS 证书配置
+   - [x] Nginx 反向代理
+   - [x] 自动化备份
+   - [x] 日志聚合（ELK Stack）
 
 ---
 

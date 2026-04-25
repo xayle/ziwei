@@ -627,12 +627,15 @@ status=revoked
 
 ### API 端点 & curl 示例
 
+> 提示：以下示例默认使用 `http://localhost:8000`。若你通过 `start-local.ps1` 或 `deploy.ps1 -Environment local -Action up` 启动且发生端口回退，请替换为实际端口。
+
 #### 1. 发起申请（任意已登录用户）
 
 ```bash
+BASE_URL="http://localhost:8000"
 TOKEN="<your_access_token>"
 
-curl -X POST http://localhost:8000/api/v1/permissions/request \
+curl -X POST ${BASE_URL}/api/v1/permissions/request \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -650,7 +653,7 @@ curl -X POST http://localhost:8000/api/v1/permissions/request \
 ADMIN_TOKEN="<admin_access_token>"
 DELEGATION_ID=42
 
-curl -X PUT http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/approve \
+curl -X PUT ${BASE_URL}/api/v1/permissions/request/${DELEGATION_ID}/approve \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json"
 
@@ -666,7 +669,7 @@ curl -X PUT http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/ap
 #### 3. 管理员拒绝
 
 ```bash
-curl -X PUT http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/reject \
+curl -X PUT ${BASE_URL}/api/v1/permissions/request/${DELEGATION_ID}/reject \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"reject_reason": "不满足申请条件"}'
@@ -678,7 +681,7 @@ curl -X PUT http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/re
 #### 4. 撤销已批准权限（高风险操作，强制写审计日志）
 
 ```bash
-curl -X DELETE http://localhost:8000/api/v1/permissions/request/${DELEGATION_ID}/revoke \
+curl -X DELETE ${BASE_URL}/api/v1/permissions/request/${DELEGATION_ID}/revoke \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json"
 

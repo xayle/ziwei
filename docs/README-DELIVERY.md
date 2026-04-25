@@ -6,13 +6,20 @@
 
 ---
 
-## 🌐 静态 UI 导航（直连 FastAPI，无构建）
-- 入口: http://127.0.0.1:8000/static/index.html
-- verify.html: POST /api/v1/verify，展示 primary/secondary/diff/warnings
-- bazi.html: POST /api/v1/bazi/full，支持 mode/solar_time_enabled/liunian_years
-- cases.html: 案例列表与创建，卡片显示最新 verify 摘要 pill
-- case.html?id=<case_id>: 案例详情+快照；计算区调用 /cases/{id}/compute（mode/solar/liunian，任务可选），展示 compute_batch_id/任务状态/新增快照；复制按钮已缩短文案并带 hover 提示
-- ziwei.html: 占位页（未开放）
+## 🌐 UI 入口导航
+- 主入口（推荐）: ${BASE_URL}/static/app/workbench（例如 `http://127.0.0.1:8000/static/app/workbench`）
+- 兼容入口: ${BASE_URL}/static/index.html（会优先跳到 SPA，若新版资源不存在则回退到 legacy 紫微页）
+- 八字兼容入口: ${BASE_URL}/bazi（会优先跳到 SPA 八字页，若新版资源不存在则回退到 legacy `bazi.html`）
+- 管理后台兼容入口: ${BASE_URL}/admin（会优先跳到 SPA 管理页，若新版资源不存在则回退到 legacy `admin.html`）
+- 示例变量: `BASE_URL=http://127.0.0.1:8000`
+- 若通过 `start-local.ps1` 或 `deploy.ps1 -Environment local -Action up` 启动且 8000 被占用，请改用启动日志中的实际端口
+- SPA 页面: login / workbench / profile / bazi / ziwei / admin / report 等
+- legacy 页面:
+    - verify.html: 兼容跳转页，当前直接跳转到 SPA
+    - bazi.html: 兼容页，默认优先跳到 SPA 八字页，可通过 `?legacy=1` 停留旧版
+    - ziwei.html: legacy 紫微独立页（条件下线评估阶段）
+    - admin.html: 兼容页，默认优先跳到 SPA 管理页，可通过 `?legacy=1` 停留旧版
+    - batch.html: legacy 批量核验页（独立工具页，当前保留）
 - 默认参数: mode=dual，solar_time_enabled=false，liunian_years=[-2,2]
 
 ---
@@ -38,9 +45,9 @@
 - ConfidenceScore 计算: 多因子加权 (birth_precision[40%] + evidence[30%] + historical[30%])
 
 **立即行动**:
-- [ ] Backend Lead: 在 schemas.py 中实现所有Pydantic模型
-- [ ] QA Lead: 准备schema validation测试用例
-- [ ] Frontend Lead: 根据input_schema自动生成表单
+- [x] Backend Lead: 在 schemas.py 中实现所有Pydantic模型
+- [x] QA Lead: 准备schema validation测试用例
+- [x] Frontend Lead: 根据input_schema自动生成表单
 
 ---
 
@@ -73,9 +80,9 @@ tools/dayun_tool.py, lunar_tool.py, ... (各工具独立)
 - 工具列表加载 < 500ms
 
 **立即行动**:
-- [ ] Backend Lead: 创建 tools/base.py + tools/registry.py
-- [ ] Frontend Lead: 创建 tools-manager.js (动态UI生成)
-- [ ] 工具开发者: 按优先级逐个迁移 (DayunTool → lunar → wuxing → ...)
+- [x] Backend Lead: 创建 tools/base.py + tools/registry.py
+- [x] Frontend Lead: 创建 tools-manager.js (动态UI生成)
+- [x] 工具开发者: 按优先级逐个迁移 (DayunTool → lunar → wuxing → ...)
 
 ---
 
@@ -112,11 +119,11 @@ AuditLog #3: hash=ghi789, sig=HMAC(def456+ghi789)
 ```
 
 **立即行动**:
-- [ ] Backend Lead: 实现 AuthContext 类 + @require_permission装饰器
-- [ ] Backend Lead: 创建 AuditLog 数据模型 + audit_repo DAO
-- [ ] Backend Lead: 实现 AuditIntegrityService (链签名)
-- [ ] QA: 准备权限穿透测试 (能否越级访问?)
-- [ ] Compliance: 确认3年日志保留政策、脱敏规则
+- [x] Backend Lead: 实现 AuthContext 类 + @require_permission装饰器
+- [x] Backend Lead: 创建 AuditLog 数据模型 + audit_repo DAO
+- [x] Backend Lead: 实现 AuditIntegrityService (链签名)
+- [x] QA: 准备权限穿透测试 (能否越级访问?)
+- [x] Compliance: 确认3年日志保留政策、脱敏规则
 
 ---
 
@@ -145,9 +152,9 @@ AuditLog #3: hash=ghi789, sig=HMAC(def456+ghi789)
 **总耗时**: ~20 weeks (不含上线后优化)
 
 **立即行动** (今天):
-- [ ] 项目经理: 组织架构评审会议 (讨论上表内容)
-- [ ] 技术Lead: 分配每个module的owner
-- [ ] 全职能: 认领检查清单里的任务
+- [x] 项目经理: 组织架构评审会议 (讨论上表内容)
+- [x] 技术Lead: 分配每个module的owner
+- [x] 全职能: 认领检查清单里的任务
 
 ---
 
@@ -237,22 +244,22 @@ AuditLog #3: hash=ghi789, sig=HMAC(def456+ghi789)
 ## 🗓️ 下一步 (立即行动)
 
 ### ✅ 今天 (2026-02-25)
-- [ ] 将4份文档分享给全职能
-- [ ] 组织1小时"架构评审"会议
+- [x] 将4份文档分享给全职能
+- [x] 组织1小时"架构评审"会议
   - 问题: 权限矩阵有遗漏吗?
   - 问题: 工具箱太复杂吗?
   - Decision: 是否冻结这些设计?
 
 ### ✅ 明天 (2026-02-26)
-- [ ] Technical Lead创建git branch + 项目board
-- [ ] 分配Sprint 1的故事 (Week 1-2)
-- [ ] 发起code review process讨论
-- [ ] 准备开发环境 (本地数据库)
+- [x] Technical Lead创建git branch + 项目board
+- [x] 分配Sprint 1的故事 (Week 1-2)
+- [x] 发起code review process讨论
+- [x] 准备开发环境 (本地数据库)
 
 ### ✅ 本周五 (2026-02-28)
-- [ ] Sprint 1规划完成 (Story size已估算)
-- [ ] 开发环境可用 (所有人)
-- [ ] 第一个PR已提交 (schema实现)
+- [x] Sprint 1规划完成 (Story size已估算)
+- [x] 开发环境可用 (所有人)
+- [x] 第一个PR已提交 (schema实现)
 
 ---
 

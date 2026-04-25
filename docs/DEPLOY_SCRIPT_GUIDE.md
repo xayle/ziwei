@@ -30,12 +30,12 @@
 .\deploy.ps1 -Environment local -Action up
 ```
 
-服务器将启动在 `http://127.0.0.1:8000`
+服务器默认启动在 `http://127.0.0.1:8000`（若被占用会自动回退到后续可用端口，最多探测 20 个）
 
 访问地址：
-- API文档: http://127.0.0.1:8000/docs
-- UI界面: http://127.0.0.1:8000/static/verify.html
-- 健康检查: http://127.0.0.1:8000/health
+- API文档: http://127.0.0.1:{实际端口}/docs
+- UI界面: http://127.0.0.1:{实际端口}/static/verify.html
+- 健康检查: http://127.0.0.1:{实际端口}/health
 
 ### 停止开发服务器
 
@@ -231,7 +231,7 @@ powershell -ExecutionPolicy Bypass -File .\deploy.ps1 -Environment help
 
 ### Q: 端口 8000 被占用？
 
-**A**: 使用 `down` 操作停止旧服务器：
+**A**: 现在 `up` 会自动切换到下一个可用端口（最多探测 20 个），无需手动改命令。你也可以先执行 `down` 清理旧进程：
 
 ```powershell
 .\deploy.ps1 -Environment local -Action down

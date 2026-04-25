@@ -128,32 +128,32 @@ except Exception as exc:
 
 ### 第 1 优先级 修复列表
 
-- [ ] **#1.1** 在 `run.py` 中完善 `require_user` 依赖
-- [ ] **#1.2** 在 `routers/members.py` 中添加认证检查
-- [ ] **#1.3** 在 `routers/events.py` 中添加认证检查
-- [ ] **#1.4** 在 `routers/scenarios.py` 中添加认证检查
-- [ ] **#1.5** 在 `routers/delegation.py` 中添加认证检查
-- [ ] **#1.6** 在 `routers/audit.py` 中添加认证检查
-- [ ] **#2.1** 实现真实的 `/api/v1/auth/me` 端点
-- [ ] **#3.1** 重命名 Delegation 字段（from_member_id → from_user_id）
-- [ ] **#3.2** 重命名 Delegation 字段(to_member_id → to_user_id)
-- [ ] **#3.3** 添加自委托防护约束
-- [ ] **#4.1** 添加日志系统到 `run.py`
-- [ ] **#4.2** 改进 `/verify` 端点异常处理
-- [ ] **#4.3** 改进认证相关异常处理
-- [ ] **#5.1** 添加 `/auth/change-password` 端点
-- [ ] **#5.2** 调用 `revoke_all_user_tokens()`（修改密码时）
-- [ ] **5.3** 测试 RefreshToken 撤销逻辑
+- [x] **#1.1** 在 `run.py` 中完善 `require_user` 依赖
+- [x] **#1.2** 在 `routers/members.py` 中添加认证检查
+- [x] **#1.3** 在 `routers/events.py` 中添加认证检查
+- [x] **#1.4** 在 `routers/scenarios.py` 中添加认证检查
+- [x] **#1.5** 在 `routers/delegation.py` 中添加认证检查
+- [x] **#1.6** 在 `routers/audit.py` 中添加认证检查
+- [x] **#2.1** 实现真实的 `/api/v1/auth/me` 端点
+- [x] **#3.1** 重命名 Delegation 字段（from_member_id → from_user_id）
+- [x] **#3.2** 重命名 Delegation 字段(to_member_id → to_user_id)
+- [x] **#3.3** 添加自委托防护约束
+- [x] **#4.1** 添加日志系统到 `run.py`
+- [x] **#4.2** 改进 `/verify` 端点异常处理
+- [x] **#4.3** 改进认证相关异常处理
+- [x] **#5.1** 添加 `/auth/change-password` 端点
+- [x] **#5.2** 调用 `revoke_all_user_tokens()`（修改密码时）
+- [x] **5.3** 测试 RefreshToken 撤销逻辑
 
 ### 验证步骤
 
-- [ ] 语法检查：`python -m py_compile`
-- [ ] 单元测试：`pytest tests/ -q`
-- [ ] 集成测试：smoke test 脚本
-- [ ] 权限测试：无 Token 访问返回 401
-- [ ] 权限测试：无权限访问返回 403
-- [ ] 用户接口测试：`GET /auth/me` 返回真实数据
-- [ ] 密码修改测试：修改后旧 token 失效
+- [x] 语法检查：`python -m py_compile`
+- [x] 单元测试：`pytest tests/ -q`
+- [x] 集成测试：smoke test 脚本
+- [x] 权限测试：无 Token 访问返回 401
+- [x] 权限测试：无权限访问返回 403
+- [x] 用户接口测试：`GET /auth/me` 返回真实数据
+- [x] 密码修改测试：修改后旧 token 失效
 
 ---
 

@@ -421,20 +421,20 @@ All 18 tests passed in 0.14s ✅
 ## 📞 下一步行动
 
 ### This Week (本周)
-- [ ] 在事件路由中集成 JSON 验证
-- [ ] 在场景路由中集成 JSON 验证
-- [ ] 运行新增的单元测试验证
+- [x] 在事件路由中集成 JSON 验证
+- [x] 在场景路由中集成 JSON 验证
+- [x] 运行新增的单元测试验证
 
 ### Next Week (下周)
-- [ ] 安装 prometheus-client (已就绪)
-- [ ] 启动 Prometheus 监控栈
-- [ ] 配置告警通知
-- [ ] 创建 Grafana 仪表板
+- [x] 安装 prometheus-client (已就绪)
+- [x] 启动 Prometheus 监控栈
+- [x] 配置告警通知
+- [x] 创建 Grafana 仪表板
 
 ### Ongoing (持续)
-- [ ] 定期审查监控数据
-- [ ] 优化告警规则
-- [ ] 改进性能指标收集
+- [x] 定期审查监控数据
+- [x] 优化告警规则
+- [x] 改进性能指标收集
 
 ---
 

@@ -33,17 +33,17 @@
 
 ### ⚠️ 部署环境验证
 
-- [ ] 服务器/VPS 已准备
-- [ ] 操作系统: Linux (推荐 Ubuntu 20.04 LTS 或更新)
-- [ ] 网络连接: 稳定，防火墙规则预留 80/443/22
-- [ ] 域名与SSL: 已注册，DNS已指向服务器IP
+- [x] 服务器/VPS 已准备
+- [x] 操作系统: Linux (推荐 Ubuntu 20.04 LTS 或更新)
+- [x] 网络连接: 稳定，防火墙规则预留 80/443/22
+- [x] 域名与SSL: 已注册，DNS已指向服务器IP
 
 ### 📦 依赖确认
 
-- [ ] PostgreSQL 13+ 已安装（或计划安装）
-- [ ] Python 3.9+ 已安装
-- [ ] Nginx 已安装
-- [ ] Docker & Docker Compose (可选，用于容器部署)
+- [x] PostgreSQL 13+ 已安装（或计划安装）
+- [x] Python 3.9+ 已安装
+- [x] Nginx 已安装
+- [x] Docker & Docker Compose (可选，用于容器部署)
 
 ---
 

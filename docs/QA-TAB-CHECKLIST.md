@@ -20,9 +20,11 @@
 ## 测试环境准备
 
 ```bash
-# 启动开发服务器
+# 启动开发服务器（默认端口；若脚本自动回退请改为实际端口）
+PORT=8000
+BASE_URL=http://127.0.0.1:${PORT}
 ENVIRONMENT=development ENGINE_V2=true SECRET_KEY=testkey12345678901234567890abcdef \
-  python -m uvicorn run:app --host 127.0.0.1 --port 8000
+  python -m uvicorn run:app --host 127.0.0.1 --port ${PORT}
 
 # 测试输入（标准女命）
 dt=1990-07-17T12:20:00, lon=116.4, tz=Asia/Shanghai, mode=dual, gender=female
@@ -30,6 +32,16 @@ dt=1990-07-17T12:20:00, lon=116.4, tz=Asia/Shanghai, mode=dual, gender=female
 # 无效输入（触发 400）
 dt=1800-01-01T00:00:00, lon=116.4, tz=Asia/Shanghai
 ```
+
+```powershell
+# Windows / PowerShell 推荐：使用脚本启动（自动处理端口占用）
+.\start-local.ps1 -Port 8000
+
+# 或使用统一部署脚本
+.\deploy.ps1 -Environment local -Action up
+```
+
+> 说明：若 `8000` 被占用，脚本会自动切换到后续可用端口（最多探测 20 个）。执行下方接口验证时，请把 URL 端口替换为实际启动端口。
 
 ---
 

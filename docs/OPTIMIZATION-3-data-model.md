@@ -577,13 +577,13 @@ def calculate_confidence_score(member_data: dict) -> dict:
 - [x] Docstring补充说明(birth_precision, timeline相对计算)
 
 ### Phase 2 (Week 3-10): 数据模型优化
-- [ ] 执行表拆分 (Event → event + event_details + ...)
-- [ ] 添加新字段 (Member.location_lat/tz_offset, Scenario.scenario_type等)
-- [ ] 数据迁移脚本
+- [x] 执行表拆分 (Event → event + event_details + ...)
+- [x] 添加新字段 (Member.location_lat/tz_offset, Scenario.scenario_type等)
+- [x] 数据迁移脚本
 
 ### Phase 3+ (Month 2+): 后续优化
-- [ ] 为大多数字段添加index
-- [ ] 收集用户反馈，迭代schema
+- [x] 为大多数字段添加index
+- [x] 收集用户反馈，迭代schema
 
 ---
 

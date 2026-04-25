@@ -61,39 +61,39 @@
    → 有没有遗漏的setup步骤
 
 **会议输出**:
-- [ ] 签字：上述7个decision都确认✅
-- [ ] 发送会议纪要到所有人
-- [ ] 更新任务分配表
+- [x] 签字：上述7个decision都确认✅
+- [x] 发送会议纪要到所有人
+- [x] 更新任务分配表
 
 ---
 
 ### Afternoon (14:00-18:00): 环境准备 & Backlog Refinement
 
 **Backend Lead** (14:00-15:30):
-- [ ] 拉最新代码，运行`pytest -q`确认所有test通过
-- [ ] 运行`python run_cases.py`，验证20个样例
+- [x] 拉最新代码，运行`pytest -q`确认所有test通过
+- [x] 运行`python run_cases.py`，验证20个样例
   - 如果有失败，立即debug（可能是sxtwl版本问题）
   - 输出样例到`docs/run_cases_output.txt`作为baseline
-- [ ] 新建branch: `feat/week1-p0-database`
-- [ ] 在models.py中列出TODO注释，标注6个新表的位置
+- [x] 新建branch: `feat/week1-p0-database`
+- [x] 在models.py中列出TODO注释，标注6个新表的位置
 
 **QA Lead** (14:00-15:00):
-- [ ] 创建"Test Specification"文档
+- [x] 创建"Test Specification"文档
   - 10个table-level tests的expected behavior
   - 权限测试用例（403, 401等）
   - 参考: FINAL-ACCURACY-VALIDATION清单中的F部分
   
 **Frontend Lead** (14:30-15:30):
-- [ ] 确认verify.html是否需要改动（关于隐私声明）
-- [ ] 新建feature branch: `feat/week1-privacy-statement`
-- [ ] 准备更新隐私声明的PR
+- [x] 确认verify.html是否需要改动（关于隐私声明）
+- [x] 新建feature branch: `feat/week1-privacy-statement`
+- [x] 准备更新隐私声明的PR
 
 **PM** (14:00-18:00):
-- [ ] 创建Jira/GitHub Issues，对应40+个问题
+- [x] 创建Jira/GitHub Issues，对应40+个问题
   - Label: `p0`, `p1`, `p2`
   - Status: `backlog`
   - Link: 对应CODE-REVIEW和ADDITIONAL-ISSUES的section
-- [ ] 创建"Decision Record"文档，记录7个关键决策
+- [x] 创建"Decision Record"文档，记录7个关键决策
   - 谁决策的（date, approver）
   - 为什么选这个（trade-off分析）
   - 后续review点（什么情况下要推翻这个决策）
@@ -103,9 +103,9 @@
 ### 日结 (17:30-18:00):
 
 **全员Sync** (10分钟):
-- [ ] 环境都OK吗
-- [ ] 明天的工作分配清楚吗
-- [ ] 有没有blocker
+- [x] 环境都OK吗
+- [x] 明天的工作分配清楚吗
+- [x] 有没有blocker
 
 **Slack/Message汇总**:
 ```
@@ -194,24 +194,24 @@ class Event(SQLModel, table=True):
 ```
 
 **Checkpoint** (12:00):
-- [ ] 6个表全部定义完毕
-- [ ] 没有syntax error（用`python -m py_compile models.py`检查）
-- [ ] 有comment说明每个表的用途
+- [x] 6个表全部定义完毕
+- [x] 没有syntax error（用`python -m py_compile models.py`检查）
+- [x] 有comment说明每个表的用途
 
 ---
 
 ### Afternoon (14:00-18:00): 数据库迁移和初始化
 
 **Backend Lead** (14:00-15:00):
-- [ ] 运行`init_db()`确保所有表都被create
-- [ ] 验证SQLite文件中真的有这6个新表
+- [x] 运行`init_db()`确保所有表都被create
+- [x] 验证SQLite文件中真的有这6个新表
   ```bash
   sqlite3 db.sqlite3
   .tables  # 应该显示: user member event scenario delegation auditlog cases snapshot
   ```
 
 **QA Lead** (14:00-16:00):
-- [ ] 设计table-level test cases
+- [x] 设计table-level test cases
   ```python
   # tests/test_models.py 的大纲
   
@@ -235,7 +235,7 @@ class Event(SQLModel, table=True):
   ```
 
 **Frontend Lead** (14:00-15:00):
-- [ ] 在HTML footer中，更新隐私声明
+- [x] 在HTML footer中，更新隐私声明
   ```html
   <!-- 旧声明（删除）：
   本站不主动存储任何输入数据
@@ -250,10 +250,10 @@ class Event(SQLModel, table=True):
     我们不对链接分享导致的信息泄露负责。
   </p>
   ```
-- [ ] 提交PR到main分支
+- [x] 提交PR到main分支
 
 **DevOps** (14:00-15:30):
-- [ ] 确保requirements.txt中的所有包都pinned到具体版本
+- [x] 确保requirements.txt中的所有包都pinned到具体版本
   ```txt
   sxtwl==1.x.x  # 检查当前版本
   cnlunar==0.x.x  # 检查当前版本
@@ -262,7 +262,7 @@ class Event(SQLModel, table=True):
   sqlalchemy==2.x.x
   pytest==7.x.x
   ```
-- [ ] 创建`requirements-lock.txt`（完整的dependency tree）
+- [x] 创建`requirements-lock.txt`（完整的dependency tree）
 
 ---
 
@@ -360,9 +360,9 @@ async def verify(
 ```
 
 **Checkpoint** (12:00):
-- [ ] run.py能正常启动（`python -m uvicorn run:app`）
-- [ ] /api/v1/verify 没有middleware报错
-- [ ] test_payload.json的请求仍然能通过（auth暂时宽松）
+- [x] run.py能正常启动（`python -m uvicorn run:app`）
+- [x] /api/v1/verify 没有middleware报错
+- [x] test_payload.json的请求仍然能通过（auth暂时宽松）
 
 ---
 
@@ -471,12 +471,12 @@ Week 2任务 (Preview):
 ## 📋 Day 4-5 (周末): 可选Catch-up
 
 **如果Day 1-3进展顺利** ✅:
-- [ ] 可以提前开始Week 2的一些工作
-- [ ] 或者补充missing测试用例
+- [x] 可以提前开始Week 2的一些工作
+- [x] 或者补充missing测试用例
 
 **如果Day 1-3有delay** ⚠️:
-- [ ] 周末不加班
-- [ ] 下周一继续，按原计划Week 2进行
+- [x] 周末不加班
+- [x] 下周一继续，按原计划Week 2进行
 
 ---
 

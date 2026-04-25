@@ -235,19 +235,19 @@ app.add_middleware(
    ```
 
 ### 第二周计划（已准备）：
-- [ ] Alembic 数据库迁移系统
-- [ ] 环境变量完整支持（已准备，配置在 app/config.py）
-- [ ] 修复 CORS 为环境变量驱动
+- [x] Alembic 数据库迁移系统
+- [x] 环境变量完整支持（已准备，配置在 app/config.py）
+- [x] 修复 CORS 为环境变量驱动
 
 ### 第三周计划：
-- [ ] 修复缓存实现（asyncio.Lock）
-- [ ] 添加错误处理装饰器
-- [ ] 输入验证中间件增强
+- [x] 修复缓存实现（asyncio.Lock）
+- [x] 添加错误处理装饰器
+- [x] 输入验证中间件增强
 
 ### 第四周计划：
-- [ ] 结构化日志（JSON）
-- [ ] 完整的单元测试套件
-- [ ] 集成测试框架
+- [x] 结构化日志（JSON）
+- [x] 完整的单元测试套件
+- [x] 集成测试框架
 
 ---
 
@@ -318,12 +318,12 @@ app.add_middleware(
 
 当以下条件都满足时，第一周重构完成：
 
-- [ ] 所有文件中的导入语句已更新
-- [ ] `get_current_user()` 重复代码已移除
-- [ ] CORS 配置使用环境变量
-- [ ] 应用启动成功：`python run.py`
-- [ ] 健康检查通过：`curl http://localhost:8000/health`
-- [ ] 所有测试通过：`pytest tests/`
+- [x] 所有文件中的导入语句已更新
+- [x] `get_current_user()` 重复代码已移除
+- [x] CORS 配置使用环境变量
+- [x] 应用启动成功：`python run.py`
+- [x] 健康检查通过：`curl http://localhost:8000/health`
+- [x] 所有测试通过：`pytest tests/`
 
 ---
 

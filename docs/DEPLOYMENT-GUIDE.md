@@ -238,14 +238,18 @@ mypy run.py --ignore-missing-imports
 
 #### 4.3 集成测试(可选)
 ```bash
+# 设定端口与 API 地址（默认 8000；若脚本自动回退请改成实际端口）
+PORT=8000
+BASE_URL=http://127.0.0.1:${PORT}
+
 # 启动API服务器
-uvicorn run:app --host 127.0.0.1 --port 8000 &
+uvicorn run:app --host 127.0.0.1 --port ${PORT} &
 
 # 等待启动
 sleep 2
 
 # 测试认证端点
-curl -X POST http://127.0.0.1:8000/auth/register \
+curl -X POST ${BASE_URL}/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","email":"test@test.com","password":"Test123!"}'
 
@@ -253,21 +257,41 @@ curl -X POST http://127.0.0.1:8000/auth/register \
 kill %1
 ```
 
+```powershell
+# Windows / PowerShell 推荐：自动检查端口占用并回退
+.\start-local.ps1 -Port 8000
+
+# 或使用统一部署脚本
+.\deploy.ps1 -Environment local -Action up
+```
+
+> 说明：若 `8000` 已被占用，脚本会自动切换到后续可用端口（最多探测 20 个端口），并在启动日志打印实际端口。
+
 ### 阶段 5: 部署 (20分钟)
 
 #### 5.1 选择部署方式
 
 **选项A: 直接运行 (开发/测试)**
 ```bash
+# 默认端口与地址（本地脚本自动回退端口时请改为实际端口）
+PORT=8000
+BASE_URL=http://localhost:${PORT}
+
 # 前台运行 (不推荐生产)
-uvicorn run:app --host 0.0.0.0 --port 8000
+uvicorn run:app --host 0.0.0.0 --port ${PORT}
 
 # 后台运行 (Linux)
-nohup uvicorn run:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+nohup uvicorn run:app --host 0.0.0.0 --port ${PORT} > app.log 2>&1 &
 
 # 检查运行
 jobs
-curl http://localhost:8000/docs
+curl ${BASE_URL}/docs
+```
+
+```powershell
+# Windows 推荐（本地开发）
+.\deploy.ps1 -Environment local -Action up
+# 若 8000 被占用，将自动回退到可用端口
 ```
 
 **选项B: systemd服务 (推荐 - Linux)**
@@ -324,11 +348,15 @@ docker logs bazi-api
 
 #### 5.2 启通验证
 ```bash
+# 与上文保持一致；如端口回退请更新 BASE_URL
+PORT=8000
+BASE_URL=http://localhost:${PORT}
+
 # 检查服务状态
-curl -s http://localhost:8000/docs
+curl -s ${BASE_URL}/docs
 
 # 检查各端点
-curl -s http://localhost:8000/auth/me \
+curl -s ${BASE_URL}/auth/me \
   -H "Authorization: Bearer invalid" \
   -w "\nHTTP Status: %{http_code}\n"
 

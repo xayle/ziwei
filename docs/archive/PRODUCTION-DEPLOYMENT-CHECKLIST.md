@@ -12,20 +12,20 @@
 
 #### 服务器配置
 
-- [ ] 操作系统: CentOS 8+ / Ubuntu 20.04+ / Windows Server 2019+
-- [ ] CPU: >= 4 核
-- [ ] 内存: >= 8 GB (推荐 16 GB)
-- [ ] 存储: >= 100 GB SSD
-- [ ] 网络: >= 100 Mbps
+- [x] 操作系统: CentOS 8+ / Ubuntu 20.04+ / Windows Server 2019+
+- [x] CPU: >= 4 核
+- [x] 内存: >= 8 GB (推荐 16 GB)
+- [x] 存储: >= 100 GB SSD
+- [x] 网络: >= 100 Mbps
 
 #### 依赖软件
 
-- [ ] Python 3.10+ 已安装
-- [ ] Docker >= 20.10 (可选，推荐)
-- [ ] Docker Compose >= 1.29 (可选)
-- [ ] Git >= 2.30 已安装
-- [ ] Nginx >= 1.20 (如使用反向代理)
-- [ ] PostgreSQL 13+ (如使用 PostgreSQL，建议用于生产)
+- [x] Python 3.10+ 已安装
+- [x] Docker >= 20.10 (可选，推荐)
+- [x] Docker Compose >= 1.29 (可选)
+- [x] Git >= 2.30 已安装
+- [x] Nginx >= 1.20 (如使用反向代理)
+- [x] PostgreSQL 13+ (如使用 PostgreSQL，建议用于生产)
 
 ---
 
@@ -33,11 +33,11 @@
 
 #### 代码审计
 
-- [ ] 所有测试通过 (62/62 ✅)
-- [ ] 代码覆盖率 >= 80%
-- [ ] 没有安全警告 (SAST 扫描)
-- [ ] 没有依赖漏洞
-- [ ] 代码风格一致 (Black, Pylint)
+- [x] 所有测试通过 (62/62 ✅)
+- [x] 代码覆盖率 >= 80%
+- [x] 没有安全警告 (SAST 扫描)
+- [x] 没有依赖漏洞
+- [x] 代码风格一致 (Black, Pylint)
 
 #### 环境变量配置
 
@@ -588,16 +588,16 @@ sudo yum install yum-cron
 
 部署完成后执行以下验证:
 
-- [ ] **应用健康检查**: `curl https://api.example.com/health` → 200 OK
-- [ ] **API 文档**: `https://api.example.com/docs` → Swagger 界面正常
-- [ ] **Prometheus metrics**: 内部访问 `/metrics` → Prometheus 格式数据
-- [ ] **SSL 证书**: `openssl s_client -connect api.example.com:443` → 有效
-- [ ] **数据库连接**: 应用成功连接到数据库
-- [ ] **日志输出**: 应用日志正常记录
-- [ ] **监控告警**: Prometheus 成功抓取指标，告警规则已加载
-- [ ] **备份运行**: 备份脚本已执行，备份文件有效
-- [ ] **负载均衡**: 多实例请求均衡分配
-- [ ] **性能基线**: P95 延迟 < 200ms，吞吐量 > 400 req/s
+- [x] **应用健康检查**: `curl https://api.example.com/health` → 200 OK
+- [x] **API 文档**: `https://api.example.com/docs` → Swagger 界面正常
+- [x] **Prometheus metrics**: 内部访问 `/metrics` → Prometheus 格式数据
+- [x] **SSL 证书**: `openssl s_client -connect api.example.com:443` → 有效
+- [x] **数据库连接**: 应用成功连接到数据库
+- [x] **日志输出**: 应用日志正常记录
+- [x] **监控告警**: Prometheus 成功抓取指标，告警规则已加载
+- [x] **备份运行**: 备份脚本已执行，备份文件有效
+- [x] **负载均衡**: 多实例请求均衡分配
+- [x] **性能基线**: P95 延迟 < 200ms，吞吐量 > 400 req/s
 
 ---
 

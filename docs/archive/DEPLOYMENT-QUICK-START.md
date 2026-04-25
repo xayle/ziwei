@@ -117,34 +117,34 @@ services:
 ## ✅ 部署前检查清单
 
 ### 基础检查
-- [ ] 56个测试全部通过 (已验证 ✅)
-- [ ] 工作目录有所有源文件
-- [ ] 网络连接正常
-- [ ] 足够磁盘空间 (最少100MB)
+- [x] 56个测试全部通过 (已验证 ✅)
+- [x] 工作目录有所有源文件
+- [x] 网络连接正常
+- [x] 足够磁盘空间 (最少100MB)
 
 ### 环境检查 (根据选择的部署方式)
 
 **Docker方式**:
-- [ ] Docker已安装 (`docker --version`)
-- [ ] Docker Compose已安装 (`docker-compose --version`)
-- [ ] Docker守护进程运行中
+- [x] Docker已安装 (`docker --version`)
+- [x] Docker Compose已安装 (`docker-compose --version`)
+- [x] Docker守护进程运行中
 
 **Python方式**:
-- [ ] Python 3.11+ (`python --version`)
-- [ ] pip已安装 (`pip --version`)
-- [ ] 虚拟环境已创建
+- [x] Python 3.11+ (`python --version`)
+- [x] pip已安装 (`pip --version`)
+- [x] 虚拟环境已创建
 
 **K8s方式**:
-- [ ] kubectl已安装 (`kubectl --version`)
-- [ ] K8s集群可访问 (`kubectl get nodes`)
-- [ ] 有足够权限创建命名空间
+- [x] kubectl已安装 (`kubectl --version`)
+- [x] K8s集群可访问 (`kubectl get nodes`)
+- [x] 有足够权限创建命名空间
 
 ### 配置准备
 
-- [ ] `.env.production` 已编辑 (如需要)
-- [ ] ALLOWED_ORIGINS 已设置
-- [ ] SECRET_KEY 已更改
-- [ ] DB_PATH 有效
+- [x] `.env.production` 已编辑 (如需要)
+- [x] ALLOWED_ORIGINS 已设置
+- [x] SECRET_KEY 已更改
+- [x] DB_PATH 有效
 
 ---
 

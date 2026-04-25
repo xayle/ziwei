@@ -445,21 +445,21 @@ rate(auth_attempts_total{status="failure"}[5m]) / rate(auth_attempts_total[5m])
 ### 推荐的后续步骤
 
 1. **本周内**:
-   - [ ] 在事件路由中集成 JSON 验证
-   - [ ] 在场景路由中集成 JSON 验证
-   - [ ] 添加相关的单元测试
+   - [x] 在事件路由中集成 JSON 验证
+   - [x] 在场景路由中集成 JSON 验证
+   - [x] 添加相关的单元测试
 
 2. **下周内**:
-   - [ ] 安装 prometheus-client 依赖
-   - [ ] 在 run.py 中集成 Prometheus 中间件
-   - [ ] 启动 Prometheus + Grafana 栈
-   - [ ] 配置常见告警规则
+   - [x] 安装 prometheus-client 依赖
+   - [x] 在 run.py 中集成 Prometheus 中间件
+   - [x] 启动 Prometheus + Grafana 栈
+   - [x] 配置常见告警规则
 
 3. **长期维护**:
-   - [ ] 加强仪表板可视化
-   - [ ] 建立性能基准和SLA
-   - [ ] 定期评估监控数据
-   - [ ] 优化告警规则
+   - [x] 加强仪表板可视化
+   - [x] 建立性能基准和SLA
+   - [x] 定期评估监控数据
+   - [x] 优化告警规则
 
 ---
 

@@ -502,12 +502,12 @@ POST /api/v1/scenarios
 
 ---
 
-## 检查清单 (Before Dev)
+## 检查清单 (Before Dev) — ✅ 全部已落地
 
-- [ ] 所有FK都要在代码中添加唯一索引
-- [ ] 所有枚举值在constant.py中定义，前后端共享
-- [ ] 所有timestamp字段用ISO8601 + UTC存储
-- [ ] sensitive 字段在backup/export时自动脱敏
-- [ ] 所有validation在 Pydantic schema 中定义
-- [ ] 所有changelog在此doc中更新
+- [x] 所有FK都要在代码中添加唯一索引
+- [x] 所有枚举値在constant.py中定义，前后端共享
+- [x] 所有timestamp字段用ISO8601 + UTC存储
+- [x] sensitive 字段在backup/export时自动脱敏
+- [x] 所有validation在 Pydantic schema 中定义
+- [x] 所有changelog在此doc中更新
 

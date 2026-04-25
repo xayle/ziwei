@@ -372,27 +372,27 @@ Week 4+ (后续)
 ## 🎯 立即行动清单
 
 ### 如果继续开发Week 3:
-- [ ] 读取WEEK3-PLAN.md了解详细计划
-- [ ] 删除旧的API进程 (`taskkill /PID... /F`)
-- [ ] 启动新API (`uvicorn run:app`)
-- [ ] 创建Scenario模型和表
-- [ ] 创建routers/scenarios.py (6个端点)
-- [ ] 运行测试验证 (`pytest tests/`)
-- [ ] 生成新报告
+- [x] 读取WEEK3-PLAN.md了解详细计划
+- [x] 删除旧的API进程 (`taskkill /PID... /F`)
+- [x] 启动新API (`uvicorn run:app`)
+- [x] 创建Scenario模型和表
+- [x] 创建routers/scenarios.py (6个端点)
+- [x] 运行测试验证 (`pytest tests/`)
+- [x] 生成新报告
 
 ### 如果准备前端开发:
-- [ ] 导出OpenAPI规范 (http://127.0.0.1:8000/openapi.json)
-- [ ] 阅读所有文档了解API设计
-- [ ] 选择前端框架 (React/Vue/Angular)
-- [ ] 生成API客户端SDK
-- [ ] 创建UI原型
+- [x] 导出OpenAPI规范 (http://127.0.0.1:8000/openapi.json)
+- [x] 阅读所有文档了解API设计
+- [x] 选择前端框架 (React/Vue/Angular)
+- [x] 生成API客户端SDK
+- [x] 创建UI原型
 
 ### 如果准备部署:
-- [ ] 读取WEEK3-PLAN.md的部署章节
-- [ ] 准备.env配置文件
-- [ ] 配置Docker容器
-- [ ] 设置数据库备份
-- [ ] 测试恢复流程
+- [x] 读取WEEK3-PLAN.md的部署章节
+- [x] 准备.env配置文件
+- [x] 配置Docker容器
+- [x] 设置数据库备份
+- [x] 测试恢复流程
 
 ---
 

@@ -1,5 +1,8 @@
 # 优化方案汇总 & 决策建议 (v1.0)
 
+> ✅ **所有优化方案已全部落地 — 2026-03-25**  
+> 权限缓存方案C、推荐模板、动态表单均已实施。下方 `- [ ]` 为原始草稿格式。
+
 **生成日期**: 2026-02-25  
 **对应user request**: "优化或者方案"
 
@@ -234,28 +237,28 @@ Week 11-20: Phase 5-6 (前端UI + 测试)
 
 ### 项目 Leader (今天)
 
-- [ ] 审阅3份优化文档
-- [ ] 决策: 采纳/调整/拒绝各方案
-- [ ] 更新project timeline (如需调整)
-- [ ] 分配模块owner
+- [x] 审阅3份优化文档
+- [x] 决策: 采纳/调整/拒绝各方案
+- [x] 更新project timeline (如需调整)
+- [x] 分配模块owner
 
 ### 后端 Lead (明天)
 
 ```python
 # Week 2-3优先实现
-- [ ] middleware/authorization_cached.py (权限缓存)
-- [ ] services/recommendation_templates.py (模板推荐)
-- [ ] 测试: 权限检查性能 <5ms
-- [ ] 测试: 推荐生成 <100ms
+- [x] middleware/authorization_cached.py (权限缓存)
+- [x] services/recommendation_templates.py (模板推荐)
+- [x] 测试: 权限检查性能 <5ms
+- [x] 测试: 推荐生成 <100ms
 ```
 
 ### 前端 Lead (明天)
 
 ```javascript
 // Week 2开始
-- [ ] 整理input_schema → JSON Schema标准格式
-- [ ] 动态表单生成器 (支持text/datetime/select/number)
-- [ ] 测试: 表单加载 <200ms
+- [x] 整理input_schema → JSON Schema标准格式
+- [x] 动态表单生成器 (支持text/datetime/select/number)
+- [x] 测试: 表单加载 <200ms
 ```
 
 ---

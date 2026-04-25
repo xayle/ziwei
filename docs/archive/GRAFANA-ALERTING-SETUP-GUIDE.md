@@ -294,33 +294,33 @@ wait
 
 ### Grafana 仪表板部署
 
-- [ ] Docker 监控栈已启动
-- [ ] Grafana 访问正常 (admin/admin)
-- [ ] Prometheus 数据源已添加
-- [ ] 仪表板已导入 (grafana-dashboard.json)
-- [ ] 所有面板数据已显示
+- [x] Docker 监控栈已启动
+- [x] Grafana 访问正常 (admin/admin)
+- [x] Prometheus 数据源已添加
+- [x] 仪表板已导入 (grafana-dashboard.json)
+- [x] 所有面板数据已显示
 
 ### Email 通知配置
 
-- [ ] SMTP 配置已设置
-- [ ] Email 通知渠道已创建
-- [ ] 测试邮件已发送
-- [ ] 告警规则已绑定 Email 渠道
+- [x] SMTP 配置已设置
+- [x] Email 通知渠道已创建
+- [x] 测试邮件已发送
+- [x] 告警规则已绑定 Email 渠道
 
 ### Slack 通知配置
 
-- [ ] Slack Webhook 已获取
-- [ ] AlertManager 配置已更新
-- [ ] Slack 通知渠道已创建
-- [ ] 测试消息已发送到 Slack
+- [x] Slack Webhook 已获取
+- [x] AlertManager 配置已更新
+- [x] Slack 通知渠道已创建
+- [x] 测试消息已发送到 Slack
 
 ### 告警规则配置
 
-- [ ] 高请求率告警已配置 (> 100 req/s)
-- [ ] 高延迟告警已配置 (P95 > 1s)
-- [ ] 高错误率告警已配置 (> 5%)
-- [ ] 慢查询告警已配置 (> 5s)
-- [ ] 低认证成功率告警已配置 (< 80%)
+- [x] 高请求率告警已配置 (> 100 req/s)
+- [x] 高延迟告警已配置 (P95 > 1s)
+- [x] 高错误率告警已配置 (> 5%)
+- [x] 慢查询告警已配置 (> 5s)
+- [x] 低认证成功率告警已配置 (< 80%)
 
 ---
 
