@@ -67,13 +67,22 @@ def _place_ziwei(day: int, ju: int) -> int:
     return (2 + (day // ju) - 1) % 12  # pragma: no cover
 
 
-def place_main_stars(lunar_day: int, wuxing_ju: int) -> dict[str, StarPosition]:
+def place_main_stars(
+    lunar_day: int,
+    wuxing_ju: int,
+    brightness_method: str = "standard",
+) -> dict[str, StarPosition]:
     """
     布局14主星，返回 {星名: StarPosition}。
 
     Args:
-        lunar_day: 农历日 (1-30)
-        wuxing_ju: 五行局数 (2/3/4/5/6)
+        lunar_day         : 农历日 (1-30)
+        wuxing_ju         : 五行局数 (2/3/4/5/6)
+        brightness_method : 亮度流派
+            "standard"  依据斗数全书（默认）
+            "zhongzhou" 中州派
+            "mod1"      现代修订一
+            "mod2"      现代修订二
     """
     ziwei_b = _place_ziwei(lunar_day, wuxing_ju)
     # 天府：令 (2 * 寅 - 紫微) % 12 = (4 - ziwei_b) % 12
@@ -84,7 +93,7 @@ def place_main_stars(lunar_day: int, wuxing_ju: int) -> dict[str, StarPosition]:
     # 紫微系（6星）
     for name, offset in ZIWEI_OFFSETS.items():
         b = (ziwei_b + offset) % 12
-        bv, bn = get_brightness(name, b)
+        bv, bn = get_brightness(name, b, brightness_method)
         result[name] = StarPosition(
             name=name, branch_idx=b, branch=BRANCHES[b],
             brightness_val=bv, brightness=bn,
@@ -93,7 +102,7 @@ def place_main_stars(lunar_day: int, wuxing_ju: int) -> dict[str, StarPosition]:
     # 天府系（8星）
     for name, offset in TIANFU_OFFSETS.items():
         b = (tianfu_b + offset) % 12
-        bv, bn = get_brightness(name, b)
+        bv, bn = get_brightness(name, b, brightness_method)
         result[name] = StarPosition(
             name=name, branch_idx=b, branch=BRANCHES[b],
             brightness_val=bv, brightness=bn,

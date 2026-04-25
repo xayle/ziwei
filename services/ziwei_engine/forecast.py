@@ -640,7 +640,8 @@ def generate_forecast(
     current_month : 当前月份（1-12），0=自动取今日月份
     """
     if current_month <= 0:
-        current_month = datetime.date.today().month
+        from zoneinfo import ZoneInfo as _ZI
+        current_month = datetime.datetime.now(_ZI("Asia/Shanghai")).month
 
     # ── 当前大运 ─────────────────────────────────────────────
     dy_item   = _get_current_dayun(chart, liunian_year)

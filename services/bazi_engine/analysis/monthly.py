@@ -172,8 +172,10 @@ def compute_monthly(
 
         if mode == "single":
             # 单用户模式：全部降级为"平"
+            lunar_month = _chi_idx + 1
             results.append(MonthlyFortuneModel(
                 month=month_num,
+                lunar_month=lunar_month,
                 month_dizhi=mb,
                 luck_level="平",
                 color_hint=_LUCK_COLOR["平"],
@@ -232,8 +234,10 @@ def compute_monthly(
         # color_hint — 根据 luck_level 返回 CSS 十六进制颜色（P0-15）
         color_hint = _LUCK_COLOR.get(luck_level, "#888888")
 
+        lunar_month = _chi_idx + 1
         results.append(MonthlyFortuneModel(
             month=month_num,
+            lunar_month=lunar_month,
             month_dizhi=mb,
             luck_level=luck_level,
             color_hint=color_hint,

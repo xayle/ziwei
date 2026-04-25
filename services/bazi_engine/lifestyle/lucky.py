@@ -77,14 +77,28 @@ def compute_lucky(
     if not lucky_direction:
         lucky_direction = "中部"
 
+    # B7: 忌神颜色和忌神方位——忌神对应的生活用色应谨慎使用
+    avoid_colors: list[str] = []
+    avoid_direction = ""
+    for el in yongshen_avoid[:2]:
+        for c in _ELEMENT_COLOR.get(el, []):
+            if c not in avoid_colors:
+                avoid_colors.append(c)
+        if not avoid_direction:
+            avoid_direction = _ELEMENT_DIRECTION.get(el, "")
+
     el_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor[:2])
+    el_avoid_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_avoid[:2])
     _colors_top = "、".join(lucky_colors[:2])
     _nums_top   = "、".join(str(n) for n in lucky_numbers[:3])
+    _avoid_colors_top = "、".join(avoid_colors[:2]) if avoid_colors else "无"
     interp = (
         f"用神五行为【{el_cn}】，幸运色为【{_colors_top}】，旺运数字为【{_nums_top}】。"
         f"旺运方位【{lucky_direction}】，出行、择座或开会时优先选择该方向可增添气场。"
         f"开运物「{lucky_item}」适合随身携带或置于工作桌上，在重要场合与面试、签约前使用效果更佳。"
-        f"将幸运色融入日常穿搭或配饰中，有助于在社交与职场中彰显个人磁场。"
+        f"【忌神五行为{el_avoid_cn}】，日常穿搭建议谨慎使用忌色【{_avoid_colors_top}】"
+        + (f"，忌神方位【{avoid_direction}】宜少居少占。" if avoid_direction else "。")
+        + f"将幸运色融入日常穿搭或配饰中，有助于在社交与职场中彰显个人磁场。"
         f"（仅供学术研究参考）"
     )
 
@@ -94,4 +108,6 @@ def compute_lucky(
         lucky_direction=lucky_direction,
         lucky_item=lucky_item,
         interpretation_text=interp,
+        avoid_colors=avoid_colors,
+        avoid_direction=avoid_direction,
     )

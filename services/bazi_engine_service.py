@@ -25,9 +25,9 @@ try:
     from cachetools import TTLCache  # type: ignore[import-untyped]
     _RESULT_CACHE: TTLCache = TTLCache(maxsize=500, ttl=3600)
     _CACHETOOLS_AVAILABLE = True
-except ImportError:
-    _RESULT_CACHE = {}  # type: ignore[assignment]
-    _CACHETOOLS_AVAILABLE = False
+except ImportError:  # pragma: no cover
+    _RESULT_CACHE = {}  # type: ignore[assignment]  # pragma: no cover
+    _CACHETOOLS_AVAILABLE = False  # pragma: no cover
 
 from app.schemas import (
     BackendInfo,
@@ -51,6 +51,19 @@ from app.schemas import (
 from app.config import settings
 from constants import API_VERSION, RULE_VERSION
 
+# ──────────────────────────────────────────────────────────────────────────────
+# B2: 规则版本标记 — 规则热重载后此值更新，使旧缓存 key 自然失效
+# ──────────────────────────────────────────────────────────────────────────────
+_CURRENT_RULE_VERSION: str = RULE_VERSION
+
+
+def invalidate_rule_cache() -> None:
+    """规则热重载后调用：更新版本标记，使所有旧 key 在下次计算时自然失效。"""
+    import time as _time
+    global _CURRENT_RULE_VERSION
+    _CURRENT_RULE_VERSION = f"{RULE_VERSION}_{_time.time():.0f}"
+
+
 # 可选的 Prometheus 指标（缺失时优雅降级）
 try:
     from services.prometheus_monitoring import (
@@ -71,8 +84,8 @@ def _make_cache_key(
     mode: str,
     gender: Optional[str],
 ) -> str:
-    """key = SHA-256 of dt+lon+mode+gender"""
-    raw = f"{dt.isoformat()}|{lon:.4f}|{mode}|{gender or ''}"
+    """key = SHA-256 of dt+lon+mode+gender+rule_version（B2: 混入规则版本避免脏读）"""
+    raw = f"{dt.isoformat()}|{lon:.4f}|{mode}|{gender or ''}|{_CURRENT_RULE_VERSION}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -81,7 +94,8 @@ def _make_cache_key(
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _engine_v2_enabled() -> bool:
-    return os.getenv("ENGINE_V2", "false").strip().lower() == "true"
+    """O9: 读取 settings.engine_v2，不再绕过 Settings 直接读 os.getenv。"""
+    return settings.engine_v2
 
 
 # ──────────────────────────────────────────────────────────────────────────────

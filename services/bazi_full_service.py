@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from math import ceil
+from types import SimpleNamespace
 from typing import Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -16,7 +17,7 @@ from app.error_handling import handle_exceptions
 
 from backends import get_jieqi_context
 from constants import API_VERSION, RULE_VERSION
-from schemas import (
+from app.schemas import (
     BaziFullRequest,
     BaziFullResponse,
     BaziMethodsModel,
@@ -25,6 +26,7 @@ from schemas import (
     DaYunModel,
     DaYunItemModel,
     DayMasterStrengthModel,
+    GejuModel,
     LiuNianResultModel,
     LiuNianItemModel,
     PillarModel,
@@ -38,6 +40,8 @@ from schemas import (
 )
 from services.normalize_input import validate_lon_strict, warn_lon_cn_range
 from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS as _BRANCH_HIDDEN_STEMS  # RL#1 藏干
+from services.bazi_engine.geju import compute_geju
+from services.bazi_rule_engine import match_rules
 from verify import verify_full
 
 
@@ -380,6 +384,7 @@ def _element_relation(day_element: str, target_element: str) -> str:
 
 
 def ten_god(day_stem: str, target_stem: str) -> Optional[str]:
+    """返回中文十神名称（比肩/劫财/食神/伤官/正财/偏财/正官/七杀/正印/偏印）。"""
     try:
         day_element, day_polarity = _stem_meta(day_stem)
         target_element, target_polarity = _stem_meta(target_stem)
@@ -390,15 +395,15 @@ def ten_god(day_stem: str, target_stem: str) -> Optional[str]:
     same_polarity = day_polarity == target_polarity
 
     if relation == "same":
-        return "bi_jian" if same_polarity else "jie_cai"
+        return "比肩" if same_polarity else "劫财"
     if relation == "child":
-        return "shi_shen" if same_polarity else "shang_guan"
+        return "食神" if same_polarity else "伤官"
     if relation == "parent":
-        return "pian_yin" if same_polarity else "zheng_yin"
+        return "偏印" if same_polarity else "正印"
     if relation == "wealth":
-        return "pian_cai" if same_polarity else "zheng_cai"
+        return "偏财" if same_polarity else "正财"
     if relation == "officer":
-        return "qi_sha" if same_polarity else "zheng_guan"
+        return "七杀" if same_polarity else "正官"
     return None
 
 
@@ -521,6 +526,66 @@ def bazi_full(
     raw.day_boundary_crossed = day_boundary_crossed
     raw.dayun = raw_dayun
 
+    # B4: 规则引擎匹配（返回 dict 列表，直接用于 BaziFullResponse.rule_matches）
+    # 先调 compute_geju 取格局结果，避免 geju=None 导致格局类规则永远无法命中
+    _geju_for_rules: SimpleNamespace | None = None
+    _geju_model: GejuModel | None = None
+    try:
+        _geju_raw = compute_geju(
+            year_stem=pillars_model.year.stem,
+            month_stem=pillars_model.month.stem,
+            month_branch=pillars_model.month.branch,
+            day_stem=pillars_model.day.stem,
+            hour_stem=pillars_model.hour.stem,
+            wuxing_scores={
+                "wood":  wuxing_score.wood,
+                "fire":  wuxing_score.fire,
+                "earth": wuxing_score.earth,
+                "metal": wuxing_score.metal,
+                "water": wuxing_score.water,
+            },
+            year_branch=pillars_model.year.branch,
+            day_branch=pillars_model.day.branch,
+            hour_branch=pillars_model.hour.branch,
+        )
+        _conf = _geju_raw.get("confidence", 0.0)
+        _geju_name = _geju_raw.get("name", "普通格")
+        _is_broken = bool(_geju_raw.get("po_geju", {}).get("broken", False))
+        if _geju_name in ("无格", "普通格"):
+            _level = "无格"
+        elif _conf >= 0.85:
+            _level = "上格"
+        elif _conf >= 0.65:
+            _level = "中格"
+        else:
+            _level = "下格"
+        _geju_for_rules = SimpleNamespace(
+            geju_name=_geju_name,
+            is_broken=_is_broken,
+            geju_level=_level,
+        )
+        _geju_model = GejuModel(
+            geju_name=_geju_name,
+            geju_level=_level,
+            month_stem_shishen=_geju_raw.get("ten_god", ""),
+            is_broken=_is_broken,
+            inference_tags=[_geju_raw.get("type", "inner")],
+            interpretation_text=_geju_raw.get("note", ""),
+            classic_ref="",
+            confidence=_conf,
+            geju_detail=_geju_raw.get("po_geju", {}).get("reason", None) if _is_broken else None,
+        )
+    except Exception:  # noqa: BLE001
+        pass  # 格局计算失败时降级为 geju=None，不阻断主流程
+    try:
+        matched_rules = match_rules(
+            geju=_geju_for_rules,
+            yongshen=yongshen,
+            shensha=None,
+        )
+    except Exception:  # noqa: BLE001
+        matched_rules = []
+
     return BaziFullResponse(
         api_version=API_VERSION,
         rule_version=RULE_VERSION,
@@ -536,6 +601,8 @@ def bazi_full(
         wuxing_breakdown=wuxing_breakdown,
         day_master_strength=strength,
         yongshen=yongshen,
+        geju=_geju_model,
         start_dayun_age=None,
         raw=raw,
+        rule_matches=matched_rules,
     )

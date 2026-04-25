@@ -1,0 +1,19 @@
+{# geju_explain.j2 ─ 格局解释片段（由 bazi_summary.j2 include）
+   变量：geju_name, geju_level, geju_broken, yongshen_favor
+#}
+{% if geju_name and geju_name != "无格" %}
+格局：**{{ geju_name }}**（{{ geju_level }}）{% if geju_broken %}—— **破格**，格局受损{% endif %}
+
+{% if not geju_broken %}
+{{ geju_name }}以清纯为美，喜{{ yongshen_favor }}为用，
+{%- if geju_level == "上格" %} 格局层次极高，一生大运顺遂，成就超越常人。
+{%- elif geju_level == "中格" %} 格局中等，运势稳健，有所作为。
+{%- elif geju_level == "下格" %} 格局偏弱，须借大运扶持，积累为要。
+{%- else %} 格局待详细推断。
+{%- endif %}
+{% else %}
+破格之命宜注重德行修身，以弥补格局之缺，遇贵吉运可挽回颓势。
+{% endif %}
+{% else %}
+格局类型：{{ geju_name if geju_name else "待推断" }}（格局信息不足，建议补充出生时辰精度）
+{% endif %}

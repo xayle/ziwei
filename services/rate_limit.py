@@ -29,4 +29,16 @@ def _rate_limit_key(request):
 
 # Global limiter instance.
 # Per-route limits via @limiter.limit in routers (verify=30/min, bazi/full=20/min).
-limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"])
+#
+# 生产环境多进程部署时（uvicorn --workers N）必须改用 Redis 后端，否则每进程各自计数导致实际限流上限被成倍放大：
+#
+#   开启 Redis 的方式：设置环境变量 REDIS_URL，例如：
+#     export REDIS_URL=redis://localhost:6379
+#   代码自动检测并切换到 Redis 存储，未设置时回退内存模式（单进程开发相容）。
+_redis_url = os.environ.get("REDIS_URL", "")
+if _redis_url:
+    limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"],
+                      storage_uri=_redis_url)
+else:
+    # 单进程开发模式 / Docker 单实例：内存存储即可
+    limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"])

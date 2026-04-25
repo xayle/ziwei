@@ -23,7 +23,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from .tables import (
     STEMS, BRANCHES, PALACE_NAMES,
-    NAYIN_30, NAYIN_TO_JU,
+    NAYIN_30, NAYIN_TO_JU, WUHU_M1_STEM,
 )
 from .lunar import LunarInfo
 
@@ -51,7 +51,7 @@ _JU_NAMES: dict[int, str] = {
 
 def calc_palaces(info: LunarInfo) -> PalaceLayout:
     """根据农历信息计算十二宫布局"""
-    m  = info.lunar_month        # 1-12
+    m  = info.calc_lunar_month   # 闰月按下一月（如闰五月=6），确保命宫计算正确
     hb = info.hour_branch_idx    # 子=0…亥=11 (寅=2)
 
     # ── 命宫地支 ──
@@ -60,10 +60,10 @@ def calc_palaces(info: LunarInfo) -> PalaceLayout:
     # ── 身宫地支 ──
     body_b = (2 + m - 1 + hb) % 12
 
-    # ── 命宫天干（五虎遁：月干+步数）──
-    # 步数 = 从寅(2) 顺数到命宫地支
+    # ── 命宫天干（五虎遁：寅干起+步数）──
+    # 步数 = 从寅(2) 顺数到命宫地支（寅宫天干 = WUHU_M1_STEM[年干]）
     steps = (life_b - 2) % 12
-    life_stem_idx = (info.month_stem_idx + steps) % 10
+    life_stem_idx = (WUHU_M1_STEM[info.year_stem_idx] + steps) % 10
 
     # ── 五行局 ──
     # jiazi_60_index = (6*stem - 5*branch) mod 60
@@ -74,7 +74,7 @@ def calc_palaces(info: LunarInfo) -> PalaceLayout:
 
     life_gz = STEMS[life_stem_idx] + BRANCHES[life_b]
     body_stem_steps = (body_b - 2) % 12
-    body_stem_idx = (info.month_stem_idx + body_stem_steps) % 10
+    body_stem_idx = (WUHU_M1_STEM[info.year_stem_idx] + body_stem_steps) % 10
     body_gz = STEMS[body_stem_idx] + BRANCHES[body_b]
 
     # ── 宫名分配 ──

@@ -1,0 +1,24 @@
+{# dayun_narrative.j2 ─ 当前大运叙事片段（可单独 include 或单独渲染）
+   变量：
+     current_dayun   dict or None { stem, branch, ten_god, start_age, start_year, wealth_hint, health_hint, love_hint }
+     day_stem        日主天干
+     strength_tier   日主强弱
+     yongshen_favor  喜用神（字符串）
+#}
+{% if current_dayun %}
+## 当前大运分析
+大运：**{{ current_dayun.stem }}{{ current_dayun.branch }}**（十神：{{ current_dayun.ten_god or "待推算" }}）
+起运年龄：约 {{ current_dayun.start_age }} 岁（{{ current_dayun.start_year }} 年起）
+
+{% if current_dayun.wealth_hint %}财运提示：{{ current_dayun.wealth_hint }}{% endif %}
+{% if current_dayun.health_hint %}健康提示：{{ current_dayun.health_hint }}{% endif %}
+{% if current_dayun.love_hint %}情感提示：{{ current_dayun.love_hint }}{% endif %}
+
+大运五行与日主{{ day_stem }}（{{ strength_tier }}）的互动：
+{%- set dayun_wuxing = current_dayun.stem ~ current_dayun.branch %}
+当前大运需结合喜用神（{{ yongshen_favor or "待推断" }}）判断吉凶。
+若大运含{{ yongshen_favor or "喜用神" }}，则此段运势利于事业、财运大步前进；
+反之若与忌神相合，宜低调守成，待时而动。
+{% else %}
+大运信息暂未获取，建议提供完整出生时间以推算起运年龄。
+{% endif %}

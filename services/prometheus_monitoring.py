@@ -154,6 +154,174 @@ BAZI_BOUNDARY_RISK = Counter(
 )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# §7  紫微专属指标  ZiWei-specific metrics
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 紫微单次排盘计数（按性别 / 状态）
+ZIWEI_CALC_TOTAL = Counter(
+    'ziwei_calc_total',
+    'ZiWei single chart calculation total',
+    ['gender', 'status'],       # gender=男/女/unknown, status=success/error
+)
+
+# 紫微单次排盘耗时（秒）
+ZIWEI_CALC_DURATION = Histogram(
+    'ziwei_calc_duration_seconds',
+    'ZiWei single chart calculation duration in seconds',
+    buckets=(0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0),
+)
+
+# 紫微批量排盘请求计数（按状态）
+ZIWEI_BATCH_REQUESTS_TOTAL = Counter(
+    'ziwei_batch_requests_total',
+    'ZiWei batch calculation requests total',
+    ['status'],                 # status=success/error
+)
+
+# 紫微批量排盘处理行数
+ZIWEI_BATCH_ROWS_TOTAL = Counter(
+    'ziwei_batch_rows_total',
+    'ZiWei batch rows processed total',
+    ['result'],                 # result=success/error
+)
+
+# 审核记录提交计数
+ZIWEI_REVIEW_SUBMIT_TOTAL = Counter(
+    'ziwei_review_submit_total',
+    'ZiWei chart review submissions total',
+    ['status'],                 # status=new/duplicate
+)
+
+# 审核状态变更计数
+ZIWEI_REVIEW_ACTION_TOTAL = Counter(
+    'ziwei_review_action_total',
+    'ZiWei chart review status changes total',
+    ['action'],                 # action=approved/rejected/revised
+)
+
+
+def record_ziwei_calc(gender: str, duration_secs: float, success: bool) -> None:
+    """记录单次紫微排盘指标。"""
+    status = "success" if success else "error"
+    g = gender if gender in ("男", "女") else "unknown"
+    ZIWEI_CALC_TOTAL.labels(gender=g, status=status).inc()
+    if success:
+        ZIWEI_CALC_DURATION.observe(duration_secs)
+
+
+def record_ziwei_batch(success_rows: int, error_rows: int, req_success: bool) -> None:
+    """记录批量排盘指标。"""
+    ZIWEI_BATCH_REQUESTS_TOTAL.labels(status="success" if req_success else "error").inc()
+    if success_rows:
+        ZIWEI_BATCH_ROWS_TOTAL.labels(result="success").inc(success_rows)
+    if error_rows:
+        ZIWEI_BATCH_ROWS_TOTAL.labels(result="error").inc(error_rows)
+
+
+def record_review_submit(is_duplicate: bool) -> None:
+    """记录审核提交指标。"""
+    ZIWEI_REVIEW_SUBMIT_TOTAL.labels(status="duplicate" if is_duplicate else "new").inc()
+
+
+def record_review_action(action: str) -> None:
+    """记录审核状态变更指标（approved/rejected/revised）。"""
+    ZIWEI_REVIEW_ACTION_TOTAL.labels(action=action).inc()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §9  A/B 测试专属指标  A/B Testing metrics
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 变体分配计数（仅首次分配，按实验名 / 变体）
+AB_EXPERIMENT_ASSIGNED = Counter(
+    'ab_experiment_assigned_total',
+    'A/B experiment variant assignments total',
+    ['experiment', 'variant'],
+)
+
+# 实验事件计数（按实验名 / 变体 / 事件类型）
+AB_EXPERIMENT_EVENT = Counter(
+    'ab_experiment_event_total',
+    'A/B experiment events total',
+    ['experiment', 'variant', 'event_type'],
+)
+
+
+def record_ab_experiment_assigned(experiment_name: str, variant: str) -> None:
+    """记录一次新的变体分配。"""
+    AB_EXPERIMENT_ASSIGNED.labels(experiment=experiment_name, variant=variant).inc()
+
+
+def record_ab_experiment_event(
+    experiment_name: str,
+    variant: str,
+    event_type: str,
+) -> None:
+    """记录一次实验事件。"""
+    AB_EXPERIMENT_EVENT.labels(
+        experiment=experiment_name,
+        variant=variant,
+        event_type=event_type,
+    ).inc()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §10  LLM 辅助解读指标
+# ─────────────────────────────────────────────────────────────────────────────
+
+# LLM 调用总计（按 provider / status）
+LLM_CALL_TOTAL = Counter(
+    'llm_call_total',
+    'LLM interpretation call total',
+    ['provider', 'status'],          # status=success/error
+)
+
+# LLM 调用耗时（按 provider）
+LLM_CALL_DURATION = Histogram(
+    'llm_call_duration_seconds',
+    'LLM call duration in seconds',
+    ['provider'],
+    buckets=(0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0),
+)
+
+# LLM Token 使用量（按 provider / type）
+LLM_TOKENS_TOTAL = Counter(
+    'llm_tokens_total',
+    'LLM tokens consumed total',
+    ['provider', 'token_type'],      # token_type=input/output
+)
+
+# LLM 草稿审核状态（按 action）
+LLM_DRAFT_ACTION_TOTAL = Counter(
+    'llm_draft_action_total',
+    'LLM draft review actions total',
+    ['action'],                      # action=approved/rejected
+)
+
+
+def record_llm_call(
+    provider: str,
+    duration_secs: float,
+    success: bool,
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+) -> None:
+    """记录一次 LLM 调用指标（调用后统一记录）。"""
+    status = "success" if success else "error"
+    LLM_CALL_TOTAL.labels(provider=provider, status=status).inc()
+    LLM_CALL_DURATION.labels(provider=provider).observe(duration_secs)
+    if input_tokens:
+        LLM_TOKENS_TOTAL.labels(provider=provider, token_type="input").inc(input_tokens)
+    if output_tokens:
+        LLM_TOKENS_TOTAL.labels(provider=provider, token_type="output").inc(output_tokens)
+
+
+def record_llm_draft_action(action: str) -> None:
+    """记录草稿审核操作（approved / rejected）。"""
+    LLM_DRAFT_ACTION_TOTAL.labels(action=action).inc()
+
+
 def record_verify_metrics(
     mode: str,
     boundary_level: str,

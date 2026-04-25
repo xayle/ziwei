@@ -1,0 +1,56 @@
+{# bazi_summary.j2 ─ 八字综合事实摘要（供 LLM grounding 使用）
+   变量：
+     day_stem          天干（如 甲）
+     geju_name         格局名（如 正官格）
+     geju_level        格局层级（上格/中格/下格/无格）
+     geju_broken       bool，是否破格
+     yongshen_favor    喜用神（逗号拼接字符串，如 木、火）
+     yongshen_avoid    忌神（逗号拼接字符串）
+     yongshen_rationale  用神推断理由（可空）
+     strength_tier     日主强弱（strong/weak/neutral 等）
+     rule_matches      list of dict { rule_id, name, evidence_text, classic_hint }
+     evidence_snippets list of dict { title, excerpt, source }
+     sample            dict or None { geju_name, summary, plain_facts, action_hints }
+     pillars           dict { year, month, day, hour } 各含 stem/branch
+#}
+【八字事实摘要（仅供学术研究参考）】
+
+## 排盘基本信息
+{% if pillars %}
+年柱：{{ pillars.year.stem }}{{ pillars.year.branch }}  月柱：{{ pillars.month.stem }}{{ pillars.month.branch }}  日柱：{{ pillars.day.stem }}{{ pillars.day.branch }}  时柱：{{ pillars.hour.stem }}{{ pillars.hour.branch }}
+{% endif %}
+日主天干：{{ day_stem }}
+日主强弱：{{ strength_tier }}
+
+## 格局分析
+{% include "geju_explain.j2" %}
+
+## 用神喜忌建议
+{% include "yongshen_advice.j2" %}
+
+## 规则引擎命中（{{ rule_matches | length }} 条）
+{% for rm in rule_matches %}
+- **{{ rm.name }}**（{{ rm.rule_id }}）
+  {{ rm.evidence_text }}
+  来源参考：《{{ rm.classic_hint }}》
+{% else %}
+（无命中规则）
+{% endfor %}
+
+## 古籍检索依据
+{% for ev in evidence_snippets %}
+- 《{{ ev.source }}》：{{ ev.excerpt }}
+{% else %}
+（无古籍片段检索到）
+{% endfor %}
+
+{% if sample %}
+## 同类命式参考样本
+参考格局：{{ sample.geju_name }}
+摘要：{{ sample.summary }}
+关键事实：{{ sample.plain_facts | join("；") if sample.plain_facts is iterable else sample.plain_facts }}
+行动提示：{{ sample.action_hints | join("；") if sample.action_hints is iterable else sample.action_hints }}
+{% endif %}
+
+---
+*以上内容均为学术研究性质，不构成任何现实决策依据。*

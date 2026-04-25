@@ -1,0 +1,18 @@
+{# yongshen_advice.j2 ─ 用神喜忌建议片段（由 bazi_summary.j2 include）
+   变量：yongshen_favor, yongshen_avoid, yongshen_rationale
+#}
+{% if yongshen_favor %}
+**喜用神**：{{ yongshen_favor }}
+  → 大运行至{{ yongshen_favor }}地，运势顺遂；宜从事与{{ yongshen_favor }}相关的行业，居住方位亦可参考。
+{% else %}
+喜用神信息待补充。
+{% endif %}
+
+{% if yongshen_avoid %}
+**忌神**：{{ yongshen_avoid }}
+  → 忌行{{ yongshen_avoid }}地大运；与忌神相克之五行可用作调候化解。
+{% endif %}
+
+{% if yongshen_rationale %}
+**推断依据**：{{ yongshen_rationale }}
+{% endif %}
