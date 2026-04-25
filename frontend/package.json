@@ -1,0 +1,35 @@
+{
+  "name": "bazi-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "sync:api": "pwsh ../scripts/sync_frontend_env.ps1",
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "html2canvas": "^1.4.1",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node22": "^22.0.5",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitest/coverage-v8": "^4.1.1",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.9.1",
+    "jsdom": "^29.0.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.11",
+    "vitest": "^4.1.1",
+    "vue-tsc": "^2.2.0"
+  }
+}

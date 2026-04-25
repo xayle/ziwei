@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════════════════════════════
+   variables.css — 前端设计 Token（从 base.css + bazi.css 同步）
+   Vue 3 前端统一引用此文件
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 默认主题（科技极简白） ──────────────────────────────────── */
+:root {
+  /* 背景层 */
+  --bg:          #f0f4f8;
+  --surface:     #ffffff;
+  --surface-2:   #f8fafc;
+
+  /* 边框 */
+  --border:      #e1e7ef;
+  --border-md:   #c8d3e1;
+
+  /* 导航 */
+  --hdr-bg:      #111827;
+  --hdr-fg:      #f9fafb;
+  --hdr-fg-2:    #9ca3af;
+
+  /* 主强调色——琥珀 */
+  --accent:      #d97706;
+  --accent-dark: #b45309;
+  --accent-lt:   #fef3c7;
+  --accent-glow: rgba(217,119,6,.14);
+  --accent-soft: rgba(217,119,6,.20);
+
+  /* 正文色 */
+  --text:        #111827;
+  --text-2:      #4b5563;
+  --text-3:      #9ca3af;
+
+  /* 语义色 */
+  --success-dark: #15803d;
+  --danger:       #ef4444;
+  --danger-dark:  #dc2626;
+  --info-dark:    #4f46e5;
+
+  /* 五行语义色 */
+  --wx-wood:  #16a34a;   /* 木·绿 */
+  --wx-fire:  #dc2626;   /* 火·赤 */
+  --wx-earth: #d97706;   /* 土·黄 */
+  --wx-metal: #64748b;   /* 金·银灰 */
+  --wx-water: #2563eb;   /* 水·蓝 */
+
+  /* 字体栈 */
+  --font-ui:   "Inter","Noto Sans SC","PingFang SC",-apple-system,sans-serif;
+  --font-cn:   "Noto Serif SC","STSong","SimSun",serif;
+  --font-mono: "JetBrains Mono","Consolas",monospace;
+
+  /* 字号 */
+  --fs-2xs: 0.625rem;
+  --fs-xs:  0.75rem;
+  --fs-sm:  0.8125rem;
+  --fs-md:  0.875rem;
+  --fs-lg:  1rem;
+  --fs-xl:  1.125rem;
+  --fs-2xl: 1.375rem;
+  --fs-3xl: 1.75rem;
+
+  /* 间距 */
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 20px;  --sp-6: 24px;  --sp-7: 28px;  --sp-8: 32px;
+
+  /* 阴影 */
+  --shadow:    0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.07);
+  --shadow-lg: 0 4px 8px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.12);
+
+  /* 圆角 / 容器 / 过渡 */
+  --radius:    10px;
+  --radius-sm: 6px;
+  --W:         960px;
+  --dur-fast:  0.12s;
+  --dur-mid:   0.2s;
+  --dur-slow:  0.35s;
+
+  /* 兼容别名 */
+  --paper:     var(--surface);
+  --border-lt: var(--border);
+  --gold:      var(--accent);
+  --gold-lt:   var(--accent-lt);
+  --muted:     var(--text-2);
+  --tag-bg:    var(--accent-lt);
+  --accent2:   var(--info-dark);
+
+  /* ── UI设计稿新 token（三栏布局专用）────────────────────── */
+  /* 品牌色：映射到现有 accent */
+  --color-brand:        #2563eb;
+  --color-brand-hover:  #1d4ed8;
+  --color-brand-light:  #dbeafe;
+
+  /* 背景层别名 */
+  --color-bg-primary:   var(--surface);
+  --color-bg-secondary: var(--surface-2);
+  --color-bg-tertiary:  #f3f4f6;
+
+  /* 文字别名 */
+  --color-text-primary:   var(--text);
+  --color-text-secondary: var(--text-2);
+  --color-text-tertiary:  #6b7280;
+  --color-text-muted:     var(--text-3);
+
+  /* 边框别名 */
+  --color-border:   var(--border);
+  --color-divider:  var(--border-md);
+
+  /* 语义色 */
+  --color-success:  #059669;
+  --color-warning:  #ef4444;
+  --color-info:     #0891b2;
+
+  /* 字号别名（映射现有 --fs-* rem 值，但提供 px 别名方便迁移） */
+  --font-size-xs:   0.75rem;
+  --font-size-sm:   0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg:   1.125rem;
+  --font-size-xl:   1.25rem;
+  --font-size-2xl:  1.5rem;
+
+  /* 间距别名（与现有 --sp-* 保持一致） */
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  16px;
+  --spacing-lg:  24px;
+  --spacing-xl:  32px;
+
+  /* 过渡（cubic-bezier 版本，区别于 --dur-*） */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.3s  cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s  cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 阴影别名 */
+  --shadow-sm:  0 1px 2px 0 rgba(0,0,0,.05);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+}
+
+/* ─── 八字主题（中式米黄/朱红）data-theme="bazi" 时覆盖 ────── */
+[data-theme="bazi"] {
+  --bg:       #f2e8d8;
+  --surface:  #fdf9f3;
+  --surface-2:#f7f0e6;
+
+  --border:    #ddd0bc;
+  --border-md: #c9b89e;
+
+  --hdr-bg:   #1a0a04;
+  --hdr-fg:   #f0ddb8;
+  --hdr-fg-2: #b8997a;
+
+  --accent:      #8b1a1a;
+  --accent-dark: #6b1414;
+  --accent-lt:   #faeada;
+  --accent-glow: rgba(139,26,26,.14);
+  --gold:        #b8862a;
+
+  --text:   #1a0a04;
+  --text-2: #5c3d2e;
+  --text-3: #9c7a5e;
+
+  /* 四柱宫格专用 */
+  --pillar-w: 68px;
+}
+
+/* ─── 全局重置 ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #app {
+  height: 100%;
+}
+body {
+  font-family: var(--font-ui);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+a { color: var(--accent-dark); text-decoration: none; }
+a:hover { color: var(--accent); }
+
+::selection { background: var(--accent-lt); color: var(--text); }
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap { margin: 0 auto; padding: 0 var(--sp-4); }
+
+/* ─── 骨架屏 ─────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skel-line {
+  height: 14px; border-radius: 4px; margin: 8px 0;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 400px; animation: shimmer 1.2s infinite;
+}
+
+/* ─── 章节高亮动画 ───────────────────────────────────────────── */
+@keyframes section-pulse {
+  0%   { background-color: var(--accent-lt); }
+  100% { background-color: transparent; }
+}
+.section-highlight {
+  animation: section-pulse 0.8s ease;
+}
