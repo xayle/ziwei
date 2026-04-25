@@ -22,7 +22,7 @@
 | N5 | UX 增强 | 历史 FIFO-5, 分享卡片 PNG, 批量 CSV, 五行环图, 大运展开, 移动端响应式, 暗黑模式 |
 | N6 | API v2 | `/api/v2` 路由, v2 Schema, v1 弃用 header, SDK 示例, Locust 压测 |
 | N7 | 测试与发布 | 910 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`,  git tag |
-| 紫微斗数 | 第三方占星引擎 | 完整命宫/主星/四化/流月引擎，Tab20 集成于 verify.html |
+| 紫微斗数 | 第三方占星引擎 | 完整命宫/主星/四化/流月引擎，当前由 SPA 主入口与兼容 legacy 页共同承载 |
 
 ### 测试指标
 
@@ -144,23 +144,37 @@ pip install -r requirements.txt
 # 可选：开发依赖
 pip install -r requirements-dev.txt
 
+# 默认本地端口（若脚本自动回退请改成实际端口）
+PORT=8000
+
 # 运行服务器
-uvicorn run:app --host 127.0.0.1 --port 8000
+uvicorn run:app --host 127.0.0.1 --port ${PORT}
+
+# 推荐（Windows / PowerShell）：使用启动脚本自动检查 .env 与端口占用
+./start-local.ps1 -Port 8000
+
+# 默认本地地址（若脚本自动回退端口请改成实际端口）
+BASE_URL=http://127.0.0.1:8000
 
 # 运行全部测试
 pytest tests/ -v
 # 结果: ✅ 854/854 tests passed (6 skipped)
 
 # 访问API文档
-# Swagger: http://127.0.0.1:8000/docs
-# ReDoc: http://127.0.0.1:8000/redoc
+# Swagger: ${BASE_URL}/docs
+# ReDoc: ${BASE_URL}/redoc
 ```
+
+> 说明：若 8000 端口已被占用，`start-local.ps1` 会自动回退到下一个可用端口（最多探测 20 个端口），并在启动信息中打印实际端口。
 
 #### 核心API使用示例
 
 ```bash
+# 默认本地地址（若脚本自动回退端口请改成实际端口）
+BASE_URL=http://127.0.0.1:8000
+
 # 1. 用户登录
-curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+curl -X POST ${BASE_URL}/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"owner","password":"userpassword"}'
 # 返回: {
@@ -171,12 +185,12 @@ curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
 
 # 2. 检查当前权限
 # Authorization: Bearer <access_token>
-curl http://127.0.0.1:8000/api/v1/members/permissions \
+curl ${BASE_URL}/api/v1/members/permissions \
   -H "Authorization: Bearer <token>"
 # 返回: {permissions: ["create_member", "read_member", ...]}
 
 # 3. 委托权限给其他用户
-curl -X POST http://127.0.0.1:8000/api/v1/delegations \
+curl -X POST ${BASE_URL}/api/v1/delegations \
   -H "Authorization: Bearer <token>" \
   -d '{
     "to_member_id": 2,
@@ -186,7 +200,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/delegations \
 # 返回: {id, from_member_id, to_member_id, ...}
 
 # 4. 创建场景
-curl -X POST http://127.0.0.1:8000/api/v1/scenarios \
+curl -X POST ${BASE_URL}/api/v1/scenarios \
   -H "Authorization: Bearer <token>" \
   -d '{
     "name": "技术合伙",
@@ -257,21 +271,33 @@ curl -X POST http://127.0.0.1:8000/api/v1/scenarios \
 ## Local Run
 - Env: copy [.env.example](.env.example) to .env and adjust HOST/PORT/BASE_URL (BASE_URL is used by smoke scripts).
 - Start API: `uvicorn run:app --host $env:HOST --port $env:PORT`
+- Start API (recommended on Windows): `./start-local.ps1 -Port 8000` (auto fallback to next free port when target port is occupied)
 - Recreate env: `pip install -r requirements.lock.txt` (frozen from the working venv).
 
 ## Local Smoke
-- Start API (terminal A): `uvicorn run:app --reload --host 127.0.0.1 --port 8000`
-- Run smoke (terminal B): `BASE_URL=http://127.0.0.1:8000 bash scripts/smoke_local.sh` or `BASE_URL=http://127.0.0.1:8000 pwsh scripts/smoke_local.ps1`
+- Start API (terminal A): `PORT=8000; uvicorn run:app --reload --host 127.0.0.1 --port ${PORT}`（若自动回退端口请替换）
+- Run smoke (terminal B): `BASE_URL=http://127.0.0.1:8000 bash scripts/smoke_local.sh` or `BASE_URL=http://127.0.0.1:8000 pwsh scripts/smoke_local.ps1`（若自动回退端口请替换）
 - What it covers: /health plus /api/v1/verify cases for request_id (generate/echo/invalid/truncate) and tz_mismatch warning. It runs all cases, summarizes failures, and exits non-zero on any failure.
 - Dependencies: curl + python (PowerShell uses curl.exe). No extra tools required.
 
 ## Local UI
-- Serve static: run app normally and open http://127.0.0.1:8000/static/index.html (no build step)
+- Primary UI (SPA): run app normally and open `${BASE_URL}/static/app/workbench` (default `http://127.0.0.1:8000/static/app/workbench`; requires built frontend assets under `static/app`)
+- Root entry: `${BASE_URL}/` and `${BASE_URL}/dashboard` will redirect to `/static/app/workbench` when SPA assets exist; otherwise they fall back to the legacy `ziwei.html`
+- Frontend dev server: `npm run dev --prefix frontend` (Vite will auto-switch from `5173` to another free port, e.g. `5174`)
+- Local dev main site: `http://localhost:5173/static/app/workbench`（若 `5173` 被占用，请以 Vite 实际端口为准）
+- Frontend API target (optional): copy `frontend/.env.example` to `frontend/.env.local`; set `VITE_DEV_API_TARGET` to actual backend URL (e.g. auto-fallback `http://127.0.0.1:8003`) and/or set `VITE_API_BASE_URL` for direct runtime calls
+- One-command sync (recommended): `npm --prefix frontend run sync:api` (or `pwsh scripts/sync_frontend_env.ps1`), auto probes `/health` on 8000-8010 and writes `frontend/.env.local`
+- After changing `frontend/.env.local`, restart Vite dev server to apply env updates
 - Pages
-  - index.html: 导航入口
-  - verify.html: POST /api/v1/verify，展示 primary/secondary/diff/warnings
-  - bazi.html: POST /api/v1/bazi/full，支持 mode/solar_time_enabled/liunian_years
-  - cases.html: 案例列表与创建，卡片显示最新 verify 摘要 pill
-  - case.html?id=<case_id>: 案例详情+快照；计算区调用 /cases/{id}/compute（mode/solar/liunian，任务可选），展示 compute_batch_id/任务状态/新增快照；复制按钮已缩短文案并带 hover 提示
-  - ziwei.html: 占位页（未开放）
+  - /static/app/workbench: 当前唯一主站入口，承载新版工作台首页
+  - /static/app/: SPA 路由基座，会继续承载 login / workbench / profile / bazi / ziwei / admin / report 等新版页面
+  - /verify: 兼容别名入口；优先跳转到 `/static/app/workbench`，若 SPA 未构建则回退到 legacy `ziwei.html`
+  - /bazi: 兼容别名入口；优先跳转到 `/static/app/bazi`，若 SPA 未构建则回退到 legacy `bazi.html`
+  - /admin: 兼容别名入口；优先跳转到 `/static/app/admin`，若 SPA 未构建则回退到 legacy `admin.html`
+  - /static/verify.html: 兼容跳转页，当前直接跳转到 `/static/app/workbench`
+  - /static/ziwei.html: legacy 紫微独立页（当前作为人工回归对照与兜底入口保留）
+  - /static/bazi.html: 兼容页；默认优先跳往 `/static/app/bazi`，可通过 `?legacy=1` 停留旧版
+  - /static/admin.html: 兼容页；默认优先跳往 `/static/app/admin`，可通过 `?legacy=1` 停留旧版
+  - /static/batch.html: legacy 批量核验工具页（独立保留）
+  - /static/index.html: 旧静态入口，当前会优先探测并跳转到 `/static/app/workbench`，若新版资源不存在则回退到 `/static/ziwei.html`
 - Defaults: mode=dual，solar_time_enabled=false，liunian_years=[-2,2]

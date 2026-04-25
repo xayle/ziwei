@@ -37,5 +37,11 @@ uv_err.txt
 .coverage
 htmlcov/
 .pytest_cache/
+.hypothesis/
+.vite/
+coverage/
+coverage*.json
 
-__scan_result.json
+# 临时扫描/输出文件
+__scan*.json
+tmp_cov.json
