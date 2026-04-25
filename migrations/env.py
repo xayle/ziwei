@@ -10,7 +10,7 @@ from app.config import settings
 # Import all SQLModel models for migration generation
 from app.models import (
     User, RefreshToken, Case, Snapshot, Member, Event, 
-    Scenario, Delegation, AuditLog
+    Scenario, Delegation, AuditLog, ChartReview
 )
 from sqlmodel import SQLModel
 
