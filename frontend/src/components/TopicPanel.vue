@@ -231,6 +231,49 @@ function askAI() {
         </div>
       </div>
 
+      <!-- 4.1 择日引擎 -->
+      <div v-else-if="section.id === 'zeri-engine'" class="content-block">
+        <div class="content-title">择日工作区</div>
+        <div class="content-placeholder">
+          <p>📅 当前已独立到择日模块，建议展示：</p>
+          <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 12px; color: var(--text-3); line-height: 1.8;">
+            <li>按用途筛选的吉日列表（婚嫁 / 搬迁 / 开业等）</li>
+            <li>月历视图与推荐日高亮</li>
+            <li>每日宜忌、冲煞、评分与证据说明</li>
+            <li>从紫微命盘自动带入命宫地支与五行局</li>
+          </ul>
+        </div>
+        <div class="content-hint">💡 左侧点击本节应直接进入择日页，而不是继续停留在案例工作台。</div>
+      </div>
+
+      <!-- 4.2 飞星 / 八宅 / 罗盘 -->
+      <div v-else-if="section.id === 'fengshui-feixing'" class="content-block">
+        <div class="content-title">风水命卦与方位</div>
+        <div class="content-placeholder">
+          <p>🧭 当前已独立到风水模块，建议展示：</p>
+          <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 12px; color: var(--text-3); line-height: 1.8;">
+            <li>命卦、卦名、五行、东四命 / 西四命结论</li>
+            <li>四吉方 / 四凶方的方位卡片与标签说明</li>
+            <li>床位、书桌、大门等家具朝向建议</li>
+            <li>房屋朝向输入后的人宅相合判断</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4.3 房屋诊断 -->
+      <div v-else-if="section.id === 'fengshui-diagnosis'" class="content-block">
+        <div class="content-title">九宫格布局诊断</div>
+        <div class="content-placeholder">
+          <p>🏠 当前已独立到风水模块，建议展示：</p>
+          <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 12px; color: var(--text-3); line-height: 1.8;">
+            <li>八方位房间类型配置（卧室 / 书房 / 厨房等）</li>
+            <li>九宫格布局板与每个方位评分</li>
+            <li>推荐房型 / 避开房型的摘要标签</li>
+            <li>整体评分、改善建议与免责声明</li>
+          </ul>
+        </div>
+      </div>
+
       <!-- 占位符：其他章节 -->
       <div v-else class="content-block">
         <div class="content-title">{{ section.label }}</div>

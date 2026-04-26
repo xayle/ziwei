@@ -3251,10 +3251,13 @@ async function loadFengshuiPanel() {
 }
 
 function toggleFengshuiPanel() {
-  showFengshuiPanel.value = !showFengshuiPanel.value
-  if (showFengshuiPanel.value) {
-    loadFengshuiPanel()
-  }
+  router.push({
+    path: '/fengshui',
+    query: {
+      birth_year: String(year.value),
+      gender: gender.value,
+    },
+  })
 }
 
 async function runFengshuiBagua() {
@@ -5134,33 +5137,51 @@ const chartSummaryStats = computed(() => {
 
         <div v-if="isOverlayFeedbackVisible('chart')" :class="['panel-feedback', overlayFeedback!.type, 'no-print']">{{ overlayFeedback!.message }}</div>
 
-        <!-- 导出按钮 -->
+        <!-- 主操作 -->
         <button class="btn-export btn-export-main no-print" @click="exportPDF">⬇ 导出 PDF</button>
         <button class="btn-export no-print" :disabled="isExportingImage" @click="exportChartAsImage">
           {{ isExportingImage ? 'PNG 导出中…' : '🖼 导出 PNG' }}
         </button>
         <button class="btn-zeri no-print" @click="gotoZeri">📅 择日</button>
-        <button class="btn-ai no-print" @click="gotoAi" :disabled="!result">🤖 AI 解读</button>
+        <button class="btn-ai no-print" :disabled="!result" @click="gotoAi">🤖 AI 解读</button>
         <button class="btn-save-case no-print" :disabled="!canSaveCurrentChart" @click="saveCurrentChart()">
           {{ isSavingCase ? '保存中…' : savedCaseId ? '✅ 已保存' : '💾 保存命盘' }}
         </button>
-        <button class="btn-cases no-print" @click="toggleCasesPanel">📚 案例库</button>
-        <button class="btn-snapshots no-print" :disabled="!savedCaseId" @click="toggleSnapshotsPanel">📸 快照</button>
-        <button class="btn-similar no-print" :disabled="!result" @click="toggleSimilarPanel">🧭 相似盘</button>
-        <button class="btn-review no-print" :disabled="!result" @click="toggleReviewPanel">🧾 审核</button>
-        <button class="btn-llm no-print" :disabled="!result" @click="toggleLlmPanel">✍ AI 草稿</button>
-        <button class="btn-ops no-print" :disabled="!result" @click="toggleOpsPanel">📊 运营</button>
-        <button class="btn-batch no-print" @click="toggleBatchPanel">📦 批量</button>
-        <button class="btn-glossary no-print" @click="toggleGlossaryPanel">📖 词汇</button>
-        <button class="btn-compat no-print" :disabled="!result" @click="toggleMultiCompatPanel">👥 多人合盘</button>
-        <button class="btn-fengshui no-print" @click="toggleFengshuiPanel">🧭 风水</button>
-        <!-- 工具按钮 -->
-        <button class="btn-tool no-print" @click="showStarSearch = true" title="搜索星曜 (S)">🔍</button>
-        <button class="btn-tool no-print" @click="showBrightnessLegend = !showBrightnessLegend" title="亮度图例">💡</button>
-        <button class="btn-tool no-print" @click="showHotkeyPanel = !showHotkeyPanel" title="快捷键 (?)">⌨</button>
-        <button class="btn-tool no-print" @click="showHistoryPanel = !showHistoryPanel; chartHistory = loadHistory()" title="历史记录">
-          📋<span v-if="chartHistory.length" class="history-badge">{{ chartHistory.length }}</span>
-        </button>
+
+        <details class="ziwei-action-menu no-print">
+          <summary class="btn-cases">📚 案例工作流</summary>
+          <div class="ziwei-menu-panel">
+            <button class="ziwei-menu-item" @click="toggleCasesPanel">📚 打开案例库</button>
+            <button class="ziwei-menu-item" :disabled="!savedCaseId" @click="toggleSnapshotsPanel">📸 查看快照</button>
+            <button class="ziwei-menu-item" :disabled="!result" @click="toggleSimilarPanel">🧭 相似盘分析</button>
+          </div>
+        </details>
+
+        <details class="ziwei-action-menu no-print">
+          <summary class="btn-review">🧾 协同治理</summary>
+          <div class="ziwei-menu-panel">
+            <button class="ziwei-menu-item" :disabled="!result" @click="toggleReviewPanel">🧾 审核面板</button>
+            <button class="ziwei-menu-item" :disabled="!result" @click="toggleLlmPanel">✍ AI 草稿</button>
+            <button class="ziwei-menu-item" :disabled="!result" @click="toggleOpsPanel">📊 运营看板</button>
+            <button class="ziwei-menu-item" @click="toggleBatchPanel">📦 批量处理</button>
+            <button class="ziwei-menu-item" @click="toggleGlossaryPanel">📖 词汇面板</button>
+            <button class="ziwei-menu-item" :disabled="!result" @click="toggleMultiCompatPanel">👥 多人合盘</button>
+            <button class="ziwei-menu-item" @click="toggleFengshuiPanel">🧭 风水助手</button>
+          </div>
+        </details>
+
+        <details class="ziwei-action-menu no-print">
+          <summary class="btn-tool-summary">🛠 工具</summary>
+          <div class="ziwei-menu-panel ziwei-menu-panel-tools">
+            <button class="ziwei-menu-item" @click="showStarSearch = true">🔍 搜索星曜</button>
+            <button class="ziwei-menu-item" @click="showBrightnessLegend = !showBrightnessLegend">💡 亮度图例</button>
+            <button class="ziwei-menu-item" @click="showHotkeyPanel = !showHotkeyPanel">⌨ 快捷键面板</button>
+            <button class="ziwei-menu-item" @click="showHistoryPanel = !showHistoryPanel; chartHistory = loadHistory()">
+              <span>📋 历史记录</span>
+              <span v-if="chartHistory.length" class="history-badge">{{ chartHistory.length }}</span>
+            </button>
+          </div>
+        </details>
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════════════
@@ -8403,6 +8424,62 @@ const chartSummaryStats = computed(() => {
 .btn-fengshui { margin-left: var(--sp-2); padding: 6px 14px; background: #ecfeff; color: #0f766e; border: 1.5px solid #5eead4; border-radius: var(--radius-sm); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; transition: all var(--dur-fast); }
 .btn-fengshui:hover:not(:disabled) { background: #ccfbf1; }
 .btn-fengshui:disabled { opacity: .6; cursor: not-allowed; }
+.ziwei-action-menu { position: relative; }
+.ziwei-action-menu summary { list-style: none; }
+.ziwei-action-menu summary::-webkit-details-marker { display: none; }
+.ziwei-action-menu[open] > summary { box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18); }
+.ziwei-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+}
+.ziwei-menu-panel-tools { min-width: 156px; }
+.ziwei-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.ziwei-menu-item:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--accent-dark);
+}
+.ziwei-menu-item:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.btn-tool-summary {
+  margin-left: var(--sp-2);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-md);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--dur-fast);
+}
+.btn-tool-summary:hover { border-color: var(--accent); color: var(--accent); }
 
 .summary-block { font-size: var(--fs-md); color: var(--text); line-height: 1.7; margin-bottom: var(--sp-5); padding: var(--sp-4); background: var(--surface-2); border-radius: var(--radius-sm); border-left: 3px solid var(--accent); }
 

@@ -5,7 +5,13 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/workbench',
+      redirect: '/home',
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: () => import('@/views/HomeView.vue'),
+      meta: { title: '业务总览' },
     },
     {
       path: '/login',
@@ -32,6 +38,12 @@ const router = createRouter({
       meta: { title: '紫微斗数' },
     },
     {
+      path: '/fengshui',
+      name: 'fengshui',
+      component: () => import('@/views/FengshuiView.vue'),
+      meta: { title: '风水助手' },
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('@/views/AdminView.vue'),
@@ -41,7 +53,7 @@ const router = createRouter({
       path: '/workbench',
       name: 'workbench',
       component: () => import('@/views/WorkbenchView.vue'),
-      meta: { title: '命理工作台' },
+      meta: { title: '案例工作台' },
     },
     {
       path: '/profile',

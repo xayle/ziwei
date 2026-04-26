@@ -1,43 +1,59 @@
 <script setup lang="ts">
-/**
- * AppSidebar.vue — 命理中控系统 完整可折叠导航树
- * 两级结构：10 大章（accordion）→ 小节（可点击）
- * 展开 240px | 折叠 64px（只显示章节图标）
- */
-import { ref, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNavStore } from '@/stores/nav'
+import { MODULE_GROUPS, PRIMARY_NAV_ITEMS, getStatusLabel } from '@/data/appModules'
 
-const route  = useRoute()
+const route = useRoute()
 const router = useRouter()
-const auth   = useAuthStore()
-const ui     = useUiStore()
-const nav    = useNavStore()
+const auth = useAuthStore()
+const ui = useUiStore()
+const nav = useNavStore()
 
-// 工作台快捷入口（固定在顶部，不属于知识树）
-const QUICK_ITEMS = [
-  { key: 'workbench', label: '工作台',  icon: '🗂', path: '/workbench' },
-  { key: 'profile',  label: '个人信息', icon: '👤', path: '/profile' },
-]
+const theme = ref<'default' | 'bazi'>('default')
+const knowledgeExpanded = ref(false)
 
-// 初始化：根据当前路由展开对应章节
+const flatModuleItems = computed(() => MODULE_GROUPS.flatMap(group => group.items))
+
 onMounted(() => nav.initFromRoute(route.path))
-watch(() => route.path, (p) => nav.initFromRoute(p))
+watch(() => route.path, (path) => {
+  nav.initFromRoute(path)
+  if (nav.currentSectionId) knowledgeExpanded.value = true
+})
 
-// 点击小节：更新 nav store + 路由跳转 + 打开右侧面板
+function handlePrimaryClick(item: (typeof PRIMARY_NAV_ITEMS)[number]) {
+  if (item.action === 'toggle-ai') {
+    ui.toggleRightPanel()
+    return
+  }
+  nav.currentSectionId = null
+  if (item.path && route.path !== item.path) router.push(item.path)
+}
+
+function handleModuleClick(path?: string) {
+  if (!path) return
+  if (route.path !== path) router.push(path)
+}
+
 function onSectionClick(sectionId: string, sectionRoute: string) {
   nav.selectSection(sectionId)
+  knowledgeExpanded.value = true
   if (sectionRoute && !route.path.startsWith(sectionRoute)) {
     router.push(sectionRoute)
   }
-  // 选中小节后自动打开右侧面板展示内容
   if (!ui.rightPanelExpanded) ui.toggleRightPanel()
 }
 
-// ── 主题切换 ──────────────────────────────────────────────────────────
-const theme = ref<'default' | 'bazi'>('default')
+function isPrimaryActive(item: (typeof PRIMARY_NAV_ITEMS)[number]) {
+  if (item.action === 'toggle-ai') return ui.rightPanelExpanded && !nav.currentSectionId
+  return !!item.path && route.path.startsWith(item.path) && !nav.currentSectionId
+}
+
+function isModuleActive(path?: string) {
+  return !!path && route.path.startsWith(path)
+}
 
 function initTheme() {
   const saved = localStorage.getItem('theme') as 'default' | 'bazi' | null
@@ -68,123 +84,130 @@ function logout() {
 
 <template>
   <aside class="sidebar" :class="{ collapsed: !ui.sidebarExpanded }">
-
-    <!-- ── 头部 ── -->
     <div class="sidebar-header">
       <span class="sidebar-logo">命理中控系统</span>
-      <button class="toggle-btn" @click="ui.toggleSidebar"
-        :title="ui.sidebarExpanded ? '折叠侧栏' : '展开侧栏'">
+      <button class="toggle-btn" @click="ui.toggleSidebar" :title="ui.sidebarExpanded ? '折叠侧栏' : '展开侧栏'">
         <span class="toggle-icon">{{ ui.sidebarExpanded ? '‹' : '›' }}</span>
       </button>
     </div>
 
-    <!-- ── 可滚动导航区 ── -->
     <div class="sidebar-scroll">
-
-      <!-- 快捷入口 -->
-      <div class="quick-section">
+      <div class="primary-section">
         <button
-          v-for="item in QUICK_ITEMS"
+          v-for="item in PRIMARY_NAV_ITEMS"
           :key="item.key"
-          class="quick-item"
-          :class="{ active: route.path.startsWith(item.path) && !nav.currentSectionId }"
-          @click="() => { nav.currentSectionId = null; router.push(item.path) }"
+          class="primary-item"
+          :class="{ active: isPrimaryActive(item) }"
+          @click="handlePrimaryClick(item)"
           :title="!ui.sidebarExpanded ? item.label : undefined"
         >
-          <span class="q-icon">{{ item.icon }}</span>
-          <span class="q-label">{{ item.label }}</span>
-        </button>
-
-        <!-- AI 助手 -->
-        <button
-          class="quick-item"
-          :class="{ active: ui.rightPanelExpanded && !nav.currentSectionId }"
-          @click="ui.toggleRightPanel"
-          :title="!ui.sidebarExpanded ? 'AI 助手' : undefined"
-        >
-          <span class="q-icon">🤖</span>
-          <span class="q-label">AI 助手</span>
+          <span class="item-icon">{{ item.icon }}</span>
+          <span class="item-body">
+            <span class="item-label">{{ item.label }}</span>
+            <span class="item-desc">{{ item.description }}</span>
+          </span>
         </button>
       </div>
 
       <div class="nav-divider" />
-      <div class="nav-section-title">
-        <span class="section-title-text">知识体系</span>
-      </div>
 
-      <!-- ── 10 大章 accordion ── -->
-      <div class="chapter-list">
-        <div
-          v-for="chapter in nav.NAV_CHAPTERS"
-          :key="chapter.id"
-          class="chapter"
+      <section v-for="group in MODULE_GROUPS" :key="group.id" class="module-group">
+        <div class="section-title-row">
+          <span class="section-title">{{ group.label }}</span>
+          <span v-if="ui.sidebarExpanded" class="section-hint">{{ group.items.length }} 项</span>
+        </div>
+
+        <button
+          v-for="item in group.items"
+          :key="item.key"
+          class="module-item"
+          :class="{ active: isModuleActive(item.path), disabled: !item.path }"
+          @click="handleModuleClick(item.path)"
+          :title="!ui.sidebarExpanded ? item.label : undefined"
         >
-          <!-- 章节标题行 -->
-          <button
-            class="chapter-header"
-            :class="{
-              'ch-expanded': nav.expandedChapterId === chapter.id,
-              'ch-active': nav.currentChapter?.id === chapter.id,
-            }"
-            :style="nav.currentChapter?.id === chapter.id ? `--ch-color: ${chapter.color}` : ''"
-            @click="nav.toggleChapter(chapter.id)"
-            :title="!ui.sidebarExpanded ? `${chapter.num}. ${chapter.label}` : undefined"
-          >
-            <span class="ch-icon" :style="`color: ${chapter.color}`">{{ chapter.icon }}</span>
-            <span class="ch-info">
-              <span class="ch-num">{{ chapter.num }}</span>
-              <span class="ch-label">{{ chapter.label }}</span>
+          <span class="item-icon module-icon">{{ item.icon }}</span>
+          <span class="item-body">
+            <span class="item-row">
+              <span class="item-label">{{ item.label }}</span>
+              <span class="status-chip" :class="item.status">{{ getStatusLabel(item.status) }}</span>
             </span>
-            <span
-              class="ch-arrow"
-              :class="{ rotated: nav.expandedChapterId === chapter.id }"
-            >›</span>
-          </button>
+            <span class="item-desc">{{ item.note || item.description }}</span>
+          </span>
+        </button>
+      </section>
 
-          <!-- 小节列表（展开时显示） -->
-          <div
-            class="section-list"
-            :class="{ open: nav.expandedChapterId === chapter.id }"
-          >
+      <div class="nav-divider" />
+
+      <section class="knowledge-section">
+        <button
+          class="knowledge-toggle"
+          :class="{ open: knowledgeExpanded }"
+          @click="knowledgeExpanded = !knowledgeExpanded"
+          :title="!ui.sidebarExpanded ? '知识体系' : undefined"
+        >
+          <span class="item-icon">📚</span>
+          <span class="item-body">
+            <span class="item-label">知识体系</span>
+            <span class="item-desc">保留原知识树，作为辅助导航与说明</span>
+          </span>
+          <span class="ch-arrow" :class="{ rotated: knowledgeExpanded }">›</span>
+        </button>
+
+        <div class="knowledge-tree" :class="{ open: knowledgeExpanded }">
+          <div v-for="chapter in nav.NAV_CHAPTERS" :key="chapter.id" class="chapter">
             <button
-              v-for="sec in chapter.sections"
-              :key="sec.id"
-              class="section-item"
-              :class="{ 'sec-active': nav.currentSectionId === sec.id }"
-              :style="nav.currentSectionId === sec.id ? `--sec-color: ${chapter.color}` : ''"
-              @click="onSectionClick(sec.id, sec.route)"
+              class="chapter-header"
+              :class="{
+                'ch-expanded': nav.expandedChapterId === chapter.id,
+                'ch-active': nav.currentChapter?.id === chapter.id,
+              }"
+              :style="nav.currentChapter?.id === chapter.id ? `--ch-color: ${chapter.color}` : ''"
+              @click="nav.toggleChapter(chapter.id)"
+              :title="!ui.sidebarExpanded ? `${chapter.num}. ${chapter.label}` : undefined"
             >
-              <span class="sec-num">{{ sec.num }}</span>
-              <span class="sec-label">{{ sec.label }}</span>
+              <span class="ch-icon" :style="`color: ${chapter.color}`">{{ chapter.icon }}</span>
+              <span class="ch-info">
+                <span class="ch-num">{{ chapter.num }}</span>
+                <span class="ch-label">{{ chapter.label }}</span>
+              </span>
+              <span class="ch-arrow" :class="{ rotated: nav.expandedChapterId === chapter.id }">›</span>
             </button>
+
+            <div class="section-list" :class="{ open: nav.expandedChapterId === chapter.id }">
+              <button
+                v-for="sec in chapter.sections"
+                :key="sec.id"
+                class="section-item"
+                :class="{ 'sec-active': nav.currentSectionId === sec.id }"
+                :style="nav.currentSectionId === sec.id ? `--sec-color: ${chapter.color}` : ''"
+                @click="onSectionClick(sec.id, sec.route)"
+              >
+                <span class="sec-num">{{ sec.num }}</span>
+                <span class="sec-label">{{ sec.label }}</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
-    <!-- ── 底部工具栏 ── -->
     <div class="sidebar-footer">
-      <button class="footer-btn" @click="toggleTheme"
-        :title="!ui.sidebarExpanded ? (theme === 'bazi' ? '科技主题' : '山水主题') : undefined">
-        <span class="q-icon">{{ theme === 'bazi' ? '☉' : '☯' }}</span>
-        <span class="q-label">{{ theme === 'bazi' ? '科技主题' : '山水主题' }}</span>
+      <button class="footer-btn" @click="toggleTheme" :title="!ui.sidebarExpanded ? (theme === 'bazi' ? '科技主题' : '山水主题') : undefined">
+        <span class="item-icon">{{ theme === 'bazi' ? '☉' : '☯' }}</span>
+        <span class="item-label footer-label">{{ theme === 'bazi' ? '科技主题' : '山水主题' }}</span>
       </button>
 
-      <button class="footer-btn logout-btn" @click="logout"
-        :title="!ui.sidebarExpanded ? '退出登录' : undefined">
-        <span class="q-icon">⬡</span>
-        <span class="q-label user-label">{{ auth.username }}</span>
-        <span class="q-label logout-hint">退出</span>
+      <button class="footer-btn logout-btn" @click="logout" :title="!ui.sidebarExpanded ? '退出登录' : undefined">
+        <span class="item-icon">⬡</span>
+        <span class="item-label footer-label">{{ auth.username || '当前用户' }}</span>
       </button>
     </div>
-
   </aside>
 </template>
 
 <style scoped>
-/* ── 根布局 ───────────────────────────────────────────────────── */
 .sidebar {
-  width: 240px;
+  width: 296px;
   height: 100vh;
   background: #161e2d;
   border-right: 1px solid rgba(255,255,255,.06);
@@ -195,34 +218,35 @@ function logout() {
   flex-shrink: 0;
   z-index: 100;
 }
-.sidebar.collapsed { width: 64px; }
 
-/* ── 头部 ─────────────────────────────────────────────────────── */
+.sidebar.collapsed { width: 72px; }
+
 .sidebar-header {
-  height: 52px;
-  padding: 0 10px 0 14px;
+  height: 56px;
+  padding: 0 10px 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(255,255,255,.07);
   flex-shrink: 0;
 }
+
 .sidebar-logo {
-  font-size: 0.8125rem;
+  font-size: 14px;
   font-weight: 700;
   color: #f0f4ff;
   letter-spacing: .03em;
   white-space: nowrap;
-  opacity: 1;
   transition: opacity var(--transition-fast);
 }
+
 .sidebar.collapsed .sidebar-logo {
   opacity: 0;
   pointer-events: none;
   width: 0;
 }
+
 .toggle-btn {
-  flex-shrink: 0;
   width: 28px;
   height: 28px;
   border: none;
@@ -232,232 +256,263 @@ function logout() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  border-radius: 6px;
 }
+
 .toggle-btn:hover { background: rgba(255,255,255,.08); color: #d1d5db; }
 .toggle-icon { font-size: 18px; line-height: 1; }
 
-/* ── 滚动导航区 ───────────────────────────────────────────────── */
 .sidebar-scroll {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px 0 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.06) transparent;
+  padding: 10px 8px 12px;
 }
-.sidebar-scroll::-webkit-scrollbar { width: 4px; }
-.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.06); border-radius: 2px; }
 
-/* ── 快捷入口 ─────────────────────────────────────────────────── */
-.quick-section {
-  padding: 0 8px;
+.primary-section,
+.module-group,
+.knowledge-section {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 6px;
 }
-.quick-item {
+
+.module-group + .module-group { margin-top: 12px; }
+
+.section-title-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 8px;
-  border: none;
-  background: transparent;
-  border-radius: 7px;
-  cursor: pointer;
-  color: #9ca3af;
-  font-size: 0.8125rem;
-  text-align: left;
-  white-space: nowrap;
-  width: 100%;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  font-family: var(--font-ui);
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
 }
-.quick-item:hover { background: rgba(255,255,255,.07); color: #e5e7eb; }
-.quick-item.active { background: rgba(59,130,246,.2); color: #93c5fd; }
-.q-icon { width: 20px; text-align: center; flex-shrink: 0; font-size: 14px; }
-.q-label {
-  overflow: hidden;
-  white-space: nowrap;
-  opacity: 1;
-  transition: opacity var(--transition-fast);
-}
-.sidebar.collapsed .q-label { opacity: 0; pointer-events: none; width: 0; }
 
-/* ── 分割线 & 标签 ────────────────────────────────────────────── */
-.nav-divider {
-  height: 1px;
-  background: rgba(255,255,255,.06);
-  margin: 6px 10px;
-}
-.nav-section-title {
-  padding: 0 12px 4px;
-  overflow: hidden;
-}
-.section-title-text {
-  font-size: 0.625rem;
+.section-title {
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .08em;
-  color: #4b5563;
-  white-space: nowrap;
-  opacity: 1;
+  color: #64748b;
+}
+
+.section-hint { font-size: 10px; color: #4b5563; }
+
+.primary-item,
+.module-item,
+.knowledge-toggle,
+.footer-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #cbd5e1;
+  text-align: left;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.primary-item:hover,
+.module-item:hover,
+.knowledge-toggle:hover,
+.footer-btn:hover { background: rgba(255,255,255,.06); color: #f8fafc; }
+
+.primary-item.active,
+.module-item.active,
+.knowledge-toggle.open { background: rgba(59,130,246,.14); color: #bfdbfe; }
+
+.module-item.disabled { opacity: .7; }
+
+.item-icon {
+  width: 24px;
+  min-width: 24px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.module-icon {
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+}
+
+.item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
   transition: opacity var(--transition-fast);
 }
-.sidebar.collapsed .section-title-text { opacity: 0; }
 
-/* ── 章节列表 ─────────────────────────────────────────────────── */
-.chapter-list { padding: 0 6px; }
-.chapter { margin-bottom: 1px; }
+.item-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: currentColor;
+}
 
-/* 章节标题行 */
+.item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-chip.ready { background: rgba(34,197,94,.16); color: #86efac; }
+.status-chip.integrated { background: rgba(99,102,241,.18); color: #c4b5fd; }
+.status-chip.planned { background: rgba(148,163,184,.14); color: #cbd5e1; }
+
+.knowledge-toggle { align-items: center; }
+
+.knowledge-tree {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .25s ease;
+}
+
+.knowledge-tree.open { max-height: 1600px; }
+.chapter { margin-top: 4px; }
+
 .chapter-header {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 7px 8px;
+  padding: 8px 10px;
   border: none;
   background: transparent;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   color: #9ca3af;
-  font-size: 0.8125rem;
   text-align: left;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  font-family: var(--font-ui);
 }
-.chapter-header:hover { background: rgba(255,255,255,.06); color: #d1d5db; }
-.chapter-header.ch-expanded { color: #e5e7eb; background: rgba(255,255,255,.05); }
+
+.chapter-header:hover { background: rgba(255,255,255,.05); color: #e5e7eb; }
+.chapter-header.ch-expanded { background: rgba(255,255,255,.05); color: #e5e7eb; }
 .chapter-header.ch-active { color: var(--ch-color, #93c5fd); }
 
-.ch-icon {
-  width: 20px;
-  text-align: center;
-  flex-shrink: 0;
-  font-size: 13px;
-  font-weight: 700;
-}
+.ch-icon { width: 20px; text-align: center; font-size: 13px; }
+
 .ch-info {
   flex: 1;
   display: flex;
-  gap: 5px;
-  align-items: baseline;
+  gap: 6px;
   overflow: hidden;
-  opacity: 1;
   transition: opacity var(--transition-fast);
 }
-.sidebar.collapsed .ch-info { opacity: 0; pointer-events: none; width: 0; }
-.ch-num {
-  font-size: 0.6875rem;
-  color: #4b5563;
-  flex-shrink: 0;
-}
-.ch-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.8125rem;
-}
+
+.ch-num { font-size: 11px; color: #4b5563; }
+.ch-label { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 .ch-arrow {
-  font-size: 13px;
+  font-size: 14px;
   color: #4b5563;
   transition: transform var(--transition-fast), opacity var(--transition-fast);
-  flex-shrink: 0;
-  opacity: 1;
 }
-.ch-arrow.rotated { transform: rotate(90deg); color: #9ca3af; }
-.sidebar.collapsed .ch-arrow { opacity: 0; }
 
-/* ── 小节列表 ─────────────────────────────────────────────────── */
+.ch-arrow.rotated { transform: rotate(90deg); color: #9ca3af; }
+
 .section-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.22s ease;
+  transition: max-height .22s ease;
   padding-left: 10px;
 }
-.section-list.open {
-  max-height: 600px; /* 足够容纳最多 10 个小节 */
-}
-.sidebar.collapsed .section-list.open { max-height: 0; }
+
+.section-list.open { max-height: 640px; }
 
 .section-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border: none;
-  background: transparent;
-  border-radius: 5px;
-  cursor: pointer;
-  color: #6b7280;
-  font-size: 0.75rem;
-  text-align: left;
-  width: 100%;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  font-family: var(--font-ui);
-  border-left: 2px solid transparent;
-  margin-left: 8px;
+  gap: 8px;
   width: calc(100% - 8px);
-}
-.section-item:hover { background: rgba(255,255,255,.05); color: #d1d5db; }
-.section-item.sec-active {
-  color: var(--sec-color, #93c5fd);
-  background: rgba(99,102,241,.12);
-  border-left-color: var(--sec-color, #6366f1);
-}
-.sec-num {
-  font-size: 0.625rem;
-  color: #374151;
-  flex-shrink: 0;
-  min-width: 26px;
-}
-.section-item.sec-active .sec-num { color: var(--sec-color, #6366f1); opacity: .7; }
-.sec-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-}
-
-/* ── 底部工具栏 ───────────────────────────────────────────────── */
-.sidebar-footer {
-  border-top: 1px solid rgba(255,255,255,.07);
-  padding: 6px 8px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex-shrink: 0;
-}
-.footer-btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  margin-left: 8px;
   padding: 6px 8px;
   border: none;
   background: transparent;
   border-radius: 6px;
   cursor: pointer;
-  color: #4b5563;
-  font-size: 0.75rem;
+  color: #6b7280;
+  font-size: 12px;
   text-align: left;
+  border-left: 2px solid transparent;
+}
+
+.section-item:hover { background: rgba(255,255,255,.05); color: #d1d5db; }
+
+.section-item.sec-active {
+  color: var(--sec-color, #93c5fd);
+  background: rgba(99,102,241,.12);
+  border-left-color: var(--sec-color, #6366f1);
+}
+
+.sec-num { min-width: 28px; font-size: 10px; color: #4b5563; }
+.sec-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.nav-divider {
+  height: 1px;
+  background: rgba(255,255,255,.06);
+  margin: 12px 8px;
+}
+
+.sidebar-footer {
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-label {
   white-space: nowrap;
-  width: 100%;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  font-family: var(--font-ui);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.footer-btn:hover { background: rgba(255,255,255,.05); color: #9ca3af; }
-.logout-btn:hover { color: #f87171; }
-.user-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-.logout-hint {
-  font-size: 0.625rem;
-  color: #374151;
-  flex-shrink: 0;
+
+.logout-btn:hover { color: #fca5a5; }
+
+.sidebar.collapsed .item-body,
+.sidebar.collapsed .ch-info,
+.sidebar.collapsed .section-title,
+.sidebar.collapsed .section-hint,
+.sidebar.collapsed .footer-label,
+.sidebar.collapsed .ch-arrow {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
 }
-.sidebar.collapsed .q-label,
-.sidebar.collapsed .logout-hint { opacity: 0; pointer-events: none; width: 0; }
+
+.sidebar.collapsed .primary-item,
+.sidebar.collapsed .module-item,
+.sidebar.collapsed .knowledge-toggle,
+.sidebar.collapsed .footer-btn,
+.sidebar.collapsed .chapter-header {
+  justify-content: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.sidebar.collapsed .knowledge-tree.open,
+.sidebar.collapsed .section-list.open { max-height: 0; }
 </style>

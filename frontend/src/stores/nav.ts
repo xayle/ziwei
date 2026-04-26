@@ -37,6 +37,12 @@ export const useNavStore = defineStore('nav', () => {
 
   /** 按路由 path 推断默认激活的章节（用于页面初始化） */
   function initFromRoute(routePath: string) {
+    if (routePath === '/' || routePath.startsWith('/home')) {
+      currentSectionId.value = null
+      expandedChapterId.value = null
+      return
+    }
+
     // 找到第一个 route 匹配的小节
     for (const ch of NAV_CHAPTERS) {
       for (const sec of ch.sections) {

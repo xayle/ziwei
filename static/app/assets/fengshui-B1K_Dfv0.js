@@ -1,0 +1,1 @@
+import{l as t}from"./index-C73FHpsX.js";async function i(){const{data:a}=await t.get("/api/v1/fengshui/options");return a}async function s(a){const{data:n}=await t.post("/api/v1/fengshui/room-layout",a);return n}export{s as a,i as g};
