@@ -8,8 +8,37 @@
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/base.css?v=20260324">
   <link rel="stylesheet" href="/static/css/ziwei.css?v=20260324">
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('legacy') === '1') return
+
+      const nextParams = new URLSearchParams(params)
+      nextParams.delete('legacy')
+      const query = nextParams.toString()
+      const target = `/static/app/ziwei${query ? `?${query}` : ''}${window.location.hash || ''}`
+
+      fetch('/static/app/index.html', { method: 'HEAD' })
+        .then((response) => {
+          if (response.ok) {
+            window.location.replace(target)
+          }
+        })
+        .catch(() => {
+          // SPA 不存在时继续留在 legacy 页面
+        })
+    })()
+  </script>
 </head>
 <body>
+<div style="max-width:1200px;margin:12px auto 0;padding:0 16px;">
+  <div style="border:1px solid rgba(59,130,246,.25);background:#eff6ff;color:#1e3a8a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;">
+    当前页为兼容入口。若新版 SPA 可用，将优先自动跳转到
+    <a href="/static/app/ziwei" style="color:#1d4ed8;font-weight:600;">/static/app/ziwei</a>；
+    如需继续停留旧版，请使用
+    <a href="/static/ziwei.html?legacy=1" style="color:#1d4ed8;font-weight:600;">legacy 模式</a>。
+  </div>
+</div>
 
 <!-- ═══ 顶部标题栏 ═══════════════════════════════════════════ -->
 <header class="hdr">

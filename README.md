@@ -281,23 +281,24 @@ curl -X POST ${BASE_URL}/api/v1/scenarios \
 - Dependencies: curl + python (PowerShell uses curl.exe). No extra tools required.
 
 ## Local UI
-- Primary UI (SPA): run app normally and open `${BASE_URL}/static/app/workbench` (default `http://127.0.0.1:8000/static/app/workbench`; requires built frontend assets under `static/app`)
-- Root entry: `${BASE_URL}/` and `${BASE_URL}/dashboard` will redirect to `/static/app/workbench` when SPA assets exist; otherwise they fall back to the legacy `ziwei.html`
+- Primary UI (SPA): run app normally and open `${BASE_URL}/static/app/cases` (default `http://127.0.0.1:8000/static/app/cases`; requires built frontend assets under `static/app`)
+- Root entry: `${BASE_URL}/` and `${BASE_URL}/dashboard` will redirect to `/static/app/cases` when SPA assets exist; otherwise they fall back to the legacy `ziwei.html`
 - Frontend dev server: `npm run dev --prefix frontend` (Vite will auto-switch from `5173` to another free port, e.g. `5174`)
-- Local dev main site: `http://localhost:5173/static/app/workbench`（若 `5173` 被占用，请以 Vite 实际端口为准）
+- Local dev main site: `http://localhost:5173/static/app/cases`（若 `5173` 被占用，请以 Vite 实际端口为准）
 - Frontend API target (optional): copy `frontend/.env.example` to `frontend/.env.local`; set `VITE_DEV_API_TARGET` to actual backend URL (e.g. auto-fallback `http://127.0.0.1:8003`) and/or set `VITE_API_BASE_URL` for direct runtime calls
 - One-command sync (recommended): `npm --prefix frontend run sync:api` (or `pwsh scripts/sync_frontend_env.ps1`), auto probes `/health` on 8000-8010 and writes `frontend/.env.local`
 - After changing `frontend/.env.local`, restart Vite dev server to apply env updates
 - Pages
-  - /static/app/workbench: 当前唯一主站入口，承载新版工作台首页
-  - /static/app/: SPA 路由基座，会继续承载 login / workbench / profile / bazi / ziwei / admin / report 等新版页面
-  - /verify: 兼容别名入口；优先跳转到 `/static/app/workbench`，若 SPA 未构建则回退到 legacy `ziwei.html`
+  - /static/app/cases: 当前唯一主站入口，承载新版案例中心首页
+  - /static/app/: SPA 路由基座，会继续承载 login / cases / profile / bazi / ziwei / admin / report 等新版页面
+  - /static/app/workbench: 兼容旧入口；当前统一重定向到 `/static/app/cases`
+  - /verify: 兼容别名入口；优先跳转到 `/static/app/cases`，若 SPA 未构建则回退到 legacy `ziwei.html`
   - /bazi: 兼容别名入口；优先跳转到 `/static/app/bazi`，若 SPA 未构建则回退到 legacy `bazi.html`
   - /admin: 兼容别名入口；优先跳转到 `/static/app/admin`，若 SPA 未构建则回退到 legacy `admin.html`
-  - /static/verify.html: 兼容跳转页，当前直接跳转到 `/static/app/workbench`
+  - /static/verify.html: 兼容跳转页，当前直接跳转到 `/static/app/cases`
   - /static/ziwei.html: legacy 紫微独立页（当前作为人工回归对照与兜底入口保留）
   - /static/bazi.html: 兼容页；默认优先跳往 `/static/app/bazi`，可通过 `?legacy=1` 停留旧版
   - /static/admin.html: 兼容页；默认优先跳往 `/static/app/admin`，可通过 `?legacy=1` 停留旧版
   - /static/batch.html: legacy 批量核验工具页（独立保留）
-  - /static/index.html: 旧静态入口，当前会优先探测并跳转到 `/static/app/workbench`，若新版资源不存在则回退到 `/static/ziwei.html`
+  - /static/index.html: 旧静态入口，当前会优先探测并跳转到 `/static/app/cases`，若新版资源不存在则回退到 `/static/ziwei.html`
 - Defaults: mode=dual，solar_time_enabled=false，liunian_years=[-2,2]

@@ -41,7 +41,7 @@ export interface PalaceResponse {
   branch: string
   stem: string
   main_stars: StarInfo[]
-  aux_stars: string[]
+  aux_stars: StarInfo[]
   flying_out: Record<string, string>
   analysis: string
   analysis_tags: string[]
@@ -197,6 +197,7 @@ export interface ZiweiResponse {
   life_ruler_star: string
   body_ruler_star: string
   true_solar_time: string
+  laiyin_palace: string
   summary: string
   analysis: Record<string, string>
   forecast: ForecastResultResponse | null

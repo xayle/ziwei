@@ -545,7 +545,7 @@
   - 使用模块 mock 隔离 router、stores、report API、节气 / 西占辅助 API
   - 以真实组件挂载方式验证 WorkbenchView 父子接线
 2. 已覆盖的组合级场景：
-  - 进入紫微工作台时自动选中首个案例，并并行加载八字 / 紫微数据
+  - 进入紫微主盘页后自动选中首个案例，并并行加载八字 / 紫微数据
   - 点击左侧案例列表后切换当前案例，并重新加载命盘
   - 点击顶部信息栏切换视图，验证父组件状态驱动界面变化
   - 点击紫微焦点区宫位按钮，验证父组件选择状态回流到焦点卡
@@ -1482,7 +1482,7 @@
 3. 更新 docs/LEGACY-SPA-MIGRATION-MATRIX.md
   - 明确 `batch.html` 当前应视为独立工具页，而不是 `ZiweiView` 的遗留缺口
   - 明确短期建议：继续保留独立 legacy 工具页
-  - 明确长期方向：如需迁移，应新建独立 SPA 工具页，而不是并入 Ziwei 主工作台
+  - 明确长期方向：如需迁移，应新建独立 SPA 工具页，而不是并入 Ziwei 主盘页
 
 本轮结果：
 - legacy / SPA 主线的剩余判断进一步收敛
@@ -2032,46 +2032,42 @@
 2. 继续执行 C 组人工页面核对，重点看候选标签、提示文案、空态与刷新反馈
 3. 若 A / C 组没有人工阻塞，再扩展到 B / D / E 组，并准备 `static/ziwei.html` compat 改造
 
-2026-04-25（第八十九轮）
+2026-04-25（第八十九轮，历史阶段记录）
 
-已继续执行：统一“唯一主站”口径到 `/static/app/workbench`
+已继续执行：统一“唯一主站”口径到 `/static/app/workbench`（历史记录；现规范入口已更新为 `/static/app/cases`）
 
 本轮已完成：
 1. 更新入口跳转实现
-  - `app/static_routes_setup.py` 中的 `/`、`/dashboard`、`/verify` 已统一改为优先跳转 `/static/app/workbench`
-  - `static/verify.html` 已改为直接跳转 `/static/app/workbench`
-  - `static/index.html` 已改为优先进入 `/static/app/workbench`
+  - `app/static_routes_setup.py` 中的 `/`、`/dashboard`、`/verify` 当时已统一改为优先跳转 `/static/app/workbench`
+  - `static/verify.html` 当时已改为直接跳转 `/static/app/workbench`
+  - `static/index.html` 当时已改为优先进入 `/static/app/workbench`
 2. 更新主入口文档口径
-  - `README.md` 已改为把 `/static/app/workbench` 标记为当前唯一主站入口
+  - `README.md` 当时已改为把 `/static/app/workbench` 标记为当时的唯一主站入口
   - `docs/api.md`、`docs/README-DELIVERY.md` 已同步更新
   - `docs/LEGACY-SPA-MIGRATION-MATRIX.md` 已补充入口层收口说明
 
 本轮结果：
-- 当前对外主站口径已从泛化的 `/static/app/` 收口为明确的 `/static/app/workbench`
-- 其余如 `/static/app/bazi`、`/static/app/ziwei`、`/static/app/admin` 继续保留为 SPA 子路由，而不再作为“主站入口”表述
+- 当时的对外主站口径已从泛化的 `/static/app/` 收口为明确的 `/static/app/workbench`；其余 `/static/app/bazi`、`/static/app/ziwei`、`/static/app/admin` 继续仅按 SPA 子路由理解
 
 下一步建议：
 1. 继续按 `ziwei.html` 回归清单推进 A / C 组人工核对
-2. 后续若再整理入口文档，统一使用“唯一主站 `/static/app/workbench`”口径
+2. 后续若再整理入口文档，仍按该阶段的“唯一主站 `/static/app/workbench`”历史口径理解
 
-2026-04-25（第九十轮）
+2026-04-25（第九十轮，历史阶段记录）
 
 已继续执行：核对前端开发态唯一主站入口
 
 本轮已完成：
 1. 校验前端开发主站地址
-  - 直接请求 `http://localhost:5173/static/app/workbench`
-  - 当前返回 200，确认开发态唯一主站可直接访问
+  - 直接请求 `http://localhost:5173/static/app/workbench`，当时返回 200
 2. 补充 README 本地开发口径
-  - 在 Local UI 段落补充 `http://localhost:5173/static/app/workbench` 为当前本地开发主站示例
-  - 同时保留“若 5173 被占用，以 Vite 实际端口为准”的说明
+  - 在 Local UI 段落补充 `http://localhost:5173/static/app/workbench` 作为当时的本地开发主站示例，并保留“若 5173 被占用，以 Vite 实际端口为准”的说明
 
 本轮结果：
-- 当前“唯一主站”口径已不仅停留在后端重定向与文档描述层面，也已在前端开发态完成直连验证
-- 后续对外说明时，可直接使用 `http://localhost:5173/static/app/workbench` 作为本地开发主站示例
+- 当时“唯一主站”口径已不仅停留在后端重定向与文档描述层面，也已在前端开发态完成直连验证，可作为该阶段的本地开发主站示例
 
 已验证：
-- `http://localhost:5173/static/app/workbench` 返回 200
+- `http://localhost:5173/static/app/workbench` 返回 200（历史验证记录；现规范入口为 `/static/app/cases`）
 
 下一步建议：
 1. 继续执行 `ziwei.html` A 组人工核对，优先检查改参排盘与阅读增强链路
@@ -2141,17 +2137,17 @@
 1. 继续执行 A 组人工页面核对，重点只看 PNG 导出与真实页面交互反馈
 2. 若无阻塞，再切到 C 组人工页面核对
 
-2026-04-25（第九十三轮）
+2026-04-25（第九十三轮，历史阶段记录）
 
 已继续执行：准备 A 组人工核对入口并收口执行顺序
 
 本轮已完成：
 1. 核对人工页面入口可用性
-  - `http://localhost:5173/static/app/workbench` 返回 200
+  - 当时主站入口 `http://localhost:5173/static/app/workbench` 返回 200（历史验证记录）
   - `http://localhost:5173/static/app/ziwei` 返回 200
   - `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 返回 200
 2. 已打开三类页面入口
-  - 主站 workbench
+  - 当时主站入口页
   - Ziwei SPA 页面
   - legacy 对照页
 3. 更新迁移矩阵
@@ -2166,9 +2162,7 @@
   - 是否仍存在必须回到 legacy 才能完成的动作
 
 已验证：
-- `http://localhost:5173/static/app/workbench` 返回 200
-- `http://localhost:5173/static/app/ziwei` 返回 200
-- `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 返回 200
+- 上述三类入口已全部通过可用性验证
 
 下一步建议：
 1. 直接按已打开入口执行 A 组人工核对，重点看 PNG 导出与页面真实反馈
@@ -3371,7 +3365,7 @@
   - 区分临时覆盖率产物与大批新增测试文件
 3. 完成口径收口后，再恢复 A 组 PNG 与 C 组审核 / AI 草稿人工核对
 
-2026-04-25（第九十八轮）
+2026-04-25（第九十八轮，历史阶段记录）
 
 已继续执行：工作区收口第二步（文档口径回收）
 
@@ -3383,7 +3377,7 @@
 2. 同步修正文档中的回归基线
   - 将 `ZiweiView.spec.ts` 定向测试结果由 `42 / 42` 更新为当前实际的 `47 / 47`
 3. 收紧 `README.md` 中的入口说明
-  - 保留 `/static/app/workbench` 作为唯一主站入口口径
+  - 当时保留 `/static/app/workbench` 作为唯一主站入口口径
   - 将 `/static/ziwei.html` 明确为当前人工回归对照与兜底入口，而不是提前写成下线评估阶段
 
 本轮结果：
@@ -3446,7 +3440,7 @@
 2. 完成当前正式收口批复核后，再恢复 A 组 PNG 与 C 组审核 / AI 草稿人工核对
 3. 后续若进入提交阶段，应优先按 A / B / C / D 四批拆开，而不是一次性处理整个工作区
 
-2026-04-25（第一百轮）
+2026-04-25（第一百轮，历史阶段记录）
 
 已继续执行：工作区收口第四步（当前正式批一致性复核）
 
@@ -3456,7 +3450,7 @@
   - 检查 `README.md`
   - 检查 `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
 2. 确认当前真实入口口径已经对齐
-  - `/static/app/workbench` 仍是唯一主站入口
+  - 该阶段 `/static/app/workbench` 仍是唯一主站入口
   - `/verify`、`/bazi`、`/admin` 当前都已是“SPA 优先、legacy 回退”的兼容别名入口
   - `/static/ziwei.html` 当前仍作为人工回归对照与兜底入口保留
 3. 修正文档中的一个遗留不一致点
@@ -3464,37 +3458,29 @@
   - 已修正为当前真实状态：`/`、`/dashboard`、`/verify`、`/bazi`、`/admin` 都已落地兼容重定向
 
 本轮结果：
-- 当前正式收口批中，README、迁移矩阵与实际入口代码的主口径已重新对齐
-- 工作区收口主线已从“诊断清零 → 文档回收 → 改动分层”进一步推进到“当前正式批一致性复核完成”
-- 后续继续推进时，可不再把入口口径问题视为当前主阻塞项
+- 当前正式收口批中，README、迁移矩阵与实际入口代码的主口径已重新对齐；入口口径问题可暂时移出主阻塞项
 
 下一步建议：
 1. 恢复 A 组 PNG 人工核对
 2. 随后恢复 C 组审核 / AI 草稿人工核对
 3. 人工回归若无阻塞，再决定 `ziwei.html` 是否进入 compat 改造观察阶段
 
-2026-04-25（第一百零一轮）
+2026-04-25（第一百零一轮，历史阶段记录）
 
 已继续执行：恢复 A 组人工核对入口
 
 本轮已完成：
 1. 复核 A 组人工核对依赖入口
-  - `http://localhost:5173/static/app/workbench` 返回 200
-  - `http://localhost:5173/static/app/ziwei` 返回 200
-  - `http://127.0.0.1:8001/static/ziwei.html?legacy=1` 返回 200
+  - 当时主站入口、Ziwei SPA 与 legacy 对照入口均已通过可用性验证
 2. 处理中途发现的本地环境问题
   - 首次检查时，8001 的 legacy 对照入口不可达
   - 已重新拉起 `backend:dev`
   - 后端恢复后再次验证，legacy 对照入口已恢复正常
 3. 已重新打开人工核对页面
-  - Ziwei SPA：`http://localhost:5173/static/app/ziwei`
-  - legacy 对照页：`http://127.0.0.1:8001/static/ziwei.html?legacy=1`
-  - 主站入口：`http://localhost:5173/static/app/workbench`
+  - Ziwei SPA、legacy 对照页与当时主站入口均已恢复到可直接使用状态
 
 本轮结果：
-- A 组 PNG 人工核对所需的主站、Ziwei SPA 与 legacy 对照入口都已恢复到可直接使用状态
-- 当前阻塞已从“入口可用性”切换回“实际页面人工核对”本身
-- 后续可以直接在已打开页面上做 PNG 导出与真实交互核对，而不需要再重复准备环境
+- A 组 PNG 人工核对所需入口已全部恢复，当前阻塞已从“入口可用性”切换回“实际页面人工核对”本身
 
 下一步建议：
 1. 在已打开的 Ziwei SPA 页面执行一次 `导出 PNG` 人工检查
@@ -3503,6 +3489,76 @@
 2026-04-25（第一百零二轮）
 
 已继续执行：恢复 C 组人工核对基线
+
+2026-04-27（第一百零三轮）
+
+已继续执行：案例中心入口唯一化收口
+
+本轮已完成：
+1. 将前端案例中心规范入口从 `/cases` 固化为唯一主入口
+  - `frontend/src/router/index.ts` 新增规范路由 `/cases`
+  - 原 `/workbench` 保留为兼容旧入口，并统一重定向到 `/cases`
+2. 同步收口所有前端一级入口与知识树跳转
+  - `HomeView.vue`、`AppNav.vue`、`appModules.ts`、`navTree.ts` 中涉及案例中心的入口已改用 `/cases`
+  - 这样“首页按钮 / 顶部导航 / 左侧主入口 / 知识树回落页”全部只指向同一个规范地址
+3. 同步收口后端与静态跳转页的主站口径
+  - `app/static_routes_setup.py` 已把根入口与 `/verify` 的 SPA 主跳转目标改为 `/static/app/cases`
+  - `static/index.html`、`static/verify.html` 已改为优先进入 `/static/app/cases`
+4. 同步更新核心文档口径
+  - `README.md`、`docs/README-DELIVERY.md`、`docs/api.md` 已改为“唯一主站入口 `/static/app/cases`”
+  - `/static/app/workbench` 现在仅保留为兼容旧入口，不再作为对外主口径
+
+本轮结果：
+- 案例中心现在同时满足“名称唯一”和“路径唯一”两层收口：
+  - 名称统一为“案例中心”
+  - 规范入口统一为 `/static/app/cases`
+- 旧地址 `/static/app/workbench` 仍可继续使用，但只承担兼容职责，不再参与主口径表达
+- 后续继续治理时，可以明确以 `/cases` 作为唯一规范入口继续收口剩余测试与文档残留
+
+下一步建议：
+1. 继续扫描测试文件与迁移文档中对 `/workbench` 作为“主入口”的历史表述
+2. 若人工回归通过，再把更多对外说明统一改成“案例中心 `/static/app/cases` + 旧入口兼容重定向”
+3. 继续保持组件文件名与历史 `workbench` 目录结构不动，只在用户可见入口层维持唯一口径
+
+2026-04-27（第一百零四轮）
+
+已继续执行：唯一入口口径补充说明
+
+本轮已完成：
+1. 明确当前规范入口基线
+  - 当前对外唯一主站入口为 `/static/app/cases`
+  - `/static/app/workbench` 仅作为兼容旧入口保留
+2. 明确历史记录的阅读方式
+  - 本文档中 2026-04-27 之前出现的 `/static/app/workbench`，默认按“当时阶段记录”理解
+  - 不再把这些旧日志条目视为当前主口径
+3. 明确后续收口原则
+  - 用户可见入口、跳转页、README 与交付文档继续统一使用 `/static/app/cases`
+  - 内部组件目录名、`WorkbenchView.vue`、`workbench` 测试文件名暂不改动，避免无收益的大规模重命名
+
+当前执行结论：
+- 现在需要继续清理的，不再是“当前主入口是否唯一”，而是“历史测试/历史记录里是否还把旧入口误写成当前口径”
+- 因此后续扫尾优先级应为：
+  1. 当前生效文档
+  2. 当前对外说明
+  3. 测试与历史记录中的误导性表述
+
+当前唯一口径（以本轮为准）：
+- 主站入口：`http://localhost:5173/static/app/cases`
+- 兼容旧入口：`http://localhost:5173/static/app/workbench` → 重定向到 `/static/app/cases`
+
+2026-04-27（第一百零五轮）
+
+已继续执行：历史入口表述最终扫尾
+
+本轮已完成：
+1. 再次复查 `设计.txt` 中所有 `/static/app/workbench` 历史记录
+2. 将仍可能引起误读的语句统一改成“当时口径 / 该阶段口径 / 兼容旧入口”表述
+3. 保留历史验证记录本身，但不再让其与当前规范入口混淆
+
+本轮结果：
+- `设计.txt` 中关于 `/static/app/workbench` 的残留，现都应按“历史阶段记录”或“兼容入口”理解
+- 当前有效主口径继续保持为 `/static/app/cases`
+- 后续若继续扫尾，重点已不再是入口命名，而是是否需要压缩历史记录篇幅
 
 本轮已完成：
 1. 对 C 组审核链路做最小 API smoke
@@ -3794,7 +3850,7 @@
 
 本轮结果：
 - `static/app/` 当前不应和前端源码混在同一批做代码审阅
-- 但在现有部署脚本与 Docker 镜像不自动构建前端的前提下，若希望 `/static/app/workbench` 在纯后端部署环境中可直接工作，`static/app/` 仍不能被简单当作可丢弃缓存
+- 但在现有部署脚本与 Docker 镜像不自动构建前端的前提下，若希望旧入口 `/static/app/workbench` 在纯后端部署环境中可直接工作，`static/app/` 仍不能被简单当作可丢弃缓存
 - 因此批次 B 现已更准确拆成：
   - 批次 B1：前端源码 / static 兼容页 / 迁移文档
   - 批次 B2：`static/app/` 构建产物（单独判断、单独处理）
@@ -3803,6 +3859,247 @@
 1. 若继续推进提交整理，批次 B 应先只整理 B1，不要先碰 `static/app/`
 2. 若之后要减少构建产物入库压力，可单独开一条主线：给 Docker / 部署脚本补前端自动构建
 3. 在现阶段未改部署链路前，`static/app/` 最稳妥的策略仍是“单独子批处理”，而不是直接忽略
+
+2026-04-27（第一百一十轮）
+
+已继续执行：全仓入口口径复查与前端构建确认
+
+本轮已完成：
+1. 复查当前生效文件中的入口口径
+  - `README.md`、`docs/api.md`、`docs/README-DELIVERY.md`、`docs/LEGACY-SPA-MIGRATION-MATRIX.md` 继续保持 `/static/app/cases` 为当前唯一主站入口
+  - `app/static_routes_setup.py`、`static/index.html`、`static/verify.html` 继续保持跳转目标为 `/static/app/cases`
+  - `frontend/src/router/index.ts` 继续保持 `/cases` 为规范入口、`/workbench` 为兼容重定向
+2. 复查旧入口与旧命名残留
+  - 当前源码与文档中未再发现把 `/workbench` 误写为当前主入口的新增回退
+  - `紫微工作台`、`案例工作台`、`主工作台` 这类旧用户可见表述未见回流
+  - `设计.txt` 中剩余 `/static/app/workbench` 继续仅按历史记录、兼容入口或部署说明理解
+3. 重新执行前端构建验证
+  - 执行 `npm run build --prefix frontend`
+  - 本轮构建通过，未发现因入口收口或日志整理导致的新回归
+
+本轮结果：
+- 当前有效主口径仍稳定保持为 `/static/app/cases`
+- 当前阶段已可认为“入口唯一性 + 旧口径防回退”两条主线均完成收口
+- 若后续继续推进，重点应从入口治理转向批次整理、人工回归或部署链路优化
+
+2026-04-27（第一百四十八轮）
+
+已继续执行：当前工作区改动分桶基线复查
+
+本轮已完成：
+1. 结合当前工作区改动，重新确认可执行分桶
+  - B1：前端源码、静态兼容页、入口代码、README 与迁移文档
+  - B2：`static/app/` 构建产物（由前端构建生成，需单独看待）
+2. 复查当前改动结构
+  - 当前仍同时存在源码层改动与 `static/app/assets/*` 构建产物更新
+  - 因此后续若继续整理，不应把 B1 与 B2 混成同一批做判断
+3. 明确当前最自然的后续顺序
+  - 先按 B1 继续看源码 / 文档 / 静态兼容页的一致性
+  - 再单独判断 B2 是否作为构建产物批处理
+  - 人工回归主线继续保持为：A 组 `PNG 导出` → C 组审核 / AI 草稿页面核对
+
+本轮结果：
+- 当前工作区已经具备“入口治理完成后转入批次整理”的清晰边界
+- 若后续继续推进，不需要再重复做入口口径扫描，而应直接围绕 B1 / B2 与 A / C 组人工回归执行
+
+2026-04-27（第一百四十九轮）
+
+已继续执行：B1 当前实际文件范围压实
+
+本轮已完成：
+1. 基于当前 `git status --short` 重新识别 B1 文件范围
+  - 文档 / 入口说明：`README.md`、`docs/README-DELIVERY.md`、`docs/api.md`、`docs/LEGACY-SPA-MIGRATION-MATRIX.md`、`设计.txt`
+  - 后端入口代码：`app/static_routes_setup.py`
+  - 静态兼容页：`static/index.html`、`static/verify.html`
+  - 前端既有源码改动：
+    - `frontend/src/router/index.ts`
+    - `frontend/src/stores/ai.ts`
+    - `frontend/src/components/AppNav.vue`
+    - `frontend/src/components/AppRightPanel.vue`
+    - `frontend/src/components/TopicPanel.vue`
+    - `frontend/src/components/workbench/WorkbenchInfoBar.vue`
+    - `frontend/src/components/__tests__/AppNav.spec.ts`
+    - `frontend/src/views/AdminView.vue`
+    - `frontend/src/views/CompatibilityView.vue`
+    - `frontend/src/views/HomeView.vue`
+    - `frontend/src/views/WorkbenchView.vue`
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/views/__tests__/WorkbenchView.spec.ts`
+  - 前端新增源码文件：
+    - `frontend/src/views/GlossaryView.vue`
+    - `frontend/src/views/LlmDraftsView.vue`
+    - `frontend/src/views/MultiCompatView.vue`
+    - `frontend/src/views/ZiweiBatchView.vue`
+    - `frontend/src/views/ZiweiCaseWorkflowView.vue`
+    - `frontend/src/utils/ziweiCaseWorkflowContext.ts`
+    - `frontend/src/utils/ziweiLlmDraftContext.ts`
+2. 明确 B2 当前范围
+  - `static/app/index.html`
+  - `static/app/assets/*` 全量构建产物增删改
+3. 收口下一步最小可执行口径
+  - 若继续做源码审阅或整理，应优先只围绕上述 B1 文件推进
+  - 若需要处理构建产物，再单独进入 B2，不与 B1 混审
+
+本轮结果：
+- 当前 B1 已从“概念分桶”进一步压实到“可直接点名审阅的具体文件集合”
+- 后续继续推进时，可以直接基于这份 B1 清单做一致性检查、人工回归准备或正式整理
+
+2026-04-27（第一百五十轮）
+
+已继续执行：B1 按功能分组收口
+
+本轮已完成：
+1. 将当前 B1 文件按功能重新分组，方便后续逐组处理
+  - G1 入口 / 路由 / 导航
+    - `frontend/src/router/index.ts`
+    - `frontend/src/components/AppNav.vue`
+    - `frontend/src/views/HomeView.vue`
+    - `frontend/src/components/__tests__/AppNav.spec.ts`
+  - G2 右侧协同面板与课题导航
+    - `frontend/src/components/AppRightPanel.vue`
+    - `frontend/src/components/TopicPanel.vue`
+    - `frontend/src/stores/ai.ts`
+    - `frontend/src/components/workbench/WorkbenchInfoBar.vue`
+  - G3 紫微主盘页 / 案例中心主线
+    - `frontend/src/views/WorkbenchView.vue`
+    - `frontend/src/views/ZiweiView.vue`
+    - `frontend/src/views/CompatibilityView.vue`
+    - `frontend/src/views/AdminView.vue`
+    - `frontend/src/views/__tests__/WorkbenchView.spec.ts`
+  - G4 新增独立页面与上下文工具
+    - `frontend/src/views/GlossaryView.vue`
+    - `frontend/src/views/LlmDraftsView.vue`
+    - `frontend/src/views/MultiCompatView.vue`
+    - `frontend/src/views/ZiweiBatchView.vue`
+    - `frontend/src/views/ZiweiCaseWorkflowView.vue`
+    - `frontend/src/utils/ziweiCaseWorkflowContext.ts`
+    - `frontend/src/utils/ziweiLlmDraftContext.ts`
+  - G5 文档、静态兼容页与后端入口
+    - `README.md`
+    - `docs/README-DELIVERY.md`
+    - `docs/api.md`
+    - `docs/LEGACY-SPA-MIGRATION-MATRIX.md`
+    - `app/static_routes_setup.py`
+    - `static/index.html`
+    - `static/verify.html`
+    - `设计.txt`
+2. 明确每组最自然的后续用途
+  - G1：检查规范入口 `/cases` 与兼容入口 `/workbench` 是否一致
+  - G2：检查“案例中心 / AI 草稿 / 课题面板”用户可见口径是否一致
+  - G3：检查紫微主盘页、案例中心与后台页之间的主工作流是否一致
+  - G4：检查拆分出去的新独立页是否已经脱离旧“工作台中心”叙事
+  - G5：检查文档、静态页与后端入口是否继续保持 `/static/app/cases` 为唯一主口径
+3. 收口下一步建议
+  - 若继续做源码级复查，应优先按 G1 → G2 → G3 → G4 → G5 的顺序推进
+  - 若继续做人工作业准备，则可直接把 G3 / G4 与 A 组、C 组回归链路对齐
+
+本轮结果：
+- 当前 B1 已从“文件清单”进一步收口到“功能分组 + 处理顺序”
+- 后续继续推进时，可以直接选定某一组继续深挖，而不需要重新整理范围
+
+2026-04-27（第一百五十一轮）
+
+已继续执行：G1 入口 / 路由 / 导航逐文件复查
+
+本轮已完成：
+1. 复查 `frontend/src/router/index.ts`
+  - `/cases` 继续作为案例中心规范入口
+  - `meta.title` 继续保持“案例中心”
+  - `/workbench` 继续仅作兼容旧入口，并重定向到 `/cases`
+2. 复查 `frontend/src/components/AppNav.vue`
+  - 顶部导航中的案例入口继续指向 `/cases`
+  - 导航标签继续保持“案例中心”
+3. 复查 `frontend/src/views/HomeView.vue`
+  - 首页工作流首步、主按钮、最近案例入口均继续指向 `/cases`
+  - 首页说明文案继续围绕“案例中心”组织，不再回落到旧工作台口径
+4. 复查 `frontend/src/components/__tests__/AppNav.spec.ts`
+  - 路由 mock 继续覆盖 `/cases`
+  - 导航测试继续断言“案例中心”存在
+
+本轮结果：
+- G1 当前未发现入口回退：规范入口仍是 `/cases`，兼容入口仍是 `/workbench` → `/cases`
+- G1 当前未发现旧“工作台”用户可见口径回流
+- 若后续继续复查，最自然的下一组应为 G2（右侧协同面板与课题导航）
+
+2026-04-27（第一百五十二轮）
+
+已继续执行：G2 右侧协同面板与课题导航逐文件复查
+
+本轮已完成：
+1. 复查 `frontend/src/components/AppRightPanel.vue`
+  - 右侧 AI 对话面板在未选案例时，继续提示“请先在案例中心选择案例”
+  - 快捷模板入口未再引用旧工作台口径
+2. 复查 `frontend/src/stores/ai.ts`
+  - AI 快捷模板的阻断提示继续保持“请先在案例中心选择一个案例，再使用快捷模板”
+  - 当前 AI 上下文入口与案例中心口径保持一致
+3. 复查 `frontend/src/components/workbench/WorkbenchInfoBar.vue`
+  - 顶部信息栏徽标继续显示“案例中心”
+  - 未发现旧“工作台”用户可见文字回流
+4. 复查 `frontend/src/components/TopicPanel.vue`
+  - 课题面板中需要选定案例的说明，继续统一为“先在案例中心选定案例”
+  - 独立能力页说明继续保持“独立工作区 / 独立页面”语义，未回退到旧总工作台叙事
+  - AI 草稿、案例工作区、西方占星、择日、合婚等入口说明继续符合拆分后的信息架构
+
+本轮结果：
+- G2 当前未发现案例中心、AI 草稿或课题面板的口径回退
+- G2 当前未发现旧“工作台中心”叙事重新回流到用户可见提示
+- 若后续继续复查，最自然的下一组应为 G3（紫微主盘页 / 案例中心主线）
+
+2026-04-27（第一百五十三轮）
+
+已继续执行：G3 紫微主盘页 / 案例中心主线逐文件复查
+
+本轮已完成：
+1. 复查 `frontend/src/views/WorkbenchView.vue`
+  - 页头注释继续明确其对外语义为“CRM 式案例中心”
+  - 文件内部仍大量使用 `Workbench*` 组件名，这是当前刻意保留的内部实现命名，不属于对外口径回退
+2. 复查 `frontend/src/views/ZiweiView.vue`
+  - 紫微主盘页内部继续把案例流转入口指向 `/ziwei/cases`
+  - 未发现把案例主入口重新写回 `/workbench` 的回退
+3. 复查 `frontend/src/views/CompatibilityView.vue`
+  - 合婚页继续说明“先在案例中心确认双方资料”
+  - 同时继续强调合盘能力已由独立页承接，不再挂回案例中心的零散入口
+4. 复查 `frontend/src/views/AdminView.vue`
+  - 管理后台入口说明继续统一使用“从紫微主盘页进入”语义
+  - 审核 / 实验治理继续与主盘页形成清晰分工，没有回退到旧总工作台叙事
+5. 复查 `frontend/src/views/__tests__/WorkbenchView.spec.ts`
+  - 当前关键用例名称继续保持“进入紫微主盘页后自动选中首个案例并加载双盘数据”
+  - 测试口径与当前用户可见叙事一致
+
+本轮结果：
+- G3 当前未发现案例中心主线、紫微主盘页主线或管理后台承接关系的口径回退
+- G3 当前确认：内部 `Workbench*` 文件名仍是实现细节，对外主叙事已与“案例中心 / 紫微主盘页”分离
+- 若后续继续复查，最自然的下一组应为 G4（新增独立页面与上下文工具）
+
+2026-04-27（第一百五十四轮）
+
+已继续执行：G4 新增独立页面与上下文工具逐文件复查
+
+本轮已完成：
+1. 复查 `frontend/src/views/GlossaryView.vue`
+  - 术语页继续保持“独立术语检索工作区”语义
+  - 从紫微命盘进入时，也仅保留“来自紫微命盘联想词条”的来源说明，没有回退到旧总工作台入口叙事
+2. 复查 `frontend/src/views/LlmDraftsView.vue`
+  - AI 草稿页继续明确“已从紫微主盘页带入命盘上下文”
+  - 页面标题继续为“AI 草稿工作区”，空态说明也继续引导回到紫微主盘页补足上下文
+3. 复查 `frontend/src/views/ZiweiBatchView.vue`
+  - 批量排盘页继续明确自己是“独立的紫微批量排盘工作区”
+  - 页面说明继续强调其已从紫微超级页拆出，未回退到旧综合工作台叙事
+4. 复查 `frontend/src/views/ZiweiCaseWorkflowView.vue`
+  - 页面继续统一使用“紫微案例工作区 / 快照工作区 / 相似盘工作区”语义
+  - 上下文缺失时继续引导用户回到紫微主盘页，而不是回到旧 `/workbench`
+  - 页面总说明继续保持“为紫微主盘页减负”的拆分定位
+5. 复查 `frontend/src/views/MultiCompatView.vue`
+  - 多人合盘页继续作为独立能力页承接
+  - 页面来源说明继续是“已从紫微当前命盘带入甲方资料”，未回退到旧工作台中心口径
+6. 复查 `frontend/src/utils/ziweiCaseWorkflowContext.ts` 与 `frontend/src/utils/ziweiLlmDraftContext.ts`
+  - 两个上下文工具文件当前仅负责 sessionStorage 上下文保存 / 读取 / 清理
+  - 未承载任何会影响用户可见口径的旧工作台命名或旧入口路径
+
+本轮结果：
+- G4 当前未发现新增独立页面重新回落到旧“工作台中心”叙事
+- G4 当前确认：新增页面与上下文工具已基本稳定围绕“紫微主盘页 → 独立工作区 / 独立页面”结构展开
+- 若后续继续复查，最自然的下一组应为 G5（文档、静态兼容页与后端入口）
 
 2026-04-25（第一百零九轮）
 
