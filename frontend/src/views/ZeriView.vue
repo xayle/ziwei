@@ -8,7 +8,19 @@ const route = useRoute()
 
 // ── 常量 ─────────────────────────────────────────────────────
 const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+const BRANCH_ZODIAC: Record<string, string> = {
+  '子':'鼠','丑':'牛','寅':'虎','卯':'兔','辰':'龙','巳':'蛇',
+  '午':'马','未':'羊','申':'猴','酉':'鸡','戌':'狗','亥':'猪',
+}
 const WX_JU_LIST = ['水二局','木三局','金四局','土五局','火六局']
+
+// ── 本命年支辅助计算 ───────────────────────────────────────────
+const birthYearInput = ref<number | ''>(new Date().getFullYear() - 30)
+function calcNatalBranch() {
+  const y = Number(birthYearInput.value)
+  if (!y || y < 1900 || y > 2100) return
+  natalYearBranch.value = BRANCHES[((y - 4) % 12 + 12) % 12]
+}
 const DEFAULT_PURPOSES: Record<string, string> = {
   general:  '通用', marriage: '婚嫁', business: '开业', travel: '出行',
   medical:  '就医', move:     '搬家', career:   '求职',
@@ -38,6 +50,7 @@ const error    = ref('')
 const result   = ref<ZeriMonthResult | null>(null)
 const selectedDay   = ref<ZeriDayItem | null>(null)
 const purposes = ref<Record<string, string>>(DEFAULT_PURPOSES)
+const fromZiwei = ref(false)   // 是否从紫微页自动带入数据
 
 // ── 从 URL query 预填（从紫微/八字页跳转过来）──────────────────
 onMounted(async () => {
@@ -45,7 +58,9 @@ onMounted(async () => {
   if (q.life_palace_branch)   lifePalaceBranch.value  = String(q.life_palace_branch)
   if (q.wuxing_ju_name)       wuxingJuName.value       = String(q.wuxing_ju_name)
   if (q.natal_year_branch)    natalYearBranch.value    = String(q.natal_year_branch)
+  if (q.birth_year)           birthYearInput.value     = Number(q.birth_year)
   if (q.purpose)              purpose.value            = String(q.purpose)
+  fromZiwei.value = !!q.life_palace_branch
   // 加载用途列表
   try { purposes.value = await getZeriPurposes() } catch { /* ignore, use defaults */ }
   // 如果有命宫参数则自动查询
@@ -134,28 +149,77 @@ function formatDate(dateStr: string): string {
   <div class="wrap zeri-view">
     <h1 class="page-title">择日推荐</h1>
 
+    <!-- ① 从紫微自动带入：成功横幅 -->
+    <div v-if="fromZiwei" class="autofill-banner autofill-ok">
+      ✅ 已从紫微命盘自动填入命宫地支「{{ lifePalaceBranch }}」、{{ wuxingJuName }}
+      <template v-if="natalYearBranch">、本命年支「{{ natalYearBranch }}」</template>，
+      正在计算推荐吉日…
+    </div>
+
+    <!-- ② 直接进入：引导提示 -->
+    <div v-else-if="!lifePalaceBranch" class="autofill-banner autofill-hint">
+      <span class="hint-icon">💡</span>
+      <div class="hint-body">
+        <strong>推荐从紫微排盘直接跳转</strong>，命宫地支和五行局将自动填入，无需手动查找。
+        <br />
+        <RouterLink to="/ziwei" class="hint-link">前往紫微排盘 →</RouterLink>
+        计算完命盘后，点击顶部
+        <span class="hint-badge">📅 择日</span>
+        按钮即可自动跳转并填入数据。
+      </div>
+    </div>
+
     <!-- 查询表单 -->
     <div class="card form-card">
+      <!-- 填写说明 -->
+      <div class="field-guide">
+        <p class="guide-title">📌 如何填写这两项？</p>
+        <p class="guide-text">
+          <strong>命宫地支</strong> 是紫微命盘中「命宫」所在的地支（子丑寅卯…），
+          在<RouterLink to="/ziwei" class="guide-link">紫微排盘</RouterLink>页面命盘格中的「命宫」右上角可看到。
+        </p>
+        <p class="guide-text">
+          <strong>五行局</strong> 是命盘中心显示的「X X局」（如水二局、木三局），两者均来自紫微命盘。
+        </p>
+        <p class="guide-text">
+          <strong>本命年支</strong> 是出生年对应的生肖地支，如 1990 年 = 午（马）。
+          可在下方输入出生年自动换算，<span class="opt-text">此项可不填</span>。
+        </p>
+      </div>
+
       <div class="form-grid">
         <div class="form-field">
-          <label>命宫地支</label>
+          <label>命宫地支 <span class="field-badge">必填</span></label>
           <select v-model="lifePalaceBranch">
             <option value="">— 选择 —</option>
-            <option v-for="b in BRANCHES" :key="b" :value="b">{{ b }}</option>
+            <option v-for="b in BRANCHES" :key="b" :value="b">{{ b }}（{{ BRANCH_ZODIAC[b] }}）</option>
           </select>
+          <span class="field-hint">紫微命盘「命宫」格的地支</span>
         </div>
         <div class="form-field">
-          <label>五行局</label>
+          <label>五行局 <span class="field-badge">必填</span></label>
           <select v-model="wuxingJuName">
             <option v-for="j in WX_JU_LIST" :key="j" :value="j">{{ j }}</option>
           </select>
+          <span class="field-hint">紫微命盘中心区域显示</span>
         </div>
-        <div class="form-field">
-          <label>本命年支<span class="opt-tag">可选</span></label>
+        <div class="form-field natal-field">
+          <label>本命年支 <span class="opt-tag">可选</span></label>
+          <div class="natal-calc">
+            <input
+              type="number" v-model.number="birthYearInput"
+              placeholder="出生年如 1990"
+              class="birth-year-input"
+              min="1900" max="2100"
+              @keyup.enter="calcNatalBranch"
+            />
+            <button class="btn-calc" type="button" @click="calcNatalBranch">换算</button>
+          </div>
           <select v-model="natalYearBranch">
             <option value="">— 不限 —</option>
-            <option v-for="b in BRANCHES" :key="b" :value="b">{{ b }}</option>
+            <option v-for="b in BRANCHES" :key="b" :value="b">{{ b }}（{{ BRANCH_ZODIAC[b] }}年生）</option>
           </select>
+          <span class="field-hint">输入出生年后点"换算"自动填入</span>
         </div>
         <div class="form-field">
           <label>用途</label>
@@ -283,6 +347,30 @@ function formatDate(dateStr: string): string {
 <style scoped>
 .zeri-view { padding-bottom: var(--sp-8); }
 
+/* 自动填入横幅 */
+.autofill-banner {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-sm);
+  font-size: var(--fs-sm); margin-bottom: var(--sp-4); line-height: 1.6;
+  font-family: var(--font-cn);
+}
+.autofill-ok {
+  background: #f0fdf4; border: 1px solid #86efac; color: #15803d;
+}
+.autofill-hint {
+  background: #fffbeb; border: 1px solid #fcd34d; color: var(--text);
+  align-items: flex-start;
+}
+.hint-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.hint-body { flex: 1; color: var(--text-2); }
+.hint-body strong { color: var(--text); }
+.hint-link { color: var(--accent-dark); font-weight: 600; text-decoration: underline; }
+.hint-badge {
+  display: inline-block; background: #fef3c7; color: #b45309;
+  border: 1px solid #fbbf24; border-radius: 4px; padding: 0 6px; font-weight: 600;
+  font-size: var(--fs-xs); vertical-align: middle;
+}
+
 .page-title {
   font-size: var(--fs-2xl); font-weight: 700;
   color: var(--text); margin-bottom: var(--sp-5);
@@ -302,6 +390,40 @@ function formatDate(dateStr: string): string {
 .form-field { display: flex; flex-direction: column; gap: 4px; }
 .form-field label { font-size: var(--fs-xs); color: var(--text-3); font-weight: 600; letter-spacing: .3px; }
 .opt-tag { font-size: 10px; background: var(--surface-2); color: var(--text-3); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+.field-badge {
+  font-size: 10px; background: var(--accent-lt); color: var(--accent-dark);
+  border-radius: 4px; padding: 0 5px; margin-left: 4px; font-weight: 600;
+}
+.field-hint { font-size: 11px; color: var(--text-3); margin-top: 2px; line-height: 1.4; }
+
+/* 填写说明卡片 */
+.field-guide {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: var(--radius-sm);
+  padding: var(--sp-4); margin-bottom: var(--sp-4);
+}
+.guide-title { font-size: var(--fs-sm); font-weight: 700; color: var(--text); margin-bottom: var(--sp-2); }
+.guide-text { font-size: var(--fs-xs); color: var(--text-2); line-height: 1.7; margin-bottom: 4px; font-family: var(--font-cn); }
+.guide-link { color: var(--accent-dark); text-decoration: underline; }
+.opt-text { color: var(--accent-dark); font-weight: 600; }
+
+/* 本命年换算 */
+.natal-field { grid-column: span 1; }
+.natal-calc { display: flex; gap: 6px; margin-bottom: 6px; }
+.birth-year-input {
+  flex: 1; min-width: 0;
+  padding: 7px 10px; border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm); font-size: var(--fs-md);
+  background: var(--surface); color: var(--text);
+}
+.birth-year-input:focus { outline: none; border-color: var(--accent); }
+.btn-calc {
+  padding: 7px 12px; background: var(--accent-lt); color: var(--accent-dark);
+  border: 1px solid rgba(217,119,6,.3); border-radius: var(--radius-sm);
+  font-size: var(--fs-sm); font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background .15s;
+}
+.btn-calc:hover { background: rgba(217,119,6,.2); }
 .form-field select,
 .form-field input[type="number"] {
   padding: 7px 10px; border: 1px solid var(--border-md);

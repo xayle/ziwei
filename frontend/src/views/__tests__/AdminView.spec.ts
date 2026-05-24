@@ -50,12 +50,6 @@ import { getGoldenCases } from '@/api/bazi'
 import { getGlossary, updateGlossaryTerm } from '@/api/static-data'
 import type { Mock } from 'vitest'
 
-// ── Router ────────────────────────────────────────────────
-const router = createRouter({
-  history: createWebHistory(),
-  routes: [{ path: '/admin', component: AdminView }],
-})
-
 // ── 测试数据 ─────────────────────────────────────────────
 const MOCK_DASHBOARD = {
   cases_total: 42, cases_this_month: 7,
@@ -124,12 +118,16 @@ const MOCK_GLOSSARY = [
 ]
 
 async function mountView() {
-  await router.push('/admin')
-  await router.isReady()
+  const freshRouter = createRouter({
+    history: createWebHistory(),
+    routes: [{ path: '/admin', component: AdminView }],
+  })
+  await freshRouter.push('/admin')
+  await freshRouter.isReady()
   const pinia = createPinia()
   setActivePinia(pinia)
   return mount(AdminView, {
-    global: { plugins: [pinia, router], stubs: { teleport: true } },
+    global: { plugins: [pinia, freshRouter], stubs: { teleport: true } },
   })
 }
 

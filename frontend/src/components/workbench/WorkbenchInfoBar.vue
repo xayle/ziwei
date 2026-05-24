@@ -44,7 +44,7 @@ function genderLabel(g: string | null): string {
         <div>
           <div class="wb-info-title-row">
             <h1 class="wb-info-name">{{ props.caseDetail.name }}</h1>
-            <span class="wb-case-badge">案例工作台</span>
+            <span class="wb-case-badge">案例中心</span>
           </div>
           <p class="wb-info-sub">
             {{ genderLabel(props.caseDetail.gender) }} 命 ·

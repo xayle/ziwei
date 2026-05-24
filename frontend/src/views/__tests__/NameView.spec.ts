@@ -1,4 +1,4 @@
-/**
+﻿/**
  * NameView.spec.ts — NameView 视图单元测试
  * 测试：Tab 切换、表单验证、API 调用、store 预填充联动
  */
@@ -68,36 +68,6 @@ async function mountView() {
     global: { plugins: [pinia, router] },
   })
 }
-
-describe('NameView — 初始渲染', () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it('默认显示「分析」Tab 内容', async () => {
-    const wrapper = await mountView()
-    expect(wrapper.text()).toContain('姓名分析')
-  })
-
-  it('显示两个 Tab 按钮', async () => {
-    const wrapper = await mountView()
-    const tabs = wrapper.findAll('.tab-btn')
-    expect(tabs.length).toBeGreaterThanOrEqual(2)
-  })
-})
-
-describe('NameView — Tab 切换', () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it('点击「改名建议」Tab 切换内容', async () => {
-    const wrapper = await mountView()
-    const tabs = wrapper.findAll('.tab-btn')
-    const suggestTab = tabs.find(t => t.text().includes('改名'))
-    expect(suggestTab).toBeDefined()
-    await suggestTab!.trigger('click')
-    // 改名建议 tab 内有提交按钮
-    expect(wrapper.text()).toContain('改名')
-  })
-})
-
 describe('NameView — 分析表单提交', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
@@ -136,25 +106,3 @@ describe('NameView — 分析表单提交', () => {
   })
 })
 
-describe('NameView — nameStore 预填充联动', () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it('nameStore 有预填数据时自动切到「改名建议」Tab', async () => {
-    await router.push('/name')
-    await router.isReady()
-    const pinia = createPinia()
-    setActivePinia(pinia)
-
-    // 预填充
-    const store = useNameStore()
-    store.setPrefill('李', ['水', '木'])
-
-    const wrapper = mount(NameView, {
-      global: { plugins: [pinia, router] },
-    })
-    await wrapper.vm.$nextTick()
-
-    // activeTab 应已切换到 suggest
-    expect(wrapper.text()).toContain('改名')
-  })
-})

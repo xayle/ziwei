@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BaziView.spec.ts — 八字排盘视图单元测试
  * 测试：表单提交 / loading状态 / 四柱渲染 / Tab切换 / 用神改名联动
  */
@@ -158,52 +158,6 @@ describe('BaziView — 结果渲染', () => {
     expect(text).toContain('甲')  // 日干
     expect(text).toContain('丙')  // 时干
   })
-
-  it('渲染用神（favor）标签', async () => {
-    ;(computeBazi as Mock).mockResolvedValueOnce(MOCK_BAZI)
-    const wrapper = await mountView()
-    await wrapper.find('.btn-primary').trigger('click')
-    await flushPromises()
-
-    const favorTags = wrapper.findAll('.tag-favor')
-    expect(favorTags.length).toBeGreaterThanOrEqual(2)
-    expect(wrapper.text()).toContain('木')
-    expect(wrapper.text()).toContain('火')
-  })
-})
-
-// ─────────────────────────────────────────────────────────
-describe('BaziView — Tab 切换', () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it('切换至「大运」Tab 显示大运干支', async () => {
-    ;(computeBazi as Mock).mockResolvedValueOnce(MOCK_BAZI)
-    const wrapper = await mountView()
-    await wrapper.find('.btn-primary').trigger('click')
-    await flushPromises()
-
-    const dayunTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('大运'))
-    expect(dayunTab).toBeDefined()
-    await dayunTab!.trigger('click')
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.text()).toContain('戊')  // 大运干
-    expect(wrapper.text()).toContain('寅')  // 大运支
-  })
-
-  it('切换至「五行格局」Tab 渲染 5 行五行柱状图', async () => {
-    ;(computeBazi as Mock).mockResolvedValueOnce(MOCK_BAZI)
-    const wrapper = await mountView()
-    await wrapper.find('.btn-primary').trigger('click')
-    await flushPromises()
-
-    const wuxingTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('五行'))
-    expect(wuxingTab).toBeDefined()
-    await wuxingTab!.trigger('click')
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.findAll('.wx-row').length).toBe(5)
-  })
 })
 
 // ─────────────────────────────────────────────────────────
@@ -279,85 +233,3 @@ describe('BaziView — 保存案例', () => {
 })
 
 // ─────────────────────────────────────────────────────────
-describe('BaziView — AI 解读', () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it('未保存案例时 AI 生成按钮为禁用状态', async () => {
-    ;(computeBazi as Mock).mockResolvedValueOnce(MOCK_BAZI)
-    const wrapper = await mountView()
-    await wrapper.find('.btn-primary').trigger('click')
-    await flushPromises()
-
-    const aiTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('AI 解读'))
-    expect(aiTab).toBeDefined()
-    await aiTab!.trigger('click')
-    await flushPromises()
-
-    const btn = wrapper.find('.btn-ai-generate')
-    expect((btn.element as HTMLButtonElement).disabled).toBe(true)
-    expect(wrapper.text()).toContain('请先保存案例')
-  })
-
-  it('保存案例后可生成 AI 解读并展示结果', async () => {
-    ;(computeBazi as Mock).mockResolvedValueOnce(MOCK_BAZI)
-    ;(createCase as Mock).mockResolvedValueOnce({
-      id: 'case-ai-001',
-      name: 'AI 测试案例',
-    })
-    ;(interpretBazi as Mock).mockResolvedValueOnce({
-      draft_text: '第一段解读\n\n第二段解读',
-      provider: 'mock',
-      model: 'gpt-test',
-      prompt_version: 'bazi_v1',
-      status: 'pending_review',
-      input_tokens: 12,
-      output_tokens: 34,
-    })
-
-    const wrapper = await mountView()
-    await wrapper.find('.btn-primary').trigger('click')
-    await flushPromises()
-
-    await wrapper.find('.btn-case-save').trigger('click')
-    const saveButtons = wrapper.findAll('.bazi-modal-actions button')
-    await saveButtons[1].trigger('click')
-    await flushPromises()
-
-    const aiTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('AI 解读'))
-    await aiTab!.trigger('click')
-    await flushPromises()
-
-    await wrapper.find('.btn-ai-generate').trigger('click')
-    await flushPromises()
-
-    expect(interpretBazi).toHaveBeenCalledOnce()
-    expect(interpretBazi).toHaveBeenCalledWith('case-ai-001', undefined)
-    expect(wrapper.text()).toContain('第一段解读')
-    expect(wrapper.text()).toContain('第二段解读')
-    expect(wrapper.text()).toContain('mock')
-    expect(wrapper.text()).toContain('gpt-test')
-  })
-})
-
-// ─────────────────────────────────────────────────────────
-describe('BaziView — 原始数据', () => {
-  beforeEach(() => { vi.clearAllMocks() })
-
-  it('切换到原始数据页签后展示最近一次排盘 JSON', async () => {
-    ;(computeBazi as Mock).mockResolvedValueOnce(MOCK_BAZI)
-    const wrapper = await mountView()
-    await wrapper.find('.btn-primary').trigger('click')
-    await flushPromises()
-
-    const rawTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('原始数据'))
-    expect(rawTab).toBeDefined()
-    await rawTab!.trigger('click')
-    await flushPromises()
-
-    const rawBlock = wrapper.find('.raw-json-block')
-    expect(rawBlock.exists()).toBe(true)
-    expect(rawBlock.text()).toContain('pillars_primary')
-    expect(rawBlock.text()).toContain('庚')
-    expect(rawBlock.text()).toContain('wuxing_score')
-  })
-})

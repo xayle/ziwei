@@ -42,14 +42,18 @@ describe('WorkbenchInfoBar', () => {
     })
 
     const buttons = wrapper.findAll('button')
-    await buttons[0].trigger('click')
-    await buttons[1].trigger('click')
-    await buttons[2].trigger('click')
-    await buttons[10].trigger('click')
+    const btn = (text: string) => buttons.find((b) => b.text().includes(text))!
 
-    expect(wrapper.emitted('toggleView')).toHaveLength(1)
-    expect(wrapper.emitted('syncProfile')).toHaveLength(1)
+    await btn('查看完整报告').trigger('click')
     expect(wrapper.emitted('openReport')).toHaveLength(1)
+
+    await btn('切换完整视图').trigger('click')
+    expect(wrapper.emitted('toggleView')).toHaveLength(1)
+
+    await btn('同步个人信息').trigger('click')
+    expect(wrapper.emitted('syncProfile')).toHaveLength(1)
+
+    await btn('删除案例').trigger('click')
     expect(wrapper.emitted('deleteCase')).toHaveLength(1)
   })
 
@@ -69,7 +73,7 @@ describe('WorkbenchInfoBar', () => {
     })
 
     expect(wrapper.find('.wb-btn-ghost.is-active').exists()).toBe(false)
-    expect(wrapper.findAll('.wb-btn-ghost')[0].text()).toContain('完整视图')
+    expect(wrapper.findAll('.wb-btn-ghost').some((b) => b.text().includes('完整视图'))).toBe(true)
     expect(wrapper.text()).toContain('女 命')
     expect(wrapper.text()).toContain('—')
     expect(wrapper.find('.wb-bool.off').text()).toContain('未启用')

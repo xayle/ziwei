@@ -3,7 +3,7 @@
  * AppRightPanel.vue — 右栏面板
  * 上半区：当前课题内容（TopicPanel）
  * 下半区：AI 对话助手
- * 宽度 380px，通过 useUiStore().rightPanelExpanded 控制
+ * 宽度 340px，通过 useUiStore() 响应式控制
  */
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useUiStore } from '@/stores/ui'
@@ -16,7 +16,7 @@ const ui  = useUiStore()
 const ai  = useAiStore()
 const nav = useNavStore()
 
-// 当前 tab：'topic'（课题内容）| 'chat'（AI对话）| 'drafts'（草稿）
+// 当前 tab：'topic'（当前重点）| 'chat'（咨询助手）| 'drafts'（参考草稿）
 const activeTab = ref<'topic' | 'chat' | 'drafts'>('topic')
 
 // 当 nav 有选中小节时，自动切到 topic tab
@@ -97,7 +97,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('app:backend-unavailable', onBackendUnavailable as EventListener)
 })
 
-watch(() => ui.rightPanelExpanded, (v) => { if (v) loadRecentDrafts() })
+watch(() => ui.rightPanelVisible, (v) => { if (v) loadRecentDrafts() })
 
 function fmtTime(iso: string): string {
   try {
@@ -113,10 +113,25 @@ function statusLabel(s: string) {
   return s === 'approved' ? '已审核' : s === 'rejected' ? '已拒绝' : '待审核'
 }
 
+const panelSummary = {
+  topic: {
+    title: '当前重点',
+    desc: '这里集中显示你当前正在处理的课题与关键提醒，不再强调系统分栏。',
+  },
+  chat: {
+    title: '咨询助手',
+    desc: '可直接向 AI 追问表达方式、补充说明与常用解读角度。',
+  },
+  drafts: {
+    title: '参考草稿',
+    desc: '查看最近生成的可参考表达，帮助你整理最终交付内容。',
+  },
+} as const
+
 </script>
 
 <template>
-  <div class="right-panel" :class="{ hidden: !ui.rightPanelExpanded }">
+  <div class="right-panel" :class="{ hidden: !ui.rightPanelVisible, compact: ui.isCompactLayout || ui.isMobileLayout }">
 
     <!-- ── 顶部标签栏 ── -->
     <div class="panel-header">
@@ -127,7 +142,7 @@ function statusLabel(s: string) {
           @click="activeTab = 'topic'"
         >
           <span>📋</span>
-          <span class="tab-label">课题</span>
+          <span class="tab-label">重点</span>
         </button>
         <button
           class="tab-btn"
@@ -135,7 +150,7 @@ function statusLabel(s: string) {
           @click="activeTab = 'chat'"
         >
           <span>🤖</span>
-          <span class="tab-label">AI 对话</span>
+          <span class="tab-label">助手</span>
           <span v-if="ai.messages.length" class="msg-badge">{{ ai.messages.length }}</span>
         </button>
         <button
@@ -148,6 +163,12 @@ function statusLabel(s: string) {
         </button>
       </div>
       <button class="close-btn" @click="ui.toggleRightPanel" title="关闭">×</button>
+    </div>
+
+    <div class="panel-intro">
+      <div class="panel-intro-kicker">咨询辅助面板</div>
+      <div class="panel-intro-title">{{ panelSummary[activeTab].title }}</div>
+      <p class="panel-intro-desc">{{ panelSummary[activeTab].desc }}</p>
     </div>
 
     <!-- ── Tab 1：课题内容 ── -->
@@ -166,16 +187,16 @@ function statusLabel(s: string) {
           class="tpl-chip"
           :disabled="ai.streaming || !ai.currentCaseId"
           @click="ai.sendModuleRequest(tpl.module, tpl.label)"
-          :title="!ai.currentCaseId ? '请先在工作台选择案例' : tpl.label"
+          :title="!ai.currentCaseId ? '请先在案例中心选择案例' : tpl.label"
         >{{ tpl.label }}</button>
       </div>
-      <p v-if="!ai.currentCaseId" class="no-case-hint">请先在工作台选择案例</p>
+      <p v-if="!ai.currentCaseId" class="no-case-hint">请先在咨询流程页选择客户，再向助手追问。</p>
 
       <!-- 消息列表 -->
       <div class="chat-messages" ref="messagesEl">
         <div v-if="ai.messages.length === 0" class="chat-empty">
           <div class="chat-empty-icon">🤖</div>
-          <div>向 AI 助手提问或从顶部选择快捷模板</div>
+          <div>先输入问题，或直接点上方常用提问开始整理话术。</div>
         </div>
         <div
           v-for="(msg, i) in ai.messages"
@@ -195,7 +216,7 @@ function statusLabel(s: string) {
         <textarea
           v-model="inputText"
           class="chat-input"
-          placeholder="输入问题… (Enter 发送，Shift+Enter 换行)"
+          placeholder="例如：帮我整理这位客户的咨询重点…"
           rows="2"
           :disabled="ai.streaming"
           @keydown="handleKeydown"
@@ -214,7 +235,7 @@ function statusLabel(s: string) {
         <span>{{ draftLoadError }}</span>
         <button type="button" class="drafts-error-retry" @click="loadRecentDrafts">重试</button>
       </div>
-      <div v-if="!draftLoadError && recentDrafts.length === 0" class="empty-hint">暂无草稿记录</div>
+      <div v-if="!draftLoadError && recentDrafts.length === 0" class="empty-hint">暂无可参考草稿，可先在咨询助手中生成。</div>
       <div
         v-for="d in recentDrafts"
         :key="d.id"
@@ -234,7 +255,7 @@ function statusLabel(s: string) {
 <style scoped>
 /* ── 根容器 ───────────────────────────────────────────────────── */
 .right-panel {
-  width: 380px;
+  width: 340px;
   height: 100vh;
   background: var(--color-bg-primary);
   border-left: 1px solid var(--color-border);
@@ -250,6 +271,11 @@ function statusLabel(s: string) {
   overflow: hidden;
 }
 
+.right-panel.compact {
+  width: 0;
+  border-left: none;
+}
+
 /* ── 顶部标签栏 ───────────────────────────────────────────────── */
 .panel-header {
   height: 48px;
@@ -259,6 +285,34 @@ function statusLabel(s: string) {
   align-items: center;
   flex-shrink: 0;
   gap: 4px;
+}
+
+.panel-intro {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08), rgba(255, 255, 255, 0));
+}
+
+.panel-intro-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.panel-intro-title {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.panel-intro-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
 }
 .tab-bar {
   flex: 1;
@@ -328,7 +382,7 @@ function statusLabel(s: string) {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  padding: 8px 12px 4px;
+  padding: 10px 12px 6px;
   border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
@@ -351,10 +405,10 @@ function statusLabel(s: string) {
 .tpl-chip:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .no-case-hint {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   text-align: center;
-  padding: 4px 12px;
+  padding: 6px 12px;
 }
 
 .chat-messages {
@@ -372,9 +426,10 @@ function statusLabel(s: string) {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-top: 30px;
+  margin-top: 34px;
   color: var(--color-text-muted);
   font-size: 0.8125rem;
+  text-align: center;
 }
 .chat-empty-icon { font-size: 32px; opacity: .3; }
 
@@ -449,7 +504,7 @@ function statusLabel(s: string) {
 /* ── 草稿 Tab ─────────────────────────────────────────────────── */
 .drafts-tab {
   overflow-y: auto;
-  padding: 8px 12px;
+  padding: 10px 12px;
   scrollbar-width: thin;
 }
 
@@ -483,10 +538,13 @@ function statusLabel(s: string) {
   padding: 24px 0;
 }
 .draft-item {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  margin-bottom: 10px;
 }
-.draft-item:last-child { border-bottom: none; }
+.draft-item:last-child { margin-bottom: 0; }
 .draft-top {
   display: flex;
   justify-content: space-between;
@@ -512,5 +570,12 @@ function statusLabel(s: string) {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+@media (max-width: 1279px) {
+  .right-panel {
+    width: 0;
+    border-left: none;
+  }
 }
 </style>

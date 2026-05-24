@@ -33,15 +33,18 @@ function genderLabel(gender: string | null | undefined): string {
 <template>
   <section class="wb-caselist">
     <div class="wb-caselist-header">
-      <span class="wb-caselist-title">占例 / 客户档案</span>
-      <button class="btn-new" @click="emit('create')" title="新建案例">＋</button>
+      <div>
+        <div class="wb-caselist-title">咨询队列</div>
+        <div class="wb-caselist-sub">先选客户，再继续分析与交付</div>
+      </div>
+      <button class="btn-new" @click="emit('create')" title="新建咨询">＋</button>
     </div>
 
     <div class="wb-search-wrap">
       <input
         v-model="searchProxy"
         class="wb-search"
-        placeholder="搜索姓名、城市、标签…"
+        placeholder="搜索客户姓名、城市或标签…"
       />
     </div>
 
@@ -86,7 +89,7 @@ function genderLabel(gender: string | null | undefined): string {
       </div>
 
       <div v-if="props.cases.length === 0" class="wb-empty-hint">
-        {{ props.modelValue ? '无匹配结果' : '暂无案例' }}
+        {{ props.modelValue ? '没有找到匹配客户' : '还没有咨询客户' }}
       </div>
     </div>
   </section>
@@ -112,6 +115,12 @@ function genderLabel(gender: string | null | undefined): string {
 }
 
 .wb-caselist-title { font-size: 13px; font-weight: 700; color: var(--text); }
+
+.wb-caselist-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-3);
+}
 
 .btn-new {
   width: 28px;

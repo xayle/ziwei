@@ -4,7 +4,8 @@
  * 触发方式：内容区 chip click / 左侧词条芯片 click / 紫微宫格 click
  * 宫格模式（activePalaceIndex != null）覆盖术语显示
  */
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { useOneTimeFlag } from '@/composables/useOneTimeFlag'
 import { useReportStore } from '@/stores/report'
 
 const store = useReportStore()
@@ -12,11 +13,7 @@ const isCollapsed = computed(() => store.cardCollapsed['glossary'] ?? false)
 
 // ─── chip 引导提示（只显示一次，localStorage 持久化）─────
 const CHIP_HINT_KEY = 'report:chip:hint:shown'
-const showChipHint = ref(!localStorage.getItem(CHIP_HINT_KEY))
-function dismissChipHint() {
-  showChipHint.value = false
-  try { localStorage.setItem(CHIP_HINT_KEY, 'true') } catch { /* ignore */ }
-}
+const { isVisible: showChipHint, dismiss: dismissChipHint } = useOneTimeFlag(CHIP_HINT_KEY)
 
 // ─── 宫格详情模式 ─────────────────────────────────────────
 const activePalace = computed(() => {

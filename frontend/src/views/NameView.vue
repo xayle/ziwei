@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useNameStore } from '@/stores/name'
 import { useProfileStore } from '@/stores/profile'
-import { analyzeName, suggestNames } from '@/api/name'
-import type { NameAnalysisResponse, NameSuggestResponse } from '@/api/name'
+import { analyzeName } from '@/api/name'
+import type { NameAnalysisResponse } from '@/api/name'
 
 const route = useRoute()
-const nameStore = useNameStore()
 const profile   = useProfileStore()
-
-// 当前 Tab
-const activeTab = ref<'analyze' | 'suggest'>('analyze')
 
 // 姓名分析表单
 const analyzeSurname = ref('')
@@ -20,16 +15,6 @@ const analyzeResult = ref<NameAnalysisResponse | null>(null)
 const analyzeLoading = ref(false)
 const analyzeError = ref('')
 
-// 改名建议表单
-const suggestSurname = ref('')
-const suggestElements = ref<string[]>([])
-const suggestTopN = ref(10)
-const suggestMinScore = ref(60)
-const suggestResult = ref<NameSuggestResponse | null>(null)
-const suggestLoading = ref(false)
-const suggestError = ref('')
-
-const WX_ELEMENTS = ['木', '火', '土', '金', '水']
 const WX_COLORS: Record<string, string> = {
   '木': 'var(--wx-wood)', '火': 'var(--wx-fire)', '土': 'var(--wx-earth)',
   '金': 'var(--wx-metal)', '水': 'var(--wx-water)',
@@ -39,28 +24,11 @@ const WX_COLORS: Record<string, string> = {
 onMounted(() => {
   const q = route.query
   if (q.surname) analyzeSurname.value = String(q.surname)
-  if (q.surname) suggestSurname.value = String(q.surname)
-  if (q.elements) {
-    suggestElements.value = String(q.elements).split(',').filter(e => WX_ELEMENTS.includes(e))
-  }
-  // 从 nameStore 预填（八字联动）
-  if (nameStore.prefillSurname) {
-    suggestSurname.value = nameStore.prefillSurname
-    if (nameStore.prefillElements.length) suggestElements.value = nameStore.prefillElements
-    activeTab.value = 'suggest'
-    nameStore.setPrefill('', [])
-  } else if (profile.surname && !analyzeSurname.value) {
-    // 从个人信息 store 预填姓氏（若没有通过 URL 或 nameStore 传入）
+  // 从个人信息 store 预填姓氏
+  if (profile.surname && !analyzeSurname.value) {
     analyzeSurname.value = profile.surname
-    suggestSurname.value = profile.surname
   }
 })
-
-function toggleElement(el: string) {
-  const idx = suggestElements.value.indexOf(el)
-  if (idx >= 0) suggestElements.value.splice(idx, 1)
-  else suggestElements.value.push(el)
-}
 
 async function doAnalyze() {
   if (!analyzeSurname.value || !analyzeGivenName.value) return
@@ -76,30 +44,6 @@ async function doAnalyze() {
   } finally {
     analyzeLoading.value = false
   }
-}
-
-async function doSuggest() {
-  if (!suggestSurname.value) return
-  suggestLoading.value = true
-  suggestError.value = ''
-  try {
-    suggestResult.value = await suggestNames({
-      surname: suggestSurname.value,
-      preferred_elements: suggestElements.value.length ? suggestElements.value : undefined,
-      top_n: suggestTopN.value,
-      min_score: suggestMinScore.value,
-    })
-  } catch (e: unknown) {
-    suggestError.value = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '建议失败，请稍后重试'
-  } finally {
-    suggestLoading.value = false
-  }
-}
-
-function useForAnalyze(givenName: string) {
-  analyzeSurname.value = suggestSurname.value
-  analyzeGivenName.value = givenName
-  activeTab.value = 'analyze'
 }
 
 function scoreClass(score: number): string {
@@ -137,16 +81,8 @@ function exportPDF() {
   <div class="wrap name-view">
     <h1 class="page-title">姓名学</h1>
 
-    <!-- Tab 切换 -->
-    <div class="tabs">
-      <button :class="['tab-btn', { active: activeTab === 'analyze' }]"
-              @click="activeTab = 'analyze'">姓名分析</button>
-      <button :class="['tab-btn', { active: activeTab === 'suggest' }]"
-              @click="activeTab = 'suggest'">改名建议</button>
-    </div>
-
-    <!-- ── 姓名分析 Tab ────────────────────────────────────────── -->
-    <section v-if="activeTab === 'analyze'" class="tab-panel">
+    <!-- ── 姓名分析 ────────────────────────────────────────── -->
+    <section class="tab-panel">
       <form class="card form-card" @submit.prevent="doAnalyze">
         <div class="form-row">
           <label>姓氏</label>
@@ -201,59 +137,6 @@ function exportPDF() {
         </div>
       </div>
     </section>
-
-    <!-- ── 改名建议 Tab ────────────────────────────────────────── -->
-    <section v-if="activeTab === 'suggest'" class="tab-panel">
-      <form class="card form-card" @submit.prevent="doSuggest">
-        <div class="form-row">
-          <label>姓氏</label>
-          <input v-model="suggestSurname" placeholder="张" maxlength="3" required />
-        </div>
-        <div class="form-row">
-          <label>偏好五行</label>
-          <div class="element-chips">
-            <button v-for="el in WX_ELEMENTS" :key="el" type="button"
-                    :class="['chip', { selected: suggestElements.includes(el) }]"
-                    :style="suggestElements.includes(el) ? { background: WX_COLORS[el], color: '#fff' } : {}"
-                    @click="toggleElement(el)">{{ el }}</button>
-          </div>
-        </div>
-        <div class="form-row">
-          <label>返回数量</label>
-          <input type="number" v-model.number="suggestTopN" min="1" max="20" />
-        </div>
-        <div class="form-row">
-          <label>最低分数</label>
-          <input type="number" v-model.number="suggestMinScore" min="0" max="100" />
-        </div>
-        <button type="submit" class="btn-primary" :disabled="suggestLoading">
-          {{ suggestLoading ? '搜索中…' : '生成建议名' }}
-        </button>
-        <p v-if="suggestError" class="error-msg">{{ suggestError }}</p>
-      </form>
-
-      <!-- 建议结果 -->
-      <div v-if="suggestResult" class="suggest-results">
-        <p class="suggest-meta">
-          共评选 {{ suggestResult.total_candidates_evaluated.toLocaleString() }} 个候选，
-          推荐 {{ suggestResult.suggestions.length }} 个
-        </p>
-        <div class="suggest-grid">
-          <div v-for="s in suggestResult.suggestions" :key="s.given_name"
-               class="card suggest-card" @click="useForAnalyze(s.given_name)">
-            <div class="suggest-name">{{ suggestSurname }}{{ s.given_name }}</div>
-            <div class="suggest-score-row">
-              <span class="score-badge" :class="scoreClass(s.overall_score)">{{ s.overall_score }}分</span>
-              <div class="element-badges">
-                <span v-for="el in s.element_composition" :key="el"
-                      class="el-badge" :style="{ background: WX_COLORS[el] }">{{ el }}</span>
-              </div>
-            </div>
-            <p class="suggest-summary">{{ s.summary }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -267,28 +150,6 @@ function exportPDF() {
   margin-bottom: var(--sp-5);
   font-family: var(--font-cn);
 }
-
-/* Tabs */
-.tabs {
-  display: flex;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-5);
-  border-bottom: 2px solid var(--border);
-  padding-bottom: -2px;
-}
-.tab-btn {
-  padding: 8px 20px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: var(--fs-md);
-  color: var(--text-2);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition: color var(--dur-fast), border-color var(--dur-fast);
-}
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-.tab-btn:hover { color: var(--text); }
 
 /* Card */
 .card {
@@ -378,17 +239,6 @@ function exportPDF() {
 }
 .btn-export:hover { background: var(--accent); color: #fff; }
 
-/* Element chips */
-.element-chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
-.chip {
-  padding: 5px 14px; border-radius: 20px;
-  border: 1px solid var(--border-md); background: var(--surface);
-  font-size: var(--fs-sm); cursor: pointer;
-  transition: all var(--dur-fast);
-}
-.chip:hover { border-color: var(--accent); color: var(--accent); }
-.chip.selected { border-color: transparent; font-weight: 600; }
-
 /* 打印样式 */
 @media print {
   .no-print { display: none !important; }
@@ -399,19 +249,4 @@ function exportPDF() {
   .grid-5 { grid-template-columns: repeat(5, 1fr); }
 }
 
-/* Suggest results */
-.suggest-meta { font-size: var(--fs-sm); color: var(--text-3); margin-bottom: var(--sp-4); }
-.suggest-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--sp-4);
-}
-.suggest-card {
-  cursor: pointer;
-  transition: transform var(--dur-fast), box-shadow var(--dur-fast);
-}
-.suggest-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.suggest-name { font-size: var(--fs-xl); font-weight: 700; font-family: var(--font-cn); margin-bottom: var(--sp-2); }
-.suggest-score-row { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); flex-wrap: wrap; }
-.suggest-summary { font-size: var(--fs-xs); color: var(--text-2); line-height: 1.5; }
 </style>

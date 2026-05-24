@@ -73,6 +73,7 @@ export const useReportStore = defineStore('report', () => {
   const caseId    = ref<string | null>(null)
   const caseData  = ref<CaseOut | null>(null)
   const caseList  = ref<CaseOut[]>([])
+  const caseListError = ref<string | null>(null)
   const caseLoading = ref(false)
   const caseError = ref<string | null>(null)
 
@@ -185,11 +186,13 @@ export const useReportStore = defineStore('report', () => {
   // ── Actions ──────────────────────────────────────────────────────
 
   async function loadCaseList() {
+    caseListError.value = null
     try {
       const res = await fetchCaseList({ limit: 50 })
       caseList.value = res.items
     } catch {
       caseList.value = []
+      caseListError.value = '案例列表加载失败，请刷新重试'
     }
   }
 
@@ -256,6 +259,7 @@ export const useReportStore = defineStore('report', () => {
 
     try {
       if (key === 'bazi') {
+        if (!c.birth_dt_local) { errorMap.value[key] = '案例缺少出生时间，无法计算'; return }
         const [y, m, d, ...rest] = c.birth_dt_local.replace('T', '-').split(/[-T:]/)
         const hm = rest.join(':').slice(0, 5)
         const dt = `${y}-${m}-${d}T${hm}:00`
@@ -270,6 +274,7 @@ export const useReportStore = defineStore('report', () => {
         })
         sessionStorage.setItem(`report:bazi:${caseId.value}`, JSON.stringify({ data: baziData.value, ts: Date.now() }))
       } else if (key === 'ziwei') {
+        if (!c.birth_dt_local) { errorMap.value[key] = '案例缺少出生时间，无法计算'; return }
         const dtParts = c.birth_dt_local.split('T')
         const [yr, mo, da] = dtParts[0].split('-').map(Number)
         const [hr, mi] = (dtParts[1] ?? '00:00').split(':').map(Number)
@@ -284,10 +289,15 @@ export const useReportStore = defineStore('report', () => {
       } else if (key === 'name') {
         const fullName = p.name.name_override ?? c.name
         if (fullName.length < 2) throw new Error('姓名少于2字，无法分析')
+        // 必须是纯汉字姓名（2-9字），非汉字的案例标签无法进行五格分析
+        const chineseNameRe = /^[\u4e00-\u9fff]{2,9}$/
+        if (!chineseNameRe.test(fullName)) {
+          throw new Error(`"${fullName.slice(0, 10)}" 含非汉字或过长，请在参数控制中填写实际中文姓名（2-9字）`)
+        }
         const surname = fullName.slice(0, 1)
         const givenName = fullName.slice(1)
         const birthYear = p.name.birth_year_override
-          ?? Number(c.birth_dt_local.slice(0, 4))
+          ?? (c.birth_dt_local ? Number(c.birth_dt_local.slice(0, 4)) : 0)
         nameData.value = await computeName({ surname, given_name: givenName, birth_year: birthYear })
         sessionStorage.setItem(`report:name:${caseId.value}`, JSON.stringify({ data: nameData.value, ts: Date.now() }))
       } else if (key === 'zeri') {
@@ -306,7 +316,7 @@ export const useReportStore = defineStore('report', () => {
         })
       } else if (key === 'fengshui') {
         const birthYear = p.fengshui.birth_year_override
-          ?? Number(c.birth_dt_local.slice(0, 4))
+          ?? (c.birth_dt_local ? Number(c.birth_dt_local.slice(0, 4)) : 0)
         const gender = p.fengshui.gender_override ?? genderToZh(c.gender)
         fengshuiData.value = await fetchFengshuiBagua({ birth_year: birthYear, gender })
       }
@@ -332,7 +342,7 @@ export const useReportStore = defineStore('report', () => {
     const p = chapterParams.value
     try {
       const birthYear = p.fengshui.birth_year_override
-        ?? Number(c.birth_dt_local.slice(0, 4))
+        ?? (c.birth_dt_local ? Number(c.birth_dt_local.slice(0, 4)) : 0)
       const gender = p.fengshui.gender_override ?? genderToZh(c.gender)
       fengshuiData.value = await fetchFengshuiBagua({ birth_year: birthYear, gender })
       cacheTimestamps.value[key] = Date.now()
@@ -450,6 +460,8 @@ export const useReportStore = defineStore('report', () => {
     baziData.value = restore<BaziFullResponse>('bazi') ?? baziData.value
     ziweiData.value = restore<ZiweiResponse>('ziwei') ?? ziweiData.value
     nameData.value = restore<NameAnalysisResponse>('name') ?? nameData.value
+    zeriData.value = restore<ZeriResponse>('zeri') ?? zeriData.value
+    fengshuiData.value = restore<FengshuiResponse>('fengshui') ?? fengshuiData.value
     // 从 localStorage 按 sectionId 逐条恢复笔记
     try {
       const allSids = CHAPTERS.flatMap(c => c.sections.map((s: { id: string }) => s.id))
@@ -464,7 +476,7 @@ export const useReportStore = defineStore('report', () => {
 
   return {
     // state
-    caseId, caseData, caseList, caseLoading, caseError,
+    caseId, caseData, caseList, caseListError, caseLoading, caseError,
     baziData, ziweiData, nameData, zeriData, fengshuiData,
     loadingMap, errorMap, cacheTimestamps,
     activeChapter, activeSection, currentChapterDef,

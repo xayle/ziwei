@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useNavStore } from '@/stores/nav'
-import { MODULE_GROUPS, PRIMARY_NAV_ITEMS, getStatusLabel } from '@/data/appModules'
+import { useThemePreference } from '@/composables/useThemePreference'
+import { MODULE_GROUPS, PRIMARY_NAV_ITEMS, getModuleMetaText, getStatusLabel } from '@/data/appModules'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,10 +13,8 @@ const auth = useAuthStore()
 const ui = useUiStore()
 const nav = useNavStore()
 
-const theme = ref<'default' | 'bazi'>('default')
+const { theme, toggleTheme } = useThemePreference()
 const knowledgeExpanded = ref(false)
-
-const flatModuleItems = computed(() => MODULE_GROUPS.flatMap(group => group.items))
 
 onMounted(() => nav.initFromRoute(route.path))
 watch(() => route.path, (path) => {
@@ -43,38 +42,17 @@ function onSectionClick(sectionId: string, sectionRoute: string) {
   if (sectionRoute && !route.path.startsWith(sectionRoute)) {
     router.push(sectionRoute)
   }
-  if (!ui.rightPanelExpanded) ui.toggleRightPanel()
+  ui.openRightPanelIfAllowed()
 }
 
 function isPrimaryActive(item: (typeof PRIMARY_NAV_ITEMS)[number]) {
-  if (item.action === 'toggle-ai') return ui.rightPanelExpanded && !nav.currentSectionId
+  if (item.action === 'toggle-ai') return ui.rightPanelVisible && !nav.currentSectionId
   return !!item.path && route.path.startsWith(item.path) && !nav.currentSectionId
 }
 
 function isModuleActive(path?: string) {
   return !!path && route.path.startsWith(path)
 }
-
-function initTheme() {
-  const saved = localStorage.getItem('theme') as 'default' | 'bazi' | null
-  if (saved === 'bazi') {
-    theme.value = 'bazi'
-    document.documentElement.dataset.theme = 'bazi'
-  }
-}
-
-function toggleTheme() {
-  theme.value = theme.value === 'default' ? 'bazi' : 'default'
-  if (theme.value === 'bazi') {
-    document.documentElement.dataset.theme = 'bazi'
-    localStorage.setItem('theme', 'bazi')
-  } else {
-    delete document.documentElement.dataset.theme
-    localStorage.setItem('theme', 'default')
-  }
-}
-
-onMounted(initTheme)
 
 function logout() {
   auth.clearToken()
@@ -85,7 +63,7 @@ function logout() {
 <template>
   <aside class="sidebar" :class="{ collapsed: !ui.sidebarExpanded }">
     <div class="sidebar-header">
-      <span class="sidebar-logo">命理中控系统</span>
+      <span class="sidebar-logo">命理工作台</span>
       <button class="toggle-btn" @click="ui.toggleSidebar" :title="ui.sidebarExpanded ? '折叠侧栏' : '展开侧栏'">
         <span class="toggle-icon">{{ ui.sidebarExpanded ? '‹' : '›' }}</span>
       </button>
@@ -131,7 +109,7 @@ function logout() {
               <span class="item-label">{{ item.label }}</span>
               <span class="status-chip" :class="item.status">{{ getStatusLabel(item.status) }}</span>
             </span>
-            <span class="item-desc">{{ item.note || item.description }}</span>
+            <span class="item-desc">{{ getModuleMetaText(item) }}</span>
           </span>
         </button>
       </section>
@@ -147,8 +125,8 @@ function logout() {
         >
           <span class="item-icon">📚</span>
           <span class="item-body">
-            <span class="item-label">知识体系</span>
-            <span class="item-desc">保留原知识树，作为辅助导航与说明</span>
+            <span class="item-label">知识参考</span>
+            <span class="item-desc">保留知识树，作为辅助阅读与查询入口</span>
           </span>
           <span class="ch-arrow" :class="{ rotated: knowledgeExpanded }">›</span>
         </button>

@@ -14,6 +14,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', component: { template: '<div/>' } },
+    { path: '/cases', component: { template: '<div/>' } },
     { path: '/login', component: { template: '<div/>' } },
     { path: '/ziwei', component: { template: '<div/>' } },
     { path: '/bazi',  component: { template: '<div/>' } },
@@ -79,7 +80,7 @@ describe('AppNav — 已登录状态', () => {
     const links = wrapper.findAll('.nav-link')
     expect(links).toHaveLength(11)
     const labels = links.map(l => l.text())
-    expect(labels).toContain('工作台')
+    expect(labels).toContain('案例中心')
     expect(labels).toContain('报告书')
     expect(labels).toContain('八字排盘')
     expect(labels).toContain('紫微斗数')

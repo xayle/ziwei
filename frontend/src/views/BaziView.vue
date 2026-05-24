@@ -1,392 +1,68 @@
-<script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import { computeBazi } from '@/api/bazi'
-import type { BaziResponse, WuxingScore, DayunItem } from '@/api/bazi'
-import { createCase } from '@/api/report'
-import { interpretBazi } from '@/api/llm'
-import { useNameStore } from '@/stores/name'
-import { useProfileStore } from '@/stores/profile'
-import CityPicker from '@/components/CityPicker.vue'
+﻿<script setup lang="ts">
+import { onMounted, nextTick } from 'vue'
 import { CANG_GAN, NAYIN_MAP, STEM_ELEMENT, stemColor } from '@/data/ganzhi'
+import CityPicker from '@/components/CityPicker.vue'
+import BaziEventSection from '@/components/bazi/BaziEventSection.vue'
+import BaziSaveDialog from '@/components/bazi/BaziSaveDialog.vue'
+import { useBaziForm } from '@/composables/useBaziForm'
+import { useBaziComputation } from '@/composables/useBaziComputation'
+import { useBaziAi } from '@/composables/useBaziAi'
+import { useBaziResults } from '@/composables/useBaziResults'
 
-const router    = useRouter()
-const nameStore = useNameStore()
-const profile   = useProfileStore()
+// ── Composables ────────────────────────────────────────────────────────────
+const {
+  birthDt, lon, tz, gender, mode, solarTime, surname,
+  initCity, cityName, showForm,
+  syncFromProfile, onCityChange, gotoNameSuggest, gotoZeri, profile,
+} = useBaziForm()
 
-// ── 表单（初始化时从个人信息 store 预填）──────────────────
-const birthDt   = ref(profile.birthDt || '1990-01-15T08:30')
-const lon       = ref<number | undefined>(profile.lon)
-const tz        = ref(profile.tz || 'Asia/Shanghai')
-const gender    = ref<'male' | 'female' | ''>(profile.gender || 'male')
-const mode      = ref<'dual' | 'single'>(profile.mode || 'dual')
-const solarTime = ref(profile.solarTime)
-const surname   = ref(profile.surname || '')
-// CityPicker 的初始城市名（响应式，用于 :initial-city prop）
-const initCity  = ref(profile.cityName || '北京')
-const cityName  = ref(profile.cityName || '北京')
-const province  = ref(profile.province || '北京市')
+const {
+  loading, error, result, savedCaseId,
+  saveCaseName, saveCaseNotes, saveDialogOpen,
+  saveCaseSaving, saveCaseError, saveCaseSuccess,
+  doCalculate, openSaveDialog, closeSaveDialog,
+  saveCurrentCase, resetSaveState, resetResult,
+} = useBaziComputation({ birthDt, lon, tz, gender, mode, solarTime, cityName, initCity })
 
-// 表单显示控制：已保存个人信息时默认折叠
-const showForm = ref(!profile.saved)
+const {
+  aiModule, aiLoading, aiError, aiStatus, aiDraft,
+  AI_MODULE_OPTIONS, aiParagraphs,
+  generateAiInterpretation, resetAiState,
+} = useBaziAi(savedCaseId)
 
-// 每次进入页面时重新同步 profile 数据
+const {
+  currentYear, dayunSelected, dayunItems, dayunActiveIdx,
+  pillars, wuxingBars, RADAR_ANGLES, RADAR_CX, RADAR_CY, RADAR_R,
+  radarBg, radarBgHalf, radarPoints, radarLabels,
+  tgColor, wxColor, wxZh, scoreColor,
+  dayMasterDesc, baziSummaryFallback, currentDayunDesc,
+  overviewGuideCards, overviewReadingSteps, overviewTerms, rawResultJson,
+} = useBaziResults(result)
+
+// ── 生命周期 ──────────────────────────────────────────────────────────────
 onMounted(() => {
-  birthDt.value   = profile.birthDt   || '1990-01-15T08:30'
-  lon.value       = profile.lon
-  tz.value        = profile.tz        || 'Asia/Shanghai'
-  gender.value    = profile.gender    || 'male'
-  mode.value      = profile.mode      || 'dual'
-  solarTime.value = profile.solarTime
-  surname.value   = profile.surname   || ''
-  initCity.value  = profile.cityName  || '北京'
-  cityName.value  = profile.cityName  || '北京'
-  province.value  = profile.province  || '北京市'
-  // 已保存个人信息则自动排盘并折叠表单
+  syncFromProfile()
   if (profile.saved) {
     showForm.value = false
     nextTick(() => doCalculate())
   }
 })
 
-// ── 状态 ──────────────────────────────────────────────
-const loading   = ref(false)
-const error     = ref('')
-const result    = ref<BaziResponse | null>(null)
-const activeTab = ref<'overview' | 'dayun' | 'wuxing' | 'analysis' | 'fortune' | 'ai' | 'raw'>('overview')
-const saveDialogOpen = ref(false)
-const saveCaseName = ref('')
-const saveCaseNotes = ref('')
-const saveCaseSaving = ref(false)
-const saveCaseError = ref('')
-const saveCaseSuccess = ref('')
-const savedCaseId = ref<string | null>(null)
-const aiModule = ref('')
-const aiLoading = ref(false)
-const aiError = ref('')
-const aiStatus = ref('')
-const aiDraft = ref<{
-  draft_text: string
-  provider: string
-  model: string
-  prompt_version: string
-  status: string
-  input_tokens: number
-  output_tokens: number
-} | null>(null)
-
-const AI_MODULE_OPTIONS = [
-  { value: '', label: '（全局解读）' },
-  { value: 'career_detail', label: '事业详解' },
-  { value: 'wealth_detail', label: '财富详解' },
-  { value: 'marriage_detail', label: '婚恋详解' },
-  { value: 'dayun_narrative', label: '大运叙述' },
-  { value: 'fengshui_suggestion', label: '风水建议' },
-]
-
-const aiParagraphs = computed(() => {
-  const text = aiDraft.value?.draft_text ?? ''
-  return text
-    .split(/\n{2,}/)
-    .map(item => item.trim())
-    .filter(Boolean)
-})
-
-const rawResultJson = computed(() => {
-  if (!result.value) return ''
-  return JSON.stringify(result.value, null, 2)
-})
-
-function onCityChange(e: { cityName: string; province: string; lon: number }) {
-  lon.value = e.lon
-  cityName.value = e.cityName
-  province.value = e.province
-  initCity.value = e.cityName
+/** 根据用神推荐改名 */
+function gotoNameSuggestWithResult() {
+  gotoNameSuggest(result.value?.yongshen?.favor ?? [])
 }
 
-function normalizeBirthDtLocal(value: string): string {
-  if (!value) return ''
-  const [datePart, timePart = '00:00'] = value.split('T')
-  const normalizedTime = timePart.length === 5 ? `${timePart}:00` : timePart
-  return `${datePart}T${normalizedTime}`
-}
-
-function buildDefaultCaseName(): string {
-  const dateLabel = birthDt.value ? birthDt.value.replace('T', ' ') : '未命名时间'
-  const cityLabel = cityName.value || initCity.value || '未命名城市'
-  return `八字案例 · ${cityLabel} · ${dateLabel}`
-}
-
-function extractErrorMessage(e: unknown, fallback: string): string {
-  return (e as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail
-    ?? (e as { message?: string })?.message
-    ?? fallback
-}
-
-function resetSaveState(clearSuccess = true): void {
-  saveDialogOpen.value = false
-  saveCaseError.value = ''
-  saveCaseSaving.value = false
-  savedCaseId.value = null
-  if (clearSuccess) saveCaseSuccess.value = ''
-}
-
-function resetAiState(): void {
-  aiModule.value = ''
-  aiLoading.value = false
-  aiError.value = ''
-  aiStatus.value = ''
-  aiDraft.value = null
-}
-
-function openSaveDialog(): void {
-  if (!result.value) return
-  saveCaseError.value = ''
-  saveCaseSuccess.value = ''
-  if (!saveCaseName.value.trim()) {
-    saveCaseName.value = buildDefaultCaseName()
-  }
-  saveDialogOpen.value = true
-}
-
-function closeSaveDialog(): void {
-  saveDialogOpen.value = false
-  saveCaseError.value = ''
-}
-
-// ── 计算排盘 ──────────────────────────────────────────
-async function doCalculate() {
-  if (!birthDt.value || lon.value === undefined) return
-  loading.value = true
-  error.value   = ''
-  result.value  = null
-  resetSaveState()
-  resetAiState()
-  try {
-    const [datePart, timePart] = birthDt.value.split('T')
-    const dt = `${datePart}T${timePart || '00:00'}:00`
-    const req: Parameters<typeof computeBazi>[0] = {
-      dt,
-      lon: lon.value!,
-      tz: tz.value,
-      mode: mode.value,
-      solar_time_enabled: solarTime.value,
-    }
-    if (gender.value) req.gender = gender.value
-    result.value = await computeBazi(req)
-    activeTab.value = 'overview'
-  } catch (e: unknown) {
-    error.value = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '排盘失败，请稍后重试'
-  } finally {
-    loading.value = false
-  }
-}
-
-async function saveCurrentCase() {
-  if (!birthDt.value || lon.value === undefined) {
-    saveCaseError.value = '出生信息不完整，无法保存案例'
-    return
-  }
-
-  saveCaseSaving.value = true
-  saveCaseError.value = ''
-
-  try {
-    const created = await createCase({
-      name: saveCaseName.value.trim() || buildDefaultCaseName(),
-      birth_dt_local: normalizeBirthDtLocal(birthDt.value),
-      tz: tz.value,
-      lon: lon.value,
-      gender: gender.value || null,
-      city: cityName.value || initCity.value || null,
-      solar_time_enabled: solarTime.value,
-      notes: saveCaseNotes.value.trim() || null,
-    })
-    savedCaseId.value = created.id
-    saveCaseSuccess.value = `已保存到案例库：${created.name}`
-    saveDialogOpen.value = false
-    aiStatus.value = '案例已保存，可生成 AI 解读'
-  } catch (e: unknown) {
-    saveCaseError.value = extractErrorMessage(e, '保存案例失败，请稍后重试')
-  } finally {
-    saveCaseSaving.value = false
-  }
-}
-
-async function generateAiInterpretation() {
-  if (!savedCaseId.value) {
-    aiError.value = '请先保存案例，再生成 AI 解读'
-    return
-  }
-
-  aiLoading.value = true
-  aiError.value = ''
-  aiStatus.value = '生成中，请稍候…'
-
-  try {
-    const draft = await interpretBazi(savedCaseId.value, aiModule.value || undefined)
-    aiDraft.value = draft
-    aiStatus.value = '生成完成'
-    activeTab.value = 'ai'
-  } catch (e: unknown) {
-    aiError.value = extractErrorMessage(e, 'AI 解读生成失败，请稍后重试')
-    aiStatus.value = ''
-  } finally {
-    aiLoading.value = false
-  }
-}
-
+/** 重置整个表单（联动 computation + AI 状态） */
 function resetForm() {
-  birthDt.value   = profile.birthDt   || '1990-01-15T08:30'
-  lon.value       = profile.lon
-  tz.value        = profile.tz        || 'Asia/Shanghai'
-  gender.value    = profile.gender    || 'male'
-  mode.value      = profile.mode      || 'dual'
-  solarTime.value = profile.solarTime
-  surname.value   = profile.surname   || ''
-  initCity.value  = profile.cityName  || '北京'
-  cityName.value  = profile.cityName  || '北京'
-  province.value  = profile.province  || '北京市'
-  result.value    = null
-  error.value     = ''
-  saveCaseName.value = ''
-  saveCaseNotes.value = ''
+  syncFromProfile()
+  resetResult()
   resetSaveState()
   resetAiState()
-}
-
-// ── 用神五行 → 推荐改名 ──────────────────────────────
-function gotoNameSuggest() {
-  const ysFavor = result.value?.yongshen?.favor ?? []
-  const WX_MAP: Record<string, string> = {
-    '甲':'木','乙':'木','寅':'木','卯':'木',
-    '丙':'火','丁':'火','巳':'火','午':'火',
-    '戊':'土','己':'土','辰':'土','戌':'土','丑':'土','未':'土',
-    '庚':'金','辛':'金','申':'金','酉':'金',
-    '壬':'水','癸':'水','亥':'水','子':'水',
-    '木':'木','火':'火','土':'土','金':'金','水':'水',
-  }
-  const elements = [...new Set(ysFavor.map(t => WX_MAP[t]).filter(Boolean))]
-  nameStore.setPrefill(surname.value, elements)
-  router.push('/name')
-}
-
-function gotoZeri() {
-  router.push('/zeri')
-}
-
-// ── 五行柱状图 ──────────────────────────────────────
-const WX_LIST = [
-  { key: 'wood',  label: '木', color: 'var(--wx-wood)' },
-  { key: 'fire',  label: '火', color: 'var(--wx-fire)' },
-  { key: 'earth', label: '土', color: 'var(--wx-earth)' },
-  { key: 'metal', label: '金', color: 'var(--wx-metal)' },
-  { key: 'water', label: '水', color: 'var(--wx-water)' },
-]
-
-const wuxingBars = computed(() => {
-  const wx = result.value?.wuxing_score as WuxingScore | undefined
-  if (!wx) return []
-  const total = WX_LIST.reduce((s, e) => s + (wx[e.key] || 0), 0) || 1
-  return WX_LIST.map(e => ({
-    ...e,
-    val: wx[e.key] || 0,
-    pct: Math.round((wx[e.key] || 0) / total * 100),
-  }))
-})
-
-// ── 四柱 ──────────────────────────────────────────────
-const currentYear = new Date().getFullYear()
-
-const pillars = computed(() => {
-  const pp = result.value?.pillars_primary
-  if (!pp) return []
-  const tg = result.value?.ten_gods ?? {}
-  return [
-    { label: '年柱', data: pp.year,  shishen: tg.year  ?? '', isDay: false },
-    { label: '月柱', data: pp.month, shishen: tg.month ?? '', isDay: false },
-    { label: '日柱', data: pp.day,   shishen: '日元',          isDay: true  },
-    { label: '时柱', data: pp.hour,  shishen: tg.hour  ?? '', isDay: false },
-  ]
-})
-
-// ── 大运列表（DaYunModel.items，干支 = stem+branch）──
-const dayunItems = computed((): DayunItem[] => result.value?.dayun?.items ?? [])
-// 大运选中(展开详情)
-const dayunSelected = ref(-1)
-// 当前大运索引
-const dayunActiveIdx = computed((): number =>
-  dayunItems.value.findIndex(
-    c => c.start_year != null && c.start_year <= currentYear && (c.start_year + 10) > currentYear
-  )
-)
-
-// ── 十神颜色 ──────────────────────────────────────────
-const TEN_GOD_COLORS: Record<string, string> = {
-  '比肩': '#3b82f6', '劫财': '#6366f1',
-  '食神': '#10b981', '伤官': '#f59e0b',
-  '正财': '#ef4444', '偏财': '#f97316',
-  '正官': '#7c3aed', '七杀': '#dc2626',
-  '正印': '#065f46', '偏印': '#0891b2',
-}
-function tgColor(tg: string): string {
-  return TEN_GOD_COLORS[tg] ?? 'var(--text-3)'
-}
-function wxColor(el: string): string {
-  const wx: Record<string, string> = {
-    '木': 'var(--wx-wood)', '火': 'var(--wx-fire)', '土': 'var(--wx-earth)',
-    '金': 'var(--wx-metal)', '水': 'var(--wx-water)',
-  }
-  return wx[el] ?? 'currentColor'
-}
-
-// ── 五行雷达图（SVG 五边形）──────────────────────────
-// 顶点顺序 12点起顺时针：木→火→土→金→水
-const RADAR_ANGLES = [270, 342, 54, 126, 198].map(d => (d * Math.PI) / 180)
-const RADAR_CX = 100, RADAR_CY = 100, RADAR_R = 72
-const RADAR_ELEMENTS = ['木', '火', '土', '金', '水']
-
-const radarBg = RADAR_ANGLES.map(a =>
-  `${(RADAR_CX + RADAR_R * Math.cos(a)).toFixed(1)},${(RADAR_CY + RADAR_R * Math.sin(a)).toFixed(1)}`
-).join(' ')
-const radarBgHalf = RADAR_ANGLES.map(a =>
-  `${(RADAR_CX + RADAR_R * 0.5 * Math.cos(a)).toFixed(1)},${(RADAR_CY + RADAR_R * 0.5 * Math.sin(a)).toFixed(1)}`
-).join(' ')
-
-const radarPoints = computed(() => {
-  const s = result.value?.wuxing_score
-  if (!s) return radarBg
-  const vals = [s.wood, s.fire, s.earth, s.metal, s.water]
-  const maxVal = Math.max(...vals, 1)
-  return RADAR_ANGLES.map((angle, i) => {
-    const r = RADAR_R * (vals[i] / maxVal)
-    return `${(RADAR_CX + r * Math.cos(angle)).toFixed(1)},${(RADAR_CY + r * Math.sin(angle)).toFixed(1)}`
-  }).join(' ')
-})
-
-const radarLabels = computed(() => {
-  const s = result.value?.wuxing_score
-  const vals = s ? [s.wood, s.fire, s.earth, s.metal, s.water] : [0,0,0,0,0]
-  return RADAR_ANGLES.map((angle, i) => {
-    const lr = RADAR_R + 18
-    return {
-      el: RADAR_ELEMENTS[i],
-      val: vals[i],
-      color: wxColor(RADAR_ELEMENTS[i]),
-      x: +(RADAR_CX + lr * Math.cos(angle)).toFixed(1),
-      y: +(RADAR_CY + lr * Math.sin(angle)).toFixed(1),
-    }
-  })
-})
-
-// 评分颜色
-function scoreColor(score: number): string {
-  if (score >= 80) return '#15803d'
-  if (score >= 60) return '#d97706'
-  return '#dc2626'
+  saveCaseName.value  = ''
+  saveCaseNotes.value = ''
 }
 </script>
-
 <template>
   <div class="wrap bazi-view">
     <h1 class="page-title">八字排盘</h1>
@@ -541,6 +217,34 @@ function scoreColor(score: number): string {
             起运 <b>{{ result.start_dayun_age }} 岁</b>
           </span>
         </div>
+        <!-- 命盘速读：日主·强弱·格局·用神 -->
+        <div v-if="result.day_master_strength || result.geju || result.yongshen" class="pillars-qbar">
+          <div v-if="result.pillars_primary" class="pqb-item">
+            <span class="pqb-key">日主</span>
+            <span class="pqb-gz" :style="{ color: stemColor((result.pillars_primary as any).day.stem) }">
+              {{ (result.pillars_primary as any).day.stem }}{{ (result.pillars_primary as any).day.branch }}
+            </span>
+            <span class="pqb-wx">（{{ (STEM_ELEMENT as any)[(result.pillars_primary as any).day.stem] ?? '' }}行）</span>
+          </div>
+          <span v-if="result.day_master_strength" class="pqb-dot">·</span>
+          <div v-if="result.day_master_strength" class="pqb-item">
+            <span class="pqb-key">强弱</span>
+            <span class="pqb-main">{{ result.day_master_strength.tier }}</span>
+          </div>
+          <span v-if="result.geju" class="pqb-dot">·</span>
+          <div v-if="result.geju" class="pqb-item">
+            <span class="pqb-key">格局</span>
+            <span class="pqb-main">{{ result.geju.geju_name }}</span>
+            <span v-if="result.geju.geju_level" class="pqb-badge">{{ result.geju.geju_level }}</span>
+          </div>
+          <span v-if="result.yongshen?.favor?.length" class="pqb-dot">·</span>
+          <div v-if="result.yongshen?.favor?.length" class="pqb-item">
+            <span class="pqb-key">用神</span>
+            <span v-for="f in result.yongshen.favor" :key="'pf'+f" class="pqb-favor-tag">{{ wxZh(f) }}</span>
+            <span v-if="result.yongshen.avoid?.length" class="pqb-avoid-sep">忌</span>
+            <span v-for="a in (result.yongshen.avoid ?? []).slice(0, 2)" :key="'pa'+a" class="pqb-avoid-tag">{{ wxZh(a) }}</span>
+          </div>
+        </div>
         <div class="case-actions-row">
           <button class="btn-case-save" @click="openSaveDialog">
             {{ savedCaseId ? '另存到案例库' : '保存到案例库' }}
@@ -548,249 +252,65 @@ function scoreColor(score: number): string {
           <span v-if="savedCaseId" class="case-save-pill case-save-pill-success">
             已保存 · {{ savedCaseId }}
           </span>
-          <span v-else class="case-save-pill">保存后可继续接入 AI 解读</span>
+          <span v-else class="case-save-pill">保存后生成深度解读</span>
           <span v-if="saveCaseSuccess" class="case-save-msg">{{ saveCaseSuccess }}</span>
         </div>
         <!-- 推荐改名按钮 -->
         <div v-if="result.yongshen?.favor?.length" class="suggest-name-row">
-          <button class="btn-suggest-name" @click="gotoNameSuggest">
+          <button class="btn-suggest-name" @click="gotoNameSuggestWithResult">
             ✦ 根据用神推荐改名
           </button>
-          <span class="hint">用神：{{ result.yongshen.favor.join('、') }}</span>
+          <span class="hint">用神：{{ result.yongshen.favor.map(wxZh).join('、') }}</span>
         </div>
       </section>
 
-      <!-- Tab 导航 -->
-      <div class="tabs">
-        <button :class="['tab-btn', { active: activeTab === 'overview' }]"
-                @click="activeTab = 'overview'">综合概览</button>
-        <button :class="['tab-btn', { active: activeTab === 'dayun' }]"
-                @click="activeTab = 'dayun'">大运</button>
-        <button :class="['tab-btn', { active: activeTab === 'wuxing' }]"
-                @click="activeTab = 'wuxing'">五行格局</button>
-        <button v-if="result.wealth_analysis || result.career || result.marriage_analysis || result.health || result.relationship || result.jewelry || result.fengshui || result.lifestyle"
-                :class="['tab-btn', { active: activeTab === 'analysis' }]"
-                @click="activeTab = 'analysis'">四维分析</button>
-        <button v-if="result.monthly_fortune?.length || result.current_fortune_summary || result.liunian_detail?.length"
-                :class="['tab-btn', { active: activeTab === 'fortune' }]"
-                @click="activeTab = 'fortune'">运势预测</button>
-        <button :class="['tab-btn', { active: activeTab === 'ai' }]"
-          @click="activeTab = 'ai'">AI 解读</button>
-        <button :class="['tab-btn', { active: activeTab === 'raw' }]"
-          @click="activeTab = 'raw'">原始数据</button>
+      <!-- ── 命盘三核 ── -->
+      <div v-if="result.day_master_strength || result.geju || result.yongshen" class="ov-core-trio ov-core-full">
+        <div v-if="result.day_master_strength" class="ov-trio-card">
+          <div class="ov-trio-kv">
+            <span class="ov-trio-label">日元强弱</span>
+            <span class="ov-trio-main">{{ result.day_master_strength.tier }}</span>
+            <span v-if="result.day_master_strength.score != null" class="ov-trio-score">{{ result.day_master_strength.score.toFixed(1) }} 分</span>
+          </div>
+          <p class="ov-trio-hint" v-if="dayMasterDesc">{{ dayMasterDesc }}</p>
+          <p class="ov-trio-hint" v-else>日主强弱决定用神与忌神的取舍方向，是命理分析的核心基础。</p>
+        </div>
+        <div v-if="result.geju" class="ov-trio-card">
+          <div class="ov-trio-kv">
+            <span class="ov-trio-label">命盘格局</span>
+            <span class="ov-trio-main">
+              {{ result.geju.geju_name }}
+              <span v-if="result.geju.geju_level" class="ov-trio-subbadge">{{ result.geju.geju_level }}</span>
+              <span v-if="result.geju.is_broken" class="ov-trio-broken">破格</span>
+            </span>
+          </div>
+          <p class="ov-trio-hint" v-if="result.geju.geju_detail">{{ result.geju.geju_detail.slice(0, 80) }}{{ result.geju.geju_detail.length > 80 ? '…' : '' }}</p>
+          <p class="ov-trio-hint" v-else-if="result.geju.interpretation_text">{{ result.geju.interpretation_text.slice(0, 80) }}…</p>
+          <p class="ov-trio-hint" v-else>格局决定命盘整体气质，是命理分析的骨干结构。</p>
+        </div>
+        <div v-if="result.yongshen" class="ov-trio-card">
+          <div class="ov-trio-kv">
+            <span class="ov-trio-label">用神 / 忌神</span>
+            <div class="ov-trio-yg">
+              <span v-for="t in result.yongshen.favor" :key="'tf'+t" class="ov-trio-favor">{{ wxZh(t) }}</span>
+              <span v-if="result.yongshen.avoid?.length" class="ov-trio-avoidlbl">忌</span>
+              <span v-for="t in result.yongshen.avoid" :key="'ta'+t" class="ov-trio-avoid">{{ wxZh(t) }}</span>
+            </div>
+          </div>
+          <p class="ov-trio-hint" v-if="result.yongshen.rationale">{{ result.yongshen.rationale.slice(0, 80) }}{{ result.yongshen.rationale.length > 80 ? '…' : '' }}</p>
+          <p class="ov-trio-hint" v-else>用神五行应尽量接触；忌神五行对应的人事物应适度规避。</p>
+        </div>
       </div>
 
-      <!-- Tab: 综合概览 -->
-      <section v-if="activeTab === 'overview'" class="tab-panel">
-        <!-- 命局总评 -->
-        <div v-if="result.bazi_summary" class="bazi-summary-block">
-          <div class="summary-label">命局综合总评</div>
-          <p class="bazi-summary-text">{{ result.bazi_summary }}</p>
-        </div>
+      <!-- ── 命局总评 ── -->
+      <div v-if="baziSummaryFallback" class="bazi-summary-block">
+        <div class="summary-label">命局综合总评</div>
+        <p class="bazi-summary-text">{{ baziSummaryFallback }}</p>
+      </div>
 
-        <!-- 当前运势摘要 -->
-        <div v-if="result.current_fortune_summary" class="cur-fortune-card">
-          <div class="cf-row">
-            <div class="cf-item">
-              <div class="cf-lbl">当前大运</div>
-              <div class="cf-val">{{ result.current_fortune_summary.current_dayun }}</div>
-              <div class="cf-sub">还剩 {{ result.current_fortune_summary.dayun_years_remaining }} 年</div>
-            </div>
-            <div class="cf-item">
-              <div class="cf-lbl">流年</div>
-              <div class="cf-val">{{ result.current_fortune_summary.current_liunian }}</div>
-            </div>
-          </div>
-          <div v-if="result.current_fortune_summary.top3_actions?.length" class="cf-actions">
-            <div class="cf-lbl">今年重点</div>
-            <ul class="cf-action-list">
-              <li v-for="(a,i) in result.current_fortune_summary.top3_actions" :key="i">{{ a }}</li>
-            </ul>
-          </div>
-          <div v-if="Object.keys(result.current_fortune_summary.this_year_domains || {}).length" class="cf-domains">
-            <div v-for="(val, key) in result.current_fortune_summary.this_year_domains" :key="key" class="cf-domain-item">
-              <span class="cf-domain-key">{{ key }}</span>
-              <span class="cf-domain-val">{{ val }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="overview-grid">
-          <!-- 用神/忌神 -->
-          <div class="ov-card" v-if="result.yongshen">
-            <div class="ov-title">用神 / 忌神</div>
-            <div class="ov-body">
-              <div class="tag-row">
-                <span v-for="t in result.yongshen.favor"   :key="'f'+t" class="tag tag-favor">{{ t }}</span>
-                <span v-for="t in result.yongshen.avoid"   :key="'a'+t" class="tag tag-avoid">{{ t }}</span>
-                <span v-for="t in (result.yongshen.neutral ?? [])" :key="'n'+t" class="tag tag-neutral">{{ t }}</span>
-              </div>
-              <p v-if="result.yongshen.rationale" class="ov-summary">{{ result.yongshen.rationale }}</p>
-            </div>
-          </div>
-          <!-- 日元强弱 -->
-          <div class="ov-card" v-if="result.day_master_strength">
-            <div class="ov-title">日元强弱</div>
-            <div class="ov-body">
-              <b>{{ result.day_master_strength.tier }}</b>
-              <p v-if="result.day_master_strength.score != null" class="ov-summary">
-                强弱分：{{ result.day_master_strength.score.toFixed(1) }}
-              </p>
-            </div>
-          </div>
-          <!-- 格局 -->
-          <div class="ov-card" v-if="result.geju">
-            <div class="ov-title">格局</div>
-            <div class="ov-body">
-              <b>{{ result.geju.geju_name }}</b>
-              <span v-if="result.geju.geju_level" class="geju-level-badge">{{ result.geju.geju_level }}</span>
-              <span v-if="result.geju.is_broken" class="geju-broken-badge">破格</span>
-              <span v-if="result.geju.confidence != null" class="geju-conf">置信 {{ (result.geju.confidence * 100).toFixed(0) }}%</span>
-              <p v-if="result.geju.geju_detail" class="ov-summary">{{ result.geju.geju_detail }}</p>
-              <p v-else-if="result.geju.interpretation_text" class="ov-summary">{{ result.geju.interpretation_text.slice(0, 80) }}…</p>
-              <p v-if="result.geju.classic_ref" class="ov-classic-ref">📜 {{ result.geju.classic_ref }}</p>
-            </div>
-          </div>
-          <!-- 命宫/身宫 -->
-          <div class="ov-card ov-card-wide" v-if="result.palace?.ming_gong">
-            <div class="ov-title">命宫 / 身宫</div>
-            <div class="ov-body">
-              <span>命宫：<b>{{ result.palace.ming_gong.dizhi }} {{ result.palace.ming_gong.palace_name }}</b></span>
-              <span v-if="result.palace.shen_gong" style="margin-left:12px">
-                身宫：<b>{{ result.palace.shen_gong?.dizhi }} {{ result.palace.shen_gong?.palace_name }}</b>
-              </span>
-            </div>
-            <div v-if="result.palace.twelve_palaces?.length" class="twelve-palaces">
-              <div v-for="tp in result.palace.twelve_palaces" :key="tp.palace_name" class="tp-item">
-                <span class="tp-name">{{ tp.palace_name }}</span>
-                <span class="tp-dizhi">{{ tp.dizhi }}</span>
-                <span v-if="tp.shishen" class="tp-ss">{{ tp.shishen }}</span>
-                <span v-if="tp.tiangan" class="tp-tg">{{ tp.tiangan }}</span>
-                <span v-if="tp.strength" :class="['tp-str', `tp-str-${tp.strength}`]">{{ tp.strength }}</span>
-                <span v-if="tp.note" class="tp-note">{{ tp.note }}</span>
-              </div>
-            </div>
-            <p v-if="result.palace.interpretation_text" class="ov-summary">{{ result.palace.interpretation_text }}</p>
-          </div>
-          <!-- 开运数据 -->
-          <div class="ov-card" v-if="result.lucky">
-            <div class="ov-title">开运参考</div>
-            <div class="ov-body">
-              <div class="lucky-row">
-                <span class="lucky-lbl">幸运色</span>
-                <span v-for="c in result.lucky.lucky_colors" :key="c" class="lucky-tag">{{ c }}</span>
-              </div>
-              <div class="lucky-row">
-                <span class="lucky-lbl">幸运数</span>
-                <span v-for="n in result.lucky.lucky_numbers" :key="n" class="lucky-tag">{{ n }}</span>
-              </div>
-              <div class="lucky-row">
-                <span class="lucky-lbl">方位 / 物品</span>
-                <span class="lucky-tag">{{ result.lucky.lucky_direction }}</span>
-                <span class="lucky-tag">{{ result.lucky.lucky_item }}</span>
-              </div>
-              <div v-if="result.lucky.avoid_colors?.length" class="lucky-row lucky-avoid">
-                <span class="lucky-lbl">忌颜色</span>
-                <span v-for="c in result.lucky.avoid_colors" :key="c" class="lucky-tag lucky-tag-avoid">{{ c }}</span>
-              </div>
-              <div v-if="result.lucky.avoid_direction" class="lucky-row lucky-avoid">
-                <span class="lucky-lbl">忌方位</span>
-                <span class="lucky-tag lucky-tag-avoid">{{ result.lucky.avoid_direction }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 命局人生弧线 -->
-        <div v-if="result.life_arc" class="life-arc-block">
-          <div class="life-arc-header">
-            <span class="life-arc-title">人生格局总论</span>
-            <span v-if="result.life_arc.overall_tier" class="life-arc-tier">{{ result.life_arc.overall_tier }}</span>
-          </div>
-          <blockquote v-if="result.life_arc.life_motto" class="life-motto">
-            "{{ result.life_arc.life_motto }}"
-          </blockquote>
-          <div v-if="result.life_arc.early_fortune || result.life_arc.mid_fortune || result.life_arc.late_fortune" class="life-arc-periods">
-            <div v-if="result.life_arc.early_fortune" class="lp-item">
-              <span class="lp-label">少年</span>
-              <p class="lp-text">{{ result.life_arc.early_fortune }}</p>
-            </div>
-            <div v-if="result.life_arc.mid_fortune" class="lp-item">
-              <span class="lp-label">中年</span>
-              <p class="lp-text">{{ result.life_arc.mid_fortune }}</p>
-            </div>
-            <div v-if="result.life_arc.late_fortune" class="lp-item">
-              <span class="lp-label">晚年</span>
-              <p class="lp-text">{{ result.life_arc.late_fortune }}</p>
-            </div>
-          </div>
-          <p v-if="result.life_arc.interpretation_text" class="life-arc-body">{{ result.life_arc.interpretation_text }}</p>
-          <p v-if="result.life_arc.optimal_action" class="pers-advice" style="margin-bottom:var(--sp-3)">💡 {{ result.life_arc.optimal_action }}</p>
-          <div v-if="result.life_arc.peak_periods?.length || result.life_arc.caution_periods?.length" class="life-arc-peaks">
-            <div v-if="result.life_arc.peak_periods?.length" class="peak-item">
-              <span class="peak-lbl peak-good">旺运大运</span>
-              <span v-for="p in result.life_arc.peak_periods" :key="p" class="peak-tag peak-tag-good">{{ p }}</span>
-            </div>
-            <div v-if="result.life_arc.caution_periods?.length" class="peak-item">
-              <span class="peak-lbl peak-warn">注意大运</span>
-              <span v-for="p in result.life_arc.caution_periods" :key="p" class="peak-tag peak-tag-warn">{{ p }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 性格分析 -->
-        <div v-if="result.personality" class="personality-block">
-          <div class="section-title">性格分析</div>
-          <p class="personality-trait"><b>{{ result.personality.day_stem_trait }}</b>（{{ result.personality.strength_modifier }}）</p>
-          <div class="personality-cols">
-            <div v-if="result.personality.advantages?.length" class="pers-col">
-              <div class="pers-lbl pers-good">✦ 优势</div>
-              <ul class="pers-list">
-                <li v-for="a in result.personality.advantages" :key="a">{{ a }}</li>
-              </ul>
-            </div>
-            <div v-if="result.personality.disadvantages?.length" class="pers-col">
-              <div class="pers-lbl pers-warn">△ 弱点</div>
-              <ul class="pers-list">
-                <li v-for="d in result.personality.disadvantages" :key="d">{{ d }}</li>
-              </ul>
-            </div>
-          </div>
-          <p v-if="result.personality.growth_advice" class="pers-advice">💡 {{ result.personality.growth_advice }}</p>
-          <div v-if="result.personality.communication_style || result.personality.stress_coping_mode || result.personality.potential_activation" class="pers-extra">
-            <p v-if="result.personality.communication_style" class="pers-sub">🗣 沟通风格：{{ result.personality.communication_style }}</p>
-            <p v-if="result.personality.stress_coping_mode" class="pers-sub">🧘 压力应对：{{ result.personality.stress_coping_mode }}</p>
-            <p v-if="result.personality.potential_activation" class="pers-sub">⚡ 潜能激活：{{ result.personality.potential_activation }}</p>
-          </div>
-          <p v-if="result.personality.disclaimer" class="ac-disclaimer">{{ result.personality.disclaimer }}</p>
-        </div>
-
-        <!-- 神煞 -->
-        <div v-if="result.shensha?.length" class="shensha-section">
-          <div class="section-title">神煞</div>
-          <div class="shensha-list">
-            <div v-for="s in (result.shensha ?? []).filter(s => s.priority === 'A' || s.priority === 'B')" :key="s.name"
-                 :class="['shensha-item', s.is_beneficial ? 'sh-good' : 'sh-bad']">
-              <span class="sh-name">{{ s.name }}</span>
-              <span class="sh-pillar">{{ s.pillar === 'year' ? '年' : s.pillar === 'month' ? '月' : s.pillar === 'day' ? '日' : '时' }}柱</span>
-              <span class="sh-meaning">{{ s.meaning }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 推荐改名 -->
-        <div v-if="result.yongshen?.favor?.length" class="suggest-name-row">
-          <button class="btn-suggest-name" @click="gotoNameSuggest">
-            ✦ 根据用神推荐改名
-          </button>
-          <button class="btn-zeri-link" @click="gotoZeri">📅 择日</button>
-          <span class="hint">用神：{{ result.yongshen.favor.join('、') }}</span>
-        </div>
-      </section>
-
-      <!-- Tab: 大运 -->
-      <section v-if="activeTab === 'dayun'" class="tab-panel">
-        <!-- 起运信息栏 -->
+      <!-- ── 大运 ── -->
+      <section class="card section-inline">
+        <h2 class="card-title">大运</h2>
         <div class="dy-header">
           <span v-if="result.start_dayun_age != null">起运 <b>{{ result.start_dayun_age }} 岁</b></span>
           <span v-if="result.dayun?.direction" class="dy-dir">
@@ -801,8 +321,6 @@ function scoreColor(score: number): string {
             &nbsp;<span class="dy-cur-age">（{{ dayunItems[dayunActiveIdx].start_age ?? '?' }}–{{ (dayunItems[dayunActiveIdx].start_age ?? 0) + 9 }}岁）</span>
           </span>
         </div>
-
-        <!-- 横向时间轴 -->
         <div v-if="dayunItems.length" class="dy-timeline-wrap">
           <div class="dy-track">
             <div v-for="(c, i) in dayunItems" :key="i"
@@ -812,7 +330,6 @@ function scoreColor(score: number): string {
                    { 'dy-sel':  dayunSelected === i },
                  ]"
                  @click="dayunSelected = dayunSelected === i ? -1 : i">
-              <!-- 连接线 + 节点 -->
               <div class="dy-dot-row">
                 <div class="dy-line-l" v-if="i > 0"></div>
                 <div class="dy-dot">
@@ -820,7 +337,6 @@ function scoreColor(score: number): string {
                 </div>
                 <div class="dy-line-r" v-if="i < dayunItems.length - 1"></div>
               </div>
-              <!-- 卡片 -->
               <div class="dy-card">
                 <div class="dy-gz">{{ (c.stem ?? '') + (c.branch ?? '') }}</div>
                 <div v-if="c.ten_god" class="dy-tg-chip"
@@ -833,8 +349,18 @@ function scoreColor(score: number): string {
             </div>
           </div>
         </div>
-
-        <!-- 展开详情面板 -->
+        <!-- 当前大运解读摘要 -->
+        <div v-if="dayunActiveIdx >= 0 && dayunItems[dayunActiveIdx]" class="dy-cur-summary">
+          <div class="dy-cur-summary-title">当前大运解读</div>
+          <p v-if="currentDayunDesc" class="dy-cur-narrative">{{ currentDayunDesc }}</p>
+          <p v-else class="dy-cur-narrative muted">点击时间轴中的大运节点可展开详情。</p>
+          <div v-if="dayunItems[dayunActiveIdx].wealth_hint || dayunItems[dayunActiveIdx].health_hint || dayunItems[dayunActiveIdx].love_hint"
+               class="dayun-hints">
+            <span v-if="dayunItems[dayunActiveIdx].wealth_hint" class="dh-tag dh-wealth">财运：{{ dayunItems[dayunActiveIdx].wealth_hint }}</span>
+            <span v-if="dayunItems[dayunActiveIdx].health_hint" class="dh-tag dh-health">健康：{{ dayunItems[dayunActiveIdx].health_hint }}</span>
+            <span v-if="dayunItems[dayunActiveIdx].love_hint"   class="dh-tag dh-love">感情：{{ dayunItems[dayunActiveIdx].love_hint }}</span>
+          </div>
+        </div>
         <transition name="dy-expand">
           <div v-if="dayunSelected >= 0 && dayunItems[dayunSelected]" class="dy-detail-card">
             <div class="dy-detail-header">
@@ -856,46 +382,38 @@ function scoreColor(score: number): string {
                  class="dayun-hints">
               <span v-if="dayunItems[dayunSelected].wealth_hint" class="dh-tag dh-wealth">财运：{{ dayunItems[dayunSelected].wealth_hint }}</span>
               <span v-if="dayunItems[dayunSelected].health_hint" class="dh-tag dh-health">健康：{{ dayunItems[dayunSelected].health_hint }}</span>
-              <span v-if="dayunItems[dayunSelected].love_hint"   class="dh-tag dh-love">  感情：{{ dayunItems[dayunSelected].love_hint }}</span>
+              <span v-if="dayunItems[dayunSelected].love_hint"   class="dh-tag dh-love">感情：{{ dayunItems[dayunSelected].love_hint }}</span>
             </div>
           </div>
         </transition>
-
         <p v-if="!dayunItems.length" class="muted">暂无大运数据</p>
       </section>
 
-      <!-- Tab: 五行格局 -->
-      <section v-if="activeTab === 'wuxing'" class="tab-panel">
-        <!-- 雷达图 + 横条并排 -->
+      <!-- ── 五行格局 ── -->
+      <section class="card section-inline">
+        <h2 class="card-title">五行格局</h2>
         <div class="wx-chart-row">
-          <!-- 五行雷达图 -->
           <div v-if="result.wuxing_score" class="wx-radar-wrap">
             <svg viewBox="0 0 200 200" class="wx-radar-svg">
-              <!-- 背景网格 -->
               <polygon :points="radarBgHalf" fill="none" stroke="var(--border)" stroke-width="0.8" stroke-dasharray="3,2"/>
               <polygon :points="radarBg"     fill="none" stroke="var(--border)" stroke-width="1"/>
-              <!-- 轴线 -->
               <line v-for="(angle, i) in RADAR_ANGLES" :key="`axis-${i}`"
                 :x1="RADAR_CX" :y1="RADAR_CY"
                 :x2="+(RADAR_CX + RADAR_R * Math.cos(angle)).toFixed(1)"
                 :y2="+(RADAR_CY + RADAR_R * Math.sin(angle)).toFixed(1)"
                 stroke="var(--border)" stroke-width="0.6" />
-              <!-- 数据区域 -->
               <polygon :points="radarPoints"
                 fill="var(--accent-soft)" fill-opacity="0.6"
                 stroke="var(--accent)" stroke-width="2"/>
-              <!-- 顶点圆点 -->
               <circle v-for="(pt, i) in radarPoints.split(' ')" :key="`dot-${i}`"
                 :cx="+pt.split(',')[0]" :cy="+pt.split(',')[1]" r="3"
                 fill="var(--accent)" />
-              <!-- 标签 -->
               <text v-for="lb in radarLabels" :key="lb.el"
                 :x="lb.x" :y="lb.y"
                 text-anchor="middle" dominant-baseline="middle"
                 class="radar-label" :fill="lb.color">{{ lb.el }}</text>
             </svg>
           </div>
-          <!-- 横条图 -->
           <div v-if="wuxingBars.length" class="wuxing-list">
             <div v-for="bar in wuxingBars" :key="bar.key" class="wx-row">
               <div class="wx-lbl" :style="{ color: bar.color }">{{ bar.label }}</div>
@@ -906,7 +424,6 @@ function scoreColor(score: number): string {
             </div>
           </div>
         </div>
-        <!-- 均衡评分 -->
         <div v-if="result.wuxing_balance_score != null" class="wx-balance">
           <div class="wx-balance-row">
             <span class="wx-bal-lbl">五行均衡分</span>
@@ -915,407 +432,257 @@ function scoreColor(score: number): string {
             </span>
           </div>
           <div v-if="result.wuxing_weak?.length || result.wuxing_strong?.length" class="wx-imbalance">
-            <span v-if="result.wuxing_weak?.length" class="wx-weak">
-              偏缺：{{ result.wuxing_weak.join('、') }}
-            </span>
-            <span v-if="result.wuxing_strong?.length" class="wx-strong">
-              偏旺：{{ result.wuxing_strong.join('、') }}
-            </span>
+            <span v-if="result.wuxing_weak?.length" class="wx-weak">偏缺：{{ result.wuxing_weak.join('、') }}</span>
+            <span v-if="result.wuxing_strong?.length" class="wx-strong">偏旺：{{ result.wuxing_strong.join('、') }}</span>
           </div>
           <p v-if="result.balance_advice" class="wx-advice">💡 {{ result.balance_advice }}</p>
         </div>
         <p v-else-if="!wuxingBars.length" class="muted">暂无五行数据</p>
       </section>
 
-      <!-- Tab: 四维分析 -->
-      <section v-if="activeTab === 'analysis'" class="tab-panel">
-        <!-- 财运 -->
-        <div v-if="result.wealth_analysis" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">💰</span>
-            <span class="ac-title">财运分析</span>
-            <span class="ac-score" :style="{ color: scoreColor(result.wealth_analysis.wealth_score) }">
-              {{ result.wealth_analysis.wealth_score }}<small>/100</small>
-            </span>
-            <span class="ac-tier">{{ result.wealth_analysis.wealth_tier }}</span>
-          </div>
-          <p class="ac-range">年收入参考范围：<b>{{ result.wealth_analysis.annual_range }}</b></p>
-          <div v-if="result.wealth_analysis.industries?.length" class="ac-tags">
-            <span class="ac-tag-lbl">适合行业</span>
-            <span v-for="ind in result.wealth_analysis.industries" :key="ind" class="ac-tag">{{ ind }}</span>
-          </div>
-          <p v-if="result.wealth_analysis.strategy" class="ac-text">{{ result.wealth_analysis.strategy }}</p>
-          <p v-if="result.wealth_analysis.investment_preference" class="ac-sub">
-            投资偏好：{{ result.wealth_analysis.investment_preference }}
-          </p>
-          <p v-if="result.wealth_analysis.financial_taboos" class="ac-sub ac-sub-warn">⚠ 理财禁忌：{{ result.wealth_analysis.financial_taboos }}</p>
-          <p v-if="result.wealth_analysis.wealth_accumulation_phases" class="ac-sub">💰 积累节奏：{{ result.wealth_analysis.wealth_accumulation_phases }}</p>
-          <div v-if="result.wealth_analysis.dayun_forecast?.length" class="ac-dayun-fc">
-            <span class="ac-tag-lbl">大运财运趋势</span>
-            <div v-for="df in result.wealth_analysis.dayun_forecast" :key="df.ganzhi" class="ac-df-item">
-              <span class="ac-df-gz">{{ df.ganzhi }}</span>
-              <span class="ac-df-trend">{{ df.trend }}</span>
-            </div>
-          </div>
-          <p v-if="result.wealth_analysis.interpretation_text" class="ac-interp">{{ result.wealth_analysis.interpretation_text }}</p>
-          <p v-if="result.wealth_analysis.disclaimer" class="ac-disclaimer">{{ result.wealth_analysis.disclaimer }}</p>
-        </div>
-        <!-- 事业 -->
-        <div v-if="result.career" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">🏆</span>
-            <span class="ac-title">事业分析</span>
-            <span class="ac-score" :style="{ color: scoreColor(result.career.career_score) }">
-              {{ result.career.career_score }}<small>/100</small>
-            </span>
-            <span v-if="result.career.leadership_potential" class="ac-tier">领导潜质</span>
-          </div>
-          <div v-if="result.career.career_directions?.length" class="ac-tags">
-            <span class="ac-tag-lbl">发展方向</span>
-            <span v-for="d in result.career.career_directions" :key="d" class="ac-tag">{{ d }}</span>
-          </div>
-          <div v-if="result.career.suitable_industries?.length" class="ac-tags">
-            <span class="ac-tag-lbl">适合行业</span>
-            <span v-for="ind in result.career.suitable_industries" :key="ind" class="ac-tag">{{ ind }}</span>
-          </div>
-          <p v-if="result.career.development_advice" class="ac-text">{{ result.career.development_advice }}</p>
-          <p v-if="result.career.optimal_move_timing" class="ac-sub">最佳时机：{{ result.career.optimal_move_timing }}</p>
-          <p v-if="result.career.entrepreneurship_assessment" class="ac-sub">🚀 创业评估：{{ result.career.entrepreneurship_assessment }}</p>
-          <p v-if="result.career.five_year_roadmap" class="ac-sub">📋 五年规划：{{ result.career.five_year_roadmap }}</p>
-          <p v-if="result.career.collaboration_style" class="ac-sub">🤝 合作方式：{{ result.career.collaboration_style }}</p>
-          <p v-if="result.career.interpretation_text" class="ac-interp">{{ result.career.interpretation_text }}</p>
-          <p v-if="result.career.disclaimer" class="ac-disclaimer">{{ result.career.disclaimer }}</p>
-        </div>
-        <!-- 婚恋 -->
-        <div v-if="result.marriage_analysis" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">💑</span>
-            <span class="ac-title">婚恋分析</span>
-            <span class="ac-score" :style="{ color: scoreColor(result.marriage_analysis.marriage_score) }">
-              {{ result.marriage_analysis.marriage_score }}<small>/100</small>
-            </span>
-            <span class="ac-tier">桃花{{ result.marriage_analysis.peach_blossom }}</span>
-          </div>
-          <p class="ac-text">另一半：{{ result.marriage_analysis.partner_profile }}</p>
-          <div class="ac-row">
-            <span>最佳年龄：{{ result.marriage_analysis.optimal_marriage_age }}</span>
-            <span>方位：{{ result.marriage_analysis.partner_direction }}</span>
-            <span>五行：{{ result.marriage_analysis.partner_wuxing }}</span>
-          </div>
-          <div v-if="result.marriage_analysis.marriage_windows?.length" class="ac-tags">
-            <span class="ac-tag-lbl">姻缘窗口</span>
-            <span v-for="w in result.marriage_analysis.marriage_windows" :key="w" class="ac-tag">{{ w }}</span>
-          </div>
-          <p v-if="result.marriage_analysis.children_outlook" class="ac-sub">子嗣：{{ result.marriage_analysis.children_outlook }}</p>
-          <p v-if="result.marriage_analysis.children_timing" class="ac-sub">🍼 生育时机：{{ result.marriage_analysis.children_timing }}</p>
-          <p v-if="result.marriage_analysis.emotional_pitfalls" class="ac-sub ac-sub-warn">⚠ 情感雷区：{{ result.marriage_analysis.emotional_pitfalls }}</p>
-          <p v-if="result.marriage_analysis.second_marriage_indicator" class="ac-sub">💔 感情波折：{{ result.marriage_analysis.second_marriage_indicator }}</p>
-          <p v-if="result.marriage_analysis.interpretation_text" class="ac-interp">{{ result.marriage_analysis.interpretation_text }}</p>
-          <p v-if="result.marriage_analysis.disclaimer" class="ac-disclaimer">{{ result.marriage_analysis.disclaimer }}</p>
-        </div>
-        <!-- 健康 -->
-        <div v-if="result.health" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">🏥</span>
-            <span class="ac-title">健康分析</span>
-            <span class="ac-score" :style="{ color: scoreColor(result.health.health_score) }">
-              {{ result.health.health_score }}<small>/100</small>
-            </span>
-            <span :class="['ac-tier', result.health.risk_level === '高' ? 'tier-warn' : '']">
-              风险{{ result.health.risk_level }}
-            </span>
-          </div>
-          <div v-if="result.health.risk_organs?.length" class="ac-tags">
-            <span class="ac-tag-lbl">注意器官</span>
-            <span v-for="o in result.health.risk_organs" :key="o" class="ac-tag ac-tag-warn">{{ o }}</span>
-          </div>
-          <p v-if="result.health.health_advice" class="ac-text">{{ result.health.health_advice }}</p>
-          <div v-if="result.health.exercise?.length || result.health.diet?.length" class="ac-health-tips">
-            <div v-if="result.health.exercise?.length" class="ht-row">
-              <span class="ht-lbl">运动</span>
-              <span v-for="e in result.health.exercise" :key="e" class="ht-item">{{ e }}</span>
-            </div>
-            <div v-if="result.health.diet?.length" class="ht-row">
-              <span class="ht-lbl">饮食</span>
-              <span v-for="d in result.health.diet" :key="d" class="ht-item">{{ d }}</span>
-            </div>
-          </div>
-          <p v-if="result.health.peak_period" class="ac-sub">✦ 体质巅峰期：{{ result.health.peak_period }}</p>
-          <p v-if="result.health.seasonal_health" class="ac-sub">🌿 季节养生：{{ result.health.seasonal_health }}</p>
-          <p v-if="result.health.mental_health_advice" class="ac-sub">🧠 心理健康：{{ result.health.mental_health_advice }}</p>
-          <p v-if="result.health.constitution_type" class="ac-sub">🏋 五行体质：{{ result.health.constitution_type }}</p>
-          <p v-if="result.health.interpretation_text" class="ac-interp">{{ result.health.interpretation_text }}</p>
-          <p v-if="result.health.disclaimer" class="ac-disclaimer">{{ result.health.disclaimer }}</p>
-        </div>
-        <p v-if="!result.wealth_analysis && !result.career && !result.marriage_analysis && !result.health" class="muted">
-          暂无四维分析数据
-        </p>
+      <!-- ── 底部操作 ── -->
+      <div v-if="result.yongshen?.favor?.length" class="suggest-name-row suggest-name-row--bottom">
+        <button class="btn-suggest-name" @click="gotoNameSuggestWithResult">✦ 根据用神推荐改名</button>
+        <button class="btn-zeri-link" @click="gotoZeri">📅 择日</button>
+        <span class="hint">用神：{{ result.yongshen.favor.map(wxZh).join('、') }}</span>
+      </div>
 
-        <!-- 六亲人际 -->
-        <div v-if="result.relationship" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">👥</span>
-            <span class="ac-title">六亲人际</span>
-            <span class="ac-score" :style="{ color: scoreColor(result.relationship.relationship_score) }">
-              {{ result.relationship.relationship_score }}<small>/100</small>
-            </span>
-          </div>
-          <div v-if="result.relationship.liu_qin && Object.keys(result.relationship.liu_qin).length" class="ac-liuqin">
-            <div v-for="(val, key) in result.relationship.liu_qin" :key="key" class="lq-item">
-              <span class="lq-key">{{ key }}</span>
-              <span class="lq-val">{{ val }}</span>
-            </div>
-          </div>
-          <div v-if="result.relationship.noble_people?.length" class="ac-tags">
-            <span class="ac-tag-lbl">贵人</span>
-            <span v-for="p in result.relationship.noble_people" :key="p" class="ac-tag ac-tag-noble">{{ p }}</span>
-          </div>
-          <div v-if="result.relationship.petty_people?.length" class="ac-tags">
-            <span class="ac-tag-lbl">小人</span>
-            <span v-for="p in result.relationship.petty_people" :key="p" class="ac-tag ac-tag-warn">{{ p }}</span>
-          </div>
-          <p v-if="result.relationship.social_strategy" class="ac-text">{{ result.relationship.social_strategy }}</p>
-          <p v-if="result.relationship.interpretation_text" class="ac-interp">{{ result.relationship.interpretation_text }}</p>
-          <p v-if="result.relationship.disclaimer" class="ac-disclaimer">{{ result.relationship.disclaimer }}</p>
+      <!-- ── 人生弧线 ── -->
+      <section v-if="result.life_arc" class="card section-inline">
+        <h2 class="card-title">人生弧线</h2>
+        <blockquote v-if="result.life_arc.life_motto" class="life-motto">"{{ result.life_arc.life_motto }}"</blockquote>
+        <div v-if="result.life_arc.overall_tier" class="life-tier-badge">
+          命格层级：<strong>{{ result.life_arc.overall_tier }}</strong>
         </div>
-
-        <!-- 开运饰品 -->
-        <div v-if="result.jewelry" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">💎</span>
-            <span class="ac-title">开运饰品</span>
+        <div class="life-arc-phases">
+          <div v-if="result.life_arc.early_fortune" class="arc-phase">
+            <span class="arc-phase-label">早年</span>
+            <p class="arc-phase-text">{{ result.life_arc.early_fortune }}</p>
           </div>
-          <div class="jewelry-items">
-            <div class="ji-card ji-primary">
-              <div class="ji-label">主饰品</div>
-              <div class="ji-detail">
-                <span v-if="result.jewelry.primary.material">{{ result.jewelry.primary.material }}</span>
-                <span v-if="result.jewelry.primary.gemstone" class="ji-gem">{{ result.jewelry.primary.gemstone }}</span>
-              </div>
-              <div class="ji-meta">
-                <span v-if="result.jewelry.primary.position">佩戴：{{ result.jewelry.primary.position }}</span>
-                <span v-if="result.jewelry.primary.wuxing">五行：{{ result.jewelry.primary.wuxing }}</span>
-              </div>
-            </div>
-            <div v-if="result.jewelry.secondary" class="ji-card">
-              <div class="ji-label">辅饰品</div>
-              <div class="ji-detail">
-                <span v-if="result.jewelry.secondary.material">{{ result.jewelry.secondary.material }}</span>
-                <span v-if="result.jewelry.secondary.gemstone" class="ji-gem">{{ result.jewelry.secondary.gemstone }}</span>
-              </div>
-              <div class="ji-meta">
-                <span v-if="result.jewelry.secondary.position">佩戴：{{ result.jewelry.secondary.position }}</span>
-                <span v-if="result.jewelry.secondary.wuxing">五行：{{ result.jewelry.secondary.wuxing }}</span>
-              </div>
-            </div>
+          <div v-if="result.life_arc.mid_fortune" class="arc-phase">
+            <span class="arc-phase-label">中年</span>
+            <p class="arc-phase-text">{{ result.life_arc.mid_fortune }}</p>
           </div>
-          <p v-if="result.jewelry.combination" class="ac-sub">✦ 搭配建议：{{ result.jewelry.combination }}</p>
-          <p v-if="result.jewelry.taboo?.length" class="ac-sub ac-sub-warn">⚠ 禁忌：{{ result.jewelry.taboo.join('、') }}</p>
-          <p v-if="result.jewelry.disclaimer" class="ac-disclaimer">{{ result.jewelry.disclaimer }}</p>
+          <div v-if="result.life_arc.late_fortune" class="arc-phase">
+            <span class="arc-phase-label">晚年</span>
+            <p class="arc-phase-text">{{ result.life_arc.late_fortune }}</p>
+          </div>
         </div>
-
-        <!-- 风水建议 -->
-        <div v-if="result.fengshui" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">🏠</span>
-            <span class="ac-title">风水建议</span>
-          </div>
-          <div v-if="result.fengshui.auspicious_directions?.length" class="ac-tags">
-            <span class="ac-tag-lbl">吉方位</span>
-            <span v-for="d in result.fengshui.auspicious_directions" :key="d" class="ac-tag">{{ d }}</span>
-          </div>
-          <div v-if="result.fengshui.lucky_colors?.length" class="ac-tags">
-            <span class="ac-tag-lbl">旺色</span>
-            <span v-for="c in result.fengshui.lucky_colors" :key="c" class="ac-tag">{{ c }}</span>
-          </div>
-          <div v-if="result.fengshui.decor?.length" class="ac-tags">
-            <span class="ac-tag-lbl">摆件</span>
-            <span v-for="d in result.fengshui.decor" :key="d" class="ac-tag">{{ d }}</span>
-          </div>
-          <div v-if="result.fengshui.plants?.length" class="ac-tags">
-            <span class="ac-tag-lbl">绿植</span>
-            <span v-for="p in result.fengshui.plants" :key="p" class="ac-tag">{{ p }}</span>
-          </div>
-          <p v-if="result.fengshui.taboo?.length" class="ac-sub ac-sub-warn">⚠ 禁忌：{{ result.fengshui.taboo.join('、') }}</p>
-          <p v-if="result.fengshui.disclaimer" class="ac-disclaimer">{{ result.fengshui.disclaimer }}</p>
+        <div v-if="result.life_arc.optimal_action" class="life-action-hint">
+          💡 当前最优行动：{{ result.life_arc.optimal_action }}
         </div>
-
-        <!-- 生活建议 -->
-        <div v-if="result.lifestyle" class="analysis-card">
-          <div class="ac-header">
-            <span class="ac-icon">🌿</span>
-            <span class="ac-title">生活建议</span>
+        <div v-if="result.life_arc.peak_periods?.length || result.life_arc.caution_periods?.length" class="life-periods">
+          <div v-if="result.life_arc.peak_periods?.length" class="period-group">
+            <span class="period-lbl period-peak">高峰期</span>
+            <span v-for="p in result.life_arc.peak_periods" :key="p" class="period-tag period-tag-peak">{{ p }}</span>
           </div>
-          <div v-if="result.lifestyle.exercise?.length" class="ac-tags">
-            <span class="ac-tag-lbl">运动</span>
-            <span v-for="e in result.lifestyle.exercise" :key="e" class="ac-tag">{{ e }}</span>
+          <div v-if="result.life_arc.caution_periods?.length" class="period-group">
+            <span class="period-lbl period-caution">谨慎期</span>
+            <span v-for="p in result.life_arc.caution_periods" :key="p" class="period-tag period-tag-caution">{{ p }}</span>
           </div>
-          <div v-if="result.lifestyle.best_times" class="ac-tags">
-            <span class="ac-tag-lbl">最佳时段</span>
-            <span class="ac-tag">{{ result.lifestyle.best_times }}</span>
-          </div>
-          <div v-if="result.lifestyle.diet?.length" class="ac-tags">
-            <span class="ac-tag-lbl">饮食</span>
-            <span v-for="d in result.lifestyle.diet" :key="d" class="ac-tag">{{ d }}</span>
-          </div>
-          <p v-if="result.lifestyle.travel_direction" class="ac-sub">🧭 旅行方位：{{ result.lifestyle.travel_direction }}</p>
-          <p v-if="result.lifestyle.sleep_advice" class="ac-sub">😴 睡眠建议：{{ result.lifestyle.sleep_advice }}</p>
-          <p v-if="result.lifestyle.disclaimer" class="ac-disclaimer">{{ result.lifestyle.disclaimer }}</p>
         </div>
       </section>
 
-      <!-- Tab: 运势预测 -->
-      <section v-if="activeTab === 'fortune'" class="tab-panel">
-        <!-- 当前运势摘要 -->
-        <div v-if="result.current_fortune_summary" class="section-block card">
-          <div class="section-title">当前运势概况</div>
-          <div class="cfs-info">
-            <span v-if="result.current_fortune_summary.current_dayun" class="cfs-item">当前大运：<b>{{ result.current_fortune_summary.current_dayun }}</b></span>
-            <span v-if="result.current_fortune_summary.dayun_years_remaining" class="cfs-item">剩余 <b>{{ result.current_fortune_summary.dayun_years_remaining }}</b> 年</span>
-            <span v-if="result.current_fortune_summary.current_liunian" class="cfs-item">流年：<b>{{ result.current_fortune_summary.current_liunian }}</b></span>
+      <!-- ── 性格分析 ── -->
+      <section v-if="result.personality" class="card section-inline">
+        <h2 class="card-title">性格分析</h2>
+        <p v-if="result.personality.day_stem_trait" class="personality-trait">{{ result.personality.day_stem_trait }}</p>
+        <div class="personality-cols">
+          <div v-if="result.personality.advantages?.length" class="personality-col">
+            <span class="plist-label plist-adv">✦ 性格优势</span>
+            <ul class="plist">
+              <li v-for="a in result.personality.advantages" :key="a">{{ a }}</li>
+            </ul>
           </div>
-          <div v-if="result.current_fortune_summary.this_year_domains && Object.keys(result.current_fortune_summary.this_year_domains).length" class="cfs-domains">
-            <div v-for="(val, key) in result.current_fortune_summary.this_year_domains" :key="key" class="cfs-dom">
-              <span class="cfs-dk">{{ key }}</span>
-              <span class="cfs-dv">{{ val }}</span>
-            </div>
-          </div>
-          <div v-if="result.current_fortune_summary.top3_actions?.length" class="cfs-actions">
-            <div class="cfs-actions-title">📌 重点行动建议</div>
-            <div v-for="(a, i) in result.current_fortune_summary.top3_actions" :key="i" class="cfs-action">{{ i + 1 }}. {{ a }}</div>
+          <div v-if="result.personality.disadvantages?.length" class="personality-col">
+            <span class="plist-label plist-dis">◆ 性格劣势</span>
+            <ul class="plist plist-dis-items">
+              <li v-for="d in result.personality.disadvantages" :key="d">{{ d }}</li>
+            </ul>
           </div>
         </div>
-        <!-- 流年四维详情 -->
-        <div v-if="result.liunian_detail?.length" class="section-block">
-          <div class="section-title">流年运势</div>
-          <div class="liunian-detail-list">
-            <div v-for="ld in result.liunian_detail" :key="ld.year" class="ld-item">
-              <div class="ld-head">
-                <span class="ld-gz">{{ ld.ganzhi }}</span>
-                <span class="ld-year">{{ ld.year }}年</span>
-                <span class="ld-score" :style="{ color: scoreColor(ld.annual_score) }">{{ ld.annual_score }}分</span>
-                <span v-if="ld.ten_god" class="ld-tg">{{ ld.ten_god }}</span>
-              </div>
-              <div v-if="ld.tai_sui_relations?.length" class="ld-taisui">
-                <span v-for="(ts, ti) in ld.tai_sui_relations" :key="ti" class="ld-ts-tag">{{ ts }}</span>
-              </div>
-              <div v-if="Object.keys(ld.domain_forecasts).length" class="ld-domains">
-                <div v-for="(val, key) in ld.domain_forecasts" :key="key" class="ld-domain">
-                  <span class="ld-dk">{{ key }}</span>
-                  <span class="ld-dv">{{ val }}</span>
-                </div>
-              </div>
-              <div v-if="ld.notable_months?.length" class="ld-notable">
-                <span class="ld-notable-lbl">重要月份：</span>
-                <span v-for="nm in ld.notable_months" :key="nm" class="ld-notable-m">{{ nm }}月</span>
-              </div>
-              <div v-if="ld.clash_pillars?.length" class="ld-clash-pillars">
-                <span class="ld-notable-lbl">冲克柱位：</span>
-                <span v-for="cp in ld.clash_pillars" :key="cp" class="ld-ts-tag">{{ cp }}</span>
-              </div>
-              <span v-if="ld.flow_wuxing" class="ld-flow-wx">五行 {{ ld.flow_wuxing }}</span>
-              <p v-if="ld.optimal_action" class="ld-action">💡 {{ ld.optimal_action }}</p>
-              <p v-if="ld.interpretation_text" class="ac-interp">{{ ld.interpretation_text }}</p>
-            </div>
-          </div>
+        <div v-if="result.personality.communication_style" class="personality-extra-row">
+          <span class="pex-key">沟通风格</span>
+          <span class="pex-val">{{ result.personality.communication_style }}</span>
         </div>
-        <!-- 人生里程碑 -->
-        <div v-if="result.milestones?.length" class="section-block">
-          <div class="section-title">人生里程碑</div>
-          <div class="milestones-list">
-            <div v-for="ms in result.milestones" :key="ms.age" :class="['ms-item', `ms-${ms.risk_level}`]">
-              <div class="ms-head">
-                <span class="ms-age">{{ ms.age }}岁</span>
-                <span class="ms-year">({{ ms.year }}年)</span>
-                <span class="ms-type">{{ ms.milestone_type }}</span>
-                <span class="ms-gz">{{ ms.ganzhi_context }}</span>
-              </div>
-              <p class="ms-desc">{{ ms.description }}</p>
-              <p v-if="ms.advice" class="ms-advice">💡 {{ ms.advice }}</p>
-            </div>
-          </div>
+        <div v-if="result.personality.stress_coping_mode" class="personality-extra-row">
+          <span class="pex-key">压力应对</span>
+          <span class="pex-val">{{ result.personality.stress_coping_mode }}</span>
         </div>
-        <!-- 月运 -->
-        <div v-if="result.monthly_fortune?.length" class="section-block">
-          <div class="section-title">月运参考</div>
-          <div class="monthly-grid">
-            <div v-for="m in result.monthly_fortune" :key="m.month"
-                 :class="['monthly-item', `ml-${m.luck_level}`]">
-              <div class="ml-head">
-                <span class="ml-month">农{{ m.lunar_month }}月</span>
-                <span class="ml-gz">{{ m.month_ganzhi || m.month_dizhi }}</span>
-                <span :class="['ml-luck', `ml-luck-${m.luck_level}`]">{{ m.luck_level }}</span>
-              </div>
-              <p class="ml-tip">{{ m.tip }}</p>
-              <div class="ml-extra">
-                <span v-if="m.clash_with" class="ml-clash">冲 {{ m.clash_with }}</span>
-                <span v-if="m.relation_to_rizhu" class="ml-rel">{{ m.relation_to_rizhu }}</span>
-              </div>
-              <div v-if="m.color_hint" class="ml-color" :style="{ background: m.color_hint }"></div>
-            </div>
-          </div>
-        </div>
-        <p v-if="!result.liunian_detail?.length && !result.monthly_fortune?.length && !result.current_fortune_summary && !result.milestones?.length" class="muted">
-          暂无运势数据
-        </p>
-      </section>
-
-      <section v-if="activeTab === 'ai'" class="tab-panel">
-        <div class="ai-panel card">
-          <div class="ai-disclaimer-bar">
-            ⚠️ AI 生成内容基于命理学研究与规则推断，仅供参考，不构成任何现实决策建议。
-            需要先保存案例，再执行生成。
-          </div>
-
-          <div class="ai-actions-row">
-            <button class="btn-ai-generate" :disabled="!savedCaseId || aiLoading" @click="generateAiInterpretation">
-              {{ aiLoading ? '生成中…' : '✦ 生成解读' }}
-            </button>
-            <select v-model="aiModule" class="ai-module-select" :disabled="aiLoading">
-              <option v-for="option in AI_MODULE_OPTIONS" :key="option.value || 'all'" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-            <span v-if="aiStatus" class="ai-status-text">{{ aiStatus }}</span>
-            <span v-else-if="!savedCaseId" class="ai-status-text ai-status-warn">请先保存案例</span>
-          </div>
-
-          <p v-if="aiError" class="error-msg ai-error-msg">{{ aiError }}</p>
-
-          <div v-if="aiDraft" class="ai-result-wrap">
-            <div class="ai-result-meta">
-              <span v-if="aiDraft.provider">🤖 {{ aiDraft.provider }}</span>
-              <span v-if="aiDraft.model">📌 {{ aiDraft.model }}</span>
-              <span v-if="aiDraft.prompt_version" class="ai-schema-badge">{{ aiDraft.prompt_version }}</span>
-              <span v-if="aiDraft.status">状态：{{ aiDraft.status }}</span>
-              <span v-if="aiDraft.input_tokens || aiDraft.output_tokens">
-                开销：{{ aiDraft.input_tokens || 0 }} in / {{ aiDraft.output_tokens || 0 }} out
-              </span>
-            </div>
-            <div class="ai-result-box">
-              <p v-for="(paragraph, index) in aiParagraphs" :key="index" class="ai-paragraph">
-                {{ paragraph }}
-              </p>
-            </div>
-          </div>
-          <p v-else class="ai-empty-state">
-            {{ savedCaseId ? '可选择模块后生成 AI 解读。' : '请先通过上方“保存到案例库”完成案例入库。' }}
-          </p>
+        <div v-if="result.personality.growth_advice" class="personality-growth">
+          💡 成长建议：{{ result.personality.growth_advice }}
         </div>
       </section>
 
-      <section v-if="activeTab === 'raw'" class="tab-panel">
-        <div class="raw-panel card">
-          <div class="raw-panel-head">
-            <div>
-              <h3 class="raw-panel-title">原始排盘数据</h3>
-              <p class="raw-panel-desc">用于排障、接口对照和后续迁移核验，直接展示最近一次八字排盘返回值。</p>
-            </div>
-            <span class="raw-panel-meta">最近一次计算结果</span>
+      <!-- ── 四维分析（财运/事业/婚恋/健康）── -->
+      <section v-if="result.wealth_analysis || result.career || result.marriage_analysis || result.health" class="card section-inline">
+        <h2 class="card-title">四维分析</h2>
+        <div class="quad-scores">
+          <div v-if="result.wealth_analysis" class="quad-card">
+            <div class="quad-score-num" :style="{ color: scoreColor(result.wealth_analysis.wealth_score) }">{{ result.wealth_analysis.wealth_score }}</div>
+            <div class="quad-label">财运</div>
+            <div class="quad-tier">{{ result.wealth_analysis.wealth_tier }}</div>
           </div>
-          <pre class="raw-json-block">{{ rawResultJson }}</pre>
+          <div v-if="result.career" class="quad-card">
+            <div class="quad-score-num" :style="{ color: scoreColor(result.career.career_score) }">{{ result.career.career_score }}</div>
+            <div class="quad-label">事业</div>
+          </div>
+          <div v-if="result.marriage_analysis" class="quad-card">
+            <div class="quad-score-num" :style="{ color: scoreColor(result.marriage_analysis.marriage_score) }">{{ result.marriage_analysis.marriage_score }}</div>
+            <div class="quad-label">婚恋</div>
+          </div>
+          <div v-if="result.health" class="quad-card">
+            <div class="quad-score-num" :style="{ color: scoreColor(result.health.health_score) }">{{ result.health.health_score }}</div>
+            <div class="quad-label">健康</div>
+            <div class="quad-tier" :style="{ color: result.health.risk_level === '高' ? 'var(--danger-dark)' : '' }">{{ result.health.risk_level }}风险</div>
+          </div>
+        </div>
+
+        <!-- 财运详情 -->
+        <details v-if="result.wealth_analysis" class="quad-detail">
+          <summary class="quad-summary">💰 财运详情</summary>
+          <div class="quad-body">
+            <p v-if="result.wealth_analysis.annual_range" class="quad-row"><span class="qk">年收参考</span><span>{{ result.wealth_analysis.annual_range }}</span></p>
+            <p v-if="result.wealth_analysis.industries?.length" class="quad-row"><span class="qk">适合行业</span><span>{{ result.wealth_analysis.industries.join('、') }}</span></p>
+            <p v-if="result.wealth_analysis.investment_preference" class="quad-row"><span class="qk">投资偏好</span><span>{{ result.wealth_analysis.investment_preference }}</span></p>
+            <p v-if="result.wealth_analysis.financial_taboos" class="quad-row"><span class="qk">财务忌讳</span><span>{{ result.wealth_analysis.financial_taboos }}</span></p>
+            <p v-if="result.wealth_analysis.strategy" class="quad-text">{{ result.wealth_analysis.strategy }}</p>
+          </div>
+        </details>
+
+        <!-- 事业详情 -->
+        <details v-if="result.career" class="quad-detail">
+          <summary class="quad-summary">🏢 事业详情</summary>
+          <div class="quad-body">
+            <p v-if="result.career.career_directions?.length" class="quad-row"><span class="qk">发展方向</span><span>{{ result.career.career_directions.join('、') }}</span></p>
+            <p v-if="result.career.suitable_industries?.length" class="quad-row"><span class="qk">适合行业</span><span>{{ result.career.suitable_industries.join('、') }}</span></p>
+            <p v-if="result.career.leadership_potential != null" class="quad-row"><span class="qk">领导潜质</span><span>{{ result.career.leadership_potential ? '✦ 具备领导力' : '偏重执行' }}</span></p>
+            <p v-if="result.career.entrepreneurship_assessment" class="quad-row"><span class="qk">创业适合度</span><span>{{ result.career.entrepreneurship_assessment }}</span></p>
+            <p v-if="result.career.five_year_roadmap" class="quad-text">五年路线图：{{ result.career.five_year_roadmap }}</p>
+          </div>
+        </details>
+
+        <!-- 婚恋详情 -->
+        <details v-if="result.marriage_analysis" class="quad-detail">
+          <summary class="quad-summary">💑 婚恋详情</summary>
+          <div class="quad-body">
+            <p v-if="result.marriage_analysis.peach_blossom" class="quad-row"><span class="qk">桃花运</span><span>{{ result.marriage_analysis.peach_blossom }}</span></p>
+            <p v-if="result.marriage_analysis.partner_wuxing" class="quad-row"><span class="qk">配偶五行</span><span>{{ result.marriage_analysis.partner_wuxing }}</span></p>
+            <p v-if="result.marriage_analysis.partner_profile" class="quad-row"><span class="qk">配偶画像</span><span>{{ result.marriage_analysis.partner_profile }}</span></p>
+            <p v-if="result.marriage_analysis.optimal_marriage_age" class="quad-row"><span class="qk">最佳婚龄</span><strong>{{ result.marriage_analysis.optimal_marriage_age }}</strong></p>
+            <p v-if="result.marriage_analysis.marriage_windows?.length" class="quad-row"><span class="qk">婚姻窗口</span><span>{{ result.marriage_analysis.marriage_windows.join('、') }}</span></p>
+            <p v-if="result.marriage_analysis.emotional_pitfalls" class="quad-row"><span class="qk">感情易犯错</span><span>{{ result.marriage_analysis.emotional_pitfalls }}</span></p>
+            <p v-if="result.marriage_analysis.children_outlook" class="quad-row"><span class="qk">子嗣运</span><span>{{ result.marriage_analysis.children_outlook }}</span></p>
+          </div>
+        </details>
+
+        <!-- 健康详情 -->
+        <details v-if="result.health" class="quad-detail">
+          <summary class="quad-summary">🏥 健康详情</summary>
+          <div class="quad-body">
+            <p v-if="result.health.risk_organs?.length" class="quad-row"><span class="qk">注意脏器</span><span>{{ result.health.risk_organs.join('、') }}</span></p>
+            <p v-if="result.health.constitution_type" class="quad-row"><span class="qk">体质类型</span><span>{{ result.health.constitution_type }}</span></p>
+            <p v-if="result.health.exercise?.length" class="quad-row"><span class="qk">适合运动</span><span>{{ result.health.exercise.join('、') }}</span></p>
+            <p v-if="result.health.diet?.length" class="quad-row"><span class="qk">饮食建议</span><span>{{ result.health.diet.join('、') }}</span></p>
+            <p v-if="result.health.seasonal_health" class="quad-row"><span class="qk">季节注意</span><span>{{ result.health.seasonal_health }}</span></p>
+            <p v-if="result.health.health_advice" class="quad-text">{{ result.health.health_advice }}</p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ── 开运信息 ── -->
+      <section v-if="result.lucky" class="card section-inline">
+        <h2 class="card-title">开运信息</h2>
+        <div class="lucky-grid">
+          <div v-if="result.lucky.lucky_colors?.length" class="lucky-item">
+            <span class="lucky-key">吉祥色</span>
+            <div class="lucky-colors">
+              <span v-for="c in result.lucky.lucky_colors" :key="c" class="lucky-color-tag">{{ c }}</span>
+            </div>
+          </div>
+          <div v-if="result.lucky.avoid_colors?.length" class="lucky-item">
+            <span class="lucky-key">忌用色</span>
+            <div class="lucky-colors">
+              <span v-for="c in result.lucky.avoid_colors" :key="c" class="avoid-color-tag">{{ c }}</span>
+            </div>
+          </div>
+          <div v-if="result.lucky.lucky_numbers?.length" class="lucky-item">
+            <span class="lucky-key">吉祥数</span>
+            <span class="lucky-val">{{ result.lucky.lucky_numbers.join('、') }}</span>
+          </div>
+          <div v-if="result.lucky.lucky_direction" class="lucky-item">
+            <span class="lucky-key">吉祥方位</span>
+            <span class="lucky-val">{{ result.lucky.lucky_direction }}</span>
+          </div>
+          <div v-if="result.lucky.lucky_item" class="lucky-item">
+            <span class="lucky-key">开运物</span>
+            <span class="lucky-val">{{ result.lucky.lucky_item }}</span>
+          </div>
         </div>
       </section>
+
+      <!-- ── 神煞 ── -->
+      <section v-if="result.shensha?.length" class="card section-inline">
+        <h2 class="card-title">神煞</h2>
+        <div class="shensha-table-wrap">
+          <table class="shensha-table">
+            <thead>
+              <tr><th>名称</th><th>所在柱</th><th>地支</th><th>吉凶</th><th>含义</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in result.shensha" :key="s.name + s.pillar" :class="s.is_beneficial ? 'ss-good' : 'ss-bad'">
+                <td><strong>{{ s.name }}</strong></td>
+                <td>{{ s.pillar }}</td>
+                <td>{{ s.dizhi }}</td>
+                <td><span class="ss-badge" :class="s.is_beneficial ? 'ss-ji' : 'ss-xiong'">{{ s.is_beneficial ? '吉' : '凶' }}</span></td>
+                <td class="ss-meaning">{{ s.meaning }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── 人生里程碑 ── -->
+      <section v-if="result.milestones?.length" class="card section-inline">
+        <h2 class="card-title">人生里程碑</h2>
+        <div class="milestones-list">
+          <div v-for="m in result.milestones" :key="m.year" class="milestone-item"
+            :class="m.risk_level === 'high' ? 'ms-high' : m.risk_level === 'medium' ? 'ms-mid' : 'ms-low'">
+            <div class="ms-timeline-dot" />
+            <div class="ms-content">
+              <div class="ms-header">
+                <span class="ms-age">{{ m.age }}岁</span>
+                <span class="ms-year">（{{ m.year }}年）</span>
+                <span class="ms-type">{{ m.milestone_type }}</span>
+                <span class="ms-gz">{{ m.ganzhi_context }}</span>
+              </div>
+              <p class="ms-desc">{{ m.description }}</p>
+              <p v-if="m.advice" class="ms-advice">💡 {{ m.advice }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 月运概览 ── -->
+      <section v-if="result.monthly_fortune?.length" class="card section-inline">
+        <h2 class="card-title">月运概览</h2>
+        <div class="monthly-grid">
+          <div
+            v-for="mf in result.monthly_fortune"
+            :key="mf.month"
+            class="monthly-cell"
+            :class="mf.luck_level === '吉' ? 'mo-ji' : mf.luck_level === '凶' ? 'mo-xiong' : 'mo-ping'"
+            :title="mf.tip + (mf.clash_with ? '  冲：' + mf.clash_with : '')"
+          >
+            <span class="mo-month">{{ mf.month }}月</span>
+            <span class="mo-gz">{{ mf.month_dizhi }}</span>
+            <span class="mo-level">{{ mf.luck_level }}</span>
+          </div>
+        </div>
+        <p class="monthly-hint">悬停查看提示；绿=吉，红=凶，灰=平</p>
+      </section>
+
+      <BaziEventSection :case-id="savedCaseId" @open-save-dialog="openSaveDialog" />
 
       <!-- 警告信息 -->
       <div v-if="result.warnings?.length" class="bazi-warnings">
@@ -1332,36 +699,19 @@ function scoreColor(score: number): string {
       </div>
     </template>
 
-    <Teleport to="body">
-      <div v-if="saveDialogOpen" class="bazi-modal-mask" @click.self="closeSaveDialog">
-        <div class="bazi-modal">
-          <h2 class="bazi-modal-title">保存案例</h2>
-          <p class="bazi-modal-desc">把当前八字排盘保存到案例库，后续可继续接入 AI 解读与运营工作流。</p>
-          <div class="bazi-modal-body">
-            <label class="bazi-form-item">
-              <span class="bazi-form-label">案例名称</span>
-              <input v-model="saveCaseName" class="bazi-form-input" placeholder="请输入案例名称" />
-            </label>
-            <label class="bazi-form-item">
-              <span class="bazi-form-label">备注</span>
-              <textarea v-model="saveCaseNotes" class="bazi-form-textarea" rows="3" placeholder="可选：记录客户背景、关注问题或备注"></textarea>
-            </label>
-            <div class="bazi-save-summary">
-              <span>出生：{{ birthDt }}</span>
-              <span>城市：{{ cityName || initCity }}</span>
-              <span>性别：{{ gender === 'male' ? '男' : gender === 'female' ? '女' : '不指定' }}</span>
-            </div>
-            <p v-if="saveCaseError" class="error-msg bazi-save-error">{{ saveCaseError }}</p>
-          </div>
-          <div class="bazi-modal-actions">
-            <button class="btn-sec" @click="closeSaveDialog">取消</button>
-            <button class="btn-primary" :disabled="saveCaseSaving" @click="saveCurrentCase">
-              {{ saveCaseSaving ? '保存中…' : '确认保存' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <BaziSaveDialog
+      :open="saveDialogOpen"
+      :birth-dt="birthDt"
+      :city-name="cityName"
+      :init-city="initCity"
+      :gender="gender"
+      v-model:save-case-name="saveCaseName"
+      v-model:save-case-notes="saveCaseNotes"
+      :save-case-saving="saveCaseSaving"
+      :save-case-error="saveCaseError"
+      @close="closeSaveDialog()"
+      @save="saveCurrentCase()"
+    />
   </div>
 </template>
 
@@ -1724,6 +1074,150 @@ function scoreColor(score: number): string {
 .ov-body { font-size: var(--fs-md); }
 .ov-summary { font-size: var(--fs-xs); color: var(--text-3); margin-top: 4px; }
 
+.overview-guide {
+  margin-bottom: var(--sp-5);
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffaf0 0%, var(--surface) 100%);
+}
+
+.overview-guide-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.overview-guide-title {
+  margin: 2px 0 0;
+  font-size: var(--fs-xl);
+  color: var(--text);
+  font-family: var(--font-cn);
+}
+
+.overview-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-soft {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-md);
+  background: #fff;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-soft:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.overview-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.overview-guide-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.overview-guide-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-3);
+}
+
+.overview-guide-value {
+  margin-top: 8px;
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.overview-reading-block {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.overview-reading-title {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.overview-reading-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.overview-reading-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.overview-reading-index {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-lt);
+  color: var(--accent-dark);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.overview-reading-text {
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--text-2);
+}
+
+.overview-terms {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.overview-terms-label {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.overview-term-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
 .tag-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag { padding: 2px 8px; border-radius: 12px; font-size: var(--fs-xs); font-weight: 600; }
 .tag-favor  { background: #dcfce7; color: #15803d; }
@@ -1809,6 +1303,29 @@ function scoreColor(score: number): string {
 .dy-yr        { font-size: 10px; color: var(--text-3); margin-top: 1px; }
 
 /* 详情面板 */
+/* 当前大运解读摘要 */
+.dy-cur-summary {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--surface-2, #f8f9ff);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--radius-sm);
+}
+.dy-cur-summary-title {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: var(--sp-2);
+  letter-spacing: .04em;
+}
+.dy-cur-narrative {
+  font-size: var(--fs-md);
+  color: var(--text);
+  line-height: 1.8;
+  margin-bottom: var(--sp-3);
+}
+.dy-cur-narrative.muted { color: var(--text-3); font-size: var(--fs-sm); }
+
 .dy-detail-card {
   margin-top: var(--sp-5);
   padding: var(--sp-4) var(--sp-5);
@@ -2106,12 +1623,80 @@ function scoreColor(score: number): string {
 .bazi-warnings { margin-top: var(--sp-4); }
 .bw-item { font-size: var(--fs-sm); color: #b45309; background: #fef3c7; border: 1px solid #fbbf24; border-radius: var(--radius-sm); padding: 6px 12px; margin-bottom: 4px; }
 .bw-code { font-weight: 600; font-size: var(--fs-xs); }
+/* ─── 年份事件预测 ─────────────────────────────────────────── */
+.yev-timeline-summary { font-size: var(--fs-sm); color: var(--text-2); margin-bottom: var(--sp-3); }
+.yev-year-track { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-4); overflow-x: auto; padding-bottom: 4px; }
+.yev-year-chip { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2); min-width: 52px; transition: border-color 0.2s, background 0.2s; }
+.yev-year-chip:hover { border-color: var(--accent); }
+.yev-year-active { border-color: var(--accent) !important; background: color-mix(in srgb, var(--accent) 10%, var(--surface-2)) !important; }
+.yev-year-num { font-size: var(--fs-xs); color: var(--text-2); }
+.yev-year-gz { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
+.yev-year-score-bar { width: 24px; border-radius: 3px; margin: 2px 0; }
+.bar-good { background: #4ade80; } .bar-bad { background: #f87171; } .bar-mid { background: #fbbf24; }
+.yev-year-risk { font-size: 10px; }
+.yev-controls { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.yev-year-pick { display: flex; align-items: center; gap: var(--sp-2); } .yev-year-pick label { font-size: var(--fs-sm); color: var(--text-2); white-space: nowrap; } .yev-year-pick input { width: 80px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); }
+.yev-event-pills { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.evt-pill { padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface-2); font-size: var(--fs-sm); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+.evt-pill:hover { border-color: var(--accent); color: var(--text); }
+.evt-pill-active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, var(--surface-2)); color: var(--accent); font-weight: 600; }
+.yev-result-card { border: 1px solid var(--border); border-radius: 12px; padding: var(--sp-4); margin-bottom: var(--sp-4); }
+.yev-result-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.yev-event-name { font-size: var(--fs-lg); font-weight: 700; color: var(--text); }
+.yev-gz { font-size: var(--fs-sm); color: var(--text-2); }
+.yev-risk-badge, .yev-opp-badge { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.risk-high { background: #fee2e2; color: #dc2626; } .risk-medium_high { background: #fef3c7; color: #d97706; } .risk-medium { background: #fef3c7; color: #ca8a04; } .risk-low { background: #f0fdf4; color: #16a34a; } .risk-none { background: var(--surface-2); color: var(--text-2); }
+.opp-high { background: #d1fae5; color: #059669; } .opp-medium_high { background: #d1fae5; color: #16a34a; } .opp-medium { background: #ecfdf5; color: #22c55e; } .opp-low { background: var(--surface-2); color: var(--text-2); } .opp-none { background: var(--surface-2); color: var(--text-2); }
+.yev-conf { font-size: var(--fs-xs); color: var(--text-2); margin-left: auto; }
+.yev-main-judgment { font-size: var(--fs-md); color: var(--text); line-height: 1.6; margin-bottom: var(--sp-2); font-weight: 500; }
+.yev-trigger-summary { font-size: var(--fs-sm); color: var(--text-2); margin-bottom: var(--sp-3); }
+.yev-signals { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--sp-3); }
+.yev-sig-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: var(--fs-xs); border: 1px solid var(--border); background: var(--surface-2); }
+.layer-natal_base { border-color: #c4b5fd; background: #f5f3ff; } .layer-dayun_trigger { border-color: #93c5fd; background: #eff6ff; } .layer-liunian_trigger { border-color: #6ee7b7; background: #ecfdf5; } .layer-month_trigger { border-color: #fde68a; background: #fffbeb; }
+.sig-layer-lbl { font-size: 10px; color: var(--text-2); }
+.sig-label { font-size: var(--fs-xs); color: var(--text); }
+.yev-months { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.yev-months-lbl { font-size: var(--fs-sm); color: var(--text-2); white-space: nowrap; }
+.yev-month-tag { padding: 2px 8px; background: color-mix(in srgb, var(--accent) 15%, var(--surface-2)); color: var(--accent); border-radius: 4px; font-size: var(--fs-xs); font-weight: 600; }
+.yev-list-block { margin-bottom: var(--sp-3); }
+.yev-list-title { font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); margin-bottom: var(--sp-1); }
+.yev-list { margin: 0; padding-left: 1.2em; font-size: var(--fs-sm); color: var(--text); line-height: 1.7; }
+.yev-advice .yev-list-title { color: var(--accent); }
+.yev-classical { font-size: var(--fs-xs); color: var(--text-2); margin-bottom: var(--sp-2); }
+.yev-classical-note { margin-right: var(--sp-3); }
+.yev-overclaim { font-size: var(--fs-xs); color: #d97706; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 10px; margin-top: var(--sp-2); }
+.yev-consult-block { margin-top: var(--sp-4); border-top: 1px solid var(--border); padding-top: var(--sp-4); }
+.yev-consult-title { font-size: var(--fs-md); font-weight: 700; color: var(--text); margin-bottom: var(--sp-3); }
+.yev-consult-input-row { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.yev-consult-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); color: var(--text); font-size: var(--fs-sm); }
+.yev-consult-input:focus { outline: none; border-color: var(--accent); }
+.yev-ask-btn { white-space: nowrap; }
+.yev-followup-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--sp-3); }
+.yev-followup-btn { padding: 4px 12px; font-size: var(--fs-xs); border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2); color: var(--text-2); cursor: pointer; transition: border-color 0.15s; }
+.yev-followup-btn:hover { border-color: var(--accent); color: var(--text); }
+.yev-consult-result { background: var(--surface-2); border-radius: 8px; padding: var(--sp-4); border: 1px solid var(--border); }
+.yev-consult-pre { white-space: pre-wrap; word-break: break-word; font-family: var(--font-cn); font-size: var(--fs-sm); color: var(--text); line-height: 1.8; margin: 0; }
+.yev-no-trend, .yev-empty { padding: var(--sp-4) 0; }
+.yev-loading { color: var(--text-2); font-size: var(--fs-sm); padding: var(--sp-3) 0; }
+.yev-save-hint {
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: var(--sp-3) var(--sp-4);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  margin-bottom: var(--sp-3);
+}
+.yev-save-hint p { margin: 0; font-size: var(--fs-sm); }
+.yev-trend-block { margin-bottom: var(--sp-4); }
+
 .bazi-version-footer { margin-top: var(--sp-4); font-size: var(--fs-xs); color: var(--text-3); display: flex; gap: var(--sp-3); justify-content: flex-end; opacity: .6; }
 
 @media (max-width: 600px) {
   .pillars-tbl th { font-size: 11px; padding: 6px 6px; }
   .pillars-tbl td { padding: 6px 6px; }
   .gz-char { font-size: var(--fs-xl); }
+  .overview-guide-head { flex-direction: column; }
+  .overview-guide-grid { grid-template-columns: 1fr; }
   .overview-grid { grid-template-columns: 1fr; }
   .life-arc-periods { grid-template-columns: 1fr; }
   .personality-cols { grid-template-columns: 1fr; }
@@ -2139,4 +1724,191 @@ function scoreColor(score: number): string {
 .wx-radar-svg { width: 200px; height: 200px; }
 .radar-label { font-size: 12px; font-family: var(--font-cn); font-weight: 700; }
 .wuxing-list { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: var(--sp-3); }
+
+/* ── 无 Tab 直接展示的内联节 ── */
+.section-inline { margin-bottom: var(--sp-5); }
+.section-inline .card-title { font-size: var(--fs-xl); font-weight: 700; padding-bottom: var(--sp-3); border-bottom: 1px solid var(--border); margin-bottom: var(--sp-4); }
+
+/* 三核铺满 */
+.ov-core-full { margin-bottom: var(--sp-4); }
+
+/* 底部操作行 */
+.suggest-name-row--bottom { margin-top: var(--sp-2); margin-bottom: var(--sp-6); }
+
+/* ══ 人生弧线 ══ */
+.life-motto { font-size: var(--fs-lg); font-style: italic; color: var(--text-2); border-left: 3px solid var(--accent); padding: 6px 12px; margin-bottom: var(--sp-3); }
+.life-tier-badge { display: inline-block; font-size: var(--fs-sm); background: var(--accent-soft); color: var(--accent-dark); border-radius: 20px; padding: 2px 12px; margin-bottom: var(--sp-3); }
+.life-arc-phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.arc-phase { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-3); }
+.arc-phase-label { display: inline-block; font-size: var(--fs-xs); font-weight: 700; padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-dark); margin-bottom: var(--sp-2); }
+.arc-phase-text { font-size: var(--fs-sm); color: var(--text); line-height: 1.55; margin: 0; }
+.life-action-hint { font-size: var(--fs-sm); color: var(--accent-dark); background: rgba(217,119,6,.07); border-radius: var(--radius-sm); padding: 6px 12px; margin-bottom: var(--sp-3); }
+.life-periods { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
+.period-group { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.period-lbl { font-size: var(--fs-xs); font-weight: 700; padding: 1px 8px; border-radius: 10px; }
+.period-peak { background: #dcfce7; color: #15803d; }
+.period-caution { background: #fee2e2; color: #dc2626; }
+.period-tag { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 10px; }
+.period-tag-peak { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.period-tag-caution { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+
+/* ══ 性格分析 ══ */
+.personality-col { flex: 1; min-width: 140px; }
+.plist-label { display: block; font-size: var(--fs-xs); font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-bottom: var(--sp-2); }
+.plist-adv { background: #dcfce7; color: #15803d; }
+.plist-dis { background: #fee2e2; color: #dc2626; }
+.plist { margin: 0; padding-left: 18px; }
+.plist li { font-size: var(--fs-sm); color: var(--text); line-height: 1.6; }
+.plist-dis-items li { color: #b45309; }
+.personality-extra-row { display: flex; gap: var(--sp-3); font-size: var(--fs-sm); padding: 4px 0; border-top: 1px solid var(--border); }
+.pex-key { color: var(--text-3); font-weight: 600; min-width: 70px; }
+.pex-val { color: var(--text); flex: 1; }
+.personality-growth { font-size: var(--fs-sm); color: var(--accent-dark); background: rgba(217,119,6,.07); border-radius: var(--radius-sm); padding: 6px 12px; margin-top: var(--sp-3); }
+
+/* ══ 四维分析 ══ */
+.quad-scores { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.quad-card { text-align: center; padding: var(--sp-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.quad-score-num { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.quad-label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+.quad-tier { font-size: var(--fs-xs); color: var(--text-3); margin-top: 2px; }
+.quad-detail { margin-bottom: var(--sp-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.quad-summary { font-size: var(--fs-sm); font-weight: 600; padding: var(--sp-2) var(--sp-3); cursor: pointer; list-style: none; user-select: none; }
+.quad-summary::-webkit-details-marker { display: none; }
+.quad-summary::before { content: '▶ '; font-size: 10px; color: var(--text-3); transition: transform .2s; }
+details[open] .quad-summary::before { content: '▼ '; }
+.quad-body { padding: 0 var(--sp-3) var(--sp-3); border-top: 1px solid var(--border); }
+.quad-row { display: flex; gap: var(--sp-3); font-size: var(--fs-sm); padding: 3px 0; margin: 0; }
+.qk { color: var(--text-3); font-weight: 600; min-width: 72px; flex-shrink: 0; }
+.quad-text { font-size: var(--fs-sm); color: var(--text); line-height: 1.55; margin: var(--sp-2) 0 0; padding: var(--sp-2); background: var(--surface); border-radius: 4px; }
+
+/* ══ 开运信息 ══ */
+.lucky-grid { display: flex; flex-direction: column; gap: var(--sp-3); }
+.lucky-item { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.lucky-key { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); min-width: 60px; }
+.lucky-colors { display: flex; flex-wrap: wrap; gap: 6px; }
+.lucky-color-tag { font-size: var(--fs-xs); padding: 2px 10px; border-radius: 10px; background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; font-weight: 600; }
+.avoid-color-tag { font-size: var(--fs-xs); padding: 2px 10px; border-radius: 10px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-weight: 600; }
+.lucky-val { font-size: var(--fs-sm); color: var(--text); font-weight: 500; }
+
+/* ══ 神煞 ══ */
+.shensha-table-wrap { overflow-x: auto; }
+.shensha-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.shensha-table th { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); padding: 5px 10px; background: var(--surface-2); border-bottom: 2px solid var(--border-md); text-align: left; }
+.shensha-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.shensha-table tr.ss-good { background: rgba(21,128,61,.04); }
+.shensha-table tr.ss-bad { background: rgba(220,38,38,.03); }
+.ss-badge { display: inline-block; font-size: var(--fs-xs); font-weight: 700; padding: 1px 8px; border-radius: 10px; }
+.ss-ji { background: #dcfce7; color: #15803d; }
+.ss-xiong { background: #fee2e2; color: #dc2626; }
+.ss-meaning { color: var(--text-2); line-height: 1.5; max-width: 380px; }
+
+/* ══ 人生里程碑（新模板）══ */
+.milestone-item { display: flex; gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px solid var(--border); position: relative; }
+.milestone-item:last-child { border-bottom: none; }
+.ms-timeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; background: var(--border-md); }
+.ms-high .ms-timeline-dot { background: #dc2626; }
+.ms-mid .ms-timeline-dot { background: #f59e0b; }
+.ms-low .ms-timeline-dot { background: #22c55e; }
+.ms-content { flex: 1; min-width: 0; }
+.ms-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: 4px; }
+.ms-age { font-weight: 700; font-size: var(--fs-md); color: var(--accent); }
+.ms-year { font-size: var(--fs-sm); color: var(--text-3); }
+.ms-type { font-size: var(--fs-xs); padding: 1px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.ms-gz { font-size: var(--fs-xs); color: var(--text-3); margin-left: auto; }
+.ms-desc { font-size: var(--fs-sm); color: var(--text); line-height: 1.55; margin: 0 0 4px; }
+.ms-advice { font-size: var(--fs-sm); color: var(--accent-dark); margin: 0; }
+
+/* ══ 月运概览（新模板）══ */
+.monthly-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 6px; margin-bottom: var(--sp-2); }
+.monthly-cell { padding: var(--sp-2) 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: default; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; transition: opacity .15s; }
+.monthly-cell:hover { opacity: .8; }
+.mo-ji { background: #f0fdf4; border-color: #86efac; }
+.mo-xiong { background: #fff1f2; border-color: #fda4af; }
+.mo-ping { background: var(--surface-2); border-color: var(--border); }
+.mo-month { font-size: var(--fs-xs); font-weight: 700; color: var(--text); }
+.mo-gz { font-size: 10px; color: var(--text-3); }
+.mo-level { font-size: var(--fs-xs); font-weight: 700; padding: 0 4px; border-radius: 3px; }
+.mo-ji .mo-level { color: #15803d; }
+.mo-xiong .mo-level { color: #dc2626; }
+.mo-ping .mo-level { color: var(--text-3); }
+.monthly-hint { font-size: var(--fs-xs); color: var(--text-3); text-align: right; margin: 0; }
+
+/* ══ 命盘速读条 (pillars-qbar) ══ */
+.pillars-qbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  padding: 11px 16px;
+  margin: var(--sp-3) 0 var(--sp-2);
+  background: linear-gradient(135deg, rgba(217,119,6,.06), var(--surface));
+  border: 1px solid rgba(217,119,6,.20);
+  border-radius: var(--radius-sm);
+}
+.pqb-item   { display: flex; align-items: center; gap: 5px; }
+.pqb-key    { font-size: 11px; color: var(--text-3); font-weight: 600; letter-spacing: .04em; }
+.pqb-gz     { font-size: var(--fs-lg); font-weight: 700; font-family: var(--font-cn); }
+.pqb-wx     { font-size: var(--fs-xs); color: var(--text-3); }
+.pqb-main   { font-size: var(--fs-md); font-weight: 700; color: var(--text); }
+.pqb-badge  { font-size: 10px; padding: 1px 6px; border-radius: 10px; background: rgba(217,119,6,.12); color: #92400e; font-weight: 600; }
+.pqb-favor-tag { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 10px; background: #dcfce7; color: #15803d; font-weight: 600; }
+.pqb-avoid-sep { font-size: var(--fs-xs); color: var(--text-3); margin: 0 3px; }
+.pqb-avoid-tag { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 10px; background: #fee2e2; color: #dc2626; font-weight: 600; }
+.pqb-dot    { color: var(--border-md); padding: 0 9px; font-size: var(--fs-md); user-select: none; }
+
+/* ══ 综合概览 - 命盘三核 (ov-core-trio) ══ */
+.ov-core-trio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.ov-trio-card {
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+.ov-trio-kv {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.ov-trio-label {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ov-trio-main {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-cn);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ov-trio-score  { font-size: var(--fs-xs); color: var(--text-3); font-weight: 400; margin-left: 4px; }
+.ov-trio-subbadge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: rgba(217,119,6,.12); color: #92400e; font-weight: 600; }
+.ov-trio-broken { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: rgba(220,38,38,.10); color: #dc2626; font-weight: 600; }
+.ov-trio-hint   { font-size: var(--fs-xs); color: var(--text-3); line-height: 1.6; margin: 0; }
+.ov-trio-yg     { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.ov-trio-favor  { font-size: var(--fs-sm); padding: 2px 10px; border-radius: 10px; background: #dcfce7; color: #15803d; font-weight: 600; }
+.ov-trio-avoidlbl { font-size: var(--fs-xs); color: var(--text-3); margin: 0 2px; }
+.ov-trio-avoid  { font-size: var(--fs-sm); padding: 2px 10px; border-radius: 10px; background: #fee2e2; color: #dc2626; font-weight: 600; }
+
+@media (max-width: 600px) {
+  .ov-core-trio { grid-template-columns: 1fr; }
+  .pillars-qbar { gap: 6px; }
+  .pqb-dot { padding: 0 4px; }
+}
 </style>

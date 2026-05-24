@@ -64,7 +64,7 @@ export const useAiStore = defineStore('ai', () => {
   /** 快捷模板：调用 interpret-module */
   async function sendModuleRequest(module: string, label: string) {
     if (!currentCaseId.value) {
-      messages.value.push({ role: 'ai', text: '⚠️ 请先在工作台选择一个案例，再使用快捷模板。' })
+      messages.value.push({ role: 'ai', text: '⚠️ 请先在案例中心选择一个案例，再使用快捷模板。' })
       return
     }
     if (streaming.value) return

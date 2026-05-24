@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from 'vue'
+import { useOneTimeFlag } from '@/composables/useOneTimeFlag'
 import { useReportStore } from '@/stores/report'
 
 const store = useReportStore()
@@ -10,11 +11,7 @@ const isCollapsed = (cardId: string) => store.cardCollapsed[cardId] ?? false
 // ─── 卡1: 五行迷你图 ─────────────────────────────────────────
 // ─── 卡2: chip 引导提示 ──────────────────────────────────────
 const CHIP_HINT_KEY = 'report:chip:hint:shown'
-const showChipHint = ref(!localStorage.getItem(CHIP_HINT_KEY))
-function dismissChipHint() {
-  showChipHint.value = false
-  try { localStorage.setItem(CHIP_HINT_KEY, 'true') } catch { /* ok */ }
-}
+const { isVisible: showChipHint, dismiss: dismissChipHint } = useOneTimeFlag(CHIP_HINT_KEY)
 
 // 卡2 宫格详情模式（当 activePalaceIndex != null 时）
 const activePalace = computed(() => {

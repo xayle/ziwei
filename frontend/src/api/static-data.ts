@@ -67,7 +67,14 @@ export async function getCities(params?: { q?: string; city_type?: string }): Pr
 
 /** GET /api/v1/classics — 典籍搜索 */
 export async function getClassics(params?: { query?: string; tag?: string; limit?: number }): Promise<ClassicPassage[]> {
-  const { data } = await apiClient.get<ClassicPassage[]>('/api/v1/classics', { params })
+  const normalizedParams = params
+    ? {
+        ...params,
+        limit: typeof params.limit === 'number' ? Math.min(params.limit, 50) : params.limit,
+      }
+    : undefined
+
+  const { data } = await apiClient.get<ClassicPassage[]>('/api/v1/classics', { params: normalizedParams })
   return data
 }
 

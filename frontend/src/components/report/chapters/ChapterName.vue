@@ -41,23 +41,26 @@ function circleProps(score: number) {
   }
 }
 
+// 全名（姓+名 拼合）
+const fullName = computed(() => nm.value ? nm.value.surname + nm.value.given_name : '')
+
 // 三才配置分析
 const sancaiText = computed(() => {
   if (!nm.value) return ''
-  const s = nm.value.sancai_score
-  return s >= 80 ? '吉祥配置，相生相扶' : s >= 60 ? '尚可，小有克制' : '欠佳，建议重新选字'
+  const s = nm.value.sancai.score
+  return s >= 8 ? '吉祥配置，相生相扶' : s >= 6 ? '尚可，小有克制' : '欠佳，建议重新选字'
 })
 
-// 五格数据
+// 五格数据（NameAnalysisResponse: tianke/renke/dike/waike/zonge 均为 GridInfoResponse）
 const wugeList = computed(() => {
   if (!nm.value) return []
   const d = nm.value
   return [
-    { key: '天格', val: d.tianGe, str: d.tianGe_str, note: '姓的根源，先天之数' },
-    { key: '人格', val: d.renGe, str: d.renGe_str, note: '五格核心，主命主性格' },
-    { key: '地格', val: d.diGe, str: d.diGe_str, note: '名字本体，主峰期运势' },
-    { key: '外格', val: d.waiGe, str: d.waiGe_str, note: '社交表现，对外展现' },
-    { key: '总格', val: d.zongGe, str: d.zongGe_str, note: '综合运势，成就表现' },
+    { key: '天格', val: d.tianke.number, str: d.tianke.lucky, note: '姓的根源，先天之数', element: d.tianke.element, score: d.tianke.score, desc: d.tianke.desc },
+    { key: '人格', val: d.renke.number, str: d.renke.lucky, note: '五格核心，主命主性格', element: d.renke.element, score: d.renke.score, desc: d.renke.desc },
+    { key: '地格', val: d.dike.number, str: d.dike.lucky, note: '名字本体，主峰期运势', element: d.dike.element, score: d.dike.score, desc: d.dike.desc },
+    { key: '外格', val: d.waike.number, str: d.waike.lucky, note: '社交表现，对外展现', element: d.waike.element, score: d.waike.score, desc: d.waike.desc },
+    { key: '总格', val: d.zonge.number, str: d.zonge.lucky, note: '综合运势，成就表现', element: d.zonge.element, score: d.zonge.score, desc: d.zonge.desc },
   ]
 })
 
@@ -70,6 +73,18 @@ const SHENG_MAP: Record<string, string> = { '木': '火', '火': '土', '土': '
 function isSheng(from: string, to: string): boolean {
   return SHENG_MAP[from] === to
 }
+
+// 五格五行序列（天→人→地→外→总）
+const gridElements = computed(() => {
+  if (!nm.value) return []
+  return [
+    { label: '天格', el: nm.value.tianke.element },
+    { label: '人格', el: nm.value.renke.element },
+    { label: '地格', el: nm.value.dike.element },
+    { label: '外格', el: nm.value.waike.element },
+    { label: '总格', el: nm.value.zonge.element },
+  ]
+})
 </script>
 
 <template>
@@ -101,10 +116,10 @@ function isSheng(from: string, to: string): boolean {
 
         <div class="conclusion-block">
           <p class="conclusion-text">
-            <span class="chip-term" @click="onChip(nm.full_name)">{{ nm.full_name }}</span>
+            <span class="chip-term" @click="onChip(fullName)">{{ fullName }}</span>
             五格数理综合得分
             <strong :style="{ color: scoreColor(nm.overall_score) }">{{ nm.overall_score }}</strong>
-            分。人格数 {{ nm.renGe }}（{{ nm.renGe_str }}）是五格核心，主命主性格。
+            分。人格数 {{ nm.renke.number }}（{{ nm.renke.lucky }}）是五格核心，主命主性格。
           </p>
         </div>
 
@@ -115,27 +130,27 @@ function isSheng(from: string, to: string): boolean {
             <!-- 天 -->
             <div class="wuge-box wuge-tian">
               <span class="wuge-key">天格</span>
-              <span class="wuge-num">{{ nm.tianGe }}</span>
-              <span class="wuge-str">{{ nm.tianGe_str }}</span>
+              <span class="wuge-num">{{ nm.tianke.number }}</span>
+              <span class="wuge-str">{{ nm.tianke.lucky }}</span>
             </div>
             <div class="wuge-connector" />
             <!-- 人 -->
             <div class="wuge-box wuge-ren" :style="{ borderColor: 'var(--accent)', boxShadow: '0 0 0 2px var(--accent-glow)' }">
               <span class="wuge-key">人格</span>
-              <span class="wuge-num" :style="{ color: 'var(--accent-dark)', fontSize: '40px' }">{{ nm.renGe }}</span>
-              <span class="wuge-str">{{ nm.renGe_str }}</span>
+              <span class="wuge-num" :style="{ color: 'var(--accent-dark)', fontSize: '40px' }">{{ nm.renke.number }}</span>
+              <span class="wuge-str">{{ nm.renke.lucky }}</span>
               <!-- 人格强度进度条 -->
               <div class="renke-bar-wrap">
-                <div class="renke-bar" :style="{ width: nm.renke_score + '%', background: scoreColor(nm.renke_score) }" />
+                <div class="renke-bar" :style="{ width: (nm.renke.score * 10) + '%', background: scoreColor(nm.renke.score * 10) }" />
               </div>
-              <span class="renke-score">{{ nm.renke_score }}分</span>
+              <span class="renke-score">{{ nm.renke.score }}/10</span>
             </div>
             <div class="wuge-connector" />
             <!-- 地 -->
             <div class="wuge-box wuge-di">
               <span class="wuge-key">地格</span>
-              <span class="wuge-num">{{ nm.diGe }}</span>
-              <span class="wuge-str">{{ nm.diGe_str }}</span>
+              <span class="wuge-num">{{ nm.dike.number }}</span>
+              <span class="wuge-str">{{ nm.dike.lucky }}</span>
             </div>
           </div>
 
@@ -143,20 +158,13 @@ function isSheng(from: string, to: string): boolean {
           <div class="wuge-side">
             <div class="wuge-box wuge-wai">
               <span class="wuge-key">外格</span>
-              <span class="wuge-num">{{ nm.waiGe }}</span>
-              <span class="wuge-str">{{ nm.waiGe_str }}</span>
+              <span class="wuge-num">{{ nm.waike.number }}</span>
+              <span class="wuge-str">{{ nm.waike.lucky }}</span>
             </div>
             <div class="wuge-box wuge-zong">
               <span class="wuge-key">总格</span>
-              <span class="wuge-num">{{ nm.zongGe }}</span>
-              <span class="wuge-str">{{ nm.zongGe_str }}</span>
-            </div>
-            <!-- 幸运数字 -->
-            <div class="lucky-nums" v-if="nm.lucky_numbers?.length">
-              <p class="lucky-label">幸运数</p>
-              <div class="lucky-chips">
-                <span v-for="n in nm.lucky_numbers" :key="n" class="lucky-chip">{{ n }}</span>
-              </div>
+              <span class="wuge-num">{{ nm.zonge.number }}</span>
+              <span class="wuge-str">{{ nm.zonge.lucky }}</span>
             </div>
           </div>
 
@@ -165,7 +173,9 @@ function isSheng(from: string, to: string): boolean {
             <div v-for="item in wugeList" :key="item.key" class="wuge-desc-row">
               <span class="desc-key">{{ item.key }}</span>
               <span class="desc-val" @click="onChip(item.str)">{{ item.val }}（{{ item.str }}）</span>
+              <span v-if="item.score != null" class="desc-score" :style="{ color: scoreColor(item.score * 10) }">{{ item.score }}/10</span>
               <span class="desc-note">{{ item.note }}</span>
+              <p v-if="item.desc" class="desc-expand">{{ item.desc }}</p>
             </div>
           </div>
         </div>
@@ -181,9 +191,12 @@ function isSheng(from: string, to: string): boolean {
         <div class="conclusion-block">
           <p class="conclusion-text">
             三才配置
-            <span class="chip-term" @click="onChip('三才')">{{ nm.sancai_pattern }}</span>，
-            得分 <strong :style="{ color: scoreColor(nm.sancai_score) }">{{ nm.sancai_score }}</strong> 分。
-            {{ sancaiText }}。
+            <span class="chip-term" @click="onChip('三才')">{{ nm.sancai.pattern }}</span>，
+            <template v-if="nm.sancai.lucky">
+              <strong :style="{ color: nm.sancai.lucky.includes('吉') ? 'var(--success-dark)' : nm.sancai.lucky.includes('凶') ? 'var(--danger-dark)' : 'var(--accent)' }">{{ nm.sancai.lucky }}</strong>，
+            </template>
+            得分 <strong :style="{ color: scoreColor(nm.sancai.score * 10) }">{{ nm.sancai.score }}</strong>/10。
+            {{ nm.sancai.desc || sancaiText }}。
           </p>
         </div>
 
@@ -191,7 +204,7 @@ function isSheng(from: string, to: string): boolean {
           <!-- 三色横条 -->
           <div class="sancai-bars">
             <div
-              v-for="(el, i) in nm.sancai_pattern.split('')"
+              v-for="(el, i) in nm.sancai.pattern.split('')"
               :key="i"
               class="sancai-bar"
               :style="{ background: elColor(el), '--el-color': elColor(el) }"
@@ -207,15 +220,15 @@ function isSheng(from: string, to: string): boolean {
               <circle cx="50" cy="50" r="44" fill="none" stroke="var(--border)" stroke-width="8" />
               <circle
                 cx="50" cy="50" r="44" fill="none"
-                :stroke="scoreColor(nm.sancai_score)"
+                :stroke="scoreColor(nm.sancai.score * 10)"
                 stroke-width="8"
                 stroke-linecap="round"
-                :stroke-dasharray="circleProps(nm.sancai_score).dash"
-                :stroke-dashoffset="-circleProps(nm.sancai_score).offset"
+                :stroke-dasharray="circleProps(nm.sancai.score * 10).dash"
+                :stroke-dashoffset="-circleProps(nm.sancai.score * 10).offset"
                 transform="rotate(-90 50 50)"
               />
               <text x="50" y="54" text-anchor="middle" font-size="22" font-weight="bold"
-                :fill="scoreColor(nm.sancai_score)" font-family="monospace">{{ nm.sancai_score }}</text>
+                :fill="scoreColor(nm.sancai.score * 10)" font-family="monospace">{{ nm.sancai.score }}</text>
             </svg>
           </div>
         </div>
@@ -230,25 +243,30 @@ function isSheng(from: string, to: string): boolean {
 
         <div class="conclusion-block">
           <p class="conclusion-text">
-            {{ nm.full_name }}各字五行：
-            {{ nm.element_composition.join(' → ') }}。
+            {{ fullName }}五格五行：天格
+            <span class="chip-term" @click="onChip(nm.tianke.element)">{{ nm.tianke.element }}</span>
+            · 人格
+            <span class="chip-term" @click="onChip(nm.renke.element)">{{ nm.renke.element }}</span>
+            · 地格
+            <span class="chip-term" @click="onChip(nm.dike.element)">{{ nm.dike.element }}</span>，
+            三才配置 {{ nm.sancai.pattern }}（{{ nm.sancai.lucky }}）。
           </p>
         </div>
 
-        <!-- 字卡片 + 相生/相克箭头 -->
+        <!-- 五格五行卡片 + 相生/相克箭头 -->
         <div class="element-cards">
-          <template v-for="(el, i) in nm.element_composition" :key="i">
-            <div class="el-card" :style="{ '--el': elColor(el), background: elColor(el) }">
-              <p class="el-char">{{ nm.full_name[i] ?? nm.full_name.slice(-1) }}</p>
-              <p class="el-el">{{ el }}</p>
+          <template v-for="(item, i) in gridElements" :key="item.label">
+            <div class="el-card" :style="{ '--el': elColor(item.el), background: elColor(item.el) }">
+              <p class="el-char">{{ item.label }}</p>
+              <p class="el-el">{{ item.el }}</p>
             </div>
             <!-- 关系箭头 -->
             <div
-              v-if="i < nm.element_composition.length - 1"
+              v-if="i < gridElements.length - 1"
               class="el-arrow"
-              :class="isSheng(el, nm.element_composition[i+1]) ? 'sheng' : 'ke'"
+              :class="isSheng(item.el, gridElements[i + 1].el) ? 'sheng' : 'ke'"
             >
-              {{ isSheng(el, nm.element_composition[i+1]) ? '⦶' : '⦷' }}
+              {{ isSheng(item.el, gridElements[i + 1].el) ? '⦶' : '⦷' }}
             </div>
           </template>
         </div>
@@ -284,9 +302,6 @@ function isSheng(from: string, to: string): boolean {
           <!-- 文字评价 -->
           <div class="score-text">
             <p class="conclusion-text">{{ nm.summary }}</p>
-            <div v-if="nm.details" class="details-block">
-              {{ nm.details }}
-            </div>
           </div>
         </div>
 
@@ -578,4 +593,8 @@ function isSheng(from: string, to: string): boolean {
 .empty-hint { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); padding: var(--sp-8) 0; color: var(--text-3); }
 .btn-primary { padding: 8px 20px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; }
 .btn-sec { padding: 5px 14px; background: transparent; border: 1px solid var(--border-md); border-radius: var(--radius-sm); font-size: var(--fs-sm); cursor: pointer; color: var(--text-2); }
+
+/* ─── 五格描述扩展 ─── */
+.desc-score { font-size: var(--fs-xs); font-weight: 700; margin-left: 6px; }
+.desc-expand { font-size: var(--fs-xs); color: var(--text-2); line-height: 1.55; font-family: var(--font-cn); margin: 4px 0 0; }
 </style>

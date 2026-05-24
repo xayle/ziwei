@@ -10,7 +10,7 @@ interface ZiweiPalace {
   stem?: string
   branch?: string
   changsheng?: string
-  aux_stars?: string[]
+  aux_stars?: { name: string; brightness?: string; brightness_val?: number }[]
   main_stars: ZiweiStar[]
   analysis?: string
   explanation?: string
@@ -113,7 +113,7 @@ function handleSelectPalace(name?: string) {
           </div>
         </div>
         <div v-if="props.activePalace.aux_stars?.length" class="chip-list" style="margin-top:10px;">
-          <span v-for="star in props.activePalace.aux_stars" :key="star" class="chip">{{ star }}</span>
+          <span v-for="star in props.activePalace.aux_stars" :key="star.name" class="chip">{{ star.name }}</span>
         </div>
         <div class="zw-focus-copy">
           <p>{{ props.activePalace.analysis || props.activePalace.explanation || props.activePalace.tooltip || '暂无宫位说明。' }}</p>

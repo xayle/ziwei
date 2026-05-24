@@ -178,11 +178,14 @@ function labelPos(index: number): { x: number; y: number } {
                 cell.day == null ? 'cal-empty' : '',
                 cell.item ? scoreClass(cell.item) : '',
                 cell.key === activeDate ? 'cal-active' : '',
+                cell.item?.is_break ? 'cal-break' : '',
               ]"
               @click="cell.item ? toggleDate(cell.key) : undefined"
             >
               <span class="cal-day">{{ cell.day ?? '' }}</span>
               <span v-if="cell.item?.score" class="cal-score">{{ cell.item.score }}</span>
+              <span v-if="cell.item?.is_break" class="cal-badge cal-badge-break" title="破日">破</span>
+              <span v-if="cell.item?.is_virtue" class="cal-badge cal-badge-virtue" title="德日">德</span>
             </div>
           </div>
 
@@ -217,6 +220,30 @@ function labelPos(index: number): { x: number; y: number } {
             </p>
           </div>
         </transition>
+
+        <!-- 月度最佳日期 Top 5 -->
+        <template v-if="zeri?.top_days?.length">
+          <div class="top-days-section">
+            <p class="top-days-title">📅 本月推荐吉日</p>
+            <div class="top-days-list">
+              <div
+                v-for="dateStr in zeri.top_days.slice(0, 5)"
+                :key="dateStr"
+                class="top-day-item"
+                :class="dateMap.get(dateStr) ? scoreClass(dateMap.get(dateStr)) : ''"
+                @click="toggleDate(dateStr)"
+              >
+                <span class="top-day-date">{{ dateStr }}</span>
+                <template v-if="dateMap.get(dateStr)">
+                  <span class="top-day-gz">{{ dateMap.get(dateStr)!.day_gz }}</span>
+                  <span class="top-day-score">{{ dateMap.get(dateStr)!.score }}分</span>
+                  <span class="top-day-level">{{ dateMap.get(dateStr)!.level }}</span>
+                  <span v-if="dateMap.get(dateStr)!.is_virtue" class="cal-badge cal-badge-virtue">德</span>
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
 
       </template>
 
@@ -644,4 +671,35 @@ function labelPos(index: number): { x: number; y: number } {
 .slide-down-enter-active, .slide-down-leave-active { transition: all 0.18s ease; overflow: hidden; }
 .slide-down-enter-from, .slide-down-leave-to { opacity: 0; max-height: 0; }
 .slide-down-enter-to, .slide-down-leave-from { opacity: 1; max-height: 300px; }
-</style>
+
+/* ─── 破日 / 德日标记 ─── */
+.cal-break { opacity: .5; }
+.cal-badge {
+  position: absolute;
+  top: 2px; right: 3px;
+  font-size: 9px; font-weight: 700; line-height: 1;
+  padding: 0 3px; border-radius: 3px;
+  font-family: var(--font-cn);
+}
+.cal-badge-break { background: #fee2e2; color: #dc2626; }
+.cal-badge-virtue { background: #dcfce7; color: #15803d; }
+
+/* 让 cal-cell 成为相对定位容器以容纳徽章 */
+.cal-cell { position: relative; }
+
+/* ─── 推荐吉日 Top N ─── */
+.top-days-section { margin-top: var(--sp-4); }
+.top-days-title { font-size: var(--fs-sm); font-weight: 700; color: var(--text); margin-bottom: var(--sp-3); }
+.top-days-list { display: flex; flex-direction: column; gap: 6px; }
+.top-day-item {
+  display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; transition: border-color .15s;
+}
+.top-day-item:hover { border-color: var(--accent); }
+.top-day-item.active { border-color: var(--accent); background: var(--accent-lt); }
+.top-day-date { font-size: var(--fs-sm); font-weight: 700; font-family: var(--font-mono); color: var(--text); }
+.top-day-gz { font-size: var(--fs-xs); color: var(--accent-dark); font-weight: 600; background: var(--accent-soft); border-radius: 4px; padding: 0 6px; }
+.top-day-score { font-size: var(--fs-xs); color: var(--text-3); margin-left: auto; }
+.top-day-level { font-size: var(--fs-xs); font-weight: 700; padding: 1px 8px; border-radius: 10px; background: #dcfce7; color: #15803d; }</style>

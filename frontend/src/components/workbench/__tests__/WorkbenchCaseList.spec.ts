@@ -73,7 +73,7 @@ describe('WorkbenchCaseList', () => {
         profileSyncTag: '同步档案',
       },
     })
-    expect(emptyWrapper.find('.wb-empty-hint').text()).toBe('暂无案例')
+    expect(emptyWrapper.find('.wb-empty-hint').text()).toBe('还没有\u54a8询客户')
 
     const filteredWrapper = mount(WorkbenchCaseList, {
       props: {
@@ -83,6 +83,6 @@ describe('WorkbenchCaseList', () => {
         profileSyncTag: '同步档案',
       },
     })
-    expect(filteredWrapper.find('.wb-empty-hint').text()).toBe('无匹配结果')
+    expect(filteredWrapper.find('.wb-empty-hint').text()).toBe('没有找到匹配客户')
   })
 })

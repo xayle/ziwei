@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   getDashboard, getAuditLogs, getCases, deleteCase,
   listReviews, getReviewStats, updateReview, deleteReview,
@@ -20,8 +21,35 @@ import type { EventResponse, EventStatsResponse } from '@/api/events'
 import type { GoldenCasesResponse } from '@/api/bazi'
 import type { GlossaryItem } from '@/api/static-data'
 
+type AdminTab = 'dashboard' | 'cases' | 'events' | 'glossary' | 'golden' | 'audit' | 'reviews' | 'experiments' | 'apikeys' | 'rules'
+
+const route = useRoute()
+const router = useRouter()
+const ADMIN_TABS: AdminTab[] = ['dashboard', 'cases', 'events', 'glossary', 'golden', 'audit', 'reviews', 'experiments', 'apikeys', 'rules']
+
 // ── Tab 状态 ──────────────────────────────────────────────
-const activeTab = ref<'dashboard' | 'cases' | 'events' | 'glossary' | 'golden' | 'audit' | 'reviews' | 'experiments' | 'apikeys' | 'rules'>('dashboard')
+const activeTab = ref<AdminTab>('dashboard')
+const entryBanner = computed(() => {
+  if (route.query.from !== 'ziwei') return ''
+  const createdReviewId = typeof route.query.createdReviewId === 'string' ? route.query.createdReviewId : ''
+  if (activeTab.value === 'reviews' && createdReviewId) {
+    return `审核单 #${createdReviewId} 已从紫微主盘页提交，现已进入审查管理。`
+  }
+  if (activeTab.value === 'experiments') return '已从紫微主盘页进入实验管理，运营与实验治理能力已收口到管理后台。'
+  if (activeTab.value === 'reviews') return '已从紫微主盘页进入审查管理，审核队列与治理动作已收口到管理后台。'
+  return '已从紫微主盘页进入管理后台。'
+})
+
+function resolveAdminTab(tab: unknown): AdminTab {
+  return typeof tab === 'string' && ADMIN_TABS.includes(tab as AdminTab) ? (tab as AdminTab) : 'dashboard'
+}
+
+function syncAdminQuery(tab: AdminTab) {
+  const nextQuery = { ...route.query } as Record<string, unknown>
+  if (tab === 'dashboard') delete nextQuery.tab
+  else nextQuery.tab = tab
+  router.replace({ query: nextQuery })
+}
 
 // ── 仪表盘 ────────────────────────────────────────────────
 const dashboard = ref<DashboardResponse | null>(null)
@@ -409,7 +437,7 @@ async function saveRemedies() {
 }
 
 // ── Tab 点击 ──────────────────────────────────────────────
-function switchTab(tab: typeof activeTab.value) {
+function applyTab(tab: AdminTab) {
   activeTab.value = tab
   if (tab === 'dashboard') loadDashboard()
   else if (tab === 'cases' && !casesLoaded.value) loadCases(true)
@@ -421,6 +449,11 @@ function switchTab(tab: typeof activeTab.value) {
   else if (tab === 'experiments' && !experimentsLoaded.value) loadExperiments()
   else if (tab === 'apikeys' && !apiKeysLoaded.value) loadApiKeys()
   else if (tab === 'rules' && !rulesLoaded.value) loadRules()
+}
+
+function switchTab(tab: AdminTab) {
+  applyTab(tab)
+  syncAdminQuery(tab)
 }
 
 function fmtDate(s: string) {
@@ -437,12 +470,25 @@ function statusBadge(s: string) {
   return MAP[s] ?? 'badge-info'
 }
 
-onMounted(loadDashboard)
+watch(
+  () => route.query.tab,
+  (tab) => {
+    const nextTab = resolveAdminTab(tab)
+    if (nextTab !== activeTab.value) {
+      applyTab(nextTab)
+    }
+  },
+)
+
+onMounted(() => {
+  applyTab(resolveAdminTab(route.query.tab))
+})
 </script>
 
 <template>
   <div class="wrap admin-view">
     <h1 class="page-title">管理后台</h1>
+    <p v-if="entryBanner" class="entry-banner">{{ entryBanner }}</p>
 
     <!-- Tab 切换 -->
     <div class="tabs">
@@ -746,6 +792,10 @@ onMounted(loadDashboard)
     <section v-if="activeTab === 'reviews'" class="tab-panel">
       <div v-if="reviewsLoading && !reviewsLoaded" class="loading-msg">加载中…</div>
       <template v-else>
+        <div class="toolbar">
+          <span class="total-hint">共 {{ reviewsTotal }} 条审核单</span>
+          <button class="btn-sec btn-sm" @click="loadReviews()">刷新</button>
+        </div>
         <div v-if="reviewStats" class="stat-grid" style="grid-template-columns: repeat(5,1fr)">
           <div class="stat-card"><div class="stat-num">{{ reviewStats.total }}</div><div class="stat-label">总数</div></div>
           <div class="stat-card stat-3"><div class="stat-num">{{ reviewStats.pending }}</div><div class="stat-label">待审</div></div>
@@ -916,6 +966,16 @@ onMounted(loadDashboard)
 
 <style scoped>
 .admin-view { padding-bottom: var(--sp-8); }
+
+.entry-banner {
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: var(--fs-sm);
+}
 
 .tabs {
   display: flex;

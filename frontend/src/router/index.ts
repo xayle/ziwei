@@ -11,7 +11,7 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
-      meta: { title: '业务总览' },
+      meta: { title: '命理工作台' },
     },
     {
       path: '/login',
@@ -38,6 +38,24 @@ const router = createRouter({
       meta: { title: '紫微斗数' },
     },
     {
+      path: '/ziwei/batch',
+      name: 'ziwei-batch',
+      component: () => import('@/views/ZiweiBatchView.vue'),
+      meta: { title: '紫微批量排盘' },
+    },
+    {
+      path: '/ziwei/cases',
+      name: 'ziwei-cases',
+      component: () => import('@/views/ZiweiCaseWorkflowView.vue'),
+      meta: { title: '紫微案例工作区' },
+    },
+    {
+      path: '/llm/drafts',
+      name: 'llm-drafts',
+      component: () => import('@/views/LlmDraftsView.vue'),
+      meta: { title: 'AI 草稿工作区' },
+    },
+    {
       path: '/fengshui',
       name: 'fengshui',
       component: () => import('@/views/FengshuiView.vue'),
@@ -50,10 +68,15 @@ const router = createRouter({
       meta: { title: '管理后台' },
     },
     {
-      path: '/workbench',
-      name: 'workbench',
+      path: '/cases',
+      name: 'case-center',
       component: () => import('@/views/WorkbenchView.vue'),
-      meta: { title: '案例工作台' },
+      meta: { title: '咨询流程' },
+    },
+    {
+      path: '/workbench',
+      name: 'workbench-legacy',
+      redirect: '/cases',
     },
     {
       path: '/profile',
@@ -84,6 +107,30 @@ const router = createRouter({
       name: 'compat',
       component: () => import('@/views/CompatibilityView.vue'),
       meta: { title: '合婚诊断' },
+    },
+    {
+      path: '/compat/synastry',
+      name: 'compat-synastry',
+      component: () => import('@/views/CompatibilityView.vue'),
+      meta: { title: '合盘工作区' },
+    },
+    {
+      path: '/compat/team',
+      name: 'compat-team',
+      component: () => import('@/views/MultiCompatView.vue'),
+      meta: { title: '多人合盘' },
+    },
+    {
+      path: '/glossary',
+      name: 'glossary',
+      component: () => import('@/views/GlossaryView.vue'),
+      meta: { title: '术语词库' },
+    },
+    {
+      path: '/human-design',
+      name: 'human-design',
+      component: () => import('@/views/HumanDesignView.vue'),
+      meta: { title: '人类设计' },
     },
     {
       path: '/tarot',

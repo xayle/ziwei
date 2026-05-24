@@ -97,7 +97,7 @@ describe('apiClient — 响应拦截器（401 处理）', () => {
     dispatchSpy.mockRestore()
   })
 
-  it('非 401 错误（如 500）不清除 token 也不派发事件', async () => {
+  it('非 401 错误（如 500）不清除 token 也不派发 app:unauthorized 事件', async () => {
     const { default: client } = await import('@/api/client')
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
 
@@ -108,7 +108,11 @@ describe('apiClient — 响应拦截器（401 处理）', () => {
     await expect(errHandler({ response: { status: 500 } })).rejects.toBeDefined()
 
     expect(localStorage.getItem('token')).toBe('some-token')  // 未被清除
-    expect(dispatchSpy).not.toHaveBeenCalled()
+    // 500 会派发 app:backend-unavailable，但不派发 app:unauthorized
+    const unauthorizedCalls = dispatchSpy.mock.calls.filter(
+      (call) => (call[0] as CustomEvent).type === 'app:unauthorized'
+    )
+    expect(unauthorizedCalls).toHaveLength(0)
 
     dispatchSpy.mockRestore()
   })

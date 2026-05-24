@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { useThemePreference } from '@/composables/useThemePreference'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -8,7 +8,7 @@ const router = useRouter()
 const auth   = useAuthStore()
 
 const navItems = [
-  { path: '/workbench', label: '工作台' },
+  { path: '/cases',     label: '案例中心' },
   { path: '/report',    label: '报告书' },
   { path: '/bazi',      label: '八字排盘' },
   { path: '/ziwei',     label: '紫微斗数' },
@@ -21,29 +21,7 @@ const navItems = [
   { path: '/admin',     label: '管理后台' },
 ]
 
-// 主题切换
-const theme = ref<'default' | 'bazi'>('default')
-
-function initTheme() {
-  const saved = localStorage.getItem('theme') as 'default' | 'bazi' | null
-  if (saved === 'bazi') {
-    theme.value = 'bazi'
-    document.documentElement.dataset.theme = 'bazi'
-  }
-}
-
-function toggleTheme() {
-  theme.value = theme.value === 'default' ? 'bazi' : 'default'
-  if (theme.value === 'bazi') {
-    document.documentElement.dataset.theme = 'bazi'
-    localStorage.setItem('theme', 'bazi')
-  } else {
-    delete document.documentElement.dataset.theme
-    localStorage.setItem('theme', 'default')
-  }
-}
-
-onMounted(initTheme)
+const { theme, toggleTheme } = useThemePreference()
 
 function logout() {
   auth.clearToken()

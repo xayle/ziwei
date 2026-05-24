@@ -125,6 +125,7 @@ const dayunItems = computed(() => {
     return { ...item, ganzhi: item.stem + item.branch, endYear: nextStart - 1, isCurrent }
   })
 })
+const currentDayun = computed(() => dayunItems.value.find(d => d.isCurrent) ?? null)
 
 // 流年列表（取 liunian_detail 优先）
 const liunianItems = computed(() => {
@@ -619,12 +620,12 @@ function onChip(term: string) {
             <template v-if="bazi.start_dayun_age != null">
               起运年龄 <strong>{{ bazi.start_dayun_age }}</strong> 岁。
             </template>
-            <template v-if="dayunItems.find(d => d.isCurrent) as any">
+            <template v-if="currentDayun">
               当前大运
-              <span class="chip-term" @click="onChip(dayunItems.find(d => d.isCurrent)!.ganzhi)">
-                {{ dayunItems.find(d => d.isCurrent)!.ganzhi }}
+              <span class="chip-term" @click="onChip(currentDayun.ganzhi)">
+                {{ currentDayun.ganzhi }}
               </span>
-              （{{ dayunItems.find(d => d.isCurrent)!.start_year }}年起，约 {{ dayunItems.find(d => d.isCurrent)!.endYear }} 年结束）。
+              （{{ currentDayun.start_year }}年起，约 {{ currentDayun.endYear }} 年结束）。
             </template>
             <template v-if="bazi.current_fortune_summary?.current_liunian">
               本流年

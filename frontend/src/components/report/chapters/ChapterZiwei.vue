@@ -58,6 +58,11 @@ const SIHUA_COLOR: Record<string, string> = {
 function sihuaColor(tag: string): string {
   return SIHUA_COLOR[tag] ?? SIHUA_COLOR[tag.slice(1)] ?? '#666'
 }
+function scoreColor(pct: number): string {
+  if (pct >= 80) return '#16a34a'
+  if (pct >= 60) return '#ca8a04'
+  return '#dc2626'
+}
 
 // 大运当前高亮
 const currentYear = new Date().getFullYear()
@@ -291,12 +296,13 @@ const visiblePatterns = computed(() => {
             <div class="remedy-list">
               <div
                 v-for="rem in ziwei.remedies"
-                :key="rem.action"
+                :key="rem.id"
                 class="remedy-item"
               >
-                <span class="remedy-cat">{{ rem.category }}</span>
-                <p class="remedy-action">{{ rem.action }}</p>
-                <p v-if="rem.reason" class="remedy-reason">{{ rem.reason }}</p>
+                <span class="remedy-cat">{{ rem.cost_level }}</span>
+                <p class="remedy-action">{{ rem.name }}</p>
+                <p v-if="rem.actions?.length" class="remedy-actions-list">{{ rem.actions.join('；') }}</p>
+                <p v-if="rem.evidence" class="remedy-reason">{{ rem.evidence }}</p>
               </div>
             </div>
           </div>
@@ -306,13 +312,13 @@ const visiblePatterns = computed(() => {
             <div class="suggestion-list">
               <div
                 v-for="sug in ziwei.life_suggestions"
-                :key="sug.suggestion"
+                :key="sug.id"
                 class="suggestion-item"
               >
-                <span class="sug-domain">{{ sug.domain }}</span>
-                <p class="sug-text">{{ sug.suggestion }}</p>
-                <div v-if="sug.score != null" class="sug-score-dot"
-                  :style="{ background: sug.score >= 80 ? 'var(--success-dark)' : sug.score >= 60 ? 'var(--accent)' : 'var(--danger-dark)' }"
+                <span class="sug-domain">{{ sug.category_label }}</span>
+                <p class="sug-text">{{ sug.short_desc }}</p>
+                <div class="sug-priority-dot"
+                  :style="{ background: sug.priority <= 2 ? 'var(--danger-dark)' : sug.priority <= 4 ? 'var(--accent)' : 'var(--success-dark)' }"
                 />
               </div>
             </div>
@@ -362,6 +368,86 @@ const visiblePatterns = computed(() => {
         </div>
 
         <p v-else class="card-empty">暂无大限数据</p>
+      </section>
+
+      <!-- ── 流年概览 ── -->
+      <section v-if="ziwei.liunian" id="section-3-6" class="section-block">
+        <div class="section-title-row">
+          <span class="section-num">3-6</span>
+          <h2 class="section-title">流年概览</h2>
+          <span class="month-badge">{{ ziwei.liunian.year }}年 · {{ ziwei.liunian.year_gz }}</span>
+        </div>
+        <div v-if="ziwei.liunian.sihua && Object.keys(ziwei.liunian.sihua).length" class="sihua-row">
+          <span class="sihua-title">流年四化</span>
+          <span
+            v-for="(star, tag) in ziwei.liunian.sihua"
+            :key="tag"
+            class="sihua-tag"
+            :style="{ background: sihuaColor(tag) + '1a', color: sihuaColor(tag), borderColor: sihuaColor(tag) + '66' }"
+          >{{ star }} {{ tag }}</span>
+        </div>
+        <p v-else class="card-empty">暂无流年四化数据</p>
+      </section>
+
+      <!-- ── 流月详情 ── -->
+      <section v-if="ziwei.liuyue?.length" id="section-3-7" class="section-block">
+        <div class="section-title-row">
+          <span class="section-num">3-7</span>
+          <h2 class="section-title">流月详情</h2>
+        </div>
+        <div class="liuyue-grid">
+          <div
+            v-for="ly in ziwei.liuyue"
+            :key="ly.month"
+            class="liuyue-cell"
+          >
+            <div class="ly-header">
+              <span class="ly-month">{{ ly.month }}月</span>
+              <span class="ly-gz">{{ ly.month_gz }}</span>
+              <span class="ly-palace">{{ ly.palace_name }}</span>
+            </div>
+            <div v-if="ly.sihua && Object.keys(ly.sihua).length" class="ly-sihua">
+              <span
+                v-for="(star, tag) in ly.sihua"
+                :key="tag"
+                class="sihua-mini"
+                :style="{ color: sihuaColor(tag) }"
+                :title="star"
+              >{{ tag.slice(-1) }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 年度预测 ── -->
+      <section v-if="ziwei.forecast?.yearly" id="section-3-8" class="section-block">
+        <div class="section-title-row">
+          <span class="section-num">3-8</span>
+          <h2 class="section-title">年度预测</h2>
+          <span class="month-badge">{{ ziwei.forecast.year }}年 · {{ ziwei.forecast.yearly.ganzhi }}</span>
+        </div>
+        <div class="forecast-score">
+          <span class="fc-score-num" :style="{ color: scoreColor(ziwei.forecast.yearly.score * 10) }">{{ ziwei.forecast.yearly.score }}</span>
+          <span class="fc-palace">流年命宫：{{ ziwei.forecast.yearly.palace_name }}</span>
+        </div>
+        <div v-if="ziwei.forecast.yearly.overall" class="conclusion-block">
+          <p class="conclusion-text">{{ ziwei.forecast.yearly.overall }}</p>
+        </div>
+        <div v-if="ziwei.forecast.yearly.details && Object.keys(ziwei.forecast.yearly.details).length" class="forecast-domains">
+          <div v-for="(val, key) in ziwei.forecast.yearly.details" :key="key" class="fc-domain-row">
+            <span class="fc-domain-key">{{ key }}</span>
+            <span class="fc-domain-val">{{ val }}</span>
+          </div>
+        </div>
+        <div v-if="ziwei.forecast.yearly.events?.length" class="forecast-events">
+          <span class="fc-section-lbl">事件预测</span>
+          <div v-for="ev in ziwei.forecast.yearly.events" :key="ev.description" class="fc-event-item"
+            :class="ev.level === 'high' ? 'ev-high' : ev.level === 'low' ? 'ev-low' : 'ev-mid'">
+            <span class="ev-cat">{{ ev.category }}</span>
+            <span class="ev-desc">{{ ev.description }}</span>
+          </div>
+        </div>
+        <p v-if="ziwei.forecast.yearly.advice" class="fc-advice">💡 {{ ziwei.forecast.yearly.advice }}</p>
       </section>
 
     </template>
@@ -436,7 +522,37 @@ const visiblePatterns = computed(() => {
   font-weight: 600;
 }
 
-/* ─── 4×4 宫格盘 ────────────────────────────────────────────── */
+/* ─── 流年 ─── */
+.sihua-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); }
+.sihua-title { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); margin-right: var(--sp-2); }
+.sihua-tag { font-size: var(--fs-xs); font-weight: 600; padding: 2px 10px; border-radius: 10px; border: 1px solid; }
+
+/* ─── 流月网格 ─── */
+.liuyue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+.liuyue-cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2); }
+.ly-header { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+.ly-month { font-size: var(--fs-sm); font-weight: 700; color: var(--text); }
+.ly-gz { font-size: 10px; color: var(--accent-dark); font-weight: 600; }
+.ly-palace { font-size: 10px; color: var(--text-3); flex: 1; text-align: right; }
+.ly-sihua { display: flex; flex-wrap: wrap; gap: 3px; }
+
+/* ─── 年度预测 ─── */
+.forecast-score { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.fc-score-num { font-size: 32px; font-weight: 700; line-height: 1; }
+.fc-palace { font-size: var(--fs-sm); color: var(--text-2); }
+.forecast-domains { display: flex; flex-direction: column; gap: 4px; margin: var(--sp-3) 0; }
+.fc-domain-row { display: flex; gap: var(--sp-3); font-size: var(--fs-sm); padding: 3px 0; border-bottom: 1px solid var(--border); }
+.fc-domain-key { color: var(--text-3); font-weight: 600; min-width: 60px; }
+.fc-domain-val { color: var(--text); flex: 1; }
+.forecast-events { margin: var(--sp-3) 0; }
+.fc-section-lbl { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); display: block; margin-bottom: var(--sp-2); }
+.fc-event-item { display: flex; align-items: flex-start; gap: var(--sp-2); padding: 4px 0; font-size: var(--fs-sm); }
+.fc-event-item.ev-high .ev-cat { background: #fee2e2; color: #dc2626; }
+.fc-event-item.ev-low .ev-cat { background: #dcfce7; color: #15803d; }
+.fc-event-item.ev-mid .ev-cat { background: #fef3c7; color: #b45309; }
+.ev-cat { font-size: var(--fs-xs); font-weight: 700; padding: 1px 6px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.ev-desc { color: var(--text); line-height: 1.5; }
+.fc-advice { font-size: var(--fs-sm); color: var(--accent-dark); background: rgba(217,119,6,.07); border-radius: var(--radius-sm); padding: 6px 12px; margin-top: var(--sp-3); }
 .palace-board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

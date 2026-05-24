@@ -7,14 +7,33 @@
  *
  * 进入 /report 系列路由时自动折叠侧边栏（报告书有专属 ReportChapterNav）
  */
-import { watch } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
 import AppSidebar from '@/components/AppSidebar.vue'
-import AppRightPanel from '@/components/AppRightPanel.vue'
 
 const route = useRoute()
 const ui    = useUiStore()
+
+function resolveViewportMode() {
+  const width = window.innerWidth
+  if (width < 860) return 'mobile'
+  if (width < 1280) return 'compact'
+  return 'desktop'
+}
+
+function syncViewportMode() {
+  ui.setViewportMode(resolveViewportMode())
+}
+
+onMounted(() => {
+  syncViewportMode()
+  window.addEventListener('resize', syncViewportMode)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', syncViewportMode)
+})
 
 // 进入报告书路由时自动折叠侧边栏
 watch(
@@ -29,14 +48,12 @@ watch(
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="`is-${ui.viewportMode}`">
     <AppSidebar />
 
     <div class="shell-center">
       <slot />
     </div>
-
-    <AppRightPanel />
   </div>
 </template>
 
@@ -44,7 +61,7 @@ watch(
 .app-shell {
   display: flex;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow: hidden;
   background: var(--bg);
 }

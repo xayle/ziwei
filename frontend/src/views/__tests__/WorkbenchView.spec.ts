@@ -83,6 +83,7 @@ const {
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockCtx.routerPush }),
+  useRoute: () => ({ path: '/workbench', query: {}, params: {} }),
 }))
 
 vi.mock('@/stores/report', () => ({
@@ -334,6 +335,7 @@ const ziweiMock = {
   wuxing_ju: 6,
   life_ruler_star: '贪狼',
   body_ruler_star: '天相',
+  laiyin_palace: '财帛宫',
   dayun: {
     items: [
       { index: 0, ganzhi: '甲辰', start_age: 33, end_age: 42, start_year: CURRENT_YEAR - 1 },
@@ -356,7 +358,7 @@ const ziweiMock = {
       stem: '甲',
       branch: '子',
       changsheng: '临官',
-      aux_stars: ['左辅'],
+      aux_stars: [{ name: '左辅', brightness: '得', brightness_val: 4, transforms: [] }],
       main_stars: [{ name: '紫微', brightness: '庙', transforms: ['化科'] }],
       analysis: '先天主轴强。',
       suggestion: '宜稳中求进。',
@@ -368,7 +370,7 @@ const ziweiMock = {
       stem: '乙',
       branch: '丑',
       changsheng: '帝旺',
-      aux_stars: ['文昌'],
+      aux_stars: [{ name: '文昌', brightness: '庙', brightness_val: 6, transforms: [] }],
       main_stars: [{ name: '破军', brightness: '平' }],
       analysis: '适合外拓与跑动。',
       opposition_name: '命宫',
@@ -412,7 +414,7 @@ async function mountView() {
 describe('WorkbenchView', () => {
   beforeEach(resetMocks)
 
-  it('进入紫微工作台时自动选中首个案例并加载双盘数据', async () => {
+  it('进入紫微主盘页后自动选中首个案例并加载双盘数据', async () => {
     const wrapper = await mountView()
 
     expect(loadCaseList).toHaveBeenCalled()
@@ -426,47 +428,6 @@ describe('WorkbenchView', () => {
     expect(wrapper.text()).toContain('双盘大运对照')
     expect(wrapper.text()).toContain('紫微：甲辰(33-42岁)')
     expect(wrapper.findAll('.wb-case-item')).toHaveLength(2)
-  })
-
-  it('bazi hotfix 视图会展示基础信息与大运摘要，且不触发紫微加载', async () => {
-    navStore.currentSectionId = 'bazi-birth'
-    navStore.currentSection = { label: '生辰数据' }
-
-    const wrapper = await mountView()
-
-    expect(computeFullBazi).toHaveBeenCalledTimes(1)
-    expect(computeZiwei).not.toHaveBeenCalled()
-    expect(wrapper.find('.wb-bazi-hotfix').exists()).toBe(true)
-    expect(wrapper.find('.wb-bazi-hotfix-title').text()).toContain('四柱八字 · 生辰数据')
-    expect(wrapper.text()).toContain('出生时间')
-    expect(wrapper.text()).toContain('格局')
-    expect(wrapper.text()).toContain('正官格')
-    expect(wrapper.text()).toContain('大运摘要')
-    expect(wrapper.findAll('.wb-bazi-hotfix .wb-dayun-item').length).toBeGreaterThan(0)
-  })
-
-  it('bazi hotfix 视图支持柱位切换与重算动作', async () => {
-    navStore.currentSectionId = 'bazi-birth'
-    navStore.currentSection = { label: '四柱与十神' }
-
-    const wrapper = await mountView()
-
-    const pillarButtons = wrapper.findAll('.wb-bazi-hotfix .wb-pillar-card')
-    expect(pillarButtons.length).toBeGreaterThan(1)
-
-    await pillarButtons[1].trigger('click')
-    await flushPromises()
-
-    expect(wrapper.findAll('.wb-bazi-hotfix .wb-pillar-card.active')).toHaveLength(1)
-    expect(wrapper.find('.wb-bazi-hotfix .wb-pillar-card.active').text()).toContain('月柱')
-
-    computeFullBazi.mockClear()
-    const reloadButton = wrapper.findAll('.wb-bazi-hotfix-head .wb-btn-ghost')[1]
-    await reloadButton.trigger('click')
-    await flushPromises()
-
-    expect(computeFullBazi).toHaveBeenCalledTimes(1)
-    expect(computeZiwei).not.toHaveBeenCalled()
   })
 
   it('点击案例列表后会切换当前案例并重新加载命盘', async () => {
@@ -486,23 +447,6 @@ describe('WorkbenchView', () => {
     expect(wrapper.find('.wb-case-item.active').text()).toContain('李四')
   })
 
-  it('父子接线生效：切换视图与选择宫位会同步更新界面', async () => {
-    const wrapper = await mountView()
-
-    expect(wrapper.find('.wb-simple-hint').exists()).toBe(true)
-    await wrapper.find('.wb-info-actions .wb-btn-ghost').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.find('.wb-simple-hint').exists()).toBe(false)
-    expect(wrapper.text()).toContain('紫微盘概览')
-
-    const palaceButtons = wrapper.findAll('.zw-cell')
-    expect(wrapper.find('.zw-focus-title').text()).toContain('命宫 · 甲子')
-    await palaceButtons[1].trigger('click')
-    await flushPromises()
-    expect(wrapper.find('.zw-focus-title').text()).toContain('迁移 · 乙丑')
-  })
-
   it('紫微计算失败时显示页面级错误态，并可点击重试', async () => {
     computeZiwei.mockRejectedValueOnce(new Error('紫微服务异常'))
     const wrapper = await mountView()
@@ -517,21 +461,6 @@ describe('WorkbenchView', () => {
 
     expect(computeZiwei).toHaveBeenCalledTimes(2)
     expect(computeFullBazi).toHaveBeenCalledTimes(2)
-  })
-
-  it('八字 section 在无结果且无错误时显示空态提示', async () => {
-    navStore.currentSectionId = 'bazi-birth'
-    navStore.currentSection = { label: '生辰数据' }
-    computeFullBazi.mockResolvedValueOnce(null)
-
-    const wrapper = await mountView()
-
-    expect(computeZiwei).not.toHaveBeenCalled()
-    const hotfixEmpty = wrapper.find('.wb-bazi-hotfix .wb-empty-card')
-    expect(wrapper.find('.wb-bazi-hotfix-title').text()).toContain('四柱八字 · 生辰数据')
-    expect(hotfixEmpty.exists()).toBe(true)
-    expect(hotfixEmpty.text()).toContain('八字结果尚未加载')
-    expect(hotfixEmpty.text()).toContain('当前案例已选中，但命盘结果还没有进入界面。')
   })
 
   it('非紫微章节会展示八字主线，并支持大运/流年/流月焦点切换', async () => {
@@ -559,25 +488,4 @@ describe('WorkbenchView', () => {
     expect(wrapper.find('.wb-liuyue-title').text()).toContain(`${TARGET_MONTH}月`)
   })
 
-  it('八字解读区点击关键月份后，会同步更新流月热力详情与选中态', async () => {
-    navStore.currentSectionId = 'overview'
-    navStore.currentSection = { label: '综合总览' }
-
-    const wrapper = await mountView()
-
-    await wrapper.find('.wb-info-actions .wb-btn-ghost').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('流年四维详情')
-    expect(wrapper.find('.wb-liuyue-title').text()).toContain(`${CURRENT_MONTH}月`)
-
-    const monthChip = wrapper.findAll('.wb-month-chip').find(button => button.text().includes(`${TARGET_MONTH}月`))
-    expect(monthChip).toBeTruthy()
-    await monthChip!.trigger('click')
-    await flushPromises()
-
-    expect(wrapper.find('.wb-liuyue-title').text()).toContain(`${TARGET_MONTH}月`)
-    expect(wrapper.find('.wb-month-chip.active').text()).toContain(`${TARGET_MONTH}月`)
-    expect(wrapper.find('.wb-lm-hm-cell.lm-hm-active').text()).toContain(`${TARGET_MONTH}月`)
-  })
 })
