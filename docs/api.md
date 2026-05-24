@@ -7,8 +7,8 @@
 - Health: `GET /health` (versions, backend availability, clock, thresholds)
 - Main: `POST /api/v1/verify`
 - Full payload: `POST /api/v1/bazi/full`
-- Primary UI (SPA): `${BASE_URL}/static/app/workbench`（例如 `http://127.0.0.1:8000/static/app/workbench`）
-- Compatibility entry: `${BASE_URL}/static/index.html`（例如 `http://127.0.0.1:8000/static/index.html`）— 会优先跳转到 `${BASE_URL}/static/app/workbench`，若新版资源不存在则回退到 legacy `ziwei.html`
+- Primary UI (SPA): `${BASE_URL}/static/app/cases`（例如 `http://127.0.0.1:8000/static/app/cases`）
+- Compatibility entry: `${BASE_URL}/static/index.html`（例如 `http://127.0.0.1:8000/static/index.html`）— 会优先跳转到 `${BASE_URL}/static/app/cases`，若新版资源不存在则回退到 legacy `ziwei.html`
 - Compatibility alias (bazi): `${BASE_URL}/bazi` — 会优先跳转到 `${BASE_URL}/static/app/bazi`，若新版资源不存在则回退到 legacy `bazi.html`
 - Compatibility alias (admin): `${BASE_URL}/admin` — 会优先跳转到 `${BASE_URL}/static/app/admin`，若新版资源不存在则回退到 legacy `admin.html`
 - Compatibility pages: `/static/bazi.html`、`/static/admin.html`（默认优先跳往 SPA，可通过 `?legacy=1` 停留旧版）

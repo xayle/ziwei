@@ -1,0 +1,366 @@
+Page: Divination Maestro Workspace Homepage Redesign
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Divination Maestro Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&f[]=cabinet-grotesk@500,600,700&display=swap');
+    html { scroll-behavior: smooth; background: #fafaf9; }
+    .font-display { font-family: 'Cabinet Grotesk', sans-serif; }
+    .font-body { font-family: 'Satoshi', sans-serif; }
+    .soft-grid {
+      background-image:
+        linear-gradient(to right, rgba(120,113,108,0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(120,113,108,0.07) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+    .fade-up { animation: fadeUp 0.7s ease-out both; }
+    .fade-up-delay-1 { animation: fadeUp 0.7s ease-out 0.08s both; }
+    .fade-up-delay-2 { animation: fadeUp 0.7s ease-out 0.16s both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-stone-50 text-stone-950 font-body">
+    <header class="sticky top-0 z-40 border-b border-stone-200 bg-stone-50">
+      <div class="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-8">
+        <a id="nav-logo-link" href="#home" class="group flex items-center gap-3">
+          <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-stone-950 text-stone-50 shadow-sm transition-transform duration-300 group-hover:rotate-3">
+            <iconify-icon icon="lucide:sparkles" class="text-xl"></iconify-icon>
+          </span>
+          <span class="leading-tight">
+            <span class="block font-display text-lg font-semibold tracking-tight">Mingli Workspace</span>
+            <span class="block text-xs font-medium text-stone-500">Consultation office</span>
+          </span>
+        </a>
+
+        <nav class="hidden items-center gap-1 rounded-full border border-stone-200 bg-white p-1 shadow-sm lg:flex">
+          <a id="nav-home-link" href="#home" class="rounded-full bg-stone-950 px-4 py-2 text-sm font-medium text-white">Home</a>
+          <a id="nav-services-link" href="#services" class="rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-950">Services</a>
+          <a id="nav-cases-link" href="#recent-cases" class="rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-950">Cases</a>
+          <a id="nav-reports-link" href="#reports" class="rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-950">Reports</a>
+          <a id="nav-workspace-link" href="#workflow" class="rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-950">My Workspace</a>
+          <details class="relative">
+            <summary class="cursor-pointer list-none rounded-full px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-950">More Tools</summary>
+            <div class="absolute right-0 mt-3 w-48 rounded-2xl border border-stone-200 bg-white p-2 shadow-xl shadow-stone-900/10">
+              <a id="nav-expert-mode-link" href="#tools" class="block rounded-xl px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-950">Expert Mode</a>
+              <a id="nav-toolbox-link" href="#tools" class="block rounded-xl px-3 py-2 text-sm font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-950">Toolbox</a>
+            </div>
+          </details>
+        </nav>
+
+        <div class="flex items-center gap-3">
+          <a id="nav-continue-link" href="#recent-cases" class="hidden rounded-full border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 shadow-sm transition-all hover:border-stone-300 hover:bg-stone-100 md:inline-flex">Continue Work</a>
+          <a id="nav-start-service-link" href="#services" class="inline-flex items-center gap-2 rounded-full bg-amber-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-amber-900/10 transition-all hover:bg-amber-800">
+            Start Service
+            <iconify-icon icon="lucide:arrow-right" class="text-base"></iconify-icon>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="home" class="relative overflow-hidden">
+      <section class="relative border-b border-stone-200">
+        <div class="absolute inset-0 soft-grid opacity-70"></div>
+        <div class="absolute right-0 top-0 h-96 w-96 rounded-full bg-amber-100 blur-3xl"></div>
+        <div class="absolute bottom-0 left-10 h-72 w-72 rounded-full bg-stone-200 blur-3xl"></div>
+
+        <div class="relative mx-auto max-w-5xl px-6 py-24 text-center lg:px-8 lg:py-32">
+          <div class="fade-up mx-auto mb-7 inline-flex w-fit items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+            <iconify-icon icon="lucide:leaf" class="text-base"></iconify-icon>
+            Divination consultation workspace
+          </div>
+          <h1 class="fade-up font-display text-5xl font-semibold tracking-tight text-stone-950 md:text-6xl lg:text-7xl">
+            Begin your next consultation with clarity
+          </h1>
+          <p class="fade-up-delay-1 mx-auto mt-7 max-w-2xl text-lg leading-8 text-stone-600">
+            A focused workspace for guiding each client from service selection to client information, analysis review, and a finished report.
+          </p>
+          <div class="fade-up-delay-2 mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+            <a id="hero-start-service-link" href="#services" class="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-amber-700 px-7 text-sm font-semibold text-white shadow-lg shadow-amber-900/10 transition-all hover:-translate-y-0.5 hover:bg-amber-800">
+              Start Service
+              <iconify-icon icon="lucide:arrow-up-right" class="text-lg"></iconify-icon>
+            </a>
+            <a id="hero-continue-work-link" href="#recent-cases" class="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-stone-200 bg-white px-7 text-sm font-semibold text-stone-800 shadow-sm transition-all hover:-translate-y-0.5 hover:border-stone-300 hover:bg-stone-100">
+              Continue Work
+              <iconify-icon icon="lucide:history" class="text-lg"></iconify-icon>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="services" class="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+        <div class="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Start with a service</p>
+            <h2 class="mt-3 font-display text-4xl font-semibold tracking-tight text-stone-950">Choose the reading type</h2>
+          </div>
+          <p class="max-w-xl text-base leading-7 text-stone-600">Keep the first decision simple. Select the service that fits the client request, then move into the guided workflow.</p>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="group rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl hover:shadow-stone-900/5">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-4">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-800">
+                  <iconify-icon icon="lucide:calendar-days" class="text-2xl"></iconify-icon>
+                </span>
+                <div>
+                  <h3 class="font-display text-xl font-semibold tracking-tight">Eight Characters</h3>
+                  <p class="mt-1 text-sm leading-6 text-stone-600">Read life patterns through birth date and time.</p>
+                </div>
+              </div>
+              <a id="service-eight-characters-link" href="#workflow" class="inline-flex shrink-0 items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700">Begin</a>
+            </div>
+          </div>
+
+          <div class="group rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl hover:shadow-stone-900/5">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-4">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-stone-800">
+                  <iconify-icon icon="lucide:orbit" class="text-2xl"></iconify-icon>
+                </span>
+                <div>
+                  <h3 class="font-display text-xl font-semibold tracking-tight">Purple Star</h3>
+                  <p class="mt-1 text-sm leading-6 text-stone-600">Explore personality, timing, and life themes.</p>
+                </div>
+              </div>
+              <a id="service-purple-star-link" href="#workflow" class="inline-flex shrink-0 items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700">Begin</a>
+            </div>
+          </div>
+
+          <div class="group rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl hover:shadow-stone-900/5">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-4">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-stone-800">
+                  <iconify-icon icon="lucide:signature" class="text-2xl"></iconify-icon>
+                </span>
+                <div>
+                  <h3 class="font-display text-xl font-semibold tracking-tight">Naming</h3>
+                  <p class="mt-1 text-sm leading-6 text-stone-600">Review name structure and recommend refined options.</p>
+                </div>
+              </div>
+              <a id="service-naming-link" href="#workflow" class="inline-flex shrink-0 items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700">Begin</a>
+            </div>
+          </div>
+
+          <div class="group rounded-3xl border border-stone-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-amber-200 hover:shadow-xl hover:shadow-stone-900/5">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-4">
+                <span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-stone-800">
+                  <iconify-icon icon="lucide:heart-handshake" class="text-2xl"></iconify-icon>
+                </span>
+                <div>
+                  <h3 class="font-display text-xl font-semibold tracking-tight">Marriage Analysis</h3>
+                  <p class="mt-1 text-sm leading-6 text-stone-600">Compare compatibility and relationship rhythm.</p>
+                </div>
+              </div>
+              <a id="service-marriage-analysis-link" href="#workflow" class="inline-flex shrink-0 items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700">Begin</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="workflow" class="border-y border-stone-200 bg-white">
+        <div class="mx-auto max-w-7xl px-6 py-24 lg:px-8">
+          <div class="mx-auto mb-16 max-w-3xl text-center">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">The one path to follow</p>
+            <h2 class="mt-3 font-display text-4xl font-semibold tracking-tight text-stone-950 md:text-5xl">From service choice to client-ready report</h2>
+            <p class="mt-5 text-base leading-7 text-stone-600">Every consultation follows the same clear journey. Start with the service, complete the client information, review the analysis, then deliver the report.</p>
+          </div>
+
+          <div class="mx-auto max-w-4xl">
+            <div class="relative">
+              <div class="absolute left-7 top-8 h-[calc(100%-4rem)] w-px bg-stone-200 md:left-1/2 md:-ml-px"></div>
+
+              <div class="relative grid gap-8 md:grid-cols-[1fr_72px_1fr] md:gap-6">
+                <div class="hidden md:block"></div>
+                <div class="relative z-10 flex md:justify-center">
+                  <span class="flex h-14 w-14 items-center justify-center rounded-full bg-amber-700 text-base font-bold text-white shadow-lg shadow-amber-900/20">01</span>
+                </div>
+                <div class="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 shadow-xl shadow-amber-900/5">
+                  <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-amber-800 shadow-sm">
+                    <iconify-icon icon="lucide:mouse-pointer-click" class="text-2xl"></iconify-icon>
+                  </div>
+                  <h3 class="font-display text-2xl font-semibold tracking-tight text-stone-950">Choose Service</h3>
+                  <p class="mt-3 text-base leading-7 text-stone-700">Begin by selecting the service that matches the client’s question. This sets the structure for the entire consultation.</p>
+                </div>
+              </div>
+
+              <div class="relative mt-8 grid gap-8 md:grid-cols-[1fr_72px_1fr] md:gap-6">
+                <div class="rounded-[2rem] border border-stone-200 bg-stone-50 p-6 md:text-right">
+                  <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-stone-700 shadow-sm md:ml-auto">
+                    <iconify-icon icon="lucide:clipboard-pen-line" class="text-2xl"></iconify-icon>
+                  </div>
+                  <h3 class="font-display text-2xl font-semibold tracking-tight text-stone-950">Fill Client Info</h3>
+                  <p class="mt-3 text-base leading-7 text-stone-600">Enter the required client details once. Keep the information organized so the analysis can begin without extra decisions.</p>
+                </div>
+                <div class="relative z-10 flex md:justify-center">
+                  <span class="flex h-14 w-14 items-center justify-center rounded-full border border-stone-200 bg-white text-base font-bold text-stone-950 shadow-sm">02</span>
+                </div>
+                <div class="hidden md:block"></div>
+              </div>
+
+              <div class="relative mt-8 grid gap-8 md:grid-cols-[1fr_72px_1fr] md:gap-6">
+                <div class="hidden md:block"></div>
+                <div class="relative z-10 flex md:justify-center">
+                  <span class="flex h-14 w-14 items-center justify-center rounded-full border border-stone-200 bg-white text-base font-bold text-stone-950 shadow-sm">03</span>
+                </div>
+                <div class="rounded-[2rem] border border-stone-200 bg-stone-50 p-6">
+                  <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-stone-700 shadow-sm">
+                    <iconify-icon icon="lucide:scan-search" class="text-2xl"></iconify-icon>
+                  </div>
+                  <h3 class="font-display text-2xl font-semibold tracking-tight text-stone-950">Review Analysis</h3>
+                  <p class="mt-3 text-base leading-7 text-stone-600">Examine the findings, identify key insights, and prepare guidance that can be explained clearly to the client.</p>
+                </div>
+              </div>
+
+              <div class="relative mt-8 grid gap-8 md:grid-cols-[1fr_72px_1fr] md:gap-6">
+                <div class="rounded-[2rem] border border-stone-200 bg-stone-50 p-6 md:text-right">
+                  <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-stone-700 shadow-sm md:ml-auto">
+                    <iconify-icon icon="lucide:file-check-2" class="text-2xl"></iconify-icon>
+                  </div>
+                  <h3 class="font-display text-2xl font-semibold tracking-tight text-stone-950">Generate Report</h3>
+                  <p class="mt-3 text-base leading-7 text-stone-600">Turn the completed analysis into a polished deliverable that the client can review, keep, and follow up on.</p>
+                </div>
+                <div class="relative z-10 flex md:justify-center">
+                  <span class="flex h-14 w-14 items-center justify-center rounded-full border border-stone-200 bg-white text-base font-bold text-stone-950 shadow-sm">04</span>
+                </div>
+                <div class="hidden md:block"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="recent-cases" class="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+        <div class="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Recent cases</p>
+            <h2 class="mt-3 font-display text-4xl font-semibold tracking-tight text-stone-950">Continue Your Work</h2>
+          </div>
+          <p class="max-w-xl text-base leading-7 text-stone-600">Return to active client work when needed. Recent cases stay compact and secondary to the main service flow.</p>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 font-display text-lg font-semibold text-amber-800">L</span>
+              <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">In progress</span>
+            </div>
+            <h3 class="mt-5 font-display text-xl font-semibold tracking-tight">Ms. Lin</h3>
+            <p class="mt-1 text-sm text-stone-500">Eight Characters</p>
+            <a id="case-lin-continue-link" href="#workflow" class="mt-6 inline-flex w-full items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700">Continue</a>
+          </div>
+
+          <div class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-stone-100 font-display text-lg font-semibold text-stone-800">C</span>
+              <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">Draft</span>
+            </div>
+            <h3 class="mt-5 font-display text-xl font-semibold tracking-tight">Mr. Chen</h3>
+            <p class="mt-1 text-sm text-stone-500">Naming</p>
+            <a id="case-chen-report-link" href="#reports" class="mt-6 inline-flex w-full items-center justify-center rounded-full border border-stone-200 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100">Prepare Report</a>
+          </div>
+
+          <div class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-stone-100 font-display text-lg font-semibold text-stone-800">W</span>
+              <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">Ready</span>
+            </div>
+            <h3 class="mt-5 font-display text-xl font-semibold tracking-tight">Wang Family</h3>
+            <p class="mt-1 text-sm text-stone-500">Marriage Analysis</p>
+            <a id="case-wang-analysis-link" href="#workflow" class="mt-6 inline-flex w-full items-center justify-center rounded-full border border-stone-200 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100">View Analysis</a>
+          </div>
+
+          <div class="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div class="flex items-start justify-between gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-stone-100 font-display text-lg font-semibold text-stone-800">H</span>
+              <span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">Info needed</span>
+            </div>
+            <h3 class="mt-5 font-display text-xl font-semibold tracking-tight">Ms. Huang</h3>
+            <p class="mt-1 text-sm text-stone-500">Purple Star</p>
+            <a id="case-huang-fill-info-link" href="#workflow" class="mt-6 inline-flex w-full items-center justify-center rounded-full border border-stone-200 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100">Fill Info</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="reports" class="mx-auto max-w-7xl px-6 pb-20 lg:px-8">
+        <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-stone-950 shadow-2xl shadow-stone-900/10">
+          <div class="grid gap-8 p-8 lg:grid-cols-[1fr_0.8fr] lg:p-10">
+            <div>
+              <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-amber-200">
+                <iconify-icon icon="lucide:file-text" class="text-base"></iconify-icon>
+                Report Center
+              </div>
+              <h2 class="font-display text-4xl font-semibold tracking-tight text-white md:text-5xl">The report is the final client deliverable</h2>
+              <p class="mt-5 max-w-2xl text-base leading-7 text-stone-300">After the analysis is complete, create a clear report that clients can keep, revisit, and use for follow-up consultation.</p>
+              <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                <a id="report-generate-link" href="#reports" class="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-amber-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-amber-500">
+                  Generate Report
+                  <iconify-icon icon="lucide:arrow-up-right" class="text-lg"></iconify-icon>
+                </a>
+                <a id="report-center-link" href="#reports" class="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-stone-950 transition-colors hover:bg-stone-100">
+                  View Report Center
+                  <iconify-icon icon="lucide:folder-open" class="text-lg"></iconify-icon>
+                </a>
+              </div>
+            </div>
+
+            <div class="rounded-[1.5rem] bg-white p-5">
+              <div class="flex items-center justify-between border-b border-stone-200 pb-4">
+                <div>
+                  <p class="text-sm font-semibold text-stone-500">Most recent report</p>
+                  <h3 class="mt-1 font-display text-xl font-semibold tracking-tight text-stone-950">Ms. Lin · Eight Characters</h3>
+                </div>
+                <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">Draft</span>
+              </div>
+              <div class="space-y-3 pt-5">
+                <div class="flex items-center gap-3 rounded-2xl bg-stone-50 p-4">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-xl text-amber-700"></iconify-icon>
+                  <span class="text-sm font-medium text-stone-700">Client information completed</span>
+                </div>
+                <div class="flex items-center gap-3 rounded-2xl bg-stone-50 p-4">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-xl text-amber-700"></iconify-icon>
+                  <span class="text-sm font-medium text-stone-700">Analysis reviewed</span>
+                </div>
+                <div class="flex items-center gap-3 rounded-2xl bg-amber-50 p-4">
+                  <iconify-icon icon="lucide:circle-dot" class="text-xl text-amber-700"></iconify-icon>
+                  <span class="text-sm font-medium text-stone-800">Ready for final report generation</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tools" class="mx-auto max-w-7xl px-6 pb-24 lg:px-8">
+        <div class="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Secondary access</p>
+              <h2 class="mt-2 font-display text-2xl font-semibold tracking-tight text-stone-950">More tools and expert mode stay out of the main path</h2>
+            </div>
+            <a id="tools-open-link" href="#tools" class="inline-flex items-center justify-center gap-2 rounded-full border border-stone-200 bg-stone-50 px-5 py-3 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100">
+              Open More Tools
+              <iconify-icon icon="lucide:settings-2" class="text-base"></iconify-icon>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
+```
+
+Please reference this design and implement it into our codebase; Try to understand the structure, which part of our codebase is relevant and implement

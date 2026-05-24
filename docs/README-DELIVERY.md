@@ -7,13 +7,13 @@
 ---
 
 ## 🌐 UI 入口导航
-- 主入口（推荐）: ${BASE_URL}/static/app/workbench（例如 `http://127.0.0.1:8000/static/app/workbench`）
+- 主入口（推荐）: ${BASE_URL}/static/app/cases（例如 `http://127.0.0.1:8000/static/app/cases`）
 - 兼容入口: ${BASE_URL}/static/index.html（会优先跳到 SPA，若新版资源不存在则回退到 legacy 紫微页）
 - 八字兼容入口: ${BASE_URL}/bazi（会优先跳到 SPA 八字页，若新版资源不存在则回退到 legacy `bazi.html`）
 - 管理后台兼容入口: ${BASE_URL}/admin（会优先跳到 SPA 管理页，若新版资源不存在则回退到 legacy `admin.html`）
 - 示例变量: `BASE_URL=http://127.0.0.1:8000`
 - 若通过 `start-local.ps1` 或 `deploy.ps1 -Environment local -Action up` 启动且 8000 被占用，请改用启动日志中的实际端口
-- SPA 页面: login / workbench / profile / bazi / ziwei / admin / report 等
+- SPA 页面: login / cases / profile / bazi / ziwei / admin / report 等
 - legacy 页面:
     - verify.html: 兼容跳转页，当前直接跳转到 SPA
     - bazi.html: 兼容页，默认优先跳到 SPA 八字页，可通过 `?legacy=1` 停留旧版
