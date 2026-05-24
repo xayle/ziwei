@@ -45,3 +45,15 @@ coverage*.json
 # 临时扫描/输出文件
 __scan*.json
 tmp_cov.json
+
+# Local analysis/decompile tools
+/tools/
+scripts/_els_*.py
+scripts/_mlk_*.py
+scripts/_swf_*.py
+scripts/mlk.parsed.json
+scripts/parse_mlk.py
+scripts/import_mlk_to_db.py
+scripts/check_day_gz.py
+scripts/_dpapi_try.py
+scripts/_mem_scan.py
