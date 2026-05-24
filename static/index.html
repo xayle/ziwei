@@ -19,10 +19,10 @@
 <body>
   <div class="box">
     <h1>正在进入命理系统…</h1>
-    <p id="status">默认优先进入新版主工作台；若新版资源未构建，将自动回退到 legacy 紫微页面。</p>
+    <p id="status">默认优先进入新版案例中心；若新版资源未构建，将自动回退到 legacy 紫微页面。</p>
     <p class="muted">如跳转未生效，可手动选择入口。</p>
     <div class="links">
-      <a class="btn" href="/static/app/workbench">进入主工作台</a>
+      <a class="btn" href="/static/app/cases">进入案例中心</a>
       <a class="btn secondary" href="/static/ziwei.html">进入 legacy 紫微页</a>
     </div>
   </div>
@@ -32,8 +32,8 @@
       try {
         const resp = await fetch('/static/app/', { method: 'GET', redirect: 'follow' })
         if (resp.ok) {
-          status.textContent = '已检测到新版资源，正在跳转到主工作台…'
-          window.location.replace('/static/app/workbench')
+          status.textContent = '已检测到新版资源，正在跳转到案例中心…'
+          window.location.replace('/static/app/cases')
           return
         }
       } catch (err) {
