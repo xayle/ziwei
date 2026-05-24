@@ -1,0 +1,1 @@
+const e="ziwei_llm_draft_context";function n(t){sessionStorage.setItem(e,JSON.stringify(t))}function r(){const t=sessionStorage.getItem(e);if(!t)return null;try{return JSON.parse(t)}catch{return null}}function s(){sessionStorage.removeItem(e)}export{s as c,r as l,n as s};
