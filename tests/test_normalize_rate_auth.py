@@ -207,16 +207,17 @@ class TestGetCurrentUser:
         request.headers.get.return_value = auth_header
         return request
 
-    def test_no_header_bypass_returns_dummy_user(self):
-        """无 Authorization header + AUTH_BYPASS=true → 返回 dummy user  (line 61)"""
+    def test_no_header_bypass_returns_bypass_user(self):
+        """无 Authorization header + AUTH_BYPASS=true → 返回 local_bypass DB 用户 (line 61)"""
         from app.dependencies.auth import get_current_user
         request = self._make_request(None)
         session = MagicMock()
+        # 模拟 DB 中不存在 bypass 用户 → _get_or_create_bypass_user 自动创建
+        session.exec.return_value.first.return_value = None
         with patch.dict(os.environ, {"AUTH_BYPASS": "true"}):
             user = get_current_user(request, session)
         assert user is not None
-        assert user.id == 0
-        assert user.username == "local"
+        assert user.username == "local_bypass"
 
     def test_no_header_no_bypass_returns_none(self):
         """无 Authorization header + AUTH_BYPASS=false → None"""

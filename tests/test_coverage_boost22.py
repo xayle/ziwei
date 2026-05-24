@@ -190,7 +190,7 @@ class TestLifespanHappyPath:
             async with lifespan(_app):
                 pass  # yield 到达
 
-        with patch("run.init_db"), \
+        with patch("app.lifecycle.init_db"), \
              patch("db.get_engine", side_effect=RuntimeError("db init test error")), \
              patch.dict(os.environ, {
                  "SECRET_KEY": _STRONG_KEY,
@@ -211,7 +211,7 @@ class TestLifespanHappyPath:
             async with lifespan(_app):
                 pass  # yield 到达
 
-        with patch("run.init_db"), \
+        with patch("app.lifecycle.init_db"), \
              patch("db.get_engine", return_value=MagicMock()), \
              patch("sqlmodel.Session"), \
              patch("services.auth_service.load_revoked_jtis_from_db", return_value=5), \
