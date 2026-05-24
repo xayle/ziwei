@@ -107,11 +107,11 @@ def _get_pillars(dt_local: datetime, lon: float, tz: str) -> dict[str, Any]:
     from services.bazi_full_service import STEM_META, BRANCH_ELEMENT as _BE
     from zoneinfo import ZoneInfo
 
-    zi      = ZoneInfo(tz)
-    local_aware = dt_local.replace(tzinfo=zi)
-    utc_dt  = local_aware.astimezone(ZoneInfo("UTC"))
-    # verify_full 接受本地 naive datetime + lon + use_solar
-    result  = verify_full(dt_local.replace(tzinfo=None), lon=lon, use_solar=True, mode="single")
+    zi = ZoneInfo(tz)
+    local_aware = dt_local if dt_local.tzinfo is not None else dt_local.replace(tzinfo=zi)
+    local_aware = local_aware.astimezone(zi)
+    # verify_full 现要求传入 timezone-aware 的本地时间。
+    result = verify_full(local_aware, lon=lon, use_solar=True, mode="single")
     p = result.pillars_primary
 
     pillars = {
@@ -144,7 +144,7 @@ def compute_compatibility(
 
     参数
     ----
-    a_dt, b_dt : 本地 naive datetime
+    a_dt, b_dt : 本地 datetime（允许 naive；内部会按时区补齐）
     a_lon, b_lon : 经度
     a_tz, b_tz   : IANA 时区
 

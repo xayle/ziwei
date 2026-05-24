@@ -108,6 +108,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     sizheng_hua: set[str] = set()
     for p in sizheng:
         sizheng_hua.update(_hua_types_in_palace(p))
+    has_sizheng_ji = "化忌" in sizheng_hua  # 三方四正中有化忌
 
     # 三方（仅命/财/官）中所有主星
     sanfang_stars: set[str] = set()
@@ -119,7 +120,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     # ════════════════════════════════════════════════
 
     # 1. 禄存守命
-    if "禄存" in set(life.aux_stars):
+    if "禄存" in life.aux_names:
         results.append(PatternResult(
             name="禄存守命",
             level="吉",
@@ -182,7 +183,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     # 6. 君臣庆会：紫微与左辅/右弼同宫
     for p in palaces:
         stars = _main_star_names(p)
-        aux = set(p.aux_stars)
+        aux = p.aux_names
         if "紫微" in stars and ("左辅" in aux or "右弼" in aux):
             helpers = [s for s in ["左辅", "右弼"] if s in aux]
             results.append(PatternResult(
@@ -312,7 +313,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     brother = get("兄弟宫")   # 命宫前一位（palace index 1）
     parent  = get("父母宫")   # 命宫后一位（palace index 11）
     if brother and parent:
-        adj_aux = set(brother.aux_stars) | set(parent.aux_stars)
+        adj_aux = brother.aux_names | parent.aux_names
         if "擎羊" in adj_aux and "陀罗" in adj_aux:
             results.append(PatternResult(
                 name="羊陀夹命",
@@ -325,7 +326,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
 
     # 15. 火铃夹命：火星+铃星夹住命宫
     if brother and parent:
-        adj_aux2 = set(brother.aux_stars) | set(parent.aux_stars)
+        adj_aux2 = brother.aux_names | parent.aux_names
         if "火星" in adj_aux2 and "铃星" in adj_aux2:
             results.append(PatternResult(
                 name="火铃夹命",
@@ -439,10 +440,10 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
 
     # 23. 禄马交驰：禄存与天马在同宫或三方拱照
     def _has_aux(p, star: str) -> bool:
-        return star in set(p.aux_stars)
+        return star in p.aux_names
 
     lu_palace = next((p for p in palaces if _has_aux(p, "禄存")), None)
-    ma_palace = next((p for p in palaces if "天马" in set(p.aux_stars)), None)
+    ma_palace = next((p for p in palaces if "天马" in p.aux_names), None)
     if lu_palace and ma_palace:
         if lu_palace is ma_palace:
             results.append(PatternResult(
@@ -466,13 +467,13 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     # 24. 三台八座朝命：三台+八座在命宫三方
     _aux_in_sizheng: set[str] = set()
     for p in sizheng:
-        _aux_in_sizheng.update(p.aux_stars)
+        _aux_in_sizheng.update(p.aux_names)
     if "三台" in _aux_in_sizheng and "八座" in _aux_in_sizheng:
         results.append(PatternResult(
             name="三台八座朝命",
             level="吉",
             description="三台、八座聚于命宫三方，权贵拱照，仕途有成，地位声望俱佳。",
-            palaces=[p.name for p in sizheng if "三台" in set(p.aux_stars) or "八座" in set(p.aux_stars)],
+            palaces=[p.name for p in sizheng if "三台" in p.aux_names or "八座" in p.aux_names],
             stars=["三台", "八座"],
             source="《紫微斗数全书》",
         ))
@@ -502,7 +503,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             name="天才天寿加会",
             level="吉",
             description="天才、天寿齐聚三方，聪明伶俐而且长寿有福，学术研究或技艺方面尤为突出。",
-            palaces=[p.name for p in sizheng if "天才" in set(p.aux_stars) or "天寿" in set(p.aux_stars)],
+            palaces=[p.name for p in sizheng if "天才" in p.aux_names or "天寿" in p.aux_names],
             stars=["天才", "天寿"],
             source="常见论法",
         ))
@@ -513,7 +514,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             name="龙凤拱命",
             level="吉",
             description="龙池、凤阁拱照命宫，气质高雅，才艺双全，贵气玲珑，多得异性贵人缘。",
-            palaces=[p.name for p in sizheng if "龙池" in set(p.aux_stars) or "凤阁" in set(p.aux_stars)],
+            palaces=[p.name for p in sizheng if "龙池" in p.aux_names or "凤阁" in p.aux_names],
             stars=["龙池", "凤阁"],
             source="常见论法",
         ))
@@ -538,7 +539,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
 
     # 29. 空劫夹命：地空+地劫夹住命宫
     if brother and parent:
-        adj_aux3 = set(brother.aux_stars) | set(parent.aux_stars)
+        adj_aux3 = brother.aux_names | parent.aux_names
         if "地空" in adj_aux3 and "地劫" in adj_aux3:
             results.append(PatternResult(
                 name="空劫夹命",
@@ -552,9 +553,8 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     # 30. 羊陀逢化忌（双重凶：羊陀夹 + 三方化忌）
     has_yang_tuo_jia = False
     if brother and parent:
-        _adj4 = set(brother.aux_stars) | set(parent.aux_stars)
+        _adj4 = brother.aux_names | parent.aux_names
         has_yang_tuo_jia = "擎羊" in _adj4 and "陀罗" in _adj4
-    has_sizheng_ji = any(_stars_with_hua(p, "化忌") for p in sizheng)
     if has_yang_tuo_jia and has_sizheng_ji:
         results.append(PatternResult(
             name="羊陀逢化忌",
@@ -581,7 +581,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     body_palace_name = _find_body_palace(palaces)
     if body_palace_name:
         body_p = get(body_palace_name)
-        if body_p and "白虎" in set(body_p.aux_stars):
+        if body_p and "白虎" in body_p.aux_names:
             results.append(PatternResult(
                 name="白虎守身",
                 level="凶",
@@ -593,7 +593,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
 
     # 33. 擎羊守官禄（事业阻碍）
     guan2 = get("官禄宫")
-    if guan2 and "擎羊" in set(guan2.aux_stars):
+    if guan2 and "擎羊" in guan2.aux_names:
         results.append(PatternResult(
             name="擎羊守官禄",
             level="凶",
@@ -608,7 +608,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     ilat_aux: set[str] = set()
     for p in palaces:
         ilat_stars.update(_main_star_names(p))
-        ilat_aux.update(p.aux_stars)
+        ilat_aux.update(p.aux_names)
     if "铃星" in ilat_aux and "陀罗" in ilat_aux and "武曲" in ilat_stars:
         results.append(PatternResult(
             name="铃昌陀武",
@@ -621,7 +621,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
 
     # 35. 马头带箭（命宫地支午+擎羊坐命）
     if life.branch == "午":
-        life_aux_set = set(life.aux_stars)
+        life_aux_set = life.aux_names
         if "擎羊" in life_aux_set:
             results.append(PatternResult(
                 name="马头带箭",
@@ -656,8 +656,8 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             continue
         prev_p = palaces[(idx - 1) % 12]
         next_p = palaces[(idx + 1) % 12]
-        prev_aux = set(prev_p.aux_stars) | _main_star_names(prev_p)
-        next_aux = set(next_p.aux_stars) | _main_star_names(next_p)
+        prev_aux = prev_p.aux_names | _main_star_names(prev_p)
+        next_aux = next_p.aux_names | _main_star_names(next_p)
         wen_stars = {"文曲", "文昌"}
         prev_wen = prev_aux & wen_stars
         next_wen = next_aux & wen_stars

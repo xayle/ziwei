@@ -28,7 +28,7 @@ from .forecast import generate_forecast, ForecastResult
 from .patterns import detect_patterns, PatternResult
 from .remedies import calc_remedies, RemedyResult
 from .life_suggestions import calc_life_suggestions, LifeSuggestion
-from .tables import PALACE_NAMES, BRANCHES, WUHU_M1_STEM
+from .tables import PALACE_NAMES, BRANCHES, WUHU_M1_STEM, get_aux_brightness
 from .decorative import place_changsheng12, place_jiangqian12, place_suiqian12
 
 
@@ -61,6 +61,11 @@ class PalaceInfo:
     changsheng: str = ""         # 长生十二神（本命盘固定星）
     jiangqian_star: str = ""     # 将前十二神（流年星）
     suiqian_star: str = ""       # 岁前十二神（流年星）
+
+    @property
+    def aux_names(self) -> frozenset[str]:
+        """辅星名称集合，供成员查找和 set 运算使用。"""
+        return frozenset(s["name"] for s in self.aux_stars)
 
 
 @dataclass
@@ -97,6 +102,7 @@ class ZiweiChart:
     # ── 命主/身主 ─────────────────────────────────────────────
     life_ruler_star: str = ""   # 命主（六星循环法）
     body_ruler_star: str = ""   # 身主（年支查表法）
+    laiyin_palace: str = ""     # 来因宫：生年天干所在宫位
 
     # ── 真太阳时 ─────────────────────────────────────────────
     true_solar_time: str = ""   # "" = 未修正；"HH:MM" = 已修正真太阳时
@@ -269,7 +275,6 @@ def ziwei_full(
     lp_b  = layout.life_branch_idx    # 命宫地支
     lp_s  = layout.life_stem_idx      # 命宫天干
     bp_b  = layout.body_branch_idx    # 身宫地支
-    print(f"[DEBUG] 身宫地支 bp_b={bp_b}, BRANCHES[bp_b]={BRANCHES[bp_b] if 0<=bp_b<len(BRANCHES) else 'INVALID'}")
 
     # 3. 十四主星（传入亮度流派）
     main_stars = place_main_stars(lunar.lunar_day, layout.wuxing_ju, brightness_method)
@@ -298,8 +303,6 @@ def ziwei_full(
     _body_ruler = _BODY_RULER_TABLE[lunar.year_branch_idx]
 
     # 4. 辅星/杂曜（传入所有安星方法参数）
-    # 调试：传递debug参数到lunar对象
-    lunar.debug = True
     aux_stars = place_aux_stars(
         lunar,
         lp_b=lp_b,
@@ -309,7 +312,6 @@ def ziwei_full(
         jiukong_method=jiukong_method,
         tianshang_method=tianshang_method,
     )
-    lunar.debug = False
 
     # 补充天才（命宫同支）
     aux_stars["天才"] = lp_b
@@ -369,11 +371,17 @@ def ziwei_full(
             for pos in main_stars.values()
             if pos.branch_idx == b
         ]
-        # 该宫内辅星（排除占位键）
-        ax_list = [
-            name for name, ab in aux_stars.items()
-            if ab == b and not name.endswith("placeholder")
-        ]
+        # 该宫内辅星（排除占位键），附带亮度数据
+        ax_list = []
+        for _aux_name, _aux_b in aux_stars.items():
+            if _aux_b == b and not _aux_name.endswith("placeholder"):
+                _bv, _bn = get_aux_brightness(_aux_name, b)
+                ax_list.append({
+                    "name": _aux_name,
+                    "brightness": _bn,
+                    "brightness_val": _bv,
+                    "transforms": [],
+                })
 
         # 宫干四化（飞出）（对应飞星体系）
         pal_sihua = apply_sihua(
@@ -397,6 +405,13 @@ def ziwei_full(
             opposition_name=PALACE_NAMES[(i + 6) % 12],
         )
         palaces_info.append(pa)
+
+    # 来因宫：生年天干所在宫位（宫干天干与年干相同的宫位）
+    _laiyin_palace_name = ""
+    for _pa in palaces_info:
+        if _pa.stem_idx == lunar.year_stem_idx:
+            _laiyin_palace_name = _pa.name
+            break
 
     # 8. 大运
     dayun = calc_dayun(lunar, gender, year, month, day,
@@ -439,15 +454,38 @@ def ziwei_full(
             if _pa.branch_idx == liunian.life_palace_branch:
                 _ln_lp_stem_idx = _pa.stem_idx
                 break
-        ln_sihua_raw = _sihua_table.get(STEMS[_ln_lp_stem_idx], {})
+        _ln_stem_name = STEMS[_ln_lp_stem_idx]
     else:
-        ln_sihua_raw = _sihua_table.get(STEMS[liunian.year_stem_idx], {})
-    liunian.sihua = {star: f"化{hua}" for hua, star in ln_sihua_raw.items()}
+        _ln_stem_name = STEMS[liunian.year_stem_idx]
+    # 使用 apply_sihua 过滤，仅纳入命盘实际存在的星（_star_branches_map 已含主星+辅星）
+    liunian.sihua = apply_sihua(_star_branches_map, _ln_stem_name, sihua_table=_sihua_table)
 
     # 10. 飞星盘
     all_branches = {name: pos.branch_idx for name, pos in main_stars.items()}
     all_branches.update(aux_stars)
     flying = calc_flying(lp_b, lp_s, all_branches)
+
+    # 自化方向注解：为星曜 transforms 添加 ↓（离心自化）和 ↑（向心自化）标记
+    _b2palace_local = {pa.branch_idx: pa for pa in palaces_info}
+    for _fly_p in flying.palaces:
+        _this_pa_local = _b2palace_local[_fly_p.branch_idx]
+        _sihua_this_local = _sihua_table.get(_fly_p.stem_name, {})
+        # 离心自化 ↓: 本宫宫干飞化的星落回本宫
+        for _hua_t_l, _tstar_l in _sihua_this_local.items():
+            _tb_l = _star_branches_map.get(_tstar_l)
+            if _tb_l is not None and _tb_l == _fly_p.branch_idx:
+                for _s in _this_pa_local.main_stars + _this_pa_local.aux_stars:
+                    if _s["name"] == _tstar_l and f"↓化{_hua_t_l}" not in _s["transforms"]:
+                        _s["transforms"].append(f"↓化{_hua_t_l}")
+        # 向心自化 ↑: 对宫宫干飞化的星落入本宫
+        _opp_fly_local = flying.palaces[(_fly_p.palace_idx + 6) % 12]
+        _sihua_opp_local = _sihua_table.get(_opp_fly_local.stem_name, {})
+        for _hua_t_l, _tstar_l in _sihua_opp_local.items():
+            _tb_l = _star_branches_map.get(_tstar_l)
+            if _tb_l is not None and _tb_l == _fly_p.branch_idx:
+                for _s in _this_pa_local.main_stars + _this_pa_local.aux_stars:
+                    if _s["name"] == _tstar_l and f"↑化{_hua_t_l}" not in _s["transforms"]:
+                        _s["transforms"].append(f"↑化{_hua_t_l}")
 
     # 11. 宫位解读
     analysis_texts = generate_full_analysis(
@@ -524,6 +562,7 @@ def ziwei_full(
         life_ruler_star=_life_ruler,
         body_ruler_star=_body_ruler,
         true_solar_time=_true_solar_time,
+        laiyin_palace=_laiyin_palace_name,
     )
     chart.forecast = generate_forecast(chart, liunian_year)
     chart.patterns = detect_patterns(palaces_info)

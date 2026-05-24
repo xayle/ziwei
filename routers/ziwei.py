@@ -102,7 +102,15 @@ def _chart_to_response(
                 )
                 for s in p.main_stars
             ],
-            aux_stars=p.aux_stars,
+            aux_stars=[
+                StarInfo(
+                    name=s["name"],
+                    brightness=s["brightness"],
+                    brightness_val=s["brightness_val"],
+                    transforms=s.get("transforms", []),
+                )
+                for s in p.aux_stars
+            ],
             flying_out=p.flying_out,
             analysis=p.analysis,
             analysis_tags=p.analysis_tags,
@@ -258,6 +266,7 @@ def _chart_to_response(
         body_ruler_star=chart.body_ruler_star,
         true_solar_time=chart.true_solar_time,
         body_palace_branch_name=getattr(chart, "body_palace_branch_name", ""),
+        laiyin_palace=getattr(chart, "laiyin_palace", ""),
         forecast=_forecast_out,
         patterns=patterns_resp,
         remedies=[

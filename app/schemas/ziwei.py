@@ -125,7 +125,7 @@ class PalaceResponse(BaseModel):
     branch: str
     stem: str
     main_stars: list[StarInfo]
-    aux_stars: list[str]
+    aux_stars: list[StarInfo]
     flying_out: dict[str, str] = {}
     analysis: str = ""
     analysis_tags: list[str] = []
@@ -241,6 +241,9 @@ class ZiweiResponse(BaseModel):
     # 命主/身主
     life_ruler_star: str = ""   # 命主
     body_ruler_star: str = ""   # 身主
+
+    # 来因宫
+    laiyin_palace: str = ""     # 来因宫名称（生年天干所在宫位）
 
     # 真太阳时
     true_solar_time: str = ""   # ""表示未传经度，"HH:MM"表示已修正

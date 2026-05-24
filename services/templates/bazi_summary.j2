@@ -13,7 +13,7 @@
      sample            dict or None { geju_name, summary, plain_facts, action_hints }
      pillars           dict { year, month, day, hour } 各含 stem/branch
 #}
-【八字事实摘要（仅供学术研究参考）】
+【命盘核心数据】
 
 ## 排盘基本信息
 {% if pillars %}
@@ -51,6 +51,3 @@
 关键事实：{{ sample.plain_facts | join("；") if sample.plain_facts is iterable else sample.plain_facts }}
 行动提示：{{ sample.action_hints | join("；") if sample.action_hints is iterable else sample.action_hints }}
 {% endif %}
-
----
-*以上内容均为学术研究性质，不构成任何现实决策依据。*

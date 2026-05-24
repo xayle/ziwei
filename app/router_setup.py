@@ -31,6 +31,7 @@ from routers import privacy as privacy_router
 from routers import name as name_router
 from routers import western as western_router
 from routers import compat as compat_router
+from routers import event_prediction as event_prediction_router
 
 
 def include_all_routers(app: FastAPI) -> None:
@@ -64,3 +65,4 @@ def include_all_routers(app: FastAPI) -> None:
     app.include_router(name_router.router)
     app.include_router(western_router.router)
     app.include_router(compat_router.router)
+    app.include_router(event_prediction_router.router)

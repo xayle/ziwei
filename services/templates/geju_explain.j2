@@ -5,14 +5,17 @@
 格局：**{{ geju_name }}**（{{ geju_level }}）{% if geju_broken %}—— **破格**，格局受损{% endif %}
 
 {% if not geju_broken %}
-{{ geju_name }}以清纯为美，喜{{ yongshen_favor }}为用，
-{%- if geju_level == "上格" %} 格局层次极高，一生大运顺遂，成就超越常人。
-{%- elif geju_level == "中格" %} 格局中等，运势稳健，有所作为。
-{%- elif geju_level == "下格" %} 格局偏弱，须借大运扶持，积累为要。
-{%- else %} 格局待详细推断。
+{{ geju_name }}以清纯为美，喜{{ yongshen_favor }}为用。
+{%- if geju_level == "上格" %} 格局层次极高，先天命局极佳，大运若顺则成就非凡，顺用神方向可主动展开布局。
+{%- elif geju_level == "中格" %} 格局层次中等，胜在稳健持久，顺用神则步步为营，逆用神则阻滞频出，方向选对比努力更重要。
+{%- elif geju_level == "下格" %} 格局偏弱，需借大运扶持，守正积累为先，不宜冒进；待大运转旺，方可主动出击。
+{%- else %} 格局结构尚待进一步推算细化。
 {%- endif %}
+{% if geju_interpretation_text is defined and geju_interpretation_text %}
+格局解析：{{ geju_interpretation_text[:300] }}
+{% endif %}
 {% else %}
-破格之命宜注重德行修身，以弥补格局之缺，遇贵吉运可挽回颓势。
+破格之命，格局受损，外表威仪内里暗流涌动，须以德行与稳健弥补先天格局之缺，遇贵吉大运可大幅挽回颓势，关键在不急于求成。
 {% endif %}
 {% else %}
 格局类型：{{ geju_name if geju_name else "待推断" }}（格局信息不足，建议补充出生时辰精度）

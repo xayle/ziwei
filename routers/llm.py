@@ -363,7 +363,7 @@ def delete_draft(
 import json as _json  # noqa: E402
 from enum import Enum  # noqa: E402
 from pydantic import BaseModel as _PydanticBase  # noqa: E402
-from app.models.case import Case as _Case  # noqa: E402
+from app.models.case import Case as _Case, Snapshot as _Snapshot  # noqa: E402
 
 
 class InterpretModule(str, Enum):
@@ -431,11 +431,128 @@ async def interpret_module(
     if case is None or case.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"案例 {payload.case_id!r} 不存在")
 
-    # 2. 构建模块专属 prompt 内容
+    # 2. 从最新快照提取真实计算数据
+    latest_snap = session.exec(
+        select(_Snapshot)
+        .where(_Snapshot.case_id == payload.case_id)
+        .where(_Snapshot.deleted_at.is_(None))  # type: ignore[attr-defined]
+        .order_by(_Snapshot.created_at.desc())  # type: ignore[attr-defined]
+        .limit(1)
+    ).first()
+    snap_data: dict = (latest_snap.output_json or {}) if latest_snap else {}
+
     module_label = _MODULE_LABELS.get(payload.module.value, payload.module.value)
     extra_ctx = ""
     if payload.context:
         extra_ctx = f"\n补充上下文：{_json.dumps(payload.context, ensure_ascii=False)}"
+
+    # 从快照提取通用命盘字段
+    geju     = snap_data.get("geju") or {}
+    yongshen = snap_data.get("yongshen") or {}
+    strength = snap_data.get("day_master_strength") or {}
+    geju_name_val  = (geju.get("geju_name") or "").strip()
+    geju_level_val = (geju.get("geju_level") or "").strip()
+    favor_list  = yongshen.get("favor") or []
+    avoid_list  = yongshen.get("avoid") or []
+    rationale   = (yongshen.get("rationale") or yongshen.get("advice") or "")[:120]
+    strength_tier  = (strength.get("tier") or "").strip()
+    strength_score = strength.get("score", "")
+    common_facts = (
+        f"案例：{case.name}（{case.birth_dt_local}，{case.tz}）\n"
+        f"格局：{geju_name_val or '待推断'} / {geju_level_val or '—'}\n"
+        f"用神：{'、'.join(favor_list) or '待推断'}  忌神：{'、'.join(avoid_list) or '—'}\n"
+        f"日主强弱：{strength_tier or '—'}（{strength_score}分）\n"
+        f"用神推断依据：{rationale or '—'}\n"
+    )
+
+    # 按模块追加专属快照数据
+    module_val = payload.module.value
+    module_specific_facts = ""
+    if module_val == "wealth_detail":
+        w = snap_data.get("wealth_analysis") or {}
+        if w:
+            industries = "、".join(w.get("industries") or [])
+            annual     = w.get("annual_range", "")
+            strategy   = (w.get("strategy") or "")[:200]
+            forecasts  = (w.get("dayun_forecast") or [])[:4]
+            forecast_txt = "\n".join(
+                f"  · {f.get('ganzhi','')}大运（{f.get('trend','')}）：{(f.get('description') or '')[:80]}"
+                for f in forecasts
+            )
+            module_specific_facts = (
+                f"\n【财运专项数据】\n"
+                f"财运评分：{w.get('score','—')} / 层级：{w.get('tier','—')} / 年收入区间估算：{annual}\n"
+                f"推荐行业：{industries or '—'}\n"
+                f"策略建议：{strategy or '—'}\n"
+                f"大运财运走势：\n{forecast_txt}"
+            )
+    elif module_val == "career_detail":
+        c = snap_data.get("career") or {}
+        if c:
+            milestone = (c.get("milestones") or c.get("five_year_roadmap") or [])[:3]
+            milestone_txt = " | ".join(str(m)[:50] for m in milestone)
+            module_specific_facts = (
+                f"\n【事业专项数据】\n"
+                f"事业评分：{c.get('score','—')} / 主线方向：{(c.get('direction') or '')[:80]}\n"
+                f"适合行业：{'、'.join(c.get('industries') or [])}\n"
+                f"领导力：{(c.get('leadership') or '')[:80]}\n"
+                f"创业vs打工：{(c.get('entrepreneurship_vs_employment') or '')[:100]}\n"
+                f"关键里程碑：{milestone_txt}"
+            )
+    elif module_val == "marriage_detail":
+        m = snap_data.get("marriage_analysis") or {}
+        if m:
+            module_specific_facts = (
+                f"\n【婚恋专项数据】\n"
+                f"婚恋评分：{m.get('score','—')} / 桃花：{m.get('peach_blossom','—')}\n"
+                f"配偶五行：{m.get('spouse_element','—')} / 配偶方位：{m.get('spouse_direction','—')}\n"
+                f"最佳婚龄窗口：{m.get('best_marriage_age','—')}\n"
+                f"感情雷区：{(m.get('emotional_red_flags') or '')[:120]}\n"
+                f"再婚指标：{m.get('remarriage_indicator','—')}"
+            )
+    elif module_val == "dayun_narrative":
+        dayun_list = snap_data.get("dayun") or []
+        if dayun_list:
+            parts = []
+            for dy in dayun_list[:5]:
+                gz = (dy.get("ganzhi") or (dy.get("stem", "") + dy.get("branch", ""))).strip()
+                tg = dy.get("ten_god", "")
+                age = dy.get("start_age", "")
+                narr = (dy.get("narrative") or "")[:120]
+                parts.append(f"  · {gz}（{tg}，约{age}岁起）：{narr}")
+            module_specific_facts = "\n【大运序列数据】\n" + "\n".join(parts)
+    elif module_val == "liunian_advice":
+        current_fs = snap_data.get("current_fortune_summary") or {}
+        liunian = snap_data.get("liunian_detail") or []
+        if current_fs:
+            dayun_now = current_fs.get("current_dayun_ganzhi", "")
+            year_pred = current_fs.get("yearly_prediction") or {}
+            top3 = current_fs.get("top_3_focus") or []
+            module_specific_facts = (
+                f"\n【当前运势数据】\n"
+                f"当前大运：{dayun_now} / 今年流年：{current_fs.get('current_liunian_gz', '')}\n"
+                f"今年预测（财/事/婚/健）：{_json.dumps(year_pred, ensure_ascii=False)[:200]}\n"
+                f"最值得关注3件事：{'；'.join(str(t) for t in top3)}"
+            )
+        elif liunian:
+            parts2 = []
+            for ly in liunian[:3]:
+                parts2.append(f"  {ly.get('year','')}年（{ly.get('ganzhi','')}）评分{ly.get('score','')}：{(ly.get('best_action') or '')[:60]}")
+            module_specific_facts = "\n【流年数据】\n" + "\n".join(parts2)
+    elif module_val == "fengshui_suggestion":
+        fs = snap_data.get("fengshui") or {}
+        lucky = snap_data.get("lucky") or {}
+        if fs or lucky:
+            module_specific_facts = (
+                f"\n【风水·开运数据】\n"
+                f"吉方：{fs.get('lucky_direction','—')} / 凶方：{fs.get('unlucky_direction','—')}\n"
+                f"推荐装饰：{(fs.get('decor_suggestions') or '')[:80]}\n"
+                f"推荐植物：{(fs.get('plant_suggestions') or '')[:60]}\n"
+                f"幸运色：{lucky.get('lucky_color','—')} / 幸运数字：{lucky.get('lucky_number','—')}\n"
+                f"开运物：{lucky.get('lucky_item','—')} / 忌讳：{lucky.get('taboo','—')}"
+            )
+
+    rendered_facts = common_facts + module_specific_facts + extra_ctx
 
     # Phase A4: 根据模块检索古籍证据
     module_keywords = _MODULE_KEYWORDS.get(payload.module.value, [])
@@ -443,18 +560,11 @@ async def interpret_module(
     if module_keywords:
         raw_evidence = fetch_evidence(module_keywords, top_k=3)
         evidence = [f"《{e['title']}》：{e['passage']}" for e in raw_evidence]
-
-    # 3. 调用 LLM（使用八字专用函数，附加古籍证据）
-    rendered_facts = (
-        f"模块：{module_label}\n"
-        f"案例名：{case.name}\n"
-        f"出生时间：{case.birth_dt_local}，时区：{case.tz}\n"
-        f"{extra_ctx.strip()}"
-    )
     try:
         result = await generate_bazi_interpretation(
             rendered_facts=rendered_facts,
             evidence_snippets=evidence,
+            module_type=payload.module.value,
         )
         record_llm_call(result.provider, result.duration_secs, success=True,
                         input_tokens=result.usage.input_tokens,

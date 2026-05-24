@@ -128,7 +128,7 @@ def _stars_in_palace(chart: 'ZiweiChart', palace_name: str) -> tuple[list[str], 
     """返回宫位中的 (主星名列表, 辅星名列表)。"""
     for p in chart.palaces:
         if p.name == palace_name:
-            return [s["name"] for s in p.main_stars], list(p.aux_stars)
+            return [s["name"] for s in p.main_stars], [s["name"] for s in p.aux_stars]
     return [], []
 
 
@@ -145,7 +145,7 @@ def _sihua_to_palace_map(
     for star, hua_text in sihua.items():
         for p in chart.palaces:
             if (any(s["name"] == star for s in p.main_stars)
-                    or star in p.aux_stars):
+                    or star in p.aux_names):
                 result[hua_text] = p.name
                 break
     return result
@@ -395,7 +395,7 @@ def _detect_events(
         pts += 4; srcs.append(f"{period_label}命宫走入本命迁移宫")
 
     for p in chart.palaces:
-        if "天马" in p.aux_stars and p.name in {"迁移宫", "命宫"}:
+        if "天马" in p.aux_names and p.name in {"迁移宫", "命宫"}:
             pts += 2; srcs.append(f"本命{p.name}有天马")
 
     for hua_type in ("化禄", "化权"):

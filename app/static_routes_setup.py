@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 def configure_static_routes(app: FastAPI) -> None:
     _static_dir = Path(__file__).resolve().parent.parent / "static"
     _spa_index = _static_dir / "app" / "index.html"
-    _spa_main_entry = "/static/app/workbench"
+    _spa_main_entry = "/static/app/cases"
 
     @app.get("/app", include_in_schema=False)
     @app.get("/app/{path:path}", include_in_schema=False)

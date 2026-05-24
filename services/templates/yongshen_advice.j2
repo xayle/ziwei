@@ -3,14 +3,15 @@
 #}
 {% if yongshen_favor %}
 **喜用神**：{{ yongshen_favor }}
-  → 大运行至{{ yongshen_favor }}地，运势顺遂；宜从事与{{ yongshen_favor }}相关的行业，居住方位亦可参考。
+  → 大运行至{{ yongshen_favor }}地，事业财运迎风而上；日常宜接触{{ yongshen_favor }}五行对应的方位、色彩与行业。
+  {% if yongshen_advice_text is defined and yongshen_advice_text %}用神调候建议：{{ yongshen_advice_text[:200] }}{% endif %}
 {% else %}
-喜用神信息待补充。
+喜用神信息待补充，建议核对出生时辰精度后重新推算。
 {% endif %}
 
 {% if yongshen_avoid %}
 **忌神**：{{ yongshen_avoid }}
-  → 忌行{{ yongshen_avoid }}地大运；与忌神相克之五行可用作调候化解。
+  → 大运行至{{ yongshen_avoid }}地须低调守成，避开{{ yongshen_avoid }}五行对应行业与决策；克制忌神五行亦可作为调候手段。
 {% endif %}
 
 {% if yongshen_rationale %}
