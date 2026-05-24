@@ -39,6 +39,7 @@ class VerifyOutput:
     mode_requested: str
     mode_effective: str
     solar_time_offset_minutes: float
+    backend_source: str = "sxtwl"  # "sxtwl" | "cnlunar_fallback"
 
 
 def verify(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "single"] = "dual") -> Validation:
@@ -94,10 +95,12 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
 
     # B3: sxtwl 合理性断言 — 失败时降级 cnlunar 并记 warning
     _sxtwl_fallback_warnings: list[str] = []
+    backend_source = "sxtwl"
     try:
         pillars_primary = primary.get_pillars(dt_effective)
     except (ValueError, IndexError, AssertionError) as _b3_err:
         _sxtwl_fallback_warnings.append("sxtwl_fallback")
+        backend_source = "cnlunar_fallback"
         try:
             _fallback = CnlunarBackend()
             pillars_primary = _fallback.get_pillars(dt_effective)
@@ -106,6 +109,13 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
             raise BackendUnavailable(f"sxtwl 断言失败且 cnlunar 降级也失败: {_b3_err}") from _b3_err
 
     pillars_secondary: Optional[Pillars] = secondary.get_pillars(dt_effective) if secondary else None
+
+    # 日柱一致性校验（晚子时/立春边界最易产生 sxtwl vs cnlunar 不一致）
+    # 若两库日柱冲突，整体 fallback 到 cnlunar，不做单柱替换（避免四柱体系混用）
+    if pillars_secondary is not None and pillars_primary.day.ganzhi != pillars_secondary.day.ganzhi:
+        pillars_primary = pillars_secondary
+        backend_source = "cnlunar_fallback"
+        _sxtwl_fallback_warnings.append("sxtwl_day_pillar_mismatch")
 
     jieqi_ctx = None
     if hasattr(primary, "get_jieqi_context"):
@@ -136,4 +146,5 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
         mode_requested=mode,
         mode_effective=mode_effective,
         solar_time_offset_minutes=correction_minutes if use_solar else 0.0,
+        backend_source=backend_source,
     )
