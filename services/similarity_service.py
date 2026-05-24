@@ -13,9 +13,9 @@ services/similarity_service.py — 相似命盘特征向量化与余弦相似度
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import math
-from dataclasses import dataclass
 from typing import Any
 
 # ────────────────────────────────────────────────────────────────

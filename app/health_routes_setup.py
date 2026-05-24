@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime
 import importlib.metadata as _imeta
 import time
-from datetime import datetime
 from typing import Callable
 from zoneinfo import ZoneInfo
 
@@ -50,9 +50,10 @@ def configure_health_routes(
     @app.get("/ready")
     def ready(response: Response):
         try:
+            from sqlmodel import Session, select
+
             from app.models import User
             from db import get_engine
-            from sqlmodel import Session, select
 
             with Session(get_engine()) as session:
                 session.exec(select(User)).first()
@@ -73,8 +74,9 @@ def configure_health_routes(
     def health_detail():
         db_ok = False
         try:
-            from db import get_engine as _get_engine
             from sqlalchemy import text as _sa_text
+
+            from db import get_engine as _get_engine
 
             with _get_engine().connect() as _conn:
                 _conn.execute(_sa_text("SELECT 1"))

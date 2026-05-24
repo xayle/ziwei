@@ -60,7 +60,7 @@ except ImportError:
     pass  # structlog 未安装，降级为标准 logging
 
 from constants import API_VERSION, RULE_VERSION
-from app.bootstrap import create_app, is_metrics_allowed
+from app.bootstrap import create_app, is_metrics_allowed, backend_status
 from app.lifecycle import APP_START_TIME, create_lifespan
 from app.schemas import (
 	BackendInfo,
@@ -105,6 +105,14 @@ from services.bazi_engine.dayun import _ELEM_LOVE_HINT as _LOVE_HINTS, _ELEM_CHI
 from services.bazi_engine.shensha import compute_shensha as _compute_shensha  # RL#9 桃花
 from services.rate_limit import limiter
 from zoneinfo import ZoneInfoNotFoundError
+from init_db import init_db  # re-export for test patching
+
+# Backward-compat aliases (functions moved to app.bootstrap in refactor)
+_backend_status = backend_status
+_is_metrics_allowed = is_metrics_allowed
+
+# Static path re-exports for test patching
+from app.static_routes_setup import _static_dir, _spa_index  # noqa: E402
 
 # ✅ Week 3: 错误处理框架
 
@@ -462,7 +470,7 @@ def metrics(request: Request):
 	返回 Prometheus 文本格式的指标数据
 	"""
 	client_host = getattr(request.client, "host", "unknown")
-	if not is_metrics_allowed(client_host):
+	if not _is_metrics_allowed(client_host):
 		raise HTTPException(status_code=403, detail="Access denied")
 	try:
 		return get_metrics_response()

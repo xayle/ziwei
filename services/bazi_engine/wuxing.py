@@ -11,17 +11,16 @@ M1 任务 1.03: 修复 S6/P63 — compute_wuxing() hidden_contrib 全零 bug
 """
 from __future__ import annotations
 
-from typing import Optional
 from dataclasses import dataclass, field
+from typing import Optional
 
 from services.bazi_engine.tables import (
-    STEMS,
+    BRANCH_HIDDEN_STEMS,
     BRANCHES,
     STEM_ELEMENT,
-    BRANCH_HIDDEN_STEMS,
+    STEMS,
     WANGXIANG,
 )
-
 
 ELEMENTS = ("wood", "fire", "earth", "metal", "water")
 

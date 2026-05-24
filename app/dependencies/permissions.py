@@ -12,12 +12,11 @@ from typing import Any, Callable, Optional
 from fastapi import Depends
 from sqlmodel import Session, select
 
-from db import get_session
-from app.models import User
-from app.models.other import Delegation
 from app.dependencies.auth import get_current_user
 from app.exceptions import AuthorizationException, ErrorCode
-
+from app.models import User
+from app.models.other import Delegation
+from db import get_session
 
 # ══════════════════════════════════════════════════════════════════════════════
 # N3.05 — 独立权限缓存（禁止与引擎 QueryCache 共用）

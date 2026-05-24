@@ -2,27 +2,28 @@
 权限委托管理服务 - 用户之间的权限授予和撤销
 """
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List
-from sqlmodel import Session, col, select
-from sqlalchemy import and_, or_
+from typing import List, Optional
 
-from app.models import Delegation, User, Member, AuditLog
-from services.permission_service import Permission, Role
-from services.permission_cascade_service import (
-    validate_permission_escalation,
-    validate_permission_chain,
-    revoke_delegation_and_dependent,
-)
+from sqlalchemy import and_, or_
+from sqlmodel import Session, col, select
+
+from app.error_handling import handle_exceptions
 
 # ✅ Week 4: 集成新的错误处理系统
 from app.exceptions import (
     AuthorizationException,
-    ValidationException,
-    ResourceNotFoundException,
     BusinessException,
     ErrorCode,
+    ResourceNotFoundException,
+    ValidationException,
 )
-from app.error_handling import handle_exceptions
+from app.models import AuditLog, Delegation, Member, User
+from services.permission_cascade_service import (
+    revoke_delegation_and_dependent,
+    validate_permission_chain,
+    validate_permission_escalation,
+)
+from services.permission_service import Permission, Role
 
 
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)

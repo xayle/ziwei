@@ -1,23 +1,19 @@
 """
 事件管理路由 - 存储和查询八字计算结果
 """
+from datetime import datetime, timezone
 import json
 import logging
-from datetime import datetime, timezone
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, field_validator, ValidationError
+
 from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session, select
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
 
-from db import get_session
-from app.models import User, Member, Event
 from app.dependencies import RequiredUser
-from services.permission_service import Permission, has_permission, Role
-from services.delegation_service import log_action
-from services.json_validators import EventJsonValidator
-from services.optimization_tools import QueryCache
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AuthorizationException,
     BusinessException,
@@ -25,7 +21,12 @@ from app.exceptions import (
     ResourceNotFoundException,
     ValidationException,
 )
-from app.error_handling import handle_exceptions
+from app.models import Event, Member, User
+from db import get_session
+from services.delegation_service import log_action
+from services.json_validators import EventJsonValidator
+from services.optimization_tools import QueryCache
+from services.permission_service import Permission, Role, has_permission
 
 # [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
 _events_cache = QueryCache(cache_seconds=300)
@@ -342,8 +343,9 @@ def get_events_stats(
     可选通过 date_from / date_to 过滤 created_at 范围（闭区间）。
     返回 { total, by_type: [{event_type, count}] }
     """
-    from sqlalchemy import func as sa_func
     from datetime import datetime as _dt
+
+    from sqlalchemy import func as sa_func
 
     stmt = (
         select(Event.event_type, sa_func.count(Event.id).label("count"))

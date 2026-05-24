@@ -28,7 +28,7 @@ from typing import Optional
 
 import sxtwl  # type: ignore[import]
 
-from .tables import STEMS, BRANCHES
+from .tables import BRANCHES, STEMS
 
 # ─────────────────────────────────────────────────────────────
 # 关系查找表

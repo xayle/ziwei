@@ -12,9 +12,9 @@
 """
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import logging
-from functools import lru_cache
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -25,6 +25,8 @@ from app.dependencies import RequiredUser
 from services.classics_search import (
     ClassicPassageModel,
     load_classics,
+)
+from services.classics_search import (
     tfidf_score as _tfidf_score,
 )
 

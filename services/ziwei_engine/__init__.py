@@ -9,28 +9,27 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from .lunar import solar_to_lunar, LunarInfo
-from .palaces import calc_palaces, PalaceLayout
-from .stars_main import place_main_stars, StarPosition
-from .stars_aux import place_aux_stars
-from .transforms import apply_sihua, build_sihua_table, STEMS
-from .dayun import calc_dayun, DayunResult
-from .liunian import calc_liunian, LiunianInfo, calc_liuyue_list
-from .flying import calc_flying, FlyingStarChart
 from .analysis import (
-    generate_palace_analysis,
-    generate_palace_tags,
     generate_full_analysis,
-    generate_summary,
+    generate_palace_analysis,
     generate_palace_structured,
+    generate_palace_tags,
+    generate_summary,
 )
-from .forecast import generate_forecast, ForecastResult
-from .patterns import detect_patterns, PatternResult
-from .remedies import calc_remedies, RemedyResult
-from .life_suggestions import calc_life_suggestions, LifeSuggestion
-from .tables import PALACE_NAMES, BRANCHES, WUHU_M1_STEM, get_aux_brightness
+from .dayun import DayunResult, calc_dayun
 from .decorative import place_changsheng12, place_jiangqian12, place_suiqian12
-
+from .flying import FlyingStarChart, calc_flying
+from .forecast import ForecastResult, generate_forecast
+from .life_suggestions import LifeSuggestion, calc_life_suggestions
+from .liunian import LiunianInfo, calc_liunian, calc_liuyue_list
+from .lunar import LunarInfo, solar_to_lunar
+from .palaces import PalaceLayout, calc_palaces
+from .patterns import PatternResult, detect_patterns
+from .remedies import RemedyResult, calc_remedies
+from .stars_aux import place_aux_stars
+from .stars_main import StarPosition, place_main_stars
+from .tables import BRANCHES, PALACE_NAMES, WUHU_M1_STEM, get_aux_brightness
+from .transforms import STEMS, apply_sihua, build_sihua_table
 
 # ──────────────────────────────────────────────────────────────
 # 数据结构
@@ -64,8 +63,14 @@ class PalaceInfo:
 
     @property
     def aux_names(self) -> frozenset[str]:
-        """辅星名称集合，供成员查找和 set 运算使用。"""
-        return frozenset(s["name"] for s in self.aux_stars)
+        """辅星名称集合，供成员查找和 set 运算使用。
+
+        aux_stars 元素可以是 str（辅星名）或 dict（含 name 键）。
+        """
+        return frozenset(
+            s if isinstance(s, str) else s["name"]
+            for s in self.aux_stars
+        )
 
 
 @dataclass
@@ -138,6 +143,7 @@ def _palace_stems_list(year_stem_idx: int, life_branch_idx: int) -> list[int]:
 # ── O4: ziwei_full() TTL 缓存 ────────────────────────────────────────
 import hashlib as _hashlib
 import threading as _threading
+
 from cachetools import TTLCache as _TTLCache
 
 _ZIWEI_CACHE: _TTLCache = _TTLCache(maxsize=200, ttl=3600)

@@ -6,11 +6,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+# Module-level paths — exposed at module scope so tests can patch them
+_static_dir = Path(__file__).resolve().parent.parent / "static"
+_spa_index = _static_dir / "app" / "index.html"
+_spa_main_entry = "/static/app/cases"
+
 
 def configure_static_routes(app: FastAPI) -> None:
-    _static_dir = Path(__file__).resolve().parent.parent / "static"
-    _spa_index = _static_dir / "app" / "index.html"
-    _spa_main_entry = "/static/app/cases"
 
     @app.get("/app", include_in_schema=False)
     @app.get("/app/{path:path}", include_in_schema=False)

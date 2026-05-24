@@ -10,17 +10,17 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
-from services.rate_limit import limiter
 from app.schemas.name import (
-    NameAnalysisResponse,
     GridInfoResponse,
-    SancaiInfoResponse,
+    NameAnalysisResponse,
     NameRequest,
-    NameSuggestRequest,
     NameSuggestionItem,
+    NameSuggestRequest,
     NameSuggestResponse,
+    SancaiInfoResponse,
 )
 from services.name_engine import analyze_name, suggest_names
+from services.rate_limit import limiter
 
 router = APIRouter(prefix="/api/v1/name", tags=["姓名学"])
 

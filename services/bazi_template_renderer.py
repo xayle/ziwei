@@ -15,10 +15,10 @@ Jinja2 模板渲染层（Phase C2）。
 
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import logging
 import os
-from functools import lru_cache
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)

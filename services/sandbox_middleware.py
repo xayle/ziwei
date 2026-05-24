@@ -20,10 +20,10 @@ C2: Sandbox 模式服务层中间件
 """
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import logging
 from pathlib import Path
-from functools import lru_cache
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

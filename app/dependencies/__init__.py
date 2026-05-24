@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from .auth import (
-    get_current_user,
-    require_user,
     CurrentUser,
     RequiredUser,
+    get_current_user,
+    require_user,
 )
 
 __all__ = [

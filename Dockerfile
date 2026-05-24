@@ -1,8 +1,26 @@
 # ============================================================================
 # BaZi API v8.0 — 多阶段构建
+# 阶段 1: frontend-builder  — Node.js 构建前端 SPA
+# 阶段 2: builder           — Python 安装依赖
+# 阶段 3: production        — 最终镜像
 # ============================================================================
 
-FROM python:3.11-slim as builder
+# ──── 阶段 1: 前端 SPA 构建 ────────────────────────────────────────────────
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /frontend
+
+# 仅先复制 package 文件以利用 Docker 层缓存
+COPY frontend/package*.json ./
+RUN npm ci --legacy-peer-deps
+
+# 复制前端源码并构建
+COPY frontend/ ./
+RUN npm run build
+# 构建产物输出到 /frontend/dist/
+
+# ──── 阶段 2: Python 依赖安装 ─────────────────────────────────────────────
+FROM python:3.11-slim AS builder
 
 # 设置Python环境变量
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -16,10 +34,7 @@ COPY requirements-lock.txt ./
 RUN python -m pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements-lock.txt
 
-# ============================================================================
-# 生产镜像
-# ============================================================================
-
+# ──── 阶段 3: 生产镜像 ────────────────────────────────────────────────────
 FROM python:3.11-slim
 
 LABEL version="8.0" \
@@ -44,6 +59,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # 复制应用代码
 COPY --chown=appuser:appuser . .
+
+# 覆盖静态 SPA 产物：用构建阶段的最新产物替换可能滞后的快照
+COPY --from=frontend-builder --chown=appuser:appuser /frontend/dist/ ./static/app/
 
 # 创建数据目录
 RUN mkdir -p /app/data && chown -R appuser:appuser /app/data

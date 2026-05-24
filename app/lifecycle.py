@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator, Callable
 import contextlib
 import logging
 import os
 import time
-from collections.abc import AsyncIterator, Callable
 
 from fastapi import FastAPI
 
 from db import init_db
-
 
 APP_START_TIME: float = time.time()
 
@@ -49,8 +48,9 @@ def create_lifespan(logger: logging.Logger) -> Callable[[FastAPI], AsyncIterator
         logger.info("[STARTUP] 数据库初始化完成")
 
         try:
-            from db import get_engine
             from sqlmodel import Session as _Session
+
+            from db import get_engine
             from services.auth_service import load_revoked_jtis_from_db
 
             with _Session(get_engine()) as session:
@@ -70,9 +70,10 @@ def create_lifespan(logger: logging.Logger) -> Callable[[FastAPI], AsyncIterator
 
         if backup_scheduler is not None:
             try:
+                from sqlmodel import Session as _DelegSession
+
                 from db import get_engine as _get_engine_o12
                 from services.permission_cascade_service import auto_revoke_expired_delegations as _auto_revoke
-                from sqlmodel import Session as _DelegSession
 
                 def _revoke_expired_delegations() -> None:
                     with _DelegSession(_get_engine_o12()) as session:

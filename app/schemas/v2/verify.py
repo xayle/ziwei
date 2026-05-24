@@ -12,12 +12,11 @@ from pydantic import BaseModel, Field
 
 from app.schemas.bazi import (
     GejuModel,
-    YongShenModel,
-    WuXingScoreModel,
     VerifyRequest,
     VerifyResponse,
+    WuXingScoreModel,
+    YongShenModel,
 )
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # v2 请求 Schema

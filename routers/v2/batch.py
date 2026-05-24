@@ -11,18 +11,18 @@
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 import logging
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
-from concurrent.futures import as_completed
 from time import monotonic as _mono
 
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
-import services.bazi_engine_service as _bazi_engine_service
 from app.schemas.bazi import BatchVerifyRequest, BatchVerifyResponse
+import services.bazi_engine_service as _bazi_engine_service
 from services.rate_limit import limiter
 
 logger = logging.getLogger(__name__)

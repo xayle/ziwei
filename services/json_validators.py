@@ -2,11 +2,11 @@
 JSON Schema 验证服务
 用于强化 Event 和 Scenario 表中 JSON 字段的数据验证
 """
-import json
-from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, field_validator, ValidationError
 from datetime import datetime
+import json
+from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 # ============================================================================
 # Event JSON Models - 八字计算结果验证

@@ -10,9 +10,9 @@ services/ziwei_engine/remedies.py — 破局建议引擎
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import json
 import pathlib
-from dataclasses import dataclass, field
 from typing import Any
 
 # 规则文件路径（相对于项目根目录的 data/）

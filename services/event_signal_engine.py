@@ -17,8 +17,8 @@ services/event_signal_engine.py — 命理事件信号识别引擎
 """
 from __future__ import annotations
 
-import logging
 from datetime import datetime
+import logging
 from typing import Optional
 
 from app.schemas.event_prediction import (

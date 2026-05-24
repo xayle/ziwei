@@ -26,9 +26,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Optional
+
 from .tables import (
-    BRANCHES, ALL_MAIN_STARS,
-    ZIWEI_OFFSETS, TIANFU_OFFSETS,
+    ALL_MAIN_STARS,
+    BRANCHES,
+    TIANFU_OFFSETS,
+    ZIWEI_OFFSETS,
     get_brightness,
 )
 

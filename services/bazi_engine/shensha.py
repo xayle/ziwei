@@ -18,14 +18,14 @@ from __future__ import annotations
 
 from services.bazi_engine.tables import (
     BRANCHES,
-    STEMS,
+    JIESHA,
     STEM_ELEMENT,
+    STEMS,
+    TAOHUA,
     TIANYI_GUIREN,
+    WANGSHEN,
     WENCHANG_GUIREN,
     YIMA,
-    TAOHUA,
-    JIESHA,
-    WANGSHEN,
 )
 
 # ──────────────────────────────────────────────────────────────────────────────

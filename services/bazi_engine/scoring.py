@@ -11,10 +11,9 @@ services/bazi_engine/scoring.py — 八字评分模型 (M3 任务 3.04)
 # 此权重影响从旺/专旺格的70%阈值判断；如需修改权重，须同步更新 geju.py 阈值逻辑
 from __future__ import annotations
 
-import statistics
 from dataclasses import dataclass
+import statistics
 from typing import Literal
-
 
 # 维度权重定义（M3 规格）
 DIMENSION_WEIGHTS = {

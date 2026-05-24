@@ -8,15 +8,15 @@ DELETE /api/v1/similarity/cases/{id}   — 软删除案例
 """
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timezone
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from db import get_session
 from app.models.chart_case import ChartCase
+from db import get_session
 from services.similarity_service import (
     CaseInput,
     cosine_similarity,

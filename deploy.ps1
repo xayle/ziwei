@@ -92,8 +92,29 @@ function Deploy-Local {
             Write-Info 'Installing dependencies...'
             .\.venv\Scripts\pip.exe install -q -r requirements.txt
 
-            Write-Info 'Initializing database...'
-            .\.venv\Scripts\python.exe -c 'from db import init_db; init_db()'
+            Write-Info 'Building frontend...'
+            if (Test-Path 'frontend\package.json') {
+                if (-not (Test-Path 'frontend\node_modules')) {
+                    Write-Info '  Installing npm dependencies...'
+                    npm install --prefix frontend --legacy-peer-deps
+                }
+                npm run build --prefix frontend
+                Write-Success '  Frontend built → static/app/'
+            } else {
+                Write-Warn '  frontend/package.json not found, skipping build'
+            }
+
+            Write-Info 'Applying database migrations (alembic upgrade head)...'
+            $alembicOk = $false
+            try {
+                .\.venv\Scripts\python.exe -m alembic upgrade head
+                $alembicOk = $true
+                Write-Success '  Migrations applied'
+            } catch {
+                Write-Warn "  alembic upgrade head failed: $_"
+                Write-Info '  Falling back to init_db (SQLModel.metadata.create_all)...'
+                .\.venv\Scripts\python.exe -c 'from db import init_db; init_db()'
+            }
 
             $requestedPort = 8000
             $port = Get-AvailableLocalPort -StartPort $requestedPort -MaxProbe 20

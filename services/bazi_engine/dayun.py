@@ -27,9 +27,9 @@ from typing import Optional
 from backends import get_jieqi_context
 from services.bazi_engine.classic_refs import get_refs_by_tag
 from services.bazi_engine.tables import (
-    STEMS,
     BRANCHES,
     STEM_ELEMENT,
+    STEMS,
     get_ten_god,
 )
 

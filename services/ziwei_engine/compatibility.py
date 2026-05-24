@@ -14,8 +14,8 @@ services/ziwei_engine/compatibility.py — 紫微斗数合盘六合度分析
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from .tables import BRANCHES
 
+from .tables import BRANCHES
 
 # ──────────────────────────────────────────────────────────────
 # 地支关系常量

@@ -2,36 +2,36 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from routers import analytics as analytics_router
+from routers import api_keys as api_keys_router
+from routers import audit as audit_router
+from routers import auth as auth_router
 from routers import bazi as bazi_router
 from routers import cases as cases_router
-from routers import relations as relations_router
+from routers import compat as compat_router
 from routers import compute as compute_router
-from routers import snapshots as snapshots_router
-from routers import auth as auth_router
-from routers import members as members_router
 from routers import delegation as delegation_router
-from routers import audit as audit_router
+from routers import event_prediction as event_prediction_router
 from routers import events as events_router
-from routers import scenarios as scenarios_router
-from routers import static_data as static_data_router
-from routers import rules_admin as rules_admin_router
-from routers import quickstart as quickstart_router
-from routers import v2 as v2_router_module
-from routers import ziwei as ziwei_router_module
-from routers import reviews as reviews_router
 from routers import experiments as experiments_router
-from routers import llm as llm_router
-from routers import similarity as similarity_router
-from routers import api_keys as api_keys_router
-from routers import zeri as zeri_router
 from routers import export as export_router
 from routers import fengshui as fengshui_router
-from routers import analytics as analytics_router
-from routers import privacy as privacy_router
+from routers import llm as llm_router
+from routers import members as members_router
 from routers import name as name_router
+from routers import privacy as privacy_router
+from routers import quickstart as quickstart_router
+from routers import relations as relations_router
+from routers import reviews as reviews_router
+from routers import rules_admin as rules_admin_router
+from routers import scenarios as scenarios_router
+from routers import similarity as similarity_router
+from routers import snapshots as snapshots_router
+from routers import static_data as static_data_router
+from routers import v2 as v2_router_module
 from routers import western as western_router
-from routers import compat as compat_router
-from routers import event_prediction as event_prediction_router
+from routers import zeri as zeri_router
+from routers import ziwei as ziwei_router_module
 
 
 def include_all_routers(app: FastAPI) -> None:

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import ClassVar, Optional
 from uuid import uuid4
 
-from sqlalchemy import Column, Index, JSON
+from sqlalchemy import JSON, Column, Index
 from sqlmodel import Field, Relationship, SQLModel
 
 

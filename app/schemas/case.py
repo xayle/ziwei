@@ -1,15 +1,14 @@
 """Case and Snapshot schemas."""
 from __future__ import annotations
 
-import re
 from datetime import datetime
+import re
 from typing import List, Optional
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, field_validator, model_validator
 
 from constants import MAX_LON, MIN_LON
-
 
 _TAG_PATTERN = re.compile(r"^[\w\s,\-\u4e00-\u9fff]+$")
 _ISO_NAIVE_PATTERN = re.compile(

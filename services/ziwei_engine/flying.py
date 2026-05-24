@@ -13,7 +13,8 @@ services/ziwei_engine/flying.py — 飞星紫微（陆斌兆体系）
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from .tables import STEMS, BRANCHES, PALACE_NAMES
+
+from .tables import BRANCHES, PALACE_NAMES, STEMS
 from .transforms import SIHUA_TABLE
 
 

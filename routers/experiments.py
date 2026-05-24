@@ -12,16 +12,16 @@ GET    /api/v1/experiments/{id}/results      — 获取实验结果统计
 """
 from __future__ import annotations
 
-import hashlib
-import json
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+import hashlib
+import json
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 
-from db import get_session
+from app.dependencies import RequiredUser
 from app.models.experiment import Experiment, ExperimentEvent
 from app.schemas.experiment import (
     AssignRequest,
@@ -35,7 +35,7 @@ from app.schemas.experiment import (
     VariantDef,
     VariantStats,
 )
-from app.dependencies import RequiredUser
+from db import get_session
 from services.prometheus_monitoring import (
     record_ab_experiment_assigned,
     record_ab_experiment_event,

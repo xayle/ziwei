@@ -2,21 +2,20 @@
 错误处理中间件和工具函数
 """
 
-import logging
-from typing import Callable, Any, Optional
-from functools import wraps
 from datetime import datetime
+from functools import wraps
+import logging
+from typing import Any, Callable, Optional
 
-from fastapi import Request, Response
+from fastapi import Request, Response, status
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import status
 
 from app.exceptions import (
     AppException,
-    ErrorDetail,
     ErrorCode,
+    ErrorDetail,
 )
 
 logger = logging.getLogger(__name__)

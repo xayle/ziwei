@@ -11,9 +11,10 @@
 """
 from __future__ import annotations
 
-import math
 from datetime import datetime, timezone
+import math
 from typing import Any
+
 
 # ── 辅助 ─────────────────────────────────────────────────────
 def _r(d: float) -> float:  return d * math.pi / 180.0

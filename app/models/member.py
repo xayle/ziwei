@@ -1,7 +1,7 @@
 """Member model - stores BaZi profile information."""
 from __future__ import annotations
 
-from datetime import datetime, date, timezone
+from datetime import date, datetime, timezone
 from typing import ClassVar, Optional
 
 from sqlalchemy import CheckConstraint, Index

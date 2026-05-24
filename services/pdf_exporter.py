@@ -1,8 +1,9 @@
 import logging
+import os
 import urllib.parse
+
 from markupsafe import escape as _html_escape
 from playwright.async_api import async_playwright
-import os
 
 logger = logging.getLogger(__name__)
 

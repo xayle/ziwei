@@ -13,12 +13,12 @@ Public API:
 """
 from __future__ import annotations
 
-import hashlib
-import os
-import logging
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+import hashlib
+import logging
+import os
+import time
 from typing import Optional
 
 try:
@@ -29,11 +29,12 @@ except ImportError:  # pragma: no cover
     _RESULT_CACHE = {}  # type: ignore[assignment]  # pragma: no cover
     _CACHETOOLS_AVAILABLE = False  # pragma: no cover
 
+from app.config import settings
 from app.schemas import (
     BackendInfo,
     BaziMethodsModel,
-    DaYunModel,
     DayMasterStrengthModel,
+    DaYunModel,
     MarriageFlagsModel,
     MarriageModel,
     PillarsModel,
@@ -48,7 +49,6 @@ from app.schemas import (
     WuXingScoreModel,
     YongShenModel,
 )
-from app.config import settings
 from constants import API_VERSION, RULE_VERSION
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -130,7 +130,8 @@ def _calculate_v1(
 ) -> CalculateResult:
     """旧 bazi_full_service 路径（从 run.py 提取）"""
     from typing import Literal, cast
-    from verify import verify_full
+
+    from app.schemas import BackendInfo
     from services.bazi_full_service import (
         build_dayun,
         build_ten_gods,
@@ -139,7 +140,7 @@ def _calculate_v1(
         compute_yongshen,
         ten_god,
     )
-    from app.schemas import BackendInfo
+    from verify import verify_full
 
     result = verify_full(dt, lon=lon, use_solar=use_solar, mode=cast("Literal['dual', 'single']", mode))
     offset_minutes_int = int(round(result.solar_time_offset_minutes))
@@ -262,9 +263,10 @@ def _calculate_v1(
         _sam = _ceil(raw_dayun.computed_months_before_rounding)
         dayun_model.start_age_months = _sam
         dayun_model.start_age = _sam // 12
-    from services.bazi_engine.dayun import _build_hints as _dayun_build_hints, _ELEM_LOVE_HINT, _ELEM_CHILD_HINT
-    from services.bazi_engine.classic_refs import get_refs_by_tag as _get_refs_by_tag
     from app.schemas.common import RangeModel
+    from services.bazi_engine.classic_refs import get_refs_by_tag as _get_refs_by_tag
+    from services.bazi_engine.dayun import _ELEM_CHILD_HINT, _ELEM_LOVE_HINT
+    from services.bazi_engine.dayun import _build_hints as _dayun_build_hints
     # 按五行粗估财富区间（万元/年）
     _WX_WEALTH_RANGE = {
         "wood": (8, 30),
@@ -700,26 +702,30 @@ def _enrich_v2_analysis(
     调用 M2 各分析引擎，填充 VerifyResponse 的新字段。
     全部在 try/except 中保护，不影响核心八字计算。
     """
-    from services.bazi_engine.wuxing import compute_shishen_scores
-    from services.bazi_engine.geju import compute_geju
-    from services.bazi_engine.shensha import compute_shensha
-    from services.bazi_engine.palace import compute_palace
-    from services.bazi_engine.analysis.wealth import compute_wealth
-    from services.bazi_engine.analysis.career import compute_career
-    from services.bazi_engine.analysis.marriage import compute_marriage
-    from services.bazi_engine.analysis.health import compute_health
-    from services.bazi_engine.analysis.relationship import compute_relationship
-    from services.bazi_engine.analysis.personality import compute_personality
-    from services.bazi_engine.analysis.monthly import compute_monthly
-    from services.bazi_engine.lifestyle.jewelry import compute_jewelry
-    from services.bazi_engine.lifestyle.fengshui import compute_fengshui
-    from services.bazi_engine.lifestyle.lucky import compute_lucky
-    from services.bazi_engine.lifestyle.lifestyle import compute_lifestyle
-    from services.bazi_engine.milestones import compute_milestones
     from app.schemas.analysis import (
-        GejuModel, PalaceModel, PalaceItemModel, ShenshaModel,
-        LifeArcModel, CurrentFortuneSummaryModel,
+        CurrentFortuneSummaryModel,
+        GejuModel,
+        LifeArcModel,
+        PalaceItemModel,
+        PalaceModel,
+        ShenshaModel,
     )
+    from services.bazi_engine.analysis.career import compute_career
+    from services.bazi_engine.analysis.health import compute_health
+    from services.bazi_engine.analysis.marriage import compute_marriage
+    from services.bazi_engine.analysis.monthly import compute_monthly
+    from services.bazi_engine.analysis.personality import compute_personality
+    from services.bazi_engine.analysis.relationship import compute_relationship
+    from services.bazi_engine.analysis.wealth import compute_wealth
+    from services.bazi_engine.geju import compute_geju
+    from services.bazi_engine.lifestyle.fengshui import compute_fengshui
+    from services.bazi_engine.lifestyle.jewelry import compute_jewelry
+    from services.bazi_engine.lifestyle.lifestyle import compute_lifestyle
+    from services.bazi_engine.lifestyle.lucky import compute_lucky
+    from services.bazi_engine.milestones import compute_milestones
+    from services.bazi_engine.palace import compute_palace
+    from services.bazi_engine.shensha import compute_shensha
+    from services.bazi_engine.wuxing import compute_shishen_scores
 
     # ── 基础数据提取 ────────────────────────────────────────────────────
     ys_br = rp.year.branch
@@ -789,6 +795,7 @@ def _enrich_v2_analysis(
         geju_name = geju_raw.get("name", "普通格")
         is_broken = not geju_raw.get("confident", True)
         from typing import cast as _cast
+
         from services.bazi_engine.classic_refs import get_refs_by_tag as _geju_get_refs
         _geju_refs_text = "\n".join(
             f"【{r.get('source','')}】{r.get('text','')}"
@@ -817,8 +824,8 @@ def _enrich_v2_analysis(
     # ── 建禄格/羊刃格：重算用神（geju_name 确定后）────────────────────────
     if geju_name in ("建禄格", "羊刃格"):
         try:
-            from services.bazi_engine.wuxing import compute_wuxing as _eng_wx2
             from services.bazi_engine.strength import compute_strength as _eng_str2
+            from services.bazi_engine.wuxing import compute_wuxing as _eng_wx2
             from services.bazi_engine.yongshen import compute_yongshen as _eng_ys2
             _w2 = _eng_wx2(ys_st, ys_br, ms_st, ms_br, ds_st, ds_br, hs_st, hs_br)
             _s2 = _eng_str2(ds_st, ms_br, ys_st, ms_st, hs_st, ys_br, ds_br, hs_br, _w2)
@@ -1108,8 +1115,10 @@ def _enrich_v2_analysis(
     # ── RL#10: 流年 items 填充（当前年份前后2年）────────────────────
     try:
         import datetime as _dt_mod
+
+        from app.schemas.bazi import LiuNianItemModel as _LiuNianItemModel
+        from app.schemas.bazi import LiuNianResultModel as _LiuNianResultModel
         from services.bazi_engine.liunian import compute_liunian as _compute_liunian
-        from app.schemas.bazi import LiuNianItemModel as _LiuNianItemModel, LiuNianResultModel as _LiuNianResultModel
         _cur_yr = _dt_mod.date.today().year
         _ln_rows = _compute_liunian(
             day_stem=ds_st, day_branch=ds_br,
@@ -1199,8 +1208,9 @@ def _enrich_v2_analysis(
     # M3 新增: interpret.py 解读文本
     # ────────────────────────────────────────────────────────────────────────
     try:
-        from services.bazi_engine.interpret import interpret_bazi, InterpretInput
-        from services.bazi_engine.relations import get_branch_relations as _get_branch_rels, get_stem_clashes as _get_stem_clashes  # P0-11
+        from services.bazi_engine.interpret import InterpretInput, interpret_bazi
+        from services.bazi_engine.relations import get_branch_relations as _get_branch_rels  # P0-11
+        from services.bazi_engine.relations import get_stem_clashes as _get_stem_clashes
         _rp_branches = (
             verify_response.pillars_primary.year.branch,
             verify_response.pillars_primary.month.branch,
@@ -1276,8 +1286,8 @@ def _enrich_v2_analysis(
     # M3 新增: life_arc 人生弧线
     # ────────────────────────────────────────────────────────────────────────
     try:
-        from services.bazi_engine.life_arc import compute_life_arc as _compute_life_arc
         from app.schemas.analysis import LifeArcModel as _LifeArcSchema
+        from services.bazi_engine.life_arc import compute_life_arc as _compute_life_arc
 
         _arc = _compute_life_arc(
             dayun_list=dayun_list,
@@ -1357,10 +1367,11 @@ def _enrich_v2_analysis(
     # M3 新增: liunian_detail (domain_forecasts)
     # ────────────────────────────────────────────────────────────────────────
     try:
+        import datetime as _dt_now_mod
+
+        from app.schemas.analysis import LiuNianDetailModel
         from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
         from services.bazi_engine.liunian import _liunian_day_relation  # 红线10 犯太岁
-        from app.schemas.analysis import LiuNianDetailModel
-        import datetime as _dt_now_mod
 
         # 取当前年前后2年共5年（而非出生年）
         current_year = _dt_now_mod.datetime.now().year
@@ -1496,8 +1507,9 @@ def _enrich_v2_analysis(
     # M3/M4: current_fortune_summary (Tab 0 精简卡片)
     # ────────────────────────────────────────────────────────────────────────
     try:
-        from app.schemas.analysis import CurrentFortuneSummaryModel as _CFS
         import datetime as _dt_mod
+
+        from app.schemas.analysis import CurrentFortuneSummaryModel as _CFS
 
         def _year_ganzhi_cfs(y: int) -> str:
             _STEMS10   = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
@@ -1554,8 +1566,12 @@ def _enrich_v2_analysis(
     try:
         from services.bazi_engine.scoring import (
             balance_score as _balance_score,
-            get_wuxing_weak_strong as _wws,
+        )
+        from services.bazi_engine.scoring import (
             build_balance_advice as _bba,
+        )
+        from services.bazi_engine.scoring import (
+            get_wuxing_weak_strong as _wws,
         )
         verify_response.wuxing_balance_score = _balance_score(wx_scores)
         _weak, _strong = _wws(wx_scores)
@@ -1567,8 +1583,9 @@ def _enrich_v2_analysis(
 
     # ── N2.07 流年运势（当前大运覆盖年份）───────────────────────────────────
     try:
-        from services.bazi_engine.liunian import compute_liunian_for_dayun as _clf_dayun
         import datetime as _dt_yf_mod
+
+        from services.bazi_engine.liunian import compute_liunian_for_dayun as _clf_dayun
         # 找当前年龄对应的大运（与 current_fortune_summary 逻辑一致）
         _today_yf = _dt_yf_mod.date.today()
         _age_yf = _today_yf.year - dt.year - (

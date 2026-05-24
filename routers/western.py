@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.schemas.western import WesternChartResponse, SolarReturnResponse
+from app.schemas.western import SolarReturnResponse, WesternChartResponse
 from services.western_astrology import compute_chart, solar_return_chart
 
 router = APIRouter(prefix="/api/v1/western", tags=["西方占星"])

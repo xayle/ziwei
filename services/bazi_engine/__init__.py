@@ -31,35 +31,36 @@ O11: 统一 re-export，各 router 可使用
 """
 from __future__ import annotations
 
-# 第1层
-from .geju import compute_geju
-from .wuxing import compute_wuxing, compute_shishen_scores
-from .shensha import compute_shensha
-from .palace import compute_palace
-from .liunian import compute_liunian
-
-# 第2层
-from .strength import compute_strength
-from .dayun import compute_dayun
-
-# 第3层
-from .yongshen import compute_yongshen
+from .analysis.career import compute_career
+from .analysis.dayun_narrative import generate_dayun_narrative
+from .analysis.health import compute_health
+from .analysis.liunian_domain import compute_liunian_domain_forecasts
+from .analysis.marriage import compute_marriage
 
 # 第4层 — 分析引擎
 from .analysis.monthly import compute_monthly
-from .analysis.liunian_domain import compute_liunian_domain_forecasts
-from .analysis.dayun_narrative import generate_dayun_narrative
-from .analysis.wealth import compute_wealth
-from .analysis.career import compute_career
-from .analysis.marriage import compute_marriage
-from .analysis.health import compute_health
 from .analysis.personality import compute_personality
+from .analysis.wealth import compute_wealth
+from .dayun import compute_dayun
 
-# 第5层 — lifestyle
-from .lifestyle.lucky import compute_lucky
+# 第1层
+from .geju import compute_geju
 from .lifestyle.fengshui import compute_fengshui
 from .lifestyle.jewelry import compute_jewelry
 from .lifestyle.lifestyle import compute_lifestyle
+
+# 第5层 — lifestyle
+from .lifestyle.lucky import compute_lucky
+from .liunian import compute_liunian
+from .palace import compute_palace
+from .shensha import compute_shensha
+
+# 第2层
+from .strength import compute_strength
+from .wuxing import compute_shishen_scores, compute_wuxing
+
+# 第3层
+from .yongshen import compute_yongshen
 
 __all__ = [
     # 第1层

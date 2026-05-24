@@ -13,8 +13,8 @@ M1 任务 1.02:
 """
 from __future__ import annotations
 
-import math
 from datetime import datetime, timezone
+import math
 
 
 def _day_of_year(dt: datetime) -> int:

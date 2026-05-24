@@ -20,11 +20,11 @@ from __future__ import annotations
 from typing import Optional
 
 from services.bazi_engine.tables import (
-    STEMS,
-    BRANCHES,
-    STEM_ELEMENT,
     BRANCH_CHONG,
+    BRANCHES,
     LIU_HE,
+    STEM_ELEMENT,
+    STEMS,
     get_ten_god,
 )
 

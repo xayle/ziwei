@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import re
 from datetime import datetime
+import re
 from typing import Any, Optional
 from uuid import uuid4
 
@@ -9,10 +9,10 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
-from db import get_session
+from app.dependencies import RequiredUser
 from app.models import Case
 from app.schemas import BaziFullRequest, BaziFullResponse, WarningModel
-from app.dependencies import RequiredUser
+from db import get_session
 from services.bazi_full_service import bazi_full
 from services.rate_limit import limiter
 
@@ -603,7 +603,7 @@ def api_jieqi(
     A7 节气精准时刻：sxtwl 精算指定年份 24 节气的精确时分秒。
     命理师判断月柱必用，精度到秒。
     """
-    from backends import SxtwlBackend, BackendUnavailable
+    from backends import BackendUnavailable, SxtwlBackend
     try:
         backend = SxtwlBackend()
     except BackendUnavailable:
@@ -727,8 +727,9 @@ def api_calendar_compare(
             message="calendar-compare 仅限管理员使用",
         )
 
-    from backends import CnlunarBackend, get_sxtwl_backend
     from zoneinfo import ZoneInfo
+
+    from backends import CnlunarBackend, get_sxtwl_backend
 
     try:
         dt = datetime.fromisoformat(payload.birth_dt).replace(
@@ -818,8 +819,9 @@ def api_bazi_batch_compare(
     session=Depends(get_session),
 ):
     """W2: 批量读取 Case 并并排对比关键字段。"""
-    from app.models import Case as _Case
     from sqlmodel import select as _select
+
+    from app.models import Case as _Case
 
     profiles: list[BatchCaseProfile] = []
     all_favors: list[set[str]] = []
@@ -836,9 +838,10 @@ def api_bazi_batch_compare(
             profiles.append(BatchCaseProfile(case_id=cid, error="无权访问"))
             continue
         try:
-            from services.bazi_engine_service import calculate
             from datetime import datetime as _dt
             import zoneinfo as _zi
+
+            from services.bazi_engine_service import calculate
             birth_dt = _dt.fromisoformat(case.birth_dt_local)
             lon = float(case.longitude or 116.4)
             tz_name = case.timezone or "Asia/Shanghai"
@@ -884,9 +887,9 @@ def api_bazi_batch_compare(
 
 
 # ─────────────────────────── D7: 黄金案例公开查阅 ────────────────────────────────
+from functools import lru_cache as _lru_cache  # noqa: E402
 import json as _json  # noqa: E402
 from pathlib import Path as _Path  # noqa: E402
-from functools import lru_cache as _lru_cache  # noqa: E402
 
 _GROUND_TRUTH_PATH = _Path(__file__).resolve().parent.parent / "data" / "ground_truth_cases.json"
 
@@ -931,9 +934,9 @@ def get_golden_cases(
 
 # ─────────────────────────── D4: 流年年度报告（异步 202） ────────────────────────────────
 import asyncio as _asyncio  # noqa: E402
-import uuid as _uuid  # noqa: E402
-from datetime import timezone as _tz  # noqa: E402
 from datetime import datetime as _dt_cls  # noqa: E402
+from datetime import timezone as _tz  # noqa: E402
+import uuid as _uuid  # noqa: E402
 
 # 进程内任务存储（生产环境应替换为 Redis/DB）
 _liunian_tasks: dict[str, dict] = {}

@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+
 import sxtwl  # type: ignore[import]
 
-from .tables import STEMS, BRANCHES, WUHU_M1_STEM, WUSHU_H0_STEM, hour_to_branch
+from .tables import BRANCHES, STEMS, WUHU_M1_STEM, WUSHU_H0_STEM, hour_to_branch
 
 
 def _jd_from_solar(year: int, month: int, day: int) -> float:

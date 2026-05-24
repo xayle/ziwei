@@ -11,15 +11,15 @@ services/ziwei_engine/forecast.py — 综合运势预测与事件分析引擎
 """
 from __future__ import annotations
 
-import datetime
 from dataclasses import dataclass, field
+import datetime
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from . import ZiweiChart
     from .dayun import DayunItem
 
-from .tables import PALACE_NAMES, BRANCHES, STEMS
+from .tables import BRANCHES, PALACE_NAMES, STEMS
 
 # ──────────────────────────────────────────────────────────────
 # 触发规则常量
@@ -128,7 +128,8 @@ def _stars_in_palace(chart: 'ZiweiChart', palace_name: str) -> tuple[list[str], 
     """返回宫位中的 (主星名列表, 辅星名列表)。"""
     for p in chart.palaces:
         if p.name == palace_name:
-            return [s["name"] for s in p.main_stars], [s["name"] for s in p.aux_stars]
+            # aux_stars 为 list[str]，使用 aux_names 属性统一处理
+            return [s["name"] for s in p.main_stars], list(p.aux_names)
     return [], []
 
 

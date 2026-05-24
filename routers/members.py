@@ -3,27 +3,26 @@
 """
 from datetime import date, datetime, timezone
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, model_validator, computed_field
+
 from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session, select
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
 
-from db import get_session
-from app.models import User, Member
 from app.dependencies import RequiredUser
-from services.permission_service import (
-    Permission, Role, has_permission
-)
-from services.delegation_service import log_action
-from services.optimization_tools import QueryCache
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AuthorizationException,
     BusinessException,
     ErrorCode,
     ResourceNotFoundException,
 )
-from app.error_handling import handle_exceptions
+from app.models import Member, User
+from db import get_session
+from services.delegation_service import log_action
+from services.optimization_tools import QueryCache
+from services.permission_service import Permission, Role, has_permission
 
 # [A1 Phase2] 模块级单例 — 跨请求共享缓存（避免每次请求重新实例化导致缓存失效）
 _members_cache = QueryCache(cache_seconds=600)

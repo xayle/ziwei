@@ -2,12 +2,13 @@
 权限级联验证服务 - 防止权限提升漏洞
 """
 from datetime import datetime, timezone
-from typing import Optional, List, Tuple
-from sqlmodel import Session, col, select
-from sqlalchemy import and_
+from typing import List, Optional, Tuple
 
-from app.models import User, Delegation
-from services.permission_service import Permission, Role, ROLE_PERMISSIONS, has_permission
+from sqlalchemy import and_
+from sqlmodel import Session, col, select
+
+from app.models import Delegation, User
+from services.permission_service import ROLE_PERMISSIONS, Permission, Role, has_permission
 
 
 def _utcnow() -> datetime:

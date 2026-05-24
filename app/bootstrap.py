@@ -2,22 +2,21 @@ from __future__ import annotations
 
 import importlib.metadata
 import importlib.util
-import logging
 from ipaddress import ip_address as _parse_ip
 from ipaddress import ip_network as _parse_network
+import logging
 from typing import Callable, cast
 
 from fastapi import FastAPI, Request, Response
 from slowapi import _rate_limit_exceeded_handler
 
-from constants import API_VERSION
 from app.health_routes_setup import configure_health_routes
 from app.http_middleware_setup import configure_http_middlewares
 from app.middleware_setup import configure_base_middlewares
 from app.router_setup import include_all_routers
 from app.static_routes_setup import configure_static_routes
+from constants import API_VERSION
 from services.rate_limit import limiter
-
 
 _METRICS_ALLOWED_CIDRS = [
     _parse_network(net) for net in

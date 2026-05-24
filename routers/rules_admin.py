@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any
 import json
 import pathlib
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/v1/rules", tags=["rules"])
 

@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from services.bazi_engine.strength import StrengthResult
-from services.bazi_engine.wuxing import WuxingResult, ELEMENTS
+from services.bazi_engine.wuxing import ELEMENTS, WuxingResult
 
 # 五行相生相克
 SHENG: dict[str, str] = {

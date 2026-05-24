@@ -1,25 +1,26 @@
 """
 审计日志路由 - 查看操作历史和安全审计
 """
-import json
 from datetime import datetime
-from typing import Optional, Any
-from pydantic import BaseModel, model_validator
-from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session, select
-from sqlalchemy import func
+import json
+from typing import Any, Optional
 
-from db import get_session
-from app.models import User, AuditLog
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, model_validator
+from sqlalchemy import func
+from sqlmodel import Session, select
+
 from app.dependencies import RequiredUser
-from services.delegation_service import get_audit_logs, log_action
-from services.permission_service import Permission, Role, has_permission
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AuthorizationException,
     ErrorCode,
     ResourceNotFoundException,
 )
-from app.error_handling import handle_exceptions
+from app.models import AuditLog, User
+from db import get_session
+from services.delegation_service import get_audit_logs, log_action
+from services.permission_service import Permission, Role, has_permission
 
 router = APIRouter(prefix="/api/v1", tags=["audit"])
 
@@ -291,12 +292,13 @@ def admin_stats(
             message="Permission denied: admin required",
         )
 
+    from datetime import timezone
+
+    from app.models.api_key import ApiKey
     from app.models.case import Case, Snapshot
     from app.models.chart_case import ChartCase
-    from app.models.review import ChartReview
-    from app.models.api_key import ApiKey
     from app.models.experiment import Experiment, ExperimentEvent
-    from datetime import timezone
+    from app.models.review import ChartReview
 
     def _count(model, *filters):
         stmt = select(func.count()).select_from(model)

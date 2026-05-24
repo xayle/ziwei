@@ -7,28 +7,25 @@ from typing import Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.exceptions import (
-    ValidationException,
-    BusinessException,
-    ServiceException,
-    ErrorCode,
-)
 from app.error_handling import handle_exceptions
-
-from backends import get_jieqi_context
-from constants import API_VERSION, RULE_VERSION
+from app.exceptions import (
+    BusinessException,
+    ErrorCode,
+    ServiceException,
+    ValidationException,
+)
 from app.schemas import (
     BaziFullRequest,
     BaziFullResponse,
     BaziMethodsModel,
-    BaziRawModel,
     BaziRawDayunModel,
-    DaYunModel,
-    DaYunItemModel,
+    BaziRawModel,
     DayMasterStrengthModel,
+    DaYunItemModel,
+    DaYunModel,
     GejuModel,
-    LiuNianResultModel,
     LiuNianItemModel,
+    LiuNianResultModel,
     PillarModel,
     PillarsModel,
     StrengthFactorModel,
@@ -38,12 +35,13 @@ from app.schemas import (
     WuXingScoreModel,
     YongShenModel,
 )
-from services.normalize_input import validate_lon_strict, warn_lon_cn_range
-from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS as _BRANCH_HIDDEN_STEMS  # RL#1 藏干
+from backends import get_jieqi_context
+from constants import API_VERSION, RULE_VERSION
 from services.bazi_engine.geju import compute_geju
+from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS as _BRANCH_HIDDEN_STEMS  # RL#1 藏干
 from services.bazi_rule_engine import match_rules
+from services.normalize_input import validate_lon_strict, warn_lon_cn_range
 from verify import verify_full
-
 
 STEM_META = {
     "甲": ("wood", "yang"),
@@ -173,8 +171,8 @@ def compute_yongshen(
     Falls back to approximate扶抑 when pillars absent (legacy/test path).
     """
     if pillars is not None:
-        from services.bazi_engine.wuxing import compute_wuxing as _eng_wx
         from services.bazi_engine.strength import compute_strength as _eng_str
+        from services.bazi_engine.wuxing import compute_wuxing as _eng_wx
         from services.bazi_engine.yongshen import compute_yongshen as _eng_yong
         _w = _eng_wx(
             pillars.year.stem, pillars.year.branch,

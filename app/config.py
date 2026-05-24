@@ -8,13 +8,14 @@
 """
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
+import os
 from pathlib import Path
 from typing import ClassVar, Optional
+
 from dotenv import load_dotenv
 
-from constants import DEFAULT_LON, RULE_VERSION, API_VERSION
+from constants import API_VERSION, DEFAULT_LON, RULE_VERSION
 
 # 加载 .env 文件（优先级最低）
 _root_dir = Path(__file__).resolve().parent.parent

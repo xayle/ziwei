@@ -7,44 +7,43 @@ GET  /api/v1/ziwei/demo  → 演示命盘（用黄金测试案例）
 from __future__ import annotations
 
 import asyncio
+import time as _time
 
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
-from services.rate_limit import limiter
-from services.prometheus_monitoring import (
-    record_ziwei_calc, record_ziwei_batch,
-)
-
-import time as _time
-
 from app.schemas.ziwei import (
-    ZiweiRequest,
-    ZiweiResponse,
-    LunarResponse,
-    PalaceResponse,
-    StarInfo,
-    DayunResponse,
-    DayunItemResponse,
-    LiunianResponse,
-    FlyingChartResponse,
-    FlyingPalaceResponse,
-    LiuyueItem,
-    ForecastResultResponse,
-    PeriodForecastResponse,
-    EventTagResponse,
-    PatternResponse,
-    RemedyResponse,
-    LifeSuggestionResponse,
+    CompatibilityDimensionResponse,
     CompatibilityRequest,
     CompatibilityResponse,
-    CompatibilityDimensionResponse,
+    DayunItemResponse,
+    DayunResponse,
+    EventTagResponse,
+    FlyingChartResponse,
+    FlyingPalaceResponse,
+    ForecastResultResponse,
+    LifeSuggestionResponse,
+    LiunianResponse,
+    LiuyueItem,
+    LunarResponse,
+    MultiCompatPairResponse,
     MultiCompatRequest,
     MultiCompatResponse,
-    MultiCompatPairResponse,
+    PalaceResponse,
+    PatternResponse,
+    PeriodForecastResponse,
+    RemedyResponse,
+    StarInfo,
+    ZiweiRequest,
+    ZiweiResponse,
 )
-from services.ziwei_engine import ziwei_full, ZiweiChart
 from services.api_cache import api_response_cache
+from services.prometheus_monitoring import (
+    record_ziwei_batch,
+    record_ziwei_calc,
+)
+from services.rate_limit import limiter
+from services.ziwei_engine import ZiweiChart, ziwei_full
 
 # 限制并发计算线程数，防止 ThreadPoolExecutor 耐尽
 # asyncio.to_thread 默认线程池大小=min(32, cpu+4)，每个请求占用该线程 1-4 秒。
@@ -491,9 +490,8 @@ import io  # noqa: E402
 import json  # noqa: E402
 import zipfile  # noqa: E402
 
-from fastapi import UploadFile, File  # noqa: E402
+from fastapi import File, UploadFile  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
-
 
 _BATCH_MAX_ROWS = 200   # 单次最多 200 行
 
@@ -661,8 +659,9 @@ async def batch_ziwei(
 # ─────────────────────────────────────────────────────────────────────────────
 # A6: POST /api/v1/ziwei/flying  飞星专项端点（轻量）
 # ─────────────────────────────────────────────────────────────────────────────
-from pydantic import BaseModel as _BaseModel  # noqa: E402
 from typing import Optional as _Optional  # noqa: E402
+
+from pydantic import BaseModel as _BaseModel  # noqa: E402
 
 
 class ZiweiFlyingRequest(_BaseModel):

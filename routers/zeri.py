@@ -12,8 +12,8 @@ import logging
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.schemas.zeri import ZeriDayResponse, ZeriMonthResponse
-from services.ziwei_engine.zeri_engine import PURPOSES, recommend_month
 from services.ziwei_engine.tables import BRANCHES
+from services.ziwei_engine.zeri_engine import PURPOSES, recommend_month
 
 logger = logging.getLogger(__name__)
 

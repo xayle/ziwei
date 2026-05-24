@@ -6,8 +6,8 @@ services/ziwei_engine/analysis.py — 逐宫文字解读模板
 """
 from __future__ import annotations
 
-from .tables import PALACE_NAMES, BRANCHES
 from .stars_main import StarPosition
+from .tables import BRANCHES, PALACE_NAMES
 
 # ──────────────────────────────────────────────────────────────
 # 单星性质简介（精简版）

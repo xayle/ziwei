@@ -18,10 +18,10 @@ services/bazi_rule_engine.py
 
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import logging
 import os
-from functools import lru_cache
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)

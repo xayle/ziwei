@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, cast
 from uuid import uuid4
 
@@ -9,16 +9,16 @@ from sqlalchemy import func
 from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import Session, select
 
-from db import get_session
-from app.models import Case, Snapshot
-from app.schemas import CaseCreate, CaseOut, CasePatch, CaseListResponse
 from app.dependencies import RequiredUser
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AuthorizationException,
     ErrorCode,
     ResourceNotFoundException,
 )
-from app.error_handling import handle_exceptions
+from app.models import Case, Snapshot
+from app.schemas import CaseCreate, CaseListResponse, CaseOut, CasePatch
+from db import get_session
 from services.delegation_service import log_action
 
 router = APIRouter(prefix="/api/v1/cases", tags=["cases"])

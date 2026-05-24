@@ -3,6 +3,7 @@
 """
 from enum import Enum
 
+
 # 定义权限枚举
 class Permission(str, Enum):
     """系统权限定义"""

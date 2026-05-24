@@ -19,13 +19,13 @@ LLM 服务层 — §10 辅助解读草稿生成。
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
+from enum import Enum
 import json
 import logging
 import os
 import threading
 import time
-from dataclasses import dataclass
-from enum import Enum
 from typing import AsyncIterator
 
 import httpx

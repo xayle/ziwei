@@ -1,17 +1,17 @@
 """Shared authentication and dependency injection."""
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
-from typing import Optional, Annotated
+import os
+from typing import Annotated, Optional
 
 from fastapi import Depends, Request
 from sqlmodel import Session, select
 
-from db import get_session
-from app.models import User
-from services.auth_service import verify_token
 from app.exceptions import AuthenticationException, ErrorCode
+from app.models import User
+from db import get_session
+from services.auth_service import verify_token
 
 
 def _auth_bypass_enabled() -> bool:

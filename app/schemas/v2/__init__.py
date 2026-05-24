@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from .verify import (
-    VerifyRequestV2,
     ResponseMeta,
+    VerifyRequestV2,
     VerifyResponseFull,
     VerifyResponseMinimal,
     VerifyResponseV2,

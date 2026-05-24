@@ -1,40 +1,41 @@
 """
 身份验证路由 - 登录、登出、权限检查
 """
+from datetime import datetime, timezone
 import logging
 import re
-from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, Request
 from jose import jwt as _jose_jwt
 from pydantic import BaseModel, field_validator
-from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session, select
 
-from db import get_session
-from app.models import User, RefreshToken
 from app.dependencies.auth import _auth_bypass_enabled
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AuthenticationException,
-    ValidationException,
-    ResourceNotFoundException,
-    ResourceConflictException,
     BusinessException,
     ErrorCode,
+    ResourceConflictException,
+    ResourceNotFoundException,
+    ValidationException,
 )
-from app.error_handling import handle_exceptions
+from app.models import RefreshToken, User
+from db import get_session
 from services.auth_service import (
-    create_access_token,
-    hash_password,
-    verify_password,
-    TokenResponse,
     TokenPayload,
+    TokenResponse,
+    create_access_token,
     create_refresh_token_record,
-    revoke_refresh_token,
-    revoke_all_user_tokens,
-    verify_token,
+    hash_password,
     revoke_access_token_jti,
+    revoke_all_user_tokens,
+    revoke_refresh_token,
+    verify_password,
+    verify_token,
 )
-from services.rate_limit import limiter
 from services.delegation_service import log_action
+from services.rate_limit import limiter
 
 router = APIRouter(prefix="/api/v1", tags=["auth"])
 logger = logging.getLogger(__name__)
@@ -484,7 +485,7 @@ def logout(
     parts = auth_header.split()
     if len(parts) == 2 and parts[0].lower() == "bearer":
         try:
-            from services.auth_service import SECRET_KEY, ALGORITHM
+            from services.auth_service import ALGORITHM, SECRET_KEY
             payload = _jose_jwt.decode(
                 parts[1], SECRET_KEY, algorithms=[ALGORITHM],
                 options={"leeway": 86400}  # 允许已到期的 token 仍能注销

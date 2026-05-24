@@ -15,16 +15,16 @@
 约束：同层模块互不调用，禁止循环依赖（见开发5.0.txt §4.12）。
 """
 
-from services.bazi_engine.analysis.wealth import compute_wealth
 from services.bazi_engine.analysis.career import compute_career
-from services.bazi_engine.analysis.marriage import compute_marriage
-from services.bazi_engine.analysis.health import compute_health
-from services.bazi_engine.analysis.relationship import compute_relationship
-from services.bazi_engine.analysis.personality import compute_personality
-from services.bazi_engine.analysis.monthly import compute_monthly
 from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
-from services.bazi_engine.analysis.wealth_estimate import estimate_wealth
+from services.bazi_engine.analysis.health import compute_health
 from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
+from services.bazi_engine.analysis.marriage import compute_marriage
+from services.bazi_engine.analysis.monthly import compute_monthly
+from services.bazi_engine.analysis.personality import compute_personality
+from services.bazi_engine.analysis.relationship import compute_relationship
+from services.bazi_engine.analysis.wealth import compute_wealth
+from services.bazi_engine.analysis.wealth_estimate import estimate_wealth
 
 __all__ = [
     "compute_wealth",

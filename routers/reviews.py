@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from db import get_session
+from app.dependencies import RequiredUser
 from app.models import ChartReview, User
 from app.models.review_history import ChartReviewHistory
 from app.schemas.review import (
@@ -43,8 +43,8 @@ from app.schemas.review import (
     ReviewHistoryResponse,
     ReviewStats,
 )
-from app.dependencies import RequiredUser
-from services.prometheus_monitoring import record_review_submit, record_review_action
+from db import get_session
+from services.prometheus_monitoring import record_review_action, record_review_submit
 
 router = APIRouter(prefix="/api/v1", tags=["reviews"])
 

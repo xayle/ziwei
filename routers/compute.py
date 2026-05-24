@@ -9,23 +9,8 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 
 from app.config import settings
-from constants import API_VERSION, RULE_VERSION
-from db import get_session
-from app.models import Case, Snapshot
 from app.dependencies import RequiredUser
-from app.schemas import (
-    BaziFullRequest,
-    BackendInfo,
-    ComputeRequest,
-    ComputeResponse,
-    ComputeTaskStatus,
-    SnapshotOut,
-    ValidationModel,
-    WarningModel,
-)
-from services.normalize_input import validate_lon_strict, warn_lon_cn_range
-from services.bazi_full_service import bazi_full
-from verify import verify_full
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AppException,
     AuthorizationException,
@@ -33,8 +18,23 @@ from app.exceptions import (
     ResourceNotFoundException,
     ValidationException,
 )
-from app.error_handling import handle_exceptions
+from app.models import Case, Snapshot
+from app.schemas import (
+    BackendInfo,
+    BaziFullRequest,
+    ComputeRequest,
+    ComputeResponse,
+    ComputeTaskStatus,
+    SnapshotOut,
+    ValidationModel,
+    WarningModel,
+)
+from constants import API_VERSION, RULE_VERSION
+from db import get_session
+from services.bazi_full_service import bazi_full
 from services.delegation_service import log_action
+from services.normalize_input import validate_lon_strict, warn_lon_cn_range
+from verify import verify_full
 
 router = APIRouter(prefix="/api/v1/cases", tags=["compute"])
 

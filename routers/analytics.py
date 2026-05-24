@@ -17,11 +17,11 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from db import get_session
 from app.dependencies import RequiredUser
 from app.error_handling import handle_exceptions
 from app.exceptions import ErrorCode
 from app.models import AuditLog, Case, ChartReview, Snapshot
+from db import get_session
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 

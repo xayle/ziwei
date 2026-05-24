@@ -3,9 +3,11 @@ app/schemas/ziwei.py — 紫微斗数 API 请求/响应模型
 """
 from __future__ import annotations
 
-from typing import Optional
-from pydantic import BaseModel, Field, model_validator, field_validator
 from datetime import date
+from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator, model_validator
+
 
 class ZiweiRequest(BaseModel):
     """紫微命盘请求。"""

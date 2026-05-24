@@ -7,10 +7,10 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from services.compatibility import compute_compatibility
 

@@ -11,8 +11,9 @@ services/ziwei_engine/liunian.py — 流年 / 流月计算
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from .tables import STEMS, BRANCHES
+
 from .lunar import LunarInfo
+from .tables import BRANCHES, STEMS
 
 
 @dataclass
@@ -89,7 +90,7 @@ def calc_liuyue_list(
     计算流年12个流月数据列表。
     每项: {month, month_name, month_gz, life_palace_branch, palace_name, sihua}
     """
-    from .tables import STEMS, BRANCHES
+    from .tables import BRANCHES, STEMS
     from .transforms import SIHUA_TABLE
     items: list[dict] = []
     m1_stem = _WUHU_M1[liunian.year_stem_idx]

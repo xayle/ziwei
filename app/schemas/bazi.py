@@ -7,27 +7,28 @@ from typing import Any, Dict, List, Literal, Optional, Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from constants import MAX_LON, MIN_LON
-from .common import RangeModel, WarningModel, BackendInfo
+
 from .analysis import (
-    WealthAnalysisModel,
     CareerAnalysisModel,
-    MarriageAnalysisModel,
-    HealthAnalysisModel,
-    RelationshipAnalysisModel,
-    PersonalityModel,
-    MonthlyFortuneModel,
-    GejuModel,
-    PalaceModel,
-    ShenshaModel,
-    JewelryModel,
-    FengshuiModel,
-    LuckyModel,
-    LifestyleModel,
-    MilestoneModel,
-    LiuNianDetailModel,
-    LifeArcModel,
     CurrentFortuneSummaryModel,
+    FengshuiModel,
+    GejuModel,
+    HealthAnalysisModel,
+    JewelryModel,
+    LifeArcModel,
+    LifestyleModel,
+    LiuNianDetailModel,
+    LuckyModel,
+    MarriageAnalysisModel,
+    MilestoneModel,
+    MonthlyFortuneModel,
+    PalaceModel,
+    PersonalityModel,
+    RelationshipAnalysisModel,
+    ShenshaModel,
+    WealthAnalysisModel,
 )
+from .common import BackendInfo, RangeModel, WarningModel
 
 
 class PillarModel(BaseModel):

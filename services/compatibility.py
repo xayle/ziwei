@@ -103,9 +103,11 @@ def _get_pillars(dt_local: datetime, lon: float, tz: str) -> dict[str, Any]:
     加上五行权重 dict。
     使用 verify_full（与主八字引擎一致）。
     """
-    from verify import verify_full
-    from services.bazi_full_service import STEM_META, BRANCH_ELEMENT as _BE
     from zoneinfo import ZoneInfo
+
+    from services.bazi_full_service import BRANCH_ELEMENT as _BE
+    from services.bazi_full_service import STEM_META
+    from verify import verify_full
 
     zi = ZoneInfo(tz)
     local_aware = dt_local if dt_local.tzinfo is not None else dt_local.replace(tzinfo=zi)

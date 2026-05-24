@@ -14,10 +14,10 @@ services/db_backup.py — O1: SQLite 定时备份服务
 """
 from __future__ import annotations
 
-import logging
-import sqlite3
 from datetime import datetime
+import logging
 from pathlib import Path
+import sqlite3
 
 logger = logging.getLogger(__name__)
 

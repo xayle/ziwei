@@ -16,7 +16,6 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import APIRouter, Header, HTTPException, Response
 from starlette.requests import Request
 
-import services.bazi_engine_service as _bazi_engine_service
 from app.schemas.v2.verify import (
     ResponseMeta,
     VerifyRequestV2,
@@ -24,9 +23,10 @@ from app.schemas.v2.verify import (
     VerifyResponseMinimal,
     VerifyResponseV2,
 )
+import services.bazi_engine_service as _bazi_engine_service
 from services.normalize_input import validate_lon_strict
-from services.rate_limit import limiter
 from services.prometheus_monitoring import record_verify_metrics
+from services.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 

@@ -9,9 +9,9 @@ services/name_engine/engine.py — 姓名学分析引擎
 """
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from itertools import product as _iterproduct
+import json
 from pathlib import Path
 
 # ── 数据加载 ──────────────────────────────────────────────────────────────────

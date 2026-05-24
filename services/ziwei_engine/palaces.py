@@ -21,11 +21,16 @@ services/ziwei_engine/palaces.py — 十二宫定位（命宫/身宫/宫名）
 from __future__ import annotations
 
 from dataclasses import dataclass
-from .tables import (
-    STEMS, BRANCHES, PALACE_NAMES,
-    NAYIN_30, NAYIN_TO_JU, WUHU_M1_STEM,
-)
+
 from .lunar import LunarInfo
+from .tables import (
+    BRANCHES,
+    NAYIN_30,
+    NAYIN_TO_JU,
+    PALACE_NAMES,
+    STEMS,
+    WUHU_M1_STEM,
+)
 
 
 @dataclass

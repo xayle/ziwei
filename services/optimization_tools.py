@@ -14,12 +14,13 @@ Phase 2 优化工具 - 批量操作、缓存、查询优化
   每个进程各自维护独立缓存，命中率接近于零。
   要实现共享缓存，请在 .env 中设置 REDIS_URL + REDIS_ENABLED=true。
 """
-import time
-import logging
-from typing import Optional, List, Dict, Any, Type, TypeVar
 from datetime import datetime, timezone
-from sqlmodel import Session, select
+import logging
+import time
+from typing import Any, Dict, List, Optional, Type, TypeVar
+
 from sqlalchemy import update
+from sqlmodel import Session, select
 
 logger = logging.getLogger(__name__)
 

@@ -2,12 +2,13 @@
 性能监控服务 - Prometheus 指标收集
 用于监控 API 性能、请求延迟、错误率等指标
 """
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
-from fastapi import Request
-from fastapi.responses import Response
+import functools
 import time
 from typing import Callable
-import functools
+
+from fastapi import Request
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
 # ============================================================================
 # 定义 Prometheus 指标

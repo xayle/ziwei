@@ -5,9 +5,8 @@ services/ziwei_engine/stars_aux.py — 辅星/杂曜布局
 """
 from __future__ import annotations
 
-from .tables import BRANCHES
 from .lunar import LunarInfo
-
+from .tables import BRANCHES
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 天魁天钺安法表（多流派）

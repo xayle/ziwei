@@ -1,22 +1,19 @@
 """
 场景管理路由 - 支持假设推演和What-If分析
 """
+from datetime import datetime, timezone
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, field_validator, ValidationError
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
-from sqlmodel import Session, select
-from sqlalchemy.exc import IntegrityError
+from typing import List, Optional
 
-from db import get_session
-from app.models import User, Member, Scenario
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import Session, select
+
 from app.dependencies import RequiredUser
-from services.permission_service import Permission, has_permission, Role
-from services.delegation_service import log_action
-from services.json_validators import ScenarioJsonValidator
+from app.error_handling import handle_exceptions
 from app.exceptions import (
     AuthorizationException,
     BusinessException,
@@ -24,7 +21,11 @@ from app.exceptions import (
     ResourceNotFoundException,
     ValidationException,
 )
-from app.error_handling import handle_exceptions
+from app.models import Member, Scenario, User
+from db import get_session
+from services.delegation_service import log_action
+from services.json_validators import ScenarioJsonValidator
+from services.permission_service import Permission, Role, has_permission
 
 logger = logging.getLogger(__name__)
 
@@ -496,8 +497,9 @@ def simulate_scenario(
         )
 
     from datetime import datetime as _dt
-    from services.bazi_engine_service import calculate
     import json as _json
+
+    from services.bazi_engine_service import calculate
 
     birth_dt_str = payload.birth_dt_override or getattr(member, "birth_dt", None) or getattr(member, "birth_date", None)
     if not birth_dt_str:

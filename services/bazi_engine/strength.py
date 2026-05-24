@@ -18,10 +18,10 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from services.bazi_engine.tables import (
-    STEMS,
+    BRANCH_HIDDEN_STEMS,
     BRANCHES,
     STEM_ELEMENT,
-    BRANCH_HIDDEN_STEMS,
+    STEMS,
     WANGXIANG,
 )
 from services.bazi_engine.wuxing import WuxingResult, _elem_of_stem

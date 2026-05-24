@@ -8,8 +8,8 @@ routers/event_prediction.py — 年份事件预测 API
 """
 from __future__ import annotations
 
-import logging
 from datetime import datetime
+import logging
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,19 +17,18 @@ from sqlmodel import Session
 
 from app.dependencies import RequiredUser
 from app.models import Case
-from db import get_session
-
 from app.schemas.event_prediction import (
-    YearEventRequest,
-    YearEventResponse,
     MultiYearTrendRequest,
     MultiYearTrendResponse,
     YearEventConsultRequest,
     YearEventConsultResponse,
+    YearEventRequest,
+    YearEventResponse,
 )
+from db import get_session
 from services.event_signal_engine import (
-    analyze_year_events,
     analyze_multi_year_trend,
+    analyze_year_events,
     compute_overall_year_score,
 )
 from services.followup_service import get_followup_questions

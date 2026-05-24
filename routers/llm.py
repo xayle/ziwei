@@ -12,18 +12,19 @@ POST   /api/v1/llm/interpret-bazi      — 完整八字→规则→模板→LLM 
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import json
 import logging
 import threading
-from datetime import datetime, timezone
 from typing import Optional
 
 from cachetools import TTLCache
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
+from starlette.requests import Request
 
-from db import get_session
+from app.dependencies import RequiredUser
 from app.models.llm import LlmDraft
 from app.schemas.llm import (
     LlmConfigResponse,
@@ -32,18 +33,17 @@ from app.schemas.llm import (
     LlmDraftUpdate,
     LlmInterpretRequest,
 )
-from app.dependencies import RequiredUser
+from db import get_session
+from services.evidence_retriever import fetch_evidence
 from services.llm_service import (
     LlmProviderType,
-    generate_interpretation,
     generate_bazi_interpretation,
+    generate_interpretation,
     get_llm_config,
     stream_interpretation,
 )
-from services.evidence_retriever import fetch_evidence
 from services.prometheus_monitoring import record_llm_call, record_llm_draft_action
 from services.rate_limit import limiter
-from starlette.requests import Request
 
 router = APIRouter(prefix="/api/v1/llm", tags=["LLM辅助解读"])
 logger = logging.getLogger(__name__)
@@ -360,10 +360,13 @@ def delete_draft(
 
 
 # ─────────────────────────── D1: 分模块 LLM 解读 ─────────────────────────────
-import json as _json  # noqa: E402
 from enum import Enum  # noqa: E402
+import json as _json  # noqa: E402
+
 from pydantic import BaseModel as _PydanticBase  # noqa: E402
-from app.models.case import Case as _Case, Snapshot as _Snapshot  # noqa: E402
+
+from app.models.case import Case as _Case  # noqa: E402
+from app.models.case import Snapshot as _Snapshot
 
 
 class InterpretModule(str, Enum):
@@ -585,6 +588,7 @@ async def interpret_module(
 
 # ─────────────────────────── D3: 完整八字一键解读 /interpret-bazi ────────────
 import hashlib as _hashlib  # noqa: E402
+
 from app.schemas.bazi import BaziFullRequest as _BaziFullRequest  # noqa: E402
 from services.bazi_full_service import bazi_full as _bazi_full  # noqa: E402
 from services.bazi_template_renderer import render_summary as _render_summary  # noqa: E402

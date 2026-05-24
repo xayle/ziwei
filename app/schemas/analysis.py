@@ -28,7 +28,6 @@ from typing import Literal, Optional, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # 一生运势总论
 # ─────────────────────────────────────────────────────────────────────────────

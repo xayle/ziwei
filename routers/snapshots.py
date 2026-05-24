@@ -1,20 +1,19 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, cast
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, Query, status
+from pydantic import BaseModel
 from sqlalchemy import desc
 from sqlmodel import Session, select
-from pydantic import BaseModel
 
-from db import get_session
+from app.dependencies import RequiredUser
+from app.error_handling import handle_exceptions
+from app.exceptions import AuthorizationException, ErrorCode, ResourceNotFoundException
 from app.models import Case, Snapshot
 from app.schemas import SnapshotOut
-from app.dependencies import RequiredUser
-from app.exceptions import AuthorizationException, ErrorCode, ResourceNotFoundException
-from app.error_handling import handle_exceptions
+from db import get_session
 from services.delegation_service import log_action
 
 router = APIRouter(prefix="/api/v1", tags=["snapshots"])

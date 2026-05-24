@@ -17,9 +17,9 @@ services/ziwei_engine/life_suggestions.py — 生活化建议引擎
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import json
 import pathlib
-from dataclasses import dataclass, field
 from typing import Any
 
 _RULES_PATH = (

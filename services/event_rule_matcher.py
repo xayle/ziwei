@@ -6,10 +6,10 @@ services/event_rule_matcher.py — 事件规则匹配器
 """
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 import logging
 import os
-from functools import lru_cache
 from typing import Any, Optional
 
 from app.schemas.event_prediction import ClassicalNote

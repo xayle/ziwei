@@ -16,12 +16,12 @@ from __future__ import annotations
 from typing import Literal
 
 from services.bazi_engine.tables import (
-    BRANCHES,
-    STEMS,
-    STEM_ELEMENT,
     BRANCH_CHONG,
+    BRANCHES,
     LIU_HE,
     SAN_HE,
+    STEM_ELEMENT,
+    STEMS,
 )
 
 # ──────────────────────────────────────────────────────────────────────────────

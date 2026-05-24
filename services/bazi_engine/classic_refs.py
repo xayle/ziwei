@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-
 CLASSIC_REFS: list[dict] = [
     # ── 大运 (1-10) ────────────────────────────────────────────────────────────
     {

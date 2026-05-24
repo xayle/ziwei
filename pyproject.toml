@@ -1,0 +1,83 @@
+[project]
+name = "bazi-api"
+version = "8.0.0"
+requires-python = ">=3.11"
+
+# ──────────────────────────────────────────────────────────────
+# Ruff — Python linter & formatter
+# 文档: https://docs.astral.sh/ruff/
+# ──────────────────────────────────────────────────────────────
+[tool.ruff]
+# 目标版本
+target-version = "py311"
+
+# 排除目录
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.egg-info",
+    "migrations/versions",  # Alembic 自动生成，不做 lint
+    "tools/",
+    "scripts/",
+    "tests/",               # 测试文件宽松处理（见 per-file-ignores）
+    "frontend/",
+    "static/",
+    "coverage/",
+]
+
+# 行长度（与 Black 兼容）
+line-length = 120
+
+[tool.ruff.lint]
+# 启用规则集
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "RUF", # ruff-specific rules
+]
+
+# 忽略规则
+ignore = [
+    "E501",  # 行长度由 format 控制
+    "E402",  # module-level import not at top（部分 run.py 有合理的延迟导入）
+    "E721",  # type comparison（少量历史代码）
+    "B904",  # raise without from（历史代码）
+    "UP007", # Optional[X] → X | None — Python 3.11 兼容但暂不强制
+    "RUF012", # mutable class var annotation — dataclass 用法
+    "RUF100", # unused noqa
+]
+
+# 每文件忽略规则
+[tool.ruff.lint.per-file-ignores]
+# 测试文件允许重定义、魔术数字
+"tests/**" = ["F811", "F401", "E501", "B"]
+# run.py 是遗留入口文件，有一些特殊模式
+"run.py" = ["E302", "E303", "F401"]
+# __init__.py 允许 re-export
+"**/__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "services", "routers", "db", "verify", "constants", "schemas", "solar_time", "boundary"]
+force-sort-within-sections = true
+
+# ──────────────────────────────────────────────────────────────
+# Pyright (静态类型检查)
+# 注意：详细配置在 pyrightconfig.json，此处仅做 pyproject 集成备注
+# ──────────────────────────────────────────────────────────────
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+# ──────────────────────────────────────────────────────────────
+# pytest（补充 pytest.ini 中的部分配置）
+# ──────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+addopts = []  # 主配置在 pytest.ini，此处留空避免冲突

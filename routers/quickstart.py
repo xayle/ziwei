@@ -12,14 +12,14 @@ from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlmodel import Session
 
-from db import get_session
+from app.dependencies import RequiredUser
+from app.error_handling import handle_exceptions
+from app.exceptions import ErrorCode, ValidationException
 from app.models import Case
 from app.schemas import CaseOut, ComputeRequest, ComputeResponse
-from app.dependencies import RequiredUser
-from app.exceptions import ErrorCode, ValidationException
-from app.error_handling import handle_exceptions
+from constants import MAX_LON, MIN_LON
+from db import get_session
 from routers.compute import _do_compute_for_case
-from constants import MIN_LON, MAX_LON
 
 router = APIRouter(prefix="/api/v1", tags=["quickstart"])
 

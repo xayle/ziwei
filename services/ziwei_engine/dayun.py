@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .tables import STEMS, BRANCHES, WUHU_M1_STEM
 from .lunar import LunarInfo
+from .tables import BRANCHES, STEMS, WUHU_M1_STEM
 
 
 @dataclass

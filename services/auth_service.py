@@ -1,25 +1,26 @@
 """
 认证服务 - JWT生成、验证、权限检查
 """
-import os
-import hashlib
-import uuid
 from datetime import datetime, timedelta, timezone
+import hashlib
+import os
 from typing import Optional
+import uuid
 
+from argon2 import PasswordHasher
+from argon2.exceptions import VerificationError, VerifyMismatchError
 from jose import JWTError, jwt
 from pydantic import BaseModel
-from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError, VerificationError
+
+from app.config import settings
+from app.error_handling import handle_exceptions
 
 # ✅ Week 4: 集成新的错误处理系统
 from app.exceptions import (
     AuthenticationException,
-    ValidationException,
     ErrorCode,
+    ValidationException,
 )
-from app.error_handling import handle_exceptions
-from app.config import settings
 
 # 配置 - 统一从 settings 读取，env var 优先
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -49,8 +50,9 @@ def revoke_access_token_jti(
     """
     _revoked_jtis.add(jti)
     if session is not None:
-        from app.models import RevokedJti
         from sqlmodel import select as _select
+
+        from app.models import RevokedJti
         # 避免重复插入（幂等）
         existing = session.exec(
             _select(RevokedJti).where(RevokedJti.jti == jti)
@@ -70,8 +72,9 @@ def load_revoked_jtis_from_db(session) -> int:
     Returns:
         加载的 JTI 数量
     """
-    from app.models import RevokedJti
     from sqlmodel import select as _select
+
+    from app.models import RevokedJti
     now = datetime.now(timezone.utc)
     rows = session.exec(
         _select(RevokedJti).where(RevokedJti.expires_at > now)
@@ -298,8 +301,9 @@ def verify_refresh_token(session, user_id: int, token: str) -> bool:
     引发:
         AuthenticationException: 令牌无效或已到期
     """
-    from app.models import RefreshToken
     from sqlmodel import select
+
+    from app.models import RefreshToken
     
     if not token:
         raise AuthenticationException(
@@ -350,8 +354,9 @@ def verify_refresh_token(session, user_id: int, token: str) -> bool:
 
 def revoke_refresh_token(session, token: str):
     """撤销刷新令牌"""
-    from app.models import RefreshToken
     from sqlmodel import select
+
+    from app.models import RefreshToken
     
     refresh_token = session.exec(
         select(RefreshToken).where(RefreshToken.token == token, RefreshToken.deleted_at.is_(None))  # type: ignore
@@ -365,8 +370,9 @@ def revoke_refresh_token(session, token: str):
 
 def revoke_all_user_tokens(session, user_id: int):
     """撤销用户的所有刷新令牌 (如修改密码时调用)"""
-    from app.models import RefreshToken
     from sqlmodel import select
+
+    from app.models import RefreshToken
     
     tokens = session.exec(
         select(RefreshToken).where(

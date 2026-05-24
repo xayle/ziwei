@@ -16,9 +16,9 @@ POST /api/v1/users/me/anonymize  — 用户自助匿名化账户数据（204 No 
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import hashlib
 import logging
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
