@@ -11,9 +11,10 @@ M1 任务 1.02:
   verify.py: from solar_time import compute_solar_correction_minutes
            → from services.bazi_engine.solar_time_v2 import compute_solar_correction_minutes
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 import math
 
 
@@ -97,6 +98,7 @@ def apply_solar_correction(dt: datetime, longitude: float) -> datetime:
 # ─────────────────────────────────────────────────────────────────────────────
 # 自检 / 验证
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def _selfcheck() -> None:
     """

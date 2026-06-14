@@ -1,4 +1,5 @@
 """routers/v2 — API v2 路由包."""
+
 from __future__ import annotations
 
 from fastapi import APIRouter

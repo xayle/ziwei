@@ -18,6 +18,7 @@ services/ziwei_engine/palaces.py — 十二宫定位（命宫/身宫/宫名）
 宫名分配（命宫为1宫，顺时针逆地支方向依次排列）：
   palace_name[i] = PALACE_NAMES[(i - 命宫支 + 12) % 12]
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,13 +37,14 @@ from .tables import (
 @dataclass
 class PalaceLayout:
     """十二宫布局"""
-    life_branch_idx: int    # 命宫地支索引
-    body_branch_idx: int    # 身宫地支索引
-    life_stem_idx: int      # 命宫天干索引
-    life_ganzhi: str        # 命宫干支 如"丁未"
-    body_ganzhi: str        # 身宫干支
-    wuxing_ju: int          # 五行局数 2/3/4/5/6
-    wuxing_ju_name: str     # "水二局" / "木三局" 等
+
+    life_branch_idx: int  # 命宫地支索引
+    body_branch_idx: int  # 身宫地支索引
+    life_stem_idx: int  # 命宫天干索引
+    life_ganzhi: str  # 命宫干支 如"丁未"
+    body_ganzhi: str  # 身宫干支
+    wuxing_ju: int  # 五行局数 2/3/4/5/6
+    wuxing_ju_name: str  # "水二局" / "木三局" 等
     # 12宫索引 → 宫名 : branch_idx → palace_name
     branch_to_palace: dict[int, str]
     # 宫名 → branch_idx
@@ -50,17 +52,21 @@ class PalaceLayout:
 
 
 _JU_NAMES: dict[int, str] = {
-    2: "水二局", 3: "木三局", 4: "金四局", 5: "土五局", 6: "火六局",
+    2: "水二局",
+    3: "木三局",
+    4: "金四局",
+    5: "土五局",
+    6: "火六局",
 }
 
 
 def calc_palaces(info: LunarInfo) -> PalaceLayout:
     """根据农历信息计算十二宫布局"""
-    m  = info.calc_lunar_month   # 闰月按下一月（如闰五月=6），确保命宫计算正确
-    hb = info.hour_branch_idx    # 子=0…亥=11 (寅=2)
+    m = info.calc_lunar_month  # 闰月按下一月（如闰五月=6），确保命宫计算正确
+    hb = info.hour_branch_idx  # 子=0…亥=11 (寅=2)
 
     # ── 命宫地支 ──
-    life_b = (2 + m - 1 - hb) % 12    # 寅(2) + 月数-1 - 时支
+    life_b = (2 + m - 1 - hb) % 12  # 寅(2) + 月数-1 - 时支
 
     # ── 身宫地支 ──
     body_b = (2 + m - 1 + hb) % 12
@@ -94,13 +100,13 @@ def calc_palaces(info: LunarInfo) -> PalaceLayout:
         palace_to_branch[name] = b
 
     return PalaceLayout(
-        life_branch_idx  = life_b,
-        body_branch_idx  = body_b,
-        life_stem_idx    = life_stem_idx,
-        life_ganzhi      = life_gz,
-        body_ganzhi      = body_gz,
-        wuxing_ju        = ju,
-        wuxing_ju_name   = _JU_NAMES[ju],
-        branch_to_palace = branch_to_palace,
-        palace_to_branch = palace_to_branch,
+        life_branch_idx=life_b,
+        body_branch_idx=body_b,
+        life_stem_idx=life_stem_idx,
+        life_ganzhi=life_gz,
+        body_ganzhi=body_gz,
+        wuxing_ju=ju,
+        wuxing_ju_name=_JU_NAMES[ju],
+        branch_to_palace=branch_to_palace,
+        palace_to_branch=palace_to_branch,
     )

@@ -7,19 +7,19 @@ services/api_key_service.py — API Key 生成、哈希与鉴权
     verify_key(key, hash) → bool
     authenticate_api_key(token, session) → ApiKey | None
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import hashlib
 import secrets
-from typing import Optional
 
 from sqlmodel import Session, select
 
 from app.models.api_key import ApiKey
 
 _PREFIX = "zw_"
-_KEY_BYTES = 24   # 24 bytes → 48 hex chars；总长度 = 3 + 48 = 51 chars
+_KEY_BYTES = 24  # 24 bytes → 48 hex chars；总长度 = 3 + 48 = 51 chars
 
 
 def generate_key() -> tuple[str, str, str]:
@@ -52,7 +52,7 @@ def verify_key(plaintext: str, stored_hash: str) -> bool:
 def authenticate_api_key(
     token: str,
     session: Session,
-) -> Optional[ApiKey]:
+) -> ApiKey | None:
     """
     从数据库中查找与 token 匹配的有效 ApiKey。
 
@@ -62,19 +62,17 @@ def authenticate_api_key(
       • expires_at 为 None 或未过期
     """
     h = hash_key(token)
-    key = session.exec(
-        select(ApiKey).where(ApiKey.key_hash == h)
-    ).first()
+    key = session.exec(select(ApiKey).where(ApiKey.key_hash == h)).first()
     if key is None:
         return None
     if key.revoked_at is not None:
         return None
     if key.expires_at is not None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         exp = key.expires_at
         # 兼容 naive datetime（SQLite 不保存 tz）
         if exp.tzinfo is None:
-            exp = exp.replace(tzinfo=timezone.utc)
+            exp = exp.replace(tzinfo=UTC)
         if now > exp:
             return None
     return key

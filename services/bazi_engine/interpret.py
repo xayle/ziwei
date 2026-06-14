@@ -10,10 +10,10 @@ services/bazi_engine/interpret.py — 解读引擎 (M3 任务 3.01)
 输入: InterpretInput (含各层计算结果)
 输出: InterpretResult(各字段模板文本)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 常量映射
@@ -21,8 +21,11 @@ from typing import Optional
 
 _WUXING_CN = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
 _ORGAN = {
-    "wood": "肝胆", "fire": "心小肠", "earth": "脾胃",
-    "metal": "肺大肠", "water": "肾膀胱",
+    "wood": "肝胆",
+    "fire": "心小肠",
+    "earth": "脾胃",
+    "metal": "肺大肠",
+    "water": "肾膀胱",
 }
 _DIRECTION = {"wood": "东方", "fire": "南方", "earth": "中部", "metal": "西方", "water": "北方"}
 _SEASON = {"wood": "春季", "fire": "夏季", "earth": "四季末", "metal": "秋季", "water": "冬季"}
@@ -176,22 +179,22 @@ _SHENSHA_TMPL: dict[str, str] = {
     "天乙贵人": "命带天乙贵人，逢难必有贵人相助，仕途与事业能得上级提携，危难中往往逢凶化吉。",
     "太极贵人": "太极贵人入命，智慧超群，学习力强，适合从事哲学、命理、医学等深度智识行业。",
     "文昌贵人": "文昌贵人加持，学业优秀，文笔出众，利于考试与学术成就，宜从事教育、写作、传媒。",
-    "将星":     "将星入命，有统帅之才，天生领袖气质，适合管理、军警、竞技等需要威权的领域。",
-    "驿马":     "驿马临命，一生多主动变动奔波，适合迁移、出差、外贸，宜以动制静、以变应变。",
-    "桃花":     "命带桃花，人缘极佳，魅力出众，异性缘旺盛，宜于从事服务业、公关、表演艺术。",
-    "华盖":     "华盖入命，孤高清雅，才华横溢，多有宗教艺术天赋，但与人相处略显孤独。",
-    "劫煞":     "劫煞临命，需防意外破财，凡事多加谨慎，出行宜避险，财务管理需特别注意。",
-    "亡神":     "亡神入命，直觉灵敏，但较易有失去感，须防泄密与论是非，保守秘密尤为重要。",
-    "孤辰":     "孤辰入命，个性独立，内心孤独感较强，宜给予足够的个人空间与独处时光。",
-    "寡宿":     "寡宿入命，自律克己，感情生活需更多用心经营，夫妻之间需主动增进沟通。",
-    "空亡":     "命带空亡，逢空则失，凡事需留余地，不可全力押注，宜以稳为主、守正待运。",
-    "咸池":     "咸池临命（桃花水），情感生活多彩，但需防感情困扰，已婚者更需专一用情。",
-    "五鬼":     "五鬼入命，需防小人与是非，工作中注意人际边界，避免轻信，谨防背后议论。",
+    "将星": "将星入命，有统帅之才，天生领袖气质，适合管理、军警、竞技等需要威权的领域。",
+    "驿马": "驿马临命，一生多主动变动奔波，适合迁移、出差、外贸，宜以动制静、以变应变。",
+    "桃花": "命带桃花，人缘极佳，魅力出众，异性缘旺盛，宜于从事服务业、公关、表演艺术。",
+    "华盖": "华盖入命，孤高清雅，才华横溢，多有宗教艺术天赋，但与人相处略显孤独。",
+    "劫煞": "劫煞临命，需防意外破财，凡事多加谨慎，出行宜避险，财务管理需特别注意。",
+    "亡神": "亡神入命，直觉灵敏，但较易有失去感，须防泄密与论是非，保守秘密尤为重要。",
+    "孤辰": "孤辰入命，个性独立，内心孤独感较强，宜给予足够的个人空间与独处时光。",
+    "寡宿": "寡宿入命，自律克己，感情生活需更多用心经营，夫妻之间需主动增进沟通。",
+    "空亡": "命带空亡，逢空则失，凡事需留余地，不可全力押注，宜以稳为主、守正待运。",
+    "咸池": "咸池临命（桃花水），情感生活多彩，但需防感情困扰，已婚者更需专一用情。",
+    "五鬼": "五鬼入命，需防小人与是非，工作中注意人际边界，避免轻信，谨防背后议论。",
     "天德贵人": "天德贵人护命，一生行事正直，多有化险为夷之机，官司灾厄往往能逢凶化吉。",
     "月德贵人": "月德贵人同天德，慈悲心重，贵人相助多，官场仕途顺遂，产厄与病灾有化解之力。",
-    "红鸾":     "红鸾入命，姻缘桃花旺，多主爱情与婚姻喜事，适婚年龄遇之婚事顺利可期。",
-    "天喜":     "天喜临年，喜庆之事多，婚娶生育添丁，皆为吉星照临之象。",
-    "金舆":     "金舆入命，晚年可享安逸之福，配偶多有助力，婚后生活较为殷实。",
+    "红鸾": "红鸾入命，姻缘桃花旺，多主爱情与婚姻喜事，适婚年龄遇之婚事顺利可期。",
+    "天喜": "天喜临年，喜庆之事多，婚娶生育添丁，皆为吉星照临之象。",
+    "金舆": "金舆入命，晚年可享安逸之福，配偶多有助力，婚后生活较为殷实。",
     "国印贵人": "国印贵人临命，有官印福缘，利于仕途晋升与社会地位提升，宜以德以义立身。",
 }
 
@@ -221,43 +224,43 @@ _DIZHI_REL_TMPL: dict[str, str] = {
 _LIFESTYLE_TMPL: dict[str, dict[str, str]] = {
     "wood": {
         "exercise": "建议进行太极、瑜伽、林间慢跑等绿色环境的舒缓运动，有助于疏肝气、排肝毒。",
-        "diet":     "多食绿色蔬菜（菠菜、韭菜、青椒），少辛辣，有助于护肝补胆。",
-        "sleep":    "头朝东而睡，顺应木气生发之方，有助于提升睡眠质量与精力恢复。",
-        "career":   "职业宜选择木属性行业：教育、医药、农林、食品、出版或文化产业。",
-        "travel":   "出行宜往东方或东南方，山地、森林、绿色植被丰富之地有助于调和木气。",
-        "color":    "居家宜以绿色、青色为主调，有助于激活木气，提升创造力。",
+        "diet": "多食绿色蔬菜（菠菜、韭菜、青椒），少辛辣，有助于护肝补胆。",
+        "sleep": "头朝东而睡，顺应木气生发之方，有助于提升睡眠质量与精力恢复。",
+        "career": "职业宜选择木属性行业：教育、医药、农林、食品、出版或文化产业。",
+        "travel": "出行宜往东方或东南方，山地、森林、绿色植被丰富之地有助于调和木气。",
+        "color": "居家宜以绿色、青色为主调，有助于激活木气，提升创造力。",
     },
     "fire": {
         "exercise": "建议游泳、冥想、气功等冷静型运动，以水克火，平衡过旺火气。",
-        "diet":     "多食苦味食物（苦瓜、莲子、苦茶），有助于清心降火、安神定志。",
-        "sleep":    "睡前冥想10分钟，避免深夜使用屏幕，有助于心火平息，深度入眠。",
-        "career":   "职业宜选择火属性行业：传媒、餐饮、能源、娱乐演艺、美容美发。",
-        "travel":   "出行宜往南方，温暖气候有助于火气旺盛；若避火则宜北方水乡。",
-        "color":    "居家宜以暖调红色点缀（勿过多），朱红与橙色能激发热情与行动力。",
+        "diet": "多食苦味食物（苦瓜、莲子、苦茶），有助于清心降火、安神定志。",
+        "sleep": "睡前冥想10分钟，避免深夜使用屏幕，有助于心火平息，深度入眠。",
+        "career": "职业宜选择火属性行业：传媒、餐饮、能源、娱乐演艺、美容美发。",
+        "travel": "出行宜往南方，温暖气候有助于火气旺盛；若避火则宜北方水乡。",
+        "color": "居家宜以暖调红色点缀（勿过多），朱红与橙色能激发热情与行动力。",
     },
     "earth": {
         "exercise": "建议快走、徒步、健身操等平稳型运动，有助于强化脾胃、调和中土。",
-        "diet":     "多食黄色食物（玉米、南瓜、小米），规律三餐，避免暴饮暴食。",
-        "sleep":    "定时作息为优先，午间小憩15-20分钟有助于激活脾土中枢之气。",
-        "career":   "职业宜选择土属性行业：房地产、保险、建筑、农业、物流仓储。",
-        "travel":   "出行宜往中原（中部地带）或西南方，平地、田园景致有助于固本。",
-        "color":    "居家宜以土黄、米色为主调，陶瓷、石材等土系摆件有助于稳定气场。",
+        "diet": "多食黄色食物（玉米、南瓜、小米），规律三餐，避免暴饮暴食。",
+        "sleep": "定时作息为优先，午间小憩15-20分钟有助于激活脾土中枢之气。",
+        "career": "职业宜选择土属性行业：房地产、保险、建筑、农业、物流仓储。",
+        "travel": "出行宜往中原（中部地带）或西南方，平地、田园景致有助于固本。",
+        "color": "居家宜以土黄、米色为主调，陶瓷、石材等土系摆件有助于稳定气场。",
     },
     "metal": {
         "exercise": "建议户外呼吸运动、骑行、拳击等有明确节奏感的运动，有助于肺气宣发。",
-        "diet":     "多食白色食物（梨、山药、白萝卜）、辛味食物，有助于润肺清宣。",
-        "sleep":    "头朝西而睡，顺应金气收敛之方，保证充足睡眠（7-8小时），护肺保气。",
-        "career":   "职业宜选择金属性行业：金融、律政、机械制造、珠宝、安保。",
-        "travel":   "出行宜往西方或西北方，高原、沙漠、戈壁等干燥地带有助于金气凝练。",
-        "color":    "居家宜以白色、金色、银色为主调，金属器物与圆形装饰有助于聚气。",
+        "diet": "多食白色食物（梨、山药、白萝卜）、辛味食物，有助于润肺清宣。",
+        "sleep": "头朝西而睡，顺应金气收敛之方，保证充足睡眠（7-8小时），护肺保气。",
+        "career": "职业宜选择金属性行业：金融、律政、机械制造、珠宝、安保。",
+        "travel": "出行宜往西方或西北方，高原、沙漠、戈壁等干燥地带有助于金气凝练。",
+        "color": "居家宜以白色、金色、银色为主调，金属器物与圆形装饰有助于聚气。",
     },
     "water": {
         "exercise": "建议拉伸、水中运动、普拉提等柔韧性运动，有助于肾气循环及灵活性。",
-        "diet":     "多食黑色食物（黑豆、核桃、黑芝麻），有助于补肾固元、滋阴益气。",
-        "sleep":    "头朝北而睡，早睡早起有益肾气，避免熬夜以防伤肾气耗散。",
-        "career":   "职业宜选择水属性行业：IT、贸易、运输、旅游、咨询、媒体资讯。",
-        "travel":   "出行宜往北方或海边，水城（如沿海港口城市）有助于激活水气。",
-        "color":    "居家宜以黑色、深蓝为点缀，流水摆件、鱼缸等水系布置有助于聚财。",
+        "diet": "多食黑色食物（黑豆、核桃、黑芝麻），有助于补肾固元、滋阴益气。",
+        "sleep": "头朝北而睡，早睡早起有益肾气，避免熬夜以防伤肾气耗散。",
+        "career": "职业宜选择水属性行业：IT、贸易、运输、旅游、咨询、媒体资讯。",
+        "travel": "出行宜往北方或海边，水城（如沿海港口城市）有助于激活水气。",
+        "color": "居家宜以黑色、深蓝为点缀，流水摆件、鱼缸等水系布置有助于聚财。",
     },
 }
 
@@ -279,12 +282,10 @@ _GENERAL_TMPL = {
         "多学「以柔克刚」，对人处事留有余地，以免四方树敌。"
     ),
     "favorable_dayun": (
-        "当前大运与命局用神相生，为人生进阶的黄金时期，"
-        "宜主动出击，把握机遇，果断决策，努力可收事半功倍之效。"
+        "当前大运与命局用神相生，为人生进阶的黄金时期，宜主动出击，把握机遇，果断决策，努力可收事半功倍之效。"
     ),
     "unfavorable_dayun": (
-        "当前大运与命局忌神相合，需低调守成，以稳为先，"
-        "不宜大举扩张或冒险，专注修炼内功、积累资源，静候旺运来临。"
+        "当前大运与命局忌神相合，需低调守成，以稳为先，不宜大举扩张或冒险，专注修炼内功、积累资源，静候旺运来临。"
     ),
 }
 
@@ -308,8 +309,16 @@ _DAY_STEM_TRAIT: dict[str, str] = {
 
 # 日主天干五行中文（用于用神解读段头）
 _STEM_WX_CN: dict[str, str] = {
-    "甲": "木", "乙": "木", "丙": "火", "丁": "火", "戊": "土",
-    "己": "土", "庚": "金", "辛": "金", "壬": "水", "癸": "水",
+    "甲": "木",
+    "乙": "木",
+    "丙": "火",
+    "丁": "火",
+    "戊": "土",
+    "己": "土",
+    "庚": "金",
+    "辛": "金",
+    "壬": "水",
+    "癸": "水",
 }
 
 # 日主强弱补充建议（strength_tier → 策略短语）
@@ -337,38 +346,42 @@ _YONGSHEN_TMPL = (
 # 数据输入/输出结构
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class InterpretInput:
     """解读引擎输入"""
+
     day_stem: str
-    wuxing_scores: dict[str, float]        # {element: float}
-    yongshen_favor: list[str]              # 英文五行
+    wuxing_scores: dict[str, float]  # {element: float}
+    yongshen_favor: list[str]  # 英文五行
     yongshen_avoid: list[str]
-    strength_tier: str                     # "极旺"|"偏旺"|"中和"|"偏弱"|"极弱"
+    strength_tier: str  # "极旺"|"偏旺"|"中和"|"偏弱"|"极弱"
     geju_name: str
-    shensha_items: list[dict]              # [{name, is_beneficial, ...}]
-    dizhi_relations: list[dict]            # [{type, branches, wuxing, palace}]
-    dayun_trend: str = "平稳"             # "上升"|"平稳"|"下降"
+    shensha_items: list[dict]  # [{name, is_beneficial, ...}]
+    dizhi_relations: list[dict]  # [{type, branches, wuxing, palace}]
+    dayun_trend: str = "平稳"  # "上升"|"平稳"|"下降"
     gender: str = "male"
 
 
 @dataclass
 class InterpretResult:
     """解读引擎输出"""
-    missing_wuxing_texts: list[str] = field(default_factory=list)   # 五行缺失描述
+
+    missing_wuxing_texts: list[str] = field(default_factory=list)  # 五行缺失描述
     dominant_wuxing_texts: list[str] = field(default_factory=list)  # 五行偏旺描述
-    geju_text: str = ""                                              # 格局解读
-    shensha_texts: list[str] = field(default_factory=list)          # 神煞解读
-    dizhi_rel_texts: list[str] = field(default_factory=list)        # 地支关系
-    lifestyle_text: str = ""                                         # 生活建议
-    yongshen_text: str = ""                                          # 用神解读
-    general_text: str = ""                                           # 通论
-    full_summary: str = ""                                           # 全文汇总（100-200字）
+    geju_text: str = ""  # 格局解读
+    shensha_texts: list[str] = field(default_factory=list)  # 神煞解读
+    dizhi_rel_texts: list[str] = field(default_factory=list)  # 地支关系
+    lifestyle_text: str = ""  # 生活建议
+    yongshen_text: str = ""  # 用神解读
+    general_text: str = ""  # 通论
+    full_summary: str = ""  # 全文汇总（100-200字）
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 主引擎
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     """
@@ -381,7 +394,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
 
     # ── 1. 五行缺失 ──────────────────────────────────────────────────────────
     for el, score in inp.wuxing_scores.items():
-        if score / total < 0.03:     # 低于3%视为缺失
+        if score / total < 0.03:  # 低于3%视为缺失
             tmpl = _MISSING_WUXING_TMPL.get(el, "")
             if tmpl:
                 result.missing_wuxing_texts.append(
@@ -396,32 +409,27 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
 
     # ── 2. 五行偏旺 ──────────────────────────────────────────────────────────
     for el, score in inp.wuxing_scores.items():
-        if score / total > 0.5:     # 超过50%视为偏旺
+        if score / total > 0.5:  # 超过50%视为偏旺
             tmpl = _DOMINANT_WUXING_TMPL.get(el, "")
             if tmpl:
-                result.dominant_wuxing_texts.append(
-                    tmpl.format(organ=_ORGAN.get(el, ""))
-                )
+                result.dominant_wuxing_texts.append(tmpl.format(organ=_ORGAN.get(el, "")))
 
     # ── 3. 格局解读 ──────────────────────────────────────────────────────────
     _geju_stem_trait = _DAY_STEM_TRAIT.get(inp.day_stem, "均衡中正")
     _geju_raw = _GEJU_TMPL.get(
-        inp.geju_name,
-        _GEJU_DEFAULT_TMPL.format(geju_name=inp.geju_name, stem_trait=_geju_stem_trait)
+        inp.geju_name, _GEJU_DEFAULT_TMPL.format(geju_name=inp.geju_name, stem_trait=_geju_stem_trait)
     )
     result.geju_text = _geju_raw.format(stem_trait=_geju_stem_trait, geju_name=inp.geju_name)
 
     # ── 4. 神煞解读 ──────────────────────────────────────────────────────────
-    for s in inp.shensha_items[:5]:   # 最多5条
+    for s in inp.shensha_items[:5]:  # 最多5条
         name = s.get("name", "")
         tmpl = _SHENSHA_TMPL.get(name)
         if tmpl:
             result.shensha_texts.append(tmpl)
         else:
             meaning = s.get("meaning") or s.get("note", "")
-            result.shensha_texts.append(
-                _SHENSHA_DEFAULT_TMPL.format(name=name, meaning=meaning)
-            )
+            result.shensha_texts.append(_SHENSHA_DEFAULT_TMPL.format(name=name, meaning=meaning))
 
     # ── 5. 地支关系 ──────────────────────────────────────────────────────────
     for rel in inp.dizhi_relations[:3]:
@@ -435,10 +443,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
             wuxing_cn = rel.get("wuxing_cn", "")
             palace = rel.get("palace", "")
             try:
-                result.dizhi_rel_texts.append(
-                    tmpl.format(b1=b1, b2=b2, b3=b3,
-                                wuxing_cn=wuxing_cn, palace=palace)
-                )
+                result.dizhi_rel_texts.append(tmpl.format(b1=b1, b2=b2, b3=b3, wuxing_cn=wuxing_cn, palace=palace))
             except KeyError:  # pragma: no cover
                 result.dizhi_rel_texts.append(f"{rel_type}关系：{b1}{b2}{b3}")
 
@@ -459,7 +464,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     favor_cn = "、".join(_WUXING_CN.get(e, e) for e in inp.yongshen_favor)
     avoid_cn = "、".join(_WUXING_CN.get(e, e) for e in inp.yongshen_avoid)
     _stem_trait = _DAY_STEM_TRAIT.get(inp.day_stem, "均衡中正")
-    _stem_wx    = _STEM_WX_CN.get(inp.day_stem, "")
+    _stem_wx = _STEM_WX_CN.get(inp.day_stem, "")
     _tier_strategy = _TIER_STRATEGY.get(inp.strength_tier, f"日主{inp.strength_tier}，顺势而为")
     result.yongshen_text = _YONGSHEN_TMPL.format(
         stem_cn=inp.day_stem or "未知",
@@ -509,7 +514,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     _sec1 = (
         f"【命局总评】{_tier_text}，格局为【{inp.geju_name}】。"
         f"命局五行以{_max_el_cn}为主导（占比{_max_pct:.0%}），"
-        f"整体气场{'阳刚进取' if inp.strength_tier in ('极旺','偏旺') else '中正平和' if inp.strength_tier == '中和' else '柔韧内敛'}。"
+        f"整体气场{'阳刚进取' if inp.strength_tier in ('极旺', '偏旺') else '中正平和' if inp.strength_tier == '中和' else '柔韧内敛'}。"
     )
 
     # ── §9-B 格局分析 ──────────────────────────────────────────────────────
@@ -540,7 +545,7 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     elif _dominant_parts:
         _sec3 = (
             f"【五行特点】五行以{_dominant_parts[0]}为旺，"
-            f"气场偏{'刚锐' if _dominant_parts[0] in ('金','火') else '柔韧' if _dominant_parts[0] in ('木','水') else '稳重'}，"
+            f"气场偏{'刚锐' if _dominant_parts[0] in ('金', '火') else '柔韧' if _dominant_parts[0] in ('木', '水') else '稳重'}，"
             f"注意节制{_dominant_parts[0]}属性的使用，防止过度旺盛带来对应脏腑压力。"
         )
     else:
@@ -562,7 +567,11 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
         _sec4 = "【神煞加持】命局神煞分布均衡，无突出的吉凶神煞干扰，整体运势以自身实力为主导。"
 
     # ── §9-E 人生主线建议 ──────────────────────────────────────────────────
-    _dayun_desc = {"上升": "当前大运处于上升通道，宜积极拓展", "下降": "当前大运偏于收缩，宜守成蓄力", "平稳": "当前大运运势平稳，宜稳中求进"}
+    _dayun_desc = {
+        "上升": "当前大运处于上升通道，宜积极拓展",
+        "下降": "当前大运偏于收缩，宜守成蓄力",
+        "平稳": "当前大运运势平稳，宜稳中求进",
+    }
     _dayun_hint = _dayun_desc.get(inp.dayun_trend, "大运平稳")
     _sec5 = (
         f"【人生主线建议】用神为{favor_cn}，忌神为{avoid_cn}。"

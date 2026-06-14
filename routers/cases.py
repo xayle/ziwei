@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import List, Optional, cast
+from datetime import UTC, datetime, timedelta
+from typing import cast
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Query, status
@@ -25,16 +25,12 @@ router = APIRouter(prefix="/api/v1/cases", tags=["cases"])
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @router.post("", response_model=CaseOut, status_code=status.HTTP_201_CREATED)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
-def create_case(
-    payload: CaseCreate,
-    current_user: RequiredUser,
-    session: Session = Depends(get_session)
-):
+def create_case(payload: CaseCreate, current_user: RequiredUser, session: Session = Depends(get_session)):
     case = Case(**payload.model_dump())
     # 本地 bypass 兜底场景下，current_user.id 可能为空或无效。
     # 仅在用户 ID 有效时写入 owner_id，避免外键约束导致 500。
@@ -64,8 +60,8 @@ def create_case(
 def list_cases(
     current_user: RequiredUser,
     session: Session = Depends(get_session),
-    q: Optional[str] = Query(default=None, description="Search by name substring"),
-    tag: Optional[str] = Query(default=None, description="Filter by tag substring"),
+    q: str | None = Query(default=None, description="Search by name substring"),
+    tag: str | None = Query(default=None, description="Filter by tag substring"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     order: str = Query(default="updated_at", pattern="^(updated_at|created_at|name)$"),
@@ -106,11 +102,11 @@ def list_cases(
         .where(
             Snapshot.case_id.in_(case_ids),  # type: ignore[union-attr]
             Snapshot.kind == "verify",
-            Snapshot.deleted_at.is_(None)  # type: ignore[union-attr]
+            Snapshot.deleted_at.is_(None),  # type: ignore[union-attr]
         )
         .order_by(Snapshot.case_id, Snapshot.created_at.desc())  # type: ignore[union-attr]
     ).all()
-    
+
     # ✅ 第五步：构建 case_id → snapshot 的映射（避免重复）
     snapshot_map = {}
     for snap in all_snapshots:
@@ -118,7 +114,7 @@ def list_cases(
             snapshot_map[snap.case_id] = snap
 
     # ✅ 第六步：构建结果（只需数据操作，无额外数据库查询）
-    results: List[CaseOut] = []
+    results: list[CaseOut] = []
     for c in cases:
         summary = None
         latest_verify = snapshot_map.get(c.id)
@@ -141,11 +137,7 @@ def list_cases(
 
 @router.get("/{case_id}", response_model=CaseOut)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
-def get_case(
-    case_id: str,
-    current_user: RequiredUser,
-    session: Session = Depends(get_session)
-):
+def get_case(case_id: str, current_user: RequiredUser, session: Session = Depends(get_session)):
     case = session.exec(
         select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore[union-attr]
     ).first()
@@ -166,7 +158,7 @@ def get_case(
             .where(
                 Snapshot.case_id == case.id,
                 Snapshot.kind == "verify",
-                Snapshot.deleted_at.is_(None)  # type: ignore[union-attr]
+                Snapshot.deleted_at.is_(None),  # type: ignore[union-attr]
             )
             .order_by(cast(ColumnElement[datetime], Snapshot.created_at).desc())
             .limit(1)
@@ -188,12 +180,7 @@ def get_case(
 
 @router.patch("/{case_id}", response_model=CaseOut)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
-def patch_case(
-    case_id: str,
-    payload: CasePatch,
-    current_user: RequiredUser,
-    session: Session = Depends(get_session)
-):
+def patch_case(case_id: str, payload: CasePatch, current_user: RequiredUser, session: Session = Depends(get_session)):
     case = session.exec(
         select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore
     ).first()
@@ -229,11 +216,7 @@ def patch_case(
 
 @router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
-def delete_case(
-    case_id: str,
-    current_user: RequiredUser,
-    session: Session = Depends(get_session)
-):
+def delete_case(case_id: str, current_user: RequiredUser, session: Session = Depends(get_session)):
     """软删除 Case（设置 deleted_at）——需要所有权"""
     case = session.exec(
         select(Case).where(Case.id == case_id, Case.deleted_at.is_(None))  # type: ignore
@@ -265,6 +248,7 @@ def delete_case(
 # B6: 隐私分享链接
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.post("/{case_id}/share-token", status_code=status.HTTP_201_CREATED)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def create_share_token(
@@ -287,7 +271,7 @@ def create_share_token(
             message="You don't have permission to share this case",
         )
     token = str(uuid4())
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    expires_at = datetime.now(UTC) + timedelta(hours=24)
     case.share_token = token
     case.share_expires_at = expires_at
     case.updated_at = _now_utc()
@@ -311,7 +295,7 @@ def get_shared_case(token: str, session: Session = Depends(get_session)):
             message="share token not found or expired",
             details={"token": token[:8] + "..."},
         )
-    if case.share_expires_at and case.share_expires_at < datetime.now(timezone.utc):
+    if case.share_expires_at and case.share_expires_at < datetime.now(UTC):
         raise ResourceNotFoundException(
             message="share token has expired",
             details={"token": token[:8] + "..."},

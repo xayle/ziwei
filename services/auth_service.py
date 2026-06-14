@@ -1,10 +1,10 @@
 """
 认证服务 - JWT生成、验证、权限检查
 """
-from datetime import datetime, timedelta, timezone
+
+from datetime import UTC, datetime, timedelta
 import hashlib
 import os
-from typing import Optional
 import uuid
 
 from argon2 import PasswordHasher
@@ -13,13 +13,11 @@ from jose import JWTError, jwt
 from pydantic import BaseModel
 
 from app.config import settings
-from app.error_handling import handle_exceptions
 
 # ✅ Week 4: 集成新的错误处理系统
 from app.exceptions import (
     AuthenticationException,
     ErrorCode,
-    ValidationException,
 )
 
 # 配置 - 统一从 settings 读取，env var 优先
@@ -39,11 +37,11 @@ _revoked_jtis: set[str] = set()
 
 def revoke_access_token_jti(
     jti: str,
-    expires_at: Optional[datetime] = None,
+    expires_at: datetime | None = None,
     session=None,
 ) -> None:
     """将 Access Token 的 JTI 加入黑名单。
-    
+
     - 始终写入内存集合（同步生效）。
     - 若提供 session，同时持久化到 DB（重启后仍有效）。
     - expires_at 用于 DB 中的过期清理；若为 None 则按 ACCESS_TOKEN_EXPIRE_MINUTES 推算。
@@ -53,12 +51,11 @@ def revoke_access_token_jti(
         from sqlmodel import select as _select
 
         from app.models import RevokedJti
+
         # 避免重复插入（幂等）
-        existing = session.exec(
-            _select(RevokedJti).where(RevokedJti.jti == jti)
-        ).first()
+        existing = session.exec(_select(RevokedJti).where(RevokedJti.jti == jti)).first()
         if not existing:
-            exp = expires_at or datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            exp = expires_at or datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             session.add(RevokedJti(jti=jti, expires_at=exp))
             try:
                 session.commit()
@@ -68,17 +65,16 @@ def revoke_access_token_jti(
 
 def load_revoked_jtis_from_db(session) -> int:
     """启动时将 DB 中未过期的 JTI 黑名单加载到内存集合。
-    
+
     Returns:
         加载的 JTI 数量
     """
     from sqlmodel import select as _select
 
     from app.models import RevokedJti
-    now = datetime.now(timezone.utc)
-    rows = session.exec(
-        _select(RevokedJti).where(RevokedJti.expires_at > now)
-    ).all()
+
+    now = datetime.now(UTC)
+    rows = session.exec(_select(RevokedJti).where(RevokedJti.expires_at > now)).all()
     for row in rows:
         _revoked_jtis.add(row.jti)
     return len(rows)
@@ -86,29 +82,31 @@ def load_revoked_jtis_from_db(session) -> int:
 
 class TokenPayload(BaseModel):
     """JWT Token中的载荷信息"""
+
     user_id: int
     username: str
     role: str = "editor"  # RBAC角色
-    exp: Optional[datetime] = None
-    iat: Optional[datetime] = None
+    exp: datetime | None = None
+    iat: datetime | None = None
 
 
 class TokenResponse(BaseModel):
     """Token响应模型"""
+
     access_token: str
     token_type: str = "bearer"
     expires_in: int
     role: str = "editor"  # RBAC角色信息
-    refresh_token: Optional[str] = None  # Week 3: RefreshToken支持
+    refresh_token: str | None = None  # Week 3: RefreshToken支持
 
 
 def hash_password(password: str) -> str:
     """
     使用Argon2哈希密码 - 企业级密码安全
-    
+
     Args:
         password: 原始密码
-        
+
     Returns:
         str: Argon2哈希值
     """
@@ -118,15 +116,15 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     验证密码是否匹配
-    
+
     支持两种哈希格式:
     1. Argon2 (推荐) - 新密码
     2. SHA256 (兼容) - 旧密码，自动升级到Argon2
-    
+
     Args:
         plain_password: 明文密码
         hashed_password: 存储的哈希值
-        
+
     Returns:
         bool: 密码是否匹配
     """
@@ -137,24 +135,26 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             return True
         except (VerifyMismatchError, VerificationError):
             return False
-    
+
     # 向后兼容: 检测是否是SHA256格式 (64个十六进制字符)
-    if len(hashed_password) == 64 and all(c in '0123456789abcdef' for c in hashed_password):
+    if len(hashed_password) == 64 and all(c in "0123456789abcdef" for c in hashed_password):
         sha256_result = hashlib.sha256(plain_password.encode()).hexdigest()
         return sha256_result == hashed_password
-    
+
     # 未知格式，返回False
     return False
 
 
-def create_access_token(user_id: int, username: str, role: str = "editor", expires_delta: Optional[timedelta] = None) -> dict:
+def create_access_token(
+    user_id: int, username: str, role: str = "editor", expires_delta: timedelta | None = None
+) -> dict:
     """创建JWT Access Token，包含RBAC角色信息"""
     if expires_delta is None:
         expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    now = datetime.now(timezone.utc)
+
+    now = datetime.now(UTC)
     expire = now + expires_delta
-    
+
     payload = {
         "user_id": user_id,
         "username": username,
@@ -163,9 +163,9 @@ def create_access_token(user_id: int, username: str, role: str = "editor", expir
         "iat": int(now.timestamp()),
         "jti": str(uuid.uuid4()),  # JWT ID — 用于 Access Token 吊销
     }
-    
+
     encoded_jwt = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-    
+
     return {
         "access_token": encoded_jwt,
         "token_type": "bearer",
@@ -174,10 +174,10 @@ def create_access_token(user_id: int, username: str, role: str = "editor", expir
     }
 
 
-def verify_token(token: str) -> Optional[TokenPayload]:
+def verify_token(token: str) -> TokenPayload | None:
     """
     验证JWT Token，返回payload或None如果无效
-    
+
     引发:
         AuthenticationException: 令牌无效或过期
     """
@@ -186,13 +186,13 @@ def verify_token(token: str) -> Optional[TokenPayload]:
             code=ErrorCode.AUTH_MISSING_TOKEN,
             message="Authorization token is missing",
         )
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id_value = payload.get("user_id")
         username_value = payload.get("username")
         role_value = payload.get("role", "editor")
-        
+
         if not isinstance(user_id_value, int) or not isinstance(username_value, str):
             raise AuthenticationException(
                 code=ErrorCode.AUTH_TOKEN_INVALID,
@@ -210,13 +210,13 @@ def verify_token(token: str) -> Optional[TokenPayload]:
         user_id = user_id_value
         username = username_value
         role = role_value if isinstance(role_value, str) else "editor"
-        
+
         exp_timestamp = payload.get("exp")
         iat_timestamp = payload.get("iat")
-        
-        exp = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc) if exp_timestamp else None
-        iat = datetime.fromtimestamp(iat_timestamp, tz=timezone.utc) if iat_timestamp else None
-        
+
+        exp = datetime.fromtimestamp(exp_timestamp, tz=UTC) if exp_timestamp else None
+        iat = datetime.fromtimestamp(iat_timestamp, tz=UTC) if iat_timestamp else None
+
         return TokenPayload(
             user_id=user_id,
             username=username,
@@ -247,31 +247,35 @@ def validate_token_exists_and_valid(token: str) -> bool:
 
 # ============ 刷新令牌管理函数 ============
 
+
 def generate_refresh_token() -> str:
     """生成唯一的刷新令牌"""
     import secrets
+
     return secrets.token_urlsafe(32)
 
 
-def create_refresh_token_record(session, user_id: int, ip_address: Optional[str] = None, user_agent: Optional[str] = None) -> str:
+def create_refresh_token_record(
+    session, user_id: int, ip_address: str | None = None, user_agent: str | None = None
+) -> str:
     """
     创建刷新令牌记录
-    
+
     Args:
         session: 数据库会话
         user_id: 用户ID
         ip_address: 请求的IP地址
         user_agent: 请求的User-Agent
-        
+
     Returns:
         str: 生成的刷新令牌
     """
     from app.models import RefreshToken
-    
+
     token = generate_refresh_token()
     # ✅ 使用配置常量（而非硬编码7天）
-    expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    
+    expires_at = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
     refresh_token = RefreshToken(
         user_id=user_id,
         token=token,
@@ -279,68 +283,67 @@ def create_refresh_token_record(session, user_id: int, ip_address: Optional[str]
         ip_address=ip_address,
         user_agent=user_agent,
     )
-    
+
     session.add(refresh_token)
     session.commit()
-    
+
     return token
 
 
 def verify_refresh_token(session, user_id: int, token: str) -> bool:
     """
     验证刷新令牌是否有效
-    
+
     Args:
         session: 数据库会话
         user_id: 用户ID
         token: 刷新令牌
-        
+
     Returns:
         bool: 令牌是否有效
-        
+
     引发:
         AuthenticationException: 令牌无效或已到期
     """
     from sqlmodel import select
 
     from app.models import RefreshToken
-    
+
     if not token:
         raise AuthenticationException(
             code=ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
             message="Refresh token is required",
         )
-    
+
     try:
         refresh_token = session.exec(
             select(RefreshToken).where(
-                (RefreshToken.user_id == user_id) &
-                (RefreshToken.token == token) &
-                (RefreshToken.is_revoked == False) &
-                (RefreshToken.deleted_at.is_(None))  # type: ignore
+                (RefreshToken.user_id == user_id)
+                & (RefreshToken.token == token)
+                & (RefreshToken.is_revoked == False)
+                & (RefreshToken.deleted_at.is_(None))  # type: ignore
             )
         ).first()
-        
+
         if not refresh_token:
             raise AuthenticationException(
                 code=ErrorCode.AUTH_INVALID_REFRESH_TOKEN,
                 message="Refresh token not found or revoked",
             )
-        
+
         # 检查是否过期（兼容 SQLite 返回 naive datetime 和 aware datetime）
         expires = refresh_token.expires_at
-        now_utc = datetime.now(timezone.utc)
+        now_utc = datetime.now(UTC)
         if expires.tzinfo is None:
             # SQLite 剥离了 tzinfo，视为 UTC 进行比较
-            from datetime import timezone as _tz
-            expires = expires.replace(tzinfo=_tz.utc)
+            expires = expires.replace(tzinfo=UTC)
         if now_utc > expires:
             raise AuthenticationException(
                 code=ErrorCode.AUTH_TOKEN_EXPIRED,
                 message="Refresh token has expired",
                 details={"expires_at": refresh_token.expires_at.isoformat()},
             )
-        
+
         return True
     except AuthenticationException:
         raise
@@ -357,11 +360,11 @@ def revoke_refresh_token(session, token: str):
     from sqlmodel import select
 
     from app.models import RefreshToken
-    
+
     refresh_token = session.exec(
         select(RefreshToken).where(RefreshToken.token == token, RefreshToken.deleted_at.is_(None))  # type: ignore
     ).first()
-    
+
     if refresh_token:
         refresh_token.is_revoked = True
         session.add(refresh_token)
@@ -373,18 +376,15 @@ def revoke_all_user_tokens(session, user_id: int):
     from sqlmodel import select
 
     from app.models import RefreshToken
-    
+
     tokens = session.exec(
         select(RefreshToken).where(
-            (RefreshToken.user_id == user_id) &
-            (RefreshToken.is_revoked == False) &
-            (RefreshToken.deleted_at.is_(None))  # type: ignore
+            (RefreshToken.user_id == user_id) & (RefreshToken.is_revoked == False) & (RefreshToken.deleted_at.is_(None))  # type: ignore
         )
     ).all()
-    
+
     for token in tokens:
         token.is_revoked = True
         session.add(token)
-    
-    session.commit()
 
+    session.commit()

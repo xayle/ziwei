@@ -7,6 +7,7 @@ services/name_engine/engine.py — 姓名学分析引擎
   data/name_sancai.json      — 三才五行配置表
   data/name_chars.json       — 汉字笔画+五行数据库
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -30,16 +31,14 @@ def _load_json(filename: str):
 
 
 # 81数理：{draw(1-81): {draw, content, value, text}}
-_EIGHTY_ONE: dict[int, dict] = {
-    item["draw"]: item for item in _load_json("name_eighty_one.json")
-}
+_EIGHTY_ONE: dict[int, dict] = {item["draw"]: item for item in _load_json("name_eighty_one.json")}
 
 # 三才配置：{"木木木": {content, text, value}, ...}
 _SANCAI: dict[str, dict] = _load_json("name_sancai.json")
 
 # 汉字笔画+五行
-_CHAR_STROKES: dict[str, int] = {}     # char → stroke count
-_CHAR_ELEMENT: dict[str, str] = {}     # char → fiveEle (金木水火土)
+_CHAR_STROKES: dict[str, int] = {}  # char → stroke count
+_CHAR_ELEMENT: dict[str, str] = {}  # char → fiveEle (金木水火土)
 for _entry in _load_json("name_chars.json"):
     _draw = _entry["draw"]
     _ele = _entry["fiveEle"]
@@ -50,15 +49,20 @@ for _entry in _load_json("name_chars.json"):
 
 # ── 笔画末位 → 五行映射 ────────────────────────────────────────────────────────
 _DIGIT_TO_ELEMENT: dict[int, str] = {
-    1: "木", 2: "木",
-    3: "火", 4: "火",
-    5: "土", 6: "土",
-    7: "金", 8: "金",
-    9: "水", 0: "水",
+    1: "木",
+    2: "木",
+    3: "火",
+    4: "火",
+    5: "土",
+    6: "土",
+    7: "金",
+    8: "金",
+    9: "水",
+    0: "水",
 }
 
 # ── 建议用字候选池（按五行分组，笔画 5-13，每五行最多 50 字）────────────────────
-_SUGGEST_POOL_MAX = 50       # 每五行最多候选字数
+_SUGGEST_POOL_MAX = 50  # 每五行最多候选字数
 _VALID_ELEMENTS: frozenset[str] = frozenset({"木", "火", "土", "金", "水"})
 
 
@@ -107,61 +111,67 @@ def _build_suggest_pool() -> dict[str, list[str]]:
     return pool
 
 
-_SUGGEST_POOL: dict[str, list[str]] = {}   # 延迟初始化，见模块末尾
+_SUGGEST_POOL: dict[str, list[str]] = {}  # 延迟初始化，见模块末尾
 
 
 # ── 数据类 ────────────────────────────────────────────────────────────────────
 
+
 @dataclass
 class GridInfo:
     """单格（天/人/地/外/总格）分析结果。"""
-    number: int          # 格数（笔画数之和）
-    element: str         # 对应五行（按末位规则）
-    lucky: str           # 吉凶文字，如 "吉"/"凶"
-    score: int           # 吉凶分值（1=极凶, 10=大吉）
-    desc: str            # 数理释义
+
+    number: int  # 格数（笔画数之和）
+    element: str  # 对应五行（按末位规则）
+    lucky: str  # 吉凶文字，如 "吉"/"凶"
+    score: int  # 吉凶分值（1=极凶, 10=大吉）
+    desc: str  # 数理释义
 
 
 @dataclass
 class SancaiInfo:
     """三才五行配置结果。"""
-    pattern: str         # 三才组合，如 "木火土"
-    lucky: str           # 吉凶，如 "大吉"/"凶多吉少"
-    score: int           # 吉凶分值（1-10）
-    desc: str            # 三才释义
+
+    pattern: str  # 三才组合，如 "木火土"
+    lucky: str  # 吉凶，如 "大吉"/"凶多吉少"
+    score: int  # 吉凶分值（1-10）
+    desc: str  # 三才释义
 
 
 @dataclass
 class NameAnalysis:
     """完整姓名分析结果。"""
+
     surname: str
     given_name: str
     # 五格
-    tianke: GridInfo     # 天格
-    renke: GridInfo      # 人格
-    dike: GridInfo       # 地格
-    waike: GridInfo      # 外格
-    zonge: GridInfo      # 总格
+    tianke: GridInfo  # 天格
+    renke: GridInfo  # 人格
+    dike: GridInfo  # 地格
+    waike: GridInfo  # 外格
+    zonge: GridInfo  # 总格
     # 三才
     sancai: SancaiInfo
     # 综合
-    overall_score: int   # 综合评分 0-100
-    summary: str         # 一句话摘要
+    overall_score: int  # 综合评分 0-100
+    summary: str  # 一句话摘要
 
 
 @dataclass
 class NameSuggestion:
     """改名建议单条结果。"""
-    given_name: str                       # 建议名（1-2字）
-    overall_score: int                    # 综合评分 0-100
-    renke_score: int                      # 人格吉凶分（1-10）
-    sancai_score: int                     # 三才吉凶分（1-10）
-    sancai_pattern: str                   # 三才五行组合，如 "金水木"
+
+    given_name: str  # 建议名（1-2字）
+    overall_score: int  # 综合评分 0-100
+    renke_score: int  # 人格吉凶分（1-10）
+    sancai_score: int  # 三才吉凶分（1-10）
+    sancai_pattern: str  # 三才五行组合，如 "金水木"
     element_composition: list[str] = field(default_factory=list)  # 各字五行
-    summary: str = ""                     # 一句话摘要
+    summary: str = ""  # 一句话摘要
 
 
 # ── 核心函数 ──────────────────────────────────────────────────────────────────
+
 
 def get_stroke_count(char: str) -> int:
     """
@@ -188,9 +198,7 @@ def _lookup_81(n: int) -> GridInfo:
     actual = n % 81
     if actual == 0:
         actual = 81
-    info = _EIGHTY_ONE.get(actual, {
-        "draw": actual, "content": "（未收录）", "value": 5, "text": "中性"
-    })
+    info = _EIGHTY_ONE.get(actual, {"draw": actual, "content": "（未收录）", "value": 5, "text": "中性"})
     return GridInfo(
         number=n,
         element=_num_to_element(n),
@@ -264,16 +272,14 @@ def analyze_name(surname: str, given_name: str) -> NameAnalysis:
     t, r, d, w, z = calc_five_grids(surname, given_name)
 
     tianke = _lookup_81(t)
-    renke  = _lookup_81(r)
-    dike   = _lookup_81(d)
-    waike  = _lookup_81(w)
-    zonge  = _lookup_81(z)
+    renke = _lookup_81(r)
+    dike = _lookup_81(d)
+    waike = _lookup_81(w)
+    zonge = _lookup_81(z)
 
     # 三才（天格→人格→地格五行）
     sancai_key = f"{tianke.element}{renke.element}{dike.element}"
-    sc_info = _SANCAI.get(sancai_key, {
-        "content": "（未收录）", "text": "中性", "value": 5
-    })
+    sc_info = _SANCAI.get(sancai_key, {"content": "（未收录）", "text": "中性", "value": 5})
     sancai = SancaiInfo(
         pattern=sancai_key,
         lucky=sc_info["text"],
@@ -282,14 +288,18 @@ def analyze_name(surname: str, given_name: str) -> NameAnalysis:
     )
 
     # 综合评分（0-100）：人格权重最高（30%），三才次之（20%），地格（20%），总格（10%），天/外格各（10%）
-    overall_score = min(100, (
-        tianke.score * 10
-        + renke.score * 30
-        + dike.score  * 20
-        + waike.score * 10
-        + zonge.score * 10
-        + sancai.score * 20
-    ) // 10)
+    overall_score = min(
+        100,
+        (
+            tianke.score * 10
+            + renke.score * 30
+            + dike.score * 20
+            + waike.score * 10
+            + zonge.score * 10
+            + sancai.score * 20
+        )
+        // 10,
+    )
 
     # 摘要
     parts: list[str] = []
@@ -320,6 +330,7 @@ def analyze_name(surname: str, given_name: str) -> NameAnalysis:
 
 
 # ── 改名建议 ──────────────────────────────────────────────────────────────────
+
 
 def suggest_names(
     surname: str,
@@ -388,15 +399,17 @@ def suggest_names(
             continue
         if analysis.overall_score < min_score:
             continue
-        results.append(NameSuggestion(
-            given_name=given,
-            overall_score=analysis.overall_score,
-            renke_score=analysis.renke.score,
-            sancai_score=analysis.sancai.score,
-            sancai_pattern=analysis.sancai.pattern,
-            element_composition=[_CHAR_ELEMENT.get(ch, "?") for ch in given],
-            summary=analysis.summary,
-        ))
+        results.append(
+            NameSuggestion(
+                given_name=given,
+                overall_score=analysis.overall_score,
+                renke_score=analysis.renke.score,
+                sancai_score=analysis.sancai.score,
+                sancai_pattern=analysis.sancai.pattern,
+                element_composition=[_CHAR_ELEMENT.get(ch, "?") for ch in given],
+                summary=analysis.summary,
+            )
+        )
 
     # 按综合分 → 人格分+三才分 降序
     results.sort(

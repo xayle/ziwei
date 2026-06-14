@@ -28,7 +28,9 @@ from routers import scenarios as scenarios_router
 from routers import similarity as similarity_router
 from routers import snapshots as snapshots_router
 from routers import static_data as static_data_router
+from routers import tarot as tarot_router
 from routers import v2 as v2_router_module
+from routers import verify as verify_router
 from routers import western as western_router
 from routers import zeri as zeri_router
 from routers import ziwei as ziwei_router_module
@@ -66,3 +68,5 @@ def include_all_routers(app: FastAPI) -> None:
     app.include_router(western_router.router)
     app.include_router(compat_router.router)
     app.include_router(event_prediction_router.router)
+    app.include_router(tarot_router.router)
+    app.include_router(verify_router.router)

@@ -1,8 +1,8 @@
 """
 成员管理路由 - 支持RBAC权限控制
 """
-from datetime import date, datetime, timezone
-from typing import Optional
+
+from datetime import UTC, date, datetime
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
@@ -32,17 +32,18 @@ router = APIRouter(prefix="/api/v1", tags=["members"])
 
 class MemberCreateRequest(BaseModel):
     """创建成员请求"""
+
     name: str
     birth_date: date
     gender: str  # "M", "F", "U"
-    birth_time_hour: Optional[int] = None
-    birth_time_minute: Optional[int] = None
+    birth_time_hour: int | None = None
+    birth_time_minute: int | None = None
     # 便捷输入：'HH:MM' 格式，等价于同时设置 birth_time_hour + birth_time_minute
-    birth_time: Optional[str] = Field(default=None, description="'HH:MM' 格式，等价于 birth_time_hour + birth_time_minute")
-    birth_city: Optional[str] = None
-    birth_longitude: Optional[float] = None
+    birth_time: str | None = Field(default=None, description="'HH:MM' 格式，等价于 birth_time_hour + birth_time_minute")
+    birth_city: str | None = None
+    birth_longitude: float | None = None
     solar_time_enabled: bool = False
-    notes: Optional[str] = None
+    notes: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -65,16 +66,17 @@ class MemberCreateRequest(BaseModel):
 
 class MemberUpdateRequest(BaseModel):
     """部分更新成员请求（PATCH）— 所有字段可选"""
-    name: Optional[str] = None
-    gender: Optional[str] = None
-    birth_time_hour: Optional[int] = None
-    birth_time_minute: Optional[int] = None
+
+    name: str | None = None
+    gender: str | None = None
+    birth_time_hour: int | None = None
+    birth_time_minute: int | None = None
     # 便捷字段：如果提供，覆盖 birth_time_hour/minute
-    birth_time: Optional[str] = Field(default=None, description="'HH:MM' 格式，覆盖 birth_time_hour + birth_time_minute")
-    birth_city: Optional[str] = None
-    birth_longitude: Optional[float] = None
-    solar_time_enabled: Optional[bool] = None
-    notes: Optional[str] = None
+    birth_time: str | None = Field(default=None, description="'HH:MM' 格式，覆盖 birth_time_hour + birth_time_minute")
+    birth_city: str | None = None
+    birth_longitude: float | None = None
+    solar_time_enabled: bool | None = None
+    notes: str | None = None
     # birth_date 不允许 PATCH — 出生日期是身份核心字段，更改需走完整 PUT
 
     @model_validator(mode="before")
@@ -98,21 +100,22 @@ class MemberUpdateRequest(BaseModel):
 
 class MemberResponse(BaseModel):
     """成员响应模型"""
+
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
     birth_date: date
     gender: str
-    birth_time_hour: Optional[int]
-    birth_time_minute: Optional[int]
-    birth_city: Optional[str]
-    birth_longitude: Optional[float]
+    birth_time_hour: int | None
+    birth_time_minute: int | None
+    birth_city: str | None
+    birth_longitude: float | None
     solar_time_enabled: bool
-    notes: Optional[str]
+    notes: str | None
 
     @computed_field
     @property
-    def birth_time(self) -> Optional[str]:
+    def birth_time(self) -> str | None:
         """输出 'HH:MM' 格式时间，方便前端时间选择器直接绑定。"""
         if self.birth_time_hour is not None:
             return f"{self.birth_time_hour:02d}:{(self.birth_time_minute or 0):02d}"
@@ -121,6 +124,7 @@ class MemberResponse(BaseModel):
 
 def check_permission(required_permission: Permission):
     """权限检查装饰器工厂"""
+
     def permission_checker(current_user: RequiredUser):
         user_role = Role(current_user.role)
         if not has_permission(user_role, required_permission):
@@ -129,7 +133,7 @@ def check_permission(required_permission: Permission):
                 message=f"Permission denied: {required_permission.value} required",
             )
         return current_user
-    
+
     return permission_checker
 
 
@@ -137,9 +141,7 @@ def check_permission(required_permission: Permission):
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def create_member(
     body: MemberCreateRequest,
-    current_user: User = Depends(
-        check_permission(Permission.CREATE_MEMBER)
-    ),
+    current_user: User = Depends(check_permission(Permission.CREATE_MEMBER)),
     session: Session = Depends(get_session),
 ):
     """
@@ -158,7 +160,7 @@ def create_member(
         solar_time_enabled=body.solar_time_enabled,
         notes=body.notes,
     )
-    
+
     try:
         session.add(new_member)
         session.commit()
@@ -169,7 +171,7 @@ def create_member(
             code=ErrorCode.BUSINESS_OPERATION_FAILED,
             message="Member creation failed",
         )
-    
+
     # 记录审计日志
     log_action(
         session,
@@ -181,7 +183,7 @@ def create_member(
             "name": body.name,
             "birth_date": str(body.birth_date),
             "gender": body.gender,
-        }
+        },
     )
 
     # 写操作后立即使缓存失效，保证列表返回最新数据
@@ -192,21 +194,19 @@ def create_member(
 @router.get("/members")
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_members(
-    current_user: User = Depends(
-        check_permission(Permission.READ_MEMBER)
-    ),
+    current_user: User = Depends(check_permission(Permission.READ_MEMBER)),
     session: Session = Depends(get_session),
     limit: int = Query(20, ge=1, le=100, description="每页数量"),
     last_id: int = Query(0, ge=0, description="最后一条记录的ID（游标分页）"),
 ):
     """
     获取用户的成员列表 - 支持游标分页和缓存
-    
+
     性能优化:
     - 使用 Keyset 分页代替 OFFSET/LIMIT（快 25 倍）
     - 缓存结果 10 分钟（命中时 < 1ms）
     - 避免加载全部数据到内存
-    
+
     参数:
     - limit: 每页返回的成员数量（默认20，最多100）
     - last_id: 上一次响应中最后一条记录的 ID（用于游标分页）
@@ -214,11 +214,11 @@ def list_members(
     # ✅ 第一步：尝试从缓存获取结果
     cache = _members_cache
     cache_key = f"members:{current_user.id}:{last_id}:{limit}"
-    
+
     cached_result = cache.get(cache_key)
     if cached_result:
         return cached_result
-    
+
     # ✅ 第二步：构建基础过滤条件（不含游标/limit）
     base_filters = [Member.owner_id == current_user.id, Member.deleted_at.is_(None)]  # type: ignore[union-attr]
 
@@ -246,10 +246,10 @@ def list_members(
         "next_cursor": next_cursor,
         "total": total_count,
     }
-    
+
     # ✅ 第六步：缓存结果 10 分钟
     cache.set(cache_key, result)
-    
+
     return result
 
 
@@ -257,9 +257,7 @@ def list_members(
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def get_member(
     member_id: int,
-    current_user: User = Depends(
-        check_permission(Permission.READ_MEMBER)
-    ),
+    current_user: User = Depends(check_permission(Permission.READ_MEMBER)),
     session: Session = Depends(get_session),
 ):
     """
@@ -268,20 +266,20 @@ def get_member(
     member = session.exec(
         select(Member).where(Member.id == member_id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
     ).first()
-    
+
     if not member:
         raise ResourceNotFoundException(
             message="Member not found",
             details={"resource_type": "member", "resource_id": member_id},
         )
-    
+
     # 检查访问权限（当前仅支持owner访问）
     if member.owner_id != current_user.id:
         raise AuthorizationException(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="You don't have permission to access this member",
         )
-    
+
     return MemberResponse.model_validate(member)
 
 
@@ -290,9 +288,7 @@ def get_member(
 def update_member(
     member_id: int,
     body: MemberCreateRequest,
-    current_user: User = Depends(
-        check_permission(Permission.UPDATE_MEMBER)
-    ),
+    current_user: User = Depends(check_permission(Permission.UPDATE_MEMBER)),
     session: Session = Depends(get_session),
 ):
     """
@@ -301,20 +297,20 @@ def update_member(
     member = session.exec(
         select(Member).where(Member.id == member_id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
     ).first()
-    
+
     if not member:
         raise ResourceNotFoundException(
             message="Member not found",
             details={"resource_type": "member", "resource_id": member_id},
         )
-    
+
     # 检查是否拥有此成员
     if member.owner_id != current_user.id:
         raise AuthorizationException(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="You don't have permission to update this member",
         )
-    
+
     # 更新字段
     member.name = body.name
     member.birth_date = body.birth_date
@@ -325,8 +321,8 @@ def update_member(
     member.birth_longitude = body.birth_longitude
     member.solar_time_enabled = body.solar_time_enabled
     member.notes = body.notes
-    member.updated_at = datetime.now(timezone.utc)
-    
+    member.updated_at = datetime.now(UTC)
+
     try:
         session.add(member)
         session.commit()
@@ -356,9 +352,7 @@ def update_member(
 def patch_member(
     member_id: int,
     body: MemberUpdateRequest,
-    current_user: User = Depends(
-        check_permission(Permission.UPDATE_MEMBER)
-    ),
+    current_user: User = Depends(check_permission(Permission.UPDATE_MEMBER)),
     session: Session = Depends(get_session),
 ):
     """
@@ -386,7 +380,7 @@ def patch_member(
     updates.pop("birth_time", None)  # birth_time 是便捷输入字段，不是 DB 列
     for key, value in updates.items():
         setattr(member, key, value)
-    member.updated_at = datetime.now(timezone.utc)
+    member.updated_at = datetime.now(UTC)
 
     try:
         session.add(member)
@@ -416,9 +410,7 @@ def patch_member(
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def delete_member(
     member_id: int,
-    current_user: User = Depends(
-        check_permission(Permission.DELETE_MEMBER)
-    ),
+    current_user: User = Depends(check_permission(Permission.DELETE_MEMBER)),
     session: Session = Depends(get_session),
 ):
     """
@@ -427,25 +419,25 @@ def delete_member(
     member = session.exec(
         select(Member).where(Member.id == member_id, Member.deleted_at.is_(None))  # type: ignore[union-attr]
     ).first()
-    
+
     if not member:
         raise ResourceNotFoundException(
             message="Member not found",
             details={"resource_type": "member", "resource_id": member_id},
         )
-    
+
     # 检查是否拥有此成员
     if member.owner_id != current_user.id:
         raise AuthorizationException(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="You don't have permission to delete this member",
         )
-    
-    member.deleted_at = datetime.now(timezone.utc)
-    member.updated_at = datetime.now(timezone.utc)
+
+    member.deleted_at = datetime.now(UTC)
+    member.updated_at = datetime.now(UTC)
     session.add(member)
     session.commit()
-    
+
     # 记录审计日志
     log_action(
         session,
@@ -453,6 +445,6 @@ def delete_member(
         action="delete_member",
         resource_type="member",
         resource_id=str(member_id),
-        details={"name": member.name}
+        details={"name": member.name},
     )
     _members_cache.clear(pattern=f"members:{current_user.id}")

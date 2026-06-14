@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from math import ceil
 from types import SimpleNamespace
-from typing import Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from app.error_handling import handle_exceptions
 from app.exceptions import (
     BusinessException,
     ErrorCode,
@@ -145,17 +143,27 @@ def compute_strength(day_stem: str, score: WuXingScoreModel) -> DayMasterStrengt
     same = getattr(score, day_elem)
     parent = getattr(score, parent_elem)
     strength_score = same + 0.8 * parent
-    if strength_score >= 3.0:
-        tier = "strong"
-    elif strength_score < 1.5:
-        tier = "weak"
+    if strength_score >= 4.0:
+        tier = "极旺"
+    elif strength_score >= 3.0:
+        tier = "偏旺"
+    elif strength_score >= 2.0:
+        tier = "中和"
+    elif strength_score >= 1.0:
+        tier = "偏弱"
     else:
-        tier = "balanced"
+        tier = "极弱"
 
-    _elem_cn = {'wood': '木', 'fire': '火', 'earth': '土', 'metal': '金', 'water': '水'}
+    _elem_cn = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
     factors = [
-        StrengthFactorModel(name="same_element_support", score=same, reason=f"{_elem_cn.get(day_elem, day_elem)} 同类总量"),
-        StrengthFactorModel(name="parent_element_support", score=0.8 * parent, reason=f"{_elem_cn.get(parent_elem, parent_elem)} 生 {_elem_cn.get(day_elem, day_elem)}"),
+        StrengthFactorModel(
+            name="same_element_support", score=same, reason=f"{_elem_cn.get(day_elem, day_elem)} 同类总量"
+        ),
+        StrengthFactorModel(
+            name="parent_element_support",
+            score=0.8 * parent,
+            reason=f"{_elem_cn.get(parent_elem, parent_elem)} 生 {_elem_cn.get(day_elem, day_elem)}",
+        ),
     ]
     return DayMasterStrengthModel(score=strength_score, tier=tier, factors=factors)
 
@@ -163,7 +171,8 @@ def compute_strength(day_stem: str, score: WuXingScoreModel) -> DayMasterStrengt
 def compute_yongshen(
     score: WuXingScoreModel,
     strength: DayMasterStrengthModel,
-    pillars: Optional["PillarsModel"] = None,
+    pillars: PillarsModel | None = None,
+    geju_name: str = "",
 ) -> YongShenModel:
     """
     RL#2: 用神必须走5分支决策树 — 禁止 min/max.
@@ -174,16 +183,26 @@ def compute_yongshen(
         from services.bazi_engine.strength import compute_strength as _eng_str
         from services.bazi_engine.wuxing import compute_wuxing as _eng_wx
         from services.bazi_engine.yongshen import compute_yongshen as _eng_yong
+
         _w = _eng_wx(
-            pillars.year.stem, pillars.year.branch,
-            pillars.month.stem, pillars.month.branch,
-            pillars.day.stem, pillars.day.branch,
-            pillars.hour.stem, pillars.hour.branch,
+            pillars.year.stem,
+            pillars.year.branch,
+            pillars.month.stem,
+            pillars.month.branch,
+            pillars.day.stem,
+            pillars.day.branch,
+            pillars.hour.stem,
+            pillars.hour.branch,
         )
         _s = _eng_str(
-            pillars.day.stem, pillars.month.branch,
-            pillars.year.stem, pillars.month.stem, pillars.hour.stem,
-            pillars.year.branch, pillars.day.branch, pillars.hour.branch,
+            pillars.day.stem,
+            pillars.month.branch,
+            pillars.year.stem,
+            pillars.month.stem,
+            pillars.hour.stem,
+            pillars.year.branch,
+            pillars.day.branch,
+            pillars.hour.branch,
             _w,
         )
         result = _eng_yong(
@@ -191,10 +210,12 @@ def compute_yongshen(
             month_branch=pillars.month.branch,
             strength=_s,
             wuxing=_w,
+            geju_name=geju_name,
         )
         _WX2CN = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
         _rat = result.rationale
-        for _en, _cn in _WX2CN.items(): _rat = _rat.replace(_en, _cn)
+        for _en, _cn in _WX2CN.items():
+            _rat = _rat.replace(_en, _cn)
         return YongShenModel(
             favor=result.favor,
             avoid=result.avoid,
@@ -203,8 +224,11 @@ def compute_yongshen(
 
     # ── 扶抑法 fallback（无四柱时使用，兼顾旧路径） ──────────────────────
     totals = {
-        "wood": score.wood, "fire": score.fire, "earth": score.earth,
-        "metal": score.metal, "water": score.water,
+        "wood": score.wood,
+        "fire": score.fire,
+        "earth": score.earth,
+        "metal": score.metal,
+        "water": score.water,
     }
     SHENG = {"wood": "fire", "fire": "earth", "earth": "metal", "metal": "water", "water": "wood"}
     SHENG_REV = {v: k for k, v in SHENG.items()}
@@ -233,7 +257,8 @@ def compute_yongshen(
         favor = [k for k, v in totals.items() if abs(v - min_val) < 1e-6]
         avoid = [k for k, v in totals.items() if abs(v - max_val) < 1e-6]
     return YongShenModel(
-        favor=favor, avoid=avoid,
+        favor=favor,
+        avoid=avoid,
         rationale=f"扶抑法: tier={strength.tier}, favor={favor}, avoid={avoid} (5-branch fallback)",
     )
 
@@ -261,7 +286,7 @@ def build_dayun(
     dt_effective: datetime,
     pillars: PillarsModel,
     methods: BaziMethodsModel,
-    gender: Optional[str] = None,
+    gender: str | None = None,
 ) -> tuple[DaYunModel, BaziRawDayunModel]:
     raw_dayun = BaziRawDayunModel()
 
@@ -381,7 +406,7 @@ def _element_relation(day_element: str, target_element: str) -> str:
     return "unknown"
 
 
-def ten_god(day_stem: str, target_stem: str) -> Optional[str]:
+def ten_god(day_stem: str, target_stem: str) -> str | None:
     """返回中文十神名称（比肩/劫财/食神/伤官/正财/偏财/正官/七杀/正印/偏印）。"""
     try:
         day_element, day_polarity = _stem_meta(day_stem)
@@ -410,7 +435,7 @@ def build_ten_gods(day_stem: str, pillars: PillarsModel):
     return {
         "year": ten_god(day_stem, pillars.year.stem),
         "month": ten_god(day_stem, pillars.month.stem),
-        "day": "日主",   # 1.15: 日柱固定标注"日主"，不计十神
+        "day": "日主",  # 1.15: 日柱固定标注"日主"，不计十神
         "hour": ten_god(day_stem, pillars.hour.stem),
     }
 
@@ -457,7 +482,7 @@ def _to_pillars_model(pillars) -> PillarsModel:
 
 def bazi_full(
     body: BaziFullRequest,
-    request_id: Optional[str] = None,
+    request_id: str | None = None,
 ) -> BaziFullResponse:
     dt = _attach_tz(body.dt, body.tz)
     lon = validate_lon_strict(body.lon)
@@ -483,7 +508,7 @@ def bazi_full(
     # Compute effective datetime for traceability
     offset_minutes_int = int(round(result.solar_time_offset_minutes))
     dt_effective = dt + timedelta(minutes=offset_minutes_int)
-    dt_effective_utc = dt_effective.astimezone(timezone.utc)
+    dt_effective_utc = dt_effective.astimezone(UTC)
 
     methods = BaziMethodsModel()
 
@@ -509,9 +534,7 @@ def bazi_full(
     liunian = build_liunian(pillars_model.day.stem, dt_effective, years_used=liunian_years)
 
     day_boundary_crossed = False
-    if methods.day_boundary_rule == "zi_initial" and (
-        dt_effective.hour >= 23 or dt_effective.hour == 0
-    ):
+    if methods.day_boundary_rule == "zi_initial" and (dt_effective.hour >= 23 or dt_effective.hour == 0):
         day_boundary_crossed = True
 
     # Derived calculations
@@ -536,8 +559,8 @@ def bazi_full(
             day_stem=pillars_model.day.stem,
             hour_stem=pillars_model.hour.stem,
             wuxing_scores={
-                "wood":  wuxing_score.wood,
-                "fire":  wuxing_score.fire,
+                "wood": wuxing_score.wood,
+                "fire": wuxing_score.fire,
                 "earth": wuxing_score.earth,
                 "metal": wuxing_score.metal,
                 "water": wuxing_score.water,
@@ -600,7 +623,7 @@ def bazi_full(
         day_master_strength=strength,
         yongshen=yongshen,
         geju=_geju_model,
-        start_dayun_age=None,
+        start_dayun_age=dayun_model.start_age,
         raw=raw,
         rule_matches=matched_rules,
     )

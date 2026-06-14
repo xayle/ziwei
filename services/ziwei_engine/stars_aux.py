@@ -3,10 +3,10 @@ services/ziwei_engine/stars_aux.py — 辅星/杂曜布局
 
 来源：《紫微斗数全书》诸星安法
 """
+
 from __future__ import annotations
 
 from .lunar import LunarInfo
-from .tables import BRANCHES
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 天魁天钺安法表（多流派）
@@ -25,17 +25,13 @@ from .tables import BRANCHES
 _KUIYUE_TABLES: dict[str, tuple[list[int], list[int]]] = {
     # (天魁表[10], 天钺表[10])  索引 = 年天干(甲=0…癸=9)
     # 六辛逢虎马（标准, 《紫微斗数全书》）
-    "standard":      ([1, 0, 11, 11, 1, 0, 1, 6, 3, 3],
-                      [7, 8,  9,  9, 7, 8, 7, 2, 5, 5]),
+    "standard": ([1, 0, 11, 11, 1, 0, 1, 6, 3, 3], [7, 8, 9, 9, 7, 8, 7, 2, 5, 5]),
     # 庚辛逢马虎 — 庚辛同属马虎组：魁午(6), 钺寅(2)
-    "gengxin_mahu":  ([1, 0, 11, 11, 1, 0, 6, 6, 3, 3],
-                      [7, 8,  9,  9, 7, 8, 2, 2, 5, 5]),
+    "gengxin_mahu": ([1, 0, 11, 11, 1, 0, 6, 6, 3, 3], [7, 8, 9, 9, 7, 8, 2, 2, 5, 5]),
     # 庚辛逢虎马 — 庚辛同属虎马组：魁寅(2), 钺午(6)
-    "gengxin_huima": ([1, 0, 11, 11, 1, 0, 2, 2, 3, 3],
-                      [7, 8,  9,  9, 7, 8, 6, 6, 5, 5]),
+    "gengxin_huima": ([1, 0, 11, 11, 1, 0, 2, 2, 3, 3], [7, 8, 9, 9, 7, 8, 6, 6, 5, 5]),
     # 六辛逢马虎 — 辛单独但虎马互换：魁寅(2), 钺午(6)
-    "liuxin_mahu":   ([1, 0, 11, 11, 1, 0, 1, 2, 3, 3],
-                      [7, 8,  9,  9, 7, 8, 7, 6, 5, 5]),
+    "liuxin_mahu": ([1, 0, 11, 11, 1, 0, 1, 2, 3, 3], [7, 8, 9, 9, 7, 8, 7, 6, 5, 5]),
 }
 
 
@@ -91,7 +87,7 @@ def place_aux_stars(
     地空：时支安法  地空 = (12 - hour_branch) % 12  (亥起子时，逆)
     地劫：时支安法  地劫 = hour_branch              (亥(11)+1=子? 从亥起子时顺)
           实际：亥(11)起子时顺布
-          地劫 = (11 + hour_branch) % 12  → 子时=11=亥? 
+          地劫 = (11 + hour_branch) % 12  → 子时=11=亥?
           经典：地空亥起子时逆，地劫亥起子时顺
           地空 = (11 - hour_branch + 12) % 12
           地劫 = (11 + hour_branch) % 12
@@ -109,10 +105,10 @@ def place_aux_stars(
     天伤：命宫对宫（迁移宫支）
     天使：疾厄宫支
     """
-    ys = info.year_stem_idx       # 年天干 甲=0
-    yb = info.year_branch_idx     # 年地支 子=0
-    m  = info.calc_lunar_month    # 计算用月份（闰月已+1），左辅布局使用
-    hb = info.hour_branch_idx     # 子=0
+    ys = info.year_stem_idx  # 年天干 甲=0
+    yb = info.year_branch_idx  # 年地支 子=0
+    m = info.calc_lunar_month  # 计算用月份（闰月已+1），左辅布局使用
+    hb = info.hour_branch_idx  # 子=0
 
     result: dict[str, int] = {}
 
@@ -141,8 +137,8 @@ def place_aux_stars(
     LUZUN_TABLE: list[int] = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0]  # 甲寅乙卯丙巳丁午戊巳己午庚申辛酉壬亥癸子
     luzun_b = LUZUN_TABLE[ys]
     result["禄存"] = luzun_b
-    result["擎羊"] = (luzun_b + 1) % 12   # 禄前一位
-    result["陀罗"] = (luzun_b - 1) % 12   # 禄后一位
+    result["擎羊"] = (luzun_b + 1) % 12  # 禄前一位
+    result["陀罗"] = (luzun_b - 1) % 12  # 禄后一位
 
     # 火星：年支+时支双变量查表
     # 来源：《斗数宣微》火星铃星安法
@@ -150,11 +146,11 @@ def place_aux_stars(
     # 行2: 年支 申子辰 → 寅(2)起子时顺
     # 行3: 年支 巳酉丑 → 卯(3)起子时顺
     # 行4: 年支 亥卯未 → 酉(9)起子时顺
-    HUOXING_BASE: dict[tuple[int,...], int] = {
-        (2, 6, 10): 1,   # 寅午戌 → 丑起
-        (8, 0, 4):  2,   # 申子辰 → 寅起
-        (5, 9, 1):  3,   # 巳酉丑 → 卯起
-        (11, 3, 7): 9,   # 亥卯未 → 酉起
+    HUOXING_BASE: dict[tuple[int, ...], int] = {
+        (2, 6, 10): 1,  # 寅午戌 → 丑起
+        (8, 0, 4): 2,  # 申子辰 → 寅起
+        (5, 9, 1): 3,  # 巳酉丑 → 卯起
+        (11, 3, 7): 9,  # 亥卯未 → 酉起
     }
     huo_base = 2  # 默认
     for grp, base in HUOXING_BASE.items():
@@ -168,11 +164,11 @@ def place_aux_stars(
     # 行2: 年支 申子辰 → 戌(10)起子时顺
     # 行3: 年支 巳酉丑 → 戌(10)起子时顺 (分歧，取通行版)
     # 行4: 年支 亥卯未 → 戌(10)起子时顺
-    LINGXING_BASE: dict[tuple[int,...], int] = {
-        (2, 6, 10):  3,   # 寅午戌 → 卯起
-        (8, 0, 4):  10,   # 申子辰 → 戌起
-        (5, 9, 1):  10,   # 巳酉丑 → 戌起
-        (11, 3, 7): 10,   # 亥卯未 → 戌起
+    LINGXING_BASE: dict[tuple[int, ...], int] = {
+        (2, 6, 10): 3,  # 寅午戌 → 卯起
+        (8, 0, 4): 10,  # 申子辰 → 戌起
+        (5, 9, 1): 10,  # 巳酉丑 → 戌起
+        (11, 3, 7): 10,  # 亥卯未 → 戌起
     }
     ling_base = 10
     for grp, base in LINGXING_BASE.items():
@@ -191,14 +187,14 @@ def place_aux_stars(
     # 天马：三合查表（申子辰→寅, 寅午戌→申, 巳酉丑→亥, 亥卯未→巳）
     # tianma_method = "year"（依据年支，默认）/ "month"（依据月支）
     TIANMA_BY_BRANCH: dict[tuple[int, ...], int] = {
-        (8, 0, 4):   2,   # 申子辰 → 寅(2)
-        (2, 6, 10):  8,   # 寅午戌 → 申(8)
-        (5, 9, 1):  11,   # 巳酉丑 → 亥(11)
-        (11, 3, 7):  5,   # 亥卯未 → 巳(5)
+        (8, 0, 4): 2,  # 申子辰 → 寅(2)
+        (2, 6, 10): 8,  # 寅午戌 → 申(8)
+        (5, 9, 1): 11,  # 巳酉丑 → 亥(11)
+        (11, 3, 7): 5,  # 亥卯未 → 巳(5)
     }
     if tianma_method == "month":
         # 月支索引：正月=寅(2), 二月=卯(3), …, 十二月=丑(1)
-        _mb = (m + 1) % 12   # 正月(1)→寅(2), 二月(2)→卯(3) …
+        _mb = (m + 1) % 12  # 正月(1)→寅(2), 二月(2)→卯(3) …
         tianma_b = 2
         for grp, base in TIANMA_BY_BRANCH.items():
             if _mb in grp:
@@ -239,8 +235,8 @@ def place_aux_stars(
     # 甲子旬→戌亥空, 甲戌旬→申酉空, 甲申旬→午未空, 甲午旬→辰巳空, 甲辰旬→寅卯空, 甲寅旬→子丑空
     year_jiazi = (6 * ys - 5 * yb) % 60
     xun = (year_jiazi // 10) * 10
-    xunkong1 = (int(xun) % 12 + 10) % 12   # 旬尾第一支（主空亡）
-    xunkong2 = (int(xun) % 12 + 11) % 12   # 旬尾第二支（副空亡）
+    xunkong1 = (int(xun) % 12 + 10) % 12  # 旬尾第一支（主空亡）
+    xunkong2 = (int(xun) % 12 + 11) % 12  # 旬尾第二支（副空亡）
 
     if jiukong_method == "single":
         # 常规单星法：仅保留主空亡
@@ -262,30 +258,34 @@ def place_aux_stars(
     # standard  常规：天伤=迁移宫支(lp_b-6), 天使=疾厄宫支(lp_b-5)
     # zhongzhou 中州：天伤=交友宫支(lp_b-7), 天使=父母宫支(lp_b-11)
     if tianshang_method == "zhongzhou":
-        result["天伤"] = (lp_b - 7) % 12    # 交友宫支
-        result["天使"] = (lp_b - 11) % 12   # 父母宫支
+        result["天伤"] = (lp_b - 7) % 12  # 交友宫支
+        result["天使"] = (lp_b - 11) % 12  # 父母宫支
     else:
-        result["天伤"] = (lp_b - 6) % 12    # 迁移宫支
-        result["天使"] = (lp_b - 5) % 12    # 疾厄宫支
+        result["天伤"] = (lp_b - 6) % 12  # 迁移宫支
+        result["天使"] = (lp_b - 5) % 12  # 疾厄宫支
 
     # 天寿：年支  天寿 = yb
     result["天寿"] = yb
 
     # 天才：命宫支 (由外层传入时追加，这里先占位为0)
-    result["天才_placeholder"] = 0   # 在__init__.py中会更新
+    result["天才_placeholder"] = 0  # 在__init__.py中会更新
 
     # 孤辰：年支查表 (寅午戌→巳, 申子辰→亥, 巳酉丑→寅, 亥卯未→申)
-    GUCHEN: dict[tuple[int,...], int] = {(2,6,10):5, (8,0,4):11, (5,9,1):2, (11,3,7):8}
+    GUCHEN: dict[tuple[int, ...], int] = {(2, 6, 10): 5, (8, 0, 4): 11, (5, 9, 1): 2, (11, 3, 7): 8}
     gc_b = 2
     for grp, base in GUCHEN.items():
-        if yb in grp: gc_b = base; break
+        if yb in grp:
+            gc_b = base
+            break
     result["孤辰"] = gc_b
 
     # 寡宿：年支查表 (寅午戌→丑, 申子辰→戌, 巳酉丑→辰, 亥卯未→未)
-    GUASU: dict[tuple[int,...], int] = {(2,6,10):1, (8,0,4):10, (5,9,1):4, (11,3,7):7}
+    GUASU: dict[tuple[int, ...], int] = {(2, 6, 10): 1, (8, 0, 4): 10, (5, 9, 1): 4, (11, 3, 7): 7}
     gs_b = 1
     for grp, base in GUASU.items():
-        if yb in grp: gs_b = base; break
+        if yb in grp:
+            gs_b = base
+            break
     result["寡宿"] = gs_b
 
     # 博士流曜 (取代表性几个)：大运天干确定，此处暂不实现，占位
@@ -297,7 +297,8 @@ def place_aux_stars(
     # 调试输出：天刑星落宫与命宫地支对比
     try:
         import sys
-        if hasattr(info, 'debug') and info.debug:
+
+        if hasattr(info, "debug") and info.debug:
             print(f"[调试] 天刑星落地支: {result['天刑']} (命宫地支: {lp_b})", file=sys.stderr)
     except Exception:
         pass
@@ -339,7 +340,7 @@ def place_aux_stars(
     result["凤阁"] = (10 - yb + 12) % 12
 
     # 天巫：年支查表（巳酉丑→巳(5)，亥卯未→巳(5)，寅午戌→亥(11)，申子辰→亥(11)）
-    TIANWU_TABLE = {(5,9,1):5, (11,3,7):5, (2,6,10):11, (8,0,4):11}
+    TIANWU_TABLE = {(5, 9, 1): 5, (11, 3, 7): 5, (2, 6, 10): 11, (8, 0, 4): 11}
     tw_b = 5
     for grp, base in TIANWU_TABLE.items():
         if yb in grp:
@@ -348,7 +349,7 @@ def place_aux_stars(
     result["天巫"] = tw_b
 
     # 解神：年支查表（寅午戌→酉(9)，申子辰→卯(3)，巳酉丑→未(7)，亥卯未→丑(1)）
-    JIEXHEN_TABLE = {(2,6,10):9, (8,0,4):3, (5,9,1):7, (11,3,7):1}
+    JIEXHEN_TABLE = {(2, 6, 10): 9, (8, 0, 4): 3, (5, 9, 1): 7, (11, 3, 7): 1}
     js_b = 9
     for grp, base in JIEXHEN_TABLE.items():
         if yb in grp:
@@ -363,7 +364,7 @@ def place_aux_stars(
     result["天虚"] = (6 - yb + 12) % 12
 
     # 阴煞：年支查表（寅午戌→巳(5)，申子辰→酉(9)，巳酉丑→丑(1)，亥卯未→未(7)）
-    YINSHA_TABLE = {(2,6,10):5, (8,0,4):9, (5,9,1):1, (11,3,7):7}
+    YINSHA_TABLE = {(2, 6, 10): 5, (8, 0, 4): 9, (5, 9, 1): 1, (11, 3, 7): 7}
     ys_b = 5
     for grp, base in YINSHA_TABLE.items():
         if yb in grp:
@@ -372,7 +373,7 @@ def place_aux_stars(
     result["阴煞"] = ys_b
 
     # 破碎：年支查表（寅午戌→申(8)，申子辰→寅(2)，巳酉丑→巳(5)，亥卯未→亥(11)）
-    POSHUI_TABLE = {(2,6,10):8, (8,0,4):2, (5,9,1):5, (11,3,7):11}
+    POSHUI_TABLE = {(2, 6, 10): 8, (8, 0, 4): 2, (5, 9, 1): 5, (11, 3, 7): 11}
     ps_b = 8
     for grp, base in POSHUI_TABLE.items():
         if yb in grp:
@@ -381,7 +382,7 @@ def place_aux_stars(
     result["破碎"] = ps_b
 
     # 蜚廉：年支查表（寅午戌→子(0)，申子辰→午(6)，巳酉丑→卯(3)，亥卯未→酉(9)）
-    FEILIAN_TABLE = {(2,6,10):0, (8,0,4):6, (5,9,1):3, (11,3,7):9}
+    FEILIAN_TABLE = {(2, 6, 10): 0, (8, 0, 4): 6, (5, 9, 1): 3, (11, 3, 7): 9}
     fl_b = 0
     for grp, base in FEILIAN_TABLE.items():
         if yb in grp:
@@ -390,7 +391,7 @@ def place_aux_stars(
     result["蜚廉"] = fl_b
 
     # 咸池：年支查表（寅午戌→午(6)，申子辰→子(0)，巳酉丑→酉(9)，亥卯未→卯(3)）
-    XIANCHI_TABLE = {(2,6,10):6, (8,0,4):0, (5,9,1):9, (11,3,7):3}
+    XIANCHI_TABLE = {(2, 6, 10): 6, (8, 0, 4): 0, (5, 9, 1): 9, (11, 3, 7): 3}
     xc_b = 6
     for grp, base in XIANCHI_TABLE.items():
         if yb in grp:

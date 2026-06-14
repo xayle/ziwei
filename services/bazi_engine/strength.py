@@ -12,16 +12,14 @@ tier 定义:
   ≥ 25  → "偏弱"
   < 25  → "极弱"
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from services.bazi_engine.tables import (
     BRANCH_HIDDEN_STEMS,
-    BRANCHES,
     STEM_ELEMENT,
-    STEMS,
     WANGXIANG,
 )
 from services.bazi_engine.wuxing import WuxingResult, _elem_of_stem
@@ -52,15 +50,16 @@ class StrengthFactor:
 @dataclass
 class StrengthResult:
     """日主强弱计算结果"""
-    score: float          # 0-100 归一化综合分
-    tier: str             # "极旺"/"偏旺"/"中和"/"偏弱"/"极弱"
+
+    score: float  # 0-100 归一化综合分
+    tier: str  # "极旺"/"偏旺"/"中和"/"偏弱"/"极弱"
     day_stem: str
     day_elem: str
     factors: list[StrengthFactor] = field(default_factory=list)
 
     # 供分析引擎使用的辅助属性
-    is_strong: bool = False    # 偏旺/极旺
-    is_weak: bool = False      # 偏弱/极弱
+    is_strong: bool = False  # 偏旺/极旺
+    is_weak: bool = False  # 偏弱/极弱
     is_balanced: bool = False  # 中和
 
 
@@ -116,10 +115,11 @@ def _get_hehua_score(day_stem: str, day_elem: str, stems: list[str], branches: l
     当前实现：只检测月支六合/三合日支的情况（简化，足够M1精度）
     """
     from services.bazi_engine.tables import LIU_HE, SAN_HE
+
     score = 0.0
     if len(branches) >= 2:
         month_b = branches[1]  # 月支
-        day_b = branches[2]    # 日支
+        day_b = branches[2]  # 日支
         if LIU_HE.get(month_b) == day_b:
             score += 50.0
         for trio, elem in SAN_HE:
@@ -169,7 +169,7 @@ def compute_strength(
     year_branch: str,
     day_branch: str,
     hour_branch: str,
-    wuxing: Optional[WuxingResult] = None,
+    wuxing: WuxingResult | None = None,
 ) -> StrengthResult:
     """
     计算日主强弱综合得分。

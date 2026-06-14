@@ -1,14 +1,15 @@
 """
 services/bazi_engine/lifestyle/lucky.py — 开运数字/颜色/方位引擎 (M2.5 任务 2.54)
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import LuckyModel
 
 # 五行→幸运数字
 _ELEMENT_NUMBERS: dict[str, list[int]] = {
-    "wood":  [3, 4, 8],
-    "fire":  [2, 7, 9],
+    "wood": [3, 4, 8],
+    "fire": [2, 7, 9],
     "earth": [5, 0, 8],
     "metal": [4, 9, 1],
     "water": [1, 6, 3],
@@ -16,8 +17,8 @@ _ELEMENT_NUMBERS: dict[str, list[int]] = {
 
 # 五行→幸运颜色
 _ELEMENT_COLOR: dict[str, list[str]] = {
-    "wood":  ["绿色", "青色"],
-    "fire":  ["红色", "紫色"],
+    "wood": ["绿色", "青色"],
+    "fire": ["红色", "紫色"],
     "earth": ["黄色", "棕色"],
     "metal": ["白色", "金色"],
     "water": ["黑色", "蓝色"],
@@ -25,8 +26,8 @@ _ELEMENT_COLOR: dict[str, list[str]] = {
 
 # 五行→幸运方向
 _ELEMENT_DIRECTION: dict[str, str] = {
-    "wood":  "东方",
-    "fire":  "南方",
+    "wood": "东方",
+    "fire": "南方",
     "earth": "中部",
     "metal": "西方",
     "water": "北方",
@@ -34,15 +35,19 @@ _ELEMENT_DIRECTION: dict[str, str] = {
 
 # 五行→开运物品
 _ELEMENT_ITEM: dict[str, str] = {
-    "wood":  "绿色植物/翡翠摆件",
-    "fire":  "红色香囊/玛瑙饰品",
+    "wood": "绿色植物/翡翠摆件",
+    "fire": "红色香囊/玛瑙饰品",
     "earth": "黄水晶/土陶器皿",
     "metal": "白水晶/金属铃铛",
     "water": "蓝色宝石/流水摆件",
 }
 
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 
@@ -90,7 +95,7 @@ def compute_lucky(
     el_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor[:2])
     el_avoid_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_avoid[:2])
     _colors_top = "、".join(lucky_colors[:2])
-    _nums_top   = "、".join(str(n) for n in lucky_numbers[:3])
+    _nums_top = "、".join(str(n) for n in lucky_numbers[:3])
     _avoid_colors_top = "、".join(avoid_colors[:2]) if avoid_colors else "无"
     interp = (
         f"用神五行为【{el_cn}】，幸运色为【{_colors_top}】，旺运数字为【{_nums_top}】。"
@@ -98,8 +103,8 @@ def compute_lucky(
         f"开运物「{lucky_item}」适合随身携带或置于工作桌上，在重要场合与面试、签约前使用效果更佳。"
         f"【忌神五行为{el_avoid_cn}】，日常穿搭建议谨慎使用忌色【{_avoid_colors_top}】"
         + (f"，忌神方位【{avoid_direction}】宜少居少占。" if avoid_direction else "。")
-        + f"将幸运色融入日常穿搭或配饰中，有助于在社交与职场中彰显个人磁场。"
-        f"（仅供学术研究参考）"
+        + "将幸运色融入日常穿搭或配饰中，有助于在社交与职场中彰显个人磁场。"
+        "（仅供学术研究参考）"
     )
 
     return LuckyModel(

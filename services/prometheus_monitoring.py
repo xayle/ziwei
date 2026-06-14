@@ -2,9 +2,10 @@
 性能监控服务 - Prometheus 指标收集
 用于监控 API 性能、请求延迟、错误率等指标
 """
+
+from collections.abc import Callable
 import functools
 import time
-from typing import Callable
 
 from fastapi import Request
 from fastapi.responses import Response
@@ -15,118 +16,71 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, ge
 # ============================================================================
 
 # 请求计数器 - 按方法、路径、状态码统计
-REQUEST_COUNT = Counter(
-    'http_requests_total',
-    'HTTP requests total',
-    ['method', 'path', 'status']
-)
+REQUEST_COUNT = Counter("http_requests_total", "HTTP requests total", ["method", "path", "status"])
 
 # 请求延迟直方图 - 按方法、路径统计
 REQUEST_DURATION = Histogram(
-    'http_request_duration_seconds',
-    'HTTP request duration in seconds',
-    ['method', 'path'],
-    buckets=(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0)
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "path"],
+    buckets=(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0),
 )
 
 # 活跃请求数 - 当前正在处理的请求数
-REQUESTS_IN_PROGRESS = Gauge(
-    'http_requests_in_progress',
-    'HTTP requests in progress',
-    ['method', 'path']
-)
+REQUESTS_IN_PROGRESS = Gauge("http_requests_in_progress", "HTTP requests in progress", ["method", "path"])
 
 # 数据库操作计数 - 按操作类型统计
-DB_OPERATION_COUNT = Counter(
-    'db_operations_total',
-    'Database operations total',
-    ['operation', 'table', 'status']
-)
+DB_OPERATION_COUNT = Counter("db_operations_total", "Database operations total", ["operation", "table", "status"])
 
 # 数据库操作延迟
 DB_OPERATION_DURATION = Histogram(
-    'db_operation_duration_seconds',
-    'Database operation duration in seconds',
-    ['operation', 'table'],
-    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0)
+    "db_operation_duration_seconds",
+    "Database operation duration in seconds",
+    ["operation", "table"],
+    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0),
 )
 
 # 认证相关指标
-AUTH_ATTEMPTS = Counter(
-    'auth_attempts_total',
-    'Authentication attempts total',
-    ['endpoint', 'status']
-)
+AUTH_ATTEMPTS = Counter("auth_attempts_total", "Authentication attempts total", ["endpoint", "status"])
 
 # 缓存指标 (如果使用)
-CACHE_HITS = Counter(
-    'cache_hits_total',
-    'Cache hits total',
-    ['key']
-)
+CACHE_HITS = Counter("cache_hits_total", "Cache hits total", ["key"])
 
-CACHE_MISSES = Counter(
-    'cache_misses_total',
-    'Cache misses total',
-    ['key']
-)
+CACHE_MISSES = Counter("cache_misses_total", "Cache misses total", ["key"])
 
 # 业务逻辑指标
-BUSINESS_OPERATION_COUNT = Counter(
-    'business_operations_total',
-    'Business operations total',
-    ['operation', 'status']
-)
+BUSINESS_OPERATION_COUNT = Counter("business_operations_total", "Business operations total", ["operation", "status"])
 
 BUSINESS_OPERATION_DURATION = Histogram(
-    'business_operation_duration_seconds',
-    'Business operation duration in seconds',
-    ['operation'],
-    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
+    "business_operation_duration_seconds",
+    "Business operation duration in seconds",
+    ["operation"],
+    buckets=(0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
 )
 
 # ── N4.05 八字引擎专属指标 ────────────────────────────────────────────────────
 
 # 八字计算耗时（_enrich_v2_analysis 全链路）
 BAZI_ENGINE_CALC_SECONDS = Histogram(
-    'bazi_engine_calc_seconds',
-    'BaZi engine full calculation duration in seconds (_enrich_v2_analysis)',
-    buckets=(0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0)
+    "bazi_engine_calc_seconds",
+    "BaZi engine full calculation duration in seconds (_enrich_v2_analysis)",
+    buckets=(0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0),
 )
 
 # 引擎缓存命中/未命中计数（由 run.py 计时区域内手动记录）
-BAZI_CACHE_HITS = Counter(
-    'bazi_cache_hits_total',
-    'BaZi query cache hits total'
-)
+BAZI_CACHE_HITS = Counter("bazi_cache_hits_total", "BaZi query cache hits total")
 
-BAZI_CACHE_MISSES = Counter(
-    'bazi_cache_misses_total',
-    'BaZi query cache misses total'
-)
+BAZI_CACHE_MISSES = Counter("bazi_cache_misses_total", "BaZi query cache misses total")
 
 # ─────────────────────────────────────────────────────────────────────────────
-ERROR_COUNT = Counter(
-    'errors_total',
-    'Total errors',
-    ['error_type', 'endpoint']
-)
+ERROR_COUNT = Counter("errors_total", "Total errors", ["error_type", "endpoint"])
 
 # 自定义业务指标示例
-MEMBERS_CREATED = Counter(
-    'members_created_total',
-    'Total members created'
-)
+MEMBERS_CREATED = Counter("members_created_total", "Total members created")
 
-EVENTS_ANALYZED = Counter(
-    'events_analyzed_total',
-    'Total events analyzed'
-)
+EVENTS_ANALYZED = Counter("events_analyzed_total", "Total events analyzed")
 
-SCENARIOS_SIMULATED = Counter(
-    'scenarios_simulated_total',
-    'Total scenarios simulated'
-)
+SCENARIOS_SIMULATED = Counter("scenarios_simulated_total", "Total scenarios simulated")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # M6.08 自定义八字业务指标 [P50]
@@ -134,24 +88,24 @@ SCENARIOS_SIMULATED = Counter(
 
 # 命盘排盘请求计数，按 mode / status 标签
 BAZI_VERIFY_TOTAL = Counter(
-    'bazi_verify_total',
-    'Total bazi verify requests',
-    ['mode', 'status'],          # mode=dual/single, status=success/error
+    "bazi_verify_total",
+    "Total bazi verify requests",
+    ["mode", "status"],  # mode=dual/single, status=success/error
 )
 
 # 命盘排盘耗时直方图（秒），含 mode 标签
 BAZI_VERIFY_DURATION = Histogram(
-    'bazi_verify_duration_seconds',
-    'Bazi verify request duration in seconds',
-    ['mode'],
+    "bazi_verify_duration_seconds",
+    "Bazi verify request duration in seconds",
+    ["mode"],
     buckets=(0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0),
 )
 
 # 命盘边界风险等级计数（L1/L2/L3/H/M/L …），按 boundary_level 标签
 BAZI_BOUNDARY_RISK = Counter(
-    'bazi_boundary_risk_total',
-    'Bazi boundary risk level counts',
-    ['boundary_level'],          # 校验级别，如 "H" / "M" / "L" / "L1/H" …
+    "bazi_boundary_risk_total",
+    "Bazi boundary risk level counts",
+    ["boundary_level"],  # 校验级别，如 "H" / "M" / "L" / "L1/H" …
 )
 
 
@@ -161,44 +115,44 @@ BAZI_BOUNDARY_RISK = Counter(
 
 # 紫微单次排盘计数（按性别 / 状态）
 ZIWEI_CALC_TOTAL = Counter(
-    'ziwei_calc_total',
-    'ZiWei single chart calculation total',
-    ['gender', 'status'],       # gender=男/女/unknown, status=success/error
+    "ziwei_calc_total",
+    "ZiWei single chart calculation total",
+    ["gender", "status"],  # gender=男/女/unknown, status=success/error
 )
 
 # 紫微单次排盘耗时（秒）
 ZIWEI_CALC_DURATION = Histogram(
-    'ziwei_calc_duration_seconds',
-    'ZiWei single chart calculation duration in seconds',
+    "ziwei_calc_duration_seconds",
+    "ZiWei single chart calculation duration in seconds",
     buckets=(0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0),
 )
 
 # 紫微批量排盘请求计数（按状态）
 ZIWEI_BATCH_REQUESTS_TOTAL = Counter(
-    'ziwei_batch_requests_total',
-    'ZiWei batch calculation requests total',
-    ['status'],                 # status=success/error
+    "ziwei_batch_requests_total",
+    "ZiWei batch calculation requests total",
+    ["status"],  # status=success/error
 )
 
 # 紫微批量排盘处理行数
 ZIWEI_BATCH_ROWS_TOTAL = Counter(
-    'ziwei_batch_rows_total',
-    'ZiWei batch rows processed total',
-    ['result'],                 # result=success/error
+    "ziwei_batch_rows_total",
+    "ZiWei batch rows processed total",
+    ["result"],  # result=success/error
 )
 
 # 审核记录提交计数
 ZIWEI_REVIEW_SUBMIT_TOTAL = Counter(
-    'ziwei_review_submit_total',
-    'ZiWei chart review submissions total',
-    ['status'],                 # status=new/duplicate
+    "ziwei_review_submit_total",
+    "ZiWei chart review submissions total",
+    ["status"],  # status=new/duplicate
 )
 
 # 审核状态变更计数
 ZIWEI_REVIEW_ACTION_TOTAL = Counter(
-    'ziwei_review_action_total',
-    'ZiWei chart review status changes total',
-    ['action'],                 # action=approved/rejected/revised
+    "ziwei_review_action_total",
+    "ZiWei chart review status changes total",
+    ["action"],  # action=approved/rejected/revised
 )
 
 
@@ -236,16 +190,16 @@ def record_review_action(action: str) -> None:
 
 # 变体分配计数（仅首次分配，按实验名 / 变体）
 AB_EXPERIMENT_ASSIGNED = Counter(
-    'ab_experiment_assigned_total',
-    'A/B experiment variant assignments total',
-    ['experiment', 'variant'],
+    "ab_experiment_assigned_total",
+    "A/B experiment variant assignments total",
+    ["experiment", "variant"],
 )
 
 # 实验事件计数（按实验名 / 变体 / 事件类型）
 AB_EXPERIMENT_EVENT = Counter(
-    'ab_experiment_event_total',
-    'A/B experiment events total',
-    ['experiment', 'variant', 'event_type'],
+    "ab_experiment_event_total",
+    "A/B experiment events total",
+    ["experiment", "variant", "event_type"],
 )
 
 
@@ -273,31 +227,31 @@ def record_ab_experiment_event(
 
 # LLM 调用总计（按 provider / status）
 LLM_CALL_TOTAL = Counter(
-    'llm_call_total',
-    'LLM interpretation call total',
-    ['provider', 'status'],          # status=success/error
+    "llm_call_total",
+    "LLM interpretation call total",
+    ["provider", "status"],  # status=success/error
 )
 
 # LLM 调用耗时（按 provider）
 LLM_CALL_DURATION = Histogram(
-    'llm_call_duration_seconds',
-    'LLM call duration in seconds',
-    ['provider'],
+    "llm_call_duration_seconds",
+    "LLM call duration in seconds",
+    ["provider"],
     buckets=(0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0),
 )
 
 # LLM Token 使用量（按 provider / type）
 LLM_TOKENS_TOTAL = Counter(
-    'llm_tokens_total',
-    'LLM tokens consumed total',
-    ['provider', 'token_type'],      # token_type=input/output
+    "llm_tokens_total",
+    "LLM tokens consumed total",
+    ["provider", "token_type"],  # token_type=input/output
 )
 
 # LLM 草稿审核状态（按 action）
 LLM_DRAFT_ACTION_TOTAL = Counter(
-    'llm_draft_action_total',
-    'LLM draft review actions total',
-    ['action'],                      # action=approved/rejected
+    "llm_draft_action_total",
+    "LLM draft review actions total",
+    ["action"],  # action=approved/rejected
 )
 
 
@@ -352,6 +306,7 @@ import re as _re
 
 _PATH_PARAM_RE = _re.compile(r"/[0-9a-fA-F-]{8,}|/\d+")
 
+
 def _normalize_path(path: str) -> str:
     """0.24: 归一化 Prometheus 路径标签，防止高基数问题。
     /cases/123 → /cases/:id ; /cases/550e8400-... → /cases/:id
@@ -367,13 +322,13 @@ async def prometheus_middleware(request: Request, call_next: Callable):
     """
     method = request.method
     path = _normalize_path(request.url.path)
-    
+
     # 记录正在处理的请求
     REQUESTS_IN_PROGRESS.labels(method=method, path=path).inc()
-    
+
     # 记录请求开始时间
     start_time = time.time()
-    
+
     try:
         # 调用下一个中间件或处理函数
         response = await call_next(request)
@@ -386,29 +341,30 @@ async def prometheus_middleware(request: Request, call_next: Callable):
     finally:
         # 计算请求耗时
         duration = time.time() - start_time
-        
+
         # 记录请求计数
         REQUEST_COUNT.labels(method=method, path=path, status=status).inc()
-        
+
         # 记录请求延迟
         REQUEST_DURATION.labels(method=method, path=path).observe(duration)
-        
+
         # 减少正在处理的请求计数
         REQUESTS_IN_PROGRESS.labels(method=method, path=path).dec()
-    
+
     return response
 
 
 def track_db_operation(operation: str, table: str):
     """
     装饰器：追踪数据库操作性能
-    
+
     使用方法:
         @track_db_operation('select', 'users')
         def get_user(user_id: int):
             # ... 数据库操作 ...
             pass
     """
+
     def decorator(func: Callable):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -416,42 +372,31 @@ def track_db_operation(operation: str, table: str):
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                DB_OPERATION_COUNT.labels(
-                    operation=operation,
-                    table=table,
-                    status='success'
-                ).inc()
-                DB_OPERATION_DURATION.labels(
-                    operation=operation,
-                    table=table
-                ).observe(duration)
+                DB_OPERATION_COUNT.labels(operation=operation, table=table, status="success").inc()
+                DB_OPERATION_DURATION.labels(operation=operation, table=table).observe(duration)
                 return result
-            except Exception as exc:
+            except Exception:
                 duration = time.time() - start_time
-                DB_OPERATION_COUNT.labels(
-                    operation=operation,
-                    table=table,
-                    status='error'
-                ).inc()
-                DB_OPERATION_DURATION.labels(
-                    operation=operation,
-                    table=table
-                ).observe(duration)
+                DB_OPERATION_COUNT.labels(operation=operation, table=table, status="error").inc()
+                DB_OPERATION_DURATION.labels(operation=operation, table=table).observe(duration)
                 raise
+
         return wrapper
+
     return decorator
 
 
 def track_business_operation(operation: str):
     """
     装饰器：追踪业务逻辑操作性能
-    
+
     使用方法:
         @track_business_operation('bazi_calculation')
         def calculate_bazi(birth_date, location):
             # ... 业务逻辑 ...
             pass
     """
+
     def decorator(func: Callable):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -459,37 +404,29 @@ def track_business_operation(operation: str):
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                BUSINESS_OPERATION_COUNT.labels(
-                    operation=operation,
-                    status='success'
-                ).inc()
-                BUSINESS_OPERATION_DURATION.labels(
-                    operation=operation
-                ).observe(duration)
+                BUSINESS_OPERATION_COUNT.labels(operation=operation, status="success").inc()
+                BUSINESS_OPERATION_DURATION.labels(operation=operation).observe(duration)
                 return result
-            except Exception as exc:
+            except Exception:
                 duration = time.time() - start_time
-                BUSINESS_OPERATION_COUNT.labels(
-                    operation=operation,
-                    status='error'
-                ).inc()
-                BUSINESS_OPERATION_DURATION.labels(
-                    operation=operation
-                ).observe(duration)
+                BUSINESS_OPERATION_COUNT.labels(operation=operation, status="error").inc()
+                BUSINESS_OPERATION_DURATION.labels(operation=operation).observe(duration)
                 raise
+
         return wrapper
+
     return decorator
 
 
 def record_auth_attempt(endpoint: str, success: bool):
     """
     记录认证尝试
-    
+
     Args:
         endpoint: 认证端点名称 (如 'login', 'register')
         success: 是否成功
     """
-    status = 'success' if success else 'failure'
+    status = "success" if success else "failure"
     AUTH_ATTEMPTS.labels(endpoint=endpoint, status=status).inc()
 
 
@@ -507,19 +444,17 @@ def record_cache_miss(key: str):
 # Prometheus 指标导出端点
 # ============================================================================
 
+
 def get_metrics_response() -> Response:
     """
     生成 Prometheus 格式的指标响应
-    
+
     使用方法：在 FastAPI app 中添加路由
         @app.get("/metrics")
         def metrics():
             return get_metrics_response()
     """
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST
-    )
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # ============================================================================

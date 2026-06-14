@@ -3,40 +3,63 @@ services/bazi_engine/analysis/career.py — 事业引擎 (M2 任务 2.02)
 
 算法规格: §4.11-B
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import CareerAnalysisModel
 
 # 天干五行
 _STEM_ELEMENT: dict[str, str] = {
-    "甲": "wood", "乙": "wood",
-    "丙": "fire", "丁": "fire",
-    "戊": "earth", "己": "earth",
-    "庚": "metal", "辛": "metal",
-    "壬": "water", "癸": "water",
+    "甲": "wood",
+    "乙": "wood",
+    "丙": "fire",
+    "丁": "fire",
+    "戊": "earth",
+    "己": "earth",
+    "庚": "metal",
+    "辛": "metal",
+    "壬": "water",
+    "癸": "water",
 }
 
 # 地支六冲
 _BRANCH_CHONG: dict[str, str] = {
-    "子": "午", "午": "子",
-    "丑": "未", "未": "丑",
-    "寅": "申", "申": "寅",
-    "卯": "酉", "酉": "卯",
-    "辰": "戌", "戌": "辰",
-    "巳": "亥", "亥": "巳",
+    "子": "午",
+    "午": "子",
+    "丑": "未",
+    "未": "丑",
+    "寅": "申",
+    "申": "寅",
+    "卯": "酉",
+    "酉": "卯",
+    "辰": "戌",
+    "戌": "辰",
+    "巳": "亥",
+    "亥": "巳",
 }
 
 # 地支五行
 _BRANCH_ELEMENT: dict[str, str] = {
-    "子": "water", "亥": "water",
-    "寅": "wood",  "卯": "wood",
-    "巳": "fire",  "午": "fire",
-    "申": "metal", "酉": "metal",
-    "丑": "earth", "辰": "earth", "未": "earth", "戌": "earth",
+    "子": "water",
+    "亥": "water",
+    "寅": "wood",
+    "卯": "wood",
+    "巳": "fire",
+    "午": "fire",
+    "申": "metal",
+    "酉": "metal",
+    "丑": "earth",
+    "辰": "earth",
+    "未": "earth",
+    "戌": "earth",
 }
 
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 # 格局对应事业方向
@@ -97,11 +120,11 @@ def compute_career(
     total = sum(shishen_scores.values()) or 1.0
 
     guan = shishen_scores.get("正官", 0.0)
-    sha  = shishen_scores.get("七杀", 0.0)
-    shi  = shishen_scores.get("食神", 0.0)
+    sha = shishen_scores.get("七杀", 0.0)
+    shi = shishen_scores.get("食神", 0.0)
     shang = shishen_scores.get("伤官", 0.0)
-    cai  = shishen_scores.get("正财", 0.0) + shishen_scores.get("偏财", 0.0)
-    yin  = shishen_scores.get("正印", 0.0) + shishen_scores.get("偏印", 0.0)
+    cai = shishen_scores.get("正财", 0.0) + shishen_scores.get("偏财", 0.0)
+    yin = shishen_scores.get("正印", 0.0) + shishen_scores.get("偏印", 0.0)
 
     guan_sha_pct = (guan + sha) / total
     shi_shang_pct = (shi + shang) / total
@@ -149,22 +172,19 @@ def compute_career(
         development_advice = (
             f"官杀有力且日主中和，具备较高的领导潜质，建议主动争取管理职位或项目负责人。"
             f"利用{geju_name}格局特点，在公司或行业内拓展多方人脉，建立跳跃式资源网络。"
-            f"规划未来 3-5 年精进目标，系统性提升管理方法论与岗位可见度。"
-            + _stem_ca_sentence
+            f"规划未来 3-5 年精进目标，系统性提升管理方法论与岗位可见度。" + _stem_ca_sentence
         )
     elif shi_shang_pct >= 0.4:
         development_advice = (
-            f"食伤旺盛，创造力与表达力尤为突出，最适合技术/创意/自由职业路线，谨慎进入官僚体系。"
-            f"建议持续输出高质量作品或方案，将个人 IP 与专业能力稳固、变现。"
-            f"可考虑展示个人作品集、申请行业各类奖项或将创意成果产品化、商业化。"
-            + _stem_ca_sentence
+            "食伤旺盛，创造力与表达力尤为突出，最适合技术/创意/自由职业路线，谨慎进入官僚体系。"
+            "建议持续输出高质量作品或方案，将个人 IP 与专业能力稳固、变现。"
+            "可考虑展示个人作品集、申请行业各类奖项或将创意成果产品化、商业化。" + _stem_ca_sentence
         )
     else:
         development_advice = (
             f"该命局适合稳步深耕，系统建立{geju_name}相关领域的专业技能体系。"
             f"在用神五行顺运年份把握重要决策时机，平日夯实专业基础、取得资质认证，逐步扩展跨部门协作能力。"
-            f"弹性应对市场变化，不拘泥于单一道路，保持对新机遇的识别能力。"
-            + _stem_ca_sentence
+            f"弹性应对市场变化，不拘泥于单一道路，保持对新机遇的识别能力。" + _stem_ca_sentence
         )
 
     # ─── 最佳行动时间 ─────────────────────────────────────────────────────
@@ -224,9 +244,7 @@ def compute_career(
     # ─── 新增：五年发展路线图 ─────────────────────────────────────────────
     _roadmap_steps: list[str] = []
     for dy in dayun_list[:3]:
-        gz = dy.get("ganzhi") or (
-            (dy.get("stem") or "") + (dy.get("branch") or "")
-        )
+        gz = dy.get("ganzhi") or ((dy.get("stem") or "") + (dy.get("branch") or ""))
         stem_el = _STEM_ELEMENT.get(dy.get("stem", ""), "")
         if stem_el and yongshen_favor and stem_el in yongshen_favor:
             action = "积极出击，主动争取晋升、跳槽或创业机会，是职业跃升的黄金窗口"

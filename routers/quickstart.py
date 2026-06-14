@@ -3,10 +3,10 @@
 用户无需分三步（POST /cases → POST /cases/{id}/compute → GET snapshots），
 一个请求即可拿到完整结果。
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -26,6 +26,7 @@ router = APIRouter(prefix="/api/v1", tags=["quickstart"])
 
 class QuickstartRequest(BaseModel):
     """一步建档+计算请求体"""
+
     # ── 人物档案字段（与 CaseCreate 一致）──
     name: str = Field(..., description="档案名称，例如：张三 2000年")
     birth_dt_local: str = Field(
@@ -34,15 +35,15 @@ class QuickstartRequest(BaseModel):
     )
     tz: str = Field(..., description="IANA 时区，例如 'Asia/Shanghai'")
     lon: float = Field(..., description="出生地经度，范围 -180~180")
-    gender: Optional[str] = Field(default=None, description="'male' 或 'female'")
-    city: Optional[str] = Field(default=None, description="出生城市名称")
+    gender: str | None = Field(default=None, description="'male' 或 'female'")
+    city: str | None = Field(default=None, description="出生城市名称")
     solar_time_enabled: bool = Field(default=False, description="是否启用真太阳时修正")
-    notes: Optional[str] = Field(default=None, description="备注")
-    tags: Optional[List[str]] = Field(default=None, description="标签列表")
+    notes: str | None = Field(default=None, description="备注")
+    tags: list[str] | None = Field(default=None, description="标签列表")
 
     @field_validator("tags", mode="before")
     @classmethod
-    def parse_tags(cls, v) -> Optional[List[str]]:
+    def parse_tags(cls, v) -> list[str] | None:
         """接受逗号分隔字符串或列表，统一转为 List[str]"""
         if v is None:
             return v
@@ -59,7 +60,7 @@ class QuickstartRequest(BaseModel):
 
     # ── 计算选项（与 ComputeRequest 一致）──
     mode: str = Field(default="dual", description="计算模式：'dual'（双引擎）或 'single'")
-    liunian_years: Optional[List[int]] = Field(
+    liunian_years: list[int] | None = Field(
         default=None,
         description="流年范围（相对当前年，例如 [-2, 2] 表示前后2年）",
     )
@@ -67,12 +68,13 @@ class QuickstartRequest(BaseModel):
 
 class QuickstartResponse(BaseModel):
     """一步建档+计算响应体"""
+
     case: CaseOut
     compute: ComputeResponse
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @router.post(
@@ -93,6 +95,7 @@ def quickstart(
 ) -> QuickstartResponse:
     # ── 1. 参数校验 ──────────────────────────────────────────────────
     from zoneinfo import ZoneInfo
+
     try:
         ZoneInfo(body.tz)
     except Exception:
@@ -102,7 +105,7 @@ def quickstart(
         )
 
     # tags list → comma-separated string for storage
-    tags_str: Optional[str] = None
+    tags_str: str | None = None
     if body.tags:
         tags_str = ",".join(t.strip() for t in body.tags if t.strip()) or None
 

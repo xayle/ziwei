@@ -6,6 +6,7 @@
 - 响应外层携带 meta（api_version / engine_version / calc_ms，满足 R38）
 - 不导入 run.py，所有依赖直接来自 services/ 层
 """
+
 from __future__ import annotations
 
 import datetime as _dt
@@ -32,10 +33,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-_ENGINE_VERSION = "v8.0"   # 与 static/sw.js CACHE_VERSION 对应
+_ENGINE_VERSION = "v8.0"  # 与 static/sw.js CACHE_VERSION 对应
 
 
 # ─── 工具函数 ─────────────────────────────────────────────────────────────────
+
 
 def _validate_tz(tz_name: str) -> None:
     """校验 IANA 时区字符串，无效时抛 400."""
@@ -68,6 +70,7 @@ def _find_current_dayun(dayun_model) -> dict | None:
 
 # ─── 端点 ─────────────────────────────────────────────────────────────────────
 
+
 @router.post(
     "/verify",
     summary="八字排盘 v2",
@@ -96,6 +99,7 @@ def v2_verify(
 
     # ── 请求准备 ──────────────────────────────────────────────────────────────
     import time
+
     _start = time.time()
 
     req_id = (x_request_id or uuid.uuid4().hex)[:128]

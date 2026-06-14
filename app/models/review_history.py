@@ -1,8 +1,9 @@
 """ChartReviewHistory model — 审核操作历史版本记录。"""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import ClassVar, Optional
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from sqlalchemy import Column, Index, Text
 from sqlmodel import Field, SQLModel
@@ -17,13 +18,14 @@ class ChartReviewHistory(SQLModel, table=True):
 
     通过 review_id 与 chart_reviews.id 关联。
     """
+
     __tablename__: ClassVar[str] = "chart_review_history"
     __table_args__ = (
         Index("idx_rv_hist_rid", "review_id"),
         Index("idx_rv_hist_changed", "changed_at"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # 关联的审核记录 ID
     review_id: int = Field(index=True)
@@ -42,6 +44,4 @@ class ChartReviewHistory(SQLModel, table=True):
     change_type: str = Field(default="status_change", max_length=30)
 
     # 变更时间（naive UTC）
-    changed_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
-    )
+    changed_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))

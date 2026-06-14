@@ -1,8 +1,9 @@
 """Experiment 与 ExperimentEvent 模型 — §9 A/B 测试平台。"""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import ClassVar, Optional
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from sqlalchemy import Column, Index, Text
 from sqlmodel import Field, SQLModel
@@ -17,6 +18,7 @@ class Experiment(SQLModel, table=True):
       - status: draft → running → paused / completed
       - traffic_split: JSON，{variant_name: 百分比整数}
     """
+
     __tablename__: ClassVar[str] = "experiments"
     __table_args__ = (
         Index("idx_experiments_status", "status"),
@@ -24,7 +26,7 @@ class Experiment(SQLModel, table=True):
         Index("idx_experiments_created", "created_at"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # 实验基本信息
     name: str = Field(max_length=100)
@@ -50,11 +52,11 @@ class Experiment(SQLModel, table=True):
     min_sample_size: int = Field(default=100)
 
     # 时间戳
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    started_at: Optional[datetime] = None
-    ended_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
+    deleted_at: datetime | None = None
 
 
 class ExperimentEvent(SQLModel, table=True):
@@ -64,6 +66,7 @@ class ExperimentEvent(SQLModel, table=True):
     每条记录代表某个会话（session_id）在某个变体下触发的一个事件：
       event_type: assigned / chart_generated / form_submitted / batch_uploaded / ...
     """
+
     __tablename__: ClassVar[str] = "experiment_events"
     __table_args__ = (
         Index("idx_exp_events_exp_id", "experiment_id"),
@@ -72,7 +75,7 @@ class ExperimentEvent(SQLModel, table=True):
         Index("idx_exp_events_created", "created_at"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # 关联实验
     experiment_id: int = Field(foreign_key="experiments.id", index=True)
@@ -89,4 +92,4 @@ class ExperimentEvent(SQLModel, table=True):
     # 附加元数据（JSON 字符串，例如 {"gender":"女","score":82}）
     meta: str = Field(default="{}", sa_column=Column(Text))
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

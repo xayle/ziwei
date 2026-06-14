@@ -8,10 +8,11 @@ API Key 生命周期：
   • 撤销：设置 revoked_at，不物理删除。
   • 过期：可选 expires_at，鉴权时同步检查。
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import ClassVar, Optional
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
@@ -20,11 +21,11 @@ from sqlmodel import Field, SQLModel
 class ApiKey(SQLModel, table=True):
     __tablename__: ClassVar[str] = "api_keys"
     __table_args__ = (
-        Index("idx_api_keys_hash",    "key_hash"),
+        Index("idx_api_keys_hash", "key_hash"),
         Index("idx_api_keys_user_id", "user_id"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # 关联用户（拥有者）
     user_id: int = Field(foreign_key="users.id", index=True)
@@ -45,12 +46,12 @@ class ApiKey(SQLModel, table=True):
     rate_limit_per_min: int = Field(default=60)
 
     # 最后使用时间（异步更新，允许稍有延迟）
-    last_used_at: Optional[datetime] = Field(default=None)
+    last_used_at: datetime | None = Field(default=None)
 
     # 过期时间（None = 永不过期）
-    expires_at: Optional[datetime] = Field(default=None)
+    expires_at: datetime | None = Field(default=None)
 
     # 撤销时间（None = 未撤销）
-    revoked_at: Optional[datetime] = Field(default=None)
+    revoked_at: datetime | None = Field(default=None)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

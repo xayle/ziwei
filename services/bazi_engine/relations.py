@@ -11,17 +11,16 @@ services/bazi_engine/relations.py — 地支关系 & 天干相克（M1 任务 1.
   scope="day_related"（默认）: 只返回与日主相关的相克关系
   scope="all": 返回四柱所有天干相克关系
 """
+
 from __future__ import annotations
 
 from typing import Literal
 
 from services.bazi_engine.tables import (
     BRANCH_CHONG,
-    BRANCHES,
     LIU_HE,
     SAN_HE,
     STEM_ELEMENT,
-    STEMS,
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -29,12 +28,13 @@ from services.bazi_engine.tables import (
 # ──────────────────────────────────────────────────────────────────────────────
 
 _STEM_KE: dict[str, str] = {
-    "木": "土", "土": "水", "水": "火",
-    "火": "金", "金": "木",
+    "木": "土",
+    "土": "水",
+    "水": "火",
+    "火": "金",
+    "金": "木",
 }
-_ELEM_TO_CN: dict[str, str] = {
-    "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"
-}
+_ELEM_TO_CN: dict[str, str] = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
 _CN_TO_ELEM: dict[str, str] = {v: k for k, v in _ELEM_TO_CN.items()}
 
 
@@ -72,8 +72,11 @@ def get_stem_clashes(
         "hour": hour_stem,
     }
     pairs = [
-        ("year", "month"), ("year", "day"), ("year", "hour"),
-        ("month", "day"), ("month", "hour"),
+        ("year", "month"),
+        ("year", "day"),
+        ("year", "hour"),
+        ("month", "day"),
+        ("month", "hour"),
         ("day", "hour"),
     ]
     results = []
@@ -85,27 +88,36 @@ def get_stem_clashes(
         ea = _elem_cn(sa)
         eb = _elem_cn(sb)
         if _STEM_KE.get(ea) == eb:
-            results.append({
-                "stem_a": sa, "stem_b": sb,
-                "direction": "a_ke_b",
-                "pillar_a": pa, "pillar_b": pb,
-                "scope": scope,          # P0-11 scope字段存在且非null
-                "note": f"{sa}[{ea}]克{sb}[{eb}]",
-            })
+            results.append(
+                {
+                    "stem_a": sa,
+                    "stem_b": sb,
+                    "direction": "a_ke_b",
+                    "pillar_a": pa,
+                    "pillar_b": pb,
+                    "scope": scope,  # P0-11 scope字段存在且非null
+                    "note": f"{sa}[{ea}]克{sb}[{eb}]",
+                }
+            )
         elif _STEM_KE.get(eb) == ea:
-            results.append({
-                "stem_a": sa, "stem_b": sb,
-                "direction": "b_ke_a",
-                "pillar_a": pa, "pillar_b": pb,
-                "scope": scope,          # P0-11 scope字段存在且非null
-                "note": f"{sb}[{eb}]克{sa}[{ea}]",
-            })
+            results.append(
+                {
+                    "stem_a": sa,
+                    "stem_b": sb,
+                    "direction": "b_ke_a",
+                    "pillar_a": pa,
+                    "pillar_b": pb,
+                    "scope": scope,  # P0-11 scope字段存在且非null
+                    "note": f"{sb}[{eb}]克{sa}[{ea}]",
+                }
+            )
     return results
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 地支关系 (1.16)
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def _branches_in_chart(
     year_branch: str,
@@ -167,13 +179,15 @@ def get_branch_relations(
             continue
 
         positions = [pos for b in involved for pos in _positions_of(b, pm)]
-        results.append({
-            "type": rtype,
-            "status": status,
-            "branches": involved,
-            "positions": positions,
-            "element": elem,
-        })
+        results.append(
+            {
+                "type": rtype,
+                "status": status,
+                "branches": involved,
+                "positions": positions,
+                "element": elem,
+            }
+        )
 
     # 六合
     seen_liuhe: set[frozenset] = set()
@@ -184,13 +198,15 @@ def get_branch_relations(
             if key not in seen_liuhe:
                 seen_liuhe.add(key)
                 pos_b = [p for p, b in pm.items() if b == bb]
-                results.append({
-                    "type": "六合",
-                    "status": "合",
-                    "branches": [ba, bb],
-                    "positions": [pos_a] + pos_b,
-                    "element": None,
-                })
+                results.append(
+                    {
+                        "type": "六合",
+                        "status": "合",
+                        "branches": [ba, bb],
+                        "positions": [pos_a] + pos_b,
+                        "element": None,
+                    }
+                )
 
     # 六冲
     seen_chong: set[frozenset] = set()
@@ -201,12 +217,14 @@ def get_branch_relations(
             if key not in seen_chong:
                 seen_chong.add(key)
                 pos_c = [p for p, b in pm.items() if b == bc]
-                results.append({
-                    "type": "六冲",
-                    "status": "冲",
-                    "branches": [ba, bc],
-                    "positions": [pos_a] + pos_c,
-                    "element": None,
-                })
+                results.append(
+                    {
+                        "type": "六冲",
+                        "status": "冲",
+                        "branches": [ba, bc],
+                        "positions": [pos_a] + pos_c,
+                        "element": None,
+                    }
+                )
 
     return results

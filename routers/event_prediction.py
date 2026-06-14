@@ -6,6 +6,7 @@ routers/event_prediction.py — 年份事件预测 API
   POST /api/v1/bazi/multi-year-trend    — 多年趋势
   POST /api/v1/bazi/year-event-consult  — AI 咨询式解读
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -39,6 +40,7 @@ router = APIRouter(prefix="/api/v1/bazi", tags=["年份事件预测"])
 
 # ─── 工具函数 ─────────────────────────────────────────────────────────────────
 
+
 def _load_case_and_calculate(case_id: str, session: Session):
     """加载 Case 并运行完整命盘计算，返回 (case, verify_response, birth_dt)。"""
     case = session.get(Case, case_id)
@@ -55,11 +57,12 @@ def _load_case_and_calculate(case_id: str, session: Session):
         raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
 
     from services.bazi_engine_service import calculate
+
     result = calculate(birth_dt, case.lon, case.tz, False, "single", case.gender)
     return case, result.verify_response, birth_dt
 
 
-_STEMS    = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+_STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 _BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
 
@@ -68,6 +71,7 @@ def _year_ganzhi(year: int) -> str:
 
 
 # ─── Endpoint 1: 单年事件分析 ──────────────────────────────────────────────────
+
 
 @router.post("/year-events", response_model=YearEventResponse)
 def api_year_events(
@@ -103,6 +107,7 @@ def api_year_events(
 
 # ─── Endpoint 2: 多年趋势 ──────────────────────────────────────────────────────
 
+
 @router.post("/multi-year-trend", response_model=MultiYearTrendResponse)
 def api_multi_year_trend(
     payload: MultiYearTrendRequest,
@@ -133,6 +138,7 @@ def api_multi_year_trend(
 
 # ─── Endpoint 3: AI 咨询式解读 ────────────────────────────────────────────────
 
+
 @router.post("/year-event-consult", response_model=YearEventConsultResponse)
 async def api_year_event_consult(
     payload: YearEventConsultRequest,
@@ -161,11 +167,13 @@ async def api_year_event_consult(
 
     # 从 event_rules.json 取该事件的所有被触发规则素材
     from services.event_rule_matcher import get_materials_for_signals
+
     rule_ids = [s.rule_id for s in (event_result.signals or []) if s.rule_id]
     materials = get_materials_for_signals(rule_ids)
 
     # 调用 LLM 解读
     from services.llm_service import generate_event_interpretation
+
     try:
         llm_resp = await generate_event_interpretation(
             event_result=event_result,

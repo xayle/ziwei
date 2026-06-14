@@ -29,9 +29,9 @@ def configure_http_middlewares(app: FastAPI) -> None:
         response = await call_next(request)
 
         _is_docs_path = _req_path in ("/docs", "/redoc", "/openapi.json")
-        _is_static_html = (
-            (_req_path.startswith("/static/") and _req_path.endswith(".html"))
-            or _req_path in ("/dashboard", "/")
+        _is_static_html = (_req_path.startswith("/static/") and _req_path.endswith(".html")) or _req_path in (
+            "/dashboard",
+            "/",
         )
         _is_spa_app = _req_path.startswith("/static/app/")
         if _is_docs_path or _is_static_html or _is_spa_app:

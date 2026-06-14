@@ -2,11 +2,12 @@
 
 Signatures are fixed per dev-start checklist v5.3.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Literal, Optional
+from typing import Literal
 
 from constants import JIEQI_THRESHOLD_MIN, SHICHEN_THRESHOLD_MIN
 
@@ -15,7 +16,7 @@ from constants import JIEQI_THRESHOLD_MIN, SHICHEN_THRESHOLD_MIN
 class Pillar:
     stem: str
     branch: str
-    ganzhi: Optional[str] = None  # display-only
+    ganzhi: str | None = None  # display-only
 
 
 @dataclass
@@ -31,8 +32,8 @@ class RiskFlags:
     near_shichen_boundary: bool
     near_jieqi_boundary: bool
     jieqi_boundary_status: Literal["ok", "unavailable"]
-    minutes_to_shichen_boundary: Optional[float]
-    minutes_to_jieqi_boundary: Optional[float]
+    minutes_to_shichen_boundary: float | None
+    minutes_to_jieqi_boundary: float | None
     leap_month_ambiguous: bool = False  # B4: 已知闰月窗口内，双库月柱可能不一致
 
 
@@ -54,15 +55,15 @@ class Validation:
 # 格式: (公历年, 闰月的公历月份, 闰月结束的公历月份)
 # 当出生月份处于闰月窗口时，sxtwl 与 cnlunar 月柱可能不一致
 _KNOWN_LEAP_MONTH_WINDOWS: list[tuple[int, int, int]] = [
-    (1957, 8, 9),   # 农历闰八月
-    (1968, 7, 8),   # 农历闰七月
-    (1976, 8, 9),   # 农历闰八月
-    (1984, 10, 11), # 农历闰十月
-    (1993, 3, 4),   # 农历闰三月
-    (2004, 2, 3),   # 农历闰二月
-    (2012, 4, 5),   # 农历闰四月
-    (2020, 4, 5),   # 农历闰四月
-    (2023, 2, 3),   # 农历闰二月
+    (1957, 8, 9),  # 农历闰八月
+    (1968, 7, 8),  # 农历闰七月
+    (1976, 8, 9),  # 农历闰八月
+    (1984, 10, 11),  # 农历闰十月
+    (1993, 3, 4),  # 农历闰三月
+    (2004, 2, 3),  # 农历闰二月
+    (2012, 4, 5),  # 农历闰四月
+    (2020, 4, 5),  # 农历闰四月
+    (2023, 2, 3),  # 农历闰二月
 ]
 
 
@@ -112,7 +113,7 @@ def compute_risk_flags(
 
 def compute_validation(
     pillars_primary: Pillars,
-    pillars_secondary: Optional[Pillars],
+    pillars_secondary: Pillars | None,
     risk_flags: RiskFlags,
     mode: Literal["dual", "single"],
 ) -> Validation:
@@ -147,10 +148,7 @@ def compute_validation(
     boundary_risk_jie = risk_flags.near_jieqi_boundary
 
     interpretation_enabled = (
-        mode == "dual"
-        and not boundary_risk_shi
-        and not boundary_risk_jie
-        and len(diff_fields) == 0
+        mode == "dual" and not boundary_risk_shi and not boundary_risk_jie and len(diff_fields) == 0
     )
 
     if boundary_risk_shi or boundary_risk_jie:

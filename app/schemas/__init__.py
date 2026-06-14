@@ -1,4 +1,5 @@
 """API schemas 包 - 集中导出所有Pydantic models."""
+
 from __future__ import annotations
 
 # Analysis (M2)

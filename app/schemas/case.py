@@ -1,9 +1,9 @@
 """Case and Snapshot schemas."""
+
 from __future__ import annotations
 
 from datetime import datetime
 import re
-from typing import List, Optional
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, field_validator, model_validator
@@ -48,30 +48,30 @@ _VALID_GENDERS: frozenset[str] = frozenset({"male", "female"})
 
 class CaseBase(BaseModel):
     """Case基础字段验证"""
+
     model_config = {
         "from_attributes": True,
     }
     name: str
-    gender: Optional[str] = None
+    gender: str | None = None
 
     @field_validator("gender")
     @classmethod
-    def validate_gender(cls, v: Optional[str]) -> Optional[str]:
+    def validate_gender(cls, v: str | None) -> str | None:
         if v is None:
             return v
         if v not in _VALID_GENDERS:
-            raise ValueError(
-                f"gender must be 'male', 'female' or null, got: {v!r}"
-            )
+            raise ValueError(f"gender must be 'male', 'female' or null, got: {v!r}")
         return v
+
     birth_dt_local: str
     tz: str
-    birth_dt: Optional[str] = None
-    city: Optional[str] = None
+    birth_dt: str | None = None
+    city: str | None = None
     lon: float
     solar_time_enabled: bool = False
-    notes: Optional[str] = None
-    tags: Optional[str] = None
+    notes: str | None = None
+    tags: str | None = None
 
     @field_validator("birth_dt_local")
     @classmethod
@@ -89,7 +89,7 @@ class CaseBase(BaseModel):
 
     @field_validator("tags", mode="before")
     @classmethod
-    def validate_tags(cls, v) -> Optional[str]:
+    def validate_tags(cls, v) -> str | None:
         if v is None:
             return v
         # 支持前端传入 List[str]，自动转为逗号分隔字符串存储
@@ -118,43 +118,44 @@ class CaseBase(BaseModel):
 
 class CaseCreate(CaseBase):
     """创建 Case 的请求"""
+
     pass
 
 
 class CasePatch(BaseModel):
     """修补 Case 的请求"""
-    name: Optional[str] = None
-    gender: Optional[str] = None
+
+    name: str | None = None
+    gender: str | None = None
 
     @field_validator("gender")
     @classmethod
-    def validate_gender(cls, v: Optional[str]) -> Optional[str]:
+    def validate_gender(cls, v: str | None) -> str | None:
         if v is None:
             return v
         if v not in _VALID_GENDERS:
-            raise ValueError(
-                f"gender must be 'male', 'female' or null, got: {v!r}"
-            )
+            raise ValueError(f"gender must be 'male', 'female' or null, got: {v!r}")
         return v
-    birth_dt_local: Optional[str] = None
-    tz: Optional[str] = None
-    birth_dt: Optional[str] = None
-    city: Optional[str] = None
-    lon: Optional[float] = None
-    solar_time_enabled: Optional[bool] = None
-    notes: Optional[str] = None
-    tags: Optional[str] = None
+
+    birth_dt_local: str | None = None
+    tz: str | None = None
+    birth_dt: str | None = None
+    city: str | None = None
+    lon: float | None = None
+    solar_time_enabled: bool | None = None
+    notes: str | None = None
+    tags: str | None = None
 
     @field_validator("birth_dt_local")
     @classmethod
-    def validate_birth_dt_local(cls, v: Optional[str]) -> Optional[str]:
+    def validate_birth_dt_local(cls, v: str | None) -> str | None:
         if v is None:
             return v
         return _normalize_birth_dt_local(v)
 
     @field_validator("tz")
     @classmethod
-    def validate_tz(cls, v: Optional[str]) -> Optional[str]:
+    def validate_tz(cls, v: str | None) -> str | None:
         if v is None:
             return v
         try:
@@ -165,7 +166,7 @@ class CasePatch(BaseModel):
 
     @field_validator("tags", mode="before")
     @classmethod
-    def validate_tags(cls, v) -> Optional[str]:
+    def validate_tags(cls, v) -> str | None:
         if v is None:
             return v
         if isinstance(v, list):
@@ -196,20 +197,21 @@ class CasePatch(BaseModel):
 
 class CaseOut(CaseBase):
     """Case 响应模型"""
+
     id: str
     created_at: datetime
     updated_at: datetime
-    last_snapshot_at: Optional[datetime] = None
-    api_version_last: Optional[str] = None
-    rule_version_last: Optional[str] = None
-    schema_version: Optional[str] = None
-    latest_verify_summary: Optional[dict] = None
+    last_snapshot_at: datetime | None = None
+    api_version_last: str | None = None
+    rule_version_last: str | None = None
+    schema_version: str | None = None
+    latest_verify_summary: dict | None = None
     # 覆盖父类 str 类型 → 输出为列表，前端标签组件可直接绑定
-    tags: Optional[List[str]] = None  # type: ignore[assignment]
+    tags: list[str] | None = None  # type: ignore[assignment]
 
     @field_validator("tags", mode="before")
     @classmethod
-    def validate_tags(cls, v) -> Optional[List[str]]:
+    def validate_tags(cls, v) -> list[str] | None:
         """覆盖 CaseBase.validate_tags：DB 字符串拆分为列表输出。"""
         if v is None:
             return None
@@ -224,28 +226,30 @@ class CaseOut(CaseBase):
 
 class SnapshotOut(BaseModel):
     """Snapshot 响应模型"""
+
     model_config = {"from_attributes": True}
 
     id: str
     case_id: str
     kind: str
-    compute_flags: Optional[dict] = None
-    input_json: Optional[dict] = None
-    output_json: Optional[dict] = None
-    backend_json: Optional[dict] = None
-    api_version: Optional[str] = None
-    rule_version: Optional[str] = None
-    schema_version: Optional[str] = None
-    summary_level: Optional[str] = None
-    summary_warning_count: Optional[int] = None
-    summary_diff_count: Optional[int] = None
-    summary_engine_primary: Optional[str] = None
-    note: Optional[str] = None
+    compute_flags: dict | None = None
+    input_json: dict | None = None
+    output_json: dict | None = None
+    backend_json: dict | None = None
+    api_version: str | None = None
+    rule_version: str | None = None
+    schema_version: str | None = None
+    summary_level: str | None = None
+    summary_warning_count: int | None = None
+    summary_diff_count: int | None = None
+    summary_engine_primary: str | None = None
+    note: str | None = None
     created_at: datetime
 
 
 class CaseListResponse(BaseModel):
     """Case 分页列表响应"""
-    items: List[CaseOut]
+
+    items: list[CaseOut]
     total: int
-    next_cursor: Optional[str] = None
+    next_cursor: str | None = None

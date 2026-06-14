@@ -31,7 +31,7 @@ def create_lifespan(logger: logging.Logger) -> Callable[[FastAPI], AsyncIterator
             raise RuntimeError(
                 "[STARTUP] SECRET_KEY 未设置或使用了默认弱密钥！"
                 "请在 .env 中配置强随机密钥，可用："
-                "python -c \"import secrets; print(secrets.token_urlsafe(32))\" 生成"
+                'python -c "import secrets; print(secrets.token_urlsafe(32))" 生成'
             )
 
         environment = os.environ.get("ENVIRONMENT", "development")

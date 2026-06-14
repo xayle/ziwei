@@ -9,13 +9,13 @@ W8 SLO 基线中间件
   - 线程安全：使用 collections.deque（固定长度）+ 原生 append（GIL 保护）
   - 仅对 /api/v1/ 路径统计，跳过 /metrics /health /docs 等辅助路径
 """
+
 from __future__ import annotations
 
 import collections
+from collections.abc import Callable
 import logging
-import statistics
 import time
-from typing import Callable, Deque, Dict
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 _WINDOW_SIZE = 100
 
 # 端点延迟样本桶：path → deque of milliseconds
-_latency_buckets: Dict[str, Deque[float]] = collections.defaultdict(
+_latency_buckets: dict[str, collections.deque[float]] = collections.defaultdict(
     lambda: collections.deque(maxlen=_WINDOW_SIZE)
 )
 
@@ -44,9 +44,9 @@ def get_endpoint_p95(path: str) -> float | None:
     return samples[min(idx, len(samples) - 1)]
 
 
-def get_all_slo_stats() -> Dict[str, float]:
+def get_all_slo_stats() -> dict[str, float]:
     """返回所有端点的当前 p95 延迟（ms），供 /health/detail 调用。"""
-    result: Dict[str, float] = {}
+    result: dict[str, float] = {}
     for path, bucket in _latency_buckets.items():
         p95 = get_endpoint_p95(path)
         if p95 is not None:
@@ -84,13 +84,17 @@ class SLOMiddleware(BaseHTTPMiddleware):
             if p95 >= SLO_CRIT_MS:
                 logger.critical(
                     "SLO CRITICAL: p95 latency %.0f ms on %s (threshold=%d ms)",
-                    p95, norm_path, SLO_CRIT_MS,
+                    p95,
+                    norm_path,
+                    SLO_CRIT_MS,
                     extra={"slo_path": norm_path, "p95_ms": p95, "slo_level": "critical"},
                 )
             elif p95 >= SLO_WARN_MS:
                 logger.warning(
                     "SLO WARNING: p95 latency %.0f ms on %s (threshold=%d ms)",
-                    p95, norm_path, SLO_WARN_MS,
+                    p95,
+                    norm_path,
+                    SLO_WARN_MS,
                     extra={"slo_path": norm_path, "p95_ms": p95, "slo_level": "warning"},
                 )
 
@@ -100,6 +104,7 @@ class SLOMiddleware(BaseHTTPMiddleware):
 def _normalize_path(path: str) -> str:
     """将路径中的动态段（UUID/整数）替换为 {id}，减少桶数量。"""
     import re
+
     # UUID
     path = re.sub(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "{id}", path)
     # 纯数字段

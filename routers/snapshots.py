@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, cast
+from datetime import UTC, datetime
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel
@@ -21,20 +21,21 @@ router = APIRouter(prefix="/api/v1", tags=["snapshots"])
 
 # ── POST /cases/{case_id}/snapshots 创建快照 ─────────────────
 
+
 class SnapshotCreate(BaseModel):
     kind: str = "ziwei"
-    compute_flags: Optional[Dict] = None
-    input_json: Optional[Dict] = None
-    output_json: Optional[Dict] = None
-    backend_json: Optional[Dict] = None
-    api_version: Optional[str] = None
-    rule_version: Optional[str] = None
-    schema_version: Optional[str] = "snapshot@5.0"
-    summary_level: Optional[str] = None
-    summary_warning_count: Optional[int] = None
-    summary_diff_count: Optional[int] = None
-    summary_engine_primary: Optional[str] = None
-    note: Optional[str] = None
+    compute_flags: dict | None = None
+    input_json: dict | None = None
+    output_json: dict | None = None
+    backend_json: dict | None = None
+    api_version: str | None = None
+    rule_version: str | None = None
+    schema_version: str | None = "snapshot@5.0"
+    summary_level: str | None = None
+    summary_warning_count: int | None = None
+    summary_diff_count: int | None = None
+    summary_engine_primary: str | None = None
+    note: str | None = None
 
 
 @router.post("/cases/{case_id}/snapshots", response_model=SnapshotOut, status_code=status.HTTP_201_CREATED)
@@ -74,7 +75,7 @@ def create_snapshot(
         summary_diff_count=payload.summary_diff_count,
         summary_engine_primary=payload.summary_engine_primary,
         note=payload.note,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     session.add(snap)
     # 更新 Case 的 last_snapshot_at
@@ -95,7 +96,7 @@ def create_snapshot(
     return SnapshotOut.model_validate(snap)
 
 
-@router.get("/cases/{case_id}/snapshots", response_model=List[SnapshotOut])
+@router.get("/cases/{case_id}/snapshots", response_model=list[SnapshotOut])
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def list_snapshots(
     case_id: str,
@@ -182,7 +183,7 @@ def delete_snapshot(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="Permission denied: snapshot not owned by current user",
         )
-    snap.deleted_at = datetime.now(timezone.utc)
+    snap.deleted_at = datetime.now(UTC)
     session.add(snap)
     session.commit()
     log_action(
@@ -199,6 +200,7 @@ def delete_snapshot(
 # W3  快照 diff  GET /api/v1/snapshots/diff?a=<id>&b=<id>
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class SnapshotDiffField(BaseModel):
     field: str
     value_a: Any
@@ -208,15 +210,15 @@ class SnapshotDiffField(BaseModel):
 class SnapshotDiffResponse(BaseModel):
     snapshot_a: str
     snapshot_b: str
-    changed_fields: List[SnapshotDiffField]
-    added_fields: List[str]    # 在 b 中新增的键
-    removed_fields: List[str]  # 在 a 中有但 b 中没有的键
+    changed_fields: list[SnapshotDiffField]
+    added_fields: list[str]  # 在 b 中新增的键
+    removed_fields: list[str]  # 在 a 中有但 b 中没有的键
     total_changes: int
 
 
-def _flat_dict(d: Any, prefix: str = "") -> Dict[str, Any]:
+def _flat_dict(d: Any, prefix: str = "") -> dict[str, Any]:
     """递归展平嵌套 dict，用 '.' 连接键路径。"""
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
     if isinstance(d, dict):
         for k, v in d.items():
             full_key = f"{prefix}.{k}" if prefix else k
@@ -243,6 +245,7 @@ def snapshot_diff(
     session: Session = Depends(get_session),
 ) -> SnapshotDiffResponse:
     """W3: 对比两快照的 output_json，逐字段展示差异。"""
+
     def _get_snap(sid: str) -> Snapshot:
         s = session.exec(
             select(Snapshot).where(Snapshot.id == sid, Snapshot.deleted_at.is_(None))  # type: ignore
@@ -272,7 +275,7 @@ def snapshot_diff(
     keys_a = set(data_a.keys())
     keys_b = set(data_b.keys())
 
-    changed: List[SnapshotDiffField] = []
+    changed: list[SnapshotDiffField] = []
     for key in sorted(keys_a & keys_b):
         if data_a[key] != data_b[key]:
             changed.append(SnapshotDiffField(field=key, value_a=data_a[key], value_b=data_b[key]))

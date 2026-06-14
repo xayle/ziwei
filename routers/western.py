@@ -3,6 +3,7 @@
 
 GET /api/v1/western/chart  — 计算出生盘（无需登录）
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -67,13 +68,13 @@ def get_western_chart(
     summary="太阳回归年盘（§6.2）",
 )
 def get_solar_return(
-    natal_dt:  str   = Query(..., description="出生时间（本地 ISO 8601）"),
-    natal_lat: float = Query(..., ge=-90.0, le=90.0,   description="出生地纬度"),
-    natal_lon: float = Query(..., ge=-180.0, le=180.0,  description="出生地经度"),
-    natal_tz:  str   = Query("Asia/Shanghai",           description="出生时区"),
-    sr_year:   int   = Query(..., ge=1900, le=2100,     description="回归年（公历年）"),
-    sr_lat:    float = Query(..., ge=-90.0, le=90.0,   description="回归年所在地纬度"),
-    sr_lon:    float = Query(..., ge=-180.0, le=180.0,  description="回归年所在地经度"),
+    natal_dt: str = Query(..., description="出生时间（本地 ISO 8601）"),
+    natal_lat: float = Query(..., ge=-90.0, le=90.0, description="出生地纬度"),
+    natal_lon: float = Query(..., ge=-180.0, le=180.0, description="出生地经度"),
+    natal_tz: str = Query("Asia/Shanghai", description="出生时区"),
+    sr_year: int = Query(..., ge=1900, le=2100, description="回归年（公历年）"),
+    sr_lat: float = Query(..., ge=-90.0, le=90.0, description="回归年所在地纬度"),
+    sr_lon: float = Query(..., ge=-180.0, le=180.0, description="回归年所在地经度"),
 ) -> SolarReturnResponse:
     """
     计算指定年份的太阳回归年盘。

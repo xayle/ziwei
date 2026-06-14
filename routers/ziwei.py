@@ -4,6 +4,7 @@ routers/ziwei.py — 紫微斗数 API 路由
 POST /api/v1/ziwei/full  → 完整命盘计算
 GET  /api/v1/ziwei/demo  → 演示命盘（用黄金测试案例）
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -53,9 +54,9 @@ _CALC_SEM = asyncio.Semaphore(8)
 router = APIRouter(prefix="/api/v1/ziwei", tags=["紫微斗数"])
 
 # 模板档位常量
-_TPL_SIMPLE   = "simple"
+_TPL_SIMPLE = "simple"
 _TPL_STANDARD = "standard"
-_TPL_PRO      = "pro"
+_TPL_PRO = "pro"
 
 
 def _chart_to_response(
@@ -72,7 +73,7 @@ def _chart_to_response(
         - standard : 完整命盘（历史默认行为）
         - pro      : 等同 standard，格局 PatternResponse.source 始终保留
     """
-    _is_simple = (template == _TPL_SIMPLE)
+    _is_simple = template == _TPL_SIMPLE
     lunar_resp = LunarResponse(
         lunar_year=chart.lunar.lunar_year,
         lunar_month=chart.lunar.lunar_month,
@@ -175,12 +176,12 @@ def _chart_to_response(
 
     liuyue_resp = [
         LiuyueItem(
-            month=d['month'],
-            month_name=d['month_name'],
-            month_gz=d['month_gz'],
-            life_palace_branch=d['life_palace_branch'],
-            palace_name=d['palace_name'],
-            sihua=d.get('sihua', {}),
+            month=d["month"],
+            month_name=d["month_name"],
+            month_gz=d["month_gz"],
+            life_palace_branch=d["life_palace_branch"],
+            palace_name=d["palace_name"],
+            sihua=d.get("sihua", {}),
         )
         for d in chart.liuyue_data
     ]
@@ -236,12 +237,12 @@ def _chart_to_response(
     # ── 模板过滤：simple 档位隐藏重运算字段 ──────────────────
     # simple：跳过 forecast/飞星/流月/详分析/建议（减少响应体积，加快前端渲染）
     # standard/pro：保持完整内容
-    _flying_out    = None        if _is_simple else flying_resp
-    _forecast_out  = None        if _is_simple else forecast_resp
-    _liuyue_out    = []          if _is_simple else liuyue_resp
-    _analysis_out  = {}          if _is_simple else chart.analysis
-    _remedies_out  = []          if _is_simple else (chart.remedies or [])
-    _ls_out        = []          if _is_simple else (chart.life_suggestions or [])
+    _flying_out = None if _is_simple else flying_resp
+    _forecast_out = None if _is_simple else forecast_resp
+    _liuyue_out = [] if _is_simple else liuyue_resp
+    _analysis_out = {} if _is_simple else chart.analysis
+    _remedies_out = [] if _is_simple else (chart.remedies or [])
+    _ls_out = [] if _is_simple else (chart.life_suggestions or [])
 
     return ZiweiResponse(
         template_version=template,
@@ -321,14 +322,26 @@ async def compute_ziwei(request: Request, req: ZiweiRequest) -> ZiweiResponse:
         async with _CALC_SEM:
             chart = await asyncio.to_thread(
                 ziwei_full,
-                req.year, req.month, req.day, req.hour, req.minute,
-                req.gender, req.liunian_year, req.longitude,
-                req.late_zishi, req.sihua_stem_indices,
-                req.leap_month_method, req.kuiyue_method,
-                req.tianma_method, req.tiankong_method,
-                req.brightness_method, req.jiukong_method,
-                req.tianshang_method, req.mingzhu_method,
-                req.liunian_sihua_method, req.changsheng_method,
+                req.year,
+                req.month,
+                req.day,
+                req.hour,
+                req.minute,
+                req.gender,
+                req.liunian_year,
+                req.longitude,
+                req.late_zishi,
+                req.sihua_stem_indices,
+                req.leap_month_method,
+                req.kuiyue_method,
+                req.tianma_method,
+                req.tiankong_method,
+                req.brightness_method,
+                req.jiukong_method,
+                req.tianshang_method,
+                req.mingzhu_method,
+                req.liunian_sihua_method,
+                req.changsheng_method,
             )
     except Exception as exc:
         record_ziwei_calc(req.gender, _time.monotonic() - _t0, success=False)
@@ -367,21 +380,32 @@ async def compute_compatibility(request: Request, req: CompatibilityRequest) -> 
         async with _CALC_SEM:
             chart_a = await asyncio.to_thread(
                 ziwei_full,
-                req.person_a.year, req.person_a.month, req.person_a.day,
-                req.person_a.hour, req.person_a.minute, req.person_a.gender,
-                req.person_a.liunian_year, req.person_a.longitude,
+                req.person_a.year,
+                req.person_a.month,
+                req.person_a.day,
+                req.person_a.hour,
+                req.person_a.minute,
+                req.person_a.gender,
+                req.person_a.liunian_year,
+                req.person_a.longitude,
             )
         async with _CALC_SEM:
             chart_b = await asyncio.to_thread(
                 ziwei_full,
-                req.person_b.year, req.person_b.month, req.person_b.day,
-                req.person_b.hour, req.person_b.minute, req.person_b.gender,
-                req.person_b.liunian_year, req.person_b.longitude,
+                req.person_b.year,
+                req.person_b.month,
+                req.person_b.day,
+                req.person_b.hour,
+                req.person_b.minute,
+                req.person_b.gender,
+                req.person_b.liunian_year,
+                req.person_b.longitude,
             )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     from services.ziwei_engine.compatibility import calc_compatibility
+
     result = calc_compatibility(chart_a, chart_b)
 
     return CompatibilityResponse(
@@ -427,8 +451,14 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
         async with _CALC_SEM:
             return await asyncio.to_thread(
                 ziwei_full,
-                p.year, p.month, p.day, p.hour, p.minute,
-                p.gender, p.liunian_year, p.longitude,
+                p.year,
+                p.month,
+                p.day,
+                p.hour,
+                p.minute,
+                p.gender,
+                p.liunian_year,
+                p.longitude,
             )
 
     try:
@@ -446,18 +476,20 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
             try:
                 result = await asyncio.to_thread(calc_compatibility, charts[i], charts[j])
             except Exception as exc:
-                raise HTTPException(status_code=400, detail=f"合盘 {i+1}-{j+1} 失败: {exc}") from exc
+                raise HTTPException(status_code=400, detail=f"合盘 {i + 1}-{j + 1} 失败: {exc}") from exc
             score = result.total_score
             raw_scores[(i, j)] = score
             raw_scores[(j, i)] = score
             pair_scores.append(score)
-            pairs.append(MultiCompatPairResponse(
-                person_a_idx=i,
-                person_b_idx=j,
-                total_score=result.total_score,
-                max_score=result.max_score,
-                level=result.level,
-            ))
+            pairs.append(
+                MultiCompatPairResponse(
+                    person_a_idx=i,
+                    person_b_idx=j,
+                    total_score=result.total_score,
+                    max_score=result.max_score,
+                    level=result.level,
+                )
+            )
 
     # N×N 矩阵（对角线=100）
     matrix: list[list[int]] = []
@@ -493,7 +525,7 @@ import zipfile  # noqa: E402
 from fastapi import File, UploadFile  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
 
-_BATCH_MAX_ROWS = 200   # 单次最多 200 行
+_BATCH_MAX_ROWS = 200  # 单次最多 200 行
 
 
 @router.post(
@@ -556,8 +588,7 @@ async def batch_ziwei(
     if missing:
         raise HTTPException(
             status_code=400,
-            detail=f"CSV 缺少必要列：{', '.join(sorted(missing))}。"
-                   "需要：name,year,month,day,hour,minute,gender",
+            detail=f"CSV 缺少必要列：{', '.join(sorted(missing))}。需要：name,year,month,day,hour,minute,gender",
         )
 
     # 构建 ZIP
@@ -573,10 +604,10 @@ async def batch_ziwei(
             chart_json: dict = {}
 
             try:
-                year   = int(row["year"].strip())
-                month  = int(row["month"].strip())
-                day    = int(row["day"].strip())
-                hour   = int(row["hour"].strip())
+                year = int(row["year"].strip())
+                month = int(row["month"].strip())
+                day = int(row["day"].strip())
+                hour = int(row["hour"].strip())
                 minute = int(row.get("minute", "0").strip() or "0")
                 gender = row["gender"].strip()
                 liunian_year_str = row.get("liunian_year", "").strip()
@@ -587,8 +618,14 @@ async def batch_ziwei(
                 async with _CALC_SEM:
                     chart = await asyncio.to_thread(
                         ziwei_full,
-                        year, month, day, hour, minute, gender,
-                        liunian_year, longitude,
+                        year,
+                        month,
+                        day,
+                        hour,
+                        minute,
+                        gender,
+                        liunian_year,
+                        longitude,
                     )
 
                 tpl = template_version if template_version in (_TPL_SIMPLE, _TPL_STANDARD, _TPL_PRO) else _TPL_STANDARD
@@ -597,29 +634,33 @@ async def batch_ziwei(
                 # 注入 input 快照
                 chart_json["_input"] = {
                     "name": name,
-                    "year": year, "month": month, "day": day,
-                    "hour": hour, "minute": minute, "gender": gender,
+                    "year": year,
+                    "month": month,
+                    "day": day,
+                    "hour": hour,
+                    "minute": minute,
+                    "gender": gender,
                 }
-                patterns_str = ", ".join(
-                    p.get("name", "") for p in (chart_json.get("patterns") or [])
-                )
+                patterns_str = ", ".join(p.get("name", "") for p in (chart_json.get("patterns") or []))
 
             except Exception as exc:
                 status = "error"
                 error_msg = str(exc)
                 patterns_str = ""
 
-            summary_rows.append({
-                "idx": idx + 1,
-                "name": name,
-                "life_palace_gz": chart_json.get("life_palace_gz", ""),
-                "body_palace_gz": chart_json.get("body_palace_gz", ""),
-                "wuxing_ju_name": chart_json.get("wuxing_ju_name", ""),
-                "patterns": patterns_str,
-                "birth_solar": chart_json.get("birth_solar", ""),
-                "status": status,
-                "error": error_msg,
-            })
+            summary_rows.append(
+                {
+                    "idx": idx + 1,
+                    "name": name,
+                    "life_palace_gz": chart_json.get("life_palace_gz", ""),
+                    "body_palace_gz": chart_json.get("body_palace_gz", ""),
+                    "wuxing_ju_name": chart_json.get("wuxing_ju_name", ""),
+                    "patterns": patterns_str,
+                    "birth_solar": chart_json.get("birth_solar", ""),
+                    "status": status,
+                    "error": error_msg,
+                }
+            )
 
             if status == "ok":
                 zf.writestr(
@@ -637,16 +678,24 @@ async def batch_ziwei(
         summary_io = io.StringIO()
         sum_writer = csv.DictWriter(
             summary_io,
-            fieldnames=["idx", "name", "birth_solar", "life_palace_gz",
-                        "body_palace_gz", "wuxing_ju_name", "patterns",
-                        "status", "error"],
+            fieldnames=[
+                "idx",
+                "name",
+                "birth_solar",
+                "life_palace_gz",
+                "body_palace_gz",
+                "wuxing_ju_name",
+                "patterns",
+                "status",
+                "error",
+            ],
         )
         sum_writer.writeheader()
         sum_writer.writerows(summary_rows)
         zf.writestr("_summary.csv", "\ufeff" + summary_io.getvalue())  # BOM for Excel
 
     zip_buffer.seek(0)
-    _ok_rows  = sum(1 for r in summary_rows if r["status"] == "ok")
+    _ok_rows = sum(1 for r in summary_rows if r["status"] == "ok")
     _err_rows = sum(1 for r in summary_rows if r["status"] == "error")
     record_ziwei_batch(success_rows=_ok_rows, error_rows=_err_rows, req_success=True)
     return Response(
@@ -659,20 +708,20 @@ async def batch_ziwei(
 # ─────────────────────────────────────────────────────────────────────────────
 # A6: POST /api/v1/ziwei/flying  飞星专项端点（轻量）
 # ─────────────────────────────────────────────────────────────────────────────
-from typing import Optional as _Optional  # noqa: E402
 
 from pydantic import BaseModel as _BaseModel  # noqa: E402
 
 
 class ZiweiFlyingRequest(_BaseModel):
     """A6 飞星请求：出生信息，返回飞星四化盘。"""
+
     year: int
     month: int
     day: int
     hour: int
     minute: int = 0
     gender: str
-    longitude: _Optional[float] = None
+    longitude: float | None = None
 
 
 @router.post(
@@ -700,7 +749,7 @@ async def api_ziwei_flying(payload: ZiweiFlyingRequest):
             payload.hour,
             payload.minute,
             payload.gender,
-            None,           # liunian_year
+            None,  # liunian_year
             payload.longitude,
         )
 

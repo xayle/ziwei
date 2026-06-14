@@ -1,8 +1,9 @@
 """ChartReview model — 命盘审核与版本化工作流。"""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import ClassVar, Optional
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from sqlalchemy import Column, Index, Text
 from sqlmodel import Field, SQLModel
@@ -21,6 +22,7 @@ class ChartReview(SQLModel, table=True):
         rejected  — 已驳回（含原因）
         revised   — 已修订并再次提交
     """
+
     __tablename__: ClassVar[str] = "chart_reviews"
     __table_args__ = (
         Index("idx_chart_reviews_hash", "report_hash"),
@@ -28,7 +30,7 @@ class ChartReview(SQLModel, table=True):
         Index("idx_chart_reviews_created", "created_at"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
 
     # 命盘标识：输入参数 SHA-256 摘要（相同输入→相同摘要，便于去重查询）
     report_hash: str = Field(index=True, max_length=64)
@@ -44,15 +46,15 @@ class ChartReview(SQLModel, table=True):
     # 审核状态与元数据
     status: str = Field(default="pending", max_length=20)
     reviewer: str = Field(default="", max_length=100)
-    notes: str = Field(default="", sa_column=Column(Text))    # 批注内容
+    notes: str = Field(default="", sa_column=Column(Text))  # 批注内容
     reject_reason: str = Field(default="", sa_column=Column(Text))
 
     # 版本追溯
     algorithm_version: str = Field(default="2.1.0", max_length=20)
     template_version: str = Field(default="standard", max_length=20)
-    revision: int = Field(default=1)   # 修订次数
+    revision: int = Field(default=1)  # 修订次数
 
     # 时间戳
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    reviewed_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    reviewed_at: datetime | None = None
+    deleted_at: datetime | None = None

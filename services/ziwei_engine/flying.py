@@ -10,11 +10,12 @@ services/ziwei_engine/flying.py — 飞星紫微（陆斌兆体系）
   2. 对每个宫位，展开其飞化（禄权科忌落入哪个宫位）
   3. 提供"追星落宫"工具函数
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .tables import BRANCHES, PALACE_NAMES, STEMS
+from .tables import PALACE_NAMES, STEMS
 from .transforms import SIHUA_TABLE
 
 
@@ -34,11 +35,12 @@ def _palace_stems(life_stem_idx: int) -> list[int]:
 @dataclass
 class PalaceFlyChart:
     """一个宫位的飞星分析。"""
-    palace_idx: int         # 0-11（命宫=0）
+
+    palace_idx: int  # 0-11（命宫=0）
     palace_name: str
-    branch_idx: int         # 地支索引
-    stem_idx: int           # 宫干天干索引
-    stem_name: str          # 宫干天干名
+    branch_idx: int  # 地支索引
+    stem_idx: int  # 宫干天干索引
+    stem_name: str  # 宫干天干名
     opposition_palace: str = ""  # 对冲宫位名（+6宫）
     # 本宫飞出的四化 → 落入哪个宫位（宫名）
     flying_out: dict[str, str] = field(default_factory=dict)
@@ -62,7 +64,7 @@ class FlyingStarChart:
 def calc_flying(
     life_palace_branch: int,
     life_stem_idx: int,
-    star_branches: dict[str, int],   # {星名: branch_idx} 用于找星在哪个宫
+    star_branches: dict[str, int],  # {星名: branch_idx} 用于找星在哪个宫
 ) -> FlyingStarChart:
     """
     计算飞星盘。
@@ -116,18 +118,14 @@ def calc_flying(
 
             # 记录到收到飞化的宫位
             if landing_palace in received:
-                received[landing_palace].append(
-                    f"{this_palace_name}宫干{stem_name}化{hua_type}"
-                )
+                received[landing_palace].append(f"{this_palace_name}宫干{stem_name}化{hua_type}")
 
             # 对冲：飞化落宫的对面宫（+6）同时被冲
             if landing_palace in palace_name_to_idx:
                 landing_idx = palace_name_to_idx[landing_palace]
                 chong_palace_name = PALACE_NAMES[(landing_idx + 6) % 12]
                 if chong_palace_name in chonged:
-                    chonged[chong_palace_name].append(
-                        f"{this_palace_name}宫干{stem_name}化{hua_type}冲"
-                    )
+                    chonged[chong_palace_name].append(f"{this_palace_name}宫干{stem_name}化{hua_type}冲")
 
             # 自化检测：飞化落回本宫
             if landing_palace == this_palace_name:
@@ -135,16 +133,18 @@ def calc_flying(
                 pal_self_transforms.append(desc)
                 all_self_transforms.append(desc)
 
-        palaces.append(PalaceFlyChart(
-            palace_idx=i,
-            palace_name=this_palace_name,
-            branch_idx=b,
-            stem_idx=stem_i,
-            stem_name=stem_name,
-            opposition_palace=opp_palace_name,
-            flying_out=flying_out,
-            self_transforms=pal_self_transforms,
-        ))
+        palaces.append(
+            PalaceFlyChart(
+                palace_idx=i,
+                palace_name=this_palace_name,
+                branch_idx=b,
+                stem_idx=stem_i,
+                stem_name=stem_name,
+                opposition_palace=opp_palace_name,
+                flying_out=flying_out,
+                self_transforms=pal_self_transforms,
+            )
+        )
 
     return FlyingStarChart(
         palaces=palaces,

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Sequence, Union
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any, Union
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -40,7 +41,7 @@ router = APIRouter(prefix="/api/v1/cases", tags=["compute"])
 
 
 def _now_utc():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _parse_dt_local(dt_local: str, tz: str) -> datetime:
@@ -83,13 +84,13 @@ def _store_snapshot(
     session: Session,
     case: Case,
     kind: str,
-    compute_flags: Dict[str, Any],
-    input_json: Dict[str, Any],
-    output_json: Dict[str, Any],
-    backend_json: Optional[Dict[str, Any]] = None,
-    summary_level: Optional[str] = None,
-    summary_warning_count: Optional[int] = None,
-    summary_diff_count: Optional[int] = None,
+    compute_flags: dict[str, Any],
+    input_json: dict[str, Any],
+    output_json: dict[str, Any],
+    backend_json: dict[str, Any] | None = None,
+    summary_level: str | None = None,
+    summary_warning_count: int | None = None,
+    summary_diff_count: int | None = None,
 ) -> Snapshot:
     snap = Snapshot(
         case_id=case.id,
@@ -186,9 +187,16 @@ def _do_compute_for_case(
             "request_id": compute_batch_id,
         }
         snap_bazi = _store_snapshot(
-            session, case, kind="bazi",
-            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
-            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
+            session,
+            case,
+            kind="bazi",
+            compute_flags=compute_flags,
+            input_json=input_effective,
+            output_json=error_payload,
+            backend_json=None,
+            summary_level=None,
+            summary_warning_count=None,
+            summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_bazi))
         tasks_status["bazi"] = ComputeTaskStatus(status="failed", snapshot_id=snap_bazi.id, message=exc.message)
@@ -200,9 +208,16 @@ def _do_compute_for_case(
             "request_id": compute_batch_id,
         }
         snap_bazi = _store_snapshot(
-            session, case, kind="bazi",
-            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
-            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
+            session,
+            case,
+            kind="bazi",
+            compute_flags=compute_flags,
+            input_json=input_effective,
+            output_json=error_payload,
+            backend_json=None,
+            summary_level=None,
+            summary_warning_count=None,
+            summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_bazi))
         tasks_status["bazi"] = ComputeTaskStatus(status="failed", snapshot_id=snap_bazi.id, message=str(exc))
@@ -263,10 +278,16 @@ def _do_compute_for_case(
         summary_diff_count = len(v.diff_fields)
 
         snap_verify = _store_snapshot(
-            session, case, kind="verify",
-            compute_flags=compute_flags, input_json=input_effective, output_json=verify_output,
-            backend_json=None, summary_level=summary_level,
-            summary_warning_count=summary_warning_count, summary_diff_count=summary_diff_count,
+            session,
+            case,
+            kind="verify",
+            compute_flags=compute_flags,
+            input_json=input_effective,
+            output_json=verify_output,
+            backend_json=None,
+            summary_level=summary_level,
+            summary_warning_count=summary_warning_count,
+            summary_diff_count=summary_diff_count,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_verify))
         tasks_status["verify"] = ComputeTaskStatus(status="success", snapshot_id=snap_verify.id, message=None)
@@ -278,9 +299,16 @@ def _do_compute_for_case(
             "request_id": compute_batch_id,
         }
         snap_verify = _store_snapshot(
-            session, case, kind="verify",
-            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
-            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
+            session,
+            case,
+            kind="verify",
+            compute_flags=compute_flags,
+            input_json=input_effective,
+            output_json=error_payload,
+            backend_json=None,
+            summary_level=None,
+            summary_warning_count=None,
+            summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_verify))
         tasks_status["verify"] = ComputeTaskStatus(status="failed", snapshot_id=snap_verify.id, message=exc.message)
@@ -292,9 +320,16 @@ def _do_compute_for_case(
             "request_id": compute_batch_id,
         }
         snap_verify = _store_snapshot(
-            session, case, kind="verify",
-            compute_flags=compute_flags, input_json=input_effective, output_json=error_payload,
-            backend_json=None, summary_level=None, summary_warning_count=None, summary_diff_count=None,
+            session,
+            case,
+            kind="verify",
+            compute_flags=compute_flags,
+            input_json=input_effective,
+            output_json=error_payload,
+            backend_json=None,
+            summary_level=None,
+            summary_warning_count=None,
+            summary_diff_count=None,
         )
         snapshots_created.append(SnapshotOut.model_validate(snap_verify))
         tasks_status["verify"] = ComputeTaskStatus(status="failed", snapshot_id=snap_verify.id, message=str(exc))

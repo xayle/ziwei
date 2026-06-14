@@ -14,24 +14,25 @@ Phase 2 优化工具 - 批量操作、缓存、查询优化
   每个进程各自维护独立缓存，命中率接近于零。
   要实现共享缓存，请在 .env 中设置 REDIS_URL + REDIS_ENABLED=true。
 """
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 import logging
 import time
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 from sqlalchemy import update
 from sqlmodel import Session, select
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class BulkOperationOptimizer:
     """批量操作优化工具"""
 
     @staticmethod
-    def bulk_insert(session: Session, model_class: Type[T], records: List[Dict[str, Any]]) -> int:
+    def bulk_insert(session: Session, model_class: type[T], records: list[dict[str, Any]]) -> int:
         """高效批量插入；返回插入行数。"""
         if not records:
             return 0
@@ -48,9 +49,9 @@ class BulkOperationOptimizer:
     @staticmethod
     def bulk_update(
         session: Session,
-        model_class: Type[T],
-        updates: Dict[str, Any],
-        filter_criteria: Dict[str, Any],
+        model_class: type[T],
+        updates: dict[str, Any],
+        filter_criteria: dict[str, Any],
     ) -> int:
         """高效批量更新；返回更新行数。"""
         try:
@@ -72,12 +73,12 @@ class BulkOperationOptimizer:
     @staticmethod
     def bulk_delete(
         session: Session,
-        model_class: Type[T],
-        filter_criteria: Dict[str, Any],
+        model_class: type[T],
+        filter_criteria: dict[str, Any],
     ) -> int:
         """软删除（设 deleted_at）；返回受影响行数。"""
         try:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             stmt = update(model_class).values(deleted_at=now)  # type: ignore[arg-type]
             for key, value in filter_criteria.items():
                 if hasattr(model_class, key):
@@ -98,9 +99,9 @@ class QueryCache:
 
     def __init__(self, cache_seconds: int = 300):
         self.cache_seconds = cache_seconds
-        self._cache: Dict[str, tuple[Any, float]] = {}
+        self._cache: dict[str, tuple[Any, float]] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """命中且未过期则返回缓存值，否则返回 None。"""
         if key in self._cache:
             value, ts = self._cache[key]
@@ -113,7 +114,7 @@ class QueryCache:
         """写入缓存。"""
         self._cache[key] = (value, time.time())
 
-    def clear(self, pattern: Optional[str] = None) -> int:
+    def clear(self, pattern: str | None = None) -> int:
         """清除全部或带指定 pattern 的条目；返回清除数。"""
         if pattern is None:
             count = len(self._cache)
@@ -124,7 +125,7 @@ class QueryCache:
             del self._cache[k]
         return len(keys)
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         return {"cached_items": len(self._cache), "cache_ttl_seconds": self.cache_seconds}
 
     def __len__(self) -> int:
@@ -136,7 +137,7 @@ class QueryCache:
 query_cache = QueryCache(cache_seconds=600)
 
 
-def optimize_query_for_relationships(session: Session, model_class: Type[T], primary_key: Any) -> Optional[T]:
+def optimize_query_for_relationships(session: Session, model_class: type[T], primary_key: Any) -> T | None:
     """
     按主键单条查询，附带耗时日志。
 
@@ -154,4 +155,3 @@ def optimize_query_for_relationships(session: Session, model_class: Type[T], pri
     except Exception as e:
         logger.error("query FAIL: %s", e)
         raise
-

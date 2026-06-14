@@ -1,4 +1,5 @@
 """app/schemas/v2 — API v2 专属 Schema 包."""
+
 from __future__ import annotations
 
 from .verify import (
@@ -10,8 +11,8 @@ from .verify import (
 )
 
 __all__ = [
-    "VerifyRequestV2",
     "ResponseMeta",
+    "VerifyRequestV2",
     "VerifyResponseFull",
     "VerifyResponseMinimal",
     "VerifyResponseV2",

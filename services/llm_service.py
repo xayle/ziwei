@@ -16,9 +16,11 @@ LLM 服务层 — §10 辅助解读草稿生成。
   LLM_MAX_TOKENS    = 800（默认）
   LLM_TEMPERATURE   = 0.7（默认）
 """
+
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from enum import Enum
 import json
@@ -26,7 +28,6 @@ import logging
 import os
 import threading
 import time
-from typing import AsyncIterator
 
 import httpx
 
@@ -35,46 +36,47 @@ logger = logging.getLogger(__name__)
 
 # ─── Provider 枚举与配置 ─────────────────────────────────────────────────────
 
+
 class LlmProviderType(str, Enum):
-    OPENAI    = "openai"
+    OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    MOCK      = "mock"
+    MOCK = "mock"
 
 
 @dataclass
 class LlmConfig:
-    provider:    LlmProviderType
-    model:       str
-    api_key:     str = ""
-    api_base:    str = ""
-    max_tokens:  int = 1600
+    provider: LlmProviderType
+    model: str
+    api_key: str = ""
+    api_base: str = ""
+    max_tokens: int = 1600
     temperature: float = 0.75
 
 
 @dataclass
 class LlmUsage:
-    input_tokens:  int   = 0
-    output_tokens: int   = 0
-    cost_usd:      float = 0.0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost_usd: float = 0.0
 
 
 @dataclass
 class LlmResponse:
-    text:           str
-    provider:       str
-    model:          str
-    usage:          LlmUsage
-    duration_secs:  float
+    text: str
+    provider: str
+    model: str
+    usage: LlmUsage
+    duration_secs: float
     prompt_version: str
-    is_fallback:    bool = False   # O6: 断路器打开时为 True
+    is_fallback: bool = False  # O6: 断路器打开时为 True
 
 
 # ── O6: LLM 断路器状态 ────────────────────────────────────────────────────────────
-_LLM_CIRCUIT_LOCK:          threading.Lock = threading.Lock()
-_LLM_FAIL_COUNT:            int   = 0
-_LLM_CIRCUIT_OPEN_UNTIL:    float = 0.0
-_LLM_CIRCUIT_FAIL_THRESH:   int   = 3      # 连续 3 次失败 → 打开
-_LLM_CIRCUIT_COOLDOWN:      int   = 600    # 10 分钟（秒）
+_LLM_CIRCUIT_LOCK: threading.Lock = threading.Lock()
+_LLM_FAIL_COUNT: int = 0
+_LLM_CIRCUIT_OPEN_UNTIL: float = 0.0
+_LLM_CIRCUIT_FAIL_THRESH: int = 3  # 连续 3 次失败 → 打开
+_LLM_CIRCUIT_COOLDOWN: int = 600  # 10 分钟（秒）
 
 
 def _llm_record_failure() -> None:
@@ -87,7 +89,8 @@ def _llm_record_failure() -> None:
             _LLM_FAIL_COUNT = 0
             logger.warning(
                 "[O6] LLM 断路器打开 %d 秒（连续 %d 次失败）",
-                _LLM_CIRCUIT_COOLDOWN, _LLM_CIRCUIT_FAIL_THRESH,
+                _LLM_CIRCUIT_COOLDOWN,
+                _LLM_CIRCUIT_FAIL_THRESH,
             )
 
 
@@ -190,8 +193,11 @@ def build_user_prompt(
 # ─── Mock 生成器（无 API key 时使用）────────────────────────────────────────────
 
 _ELEM_TALENT: dict[str, str] = {
-    "水": "智谋型", "木": "进取型", "火": "活跃型",
-    "土": "稳健型", "金": "决断型",
+    "水": "智谋型",
+    "木": "进取型",
+    "火": "活跃型",
+    "土": "稳健型",
+    "金": "决断型",
 }
 
 _MOCK_TEMPLATE = """\
@@ -226,7 +232,7 @@ def _mock_generate(
     pattern_summary: str,
 ) -> str:
     wux_elem = next((e for e in _ELEM_TALENT if e in (wuxing_ju_name or "")), "")
-    talent   = _ELEM_TALENT.get(wux_elem, "综合型")
+    talent = _ELEM_TALENT.get(wux_elem, "综合型")
     return _MOCK_TEMPLATE.format(
         lp_gz=life_palace_gz or "（未知）",
         wux_ju=wuxing_ju_name or "（未知局）",
@@ -238,9 +244,8 @@ def _mock_generate(
 
 # ─── 实际 API 调用（httpx）────────────────────────────────────────────────────
 
-async def _call_openai(
-    cfg: LlmConfig, system_prompt: str, user_prompt: str
-) -> tuple[str, LlmUsage]:
+
+async def _call_openai(cfg: LlmConfig, system_prompt: str, user_prompt: str) -> tuple[str, LlmUsage]:
     headers = {
         "Authorization": f"Bearer {cfg.api_key}",
         "Content-Type": "application/json",
@@ -249,50 +254,44 @@ async def _call_openai(
         "model": cfg.model,
         "messages": [
             {"role": "system", "content": system_prompt},
-            {"role": "user",   "content": user_prompt},
+            {"role": "user", "content": user_prompt},
         ],
-        "max_tokens":  cfg.max_tokens,
+        "max_tokens": cfg.max_tokens,
         "temperature": cfg.temperature,
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
-        r = await client.post(
-            f"{cfg.api_base}/v1/chat/completions", headers=headers, json=body
-        )
+        r = await client.post(f"{cfg.api_base}/v1/chat/completions", headers=headers, json=body)
         r.raise_for_status()
         data = r.json()
 
     text = data["choices"][0]["message"]["content"]
-    raw  = data.get("usage", {})
+    raw = data.get("usage", {})
     it, ot = raw.get("prompt_tokens", 0), raw.get("completion_tokens", 0)
     # gpt-4o-mini: ~$0.00015/1K input, ~$0.0006/1K output
     cost = it * 0.00015 / 1000 + ot * 0.0006 / 1000
     return text, LlmUsage(it, ot, round(cost, 6))
 
 
-async def _call_anthropic(
-    cfg: LlmConfig, system_prompt: str, user_prompt: str
-) -> tuple[str, LlmUsage]:
+async def _call_anthropic(cfg: LlmConfig, system_prompt: str, user_prompt: str) -> tuple[str, LlmUsage]:
     headers = {
         "x-api-key": cfg.api_key,
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
     }
     body = {
-        "model":       cfg.model,
-        "max_tokens":  cfg.max_tokens,
+        "model": cfg.model,
+        "max_tokens": cfg.max_tokens,
         "temperature": cfg.temperature,
-        "system":      system_prompt,
-        "messages":    [{"role": "user", "content": user_prompt}],
+        "system": system_prompt,
+        "messages": [{"role": "user", "content": user_prompt}],
     }
     async with httpx.AsyncClient(timeout=60.0) as client:
-        r = await client.post(
-            f"{cfg.api_base}/v1/messages", headers=headers, json=body
-        )
+        r = await client.post(f"{cfg.api_base}/v1/messages", headers=headers, json=body)
         r.raise_for_status()
         data = r.json()
 
     text = data["content"][0]["text"]
-    raw  = data.get("usage", {})
+    raw = data.get("usage", {})
     it, ot = raw.get("input_tokens", 0), raw.get("output_tokens", 0)
     # claude-3-haiku: ~$0.00025/1K input, ~$0.00125/1K output
     cost = it * 0.00025 / 1000 + ot * 0.00125 / 1000
@@ -301,20 +300,21 @@ async def _call_anthropic(
 
 # ─── 主入口 ───────────────────────────────────────────────────────────────────
 
+
 async def generate_interpretation(
-    life_palace_gz:     str,
-    wuxing_ju_name:     str,
-    pattern_summary:    str,
+    life_palace_gz: str,
+    wuxing_ju_name: str,
+    pattern_summary: str,
     birth_info_summary: str,
 ) -> LlmResponse:
     """生成命盘解读草稿，自动选择已配置的 LLM provider。"""
     cfg = get_llm_config()
-    t0  = time.monotonic()
+    t0 = time.monotonic()
 
     # O6: 断路器打开 → 直接返回 Mock fallback
     if cfg.provider != LlmProviderType.MOCK and _is_circuit_open():
         logger.warning("[O6] 断路器打开，generate_interpretation 使用 Mock fallback")
-        text  = _mock_generate(life_palace_gz, wuxing_ju_name, pattern_summary)
+        text = _mock_generate(life_palace_gz, wuxing_ju_name, pattern_summary)
         usage = LlmUsage(0, len(text.split()), 0.0)
         return LlmResponse(
             text=text,
@@ -327,12 +327,10 @@ async def generate_interpretation(
         )
 
     if cfg.provider == LlmProviderType.MOCK:
-        text  = _mock_generate(life_palace_gz, wuxing_ju_name, pattern_summary)
+        text = _mock_generate(life_palace_gz, wuxing_ju_name, pattern_summary)
         usage = LlmUsage(0, len(text.split()), 0.0)
     else:
-        user_prompt = build_user_prompt(
-            life_palace_gz, wuxing_ju_name, pattern_summary, birth_info_summary
-        )
+        user_prompt = build_user_prompt(life_palace_gz, wuxing_ju_name, pattern_summary, birth_info_summary)
         try:
             if cfg.provider == LlmProviderType.OPENAI:
                 text, usage = await _call_openai(cfg, _SYSTEM_PROMPT, user_prompt)
@@ -340,9 +338,7 @@ async def generate_interpretation(
                 text, usage = await _call_anthropic(cfg, _SYSTEM_PROMPT, user_prompt)
         except httpx.HTTPStatusError as e:
             _llm_record_failure()
-            raise RuntimeError(
-                f"LLM API 返回错误 {e.response.status_code}: {e.response.text[:200]}"
-            ) from e
+            raise RuntimeError(f"LLM API 返回错误 {e.response.status_code}: {e.response.text[:200]}") from e
         except Exception as e:
             _llm_record_failure()
             raise RuntimeError(f"LLM API 调用失败: {e}") from e
@@ -443,11 +439,11 @@ _PROMPT_FENGSHUI = (
 )
 
 _MODULE_PROMPTS: dict[str, str] = {
-    "wealth_detail":       _PROMPT_WEALTH,
-    "career_detail":       _PROMPT_CAREER,
-    "marriage_detail":     _PROMPT_MARRIAGE,
-    "dayun_narrative":     _PROMPT_DAYUN,
-    "liunian_advice":      _PROMPT_LIUNIAN,
+    "wealth_detail": _PROMPT_WEALTH,
+    "career_detail": _PROMPT_CAREER,
+    "marriage_detail": _PROMPT_MARRIAGE,
+    "dayun_narrative": _PROMPT_DAYUN,
+    "liunian_advice": _PROMPT_LIUNIAN,
     "fengshui_suggestion": _PROMPT_FENGSHUI,
 }
 
@@ -462,9 +458,7 @@ _BAZI_USER_TEMPLATE = (
 
 def _build_bazi_user_prompt(rendered_facts: str, evidence_snippets: list[str]) -> str:
     if evidence_snippets:
-        evidence_block = "\n".join(
-            f"· {snippet}" for snippet in evidence_snippets
-        )
+        evidence_block = "\n".join(f"· {snippet}" for snippet in evidence_snippets)
     else:
         evidence_block = "（暂无匹配的古籍引文）"
     return _BAZI_USER_TEMPLATE.format(
@@ -476,7 +470,7 @@ def _build_bazi_user_prompt(rendered_facts: str, evidence_snippets: list[str]) -
 def _mock_bazi_generate(rendered_facts: str, evidence_snippets: list[str]) -> str:
     evidence_note = ""
     if evidence_snippets:
-        evidence_note = f"\n\n【古籍参考】\n" + "\n".join(f"· {s}" for s in evidence_snippets[:2])
+        evidence_note = "\n\n【古籍参考】\n" + "\n".join(f"· {s}" for s in evidence_snippets[:2])
     return (
         "【八字命盘综合解读草稿 · AI 辅助生成 · 仅供参考】\n\n"
         "▌ 格局概述\n"
@@ -545,9 +539,7 @@ async def generate_bazi_interpretation(
                 text, usage = await _call_anthropic(cfg, system_prompt, user_prompt)
         except httpx.HTTPStatusError as e:
             _llm_record_failure()
-            raise RuntimeError(
-                f"LLM API 返回错误 {e.response.status_code}: {e.response.text[:200]}"
-            ) from e
+            raise RuntimeError(f"LLM API 返回错误 {e.response.status_code}: {e.response.text[:200]}") from e
         except Exception as e:
             _llm_record_failure()
             raise RuntimeError(f"LLM API 调用失败: {e}") from e
@@ -563,9 +555,9 @@ async def generate_bazi_interpretation(
 
 
 async def stream_interpretation(
-    life_palace_gz:     str,
-    wuxing_ju_name:     str,
-    pattern_summary:    str,
+    life_palace_gz: str,
+    wuxing_ju_name: str,
+    pattern_summary: str,
     birth_info_summary: str,
 ) -> AsyncIterator[str]:
     """
@@ -576,31 +568,29 @@ async def stream_interpretation(
     """
     cfg = get_llm_config()
     yield (
-        f'event: start\ndata: {json.dumps({"status": "generating", "provider": cfg.provider.value}, ensure_ascii=False)}\n\n'
+        f"event: start\ndata: {json.dumps({'status': 'generating', 'provider': cfg.provider.value}, ensure_ascii=False)}\n\n"
     )
 
     if cfg.provider == LlmProviderType.MOCK:
-        text  = _mock_generate(life_palace_gz, wuxing_ju_name, pattern_summary)
+        text = _mock_generate(life_palace_gz, wuxing_ju_name, pattern_summary)
         # 按句号分块模拟流式输出
         parts = [s + "。" for s in text.split("。") if s.strip()]
         for i, part in enumerate(parts):
             yield f"event: chunk\ndata: {json.dumps({'idx': i, 'text': part}, ensure_ascii=False)}\n\n"
             await asyncio.sleep(0.04)
         usage_dict = {"input_tokens": 0, "output_tokens": len(text.split()), "cost_usd": 0.0}
-        full_text  = text
+        full_text = text
     else:
-        user_prompt = build_user_prompt(
-            life_palace_gz, wuxing_ju_name, pattern_summary, birth_info_summary
-        )
+        user_prompt = build_user_prompt(life_palace_gz, wuxing_ju_name, pattern_summary, birth_info_summary)
         try:
             if cfg.provider == LlmProviderType.OPENAI:
                 full_text, usage_obj = await _call_openai(cfg, _SYSTEM_PROMPT, user_prompt)
             else:
                 full_text, usage_obj = await _call_anthropic(cfg, _SYSTEM_PROMPT, user_prompt)
             usage_dict = {
-                "input_tokens":  usage_obj.input_tokens,
+                "input_tokens": usage_obj.input_tokens,
                 "output_tokens": usage_obj.output_tokens,
-                "cost_usd":      usage_obj.cost_usd,
+                "cost_usd": usage_obj.cost_usd,
             }
         except Exception as e:
             err = json.dumps({"error": str(e)}, ensure_ascii=False)
@@ -609,7 +599,7 @@ async def stream_interpretation(
 
         # 按 50 字符分块推送已生成文本
         for i in range(0, len(full_text), 50):
-            chunk = full_text[i: i + 50]
+            chunk = full_text[i : i + 50]
             yield f"event: chunk\ndata: {json.dumps({'idx': i // 50, 'text': chunk}, ensure_ascii=False)}\n\n"
             await asyncio.sleep(0.01)
 
@@ -655,7 +645,7 @@ def _build_event_consult_prompt(
     if et.event_subtypes:
         lines.append(f"事件子类：{'、'.join(et.event_subtypes)}")
     if et.key_months:
-        lines.append(f"关键月份：{'、'.join(str(m)+'月' for m in et.key_months)}")
+        lines.append(f"关键月份：{'、'.join(str(m) + '月' for m in et.key_months)}")
     if et.possible_manifestations:
         lines.append("可能表现：" + "；".join(et.possible_manifestations[:4]))
     if et.omens:
@@ -671,7 +661,7 @@ def _build_event_consult_prompt(
     if et.avoid_overclaim:
         lines.append(f"\n⚠ 注意事项（必须在解读末尾说明）：{et.avoid_overclaim}")
     lines.append("")
-    lines.append(f"=== 用户问题 ===")
+    lines.append("=== 用户问题 ===")
     lines.append(user_question)
     return "\n".join(lines)
 

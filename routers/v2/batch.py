@@ -9,6 +9,7 @@
 - 速率限制 10/min（per user，通过 services/rate_limit.py）
 - 超时降级：返回已完成的部分结果 + failed 列表，不返回 502/504
 """
+
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -28,9 +29,9 @@ from services.rate_limit import limiter
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-_OVERALL_DEADLINE = 60.0   # 硬上限 60s
-_PER_ITEM_TIMEOUT = 5.0    # 单条软超时 5s
-_DEFAULT_WORKERS  = 4
+_OVERALL_DEADLINE = 60.0  # 硬上限 60s
+_PER_ITEM_TIMEOUT = 5.0  # 单条软超时 5s
+_DEFAULT_WORKERS = 4
 
 
 def _calc_single(item, idx: int) -> dict:

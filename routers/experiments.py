@@ -1,4 +1,4 @@
-﻿"""
+"""
 A/B 测试实验路由 (§9)
 
 POST   /api/v1/experiments                   — 创建实验
@@ -10,13 +10,13 @@ POST   /api/v1/experiments/{id}/assign       — 将会话分配到变体
 POST   /api/v1/experiments/{id}/event        — 上报实验事件
 GET    /api/v1/experiments/{id}/results      — 获取实验结果统计
 """
+
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import hashlib
 import json
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
@@ -46,6 +46,7 @@ router = APIRouter(prefix="/api/v1/experiments", tags=["A/B实验"])
 
 # ─────────────────────────── helpers ───────────────────────────────────────
 
+
 def _exp_to_resp(exp: Experiment) -> ExperimentResponse:
     try:
         variants_raw = json.loads(exp.variants or "[]")
@@ -74,7 +75,7 @@ def _exp_to_resp(exp: Experiment) -> ExperimentResponse:
     )
 
 
-def _build_traffic_split(variants: List[VariantDef]) -> dict:
+def _build_traffic_split(variants: list[VariantDef]) -> dict:
     """按权重计算每个变体的百分比（保证总和 = 100）。"""
     total_weight = sum(v.weight for v in variants)
     split: dict = {}
@@ -87,7 +88,7 @@ def _build_traffic_split(variants: List[VariantDef]) -> dict:
     return split
 
 
-def _assign_variant(variants: List[VariantDef], traffic_split: dict, session_id: str) -> str:
+def _assign_variant(variants: list[VariantDef], traffic_split: dict, session_id: str) -> str:
     """
     确定性地将 session_id 分配到变体（哈希取模 + 流量分割）。
     相同 session_id 始终获得相同变体。
@@ -102,6 +103,7 @@ def _assign_variant(variants: List[VariantDef], traffic_split: dict, session_id:
 
 
 # ─────────────────────────── 实验 CRUD ──────────────────────────────────────
+
 
 @router.post(
     "",
@@ -138,7 +140,7 @@ def create_experiment(
 )
 def list_experiments(
     _user: RequiredUser,
-    status: Optional[str] = Query(None, description="按状态筛选: draft/running/paused/completed"),
+    status: str | None = Query(None, description="按状态筛选: draft/running/paused/completed"),
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     session: Session = Depends(get_session),
@@ -149,7 +151,7 @@ def list_experiments(
     stmt = stmt.order_by(Experiment.created_at.desc())  # type: ignore[attr-defined]
     all_items = session.exec(stmt).all()
     total = len(all_items)
-    items = [_exp_to_resp(e) for e in all_items[skip: skip + limit]]
+    items = [_exp_to_resp(e) for e in all_items[skip : skip + limit]]
     return ExperimentListResponse(total=total, items=items)
 
 
@@ -187,9 +189,9 @@ def update_experiment(
     # 状态转换规则
     if payload.status:
         valid_transitions: dict = {
-            "draft":     {"running"},
-            "running":   {"paused", "completed"},
-            "paused":    {"running", "completed"},
+            "draft": {"running"},
+            "running": {"paused", "completed"},
+            "paused": {"running", "completed"},
             "completed": set(),
         }
         if payload.status not in valid_transitions.get(exp.status, set()):
@@ -197,7 +199,7 @@ def update_experiment(
                 status_code=422,
                 detail=f"不允许从 {exp.status} 切换至 {payload.status}",
             )
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if payload.status == "running" and exp.started_at is None:
             exp.started_at = now
         if payload.status == "completed":
@@ -215,7 +217,7 @@ def update_experiment(
     if payload.target_metric is not None:
         exp.target_metric = payload.target_metric
 
-    exp.updated_at = datetime.now(timezone.utc)
+    exp.updated_at = datetime.now(UTC)
     session.add(exp)
     session.commit()
     session.refresh(exp)
@@ -237,13 +239,14 @@ def delete_experiment(
         raise HTTPException(status_code=404, detail="实验不存在")
     if exp.status == "running":
         raise HTTPException(status_code=422, detail="运行中的实验无法删除，请先暂停或完成")
-    exp.deleted_at = datetime.now(timezone.utc)
-    exp.updated_at = datetime.now(timezone.utc)
+    exp.deleted_at = datetime.now(UTC)
+    exp.updated_at = datetime.now(UTC)
     session.add(exp)
     session.commit()
 
 
 # ─────────────────────────── 变体分配 ───────────────────────────────────────
+
 
 @router.post(
     "/{exp_id}/assign",
@@ -315,6 +318,7 @@ def assign_variant(
 
 # ─────────────────────────── 事件上报 ───────────────────────────────────────
 
+
 @router.post(
     "/{exp_id}/event",
     status_code=201,
@@ -348,6 +352,7 @@ def record_event(
 
 # ─────────────────────────── 结果分析 ───────────────────────────────────────
 
+
 @router.get(
     "/{exp_id}/results",
     response_model=ExperimentResults,
@@ -362,9 +367,7 @@ def get_results(
     if not exp or exp.deleted_at is not None:
         raise HTTPException(status_code=404, detail="实验不存在")
 
-    events = session.exec(
-        select(ExperimentEvent).where(ExperimentEvent.experiment_id == exp_id)
-    ).all()
+    events = session.exec(select(ExperimentEvent).where(ExperimentEvent.experiment_id == exp_id)).all()
 
     # 统计每个变体的 assigned 数量 + 转化数量 + 其他事件
     assigned_count: dict[str, int] = defaultdict(int)
@@ -390,13 +393,15 @@ def get_results(
         n = assigned_count.get(vname, 0)
         c = conversion_count.get(vname, 0)
         rate = c / n if n > 0 else 0.0
-        variant_stats.append(VariantStats(
-            variant=vname,
-            assigned=n,
-            conversions=c,
-            conversion_rate=round(rate, 4),
-            other_events=dict(other_events_count.get(vname, {})),
-        ))
+        variant_stats.append(
+            VariantStats(
+                variant=vname,
+                assigned=n,
+                conversions=c,
+                conversion_rate=round(rate, 4),
+                other_events=dict(other_events_count.get(vname, {})),
+            )
+        )
 
     total_assigned = sum(s.assigned for s in variant_stats)
 
@@ -406,10 +411,7 @@ def get_results(
     if total_assigned >= exp.min_sample_size and variant_stats:
         best = max(variant_stats, key=lambda s: s.conversion_rate)
         winner = best.variant
-        note = (
-            f"样本量已达标（{total_assigned}）。"
-            f"最高转化率变体: {best.variant}（{best.conversion_rate:.1%}）"
-        )
+        note = f"样本量已达标（{total_assigned}）。最高转化率变体: {best.variant}（{best.conversion_rate:.1%}）"
 
     return ExperimentResults(
         experiment_id=exp_id,

@@ -22,6 +22,7 @@ services/bazi_engine/geju.py — 格局判断（M1 任务 1.10）
     食神格: 偏印（枭印）透干夺食
     伤官格: 正官透干（伤官见官）
 """
+
 from __future__ import annotations
 
 from services.bazi_engine.tables import (
@@ -53,14 +54,14 @@ GEJU_META: dict[str, dict] = {
     "从革格": {"type": "outer", "note": "金气专旺（≥70%），主威武刚烈，利西方金融"},
     "润下格": {"type": "outer", "note": "水气专旺（≥70%），主智谋机变，利北方"},
     # ── 从格（日主极弱，顺从最强之神）────────────────────────────────
-    "从财格": {"type": "cong",  "note": "日主极弱，全局财星最旺，宜顺从理财，忌比劫"},
+    "从财格": {"type": "cong", "note": "日主极弱，全局财星最旺，宜顺从理财，忌比劫"},
     "从官杀格": {"type": "cong", "note": "日主极弱，全局官杀最旺，宜服从管理，利官场"},
-    "从儿格": {"type": "cong",  "note": "日主极弱，食伤广布，专事创作技艺"},
-    "从势格": {"type": "cong",  "note": "日主极弱，财官食伤均衡，顺势应变"},
+    "从儿格": {"type": "cong", "note": "日主极弱，食伤广布，专事创作技艺"},
+    "从势格": {"type": "cong", "note": "日主极弱，财官食伤均衡，顺势应变"},
     # ── 特殊格 ───────────────────────────────────────────────────────
     "建禄格": {"type": "special", "note": "月令为日主临官位（禄），日主有根有力"},
     "羊刃格": {"type": "special", "note": "月令为日主刃旺，刚烈之象"},
-    "普通格": {"type": "none",  "note": "五行较均衡，无明显格局"},
+    "普通格": {"type": "none", "note": "五行较均衡，无明显格局"},
     # ── 化气格（天干五合，日主参与，月支归属五行匹配）────────────────
     "化土格": {"type": "huaqi", "note": "甲己化土，日主参与五合，月支土气归属"},
     "化金格": {"type": "huaqi", "note": "乙庚化金，日主参与五合，月支金气归属"},
@@ -85,12 +86,18 @@ _SHISHEN_TO_GEJU: dict[str, str] = {
 
 # 月支 → 建禄/羊刃对应的天干
 _JIANLU_STEM: dict[str, str] = {
-    "寅": "甲", "卯": "乙",   # 木
-    "午": "丙戊", "巳": "丙",  # 火
-    "申": "庚", "酉": "辛",   # 金
-    "子": "壬", "亥": "癸",   # 水
-    "辰": "戊", "戌": "戊",   # 土
-    "丑": "己", "未": "己",
+    "寅": "甲",
+    "卯": "乙",  # 木
+    "午": "丙戊",
+    "巳": "丙",  # 火
+    "申": "庚",
+    "酉": "辛",  # 金
+    "子": "壬",
+    "亥": "癸",  # 水
+    "辰": "戊",
+    "戌": "戊",  # 土
+    "丑": "己",
+    "未": "己",
 }
 
 # 五合化气规则: frozenset({干A, 干B}) → (化出五行英文, 格局名称)
@@ -98,8 +105,8 @@ _WUHE_HUAQI: dict[frozenset, tuple[str, str]] = {
     frozenset({"甲", "己"}): ("earth", "化土格"),
     frozenset({"乙", "庚"}): ("metal", "化金格"),
     frozenset({"丙", "辛"}): ("water", "化水格"),
-    frozenset({"丁", "壬"}): ("wood",  "化木格"),
-    frozenset({"戊", "癸"}): ("fire",  "化火格"),
+    frozenset({"丁", "壬"}): ("wood", "化木格"),
+    frozenset({"戊", "癸"}): ("fire", "化火格"),
 }
 
 # 克化关系: key=被克五行, value=克它的五行
@@ -107,14 +114,14 @@ _WUXING_KE_BY: dict[str, str] = {
     "earth": "wood",
     "metal": "fire",
     "water": "earth",
-    "wood":  "metal",
-    "fire":  "water",
+    "wood": "metal",
+    "fire": "water",
 }
 
 # 相生关系: key=生者, value=被生者（a生b）
 _WUXING_SHENG: dict[str, str] = {
-    "wood":  "fire",
-    "fire":  "earth",
+    "wood": "fire",
+    "fire": "earth",
     "earth": "metal",
     "metal": "water",
     "water": "wood",
@@ -125,14 +132,15 @@ _WUXING_SHENG: dict[str, str] = {
 # 主函数
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def compute_geju(
     year_stem: str,
     month_stem: str,
     month_branch: str,
     day_stem: str,
     hour_stem: str,
-    wuxing_scores: dict[str, float] | None = None,   # 五行得分，用于外格判断
-    year_branch: str | None = None,                  # N1.03 三合局检测
+    wuxing_scores: dict[str, float] | None = None,  # 五行得分，用于外格判断
+    year_branch: str | None = None,  # N1.03 三合局检测
     day_branch: str | None = None,
     hour_branch: str | None = None,
 ) -> dict:
@@ -192,13 +200,13 @@ def compute_geju(
     # ══════════════════════════════════════════════════════════════════════
     huaqi = _check_huaqi(all_stems_full, month_branch)
     if huaqi["is_huaqi"]:
-        geju_name  = huaqi["huaqi_name"]
-        ten_god    = ""   # 化气格不以月令十神取格
+        geju_name = huaqi["huaqi_name"]
+        ten_god = ""  # 化气格不以月令十神取格
         confidence = huaqi["confidence"]
-        meta       = GEJU_META.get(geju_name, GEJU_META["普通格"])
+        meta = GEJU_META.get(geju_name, GEJU_META["普通格"])
     else:
         # ── 3. 十神关系 → 格局（正常取格链）──────────────────────────
-        ten_god   = get_ten_god(day_stem, ref_stem)
+        ten_god = get_ten_god(day_stem, ref_stem)
         geju_name = _SHISHEN_TO_GEJU.get(ten_god, "普通格")
 
         # ══════════════════════════════════════════════════════════════
@@ -221,21 +229,21 @@ def compute_geju(
                 dominant_elem = max(wuxing_scores, key=lambda k: wuxing_scores.get(k) or 0.0)
                 ratio = wuxing_scores[dominant_elem] / total_wx
                 if dominant_elem == day_elem:
-                    confidence = min(0.5 + ratio * 0.5, 0.95)   # 从旺格类（同气）
+                    confidence = min(0.5 + ratio * 0.5, 0.95)  # 从旺格类（同气）
                 else:
-                    confidence = min(0.4 + ratio * 0.4, 0.85)   # 专旺格类（异气）
+                    confidence = min(0.4 + ratio * 0.4, 0.85)  # 专旺格类（异气）
             else:
                 confidence = 0.75
         elif meta["type"] == "cong":
             confidence = 0.70
-        elif meta["type"] == "special":   # 建禄格 / 羊刃格
+        elif meta["type"] == "special":  # 建禄格 / 羊刃格
             confidence = 0.80
         elif toukan_stem:
-            confidence = 0.85             # 正格透干成格
+            confidence = 0.85  # 正格透干成格
         elif geju_name != "普通格":
-            confidence = 0.65             # 正格无透干靠藏干
+            confidence = 0.65  # 正格无透干靠藏干
         else:
-            confidence = 0.40             # 普通格
+            confidence = 0.40  # 普通格
 
     # ══════════════════════════════════════════════════════════════════════
     # 优先级 3: 三合全合 confidence 调整（N1.03）
@@ -243,10 +251,10 @@ def compute_geju(
     if year_branch and day_branch and hour_branch:
         try:
             from services.bazi_engine.relations import get_branch_relations as _gbr
+
             day_elem_adj, _ = STEM_ELEMENT.get(day_stem, ("?", "?"))
             sanhe_list = [
-                r for r in _gbr(year_branch, month_branch, day_branch, hour_branch)
-                if r["type"] == "三合全合"
+                r for r in _gbr(year_branch, month_branch, day_branch, hour_branch) if r["type"] == "三合全合"
             ]
             for sanhe in sanhe_list:
                 sanhe_elem = sanhe.get("element", "")
@@ -268,15 +276,15 @@ def compute_geju(
     po = check_po_geju(geju_name, all_stems_full, day_stem, wuxing_scores)
 
     return {
-        "name":        geju_name,
-        "type":        meta["type"],
-        "month_qi":    month_qi,
+        "name": geju_name,
+        "type": meta["type"],
+        "month_qi": month_qi,
         "toukan_stem": toukan_stem,
-        "ten_god":     ten_god,
-        "note":        meta["note"],
-        "confident":   geju_name != "普通格",
-        "confidence":  confidence if not po["broken"] else max(0.0, confidence - 0.3),
-        "po_geju":     po,
+        "ten_god": ten_god,
+        "note": meta["note"],
+        "confident": geju_name != "普通格",
+        "confidence": confidence if not po["broken"] else max(0.0, confidence - 0.3),
+        "po_geju": po,
     }
 
 
@@ -284,8 +292,9 @@ def compute_geju(
 # 化气格判定（N1.02）
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _check_huaqi(
-    stems: list[str],     # [year_stem, month_stem, day_stem, hour_stem] 必须含日干
+    stems: list[str],  # [year_stem, month_stem, day_stem, hour_stem] 必须含日干
     month_branch: str,
 ) -> dict:
     """
@@ -335,10 +344,10 @@ def _check_huaqi(
                     if ke_elem not in chart_elems:
                         confidence += 0.10  # 无克制加成 → 0.80
                 return {
-                    "is_huaqi":    True,
+                    "is_huaqi": True,
                     "huaqi_element": huaqi_elem,
-                    "huaqi_name":  huaqi_name,
-                    "confidence":  confidence,
+                    "huaqi_name": huaqi_name,
+                    "confidence": confidence,
                 }
 
     return {"is_huaqi": False, "huaqi_element": "", "huaqi_name": "", "confidence": 0.0}
@@ -360,8 +369,8 @@ def _no_geju(reason: str = "") -> dict:
 
 # 五行专旺格：元素 → 格局名
 _WUXING_SPECIAL_GEJU: dict[str, str] = {
-    "wood":  "曲直格",
-    "fire":  "炎上格",
+    "wood": "曲直格",
+    "fire": "炎上格",
     "earth": "稼穑格",
     "metal": "从革格",
     "water": "润下格",
@@ -369,9 +378,12 @@ _WUXING_SPECIAL_GEJU: dict[str, str] = {
 
 # 十神 → 从格分类
 _SHISHEN_CONG_GEJU: dict[str, str] = {
-    "正财": "从财格",  "偏财": "从财格",
-    "正官": "从官杀格", "七杀": "从官杀格",
-    "食神": "从儿格",  "伤官": "从儿格",
+    "正财": "从财格",
+    "偏财": "从财格",
+    "正官": "从官杀格",
+    "七杀": "从官杀格",
+    "食神": "从儿格",
+    "伤官": "从儿格",
 }
 
 
@@ -418,10 +430,14 @@ def _check_outer_geju(
             # 简化映射：财星(metal/earth生金，水)+官星→相应从格
             # 通过五行反查对日主的十神
             from services.bazi_engine.tables import get_ten_god as _gtg
+
             # 找与最旺元素同属的天干代表（取主气）
             _ELEM_REPR_STEM = {
-                "wood": "甲", "fire": "丙", "earth": "戊",
-                "metal": "庚", "water": "壬",
+                "wood": "甲",
+                "fire": "丙",
+                "earth": "戊",
+                "metal": "庚",
+                "water": "壬",
             }
             repr_stem = _ELEM_REPR_STEM.get(se, "甲")
             ten_god = _gtg(day_stem, repr_stem)
@@ -437,6 +453,7 @@ def _check_outer_geju(
 # ──────────────────────────────────────────────────────────────────────────────
 # 破格判断（M3 补充）
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def check_po_geju(
     geju_name: str,
@@ -470,6 +487,7 @@ def check_po_geju(
             "severity": str,    # none / minor / major
         }
     """
+
     def _ten_gods_in_stems() -> list[str]:
         """获取除日主外所有天干的十神列表"""
         gods = []

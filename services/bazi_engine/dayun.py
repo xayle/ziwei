@@ -18,11 +18,11 @@ services/bazi_engine/dayun.py — 大运排盘（M1 任务 1.07）
   start_age_months = ceil(delta_days / days_per_month)
   start_age = start_age_months // 12
 """
+
 from __future__ import annotations
 
 from datetime import datetime
 from math import ceil
-from typing import Optional
 
 from backends import get_jieqi_context
 from services.bazi_engine.classic_refs import get_refs_by_tag
@@ -36,6 +36,7 @@ from services.bazi_engine.tables import (
 # ──────────────────────────────────────────────────────────────────────────────
 # 内部工具
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def _ganzhi_index(stem: str, branch: str) -> int:
     """60甲子序号 (甲子=0 … 癸亥=59)"""
@@ -58,9 +59,10 @@ def _ganzhi_from_index(idx: int) -> tuple[str, str]:
 # 大运方向
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _get_direction(
     year_stem: str,
-    gender: Optional[str],           # "male" / "female" / None
+    gender: str | None,  # "male" / "female" / None
 ) -> tuple[str, str]:
     """
     返回 (direction, basis_note)
@@ -76,9 +78,9 @@ def _get_direction(
     else:
         is_male = gender.lower() in ("male", "m", "男")
         if is_male:
-            fwd = year_polarity == "yang"           # 男阳顺/男阴逆
+            fwd = year_polarity == "yang"  # 男阳顺/男阴逆
         else:
-            fwd = year_polarity == "yin"            # 女阴顺/女阳逆
+            fwd = year_polarity == "yin"  # 女阴顺/女阳逆
         basis = f"gender={gender},year_yinyang={year_polarity}"
 
     direction = "forward" if fwd else "backward"
@@ -196,23 +198,11 @@ def _build_hints(
     stem_elem, _ = STEM_ELEMENT.get(stem, ("?", "?"))
     # 以十神为主键，element 为备选
     ten_god = get_ten_god(day_stem, stem) if day_stem and day_stem != "?" else ""
-    wealth_hint = (
-        _TEN_GOD_WEALTH_HINT.get(ten_god)
-        or _ELEM_WEALTH_HINT.get(stem_elem, "")
-    )
-    love_hint = (
-        _TEN_GOD_LOVE_HINT.get(ten_god)
-        or _ELEM_LOVE_HINT.get(stem_elem, "")
-    )
-    child_hint = (
-        _TEN_GOD_CHILD_HINT.get(ten_god)
-        or _ELEM_CHILD_HINT.get(stem_elem, "")
-    )
+    wealth_hint = _TEN_GOD_WEALTH_HINT.get(ten_god) or _ELEM_WEALTH_HINT.get(stem_elem, "")
+    love_hint = _TEN_GOD_LOVE_HINT.get(ten_god) or _ELEM_LOVE_HINT.get(stem_elem, "")
+    child_hint = _TEN_GOD_CHILD_HINT.get(ten_god) or _ELEM_CHILD_HINT.get(stem_elem, "")
     # 健康 hint：十神为主，再拼接地支脏腑补充
-    tg_health = (
-        _TEN_GOD_HEALTH_HINT.get(ten_god)
-        or _ELEM_HEALTH_HINT.get(stem_elem, "")
-    )
+    tg_health = _TEN_GOD_HEALTH_HINT.get(ten_god) or _ELEM_HEALTH_HINT.get(stem_elem, "")
     branch_health = _BRANCH_HEALTH_HINT.get(branch, "")
     health_hint = f"{tg_health}　{branch_health}".strip() if branch_health else tg_health
     return {
@@ -227,13 +217,14 @@ def _build_hints(
 # 主函数
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def compute_dayun(
-    birth_dt: datetime,           # 矫正后的出生时间（本地，UTC+8）
+    birth_dt: datetime,  # 矫正后的出生时间（本地，UTC+8）
     year_stem: str,
     month_stem: str,
     month_branch: str,
     day_stem: str,
-    gender: Optional[str] = None, # "male"/"female"/None
+    gender: str | None = None,  # "male"/"female"/None
     count: int = 10,
     days_per_month: int = 3,
 ) -> dict:
@@ -281,7 +272,7 @@ def compute_dayun(
         anchor_name = jie_ctx.next_jie_name
         delta_days = (anchor_dt - birth_dt).total_seconds() / 86400.0
     else:
-        anchor_dt = jie_ctx.prev_jie_dt         # 修复: 旧代码此处错误用了 next_jie_dt
+        anchor_dt = jie_ctx.prev_jie_dt  # 修复: 旧代码此处错误用了 next_jie_dt
         anchor_name = jie_ctx.prev_jie_name
         delta_days = (birth_dt - anchor_dt).total_seconds() / 86400.0
 
@@ -307,19 +298,21 @@ def compute_dayun(
 
         # 本柱相关引用
         refs_hint = get_refs_by_tag(ten_god) if ten_god else []
-        refs = (dayun_refs + refs_hint)[:3]   # 最多3条
+        refs = (dayun_refs + refs_hint)[:3]  # 最多3条
 
-        items.append({
-            "start_age": start_age + i * 10,
-            "start_year": base_year + i * 10,
-            "start_age_months": start_age_months + i * 120,
-            "stem": stem,
-            "branch": branch,
-            "ten_god": ten_god,
-            "flow_wuxing": stem_elem,
-            **hints,
-            "refs": refs,
-        })
+        items.append(
+            {
+                "start_age": start_age + i * 10,
+                "start_year": base_year + i * 10,
+                "start_age_months": start_age_months + i * 120,
+                "stem": stem,
+                "branch": branch,
+                "ten_god": ten_god,
+                "flow_wuxing": stem_elem,
+                **hints,
+                "refs": refs,
+            }
+        )
         current_idx = (current_idx + step) % 60
 
     return {

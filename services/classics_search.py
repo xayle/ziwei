@@ -11,6 +11,7 @@
   services/evidence_retriever.py
   routers/static_data.py（导入本模块函数代替原本地私有函数）
 """
+
 from __future__ import annotations
 
 from collections import Counter
@@ -20,7 +21,7 @@ import logging
 import math
 from pathlib import Path
 import re
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -31,6 +32,7 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # ── 模型 ────────────────────────────────────────────────────────────────────
 
+
 class ClassicPassageModel(BaseModel):
     id: str
     title: str
@@ -38,11 +40,12 @@ class ClassicPassageModel(BaseModel):
     dynasty: str
     tags: list[str]
     passage: str
-    notes: Optional[str] = None
-    score: Optional[float] = None   # TF-IDF 相关度（仅搜索时返回）
+    notes: str | None = None
+    score: float | None = None  # TF-IDF 相关度（仅搜索时返回）
 
 
 # ── 加载（单例 + lru_cache）──────────────────────────────────────────────────
+
 
 @lru_cache(maxsize=1)
 def load_classics() -> list[ClassicPassageModel]:
@@ -63,6 +66,7 @@ def load_classics() -> list[ClassicPassageModel]:
 
 # ── 分词（F3 修复：新增 bigram）──────────────────────────────────────────────
 
+
 def tokenize(text: str) -> list[str]:
     """
     中文 token 化：返回字符级 token + 相邻字符对（bigram）。
@@ -74,12 +78,14 @@ def tokenize(text: str) -> list[str]:
     """
     text_clean = re.sub(r"\s+", "", text)
     chars = [c for c in text_clean if c.strip()]
-    bigrams = [text_clean[i: i + 2] for i in range(len(text_clean) - 1)
-               if text_clean[i].strip() and text_clean[i + 1].strip()]
+    bigrams = [
+        text_clean[i : i + 2] for i in range(len(text_clean) - 1) if text_clean[i].strip() and text_clean[i + 1].strip()
+    ]
     return chars + bigrams
 
 
 # ── TF-IDF 评分 ──────────────────────────────────────────────────────────────
+
 
 def tfidf_score(
     query: str,

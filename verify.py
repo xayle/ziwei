@@ -1,12 +1,13 @@
 """Validation and boundary integration (stub)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Optional, Literal, Any, cast
+from typing import Any, Literal, cast
 from zoneinfo import ZoneInfo
 
-from backends import BackendUnavailable, CnlunarBackend, SxtwlBackend, get_sxtwl_backend
+from backends import BackendUnavailable, CnlunarBackend, get_sxtwl_backend
 from boundary import Pillars, RiskFlags, Validation, compute_risk_flags, compute_validation
 from constants import MAX_LON, MIN_LON
 from services.bazi_engine.solar_time_v2 import compute_solar_correction_minutes
@@ -24,7 +25,7 @@ def _validate_lon(lon: float) -> float:
     return lon
 
 
-def _pick_backends(mode: Literal["dual", "single"]) -> tuple[str, Optional[str]]:
+def _pick_backends(mode: Literal["dual", "single"]) -> tuple[str, str | None]:
     if mode not in {"dual", "single"}:
         raise ValueError("mode must be 'dual' or 'single'")
     return ("sxtwl", "cnlunar") if mode == "dual" else ("sxtwl", None)
@@ -34,7 +35,7 @@ def _pick_backends(mode: Literal["dual", "single"]) -> tuple[str, Optional[str]]
 class VerifyOutput:
     validation: Validation
     pillars_primary: Pillars
-    pillars_secondary: Optional[Pillars]
+    pillars_secondary: Pillars | None
     risk_flags: RiskFlags
     mode_requested: str
     mode_effective: str
@@ -108,7 +109,7 @@ def verify_full(dt_utc8, lon: float, use_solar: bool, mode: Literal["dual", "sin
         except (BackendUnavailable, Exception):
             raise BackendUnavailable(f"sxtwl 断言失败且 cnlunar 降级也失败: {_b3_err}") from _b3_err
 
-    pillars_secondary: Optional[Pillars] = secondary.get_pillars(dt_effective) if secondary else None
+    pillars_secondary: Pillars | None = secondary.get_pillars(dt_effective) if secondary else None
 
     # 日柱一致性校验（晚子时/立春边界最易产生 sxtwl vs cnlunar 不一致）
     # 若两库日柱冲突，整体 fallback 到 cnlunar，不做单柱替换（避免四柱体系混用）

@@ -14,67 +14,93 @@ services/bazi_engine/analysis/wealth.py — 财运引擎 (M2 任务 2.01)
     tier in {"上","中","下"}
     industries 非空列表
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import WealthAnalysisModel
 
 # 五行→行业映射
 _WUXING_TO_INDUSTRIES: dict[str, list[str]] = {
-    "metal":  ["金融", "律政", "机械制造", "珠宝"],
-    "wood":   ["教育", "医药", "农林", "食品", "出版"],
-    "water":  ["贸易", "运输", "IT", "资讯", "旅游"],
-    "fire":   ["传媒", "餐饮", "能源", "娱乐演艺"],
-    "earth":  ["房地产", "保险", "建筑", "农业"],
+    "metal": ["金融", "律政", "机械制造", "珠宝"],
+    "wood": ["教育", "医药", "农林", "食品", "出版"],
+    "water": ["贸易", "运输", "IT", "资讯", "旅游"],
+    "fire": ["传媒", "餐饮", "能源", "娱乐演艺"],
+    "earth": ["房地产", "保险", "建筑", "农业"],
 }
 
 # 地支六冲对照
 _BRANCH_CHONG: dict[str, str] = {
-    "子": "午", "午": "子",
-    "丑": "未", "未": "丑",
-    "寅": "申", "申": "寅",
-    "卯": "酉", "酉": "卯",
-    "辰": "戌", "戌": "辰",
-    "巳": "亥", "亥": "巳",
+    "子": "午",
+    "午": "子",
+    "丑": "未",
+    "未": "丑",
+    "寅": "申",
+    "申": "寅",
+    "卯": "酉",
+    "酉": "卯",
+    "辰": "戌",
+    "戌": "辰",
+    "巳": "亥",
+    "亥": "巳",
 }
 
 # 天干五行（简化映射）
 _STEM_ELEMENT: dict[str, str] = {
-    "甲": "wood", "乙": "wood",
-    "丙": "fire", "丁": "fire",
-    "戊": "earth", "己": "earth",
-    "庚": "metal", "辛": "metal",
-    "壬": "water", "癸": "water",
+    "甲": "wood",
+    "乙": "wood",
+    "丙": "fire",
+    "丁": "fire",
+    "戊": "earth",
+    "己": "earth",
+    "庚": "metal",
+    "辛": "metal",
+    "壬": "water",
+    "癸": "water",
 }
 
 # 地支五行
 _BRANCH_ELEMENT: dict[str, str] = {
-    "子": "water", "亥": "water",
-    "寅": "wood", "卯": "wood",
-    "巳": "fire", "午": "fire",
-    "申": "metal", "酉": "metal",
-    "丑": "earth", "辰": "earth", "未": "earth", "戌": "earth",
+    "子": "water",
+    "亥": "water",
+    "寅": "wood",
+    "卯": "wood",
+    "巳": "fire",
+    "午": "fire",
+    "申": "metal",
+    "酉": "metal",
+    "丑": "earth",
+    "辰": "earth",
+    "未": "earth",
+    "戌": "earth",
 }
 
 # 相生关系（A生B）
 _SHENG: dict[str, str] = {
-    "wood": "fire", "fire": "earth", "earth": "metal",
-    "metal": "water", "water": "wood",
+    "wood": "fire",
+    "fire": "earth",
+    "earth": "metal",
+    "metal": "water",
+    "water": "wood",
 }
 
 # 五行对应中文
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 
 def compute_wealth(
     yongshen_favor: list[str],
     yongshen_avoid: list[str],
-    wuxing_scores: dict[str, float],      # {"wood":..., "fire":..., ...}
-    shishen_scores: dict[str, float],     # {"正财":..., "偏财":..., ...}
-    strength_score: float,                # 日主强弱分（0-100）
-    dayun_list: list[dict],               # 大运列表（每项含 stem/branch/ganzhi）
-    day_branch: str = "",                 # 日支（用于地支冲断言）
+    wuxing_scores: dict[str, float],  # {"wood":..., "fire":..., ...}
+    shishen_scores: dict[str, float],  # {"正财":..., "偏财":..., ...}
+    strength_score: float,  # 日主强弱分（0-100）
+    dayun_list: list[dict],  # 大运列表（每项含 stem/branch/ganzhi）
+    day_branch: str = "",  # 日支（用于地支冲断言）
 ) -> WealthAnalysisModel:
     """
     §4.11-A 财运引擎
@@ -93,16 +119,14 @@ def compute_wealth(
     """
     # ─── 1. 财星力量 ────────────────────────────────────────────────────────
     zheng_cai = shishen_scores.get("正财", 0.0)
-    pian_cai  = shishen_scores.get("偏财", 0.0)
+    pian_cai = shishen_scores.get("偏财", 0.0)
     total_shishen = sum(shishen_scores.values()) or 1.0
     cai_power = (zheng_cai * 1.0 + pian_cai * 0.8) / total_shishen * 100  # 归一化
 
     # ─── 2. 用神匹配度 ─────────────────────────────────────────────────────
     # 财星五行属于哪些：正财/偏财对应的五行（需要从 wuxing 得分判断）
     total_wx = sum(wuxing_scores.values()) or 1.0
-    yongshen_match = sum(
-        wuxing_scores.get(e, 0.0) for e in yongshen_favor
-    ) / total_wx * 100
+    yongshen_match = sum(wuxing_scores.get(e, 0.0) for e in yongshen_favor) / total_wx * 100
 
     # ─── 3. 月令旺衰系数 ────────────────────────────────────────────────────
     # 简化：用最大五行占比作为旺衰指标（30-50为均衡=0.5；>50为旺）
@@ -149,12 +173,10 @@ def compute_wealth(
     # ─── 6. 大运趋势 ─────────────────────────────────────────────────────
     dayun_forecast: list[dict] = []
     for item in dayun_list:
-        gz = item.get("ganzhi") or (
-            (item.get("stem") or "") + (item.get("branch") or "")
-        )
-        stem  = item.get("stem", "")
+        gz = item.get("ganzhi") or ((item.get("stem") or "") + (item.get("branch") or ""))
+        stem = item.get("stem", "")
         branch = item.get("branch", "")
-        stem_el   = _STEM_ELEMENT.get(stem, "")
+        stem_el = _STEM_ELEMENT.get(stem, "")
         branch_el = _BRANCH_ELEMENT.get(branch, "")
 
         # 天干与日主关系：先判断基础趋势
@@ -179,7 +201,7 @@ def compute_wealth(
                 trend = "上升"
 
         # 生成趋势说明语（依据天干/地支五行组合差异化描述）
-        stem_cn   = _ELEMENT_CN.get(stem_el, "")
+        stem_cn = _ELEMENT_CN.get(stem_el, "")
         branch_cn = _ELEMENT_CN.get(branch_el, "")
         branch_in_favor = bool(branch_el and yongshen_favor and branch_el in yongshen_favor)
         branch_in_avoid = bool(branch_el and yongshen_avoid and branch_el in yongshen_avoid)
@@ -217,10 +239,7 @@ def compute_wealth(
                     f"守住既有资产，精简无效支出，为下一顺运期积累资本。"
                 )
             else:
-                trend_desc = (
-                    f"{gz}大运：财运平稳，五行中和，收支基本均衡。"
-                    f"轻装稳打，稳健发展为宜，不必冒进。"
-                )
+                trend_desc = f"{gz}大运：财运平稳，五行中和，收支基本均衡。轻装稳打，稳健发展为宜，不必冒进。"
 
         dayun_forecast.append({"ganzhi": gz, "trend": trend, "description": trend_desc})
 
@@ -270,7 +289,7 @@ def compute_wealth(
 
     # ─── 新增：投资偏好 ──────────────────────────────────────────────────
     zheng_cai_pct = zheng_cai / total_shishen
-    pian_cai_pct  = pian_cai  / total_shishen
+    pian_cai_pct = pian_cai / total_shishen
     if zheng_cai_pct > pian_cai_pct and zheng_cai_pct >= 0.12:
         investment_preference = (
             f"正财有根（正财占比{zheng_cai_pct:.0%}），天然倾向稳健收益型投资。"
@@ -329,12 +348,10 @@ def compute_wealth(
     # ─── 新增：财富积累三阶段规划 ────────────────────────────────────────
     _phases: list[str] = []
     for i, dy in enumerate(dayun_list[:3]):
-        gz = dy.get("ganzhi") or (
-            (dy.get("stem") or "") + (dy.get("branch") or "")
-        )
+        gz = dy.get("ganzhi") or ((dy.get("stem") or "") + (dy.get("branch") or ""))
         stem_el = _STEM_ELEMENT.get(dy.get("stem", ""), "")
         start_age = dy.get("start_age", "")
-        end_age   = dy.get("end_age", "")
+        end_age = dy.get("end_age", "")
         age_str = f"{start_age}-{end_age}岁" if start_age or end_age else f"第{i + 1}大运"
         if stem_el and yongshen_favor and stem_el in yongshen_favor:
             phase_strategy = (

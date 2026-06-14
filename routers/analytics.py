@@ -8,10 +8,10 @@ W6 命理师仪表盘  GET /api/v1/analytics/dashboard
   - 最近 7 天每天的请求量（从 AuditLog 统计）
   - 最近创建的 5 个案例
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -28,8 +28,9 @@ router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 
 # ── Response models ────────────────────────────────────────────────────────
 
+
 class DailyActivity(BaseModel):
-    date: str        # ISO date string, e.g. "2026-03-23"
+    date: str  # ISO date string, e.g. "2026-03-23"
     count: int
 
 
@@ -52,15 +53,16 @@ class DashboardResponse(BaseModel):
     reviews_rejected: int
     reviews_revised: int
     # 操作活跃度（最近 7 天）
-    daily_activity: List[DailyActivity]
+    daily_activity: list[DailyActivity]
     # 最近案例
-    recent_cases: List[CaseSummary]
+    recent_cases: list[CaseSummary]
     # 元信息
     generated_at: datetime
-    owner_id: Optional[int]
+    owner_id: int | None
 
 
 # ── Endpoint ───────────────────────────────────────────────────────────────
+
 
 @router.get(
     "/dashboard",
@@ -74,18 +76,15 @@ def get_dashboard(
     session: Session = Depends(get_session),
 ) -> DashboardResponse:
     """W6: 实时聚合统计，单次 SQL 批量查询，避免 N+1。"""
-    now = datetime.now(timezone.utc)
-    month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    now = datetime.now(UTC)
+    month_start = datetime(now.year, now.month, 1, tzinfo=UTC)
     uid = current_user.id
 
     # ── 案例统计 ────────────────────────────────────────────────────────────
     cases_q = select(Case).where(Case.owner_id == uid, Case.deleted_at.is_(None))  # type: ignore
     all_cases = session.exec(cases_q).all()
     cases_total = len(all_cases)
-    cases_this_month = sum(
-        1 for c in all_cases
-        if c.created_at and _make_aware(c.created_at) >= month_start
-    )
+    cases_this_month = sum(1 for c in all_cases if c.created_at and _make_aware(c.created_at) >= month_start)
 
     # ── 快照统计 ────────────────────────────────────────────────────────────
     # 只统计属于当前用户 Case 的快照
@@ -94,19 +93,16 @@ def get_dashboard(
         snaps = session.exec(
             select(Snapshot).where(
                 Snapshot.case_id.in_(case_ids),  # type: ignore
-                Snapshot.deleted_at.is_(None),   # type: ignore
+                Snapshot.deleted_at.is_(None),  # type: ignore
             )
         ).all()
     else:
         snaps = []
     snapshots_total = len(snaps)
-    snapshots_this_month = sum(
-        1 for s in snaps
-        if s.created_at and _make_aware(s.created_at) >= month_start
-    )
+    snapshots_this_month = sum(1 for s in snaps if s.created_at and _make_aware(s.created_at) >= month_start)
 
     # ── 审核统计（全局，不限用户）──────────────────────────────────────────
-    review_counts: Dict[str, int] = {"pending": 0, "approved": 0, "rejected": 0, "revised": 0}
+    review_counts: dict[str, int] = {"pending": 0, "approved": 0, "rejected": 0, "revised": 0}
     for r in session.exec(
         select(ChartReview).where(ChartReview.deleted_at.is_(None))  # type: ignore
     ).all():
@@ -122,7 +118,7 @@ def get_dashboard(
         )
     ).all()
 
-    day_counts: Dict[str, int] = {}
+    day_counts: dict[str, int] = {}
     for i in range(7):
         d = (now - timedelta(days=6 - i)).date().isoformat()
         day_counts[d] = 0
@@ -162,5 +158,5 @@ def get_dashboard(
 def _make_aware(dt: datetime) -> datetime:
     """确保 datetime 带 UTC tzinfo。"""
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
+        return dt.replace(tzinfo=UTC)
     return dt

@@ -22,7 +22,7 @@ from functools import lru_cache
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -71,21 +71,18 @@ def _build_context(
         }
 
     # ── yongshen ──
+    _EN2CN = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
     if yongshen is not None:
         ctx["yongshen"] = {
-            "favor": list(getattr(yongshen, "favor", []) or []),
-            "avoid": list(getattr(yongshen, "avoid", []) or []),
+            "favor": [_EN2CN.get(e, e) for e in (getattr(yongshen, "favor", []) or [])],
+            "avoid": [_EN2CN.get(e, e) for e in (getattr(yongshen, "avoid", []) or [])],
         }
     else:
         ctx["yongshen"] = {"favor": [], "avoid": []}
 
     # ── shensha：列表中每个元素展开为 dict，并拼接 name 列表用于 contains 匹配 ──
     if shensha:
-        ctx["shensha"] = {
-            "name": [
-                getattr(s, "name", "") for s in shensha if getattr(s, "name", "")
-            ]
-        }
+        ctx["shensha"] = {"name": [getattr(s, "name", "") for s in shensha if getattr(s, "name", "")]}
     else:
         ctx["shensha"] = {"name": []}
 
@@ -178,7 +175,7 @@ def _eval_trigger(trigger: dict, ctx: dict) -> bool:
 def match_rules(
     geju: Any | None,
     yongshen: Any,
-    shensha: Optional[list[Any]] = None,
+    shensha: list[Any] | None = None,
 ) -> list[dict]:
     """
     根据格局/用神/神煞信息匹配规则，返回匹配命中的规则列表（dict格式）。

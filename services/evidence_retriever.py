@@ -10,6 +10,7 @@
   - 仅依赖 services.classics_search，不导入任何 routers/ 模块（避免 F1 循环导入）
   - 所有数据来自内存缓存，不访问 DB / 外部网络
 """
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # 返回的单条证据结构（轻量 dict，不使用 Pydantic 以减少开销）
 # keys: id, title, passage, score
-_PASSAGE_PREVIEW_LEN = 200   # 最多截取多少字送入 LLM
+_PASSAGE_PREVIEW_LEN = 200  # 最多截取多少字送入 LLM
 
 
 def fetch_evidence(

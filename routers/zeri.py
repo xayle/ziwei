@@ -5,6 +5,7 @@ routers/zeri.py — §13 择日推荐端点
     GET  /api/v1/zeri/recommend — 按月推荐吉日（无需登录，只需提供命盘参数）
     GET  /api/v1/zeri/purposes  — 返回支持的用途列表
 """
+
 from __future__ import annotations
 
 import logging
@@ -34,6 +35,7 @@ _VALID_WX = {"水", "木", "火", "土", "金"}
 # GET /api/v1/zeri/purposes
 # ─────────────────────────────────────────────────────────────
 
+
 @router.get(
     "/purposes",
     summary="获取支持的择日用途列表",
@@ -47,6 +49,7 @@ def list_purposes() -> dict:
 # ─────────────────────────────────────────────────────────────
 # GET /api/v1/zeri/recommend
 # ─────────────────────────────────────────────────────────────
+
 
 @router.get(
     "/recommend",

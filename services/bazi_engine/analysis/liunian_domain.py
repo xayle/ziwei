@@ -37,14 +37,13 @@ services/bazi_engine/analysis/liunian_domain.py — 流年四维预测 (M3 §4.1
     与用神合         → 身体状态佳
     通用             → 健康平稳
 """
-from __future__ import annotations
 
-from typing import Literal
+from __future__ import annotations
 
 # 五行与脏腑对应
 _ORGAN_MAP = {
-    "wood":  "肝胆",
-    "fire":  "心血管",
+    "wood": "肝胆",
+    "fire": "心血管",
     "earth": "脾胃",
     "metal": "肺肠",
     "water": "肾脏",
@@ -61,28 +60,50 @@ _OVERCOME: dict[str, str] = {
 
 # 干支对应五行（天干）
 _STEM_WUXING = {
-    "甲": "wood", "乙": "wood",
-    "丙": "fire", "丁": "fire",
-    "戊": "earth", "己": "earth",
-    "庚": "metal", "辛": "metal",
-    "壬": "water", "癸": "water",
+    "甲": "wood",
+    "乙": "wood",
+    "丙": "fire",
+    "丁": "fire",
+    "戊": "earth",
+    "己": "earth",
+    "庚": "metal",
+    "辛": "metal",
+    "壬": "water",
+    "癸": "water",
 }
 
 # 地支桃花规则：年/日支三合局首支 → 桃花地支
 _TAOHUAL_MAP = {
-    "寅": "卯", "午": "卯", "戌": "卯",   # 寅午戌 → 桃花在卯
-    "亥": "子", "卯": "子", "未": "子",   # 亥卯未 → 桃花在子
-    "申": "酉", "子": "酉", "辰": "酉",   # 申子辰 → 桃花在酉
-    "巳": "午", "酉": "午", "丑": "午",   # 巳酉丑 → 桃花在午
+    "寅": "卯",
+    "午": "卯",
+    "戌": "卯",  # 寅午戌 → 桃花在卯
+    "亥": "子",
+    "卯": "子",
+    "未": "子",  # 亥卯未 → 桃花在子
+    "申": "酉",
+    "子": "酉",
+    "辰": "酉",  # 申子辰 → 桃花在酉
+    "巳": "午",
+    "酉": "午",
+    "丑": "午",  # 巳酉丑 → 桃花在午
 }
 
 # 地支驿马规则：年支三合局→驿马地支
 _YIMA_MAP = {
-    "申": "寅", "子": "寅", "辰": "寅",
-    "寅": "申", "午": "申", "戌": "申",
-    "亥": "巳", "卯": "巳", "未": "巳",
-    "巳": "亥", "酉": "亥", "丑": "亥",
+    "申": "寅",
+    "子": "寅",
+    "辰": "寅",
+    "寅": "申",
+    "午": "申",
+    "戌": "申",
+    "亥": "巳",
+    "卯": "巳",
+    "未": "巳",
+    "巳": "亥",
+    "酉": "亥",
+    "丑": "亥",
 }
+
 
 def _is_taohua(day_branch: str, year_branch: str) -> bool:
     taohua = _TAOHUAL_MAP.get(day_branch)
@@ -95,16 +116,16 @@ def _is_yima(day_branch: str, year_branch: str) -> bool:
 
 
 def compute_liunian_domain_forecasts(
-    year:            int,
-    year_stem:       str,
-    year_branch:     str,
-    day_stem:        str,
-    day_branch:      str,
-    shishen_scores:  dict[str, float],
-    yongshen_favor:  list[str],
-    wuxing_scores:   dict[str, float],
-    gender:          str = "male",
-    year_ten_god:    str = "",          # 流年天干对日主的十神（优先分支）
+    year: int,
+    year_stem: str,
+    year_branch: str,
+    day_stem: str,
+    day_branch: str,
+    shishen_scores: dict[str, float],
+    yongshen_favor: list[str],
+    wuxing_scores: dict[str, float],
+    gender: str = "male",
+    year_ten_god: str = "",  # 流年天干对日主的十神（优先分支）
 ) -> dict[str, str]:
     """
     M3 §4.11-H — 流年四维预测
@@ -125,8 +146,8 @@ def compute_liunian_domain_forecasts(
         {"财运": str, "事业": str, "婚恋": str, "健康": str}
     """
     year_wuxing = _STEM_WUXING.get(year_stem, "")
-    day_wuxing  = _STEM_WUXING.get(day_stem, "")
-    total_wx    = sum(wuxing_scores.values()) or 1.0
+    day_wuxing = _STEM_WUXING.get(day_stem, "")
+    total_wx = sum(wuxing_scores.values()) or 1.0
 
     # ── 财运 ──────────────────────────────────────────────────────────────────
     # 优先用流年十神作主分支，命局分布作备用
@@ -213,11 +234,10 @@ def compute_liunian_domain_forecasts(
     else:
         # 无流年十神时，回退到命局分布逻辑
         zhengcai_score = shishen_scores.get("正财", 0.0)
-        piancai_score  = shishen_scores.get("偏财", 0.0)
-        bijie_score    = (shishen_scores.get("比肩", 0.0) +
-                          shishen_scores.get("劫财", 0.0))
+        piancai_score = shishen_scores.get("偏财", 0.0)
+        bijie_score = shishen_scores.get("比肩", 0.0) + shishen_scores.get("劫财", 0.0)
         has_cai_yongshen = bool(yongshen_favor)  # 用神存在即有财运支撑
-        yin_score = (shishen_scores.get("正印", 0.0) + shishen_scores.get("偏印", 0.0))
+        yin_score = shishen_scores.get("正印", 0.0) + shishen_scores.get("偏印", 0.0)
 
         if (zhengcai_score > 0.1 or piancai_score > 0.1) and has_cai_yongshen:
             caiyun = (
@@ -259,10 +279,8 @@ def compute_liunian_domain_forecasts(
     # ── 事业 ──────────────────────────────────────────────────────────────────
     # 优先用流年十神作主分支，命局分布/驿马作备用
     is_yima = _is_yima(day_branch, year_branch)
-    guansha_score  = (shishen_scores.get("正官", 0.0) +
-                      shishen_scores.get("七杀", 0.0))
-    shishang_score = (shishen_scores.get("食神", 0.0) +
-                      shishen_scores.get("伤官", 0.0))
+    guansha_score = shishen_scores.get("正官", 0.0) + shishen_scores.get("七杀", 0.0)
+    shishang_score = shishen_scores.get("食神", 0.0) + shishen_scores.get("伤官", 0.0)
 
     if year_ten_god == "正官":
         shiye = (
@@ -360,8 +378,8 @@ def compute_liunian_domain_forecasts(
     # ── 婚恋 ──────────────────────────────────────────────────────────────────
     # 优先：桃花/流年十神特殊场景；其次：命局官杀女命；再次：用神/通用
     guanxing_score = shishen_scores.get("正官", 0.0)
-    qisha_score    = shishen_scores.get("七杀", 0.0)
-    is_taohua      = _is_taohua(day_branch, year_branch)
+    qisha_score = shishen_scores.get("七杀", 0.0)
+    is_taohua = _is_taohua(day_branch, year_branch)
 
     if is_taohua:
         hunlian = (

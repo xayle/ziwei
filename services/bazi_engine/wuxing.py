@@ -9,24 +9,20 @@ M1 任务 1.03: 修复 S6/P63 — compute_wuxing() hidden_contrib 全零 bug
 - 附: missing_elements + dominant_elements(>40%)
 - 验证: hidden_contrib ≠ {}
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from services.bazi_engine.tables import (
     BRANCH_HIDDEN_STEMS,
-    BRANCHES,
     STEM_ELEMENT,
-    STEMS,
     WANGXIANG,
 )
 
 ELEMENTS = ("wood", "fire", "earth", "metal", "water")
 
-ELEMENTS_CN: dict[str, str] = {
-    "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"
-}
+ELEMENTS_CN: dict[str, str] = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
 
 
 @dataclass
@@ -45,14 +41,14 @@ class WuxingResult:
     branch_hidden_contrib: dict[str, float] = field(default_factory=dict)  # 地支全部藏干贡献
 
     # 附加分析
-    missing_elements: list[str] = field(default_factory=list)    # 完全为0的五行
+    missing_elements: list[str] = field(default_factory=list)  # 完全为0的五行
     dominant_elements: list[str] = field(default_factory=list)  # 占比 > 40%
 
     # 月令加持系数（供 strength.py 使用）
     month_branch_wangxiang: dict[str, int] = field(default_factory=dict)
 
 
-def _elem_of_stem(stem: str) -> Optional[str]:
+def _elem_of_stem(stem: str) -> str | None:
     return STEM_ELEMENT.get(stem, (None, None))[0]  # type: ignore[return-value]
 
 

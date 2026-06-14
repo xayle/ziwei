@@ -4,6 +4,7 @@ services/ziwei_engine/__init__.py — 紫微斗数引擎入口
 公开接口：
   ziwei_full(year, month, day, hour, minute, gender) → ZiweiChart
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -35,31 +36,33 @@ from .transforms import STEMS, apply_sihua, build_sihua_table
 # 数据结构
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class PalaceInfo:
     """一个宫位的完整信息。"""
-    index: int               # 0=命宫，1=兄弟宫，…，11=父母宫
-    name: str                # 宫位名称
-    branch_idx: int          # 地支索引
-    branch: str              # 地支文字
-    stem_idx: int            # 宫干天干索引
-    stem: str                # 宫干天干文字
-    main_stars: list[dict]   # [{name, brightness, brightness_val, transforms}]
-    aux_stars: list[str]     # 辅星/杂曜名称列表
+
+    index: int  # 0=命宫，1=兄弟宫，…，11=父母宫
+    name: str  # 宫位名称
+    branch_idx: int  # 地支索引
+    branch: str  # 地支文字
+    stem_idx: int  # 宫干天干索引
+    stem: str  # 宫干天干文字
+    main_stars: list[dict]  # [{name, brightness, brightness_val, transforms}]
+    aux_stars: list[str]  # 辅星/杂曜名称列表
     flying_out: dict[str, str] = field(default_factory=dict)
     analysis: str = ""
     analysis_tags: list[str] = field(default_factory=list)
     xiaoxian_ages: list[int] = field(default_factory=list)  # 该宫小限所对应的年龄列表
-    opposition_name: str = ""      # 对宫名称（+6宫）
+    opposition_name: str = ""  # 对宫名称（+6宫）
     # N7.05 pyright: structured analysis fields (generate_palace_structured output)
     conclusion: str = ""
     explanation: str = ""
     suggestion: str = ""
     tooltip: str = ""
     dayun_boshi: list[str] = field(default_factory=list)  # 当前大运博士十二流曜（落在该宫的星名列表）
-    changsheng: str = ""         # 长生十二神（本命盘固定星）
-    jiangqian_star: str = ""     # 将前十二神（流年星）
-    suiqian_star: str = ""       # 岁前十二神（流年星）
+    changsheng: str = ""  # 长生十二神（本命盘固定星）
+    jiangqian_star: str = ""  # 将前十二神（流年星）
+    suiqian_star: str = ""  # 岁前十二神（流年星）
 
     @property
     def aux_names(self) -> frozenset[str]:
@@ -67,35 +70,33 @@ class PalaceInfo:
 
         aux_stars 元素可以是 str（辅星名）或 dict（含 name 键）。
         """
-        return frozenset(
-            s if isinstance(s, str) else s["name"]
-            for s in self.aux_stars
-        )
+        return frozenset(s if isinstance(s, str) else s["name"] for s in self.aux_stars)
 
 
 @dataclass
 class ZiweiChart:
     """完整紫微命盘。"""
+
     # ── 基本信息 ──────────────────────────────────────────────
-    birth_solar: str        # 公历生日（ISO格式）
+    birth_solar: str  # 公历生日（ISO格式）
     gender: str
     lunar: LunarInfo
     palaces: list[PalaceInfo]
     life_palace_branch: int
     life_palace_stem_idx: int
-    life_palace_gz: str      # 干支
+    life_palace_gz: str  # 干支
     body_palace_branch: int
     body_palace_gz: str
-    wuxing_ju: int           # 五行局数
-    wuxing_ju_name: str      # 水二局/木三局/…
+    wuxing_ju: int  # 五行局数
+    wuxing_ju_name: str  # 水二局/木三局/…
     dayun: DayunResult
     body_palace_branch_name: str = ""  # 身宫地支汉字
 
     # ── 流年（默认当年）────────────────────────────────────────
-    liunian: Optional[LiunianInfo] = None
+    liunian: LiunianInfo | None = None
 
     # ── 飞星盘 ────────────────────────────────────────────────
-    flying: Optional[FlyingStarChart] = None
+    flying: FlyingStarChart | None = None
 
     # ── 流月列表（12项） ──────────────────────────────────────
     liuyue_data: list[dict] = field(default_factory=list)
@@ -105,15 +106,15 @@ class ZiweiChart:
     analysis: dict[str, str] = field(default_factory=dict)
 
     # ── 命主/身主 ─────────────────────────────────────────────
-    life_ruler_star: str = ""   # 命主（六星循环法）
-    body_ruler_star: str = ""   # 身主（年支查表法）
-    laiyin_palace: str = ""     # 来因宫：生年天干所在宫位
+    life_ruler_star: str = ""  # 命主（六星循环法）
+    body_ruler_star: str = ""  # 身主（年支查表法）
+    laiyin_palace: str = ""  # 来因宫：生年天干所在宫位
 
     # ── 真太阳时 ─────────────────────────────────────────────
-    true_solar_time: str = ""   # "" = 未修正；"HH:MM" = 已修正真太阳时
+    true_solar_time: str = ""  # "" = 未修正；"HH:MM" = 已修正真太阳时
 
     # ── 运势预测 ───────────────────────────────────────────────
-    forecast: Optional[ForecastResult] = None   # 年运+月运预测
+    forecast: ForecastResult | None = None  # 年运+月运预测
 
     # ── 格局检测 ───────────────────────────────────────────────
     patterns: list[PatternResult] = field(default_factory=list)
@@ -123,6 +124,8 @@ class ZiweiChart:
 
     # ── 生活化建议 ─────────────────────────────────────────────
     life_suggestions: list[LifeSuggestion] = field(default_factory=list)
+
+
 # 宫干序列（从命宫天干顺数十二宫）
 # ──────────────────────────────────────────────────────────────
 def _palace_stems_list(year_stem_idx: int, life_branch_idx: int) -> list[int]:
@@ -157,11 +160,16 @@ def clear_ziwei_cache() -> None:
 
 
 def _ziwei_cache_key(
-    year: int, month: int, day: int,
-    hour: int, minute: int, gender: str,
-    liunian_year: "int | None", longitude: "float | None",
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    minute: int,
+    gender: str,
+    liunian_year: int | None,
+    longitude: float | None,
     late_zishi: bool,
-    sihua_stem_indices: "dict[str, int] | None",
+    sihua_stem_indices: dict[str, int] | None,
     leap_month_method: str,
     kuiyue_method: str,
     tianma_method: str,
@@ -193,22 +201,22 @@ def ziwei_full(
     hour: int,
     minute: int,
     gender: str,
-    liunian_year: Optional[int] = None,
-    longitude: Optional[float] = None,
+    liunian_year: int | None = None,
+    longitude: float | None = None,
     # ── 算法设置 ──────────────────────────────────────────────
     late_zishi: bool = True,
-    sihua_stem_indices: "Optional[dict[str, int]]" = None,
+    sihua_stem_indices: dict[str, int] | None = None,
     leap_month_method: str = "mid",
     kuiyue_method: str = "standard",
     # ── A1-A8 新增安星方法 ────────────────────────────────────
-    tianma_method: str = "year",           # 天马：year(年支)/month(月支)
-    tiankong_method: str = "standard",     # 天空：standard/shun(顺加生时)
-    brightness_method: str = "standard",   # 亮度：standard/zhongzhou/mod1/mod2
-    jiukong_method: str = "dual",          # 截空旬空：dual/single/zhanyan
-    tianshang_method: str = "standard",    # 天使天伤：standard/zhongzhou
-    mingzhu_method: str = "quanshu",       # 命主：quanshu/zhongzhou
+    tianma_method: str = "year",  # 天马：year(年支)/month(月支)
+    tiankong_method: str = "standard",  # 天空：standard/shun(顺加生时)
+    brightness_method: str = "standard",  # 亮度：standard/zhongzhou/mod1/mod2
+    jiukong_method: str = "dual",  # 截空旬空：dual/single/zhanyan
+    tianshang_method: str = "standard",  # 天使天伤：standard/zhongzhou
+    mingzhu_method: str = "quanshu",  # 命主：quanshu/zhongzhou
     liunian_sihua_method: str = "year_stem",  # 流年四化：year_stem/life_palace_stem
-    changsheng_method: str = "standard",   # 长生十二神：standard/water_earth/fire_earth
+    changsheng_method: str = "standard",  # 长生十二神：standard/water_earth/fire_earth
 ) -> ZiweiChart:
     """
     计算完整紫微斗数命盘。
@@ -235,13 +243,32 @@ def ziwei_full(
     """
     import datetime as _dt
     from zoneinfo import ZoneInfo as _ZI
+
     if liunian_year is None:
         liunian_year = _dt.datetime.now(_ZI("Asia/Shanghai")).year
     # O4: TTL 缓存检查
-    _ck = _ziwei_cache_key(year, month, day, hour, minute, gender, liunian_year, longitude,
-                           late_zishi, sihua_stem_indices, leap_month_method, kuiyue_method,
-                           tianma_method, tiankong_method, brightness_method, jiukong_method,
-                           tianshang_method, mingzhu_method, liunian_sihua_method, changsheng_method)
+    _ck = _ziwei_cache_key(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        gender,
+        liunian_year,
+        longitude,
+        late_zishi,
+        sihua_stem_indices,
+        leap_month_method,
+        kuiyue_method,
+        tianma_method,
+        tiankong_method,
+        brightness_method,
+        jiukong_method,
+        tianshang_method,
+        mingzhu_method,
+        liunian_sihua_method,
+        changsheng_method,
+    )
     with _ZIWEI_CACHE_LOCK:
         if _ck in _ZIWEI_CACHE:
             return _ZIWEI_CACHE[_ck]
@@ -258,10 +285,11 @@ def ziwei_full(
     if longitude is not None:
         try:
             from services.bazi_engine.solar_time_v2 import apply_solar_correction
+
             _corrected = apply_solar_correction(
                 _dt.datetime(_calc_year, _calc_month, _calc_day, hour, minute), longitude
             )
-            _apply_hour   = _corrected.hour
+            _apply_hour = _corrected.hour
             _apply_minute = _corrected.minute
             _true_solar_time = f"{_corrected.hour:02d}:{_corrected.minute:02d}"
         except Exception:
@@ -271,16 +299,16 @@ def ziwei_full(
     _sihua_table = build_sihua_table(sihua_stem_indices)
 
     # 1. 农历信息（传入 leap_month_method 及晚子时修正后的日期）
-    lunar = solar_to_lunar(_calc_year, _calc_month, _calc_day,
-                           _apply_hour, _apply_minute,
-                           leap_month_method=leap_month_method)
+    lunar = solar_to_lunar(
+        _calc_year, _calc_month, _calc_day, _apply_hour, _apply_minute, leap_month_method=leap_month_method
+    )
 
     # 2. 命宫/身宫/五行局
     layout = calc_palaces(lunar)
 
-    lp_b  = layout.life_branch_idx    # 命宫地支
-    lp_s  = layout.life_stem_idx      # 命宫天干
-    bp_b  = layout.body_branch_idx    # 身宫地支
+    lp_b = layout.life_branch_idx  # 命宫地支
+    lp_s = layout.life_stem_idx  # 命宫天干
+    bp_b = layout.body_branch_idx  # 身宫地支
 
     # 3. 十四主星（传入亮度流派）
     main_stars = place_main_stars(lunar.lunar_day, layout.wuxing_ju, brightness_method)
@@ -291,14 +319,34 @@ def ziwei_full(
     #   zhongzhou (中州): 年支查固定表
     _LIFE_RULER_CYCLE = ["贪狼", "巨门", "禄存", "文曲", "廉贞", "武曲"]
     _MINGZHU_ZHONGZHOU = [
-        "贪狼", "巨门", "天相", "天梁", "七杀", "天同",
-        "武曲", "太阳", "破军", "廉贞", "紫微", "天机",
+        "贪狼",
+        "巨门",
+        "天相",
+        "天梁",
+        "七杀",
+        "天同",
+        "武曲",
+        "太阳",
+        "破军",
+        "廉贞",
+        "紫微",
+        "天机",
     ]  # 子→贪狼,丑→巨门,寅→天相,卯→天梁,辰→七杀,巳→天同
-       # 午→武曲,未→太阳,申→破军,酉→廉贞,戌→紫微,亥→天机
+    # 午→武曲,未→太阳,申→破军,酉→廉贞,戌→紫微,亥→天机
     # 身主：年支查表 子/午→火星 丑/未→天相 寅/申→天梁 卯/酉→天同 辰/戌→文昌 巳/亥→武曲
     _BODY_RULER_TABLE = [
-        "火星", "天相", "天梁", "天同", "文昌", "武曲",
-        "火星", "天相", "天梁", "天同", "文昌", "武曲",
+        "火星",
+        "天相",
+        "天梁",
+        "天同",
+        "文昌",
+        "武曲",
+        "火星",
+        "天相",
+        "天梁",
+        "天同",
+        "文昌",
+        "武曲",
     ]
     _tanlang_b = main_stars["贪狼"].branch_idx
     _life_steps = (lp_b - _tanlang_b) % 12
@@ -343,10 +391,10 @@ def ziwei_full(
     # 三合金 巳酉丑(5,9,1)：男起巳(5)，女起亥(11)
     # 三合木 亥卯未(11,3,7)：男起亥(11)，女起巳(5)
     _XIAOXIAN_GROUPS = [
-        (frozenset([2, 6, 10]),  2,  8),
-        (frozenset([8, 0, 4]),   8,  2),
-        (frozenset([5, 9, 1]),   5, 11),
-        (frozenset([11, 3, 7]), 11,  5),
+        (frozenset([2, 6, 10]), 2, 8),
+        (frozenset([8, 0, 4]), 8, 2),
+        (frozenset([5, 9, 1]), 5, 11),
+        (frozenset([11, 3, 7]), 11, 5),
     ]
     _is_male = gender.upper() in ("M", "男", "MALE")
     _xx_start = 2
@@ -363,8 +411,8 @@ def ziwei_full(
     # 7. 构建12宫信息
     palaces_info: list[PalaceInfo] = []
     for i in range(12):
-        b = (lp_b - i) % 12          # 该宫地支索引
-        s = pal_stems[i]              # 该宫天干
+        b = (lp_b - i) % 12  # 该宫地支索引
+        s = pal_stems[i]  # 该宫天干
 
         # 该宫内主星
         ms_list = [
@@ -382,12 +430,14 @@ def ziwei_full(
         for _aux_name, _aux_b in aux_stars.items():
             if _aux_b == b and not _aux_name.endswith("placeholder"):
                 _bv, _bn = get_aux_brightness(_aux_name, b)
-                ax_list.append({
-                    "name": _aux_name,
-                    "brightness": _bn,
-                    "brightness_val": _bv,
-                    "transforms": [],
-                })
+                ax_list.append(
+                    {
+                        "name": _aux_name,
+                        "brightness": _bn,
+                        "brightness_val": _bv,
+                        "transforms": [],
+                    }
+                )
 
         # 宫干四化（飞出）（对应飞星体系）
         pal_sihua = apply_sihua(
@@ -395,7 +445,7 @@ def ziwei_full(
             STEMS[s],
             sihua_table=_sihua_table,
         )
-        fly_out = {star: f"化{hua.replace('化','')}" for star, hua in pal_sihua.items()}
+        fly_out = {star: f"化{hua.replace('化', '')}" for star, hua in pal_sihua.items()}
 
         pa = PalaceInfo(
             index=i,
@@ -420,27 +470,30 @@ def ziwei_full(
             break
 
     # 8. 大运
-    dayun = calc_dayun(lunar, gender, year, month, day,
-                       birth_hour=hour, birth_minute=minute,
-                       wuxing_ju=layout.wuxing_ju,
-                       life_branch_idx=lp_b,
-                       life_stem_idx=lp_s)
+    dayun = calc_dayun(
+        lunar,
+        gender,
+        year,
+        month,
+        day,
+        birth_hour=hour,
+        birth_minute=minute,
+        wuxing_ju=layout.wuxing_ju,
+        life_branch_idx=lp_b,
+        life_stem_idx=lp_s,
+    )
 
     # ── 大运四化 + 博士十二流曜 ──────────────────────────────
     # 博士在大运干对应的禄存宫，阳干顺数，阴干逆数，共12曜
     # 四化解析同时纳入辅星（文昌文曲左辅右弼等可参与四化）
     _star_branches_map = {nm: pos.branch_idx for nm, pos in main_stars.items()}
-    _star_branches_map.update({
-        nm: b for nm, b in aux_stars.items()
-        if not nm.endswith("placeholder")
-    })
+    _star_branches_map.update({nm: b for nm, b in aux_stars.items() if not nm.endswith("placeholder")})
     _LUZUN_B = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0]  # 甲乙丙丁戊己庚辛壬癸 禄存地支（丁→午6，戊→巳5，己→午6）
-    _BOSHI_12 = ["博士", "力士", "青龙", "小耗", "将军", "奏书",
-                 "飞廉", "喜神", "病符", "大耗", "伏兵", "官府"]
+    _BOSHI_12 = ["博士", "力士", "青龙", "小耗", "将军", "奏书", "飞廉", "喜神", "病符", "大耗", "伏兵", "官府"]
     for _item in dayun.items:
         _item.sihua = apply_sihua(_star_branches_map, STEMS[_item.stem_idx], sihua_table=_sihua_table)
         _luzun_b = _LUZUN_B[_item.stem_idx]
-        _yang_dy = (_item.stem_idx % 2 == 0)
+        _yang_dy = _item.stem_idx % 2 == 0
         _boshi: dict[str, str] = {}
         for _i, _sn in enumerate(_BOSHI_12):
             _bi = (_luzun_b + _i) % 12 if _yang_dy else (_luzun_b - _i) % 12
@@ -495,9 +548,13 @@ def ziwei_full(
 
     # 11. 宫位解读
     analysis_texts = generate_full_analysis(
-        main_stars, aux_stars,
-        lp_b, STEMS[lp_s] + BRANCHES[lp_b],
-        bp_b, layout.wuxing_ju, layout.wuxing_ju_name,
+        main_stars,
+        aux_stars,
+        lp_b,
+        STEMS[lp_s] + BRANCHES[lp_b],
+        bp_b,
+        layout.wuxing_ju,
+        layout.wuxing_ju_name,
         gender,
     )
     summary = generate_summary(main_stars, aux_stars, lp_b)
@@ -506,8 +563,9 @@ def ziwei_full(
     for pa in palaces_info:
         pa.analysis = analysis_texts.get(pa.name, "")
         pa.analysis_tags = generate_palace_tags(pa.branch_idx, main_stars, aux_stars)
-        pa.conclusion, pa.explanation, pa.suggestion, pa.tooltip = \
-            generate_palace_structured(pa.index, pa.branch_idx, main_stars, aux_stars)
+        pa.conclusion, pa.explanation, pa.suggestion, pa.tooltip = generate_palace_structured(
+            pa.index, pa.branch_idx, main_stars, aux_stars
+        )
 
     # ── 博士十二流曜宫格化：找当前大运，分配博士星至各宫 ───────────────
     _current_age = liunian_year - year + 1  # 流年对应虚岁（近似）
@@ -524,13 +582,14 @@ def ziwei_full(
     if _current_dayun_item is not None:
         for _pa in palaces_info:
             _pa.dayun_boshi = [
-                _sn for _sn, _b_name in _current_dayun_item.boshi_stars.items()
-                if _b_name == BRANCHES[_pa.branch_idx]
+                _sn for _sn, _b_name in _current_dayun_item.boshi_stars.items() if _b_name == BRANCHES[_pa.branch_idx]
             ]
 
     # 11b. 三套十二神：长生十二神（本命固定）+ 将前/岁前十二神（流年）
     _changsheng12_map = place_changsheng12(
-        layout.wuxing_ju, gender, lunar.year_branch_idx,
+        layout.wuxing_ju,
+        gender,
+        lunar.year_branch_idx,
         changsheng_method=changsheng_method,
     )
     _liunian_b = liunian.year_branch_idx if liunian is not None else lunar.year_branch_idx

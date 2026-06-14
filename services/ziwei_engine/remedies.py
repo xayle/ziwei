@@ -8,6 +8,7 @@ services/ziwei_engine/remedies.py — 破局建议引擎
     from .remedies import calc_remedies, RemedyResult
     remedies = calc_remedies(chart)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -35,22 +36,25 @@ def _load_rules() -> list[dict]:
 # 数据结构
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class RemedyResult:
     """单条破局建议。"""
-    id: str                             # 规则 ID
-    name: str                           # 建议标题
-    priority: int                       # 优先级（1=最高，3=参考）
-    cost_level: str                     # 成本分级：低 / 中 / 高
-    valid_scope: str                    # 有效期：流年 / 大运 / 长期
-    actions: list[str] = field(default_factory=list)   # 具体行动步骤
-    evidence: str = ""                  # 触发依据（宫位/格局/大运节点）
-    disclaimer: str = ""               # 免责声明
+
+    id: str  # 规则 ID
+    name: str  # 建议标题
+    priority: int  # 优先级（1=最高，3=参考）
+    cost_level: str  # 成本分级：低 / 中 / 高
+    valid_scope: str  # 有效期：流年 / 大运 / 长期
+    actions: list[str] = field(default_factory=list)  # 具体行动步骤
+    evidence: str = ""  # 触发依据（宫位/格局/大运节点）
+    disclaimer: str = ""  # 免责声明
 
 
 # ──────────────────────────────────────────────────────────────
 # 内部辅助
 # ──────────────────────────────────────────────────────────────
+
 
 def _get_palace(palaces: list, name: str):
     """按名称查找宫位对象，未找到返回 None。"""
@@ -81,6 +85,7 @@ def _fill_template(template: str, context: dict[str, Any]) -> str:
 # 主函数
 # ──────────────────────────────────────────────────────────────
 
+
 def calc_remedies(chart) -> list[RemedyResult]:
     """
     根据命盘格局与宫位四化，从规则库匹配破局建议。
@@ -108,6 +113,7 @@ def calc_remedies(chart) -> list[RemedyResult]:
     cur_dayun_gz = ""
     if hasattr(chart, "dayun") and chart.dayun and chart.dayun.items:
         import datetime
+
         cy = datetime.date.today().year
         for d in chart.dayun.items:
             if cy >= d.start_year and cy < d.start_year + 10:
@@ -127,8 +133,12 @@ def calc_remedies(chart) -> list[RemedyResult]:
             if p and _stars_with_hua_in_palace(p, hua):
                 matched = True
                 stars = _stars_with_hua_in_palace(p, hua)
-                context = {"stars": "、".join(stars), "palace": palace_name,
-                           "liunian_year": liunian_year, "dayun": cur_dayun_gz}
+                context = {
+                    "stars": "、".join(stars),
+                    "palace": palace_name,
+                    "liunian_year": liunian_year,
+                    "dayun": cur_dayun_gz,
+                }
             else:
                 context = {}
 
@@ -158,16 +168,18 @@ def calc_remedies(chart) -> list[RemedyResult]:
 
         evidence = _fill_template(rule.get("evidence_template", ""), context)
 
-        results.append(RemedyResult(
-            id=rule["id"],
-            name=rule["name"],
-            priority=rule.get("priority", 3),
-            cost_level=rule.get("cost_level", "低"),
-            valid_scope=rule.get("valid_scope", "长期"),
-            actions=rule.get("actions", []),
-            evidence=evidence,
-            disclaimer=rule.get("disclaimer", "以上为参考性建议，请结合自身情况理性评估。"),
-        ))
+        results.append(
+            RemedyResult(
+                id=rule["id"],
+                name=rule["name"],
+                priority=rule.get("priority", 3),
+                cost_level=rule.get("cost_level", "低"),
+                valid_scope=rule.get("valid_scope", "长期"),
+                actions=rule.get("actions", []),
+                evidence=evidence,
+                disclaimer=rule.get("disclaimer", "以上为参考性建议，请结合自身情况理性评估。"),
+            )
+        )
 
     # 按优先级升序、再按名称字母序稳定排序
     results.sort(key=lambda r: (r.priority, r.name))

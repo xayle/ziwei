@@ -3,14 +3,15 @@ services/bazi_engine/analysis/health.py — 健康引擎 (M2 任务 2.04)
 
 算法规格: §4.11-D
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import HealthAnalysisModel
 
 # 五行→脏腑
 _WUXING_TO_ORGAN: dict[str, list[str]] = {
-    "wood":  ["肝", "胆"],
-    "fire":  ["心", "小肠"],
+    "wood": ["肝", "胆"],
+    "fire": ["心", "小肠"],
     "earth": ["脾", "胃"],
     "metal": ["肺", "大肠"],
     "water": ["肾", "膀胱"],
@@ -18,13 +19,17 @@ _WUXING_TO_ORGAN: dict[str, list[str]] = {
 
 # 五行中文
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 # 五行→养生建议
 _WUXING_TO_HEALTH_ADVICE: dict[str, str] = {
-    "wood":  "保护肝胆，适量运动，避免过度劳累，少饮酒。",
-    "fire":  "注意心血管，保持平和心态，避免过度兴奋。",
+    "wood": "保护肝胆，适量运动，避免过度劳累，少饮酒。",
+    "fire": "注意心血管，保持平和心态，避免过度兴奋。",
     "earth": "调理脾胃，规律饮食，避免暴饮暴食。",
     "metal": "保护肺大肠，注意呼吸道，适当户外活动。",
     "water": "保护肾膀胱，注意腰膝保暖，避免过度劳神。",
@@ -32,8 +37,8 @@ _WUXING_TO_HEALTH_ADVICE: dict[str, str] = {
 
 # 五行→运动建议
 _WUXING_TO_EXERCISE: dict[str, str] = {
-    "wood":  "太极、瑜伽、有氧慢跑",
-    "fire":  "游泳、冥想、柔和运动",
+    "wood": "太极、瑜伽、有氧慢跑",
+    "fire": "游泳、冥想、柔和运动",
     "earth": "快走、健身操、轻量运动",
     "metal": "户外呼吸操、登山、骑行",
     "water": "拉伸、低强度有氧、水中运动",
@@ -41,8 +46,8 @@ _WUXING_TO_EXERCISE: dict[str, str] = {
 
 # 五行→饮食建议
 _WUXING_TO_DIET: dict[str, str] = {
-    "wood":  "多食绿色蔬菜，减少辛辣刺激",
-    "fire":  "多食苦瓜、莲子等清心食物，减少辛辣",
+    "wood": "多食绿色蔬菜，减少辛辣刺激",
+    "fire": "多食苦瓜、莲子等清心食物，减少辛辣",
     "earth": "多食黄色食物（玉米、南瓜），规律三餐",
     "metal": "多食白色食物（梨、白萝卜），润肺养气",
     "water": "多食黑色食物（黑豆、核桃），补肾固元",
@@ -65,7 +70,7 @@ _STEM_HEALTH_FOCUS: dict[str, str] = {
 
 
 def compute_health(
-    wuxing_scores: dict[str, float],   # {"wood":..., "fire":..., ...}
+    wuxing_scores: dict[str, float],  # {"wood":..., "fire":..., ...}
     yongshen_favor: list[str],
     yongshen_avoid: list[str],
     day_stem: str = "",
@@ -84,7 +89,7 @@ def compute_health(
     # ─── 1. 五行偏旺/偏弱判断 ───────────────────────────────────────────
     avg = total / 5
     strong_wuxing: list[str] = []
-    weak_wuxing:   list[str] = []
+    weak_wuxing: list[str] = []
 
     for el, score in wuxing_scores.items():
         ratio = score / total
@@ -130,12 +135,12 @@ def compute_health(
         prim_el = "earth"
 
     health_advice = _WUXING_TO_HEALTH_ADVICE.get(prim_el, "保持作息规律，定期体检。")
-    exercise      = [
+    exercise = [
         _WUXING_TO_EXERCISE.get(prim_el, "适量有氧运动"),
         "每天快走 30 分钟，降低循环血压力、增强心肺功能",
         "每周两次拉伸或正念练习以放松神经、缓解压力",
     ]
-    diet          = [
+    diet = [
         _WUXING_TO_DIET.get(prim_el, "均衡饮食，清淡为主"),
         "每日饮水不少于 1500ml，额外补充新鲜蔬果",
         "少食加工食品和高糖饮料，减少内脏负担",
@@ -152,9 +157,9 @@ def compute_health(
     # ─── inference_tags ─────────────────────────────────────────────
     tags = []
     for el in strong_wuxing:
-        tags.append(f"{_ELEMENT_CN.get(el,el)}偏旺慎{''.join(_WUXING_TO_ORGAN.get(el,[]))}")
+        tags.append(f"{_ELEMENT_CN.get(el, el)}偏旺慎{''.join(_WUXING_TO_ORGAN.get(el, []))}")
     for el in weak_wuxing:
-        tags.append(f"{_ELEMENT_CN.get(el,el)}偏弱需补{''.join(_WUXING_TO_ORGAN.get(el,[]))}")
+        tags.append(f"{_ELEMENT_CN.get(el, el)}偏弱需补{''.join(_WUXING_TO_ORGAN.get(el, []))}")
     if not tags:
         tags.append("五行均衡，体质较佳")
 

@@ -1,14 +1,15 @@
 """
 services/bazi_engine/lifestyle/fengshui.py — 风水方位引擎 (M2.5 任务 2.53)
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import FengshuiModel
 
 # 五行→吉方
 _ELEMENT_DIRECTION: dict[str, str] = {
-    "wood":  "东方/东南方",
-    "fire":  "南方",
+    "wood": "东方/东南方",
+    "fire": "南方",
     "earth": "中部/西南/东北",
     "metal": "西方/西北方",
     "water": "北方",
@@ -16,8 +17,8 @@ _ELEMENT_DIRECTION: dict[str, str] = {
 
 # 五行→装饰建议
 _ELEMENT_DECOR: dict[str, str] = {
-    "wood":  "绿植盆栽、木质家具、竹帘",
-    "fire":  "暖光灯、红色或橙色装饰、蜡烛",
+    "wood": "绿植盆栽、木质家具、竹帘",
+    "fire": "暖光灯、红色或橙色装饰、蜡烛",
     "earth": "陶瓷摆件、土黄或米色沙发、石材台面",
     "metal": "金属装饰品、白色/灰色家具、圆形吊灯",
     "water": "鱼缸/流水摆件、蓝黑色系装饰",
@@ -25,8 +26,8 @@ _ELEMENT_DECOR: dict[str, str] = {
 
 # 五行→植物
 _ELEMENT_PLANT: dict[str, str] = {
-    "wood":  "发财树/富贵竹",
-    "fire":  "火鹤花/玫瑰",
+    "wood": "发财树/富贵竹",
+    "fire": "火鹤花/玫瑰",
     "earth": "多肉植物/仙人掌",
     "metal": "铁树/万年青",
     "water": "水培植物/水仙",
@@ -34,8 +35,8 @@ _ELEMENT_PLANT: dict[str, str] = {
 
 # 五行→幸运色
 _ELEMENT_COLOR: dict[str, list[str]] = {
-    "wood":  ["绿色", "青色", "深绿"],
-    "fire":  ["红色", "橙色", "紫色"],
+    "wood": ["绿色", "青色", "深绿"],
+    "fire": ["红色", "橙色", "紫色"],
     "earth": ["黄色", "棕色", "米色"],
     "metal": ["白色", "金色", "银色"],
     "water": ["黑色", "蓝色", "深蓝"],
@@ -43,15 +44,19 @@ _ELEMENT_COLOR: dict[str, list[str]] = {
 
 # 忌神→禁忌方位/颜色
 _ELEMENT_TABOO_DIRECTION: dict[str, str] = {
-    "wood":  "东方过度绿化",
-    "fire":  "南方过多红色",
+    "wood": "东方过度绿化",
+    "fire": "南方过多红色",
     "earth": "中央过多重物",
     "metal": "西方金属过多",
     "water": "北方潮湿阴暗",
 }
 
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 
@@ -102,8 +107,8 @@ def compute_fengshui(
         t = _ELEMENT_TABOO_DIRECTION.get(el, "")
         if t:
             reason_map = {
-                "wood":  "过度绿化会加重木气郁结，引发情绪压抑",
-                "fire":  "过多红色在忌火命局中会引发躁动不安",
+                "wood": "过度绿化会加重木气郁结，引发情绪压抑",
+                "fire": "过多红色在忌火命局中会引发躁动不安",
                 "earth": "中央堆重物阻断气流，影响整体运势流通",
                 "metal": "金属陈设过多会加重利器之气，影响人际",
                 "water": "北方潮湿阴暗会使水气凝滞，耗损精力",

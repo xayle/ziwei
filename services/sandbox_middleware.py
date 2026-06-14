@@ -18,6 +18,7 @@ C2: Sandbox 模式服务层中间件
   此中间件仅在 settings.sandbox_enabled=True 时生效；
   生产环境默认 SANDBOX_ENABLED=false。
 """
+
 from __future__ import annotations
 
 from functools import lru_cache

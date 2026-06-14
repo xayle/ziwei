@@ -18,10 +18,10 @@
   GET    /api/v1/reviews/{id}/history — 查看变更历史（需登录）
   POST   /api/v1/reviews/{id}/assign  — W1 分配审核员（需登录）
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -121,7 +121,7 @@ def submit_review(payload: ChartReviewCreate, session: Session = Depends(get_ses
         template_version=payload.template_version,
         algorithm_version=ALGORITHM_VERSION,
         status="pending",
-        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        created_at=datetime.now(UTC).replace(tzinfo=None),
     )
     session.add(review)
     session.commit()
@@ -134,7 +134,7 @@ def submit_review(payload: ChartReviewCreate, session: Session = Depends(get_ses
 def list_reviews(
     current_user: RequiredUser,
     session: Session = Depends(get_session),
-    status: Optional[str] = Query(None),
+    status: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> ChartReviewListResponse:
@@ -155,8 +155,13 @@ def review_stats(current_user: RequiredUser, session: Session = Depends(get_sess
     for r in all_records:
         if r.status in counts:
             counts[r.status] += 1
-    return ReviewStats(total=len(all_records), pending=counts["pending"], approved=counts["approved"],
-                       rejected=counts["rejected"], revised=counts["revised"])
+    return ReviewStats(
+        total=len(all_records),
+        pending=counts["pending"],
+        approved=counts["approved"],
+        rejected=counts["rejected"],
+        revised=counts["revised"],
+    )
 
 
 @router.get("/reviews/queue", response_model=ChartReviewListResponse, summary="W1 待审核队列")
@@ -166,8 +171,12 @@ def review_queue(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> ChartReviewListResponse:
-    stmt = (select(ChartReview).where(ChartReview.status == "pending")
-            .where(ChartReview.deleted_at.is_(None)).order_by(ChartReview.created_at.asc()))
+    stmt = (
+        select(ChartReview)
+        .where(ChartReview.status == "pending")
+        .where(ChartReview.deleted_at.is_(None))
+        .order_by(ChartReview.created_at.asc())
+    )
     all_records = session.exec(stmt).all()
     total = len(all_records)
     start = (page - 1) * page_size
@@ -182,9 +191,13 @@ def my_review_queue(
     page_size: int = Query(20, ge=1, le=100),
 ) -> ChartReviewListResponse:
     username = current_user.username if hasattr(current_user, "username") else str(current_user.id)
-    stmt = (select(ChartReview).where(ChartReview.reviewer == username)
-            .where(ChartReview.status == "pending").where(ChartReview.deleted_at.is_(None))
-            .order_by(ChartReview.created_at.asc()))
+    stmt = (
+        select(ChartReview)
+        .where(ChartReview.reviewer == username)
+        .where(ChartReview.status == "pending")
+        .where(ChartReview.deleted_at.is_(None))
+        .order_by(ChartReview.created_at.asc())
+    )
     all_records = session.exec(stmt).all()
     total = len(all_records)
     start = (page - 1) * page_size
@@ -200,7 +213,7 @@ def bulk_review_action(
         raise HTTPException(status_code=422, detail=f"action 必须为 {sorted(allowed_actions)} 之一")
     succeeded: list[int] = []
     failed: list[int] = []
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(UTC).replace(tzinfo=None)
     for rid in payload.ids:
         review = session.get(ChartReview, rid)
         if not review or review.deleted_at is not None:
@@ -221,15 +234,17 @@ def bulk_review_action(
                     review.revision = (review.revision or 1) + 1
             session.add(review)
             succeeded.append(rid)
-            session.add(ChartReviewHistory(
-                review_id=rid,
-                status=payload.action if payload.action != "delete" else "deleted",
-                reviewer=payload.reviewer or "",
-                notes=payload.notes or "",
-                reject_reason=payload.reject_reason or "",
-                change_type="bulk_action",
-                changed_at=now,
-            ))
+            session.add(
+                ChartReviewHistory(
+                    review_id=rid,
+                    status=payload.action if payload.action != "delete" else "deleted",
+                    reviewer=payload.reviewer or "",
+                    notes=payload.notes or "",
+                    reject_reason=payload.reject_reason or "",
+                    change_type="bulk_action",
+                    changed_at=now,
+                )
+            )
         except Exception:
             failed.append(rid)
     session.commit()
@@ -263,7 +278,9 @@ def review_assignees(current_user: RequiredUser, session: Session = Depends(get_
 
 
 @router.get("/reviews/{review_id}", response_model=ChartReviewResponse, summary="获取单条审核详情")
-def get_review(review_id: int, current_user: RequiredUser, session: Session = Depends(get_session)) -> ChartReviewResponse:
+def get_review(
+    review_id: int, current_user: RequiredUser, session: Session = Depends(get_session)
+) -> ChartReviewResponse:
     review = session.get(ChartReview, review_id)
     if not review or review.deleted_at is not None:
         raise HTTPException(status_code=404, detail="审核记录不存在")
@@ -284,19 +301,21 @@ def update_review(
         review.notes = payload.notes
     if payload.reject_reason:
         review.reject_reason = payload.reject_reason
-    review.reviewed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    review.reviewed_at = datetime.now(UTC).replace(tzinfo=None)
     if payload.status == "revised":
         review.revision = (review.revision or 1) + 1
     session.add(review)
-    session.add(ChartReviewHistory(
-        review_id=review_id,
-        status=payload.status,
-        reviewer=payload.reviewer or "",
-        notes=payload.notes or "",
-        reject_reason=payload.reject_reason or "",
-        change_type="status_change",
-        changed_at=datetime.now(timezone.utc).replace(tzinfo=None),
-    ))
+    session.add(
+        ChartReviewHistory(
+            review_id=review_id,
+            status=payload.status,
+            reviewer=payload.reviewer or "",
+            notes=payload.notes or "",
+            reject_reason=payload.reject_reason or "",
+            change_type="status_change",
+            changed_at=datetime.now(UTC).replace(tzinfo=None),
+        )
+    )
     session.commit()
     session.refresh(review)
     record_review_action(payload.status)
@@ -308,24 +327,34 @@ def delete_review(review_id: int, current_user: RequiredUser, session: Session =
     review = session.get(ChartReview, review_id)
     if not review or review.deleted_at is not None:
         raise HTTPException(status_code=404, detail="审核记录不存在")
-    review.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    review.deleted_at = datetime.now(UTC).replace(tzinfo=None)
     session.add(review)
     session.commit()
 
 
 @router.get("/reviews/{review_id}/history", response_model=ReviewHistoryResponse, summary="获取审核变更历史")
-def get_review_history(review_id: int, current_user: RequiredUser, session: Session = Depends(get_session)) -> ReviewHistoryResponse:
+def get_review_history(
+    review_id: int, current_user: RequiredUser, session: Session = Depends(get_session)
+) -> ReviewHistoryResponse:
     review = session.get(ChartReview, review_id)
     if not review or review.deleted_at is not None:
         raise HTTPException(status_code=404, detail="审核记录不存在")
     history = session.exec(
-        select(ChartReviewHistory).where(ChartReviewHistory.review_id == review_id)
+        select(ChartReviewHistory)
+        .where(ChartReviewHistory.review_id == review_id)
         .order_by(ChartReviewHistory.changed_at)
     ).all()
     items = [
-        ReviewHistoryItem(id=h.id, review_id=h.review_id, status=h.status, reviewer=h.reviewer,
-                          notes=h.notes, reject_reason=h.reject_reason, change_type=h.change_type,
-                          changed_at=h.changed_at)
+        ReviewHistoryItem(
+            id=h.id,
+            review_id=h.review_id,
+            status=h.status,
+            reviewer=h.reviewer,
+            notes=h.notes,
+            reject_reason=h.reject_reason,
+            change_type=h.change_type,
+            changed_at=h.changed_at,
+        )
         for h in history
     ]
     return ReviewHistoryResponse(review_id=review_id, items=items, total=len(items))

@@ -15,6 +15,7 @@ services/ziwei_engine/life_suggestions.py — 生活化建议引擎
     from .life_suggestions import calc_life_suggestions, LifeSuggestion
     suggestions = calc_life_suggestions(chart)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,19 +23,17 @@ import json
 import pathlib
 from typing import Any
 
-_RULES_PATH = (
-    pathlib.Path(__file__).parent.parent.parent / "data" / "life_suggestions_rules.json"
-)
+_RULES_PATH = pathlib.Path(__file__).parent.parent.parent / "data" / "life_suggestions_rules.json"
 
 # 全局规则缓存
 _RULES: list[dict] | None = None
 
 CATEGORY_LABELS: dict[str, str] = {
     "jewelry": "饰品建议",
-    "plants":  "植物摆放",
+    "plants": "植物摆放",
     "objects": "家居摆件",
-    "bed":     "床位布局",
-    "timing":  "择日时机",
+    "bed": "床位布局",
+    "timing": "择日时机",
 }
 
 
@@ -50,17 +49,19 @@ def _load_rules() -> list[dict]:
 # 数据结构
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class LifeSuggestion:
     """单条生活化建议。"""
+
     id: str
-    category: str                          # jewelry / plants / objects / bed / timing
-    category_label: str                    # 饰品建议 / 植物摆放 / …
-    name: str                              # 建议标题
-    priority: int                          # 1=立即, 2=次要, 3=可选
-    cost_level: str                        # 低 / 中 / 高
-    valid_scope: str                       # 流年 / 大运 / 长期
-    short_desc: str = ""                   # 一句话简介
+    category: str  # jewelry / plants / objects / bed / timing
+    category_label: str  # 饰品建议 / 植物摆放 / …
+    name: str  # 建议标题
+    priority: int  # 1=立即, 2=次要, 3=可选
+    cost_level: str  # 低 / 中 / 高
+    valid_scope: str  # 流年 / 大运 / 长期
+    short_desc: str = ""  # 一句话简介
     actions: list[str] = field(default_factory=list)
     evidence: str = ""
     notes: str = ""
@@ -70,6 +71,7 @@ class LifeSuggestion:
 # ──────────────────────────────────────────────────────────────
 # 内部辅助
 # ──────────────────────────────────────────────────────────────
+
 
 def _get_palace(palaces: list, name: str):
     return next((p for p in palaces if p.name == name), None)
@@ -114,6 +116,7 @@ def _fill_template(template: str, ctx: dict[str, Any]) -> str:
 # 主函数
 # ──────────────────────────────────────────────────────────────
 
+
 def calc_life_suggestions(chart) -> list[LifeSuggestion]:
     """
     根据命盘匹配生活化建议规则，返回排序后的建议列表。
@@ -134,6 +137,7 @@ def calc_life_suggestions(chart) -> list[LifeSuggestion]:
     wuxing_ju: str = getattr(chart, "wuxing_ju_name", "") or ""
 
     import datetime
+
     liunian_year: int = getattr(chart, "liunian_year", 0) or datetime.date.today().year
 
     for rule in rules:
@@ -164,9 +168,7 @@ def calc_life_suggestions(chart) -> list[LifeSuggestion]:
         # ── 触发类型 3：格局名包含关键字 ──────────────────────
         elif ttype == "pattern":
             keyword = trigger.get("pattern_name_contains", "")
-            matched_pname = next(
-                (pn for pn in detected_patterns if keyword in pn), None
-            )
+            matched_pname = next((pn for pn in detected_patterns if keyword in pn), None)
             if matched_pname:
                 matched = True
                 ctx.update({"pattern_name": matched_pname})
@@ -184,13 +186,10 @@ def calc_life_suggestions(chart) -> list[LifeSuggestion]:
             transform = trigger.get("transform", "")
             keyword = trigger.get("pattern_name_contains", "")
             p = _get_palace(palaces, palace_name)
-            pat_match = next(
-                (pn for pn in detected_patterns if keyword in pn), None
-            )
+            pat_match = next((pn for pn in detected_patterns if keyword in pn), None)
             if _transform_in_palace(p, transform) and pat_match:
                 matched = True
-                ctx.update({"palace": palace_name, "transform": transform,
-                            "pattern_name": pat_match})
+                ctx.update({"palace": palace_name, "transform": transform, "pattern_name": pat_match})
 
         if not matched:
             continue
@@ -198,23 +197,25 @@ def calc_life_suggestions(chart) -> list[LifeSuggestion]:
         evidence = _fill_template(rule.get("evidence_template", ""), ctx)
         cat = rule.get("category", "objects")
 
-        results.append(LifeSuggestion(
-            id=rule["id"],
-            category=cat,
-            category_label=CATEGORY_LABELS.get(cat, cat),
-            name=rule["name"],
-            priority=rule.get("priority", 3),
-            cost_level=rule.get("cost_level", "低"),
-            valid_scope=rule.get("valid_scope", "长期"),
-            short_desc=rule.get("short_desc", ""),
-            actions=rule.get("actions", []),
-            evidence=evidence,
-            notes=rule.get("notes", ""),
-            disclaimer=rule.get(
-                "disclaimer",
-                "以上为传统命理参考性建议，请结合自身实际情况理性判断，不作为任何专业决策依据。",
-            ),
-        ))
+        results.append(
+            LifeSuggestion(
+                id=rule["id"],
+                category=cat,
+                category_label=CATEGORY_LABELS.get(cat, cat),
+                name=rule["name"],
+                priority=rule.get("priority", 3),
+                cost_level=rule.get("cost_level", "低"),
+                valid_scope=rule.get("valid_scope", "长期"),
+                short_desc=rule.get("short_desc", ""),
+                actions=rule.get("actions", []),
+                evidence=evidence,
+                notes=rule.get("notes", ""),
+                disclaimer=rule.get(
+                    "disclaimer",
+                    "以上为传统命理参考性建议，请结合自身实际情况理性判断，不作为任何专业决策依据。",
+                ),
+            )
+        )
 
     results.sort(key=lambda r: (r.priority, r.category, r.name))
     return results

@@ -3,7 +3,7 @@
 """
 
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import HTTPException, status
 
@@ -11,9 +11,10 @@ from fastapi import HTTPException, status
 # 错误代码枚举
 # ============================================================================
 
+
 class ErrorCode(str, Enum):
     """应用程序错误代码"""
-    
+
     # 认证相关 (AUTH_*)
     AUTH_INVALID_CREDENTIALS = "AUTH_001"
     AUTH_TOKEN_EXPIRED = "AUTH_002"
@@ -22,37 +23,37 @@ class ErrorCode(str, Enum):
     AUTH_USER_INACTIVE = "AUTH_005"
     AUTH_INVALID_REFRESH_TOKEN = "AUTH_006"
     AUTH_PASSWORD_WEAK = "AUTH_007"
-    
+
     # 授权相关 (AUTHZ_*)
     AUTHZ_PERMISSION_DENIED = "AUTHZ_001"
     AUTHZ_ROLE_INSUFFICIENT = "AUTHZ_002"
     AUTHZ_RESOURCE_FORBIDDEN = "AUTHZ_003"
-    
+
     # 数据验证 (VALIDATION_*)
     VALIDATION_INVALID_INPUT = "VALIDATION_001"
     VALIDATION_MISSING_FIELD = "VALIDATION_002"
     VALIDATION_INVALID_FORMAT = "VALIDATION_003"
     VALIDATION_FILE_TOO_LARGE = "VALIDATION_004"
     VALIDATION_INVALID_JSON = "VALIDATION_005"
-    
+
     # 资源错误 (RESOURCE_*)
     RESOURCE_NOT_FOUND = "RESOURCE_001"
     RESOURCE_ALREADY_EXISTS = "RESOURCE_002"
     RESOURCE_CONFLICT = "RESOURCE_003"
     RESOURCE_DELETED = "RESOURCE_004"
-    
+
     # 业务逻辑错误 (BUSINESS_*)
     BUSINESS_INVALID_STATE = "BUSINESS_001"
     BUSINESS_OPERATION_FAILED = "BUSINESS_002"
     BUSINESS_CONSTRAINT_VIOLATION = "BUSINESS_003"
     BUSINESS_DEPENDENCY_ERROR = "BUSINESS_004"
-    
+
     # 外部服务错误 (SERVICE_*)
     SERVICE_UNAVAILABLE = "SERVICE_001"
     SERVICE_TIMEOUT = "SERVICE_002"
     SERVICE_RATE_LIMITED = "SERVICE_003"
     SERVICE_EXTERNAL_ERROR = "SERVICE_004"
-    
+
     # 系统错误 (SYSTEM_*)
     SYSTEM_INTERNAL_ERROR = "SYSTEM_001"
     SYSTEM_DATABASE_ERROR = "SYSTEM_002"
@@ -64,32 +65,33 @@ class ErrorCode(str, Enum):
 # 自定义异常类
 # ============================================================================
 
+
 class AppException(Exception):
     """应用程序基础异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode,
         message: str,
         status_code: int = status.HTTP_400_BAD_REQUEST,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         self.code = code
         self.message = message
         self.status_code = status_code
         self.details = details or {}
-        
+
         super().__init__(self.message)
 
 
 class AuthenticationException(AppException):
     """认证异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             code=code,
@@ -101,12 +103,12 @@ class AuthenticationException(AppException):
 
 class AuthorizationException(AppException):
     """授权异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             code=code,
@@ -118,12 +120,12 @@ class AuthorizationException(AppException):
 
 class ValidationException(AppException):
     """数据验证异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             code=code,
@@ -135,14 +137,14 @@ class ValidationException(AppException):
 
 class ResourceNotFoundException(AppException):
     """资源不存在异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode = ErrorCode.RESOURCE_NOT_FOUND,
         message: str = "Resource not found",
-        resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        resource_type: str | None = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         # 支持两种初始化方式：
         # 1. code + message + details（新方式）
@@ -150,7 +152,7 @@ class ResourceNotFoundException(AppException):
         if resource_type and resource_id:
             message = f"{resource_type} with id '{resource_id}' not found"
             details = details or {"resource_type": resource_type, "resource_id": resource_id}
-        
+
         super().__init__(
             code=code,
             message=message,
@@ -166,9 +168,9 @@ class ResourceConflictException(AppException):
         self,
         resource_type: str,
         code: ErrorCode = ErrorCode.RESOURCE_ALREADY_EXISTS,
-        message: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        message: str | None = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
     ):
         _message = message or f"{resource_type} already exists or conflicts with existing data"
         super().__init__(
@@ -181,12 +183,12 @@ class ResourceConflictException(AppException):
 
 class BusinessException(AppException):
     """业务逻辑异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             code=code,
@@ -198,12 +200,12 @@ class BusinessException(AppException):
 
 class ServiceException(AppException):
     """外部服务异常"""
-    
+
     def __init__(
         self,
         code: ErrorCode,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             code=code,
@@ -215,11 +217,11 @@ class ServiceException(AppException):
 
 class DatabaseException(AppException):
     """数据库异常"""
-    
+
     def __init__(
         self,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(
             code=ErrorCode.SYSTEM_DATABASE_ERROR,
@@ -233,16 +235,17 @@ class DatabaseException(AppException):
 # 错误响应模型
 # ============================================================================
 
+
 class ErrorDetail:
     """错误详情对象"""
-    
-    def __init__(self, code: str, message: str, status_code: int, details: Dict[str, Any]):
+
+    def __init__(self, code: str, message: str, status_code: int, details: dict[str, Any]):
         self.code = code
         self.message = message
         self.status_code = status_code
         self.details = details
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """转换为字典格式"""
         return {
             "error": {
@@ -261,7 +264,7 @@ def exception_to_http_exception(exc: AppException) -> HTTPException:
         status_code=exc.status_code,
         details=exc.details,
     )
-    
+
     return HTTPException(
         status_code=exc.status_code,
         detail=error_detail.to_dict(),

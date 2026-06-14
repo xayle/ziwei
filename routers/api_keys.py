@@ -7,9 +7,10 @@ routers/api_keys.py — §12 API Key 管理端点
     GET    /api/v1/api-keys/{key_id} — 查看单个 Key 详情
     DELETE /api/v1/api-keys/{key_id} — 撤销 Key（软撤销，设 revoked_at）
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Annotated
 
@@ -44,6 +45,7 @@ _MAX_ACTIVE_KEYS_PER_USER = 20
 # Helper
 # ---------------------------------------------------------------------------
 
+
 def _get_key_or_404(
     key_id: int,
     user_id: int,
@@ -76,6 +78,7 @@ def _to_response(key: ApiKey) -> ApiKeyResponse:
 # ---------------------------------------------------------------------------
 # POST /api/v1/api-keys — 创建
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "",
@@ -110,7 +113,7 @@ def create_api_key(
 
     expires_at: datetime | None = None
     if body.expires_in_days is not None:
-        expires_at = datetime.now(timezone.utc) + timedelta(days=body.expires_in_days)
+        expires_at = datetime.now(UTC) + timedelta(days=body.expires_in_days)
 
     assert current_user.id is not None
     api_key = ApiKey(
@@ -128,7 +131,10 @@ def create_api_key(
 
     logger.info(
         "API Key 已创建: id=%s user=%s name=%r scopes=%s",
-        api_key.id, current_user.id, api_key.name, api_key.scopes,
+        api_key.id,
+        current_user.id,
+        api_key.name,
+        api_key.scopes,
     )
 
     return ApiKeyCreateResponse(
@@ -146,6 +152,7 @@ def create_api_key(
 # ---------------------------------------------------------------------------
 # GET /api/v1/api-keys — 列表
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "",
@@ -166,9 +173,7 @@ def list_api_keys(
         .limit(limit)
     ).all()
 
-    total = session.exec(
-        select(ApiKey).where(ApiKey.user_id == current_user.id)
-    )
+    total = session.exec(select(ApiKey).where(ApiKey.user_id == current_user.id))
     total_count = len(list(total))
 
     return ApiKeyListResponse(
@@ -180,6 +185,7 @@ def list_api_keys(
 # ---------------------------------------------------------------------------
 # GET /api/v1/api-keys/{key_id} — 详情
 # ---------------------------------------------------------------------------
+
 
 @router.get(
     "/{key_id}",
@@ -199,6 +205,7 @@ def get_api_key(
 # ---------------------------------------------------------------------------
 # DELETE /api/v1/api-keys/{key_id} — 撤销
 # ---------------------------------------------------------------------------
+
 
 @router.delete(
     "/{key_id}",
@@ -220,13 +227,15 @@ def revoke_api_key(
             detail="该 API Key 已被撤销",
         )
 
-    key.revoked_at = datetime.now(timezone.utc)
+    key.revoked_at = datetime.now(UTC)
     session.add(key)
     session.commit()
 
     logger.info(
         "API Key 已撤销: id=%s user=%s name=%r",
-        key.id, current_user.id, key.name,
+        key.id,
+        current_user.id,
+        key.name,
     )
 
     return {"message": f"API Key #{key_id} 已撤销", "revoked_at": key.revoked_at.isoformat()}

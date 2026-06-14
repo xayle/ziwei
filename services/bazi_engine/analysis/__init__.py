@@ -27,14 +27,14 @@ from services.bazi_engine.analysis.wealth import compute_wealth
 from services.bazi_engine.analysis.wealth_estimate import estimate_wealth
 
 __all__ = [
-    "compute_wealth",
     "compute_career",
-    "compute_marriage",
     "compute_health",
-    "compute_relationship",
-    "compute_personality",
-    "compute_monthly",
-    "generate_dayun_narrative",
-    "estimate_wealth",
     "compute_liunian_domain_forecasts",
+    "compute_marriage",
+    "compute_monthly",
+    "compute_personality",
+    "compute_relationship",
+    "compute_wealth",
+    "estimate_wealth",
+    "generate_dayun_narrative",
 ]

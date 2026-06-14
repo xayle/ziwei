@@ -10,13 +10,14 @@
 数据源: data/glossary.json / data/cities.json / data/classics.json / data/concepts.json
 服务启动时一次性加载至内存，每次请求不访问 DB。
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
 import json
 import logging
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -40,24 +41,24 @@ _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 # ── Schema 模型 ─────────────────────────────────────────────────────────────────
 class GlossaryItemModel(BaseModel):
-    term: str                   # 术语，如"七杀"
-    pinyin: str                 # 拼音，如"qī shā"
-    definition: str             # 简明定义（≤80字）
+    term: str  # 术语，如"七杀"
+    pinyin: str  # 拼音，如"qī shā"
+    definition: str  # 简明定义（≤80字）
     category: Literal["格局", "神煞", "五行", "十神", "大运", "其他"]
-    classic_source: Optional[str] = None  # 来源典籍（如有）
+    classic_source: str | None = None  # 来源典籍（如有）
 
 
 class GlossaryUpdateRequest(BaseModel):
     definition: str
-    pinyin: Optional[str] = None
-    classic_source: Optional[str] = None
+    pinyin: str | None = None
+    classic_source: str | None = None
 
 
 class CityModel(BaseModel):
-    name: str       # 城市名，如"北京"
-    province: str   # 省份，如"北京市"
-    lng: float      # 经度，精确到小数点后2位，范围[73.0, 135.5]
-    lat: float      # 纬度
+    name: str  # 城市名，如"北京"
+    province: str  # 省份，如"北京市"
+    lng: float  # 经度，精确到小数点后2位，范围[73.0, 135.5]
+    lat: float  # 纬度
     city_type: Literal["直辖市", "省会", "计划单列市"]
 
 
@@ -71,6 +72,7 @@ class ConceptModel(BaseModel):
 
 
 # ── 内存缓存加载 ─────────────────────────────────────────────────────────────────
+
 
 @lru_cache(maxsize=1)
 def _load_glossary() -> list[GlossaryItemModel]:
@@ -137,6 +139,7 @@ def _load_concepts() -> list[ConceptModel]:
 
 # ── 端点 ─────────────────────────────────────────────────────────────────────────
 
+
 @router.get(
     "/glossary",
     response_model=list[GlossaryItemModel],
@@ -149,8 +152,8 @@ def _load_concepts() -> list[ConceptModel]:
     ),
 )
 def get_glossary(
-    q: Optional[str] = Query(None, description="全文搜索关键词"),
-    category: Optional[str] = Query(None, description="分类过滤：格局/神煞/五行/十神/大运/其他"),
+    q: str | None = Query(None, description="全文搜索关键词"),
+    category: str | None = Query(None, description="分类过滤：格局/神煞/五行/十神/大运/其他"),
     limit: int = Query(100, ge=1, le=500),
 ) -> list[GlossaryItemModel]:
     """GET /api/v1/glossary — 返回命理术语，支持 ?q= 全文搜索"""
@@ -167,7 +170,8 @@ def get_glossary(
             # 降级：简单包含匹配
             ql = q.strip().lower()
             items = [
-                i for i in _load_glossary()
+                i
+                for i in _load_glossary()
                 if ql in i.term.lower() or ql in i.definition.lower() or ql in (i.pinyin or "").lower()
             ]
     return items[:limit]
@@ -219,8 +223,8 @@ def update_glossary_term(
     ),
 )
 def get_cities(
-    q: Optional[str] = Query(None, description="城市名或省份模糊搜索"),
-    city_type: Optional[str] = Query(None, description="直辖市/省会/计划单列市"),
+    q: str | None = Query(None, description="城市名或省份模糊搜索"),
+    city_type: str | None = Query(None, description="直辖市/省会/计划单列市"),
 ) -> list[CityModel]:
     """GET /api/v1/cities — 支持 ?q= 模糊搜索城市名/省份"""
     cities = _load_cities()
@@ -230,10 +234,7 @@ def get_cities(
         cities = [c for c in cities if c.city_type == city_type]
     if q and q.strip():
         ql = q.strip().lower()
-        cities = [
-            c for c in cities
-            if ql in c.name.lower() or ql in c.province.lower()
-        ]
+        cities = [c for c in cities if ql in c.name.lower() or ql in c.province.lower()]
     return cities
 
 
@@ -248,8 +249,8 @@ def get_cities(
     ),
 )
 def search_classics(
-    query: Optional[str] = Query(None, description="检索关键词（TF-IDF 排序）"),
-    tag: Optional[str] = Query(None, description='按标签过滤，如"格局"、"用神"'),
+    query: str | None = Query(None, description="检索关键词（TF-IDF 排序）"),
+    tag: str | None = Query(None, description='按标签过滤，如"格局"、"用神"'),
     limit: int = Query(10, ge=1, le=50),
 ) -> list[ClassicPassageModel]:
     """GET /api/v1/classics — 古籍 TF-IDF 全文检索"""
@@ -270,8 +271,7 @@ def search_classics(
             # 降级：简单包含匹配
             ql = query.strip().lower()
             result = [
-                i for i in items
-                if ql in i.passage.lower() or ql in i.title.lower() or ql in (i.notes or "").lower()
+                i for i in items if ql in i.passage.lower() or ql in i.title.lower() or ql in (i.notes or "").lower()
             ][:limit]
         return result
     return items[:limit]
@@ -287,8 +287,8 @@ def search_classics(
     ),
 )
 def get_concepts(
-    category: Optional[str] = Query(None, description="分类过滤：bazi 或 ziwei"),
-    q: Optional[str] = Query(None, description="关键词搜索（匹配 term/definition/aliases）"),
+    category: str | None = Query(None, description="分类过滤：bazi 或 ziwei"),
+    q: str | None = Query(None, description="关键词搜索（匹配 term/definition/aliases）"),
     limit: int = Query(100, ge=1, le=500),
 ) -> list[ConceptModel]:
     """GET /api/v1/docs/concepts — 命理概念术语说明"""
@@ -302,9 +302,8 @@ def get_concepts(
     if q and q.strip():
         ql = q.strip().lower()
         items = [
-            i for i in items
-            if ql in i.term.lower()
-            or ql in i.definition.lower()
-            or any(ql in alias.lower() for alias in i.aliases)
+            i
+            for i in items
+            if ql in i.term.lower() or ql in i.definition.lower() or any(ql in alias.lower() for alias in i.aliases)
         ]
     return items[:limit]

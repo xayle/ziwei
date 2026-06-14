@@ -19,7 +19,7 @@ from functools import lru_cache
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def _find_best_sample(
     geju_name: str,
     yongshen_favor: list[str],
     strength_tier: str,
-) -> Optional[dict]:
+) -> dict | None:
     """
     按优先级找最相似样本：
     1. geju_name 精确匹配（再按 yongshen_favor 重合度排序，取最高）
@@ -76,10 +76,7 @@ def _find_best_sample(
         "neutral": ["neutral", "中和", "平"],
     }
     peer_tiers = strength_map.get(strength_tier, [strength_tier])
-    tier_matches = [
-        s for s in samples
-        if s.get("strength") in peer_tiers or s.get("strength_tier") in peer_tiers
-    ]
+    tier_matches = [s for s in samples if s.get("strength") in peer_tiers or s.get("strength_tier") in peer_tiers]
     if tier_matches:
         return max(tier_matches, key=_overlap)
 
@@ -95,9 +92,7 @@ def _get_jinja_env():
     try:
         from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-        templates_dir = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "templates"
-        )
+        templates_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
         env = Environment(
             loader=FileSystemLoader(templates_dir),
             autoescape=select_autoescape(enabled_extensions=()),  # 纯文本，不做 HTML escape
@@ -167,7 +162,7 @@ def render_summary(bazi_result: Any, evidence_snippets: list[dict]) -> str:
             "branch": getattr(p, "branch", ""),
         }
 
-    pillars_dict: Optional[dict] = None
+    pillars_dict: dict | None = None
     if pillars:
         pillars_dict = {
             "year": _pillar_to_dict(getattr(pillars, "year", None)),

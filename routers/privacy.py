@@ -14,9 +14,10 @@ POST /api/v1/users/me/anonymize  — 用户自助匿名化账户数据（204 No 
 - RefreshToken      → 物理删除 WHERE user_id=?
 - AuditLog          → 不删除（保留用于合规审计）
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import hashlib
 import logging
 
@@ -51,7 +52,7 @@ class AnonymizeConfirmRequest(BaseModel):
         "- 案例出生时间、经度 → 清零\n"
         "- RefreshToken → 物理删除\n"
         "- AuditLog → 保留（合规要求）\n\n"
-        "请求体需携带 `{ \"confirm\": \"ANONYMIZE\" }` 防误操作。"
+        '请求体需携带 `{ "confirm": "ANONYMIZE" }` 防误操作。'
     ),
 )
 def anonymize_user(
@@ -91,7 +92,7 @@ def anonymize_user(
     user.username = f"deleted_{user_id}"
     user.password_hash = ""
     user.is_active = False
-    user.deleted_at = datetime.now(timezone.utc)
+    user.deleted_at = datetime.now(UTC)
     session.add(user)
 
     # 3. 清除该用户所有案例的出生关键信息
@@ -105,9 +106,7 @@ def anonymize_user(
         session.add(case)
 
     # 4. 物理删除 RefreshToken
-    tokens = session.exec(
-        select(RefreshToken).where(RefreshToken.user_id == user_id)
-    ).all()
+    tokens = session.exec(select(RefreshToken).where(RefreshToken.user_id == user_id)).all()
     for token in tokens:
         session.delete(token)
 
@@ -128,6 +127,5 @@ def anonymize_user(
     except Exception as exc:
         logger.warning("GDPR audit log failed (non-blocking): %s", exc)
 
-    logger.info("[C1 GDPR] user_id=%d anonymized; cases=%d tokens_deleted=%d",
-                user_id, len(cases), len(tokens))
+    logger.info("[C1 GDPR] user_id=%d anonymized; cases=%d tokens_deleted=%d", user_id, len(cases), len(tokens))
     # 204 No Content — FastAPI 自动处理 return None

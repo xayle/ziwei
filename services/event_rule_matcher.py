@@ -4,20 +4,20 @@ services/event_rule_matcher.py — 事件规则匹配器
 从 data/event_rules.json 加载规则素材，根据信号 rule_id 列表
 查找对应的：古籍依据、现实表现、预兆、建议、avoid_overclaim。
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from app.schemas.event_prediction import ClassicalNote
 
 logger = logging.getLogger(__name__)
 
-_RULES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                           "data", "event_rules.json")
+_RULES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "event_rules.json")
 
 
 @lru_cache(maxsize=1)
@@ -46,7 +46,7 @@ def get_subtypes_for_rule_ids(rule_ids: list[str]) -> list[str]:
     for rid in rule_ids:
         rule = by_id.get(rid)
         if rule:
-            for st in (rule.get("subtypes") or []):
+            for st in rule.get("subtypes") or []:
                 if st not in seen:
                     seen.add(st)
                     result.append(st)
@@ -64,8 +64,8 @@ def get_materials_for_signals(rule_ids: list[str]) -> dict[str, Any]:
     """
     by_id = _rules_by_id()
     manifestations: list[str] = []
-    omens:          list[str] = []
-    advice:         list[str] = []
+    omens: list[str] = []
+    advice: list[str] = []
     classical_notes: list[ClassicalNote] = []
     avoid_overclaims: list[str] = []
 
@@ -80,15 +80,15 @@ def get_materials_for_signals(rule_ids: list[str]) -> dict[str, Any]:
     matched.sort(key=lambda r: _SEV_ORDER.get(r.get("severity", "low"), 2))
 
     for rule in matched:
-        for m in (rule.get("possible_manifestations") or []):
+        for m in rule.get("possible_manifestations") or []:
             if m not in seen_m:
                 seen_m.add(m)
                 manifestations.append(m)
-        for o in (rule.get("omens") or []):
+        for o in rule.get("omens") or []:
             if o not in seen_o:
                 seen_o.add(o)
                 omens.append(o)
-        for ad in (rule.get("advice") or []):
+        for ad in rule.get("advice") or []:
             if ad not in seen_a:
                 seen_a.add(ad)
                 advice.append(ad)
@@ -103,9 +103,9 @@ def get_materials_for_signals(rule_ids: list[str]) -> dict[str, Any]:
 
     # 截取合理数量
     return {
-        "manifestations":  manifestations[:6],
-        "omens":           omens[:5],
-        "advice":          advice[:5],
+        "manifestations": manifestations[:6],
+        "omens": omens[:5],
+        "advice": advice[:5],
         "classical_notes": classical_notes[:3],
         "avoid_overclaim": avoid_overclaims[0] if avoid_overclaims else None,
     }
@@ -132,4 +132,5 @@ def match_rules_by_category(category: str, signal_keys: list[str]) -> list[dict]
 def get_followup_questions(event_type: str) -> list[str]:
     """返回该事件类别的追问问题列表（从 followup_service 读取）"""
     from services.followup_service import FOLLOWUP_MAP
+
     return FOLLOWUP_MAP.get(event_type, [])

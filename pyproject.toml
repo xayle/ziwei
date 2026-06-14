@@ -44,6 +44,9 @@ select = [
 
 # 忽略规则
 ignore = [
+    "RUF001", # ambiguous-unicode-character-string — 中文项目干支/五行符号不可避免
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
     "E501",  # 行长度由 format 控制
     "E402",  # module-level import not at top（部分 run.py 有合理的延迟导入）
     "E721",  # type comparison（少量历史代码）
@@ -51,6 +54,7 @@ ignore = [
     "UP007", # Optional[X] → X | None — Python 3.11 兼容但暂不强制
     "RUF012", # mutable class var annotation — dataclass 用法
     "RUF100", # unused noqa
+    "B008",   # function-call-in-default-argument — FastAPI Depends() 标准模式
 ]
 
 # 每文件忽略规则

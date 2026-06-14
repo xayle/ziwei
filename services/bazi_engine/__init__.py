@@ -29,6 +29,7 @@ services/bazi_engine — 八字命理计算引擎包（v7.0）
 O11: 统一 re-export，各 router 可使用
     from services.bazi_engine import compute_geju, compute_monthly, ...
 """
+
 from __future__ import annotations
 
 from .analysis.career import compute_career
@@ -90,4 +91,3 @@ __all__ = [
     "compute_jewelry",
     "compute_lifestyle",
 ]
-

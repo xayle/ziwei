@@ -5,6 +5,7 @@ routers/name.py — §16 姓名学分析端点
   POST /api/v1/name/analyze  — 五格数理 + 三才配置分析（无需认证）
   POST /api/v1/name/suggest  — 改名字选建议（无需认证）
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
@@ -140,4 +141,60 @@ def suggest_name_endpoint(request: Request, req: NameSuggestRequest) -> NameSugg
         preferred_elements=pref,
         total_candidates_evaluated=total,
         suggestions=items,
+    )
+
+
+# ── T3.2: 中文姓名笔画数字化 ────────────────────────────────────────────────
+
+from pydantic import BaseModel, Field
+
+
+class StrokesRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=20, description="中文姓名，如'张伟'")
+
+
+class CharStrokeInfo(BaseModel):
+    char: str
+    strokes: int
+    numerology_digit: int  # 笔画化减到1-9（保留11/22/33）
+
+
+class StrokesResponse(BaseModel):
+    name: str
+    chars: list[CharStrokeInfo]
+    total_strokes: int
+    expression_number: int  # 全名笔画总数化减
+
+
+@router.post("/strokes", response_model=StrokesResponse, summary="中文姓名笔画数字化")
+@limiter.limit("30/minute")
+def analyze_strokes_endpoint(request: Request, req: StrokesRequest) -> StrokesResponse:
+    """
+    对中文姓名逐字查询笔画数，并进行数字命理化减，输出：
+    - 每个字对应笔画数及化减后数字（1-9，保留大师数11/22/33）
+    - 全名笔画总数及表达数（Expression Number）
+
+    可配合 NumerologyView 的中文模式使用。
+    """
+    from services.name_engine.engine import get_stroke_count
+
+    def _reduce(n: int) -> int:
+        if n in (11, 22, 33):
+            return n
+        if n < 10:
+            return n
+        return _reduce(sum(int(d) for d in str(n)))
+
+    chars_info: list[CharStrokeInfo] = []
+    total = 0
+    for char in req.name:
+        s = get_stroke_count(char)
+        total += s
+        chars_info.append(CharStrokeInfo(char=char, strokes=s, numerology_digit=_reduce(s)))
+
+    return StrokesResponse(
+        name=req.name,
+        chars=chars_info,
+        total_strokes=total,
+        expression_number=_reduce(total),
     )

@@ -3,37 +3,57 @@ services/bazi_engine/analysis/marriage.py — 婚姻引擎 (M2 任务 2.03)
 
 算法规格: §4.11-C
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import MarriageAnalysisModel
 
 # 地支六冲
 _BRANCH_CHONG: dict[str, str] = {
-    "子": "午", "午": "子",
-    "丑": "未", "未": "丑",
-    "寅": "申", "申": "寅",
-    "卯": "酉", "酉": "卯",
-    "辰": "戌", "戌": "辰",
-    "巳": "亥", "亥": "巳",
+    "子": "午",
+    "午": "子",
+    "丑": "未",
+    "未": "丑",
+    "寅": "申",
+    "申": "寅",
+    "卯": "酉",
+    "酉": "卯",
+    "辰": "戌",
+    "戌": "辰",
+    "巳": "亥",
+    "亥": "巳",
 }
 
 # 地支六合
 _BRANCH_HE: dict[str, str] = {
-    "子": "丑", "丑": "子",
-    "寅": "亥", "亥": "寅",
-    "卯": "戌", "戌": "卯",
-    "辰": "酉", "酉": "辰",
-    "巳": "申", "申": "巳",
-    "午": "未", "未": "午",
+    "子": "丑",
+    "丑": "子",
+    "寅": "亥",
+    "亥": "寅",
+    "卯": "戌",
+    "戌": "卯",
+    "辰": "酉",
+    "酉": "辰",
+    "巳": "申",
+    "申": "巳",
+    "午": "未",
+    "未": "午",
 }
 
 # 地支三合（部分代表）
 _BRANCH_SANHE: dict[str, str] = {
-    "子": "水局", "辰": "水局", "申": "水局",
-    "寅": "木局", "午": "木局", "戌": "木局",
+    "子": "水局",
+    "辰": "水局",
+    "申": "水局",
+    "寅": "木局",
+    "午": "木局",
+    "戌": "木局",
     "卯": "木局",
-    "巳": "火局", "酉": "火局", "丑": "火局",
-    "亥": "水局", "未": "木局",
+    "巳": "火局",
+    "酉": "火局",
+    "丑": "火局",
+    "亥": "水局",
+    "未": "木局",
 }
 
 # 自刑支
@@ -44,38 +64,58 @@ _TAOHUA: set[str] = {"子", "午", "卯", "酉"}
 
 # 天干五行
 _STEM_ELEMENT: dict[str, str] = {
-    "甲": "wood", "乙": "wood",
-    "丙": "fire", "丁": "fire",
-    "戊": "earth", "己": "earth",
-    "庚": "metal", "辛": "metal",
-    "壬": "water", "癸": "water",
+    "甲": "wood",
+    "乙": "wood",
+    "丙": "fire",
+    "丁": "fire",
+    "戊": "earth",
+    "己": "earth",
+    "庚": "metal",
+    "辛": "metal",
+    "壬": "water",
+    "癸": "water",
 }
 
 # 地支五行
 _BRANCH_ELEMENT: dict[str, str] = {
-    "子": "water", "亥": "water",
-    "寅": "wood",  "卯": "wood",
-    "巳": "fire",  "午": "fire",
-    "申": "metal", "酉": "metal",
-    "丑": "earth", "辰": "earth", "未": "earth", "戌": "earth",
+    "子": "water",
+    "亥": "water",
+    "寅": "wood",
+    "卯": "wood",
+    "巳": "fire",
+    "午": "fire",
+    "申": "metal",
+    "酉": "metal",
+    "丑": "earth",
+    "辰": "earth",
+    "未": "earth",
+    "戌": "earth",
 }
 
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 # 配偶五行（中文）→ 英文，用于婚恋窗口匹配
 _PARTNER_WUXING_EN: dict[str, str] = {
-    "金": "metal", "木": "wood", "水": "water", "火": "fire", "土": "earth",
+    "金": "metal",
+    "木": "wood",
+    "水": "water",
+    "火": "fire",
+    "土": "earth",
 }
 
 
 def compute_marriage(
-    all_branches: list[str],      # 四柱地支列表（年支/月支/日支/时支）
-    day_branch: str,              # 日支（配偶宫）
+    all_branches: list[str],  # 四柱地支列表（年支/月支/日支/时支）
+    day_branch: str,  # 日支（配偶宫）
     shishen_scores: dict[str, float],
-    shensha_items: list[dict],    # 神煞列表（含 name/is_beneficial/dizhi）
-    gender: str,                  # "male" / "female"
+    shensha_items: list[dict],  # 神煞列表（含 name/is_beneficial/dizhi）
+    gender: str,  # "male" / "female"
     yongshen_favor: list[str],
     yongshen_avoid: list[str],
     dayun_list: list[dict],
@@ -87,8 +127,8 @@ def compute_marriage(
     total = sum(shishen_scores.values()) or 1.0
 
     guan = shishen_scores.get("正官", 0.0)
-    sha  = shishen_scores.get("七杀", 0.0)
-    cai  = shishen_scores.get("正财", 0.0) + shishen_scores.get("偏财", 0.0)
+    sha = shishen_scores.get("七杀", 0.0)
+    cai = shishen_scores.get("正财", 0.0) + shishen_scores.get("偏财", 0.0)
 
     guan_sha_pct = (guan + sha) / total
     cai_pct = cai / total
@@ -138,14 +178,10 @@ def compute_marriage(
         # 夫星=财星五行（正财/偏财）→通过日主推
         partner_shishen_cn = "财星（正财/偏财）"
         cai_wuxing_candidates = ["earth", "metal", "water"]  # 简化
-        partner_wuxing = _ELEMENT_CN.get(
-            yongshen_favor[0] if yongshen_favor else "earth", "土"
-        )
+        partner_wuxing = _ELEMENT_CN.get(yongshen_favor[0] if yongshen_favor else "earth", "土")
     else:
         partner_shishen_cn = "夫星（正官/七杀）"
-        partner_wuxing = _ELEMENT_CN.get(
-            yongshen_favor[0] if yongshen_favor else "metal", "金"
-        )
+        partner_wuxing = _ELEMENT_CN.get(yongshen_favor[0] if yongshen_favor else "metal", "金")
 
     # ─── 5. 配偶画像 ─────────────────────────────────────────────────
     _partner_personality = {
@@ -201,24 +237,23 @@ def compute_marriage(
     # ─── 8. 婚恋窗口（大运） ──────────────────────────────────────────
     marriage_windows: list[str] = []
     for dyun in dayun_list[:5]:  # 前5步大运
-        gz = dyun.get("ganzhi") or (
-            (dyun.get("stem") or "") + (dyun.get("branch") or "")
-        )
+        gz = dyun.get("ganzhi") or ((dyun.get("stem") or "") + (dyun.get("branch") or ""))
         branch = dyun.get("branch", "")
-        stem   = dyun.get("stem", "")
+        stem = dyun.get("stem", "")
         # 大支五行与配偶星五行同气或相生 → 婚期窗口
         br_el = _BRANCH_ELEMENT.get(branch, "")
         partner_el_en = _PARTNER_WUXING_EN.get(partner_wuxing, "")
         _SHENG_EN: dict[str, str] = {
-            "wood": "fire", "fire": "earth", "earth": "metal",
-            "metal": "water", "water": "wood",
+            "wood": "fire",
+            "fire": "earth",
+            "earth": "metal",
+            "metal": "water",
+            "water": "wood",
         }
-        is_window = bool(br_el and partner_el_en and (
-            br_el == partner_el_en or _SHENG_EN.get(br_el) == partner_el_en
-        ))
+        is_window = bool(br_el and partner_el_en and (br_el == partner_el_en or _SHENG_EN.get(br_el) == partner_el_en))
         if is_window:
             start_age = dyun.get("start_age", 0)
-            end_age   = dyun.get("end_age", start_age + 10)
+            end_age = dyun.get("end_age", start_age + 10)
             marriage_windows.append(f"{gz}（{start_age}-{end_age}岁）大运助婚期")
 
     # ─── 9. 子女 ─────────────────────────────────────────────────────
@@ -251,7 +286,9 @@ def compute_marriage(
         tags.append("官杀混杂")
     tags.extend(warnings)
 
-    _win_str = ("、".join(marriage_windows[:2]) + "为最佳婚恋时机，") if marriage_windows else "大运顺运期为婚恋高峰期，"
+    _win_str = (
+        ("、".join(marriage_windows[:2]) + "为最佳婚恋时机，") if marriage_windows else "大运顺运期为婚恋高峰期，"
+    )
     interp = (
         f"婚姻综合评分 {marriage_score} 分，桃花指数【{peach_blossom}】，配偶五行属【{partner_wuxing}】。"
         f"{partner_profile}"

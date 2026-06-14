@@ -4,10 +4,12 @@ app/dependencies/permissions.py — 细粒度资源权限依赖（N3.04 + N3.05�
 N3.04: require_resource_permission(resource_type, action) → Depends
 N3.05: 独立 PermissionCache，与引擎 QueryCache 物理隔离，TTL=300s
 """
+
 from __future__ import annotations
 
+from collections.abc import Callable
 import time
-from typing import Any, Callable, Optional
+from typing import Any
 
 from fastapi import Depends
 from sqlmodel import Session, select
@@ -22,6 +24,7 @@ from db import get_session
 # N3.05 — 独立权限缓存（禁止与引擎 QueryCache 共用）
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 class PermissionCache:
     """
     本地内存权限缓存。与引擎 QueryCache 物理隔离：
@@ -29,11 +32,12 @@ class PermissionCache:
       - Cache key 空间不同，无命名冲突风险
     TTL 默认 300 秒（5 分钟）。
     """
+
     def __init__(self, ttl: int = 300) -> None:
         self._cache: dict[str, tuple[Any, float]] = {}
         self._ttl = ttl
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """返回缓存值；已过期或不存在则返回 None。"""
         entry = self._cache.get(key)
         if entry is None:
@@ -73,6 +77,7 @@ def get_permission_cache() -> PermissionCache:
 # N3.04 — 细粒度资源权限依赖
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def require_resource_permission(
     resource_type: str,
     action: str,
@@ -94,7 +99,7 @@ def require_resource_permission(
     permission_type = f"{action}_{resource_type}"
 
     def _check(
-        current_user: Optional[User] = Depends(get_current_user),
+        current_user: User | None = Depends(get_current_user),
         session: Session = Depends(get_session),
     ) -> None:
         if current_user is None:

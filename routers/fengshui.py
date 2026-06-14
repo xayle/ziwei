@@ -6,10 +6,10 @@ routers/fengshui.py — §15 风水方位助手端点
     GET  /api/v1/fengshui/options        — 返回前端所需的可选项（朝向列表等）
     POST /api/v1/fengshui/room-layout    — 九宫格房间布局评估（v8.8.0）
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
 
@@ -46,6 +46,7 @@ _VALID_FACINGS = set(HOUSE_FACING_OPTIONS.keys()) | {""}
 # GET /api/v1/fengshui/options
 # ─────────────────────────────────────────────────────────────
 
+
 @router.get(
     "/options",
     summary="获取风水助手可选项（朝向列表等）",
@@ -63,6 +64,7 @@ def get_options() -> dict:
 # ─────────────────────────────────────────────────────────────
 # GET /api/v1/fengshui/bagua
 # ─────────────────────────────────────────────────────────────
+
 
 @router.get(
     "/bagua",
@@ -84,7 +86,7 @@ def get_options() -> dict:
 def get_bagua(
     birth_year: int = Query(..., ge=1900, le=2100, description="出生公历年份"),
     gender: str = Query(..., description="性别：男 / 女"),
-    house_facing: Optional[str] = Query(default=None, description="房屋朝向（可选）：N/NE/E/SE/S/SW/W/NW"),
+    house_facing: str | None = Query(default=None, description="房屋朝向（可选）：N/NE/E/SE/S/SW/W/NW"),
 ) -> BaguaResponse:
     # 参数校验
     if gender not in _VALID_GENDERS:
@@ -135,12 +137,15 @@ def get_bagua(
         for d in result.inauspicious
     ]
 
-    def _tip_resp(t) -> Optional[FurnitureTipResponse]:
+    def _tip_resp(t) -> FurnitureTipResponse | None:
         if t is None:
             return None
         return FurnitureTipResponse(
-            item=t.item, direction=t.direction, direction_zh=t.direction_zh,
-            label=t.label, reason=t.reason,
+            item=t.item,
+            direction=t.direction,
+            direction_zh=t.direction_zh,
+            label=t.label,
+            reason=t.reason,
         )
 
     return BaguaResponse(
@@ -219,10 +224,10 @@ def room_layout_assess(payload: RoomLayoutRequest) -> RoomLayoutResponse:
 
     try:
         result = assess_room_layout(
-            birth_year   = payload.birth_year,
-            gender       = payload.gender,
-            rooms        = payload.rooms,
-            house_facing = payload.house_facing or None,
+            birth_year=payload.birth_year,
+            gender=payload.gender,
+            rooms=payload.rooms,
+            house_facing=payload.house_facing or None,
         )
     except Exception as exc:
         logger.exception("房间布局评估异常: %s", exc)
@@ -233,26 +238,26 @@ def room_layout_assess(payload: RoomLayoutRequest) -> RoomLayoutResponse:
 
     cells = [
         ZoneAssessmentResponse(
-            direction    = c.direction,
-            direction_zh = c.direction_zh,
-            label        = c.label,
-            level_css    = c.level_css,
-            room_type    = c.room_type,
-            room_zh      = c.room_zh,
-            assess_level = c.assess_level,
-            assess_score = c.assess_score,
-            assess_note  = c.assess_note,
+            direction=c.direction,
+            direction_zh=c.direction_zh,
+            label=c.label,
+            level_css=c.level_css,
+            room_type=c.room_type,
+            room_zh=c.room_zh,
+            assess_level=c.assess_level,
+            assess_score=c.assess_score,
+            assess_note=c.assess_note,
         )
         for c in result.cells
     ]
 
     return RoomLayoutResponse(
-        life_gua    = result.life_gua,
-        gua_name    = result.gua_name,
-        score       = result.score,
-        grade       = result.grade,
-        grade_css   = result.grade_css,
-        cells       = cells,
-        suggestions = result.suggestions,
-        disclaimer  = result.disclaimer,
+        life_gua=result.life_gua,
+        gua_name=result.gua_name,
+        score=result.score,
+        grade=result.grade,
+        grade_css=result.grade_css,
+        cells=cells,
+        suggestions=result.suggestions,
+        disclaimer=result.disclaimer,
     )

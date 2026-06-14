@@ -22,13 +22,12 @@ services/ziwei_engine/stars_main.py — 14主星布局
 
 三、其余星位 = 紫微/天府 + 固定偏移 (见 tables.py)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .tables import (
-    ALL_MAIN_STARS,
     BRANCHES,
     TIANFU_OFFSETS,
     ZIWEI_OFFSETS,
@@ -39,10 +38,10 @@ from .tables import (
 @dataclass
 class StarPosition:
     name: str
-    branch_idx: int          # 所在地支索引 (子=0…亥=11)
-    branch: str              # 地支名
-    brightness_val: int      # 亮度值 5庙…0陷
-    brightness: str          # 亮度名
+    branch_idx: int  # 所在地支索引 (子=0…亥=11)
+    branch: str  # 地支名
+    brightness_val: int  # 亮度值 5庙…0陷
+    brightness: str  # 亮度名
     transforms: list[str] = field(default_factory=list)  # 化禄/化权/化科/化忌
 
 
@@ -55,13 +54,13 @@ def _place_ziwei(day: int, ju: int) -> int:
     """
     q, r = divmod(day, ju)
     if r == 0:
-        return (2 + q - 1) % 12   # 寅(2) + q - 1
+        return (2 + q - 1) % 12  # 寅(2) + q - 1
 
     # 奇数步向前加，偶数步向后减（奇加偶减正统算法）
     for step in range(1, 31):
-        if step % 2 == 1:          # 奇数步：day + step
+        if step % 2 == 1:  # 奇数步：day + step
             candidate = day + step
-        else:                       # 偶数步：day - step
+        else:  # 偶数步：day - step
             candidate = day - step
         if candidate > 0 and candidate % ju == 0:
             return (2 + candidate // ju - 1) % 12
@@ -98,8 +97,11 @@ def place_main_stars(
         b = (ziwei_b + offset) % 12
         bv, bn = get_brightness(name, b, brightness_method)
         result[name] = StarPosition(
-            name=name, branch_idx=b, branch=BRANCHES[b],
-            brightness_val=bv, brightness=bn,
+            name=name,
+            branch_idx=b,
+            branch=BRANCHES[b],
+            brightness_val=bv,
+            brightness=bn,
         )
 
     # 天府系（8星）
@@ -107,8 +109,11 @@ def place_main_stars(
         b = (tianfu_b + offset) % 12
         bv, bn = get_brightness(name, b, brightness_method)
         result[name] = StarPosition(
-            name=name, branch_idx=b, branch=BRANCHES[b],
-            brightness_val=bv, brightness=bn,
+            name=name,
+            branch_idx=b,
+            branch=BRANCHES[b],
+            brightness_val=bv,
+            brightness=bn,
         )
 
     return result

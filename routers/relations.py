@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Iterable
+from collections.abc import Iterable
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -34,35 +35,53 @@ router = APIRouter(prefix="/api/v1/relations", tags=["relations"])
 
 
 _CLASH = {
-    ("子", "午"), ("午", "子"),
-    ("丑", "未"), ("未", "丑"),
-    ("寅", "申"), ("申", "寅"),
-    ("卯", "酉"), ("酉", "卯"),
-    ("辰", "戌"), ("戌", "辰"),
-    ("巳", "亥"), ("亥", "巳"),
+    ("子", "午"),
+    ("午", "子"),
+    ("丑", "未"),
+    ("未", "丑"),
+    ("寅", "申"),
+    ("申", "寅"),
+    ("卯", "酉"),
+    ("酉", "卯"),
+    ("辰", "戌"),
+    ("戌", "辰"),
+    ("巳", "亥"),
+    ("亥", "巳"),
 }
 
 _HARM = {
-    ("子", "未"), ("未", "子"),
-    ("丑", "午"), ("午", "丑"),
-    ("寅", "巳"), ("巳", "寅"),
-    ("卯", "辰"), ("辰", "卯"),
-    ("申", "亥"), ("亥", "申"),
-    ("酉", "戌"), ("戌", "酉"),
+    ("子", "未"),
+    ("未", "子"),
+    ("丑", "午"),
+    ("午", "丑"),
+    ("寅", "巳"),
+    ("巳", "寅"),
+    ("卯", "辰"),
+    ("辰", "卯"),
+    ("申", "亥"),
+    ("亥", "申"),
+    ("酉", "戌"),
+    ("戌", "酉"),
 }
 
 _COMBINE = {
-    ("子", "丑"), ("丑", "子"),
-    ("寅", "亥"), ("亥", "寅"),
-    ("卯", "戌"), ("戌", "卯"),
-    ("辰", "酉"), ("酉", "辰"),
-    ("巳", "申"), ("申", "巳"),
-    ("午", "未"), ("未", "午"),
+    ("子", "丑"),
+    ("丑", "子"),
+    ("寅", "亥"),
+    ("亥", "寅"),
+    ("卯", "戌"),
+    ("戌", "卯"),
+    ("辰", "酉"),
+    ("酉", "辰"),
+    ("巳", "申"),
+    ("申", "巳"),
+    ("午", "未"),
+    ("未", "午"),
 }
 
 
 def _now_utc() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _parse_dt_local(dt_local: str, tz: str) -> datetime:
@@ -151,22 +170,34 @@ def _score_elements(a: RelationProfile, b: RelationProfile) -> tuple[list[Relati
     conflicts: list[RelationPoint] = []
 
     if a.dominant_element and a.dominant_element in b.yongshen_favor:
-        supports.append(RelationPoint(tag="favor", detail=f"{a.name}主用元素 {a.dominant_element} 扶助 {b.name}", weight=12))
+        supports.append(
+            RelationPoint(tag="favor", detail=f"{a.name}主用元素 {a.dominant_element} 扶助 {b.name}", weight=12)
+        )
     if b.dominant_element and b.dominant_element in a.yongshen_favor:
-        supports.append(RelationPoint(tag="favor", detail=f"{b.name}主用元素 {b.dominant_element} 扶助 {a.name}", weight=12))
+        supports.append(
+            RelationPoint(tag="favor", detail=f"{b.name}主用元素 {b.dominant_element} 扶助 {a.name}", weight=12)
+        )
 
     if a.dominant_element and a.dominant_element in b.yongshen_avoid:
-        conflicts.append(RelationPoint(tag="avoid", detail=f"{a.name}主用元素 {a.dominant_element} 被 {b.name}忌讳", weight=-12))
+        conflicts.append(
+            RelationPoint(tag="avoid", detail=f"{a.name}主用元素 {a.dominant_element} 被 {b.name}忌讳", weight=-12)
+        )
     if b.dominant_element and b.dominant_element in a.yongshen_avoid:
-        conflicts.append(RelationPoint(tag="avoid", detail=f"{b.name}主用元素 {b.dominant_element} 被 {a.name}忌讳", weight=-12))
+        conflicts.append(
+            RelationPoint(tag="avoid", detail=f"{b.name}主用元素 {b.dominant_element} 被 {a.name}忌讳", weight=-12)
+        )
 
     shared_favor = set(a.yongshen_favor) & set(b.yongshen_favor)
     if shared_favor:
-        supports.append(RelationPoint(tag="shared_favor", detail=f"共同喜用: {', '.join(sorted(shared_favor))}", weight=8))
+        supports.append(
+            RelationPoint(tag="shared_favor", detail=f"共同喜用: {', '.join(sorted(shared_favor))}", weight=8)
+        )
 
     shared_avoid = set(a.yongshen_avoid) & set(b.yongshen_avoid)
     if shared_avoid:
-        conflicts.append(RelationPoint(tag="shared_avoid", detail=f"共同忌神: {', '.join(sorted(shared_avoid))}", weight=-6))
+        conflicts.append(
+            RelationPoint(tag="shared_avoid", detail=f"共同忌神: {', '.join(sorted(shared_avoid))}", weight=-6)
+        )
 
     # Balance gap on five elements
     if a.wuxing_score and b.wuxing_score:
@@ -181,7 +212,9 @@ def _score_elements(a: RelationProfile, b: RelationProfile) -> tuple[list[Relati
     return supports, conflicts
 
 
-def _score_branches(branches_a: Iterable[str], branches_b: Iterable[str]) -> tuple[list[RelationPoint], list[RelationPoint]]:
+def _score_branches(
+    branches_a: Iterable[str], branches_b: Iterable[str]
+) -> tuple[list[RelationPoint], list[RelationPoint]]:
     supports: list[RelationPoint] = []
     conflicts: list[RelationPoint] = []
     for ba in branches_a:
@@ -195,7 +228,9 @@ def _score_branches(branches_a: Iterable[str], branches_b: Iterable[str]) -> tup
     return supports, conflicts
 
 
-def _aggregate_score(supports: list[RelationPoint], conflicts: list[RelationPoint], relation_type: str) -> tuple[float, str]:
+def _aggregate_score(
+    supports: list[RelationPoint], conflicts: list[RelationPoint], relation_type: str
+) -> tuple[float, str]:
     base = 60.0
     support_score = sum(p.weight for p in supports)
     conflict_score = sum(abs(p.weight) for p in conflicts)

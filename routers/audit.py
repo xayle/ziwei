@@ -1,9 +1,10 @@
 """
 审计日志路由 - 查看操作历史和安全审计
 """
-from datetime import datetime
+
+from datetime import UTC, datetime
 import json
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, model_validator
@@ -27,28 +28,27 @@ router = APIRouter(prefix="/api/v1", tags=["audit"])
 
 class AuditLogResponse(BaseModel):
     """审计日志响应（N3.06：新增 RBAC 操作关键字段）"""
+
     id: int
     user_id: int
     action: str
     resource_type: str
-    resource_id: Optional[str]
-    details: Optional[str]
-    ip_address: Optional[str]
-    user_agent: Optional[str]
+    resource_id: str | None
+    details: str | None
+    ip_address: str | None
+    user_agent: str | None
     status: str
-    error_message: Optional[str]
+    error_message: str | None
     created_at: datetime
     # N3.06 新增字段：从 details JSON 提取，approve/reject/revoke 操作可用
-    old_status: Optional[str] = None
-    new_status: Optional[str] = None
-    operator_id: Optional[int] = None
+    old_status: str | None = None
+    new_status: str | None = None
+    operator_id: int | None = None
 
     @model_validator(mode="after")  # type: ignore[misc]
     def _extract_rbac_fields(self) -> "AuditLogResponse":
         """从 details JSON 中提取 RBAC 关键字段（仅在字段未显式设置时）"""
-        if self.details and self.action in (
-            "approve_permission", "reject_permission", "revoke_permission"
-        ):
+        if self.details and self.action in ("approve_permission", "reject_permission", "revoke_permission"):
             try:
                 d: dict[str, Any] = json.loads(self.details)
                 if self.old_status is None:
@@ -67,10 +67,10 @@ class AuditLogResponse(BaseModel):
 def get_user_audit_logs(
     current_user: RequiredUser,
     session: Session = Depends(get_session),
-    action: Optional[str] = Query(None, description="按操作类型过滤"),
-    resource_type: Optional[str] = Query(None, description="按资源类型过滤"),
+    action: str | None = Query(None, description="按操作类型过滤"),
+    resource_type: str | None = Query(None, description="按资源类型过滤"),
     limit: int = Query(50, ge=1, le=200, description="返回数量限制"),
-    before_id: Optional[int] = Query(None, description="keyset 分页游标：仅返回 id 小于此值的记录"),
+    before_id: int | None = Query(None, description="keyset 分页游标：仅返回 id 小于此值的记录"),
 ):
     """
     获取当前用户的审计日志（keyset 分页：传入 next_cursor 作为下次 before_id）
@@ -127,11 +127,11 @@ def get_user_audit_logs(
 def get_all_audit_logs(
     current_user: RequiredUser,
     session: Session = Depends(get_session),
-    user_id: Optional[int] = Query(None, description="按用户过滤"),
-    action: Optional[str] = Query(None, description="按操作类型过滤"),
-    resource_type: Optional[str] = Query(None, description="按资源类型过滤"),
+    user_id: int | None = Query(None, description="按用户过滤"),
+    action: str | None = Query(None, description="按操作类型过滤"),
+    resource_type: str | None = Query(None, description="按资源类型过滤"),
     limit: int = Query(100, ge=1, le=1000, description="返回数量限制"),
-    before_id: Optional[int] = Query(None, description="keyset 分页游标：仅返回 id 小于此值的记录"),
+    before_id: int | None = Query(None, description="keyset 分页游标：仅返回 id 小于此值的记录"),
 ):
     """
     获取全局审计日志 - 仅限管理员或具有VIEW_AUDIT_LOG权限（keyset 分页）
@@ -203,20 +203,20 @@ def get_audit_log_detail(
     log = session.exec(
         select(AuditLog).where(AuditLog.id == log_id, AuditLog.deleted_at.is_(None))  # type: ignore[union-attr]
     ).first()
-    
+
     if not log:
         raise ResourceNotFoundException(
             message="Audit log not found",
             details={"resource_type": "audit_log", "resource_id": log_id},
         )
-    
+
     # 用户只能查看自己的日志，除非是管理员
     if log.user_id != current_user.id and not current_user.is_admin:
         raise AuthorizationException(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
             message="Access denied",
         )
-    
+
     return AuditLogResponse(
         id=log.id or 0,
         user_id=log.user_id or 0,
@@ -234,9 +234,10 @@ def get_audit_log_detail(
 
 class ManualAuditLogRequest(BaseModel):
     """手动审计日志请求体"""
+
     action: str
     resource_type: str
-    resource_id: Optional[str] = None
+    resource_id: str | None = None
 
 
 @router.post("/audit-logs/manual")
@@ -260,7 +261,7 @@ def log_manual_action(
         resource_id=resource_id,
         details={"manual": True},
     )
-    
+
     return AuditLogResponse(
         id=log.id or 0,
         user_id=log.user_id or 0,
@@ -292,8 +293,6 @@ def admin_stats(
             message="Permission denied: admin required",
         )
 
-    from datetime import timezone
-
     from app.models.api_key import ApiKey
     from app.models.case import Case, Snapshot
     from app.models.chart_case import ChartCase
@@ -306,26 +305,26 @@ def admin_stats(
             stmt = stmt.where(f)
         return session.exec(stmt).one() or 0
 
-    total_users: int   = _count(User, User.deleted_at.is_(None))  # type: ignore[attr-defined]
-    active_users: int  = _count(User, User.deleted_at.is_(None), User.is_active.is_(True))  # type: ignore[attr-defined]
+    total_users: int = _count(User, User.deleted_at.is_(None))  # type: ignore[attr-defined]
+    active_users: int = _count(User, User.deleted_at.is_(None), User.is_active.is_(True))  # type: ignore[attr-defined]
     total_audit_logs: int = _count(AuditLog, AuditLog.deleted_at.is_(None))  # type: ignore[attr-defined]
-    total_cases:     int  = _count(Case,      Case.deleted_at.is_(None))  # type: ignore[attr-defined]
-    total_snapshots: int  = _count(Snapshot,  Snapshot.deleted_at.is_(None))  # type: ignore[attr-defined]
+    total_cases: int = _count(Case, Case.deleted_at.is_(None))  # type: ignore[attr-defined]
+    total_snapshots: int = _count(Snapshot, Snapshot.deleted_at.is_(None))  # type: ignore[attr-defined]
     total_chart_cases: int = _count(ChartCase, ChartCase.deleted_at.is_(None))  # type: ignore[attr-defined]
 
     # 审核统计
-    review_pending:  int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "pending")  # type: ignore[attr-defined]
+    review_pending: int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "pending")  # type: ignore[attr-defined]
     review_approved: int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "approved")  # type: ignore[attr-defined]
     review_rejected: int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "rejected")  # type: ignore[attr-defined]
-    review_revised:  int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "revised")  # type: ignore[attr-defined]
+    review_revised: int = _count(ChartReview, ChartReview.deleted_at.is_(None), ChartReview.status == "revised")  # type: ignore[attr-defined]
 
     # API Key 统计
-    total_api_keys:  int = _count(ApiKey, ApiKey.revoked_at.is_(None))  # type: ignore[attr-defined]
+    total_api_keys: int = _count(ApiKey, ApiKey.revoked_at.is_(None))  # type: ignore[attr-defined]
 
     # 实验统计
-    total_experiments: int          = _count(Experiment)
-    running_experiments: int        = _count(Experiment, Experiment.status == "running")  # type: ignore[attr-defined]
-    total_experiment_events: int    = _count(ExperimentEvent)
+    total_experiments: int = _count(Experiment)
+    running_experiments: int = _count(Experiment, Experiment.status == "running")  # type: ignore[attr-defined]
+    total_experiment_events: int = _count(ExperimentEvent)
 
     # 最活跃格局（前 5）
     top_patterns: list[dict] = []
@@ -336,6 +335,7 @@ def admin_stats(
             .where(ChartCase.pattern_summary != "")
         ).all()
         from collections import Counter
+
         pctr: Counter = Counter()
         for row in pattern_rows:
             for pn in row.split(","):
@@ -386,5 +386,5 @@ def admin_stats(
         },
         "top_patterns": top_patterns,
         "top_wuxing": top_wuxing,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
     }

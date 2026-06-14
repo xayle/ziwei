@@ -1,7 +1,8 @@
 """Relation compatibility schemas."""
+
 from __future__ import annotations
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -22,8 +23,8 @@ class RelationPoint(BaseModel):
 
 class RelationProfile(BaseModel):
     case_id: str
-    name: Optional[str] = None
-    dominant_element: Optional[str] = None
+    name: str | None = None
+    dominant_element: str | None = None
     yongshen_favor: list[str] = Field(default_factory=list)
     yongshen_avoid: list[str] = Field(default_factory=list)
     wuxing_score: dict[str, float] = Field(default_factory=dict)
@@ -35,7 +36,7 @@ class RelationResult(BaseModel):
     summary: str
     support_points: list[RelationPoint] = Field(default_factory=list)
     conflict_points: list[RelationPoint] = Field(default_factory=list)
-    advice: Optional[str] = None
+    advice: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
 
 

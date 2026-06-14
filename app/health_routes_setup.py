@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import importlib.metadata as _imeta
 import time
-from typing import Callable
 from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Response
@@ -63,7 +63,7 @@ def configure_health_routes(
                 "timestamp": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(),
             }
         except Exception as e:
-            logger.error(f"Ready check failed: {str(e)}")
+            logger.error(f"Ready check failed: {e!s}")
             response.status_code = 500
             return {
                 "status": "not_ready",

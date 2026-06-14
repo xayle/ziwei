@@ -3,11 +3,11 @@
 This file intentionally contains no rule duplication. It only adapts upstream
 libraries into the shared `Pillars` shape used by boundary/validation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 from zoneinfo import ZoneInfo
 
 from boundary import Pillar, Pillars
@@ -24,10 +24,10 @@ class BackendUnavailable(RuntimeError):
 import threading as _threading
 
 _SXTWL_BACKEND_LOCK: _threading.Lock = _threading.Lock()
-_SXTWL_BACKEND_INSTANCE: "Optional[SxtwlBackend]" = None
+_SXTWL_BACKEND_INSTANCE: SxtwlBackend | None = None
 
 
-def get_sxtwl_backend() -> "SxtwlBackend":
+def get_sxtwl_backend() -> SxtwlBackend:
     """返回全局单例 SxtwlBackend；首次调用时构造，后续复用。"""
     global _SXTWL_BACKEND_INSTANCE
     if _SXTWL_BACKEND_INSTANCE is None:
@@ -156,7 +156,7 @@ class SxtwlBackend:
         self._assert_pillars_sane(pillars, dt_local)  # B3: 静默错误检测
         return pillars
 
-    def get_jieqi_context(self, dt_utc8) -> Optional[JieqiContext]:
+    def get_jieqi_context(self, dt_utc8) -> JieqiContext | None:
         dt_local = _ensure_tz(dt_utc8)
         year = dt_local.year
         candidates = []
@@ -238,7 +238,7 @@ def get_pillars(dt_utc8, backend: str = "sxtwl") -> Pillars:
     raise ValueError(f"Unsupported backend: {backend}")
 
 
-def get_jieqi_context(dt_utc8) -> Optional[JieqiContext]:
+def get_jieqi_context(dt_utc8) -> JieqiContext | None:
     """Return jieqi context if backend supports it (sxtwl)."""
     try:
         return SxtwlBackend().get_jieqi_context(dt_utc8)

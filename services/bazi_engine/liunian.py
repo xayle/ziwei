@@ -15,9 +15,8 @@ services/bazi_engine/liunian.py — 流年排盘（M1 任务 1.08）
   6. 合太岁  (六合 LIU_HE)
   7. None   (无特殊关系)
 """
-from __future__ import annotations
 
-from typing import Optional
+from __future__ import annotations
 
 from services.bazi_engine.tables import (
     BRANCH_CHONG,
@@ -34,35 +33,47 @@ from services.bazi_engine.tables import (
 
 # 六害: branch → 与其相害的branch
 LIU_HAI: dict[str, str] = {
-    "子": "未", "未": "子",
-    "丑": "午", "午": "丑",
-    "寅": "巳", "巳": "寅",
-    "卯": "辰", "辰": "卯",
-    "申": "亥", "亥": "申",
-    "酉": "戌", "戌": "酉",
+    "子": "未",
+    "未": "子",
+    "丑": "午",
+    "午": "丑",
+    "寅": "巳",
+    "巳": "寅",
+    "卯": "辰",
+    "辰": "卯",
+    "申": "亥",
+    "亥": "申",
+    "酉": "戌",
+    "戌": "酉",
 }
 
 # 六破: branch → 与其相破的branch
 LIU_PO: dict[str, str] = {
-    "子": "酉", "酉": "子",
-    "丑": "辰", "辰": "丑",
-    "寅": "亥", "亥": "寅",
-    "卯": "午", "午": "卯",
-    "巳": "申", "申": "巳",
-    "未": "戌", "戌": "未",
+    "子": "酉",
+    "酉": "子",
+    "丑": "辰",
+    "辰": "丑",
+    "寅": "亥",
+    "亥": "寅",
+    "卯": "午",
+    "午": "卯",
+    "巳": "申",
+    "申": "巳",
+    "未": "戌",
+    "戌": "未",
 }
 
 # 三刑: branch → set(与其相刑的branch)
 SAN_XING: dict[str, set[str]] = {
-    "寅": {"申", "巳"},   # 寅刑申(无礼之刑)部分; 实际寅申巳三刑
+    "寅": {"申", "巳"},  # 寅刑申(无礼之刑)部分; 实际寅申巳三刑
     "巳": {"申", "寅"},
     "申": {"寅", "巳"},
-    "丑": {"戌", "未"},   # 丑戌未三刑
+    "丑": {"戌", "未"},  # 丑戌未三刑
     "戌": {"丑", "未"},
     "未": {"丑", "戌"},
-    "子": {"卯"},          # 子卯相刑（无礼之刑）
+    "子": {"卯"},  # 子卯相刑（无礼之刑）
     "卯": {"子"},
-    "辰": {"辰"},          # 辰午酉亥自刑
+    "辰": {"辰"},  # 辰午酉亥自刑
     "午": {"午"},
     "酉": {"酉"},
     "亥": {"亥"},
@@ -72,6 +83,7 @@ SAN_XING: dict[str, set[str]] = {
 # ──────────────────────────────────────────────────────────────────────────────
 # 干支工具
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def _ganzhi_of_year(year: int) -> tuple[str, str]:
     """给定公历年份返回干支 (甲子=1984年为基准)"""
@@ -85,7 +97,8 @@ def _ganzhi_of_year(year: int) -> tuple[str, str]:
 # 流年与日柱关系
 # ──────────────────────────────────────────────────────────────────────────────
 
-def _liunian_day_relation(liunian_branch: str, day_branch: str) -> Optional[str]:
+
+def _liunian_day_relation(liunian_branch: str, day_branch: str) -> str | None:
     """判断流年支与日支的犯太岁关系"""
     if liunian_branch == day_branch:
         return "值太岁"
@@ -105,6 +118,7 @@ def _liunian_day_relation(liunian_branch: str, day_branch: str) -> Optional[str]
 # ──────────────────────────────────────────────────────────────────────────────
 # 主函数
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def compute_liunian(
     day_stem: str,
@@ -137,14 +151,16 @@ def compute_liunian(
         ten_god = get_ten_god(day_stem, stem)
         stem_elem, _ = STEM_ELEMENT.get(stem, ("?", "?"))
         clash = _liunian_day_relation(branch, day_branch)
-        results.append({
-            "year": year,
-            "stem": stem,
-            "branch": branch,
-            "ten_god": ten_god,
-            "flow_wuxing": stem_elem,
-            "clash": clash,
-        })
+        results.append(
+            {
+                "year": year,
+                "stem": stem,
+                "branch": branch,
+                "ten_god": ten_god,
+                "flow_wuxing": stem_elem,
+                "clash": clash,
+            }
+        )
     return results
 
 

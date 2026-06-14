@@ -2,7 +2,7 @@
 OpenAPI 文档增强和自动生成
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
@@ -14,19 +14,20 @@ from app.exceptions import ErrorCode
 # API 文档增强
 # ============================================================================
 
-def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
+
+def get_openapi_with_error_schemas(app: FastAPI) -> dict[str, Any]:
     """
     获取增强的 OpenAPI schema，包含标准错误定义
-    
+
     Args:
         app: FastAPI 应用实例
-    
+
     Returns:
         增强的 OpenAPI schema
     """
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     # 获取默认的 OpenAPI schema
     # openapi_version 固定 3.0.3：swagger-ui 4.x 不支持 3.1.0
     openapi_schema = get_openapi(
@@ -36,14 +37,14 @@ def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
         description=app.description,
         routes=app.routes,
     )
-    
+
     # 添加标准错误响应定义
     if "components" not in openapi_schema:
         openapi_schema["components"] = {}
-    
+
     if "schemas" not in openapi_schema["components"]:
         openapi_schema["components"]["schemas"] = {}
-    
+
     # 添加错误响应模型
     openapi_schema["components"]["schemas"]["ErrorResponse"] = {
         "type": "object",
@@ -72,7 +73,7 @@ def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
         },
         "required": ["error"],
     }
-    
+
     # 添加常见错误响应
     openapi_schema["components"]["responses"] = {
         "UnauthorizedError": {
@@ -147,16 +148,16 @@ def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
             },
         },
     }
-    
+
     # 为每个路由添加标准错误响应
     for path, methods in openapi_schema.get("paths", {}).items():
         for method, operation in methods.items():
             if method not in ["get", "post", "put", "delete", "patch"]:
                 continue
-            
+
             if "responses" not in operation:
                 operation["responses"] = {}
-            
+
             # 添加常见错误响应
             common_responses = {
                 "400": {"$ref": "#/components/responses/ValidationError"},
@@ -165,12 +166,12 @@ def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
                 "404": {"$ref": "#/components/responses/NotFoundError"},
                 "500": {"$ref": "#/components/responses/InternalServerError"},
             }
-            
+
             # 仅添加未定义的响应
             for status_code, response in common_responses.items():
                 if status_code not in operation["responses"]:
                     operation["responses"][status_code] = response
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -179,15 +180,16 @@ def get_openapi_with_error_schemas(app: FastAPI) -> Dict[str, Any]:
 # 文档字符串增强
 # ============================================================================
 
+
 class APIEndpointDoc:
     """API 端点文档增强工具"""
-    
+
     @staticmethod
     def success_response(
         status_code: int = 200,
         description: str = "Success",
-        schema: Optional[BaseModel] = None,
-    ) -> Dict[str, Any]:
+        schema: BaseModel | None = None,
+    ) -> dict[str, Any]:
         """生成成功响应文档"""
         return {
             str(status_code): {
@@ -195,13 +197,13 @@ class APIEndpointDoc:
                 **({"content": {"application/json": {"schema": schema}}} if schema else {}),
             }
         }
-    
+
     @staticmethod
     def error_response(
         status_code: int,
         description: str,
         error_code: ErrorCode,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """生成错误响应文档"""
         return {
             str(status_code): {
@@ -225,9 +227,10 @@ class APIEndpointDoc:
 # 服务文档生成
 # ============================================================================
 
+
 class ServiceDocGenerator:
     """服务类文档自动生成"""
-    
+
     @staticmethod
     def generate_service_doc(
         service_class,
@@ -236,17 +239,17 @@ class ServiceDocGenerator:
     ) -> str:
         """为服务类生成 Markdown 文档"""
         doc = f"# {title}\n\n{description}\n\n"
-        
+
         # 获取公共方法
         methods = [m for m in dir(service_class) if not m.startswith("_") and callable(getattr(service_class, m))]
-        
+
         if methods:
             doc += "## Methods\n\n"
             for method_name in methods:
                 method = getattr(service_class, method_name)
                 if method.__doc__:
                     doc += f"### {method_name}\n\n{method.__doc__}\n\n"
-        
+
         return doc
 
 
@@ -254,28 +257,29 @@ class ServiceDocGenerator:
 # API 版本管理
 # ============================================================================
 
+
 class APIVersionManager:
     """API 版本管理器"""
-    
+
     def __init__(self):
         self.api_versions = {}
-    
+
     def register_version(self, version: str, description: str, deprecated: bool = False):
         """注册 API 版本"""
         self.api_versions[version] = {
             "description": description,
             "deprecated": deprecated,
         }
-    
-    def get_versions(self) -> Dict[str, Dict[str, Any]]:
+
+    def get_versions(self) -> dict[str, dict[str, Any]]:
         """获取所有 API 版本"""
         return self.api_versions
-    
-    def add_version_info_to_openapi(self, openapi_schema: Dict[str, Any]) -> Dict[str, Any]:
+
+    def add_version_info_to_openapi(self, openapi_schema: dict[str, Any]) -> dict[str, Any]:
         """在 OpenAPI schema 中添加版本信息"""
         if "info" not in openapi_schema:
             openapi_schema["info"] = {}
-        
+
         openapi_schema["info"]["x-api-versions"] = self.api_versions
         return openapi_schema
 
@@ -283,6 +287,7 @@ class APIVersionManager:
 # ============================================================================
 # Swagger UI 自定义配置
 # ============================================================================
+
 
 def get_swagger_ui_html_custom() -> str:
     """自定义 Swagger UI HTML"""
@@ -320,19 +325,22 @@ def get_swagger_ui_html_custom() -> str:
 # API 文档生成函数
 # ============================================================================
 
+
 def setup_openapi_docs(app: FastAPI) -> None:
     """为 FastAPI 应用设置增强的 OpenAPI 文档"""
-    
+
     @app.get("/openapi.json", include_in_schema=False)
     def get_openapi():
         return get_openapi_with_error_schemas(app)
-    
+
     # 版本管理器
     version_manager = APIVersionManager()
     version_manager.register_version("v1", "初始版本（已废弃，将于 2026-12-31 停止支持）", deprecated=True)
-    version_manager.register_version("v2", "当前稳定版本：新增 output_format 精简响应、meta 信封（R38）、批量排盘（R39）")
-    
+    version_manager.register_version(
+        "v2", "当前稳定版本：新增 output_format 精简响应、meta 信封（R38）、批量排盘（R39）"
+    )
+
     openapi_schema = get_openapi_with_error_schemas(app)
     openapi_schema = version_manager.add_version_info_to_openapi(openapi_schema)
-    
+
     app.openapi_schema = openapi_schema

@@ -11,6 +11,7 @@ services/ziwei_engine/compatibility.py — 紫微斗数合盘六合度分析
 公开接口：
   from .compatibility import calc_compatibility, CompatibilityResult
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -23,20 +24,30 @@ from .tables import BRANCHES
 
 # 六合对：子丑 寅亥 卯戌 辰酉 巳申 午未
 _LIUHE: list[frozenset] = [
-    frozenset({0, 1}), frozenset({2, 11}), frozenset({3, 10}),
-    frozenset({4, 9}), frozenset({5, 8}),  frozenset({6, 7}),
+    frozenset({0, 1}),
+    frozenset({2, 11}),
+    frozenset({3, 10}),
+    frozenset({4, 9}),
+    frozenset({5, 8}),
+    frozenset({6, 7}),
 ]
 
 # 三合局：申子辰 寅午戌 亥卯未 巳酉丑
 _SANHE: list[frozenset] = [
-    frozenset({8, 0, 4}), frozenset({2, 6, 10}),
-    frozenset({11, 3, 7}), frozenset({5, 9, 1}),
+    frozenset({8, 0, 4}),
+    frozenset({2, 6, 10}),
+    frozenset({11, 3, 7}),
+    frozenset({5, 9, 1}),
 ]
 
 # 六冲对：子午 丑未 寅申 卯酉 辰戌 巳亥
 _CHONG: list[frozenset] = [
-    frozenset({0, 6}), frozenset({1, 7}), frozenset({2, 8}),
-    frozenset({3, 9}), frozenset({4, 10}), frozenset({5, 11}),
+    frozenset({0, 6}),
+    frozenset({1, 7}),
+    frozenset({2, 8}),
+    frozenset({3, 9}),
+    frozenset({4, 10}),
+    frozenset({5, 11}),
 ]
 
 
@@ -81,6 +92,7 @@ def _wx_relation(wx_a: str, wx_b: str) -> str:
 # 数据结构
 # ──────────────────────────────────────────────────────────────
 
+
 @dataclass
 class CompatibilityDimension:
     name: str
@@ -93,7 +105,7 @@ class CompatibilityDimension:
 class CompatibilityResult:
     total_score: int
     max_score: int
-    level: str          # "上上签" / "上签" / "中签" / "下签" / "平"
+    level: str  # "上上签" / "上签" / "中签" / "下签" / "平"
     summary: str
     dimensions: list[CompatibilityDimension] = field(default_factory=list)
     person_a_info: dict = field(default_factory=dict)
@@ -107,6 +119,7 @@ class CompatibilityResult:
 # ──────────────────────────────────────────────────────────────
 # 主分析函数
 # ──────────────────────────────────────────────────────────────
+
 
 def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
     """
@@ -124,40 +137,25 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
     """
     dims: list[CompatibilityDimension] = []
 
-    lb_a = chart_a.life_palace_branch   # 甲方命宫地支索引
-    lb_b = chart_b.life_palace_branch   # 乙方命宫地支索引
+    lb_a = chart_a.life_palace_branch  # 甲方命宫地支索引
+    lb_b = chart_b.life_palace_branch  # 乙方命宫地支索引
 
     # ── 维度 1：命宫地支相合（25 分）────────────────────────
     if _is_liuhe(lb_a, lb_b):
         s1 = 25
-        d1 = (
-            f"两人命宫地支六合（{BRANCHES[lb_a]}、{BRANCHES[lb_b]}），"
-            f"天作之合，相处融洽，默契天然。"
-        )
+        d1 = f"两人命宫地支六合（{BRANCHES[lb_a]}、{BRANCHES[lb_b]}），天作之合，相处融洽，默契天然。"
     elif _is_sanhe(lb_a, lb_b):
         s1 = 20
-        d1 = (
-            f"两人命宫地支三合（{BRANCHES[lb_a]}、{BRANCHES[lb_b]}），"
-            f"缘分深厚，志向相合，携手并进。"
-        )
+        d1 = f"两人命宫地支三合（{BRANCHES[lb_a]}、{BRANCHES[lb_b]}），缘分深厚，志向相合，携手并进。"
     elif lb_a == lb_b:
         s1 = 16
-        d1 = (
-            f"两人命宫同支（{BRANCHES[lb_a]}），同类相遇，"
-            f"价值观高度一致，但也易有竞争感。"
-        )
+        d1 = f"两人命宫同支（{BRANCHES[lb_a]}），同类相遇，价值观高度一致，但也易有竞争感。"
     elif _is_chong(lb_a, lb_b):
         s1 = 5
-        d1 = (
-            f"两人命宫地支相冲（{BRANCHES[lb_a]}冲{BRANCHES[lb_b]}），"
-            f"个性差异较大，易生矛盾，需多包容。"
-        )
+        d1 = f"两人命宫地支相冲（{BRANCHES[lb_a]}冲{BRANCHES[lb_b]}），个性差异较大，易生矛盾，需多包容。"
     else:
         s1 = 12
-        d1 = (
-            f"两人命宫地支（{BRANCHES[lb_a]}、{BRANCHES[lb_b]}）无特殊合冲，"
-            f"相处平稳，缘分温和。"
-        )
+        d1 = f"两人命宫地支（{BRANCHES[lb_a]}、{BRANCHES[lb_b]}）无特殊合冲，相处平稳，缘分温和。"
     dims.append(CompatibilityDimension("命宫相合", s1, 25, d1))
 
     # ── 维度 2：五行相生（20 分）────────────────────────────
@@ -189,10 +187,7 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
     yb_b = chart_b.lunar.year_branch_idx
     if _is_liuhe(yb_a, yb_b):
         s3 = 20
-        d3 = (
-            f"两人年支六合（{BRANCHES[yb_a]}年、{BRANCHES[yb_b]}年），"
-            f"生肖天作一对，情投意合，缘份深。"
-        )
+        d3 = f"两人年支六合（{BRANCHES[yb_a]}年、{BRANCHES[yb_b]}年），生肖天作一对，情投意合，缘份深。"
     elif _is_sanhe(yb_a, yb_b):
         s3 = 16
         d3 = f"生肖三合（{BRANCHES[yb_a]}、{BRANCHES[yb_b]}），志趣相投，合作顺畅。"
@@ -201,10 +196,7 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
         d3 = f"同生肖（{BRANCHES[yb_a]}年），背景相似有共鸣，也易有暗中竞争。"
     elif _is_chong(yb_a, yb_b):
         s3 = 4
-        d3 = (
-            f"年支相冲（{BRANCHES[yb_a]}与{BRANCHES[yb_b]}），"
-            f"生肖相克，易有明争暗斗，需耐心沟通。"
-        )
+        d3 = f"年支相冲（{BRANCHES[yb_a]}与{BRANCHES[yb_b]}），生肖相克，易有明争暗斗，需耐心沟通。"
     else:
         s3 = 10
         d3 = f"年支（{BRANCHES[yb_a]}、{BRANCHES[yb_b]}）无特殊关系，相处平稳。"
@@ -223,10 +215,7 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
         common_stars = hus_stars & life_b_stars
         if common_stars:
             s4 = 20
-            d4 = (
-                f"甲方夫妻宫主星（{'/'.join(common_stars)}）正是乙方命宫之星，"
-                f"情缘天定，婚缘深厚，相遇即是归途。"
-            )
+            d4 = f"甲方夫妻宫主星（{'/'.join(common_stars)}）正是乙方命宫之星，情缘天定，婚缘深厚，相遇即是归途。"
         elif hus_a.branch_idx == lb_b:
             s4 = 18
             d4 = "甲方夫妻宫地支与乙方命宫同支，婚缘有力，感情踏实。"
@@ -243,23 +232,20 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
 
     # ── 维度 5：阴阳互补（15 分）────────────────────────────
     # 天干阴阳：甲丙戊庚壬=阳(0)，乙丁己辛癸=阴(1)
-    yy_a = chart_a.life_palace_stem_idx % 2   # 0=阳, 1=阴
+    yy_a = chart_a.life_palace_stem_idx % 2  # 0=阳, 1=阴
     yy_b = chart_b.life_palace_stem_idx % 2
     stem_a = chart_a.life_palace_gz[0]
     stem_b = chart_b.life_palace_gz[0]
     if yy_a != yy_b:
         s5 = 15
         d5 = (
-            f"命宫天干一阴（{stem_b if yy_b else stem_a}）一阳（{stem_a if yy_a==0 else stem_b}），"
+            f"命宫天干一阴（{stem_b if yy_b else stem_a}）一阳（{stem_a if yy_a == 0 else stem_b}），"
             f"刚柔相济，阴阳互补，相得益彰。"
         )
     else:
         label = "阳" if yy_a == 0 else "阴"
         s5 = 8
-        d5 = (
-            f"命宫天干同为{label}（{stem_a}、{stem_b}），"
-            f"同质相趋，可共进退，惟缺互补之力。"
-        )
+        d5 = f"命宫天干同为{label}（{stem_a}、{stem_b}），同质相趋，可共进退，惟缺互补之力。"
     dims.append(CompatibilityDimension("阴阳互补", s5, 15, d5))
 
     # ── 综合评定 ─────────────────────────────────────────────
@@ -379,7 +365,7 @@ def _collect_conflicts(ca, cb) -> list[str]:
         pts.append("甲方夫妻宫与乙方命宫相冲：婚缘有阻滞，需主动化解")
 
     # 化忌飞对方命宫
-    for fp in getattr(ca, "flying", None) and [] or []:
+    for fp in (getattr(ca, "flying", None) and []) or []:
         pass  # 有 flying 属性时可扩展
 
     return pts

@@ -7,6 +7,7 @@ services/ziwei_engine/dayun.py — 紫微斗数大限计算
   干支：每大限干支 = 对应宫位本身的天干（五虎遁）+ 地支
   每限十年，共排12限(120年)
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -17,23 +18,23 @@ from .tables import BRANCHES, STEMS, WUHU_M1_STEM
 
 @dataclass
 class DayunItem:
-    index: int            # 第几柱大运（从1开始）
-    stem_idx: int         # 天干索引
-    branch_idx: int       # 地支索引
-    ganzhi: str           # 干支文字
-    start_age: int        # 起运虚岁
-    end_age: int          # 终运虚岁
-    start_year: int       # 起运公历年
-    sihua: dict[str, str] = field(default_factory=dict)       # 大运四化 {星名: "化禄"/"化权"/"化科"/"化忌"}
-    boshi_stars: dict[str, str] = field(default_factory=dict) # 博士十二流曜 {星名: 地支名}
+    index: int  # 第几柱大运（从1开始）
+    stem_idx: int  # 天干索引
+    branch_idx: int  # 地支索引
+    ganzhi: str  # 干支文字
+    start_age: int  # 起运虚岁
+    end_age: int  # 终运虚岁
+    start_year: int  # 起运公历年
+    sihua: dict[str, str] = field(default_factory=dict)  # 大运四化 {星名: "化禄"/"化权"/"化科"/"化忌"}
+    boshi_stars: dict[str, str] = field(default_factory=dict)  # 博士十二流曜 {星名: 地支名}
 
 
 @dataclass
 class DayunResult:
-    forward: bool                    # True=顺行，False=逆行
-    start_age_exact: float           # 精确起运岁数（可带小数）
-    start_age: int                   # 起运虚岁（取整）
-    start_age_text: str = ""         # 起运年龄文字，如 "3年2月26天"
+    forward: bool  # True=顺行，False=逆行
+    start_age_exact: float  # 精确起运岁数（可带小数）
+    start_age: int  # 起运虚岁（取整）
+    start_age_text: str = ""  # 起运年龄文字，如 "3年2月26天"
     items: list[DayunItem] = field(default_factory=list)
 
 
@@ -48,12 +49,18 @@ def _calc_dayun_direction(year_stem_idx: int, gender: str) -> bool:
     return (yang and male) or (not yang and not male)
 
 
-def calc_dayun(info: LunarInfo, gender: str,
-               birth_year: int, birth_month_solar: int = 0, birth_day_solar: int = 0,
-               birth_hour: int = 12, birth_minute: int = 0,
-               wuxing_ju: int = 5,
-               life_branch_idx: int = 2,
-               life_stem_idx: int = 4) -> DayunResult:
+def calc_dayun(
+    info: LunarInfo,
+    gender: str,
+    birth_year: int,
+    birth_month_solar: int = 0,
+    birth_day_solar: int = 0,
+    birth_hour: int = 12,
+    birth_minute: int = 0,
+    wuxing_ju: int = 5,
+    life_branch_idx: int = 2,
+    life_stem_idx: int = 4,
+) -> DayunResult:
     """
     计算紫微斗数大限（十年大运）。
 
@@ -87,15 +94,17 @@ def calc_dayun(info: LunarInfo, gender: str,
         age_end = age_start + 9
         year_start = birth_year + age_start - 1  # 虚岁转公历年
 
-        items.append(DayunItem(
-            index=i + 1,
-            stem_idx=stem,
-            branch_idx=branch,
-            ganzhi=STEMS[stem] + BRANCHES[branch],
-            start_age=age_start,
-            end_age=age_end,
-            start_year=year_start,
-        ))
+        items.append(
+            DayunItem(
+                index=i + 1,
+                stem_idx=stem,
+                branch_idx=branch,
+                ganzhi=STEMS[stem] + BRANCHES[branch],
+                start_age=age_start,
+                end_age=age_end,
+                start_year=year_start,
+            )
+        )
 
     return DayunResult(
         forward=forward,

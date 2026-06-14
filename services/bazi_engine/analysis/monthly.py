@@ -3,24 +3,41 @@ services/bazi_engine/analysis/monthly.py — 月运引擎 (M2 任务 2.07)
 
 算法规格: §4.11-G
 """
+
 from __future__ import annotations
 
 from app.schemas.analysis import MonthlyFortuneModel
 
 # 月份→月支（阴历月，1月=寅）
 _MONTH_BRANCH: list[str] = [
-    "寅", "卯", "辰", "巳", "午", "未",
-    "申", "酉", "戌", "亥", "子", "丑",
+    "寅",
+    "卯",
+    "辰",
+    "巳",
+    "午",
+    "未",
+    "申",
+    "酉",
+    "戌",
+    "亥",
+    "子",
+    "丑",
 ]
 
 # 地支六冲
 _BRANCH_CHONG: dict[str, str] = {
-    "子": "午", "午": "子",
-    "丑": "未", "未": "丑",
-    "寅": "申", "申": "寅",
-    "卯": "酉", "酉": "卯",
-    "辰": "戌", "戌": "辰",
-    "巳": "亥", "亥": "巳",
+    "子": "午",
+    "午": "子",
+    "丑": "未",
+    "未": "丑",
+    "寅": "申",
+    "申": "寅",
+    "卯": "酉",
+    "酉": "卯",
+    "辰": "戌",
+    "戌": "辰",
+    "巳": "亥",
+    "亥": "巳",
 }
 
 # 地支三刑（部分关键）
@@ -33,7 +50,7 @@ _BRANCH_XING: dict[str, set[str]] = {
     "未": {"未", "丑"},
     "子": {"子", "卯"},  # 子卯刑
     "卯": {"卯", "子"},
-    "辰": {"辰"},        # 辰午酉亥自刑（partial）
+    "辰": {"辰"},  # 辰午酉亥自刑（partial）
     "午": {"午"},
     "酉": {"酉"},
     "亥": {"亥"},
@@ -41,38 +58,61 @@ _BRANCH_XING: dict[str, set[str]] = {
 
 # 地支六合
 _BRANCH_HE: dict[str, str] = {
-    "子": "丑", "丑": "子",
-    "寅": "亥", "亥": "寅",
-    "卯": "戌", "戌": "卯",
-    "辰": "酉", "酉": "辰",
-    "巳": "申", "申": "巳",
-    "午": "未", "未": "午",
+    "子": "丑",
+    "丑": "子",
+    "寅": "亥",
+    "亥": "寅",
+    "卯": "戌",
+    "戌": "卯",
+    "辰": "酉",
+    "酉": "辰",
+    "巳": "申",
+    "申": "巳",
+    "午": "未",
+    "未": "午",
 }
 
 # 地支五行
 _BRANCH_ELEMENT: dict[str, str] = {
-    "子": "water", "亥": "water",
-    "寅": "wood",  "卯": "wood",
-    "巳": "fire",  "午": "fire",
-    "申": "metal", "酉": "metal",
-    "丑": "earth", "辰": "earth", "未": "earth", "戌": "earth",
+    "子": "water",
+    "亥": "water",
+    "寅": "wood",
+    "卯": "wood",
+    "巳": "fire",
+    "午": "fire",
+    "申": "metal",
+    "酉": "metal",
+    "丑": "earth",
+    "辰": "earth",
+    "未": "earth",
+    "戌": "earth",
 }
 
 # 相生
 _SHENG: dict[str, str] = {
-    "wood": "fire", "fire": "earth", "earth": "metal",
-    "metal": "water", "water": "wood",
+    "wood": "fire",
+    "fire": "earth",
+    "earth": "metal",
+    "metal": "water",
+    "water": "wood",
 }
 
 # 相克
 _KE: dict[str, str] = {
-    "wood": "earth", "earth": "water", "water": "fire",
-    "fire": "metal", "metal": "wood",
+    "wood": "earth",
+    "earth": "water",
+    "water": "fire",
+    "fire": "metal",
+    "metal": "wood",
 }
 
 # 五行中文
 _ELEMENT_CN: dict[str, str] = {
-    "metal": "金", "wood": "木", "water": "水", "fire": "火", "earth": "土",
+    "metal": "金",
+    "wood": "木",
+    "water": "水",
+    "fire": "火",
+    "earth": "土",
 }
 
 # lucky_color hint — CSS 十六进制（按吉凶等级，规格 P0-15）
@@ -84,8 +124,8 @@ _LUCK_COLOR: dict[str, str] = {
 
 # 吉月：按月支五行差异化利好方向（用于区分各月"吉"月的具体建议）
 _ELEMENT_LUCKY_TIP: dict[str, str] = {
-    "wood":  "宜推进学业、教育或文职事务，人际拓展顺畅，有利签约与合作",
-    "fire":  "宜表达展示、社交拓展，名声曝光度提升，创意与传媒类事务有进展",
+    "wood": "宜推进学业、教育或文职事务，人际拓展顺畅，有利签约与合作",
+    "fire": "宜表达展示、社交拓展，名声曝光度提升，创意与传媒类事务有进展",
     "earth": "宜稳健置业、商贸谈判，实业与不动产类事务推进顺利",
     "metal": "宜处理法务、金融或签约事宜，收益稳定，管理效率提升",
     "water": "宜开展贸易、远行或IT类项目，智识工作与流通事务顺利",
@@ -125,14 +165,14 @@ _BRANCH_TIP_XIONG: dict[str, str] = {
 
 
 def compute_monthly(
-    day_branch: str,               # 日支
-    yongshen_favor: list[str],     # 用神五行（英文）
-    yongshen_avoid: list[str],     # 忌神五行（英文）
-    year_branch: str = "",         # 流年地支（可选）
-    mode: str = "dual",            # "dual" | "single"
+    day_branch: str,  # 日支
+    yongshen_favor: list[str],  # 用神五行（英文）
+    yongshen_avoid: list[str],  # 忌神五行（英文）
+    year_branch: str = "",  # 流年地支（可选）
+    mode: str = "dual",  # "dual" | "single"
     month_ganzhis: list[str] | None = None,  # 12个月干支，如["甲寅","乙卯",...]
-    current_dayun_stem: str | None = None,   # 当前大运天干
-    day_stem: str | None = None,             # 日主天干，用于计算十神关系（N2.03）
+    current_dayun_stem: str | None = None,  # 当前大运天干
+    day_stem: str | None = None,  # 日主天干，用于计算十神关系（N2.03）
 ) -> list[MonthlyFortuneModel]:
     """
     §4.11-G 月运引擎
@@ -151,6 +191,7 @@ def compute_monthly(
         list[MonthlyFortuneModel] — 长度恰好 12
     """
     from services.bazi_engine.tables import get_ten_god as _gtg
+
     results: list[MonthlyFortuneModel] = []
 
     for month_idx in range(12):
@@ -173,18 +214,20 @@ def compute_monthly(
         if mode == "single":
             # 单用户模式：全部降级为"平"
             lunar_month = _chi_idx + 1
-            results.append(MonthlyFortuneModel(
-                month=month_num,
-                lunar_month=lunar_month,
-                month_dizhi=mb,
-                luck_level="平",
-                color_hint=_LUCK_COLOR["平"],
-                tip="本月平稳，顺势而为。",
-                clash_with=None,
-                month_ganzhi=_mgz,
-                dayun_stem=current_dayun_stem,
-                relation_to_rizhu=_relation,
-            ))
+            results.append(
+                MonthlyFortuneModel(
+                    month=month_num,
+                    lunar_month=lunar_month,
+                    month_dizhi=mb,
+                    luck_level="平",
+                    color_hint=_LUCK_COLOR["平"],
+                    tip="本月平稳，顺势而为。",
+                    clash_with=None,
+                    month_ganzhi=_mgz,
+                    dayun_stem=current_dayun_stem,
+                    relation_to_rizhu=_relation,
+                )
+            )
             continue
 
         # ── dual 模式 ── 完整推算 ──────────────────────────────────────
@@ -201,9 +244,8 @@ def compute_monthly(
             tip = f"本月{mb}冲{day_branch}，注意人际与健康摩擦，低调行事。"
 
         # 2. 月支与用神五行同气/生 → 吉
-        elif mb_element and yongshen_favor and (
-            mb_element in yongshen_favor
-            or _SHENG.get(mb_element) in yongshen_favor
+        elif (
+            mb_element and yongshen_favor and (mb_element in yongshen_favor or _SHENG.get(mb_element) in yongshen_favor)
         ):
             luck_level = "吉"
             el_cn = _ELEMENT_CN.get(mb_element, mb_element)
@@ -211,10 +253,7 @@ def compute_monthly(
             tip = f"本月{mb}（{el_cn}）顺应用神，{_specific}。"
 
         # 3. 月支与忌神相克 → 凶
-        elif mb_element and yongshen_avoid and (
-            mb_element in yongshen_avoid
-            or _KE.get(mb_element) in yongshen_avoid
-        ):
+        elif mb_element and yongshen_avoid and (mb_element in yongshen_avoid or _KE.get(mb_element) in yongshen_avoid):
             luck_level = "凶"
             tip = _BRANCH_TIP_XIONG.get(mb, f"本月{mb}触动忘神，需谨慎决策，避免冲动行事。")
 
@@ -235,17 +274,19 @@ def compute_monthly(
         color_hint = _LUCK_COLOR.get(luck_level, "#888888")
 
         lunar_month = _chi_idx + 1
-        results.append(MonthlyFortuneModel(
-            month=month_num,
-            lunar_month=lunar_month,
-            month_dizhi=mb,
-            luck_level=luck_level,
-            color_hint=color_hint,
-            tip=tip,
-            clash_with=clash_with,
-            month_ganzhi=_mgz,
-            dayun_stem=current_dayun_stem,
-            relation_to_rizhu=_relation,
-        ))
+        results.append(
+            MonthlyFortuneModel(
+                month=month_num,
+                lunar_month=lunar_month,
+                month_dizhi=mb,
+                luck_level=luck_level,
+                color_hint=color_hint,
+                tip=tip,
+                clash_with=clash_with,
+                month_ganzhi=_mgz,
+                dayun_stem=current_dayun_stem,
+                relation_to_rizhu=_relation,
+            )
+        )
 
     return results

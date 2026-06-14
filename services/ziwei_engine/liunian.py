@@ -8,27 +8,26 @@ services/ziwei_engine/liunian.py — 流年 / 流月计算
 
 流月：以流年命宫为基点，每月顺数一宫。
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .lunar import LunarInfo
 from .tables import BRANCHES, STEMS
 
 
 @dataclass
 class LiunianInfo:
-    year: int              # 公历流年
-    year_stem_idx: int     # 流年天干
-    year_branch_idx: int   # 流年地支
-    year_gz: str           # 干支
+    year: int  # 公历流年
+    year_stem_idx: int  # 流年天干
+    year_branch_idx: int  # 流年地支
+    year_gz: str  # 干支
     life_palace_branch: int  # 流年命宫地支
     # 流年四化
     sihua: dict[str, str] = field(default_factory=dict)
 
 
-def calc_liunian(target_year: int, birth_year: int,
-                 life_palace_branch: int) -> LiunianInfo:
+def calc_liunian(target_year: int, birth_year: int, life_palace_branch: int) -> LiunianInfo:
     """
     计算指定公历年的流年信息。
 
@@ -38,7 +37,7 @@ def calc_liunian(target_year: int, birth_year: int,
     """
     # 流年干支：天干 = (target_year - 4) % 10，地支 = (target_year - 4) % 12
     # 甲子年=公历4年（甲=0, 子=0）：(year-4)%10=stem, (year-4)%12=branch
-    stem_idx   = (target_year - 4) % 10
+    stem_idx = (target_year - 4) % 10
     branch_idx = (target_year - 4) % 12
 
     # 流年命宫：以寅(2)为起点，加太岁地支，注意顺数
@@ -49,6 +48,7 @@ def calc_liunian(target_year: int, birth_year: int,
     liunian_life = (2 + branch_idx) % 12
 
     from .transforms import SIHUA_TABLE
+
     sihua_map = SIHUA_TABLE.get(STEMS[stem_idx], {})
     sihua = {star: f"化{hua}" for hua, star in sihua_map.items()}
 
@@ -72,8 +72,18 @@ def calc_liuyue(liunian_life_branch: int, month: int) -> int:
 
 # 农历月份名称（对应公历约+1月：正月≈2月，依次顺推）
 _LUNAR_MONTH_NAMES: list[str] = [
-    '正月(寅)', '二月(卯)', '三月(辰)', '四月(巳)', '五月(午)', '六月(未)',
-    '七月(申)', '八月(酉)', '九月(戌)', '十月(亥)', '十一月(子)', '十二月(丑)',
+    "正月(寅)",
+    "二月(卯)",
+    "三月(辰)",
+    "四月(巳)",
+    "五月(午)",
+    "六月(未)",
+    "七月(申)",
+    "八月(酉)",
+    "九月(戌)",
+    "十月(亥)",
+    "十一月(子)",
+    "十二月(丑)",
 ]
 # 农历月份对应地支索引（寅=2起）
 _MONTH_BRANCHES: list[int] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1]
@@ -83,7 +93,7 @@ _WUHU_M1: list[int] = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0]
 
 
 def calc_liuyue_list(
-    liunian: 'LiunianInfo',
+    liunian: LiunianInfo,
     branch_to_palace_name: dict[int, str],
 ) -> list[dict]:
     """
@@ -92,6 +102,7 @@ def calc_liuyue_list(
     """
     from .tables import BRANCHES, STEMS
     from .transforms import SIHUA_TABLE
+
     items: list[dict] = []
     m1_stem = _WUHU_M1[liunian.year_stem_idx]
     for i in range(12):
@@ -100,16 +111,18 @@ def calc_liuyue_list(
         mo_branch_idx = _MONTH_BRANCHES[i]
         mo_gz = STEMS[mo_stem_idx] + BRANCHES[mo_branch_idx]
         life_b = calc_liuyue(liunian.life_palace_branch, month)
-        palace_name = branch_to_palace_name.get(life_b, '—')
+        palace_name = branch_to_palace_name.get(life_b, "—")
         # 流月四化（月干四化）
         mo_sihua_raw = SIHUA_TABLE.get(STEMS[mo_stem_idx], {})
         mo_sihua = {star: f"化{hua}" for hua, star in mo_sihua_raw.items()}
-        items.append({
-            'month': month,
-            'month_name': _LUNAR_MONTH_NAMES[i],
-            'month_gz': mo_gz,
-            'life_palace_branch': life_b,
-            'palace_name': palace_name,
-            'sihua': mo_sihua,
-        })
+        items.append(
+            {
+                "month": month,
+                "month_name": _LUNAR_MONTH_NAMES[i],
+                "month_gz": mo_gz,
+                "life_palace_branch": life_b,
+                "palace_name": palace_name,
+                "sihua": mo_sihua,
+            }
+        )
     return items

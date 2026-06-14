@@ -20,11 +20,11 @@ services/ziwei_engine/zeri_engine.py — §13 择日推荐引擎
 --------
   大吉 ≥ 78 / 吉 ≥ 62 / 中 ≥ 45 / 凶 < 45
 """
+
 from __future__ import annotations
 
 import calendar
 from dataclasses import dataclass, field
-from typing import Optional
 
 import sxtwl  # type: ignore[import]
 
@@ -36,51 +36,51 @@ from .tables import BRANCHES, STEMS
 
 # 三合局（一组三个地支彼此三合）
 _SANHE: list[frozenset[int]] = [
-    frozenset({8, 0, 4}),   # 申子辰（水局）
+    frozenset({8, 0, 4}),  # 申子辰（水局）
     frozenset({2, 6, 10}),  # 寅午戌（火局）
     frozenset({11, 3, 7}),  # 亥卯未（木局）
-    frozenset({5, 9, 1}),   # 巳酉丑（金局）
+    frozenset({5, 9, 1}),  # 巳酉丑（金局）
 ]
 
 # 六合对（相邻天地合化）
 _LIUHE: list[frozenset[int]] = [
-    frozenset({0, 1}),   # 子丑合土
+    frozenset({0, 1}),  # 子丑合土
     frozenset({2, 11}),  # 寅亥合木
     frozenset({3, 10}),  # 卯戌合火
-    frozenset({4, 9}),   # 辰酉合金
-    frozenset({5, 8}),   # 巳申合水
-    frozenset({6, 7}),   # 午未合土
+    frozenset({4, 9}),  # 辰酉合金
+    frozenset({5, 8}),  # 巳申合水
+    frozenset({6, 7}),  # 午未合土
 ]
 
 # 相冲对（六冲）
 _CHONG: list[frozenset[int]] = [
-    frozenset({0, 6}),   # 子午冲
-    frozenset({1, 7}),   # 丑未冲
-    frozenset({2, 8}),   # 寅申冲
-    frozenset({3, 9}),   # 卯酉冲
+    frozenset({0, 6}),  # 子午冲
+    frozenset({1, 7}),  # 丑未冲
+    frozenset({2, 8}),  # 寅申冲
+    frozenset({3, 9}),  # 卯酉冲
     frozenset({4, 10}),  # 辰戌冲
     frozenset({5, 11}),  # 巳亥冲
 ]
 
 # 相害对（六害）
 _HAI: list[frozenset[int]] = [
-    frozenset({0, 7}),   # 子未害
-    frozenset({1, 6}),   # 丑午害
-    frozenset({2, 5}),   # 寅巳害
-    frozenset({3, 4}),   # 卯辰害
+    frozenset({0, 7}),  # 子未害
+    frozenset({1, 6}),  # 丑午害
+    frozenset({2, 5}),  # 寅巳害
+    frozenset({3, 4}),  # 卯辰害
     frozenset({8, 11}),  # 申亥害
     frozenset({9, 10}),  # 酉戌害
 ]
 
 # 相刑（仅记录有刑煞意义的对）
 _XING: list[frozenset[int]] = [
-    frozenset({2, 5}),   # 寅刑巳 / 巳刑寅
-    frozenset({5, 8}),   # 巳刑申 / 申刑巳
-    frozenset({2, 8}),   # （与上面形成三刑，也单独记录）
-    frozenset({1, 7}),   # 丑刑未
+    frozenset({2, 5}),  # 寅刑巳 / 巳刑寅
+    frozenset({5, 8}),  # 巳刑申 / 申刑巳
+    frozenset({2, 8}),  # （与上面形成三刑，也单独记录）
+    frozenset({1, 7}),  # 丑刑未
     frozenset({7, 10}),  # 未刑戌
     frozenset({1, 10}),  # 戌刑丑（三刑）
-    frozenset({0, 3}),   # 子卯相刑
+    frozenset({0, 3}),  # 子卯相刑
 ]
 
 # ─────────────────────────────────────────────────────────────
@@ -95,9 +95,10 @@ _STEM_WX: list[int] = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]  # 甲乙=木,丙丁=火,..
 # 木(0)克土(2), 火(1)克金(3), 土(2)克水(4), 金(3)克木(0), 水(4)克火(1)  相克
 
 _SHENG_ME: list[int] = [4, 0, 1, 2, 3]  # 生我者：木由水生、火由木生...
-_I_SHENG: list[int]  = [1, 2, 3, 4, 0]  # 我生者
-_KE_ME: list[int]   = [3, 4, 0, 1, 2]  # 克我者：木被金克...
-_I_KE: list[int]    = [2, 3, 4, 0, 1]  # 我克者
+_I_SHENG: list[int] = [1, 2, 3, 4, 0]  # 我生者
+_KE_ME: list[int] = [3, 4, 0, 1, 2]  # 克我者：木被金克...
+_I_KE: list[int] = [2, 3, 4, 0, 1]  # 我克者
+
 
 def _natal_wx(wuxing_ju_name: str) -> int:
     """从五行局名称解析纳音五行（0=木,1=火,2=土,3=金,4=水）。"""
@@ -106,6 +107,7 @@ def _natal_wx(wuxing_ju_name: str) -> int:
         if k in wuxing_ju_name:
             return v
     return 2  # 默认土
+
 
 def _stem_favor(stem_idx: int, natal_wx: int) -> int:
     """
@@ -125,9 +127,11 @@ def _stem_favor(stem_idx: int, natal_wx: int) -> int:
         return -8
     return 0
 
+
 # ─────────────────────────────────────────────────────────────
 # 地支关系得分
 # ─────────────────────────────────────────────────────────────
+
 
 def _branch_rel_score(b1: int, b2: int) -> tuple[int, str]:
     """
@@ -152,6 +156,7 @@ def _branch_rel_score(b1: int, b2: int) -> tuple[int, str]:
             return -10, "相害"
     return 0, ""
 
+
 # ─────────────────────────────────────────────────────────────
 # 天德/月德 查找表（月支→天干索引）
 # ─────────────────────────────────────────────────────────────
@@ -160,29 +165,29 @@ def _branch_rel_score(b1: int, b2: int) -> tuple[int, str]:
 # 寅月(2)→丁(3), 卯(3)→申 (branch, not stem - 特殊), ...
 # 注：天德除卯月(申)和酉月(寅)外均为天干；简化：只处理天干匹配
 _TIANDE: dict[int, str] = {
-    2:  "3",   # 正月寅→天德丁
-    3:  "stem_申",  # 二月卯→天德申（地支，略过天干匹配）
-    4:  "8",   # 三月辰→天德壬
-    5:  "7",   # 四月巳→天德辛
-    6:  "branch_亥",  # 五月午→天德亥（地支）
-    7:  "0",   # 六月未→天德甲
-    8:  "9",   # 七月申→天德癸
-    9:  "branch_寅",  # 八月酉→天德寅（地支）
-    10: "2",   # 九月戌→天德丙
-    11: "1",   # 十月亥→天德乙
-    0:  "branch_巳",  # 十一月子→天德巳（地支）
-    1:  "6",   # 十二月丑→天德庚
+    2: "3",  # 正月寅→天德丁
+    3: "stem_申",  # 二月卯→天德申（地支，略过天干匹配）
+    4: "8",  # 三月辰→天德壬
+    5: "7",  # 四月巳→天德辛
+    6: "branch_亥",  # 五月午→天德亥（地支）
+    7: "0",  # 六月未→天德甲
+    8: "9",  # 七月申→天德癸
+    9: "branch_寅",  # 八月酉→天德寅（地支）
+    10: "2",  # 九月戌→天德丙
+    11: "1",  # 十月亥→天德乙
+    0: "branch_巳",  # 十一月子→天德巳（地支）
+    1: "6",  # 十二月丑→天德庚
 }
 
 # 月德：寅午戌月→丙, 申子辰月→壬, 亥卯未月→甲, 巳酉丑月→庚
 _YUEDE_STEM: dict[int, int] = {}
 for _b in (2, 6, 10):  # 寅午戌
     _YUEDE_STEM[_b] = STEMS.index("丙")
-for _b in (8, 0, 4):   # 申子辰
+for _b in (8, 0, 4):  # 申子辰
     _YUEDE_STEM[_b] = STEMS.index("壬")
 for _b in (11, 3, 7):  # 亥卯未
     _YUEDE_STEM[_b] = STEMS.index("甲")
-for _b in (5, 9, 1):   # 巳酉丑
+for _b in (5, 9, 1):  # 巳酉丑
     _YUEDE_STEM[_b] = STEMS.index("庚")
 
 
@@ -208,44 +213,48 @@ def _virtue_score(day_stem_idx: int, day_branch_idx: int, month_branch_idx: int)
 
     return bonus, labels
 
+
 # ─────────────────────────────────────────────────────────────
 # 用途名称
 # ─────────────────────────────────────────────────────────────
 
 PURPOSES: dict[str, str] = {
-    "marriage":  "婚嫁/感情",
-    "business":  "商业/财务",
-    "travel":    "出行",
-    "medical":   "求医/健康",
-    "move":      "搬家/入宅",
-    "career":    "事业/求职",
-    "general":   "通用",
+    "marriage": "婚嫁/感情",
+    "business": "商业/财务",
+    "travel": "出行",
+    "medical": "求医/健康",
+    "move": "搬家/入宅",
+    "career": "事业/求职",
+    "general": "通用",
 }
 
 # ─────────────────────────────────────────────────────────────
 # 数据结构
 # ─────────────────────────────────────────────────────────────
 
+
 @dataclass
 class ZeriDayResult:
     """单日择日评分结果。"""
-    date: str              # "2026-04-01"
-    weekday: str           # 日/一/二/三/四/五/六
-    day_gz: str            # 干支，如"乙巳"
-    day_stem: str          # 天干
-    day_branch: str        # 地支
-    lunar_info: str        # 农历简要（如"三月初五"）
-    score: int             # 0-100
-    level: str             # 大吉/吉/中/凶
-    level_css: str         # daji/ji/zhong/xiong
-    evidence: list[str]    # 得分依据说明
-    is_break: bool         # 是否岁破/月破日（凶日标记）
-    is_virtue: bool        # 是否天德/月德日
+
+    date: str  # "2026-04-01"
+    weekday: str  # 日/一/二/三/四/五/六
+    day_gz: str  # 干支，如"乙巳"
+    day_stem: str  # 天干
+    day_branch: str  # 地支
+    lunar_info: str  # 农历简要（如"三月初五"）
+    score: int  # 0-100
+    level: str  # 大吉/吉/中/凶
+    level_css: str  # daji/ji/zhong/xiong
+    evidence: list[str]  # 得分依据说明
+    is_break: bool  # 是否岁破/月破日（凶日标记）
+    is_virtue: bool  # 是否天德/月德日
 
 
 @dataclass
 class ZeriMonthResult:
     """一整月择日结果。"""
+
     year: int
     month: int
     purpose: str
@@ -291,19 +300,19 @@ def recommend_month(
     # ── 获取年/月干支（以月1日为基准）
     ref_day = sxtwl.fromSolar(year, month, 1)
     year_gz_obj = ref_day.getYearGZ()
-    year_stem_idx  = year_gz_obj.tg
+    year_stem_idx = year_gz_obj.tg
     year_branch_idx = year_gz_obj.dz
     year_gz_str = STEMS[year_stem_idx] + BRANCHES[year_branch_idx]
 
     month_gz_obj = ref_day.getMonthGZ()
-    month_stem_idx   = month_gz_obj.tg
+    month_stem_idx = month_gz_obj.tg
     month_branch_idx = month_gz_obj.dz
     month_gz_str = STEMS[month_stem_idx] + BRANCHES[month_branch_idx]
 
     # 月破 = 与月支相冲的地支
     month_break_b = (month_branch_idx + 6) % 12
     # 岁破 = 与年支相冲的地支
-    year_break_b  = (year_branch_idx + 6) % 12
+    year_break_b = (year_branch_idx + 6) % 12
 
     # ── 遍历当月所有天
     _, days_in_month = calendar.monthrange(year, month)
@@ -311,19 +320,20 @@ def recommend_month(
 
     for day_num in range(1, days_in_month + 1):
         day_obj = sxtwl.fromSolar(year, month, day_num)
-        day_gz_obj   = day_obj.getDayGZ()
+        day_gz_obj = day_obj.getDayGZ()
         day_stem_idx = day_gz_obj.tg
-        day_b_idx    = day_gz_obj.dz
+        day_b_idx = day_gz_obj.dz
 
-        day_gz_str  = STEMS[day_stem_idx] + BRANCHES[day_b_idx]
-        date_str    = f"{year:04d}-{month:02d}-{day_num:02d}"
+        day_gz_str = STEMS[day_stem_idx] + BRANCHES[day_b_idx]
+        date_str = f"{year:04d}-{month:02d}-{day_num:02d}"
         import datetime
+
         weekday_idx = datetime.date(year, month, day_num).weekday()
         weekday_str = _WEEKDAY_ZH[weekday_idx]
 
         # 农历
         l_month = day_obj.getLunarMonth()
-        l_day   = day_obj.getLunarDay()
+        l_day = day_obj.getLunarDay()
         lunar_str = _lunar_day_str(l_month, l_day)
 
         evidence: list[str] = []
@@ -344,7 +354,7 @@ def recommend_month(
                 direction = "利" if b_sc > 0 else "不利"
                 evidence.append(
                     f"日支{BRANCHES[day_b_idx]}与命宫地支{life_palace_branch}"
-                    f"【{b_rel}】，{direction}命主（{'+' if b_sc>0 else ''}{b_sc}）"
+                    f"【{b_rel}】，{direction}命主（{'+' if b_sc > 0 else ''}{b_sc}）"
                 )
             score += b_sc
 
@@ -355,8 +365,7 @@ def recommend_month(
             if nb_sc < 0:
                 penalty = nb_sc // 2  # 本命年支影响权重折半
                 evidence.append(
-                    f"日支{BRANCHES[day_b_idx]}与本命年支{natal_year_branch}"
-                    f"【{nb_rel}】，冲本命（{penalty}）"
+                    f"日支{BRANCHES[day_b_idx]}与本命年支{natal_year_branch}【{nb_rel}】，冲本命（{penalty}）"
                 )
                 score += penalty
 
@@ -379,9 +388,7 @@ def recommend_month(
         is_virtue = virt_sc > 0
 
         # 6. 用途专属加成
-        purpose_sc, purpose_ev = _purpose_bonus(
-            purpose, day_b_idx, life_b, natal_b, natal_wx, day_stem_idx
-        )
+        purpose_sc, purpose_ev = _purpose_bonus(purpose, day_b_idx, life_b, natal_b, natal_wx, day_stem_idx)
         if purpose_sc != 0:
             evidence.append(purpose_ev)
             score += purpose_sc
@@ -399,20 +406,22 @@ def recommend_month(
         else:
             level, css = "凶", "xiong"
 
-        day_results.append(ZeriDayResult(
-            date=date_str,
-            weekday=weekday_str,
-            day_gz=day_gz_str,
-            day_stem=STEMS[day_stem_idx],
-            day_branch=BRANCHES[day_b_idx],
-            lunar_info=lunar_str,
-            score=score,
-            level=level,
-            level_css=css,
-            evidence=evidence,
-            is_break=is_break,
-            is_virtue=is_virtue,
-        ))
+        day_results.append(
+            ZeriDayResult(
+                date=date_str,
+                weekday=weekday_str,
+                day_gz=day_gz_str,
+                day_stem=STEMS[day_stem_idx],
+                day_branch=BRANCHES[day_b_idx],
+                lunar_info=lunar_str,
+                score=score,
+                level=level,
+                level_css=css,
+                evidence=evidence,
+                is_break=is_break,
+                is_virtue=is_virtue,
+            )
+        )
 
     # 推荐日：评级为大吉/吉 的前 8 天
     top = [d.date for d in sorted(day_results, key=lambda x: -x.score) if d.level in ("大吉", "吉")][:8]
@@ -432,6 +441,7 @@ def recommend_month(
 # ─────────────────────────────────────────────────────────────
 # 用途加成
 # ─────────────────────────────────────────────────────────────
+
 
 def _purpose_bonus(
     purpose: str,
@@ -461,35 +471,35 @@ def _purpose_bonus(
         # 商业/财务：日天干五行为 生我/同我 额外加成
         day_wx = _STEM_WX[day_stem]
         if day_wx == natal_wx or day_wx == _SHENG_ME[natal_wx]:
-            return 10, f"财运吉：日天干五行生旺命主（+10）"
+            return 10, "财运吉：日天干五行生旺命主（+10）"
 
     elif purpose == "travel":
         # 出行：避冲 - 若日支冲命宫，已在主逻辑中计分，此处不重复；否则轻微加分于六合日
         if life_b >= 0 and frozenset({day_b, life_b}) in _LIUHE:
-            return 8, f"出行吉：日支与命宫六合，宜动（+8）"
+            return 8, "出行吉：日支与命宫六合，宜动（+8）"
 
     elif purpose == "medical":
         # 求医：天德日已在 virtue 处理；此处对日天干为水（壬癸）有益
         day_wx = _STEM_WX[day_stem]
         if day_wx == 4:  # 水：主智慧与调养
-            return 6, f"求医吉：壬癸水日，利养生调理（+6）"
+            return 6, "求医吉：壬癸水日，利养生调理（+6）"
 
     elif purpose == "move":
         # 搬家/入宅：避三煞（与年支特定三个地支）
         _sansha_map: dict[int, set[int]] = {
             # 年支→三煞地支集合（每个地支方位的三煞）
-            2: {8, 9, 10},   # 寅年：申酉戌
-            6: {4, 5, 6},    # 午年：辰巳午
+            2: {8, 9, 10},  # 寅年：申酉戌
+            6: {4, 5, 6},  # 午年：辰巳午
             10: {0, 1, 11},  # 戌年：亥子丑
-            3: {5, 6, 7},    # 卯年：巳午未
-            7: {1, 2, 3},    # 未年：丑寅卯
-            11: {9, 10, 11}, # 亥年：酉戌亥
-            0: {2, 3, 4},    # 子年：寅卯辰
-            4: {6, 7, 8},    # 辰年：午未申
+            3: {5, 6, 7},  # 卯年：巳午未
+            7: {1, 2, 3},  # 未年：丑寅卯
+            11: {9, 10, 11},  # 亥年：酉戌亥
+            0: {2, 3, 4},  # 子年：寅卯辰
+            4: {6, 7, 8},  # 辰年：午未申
             8: {10, 11, 0},  # 申年：戌亥子
-            1: {3, 4, 5},    # 丑年：卯辰巳
-            5: {7, 8, 9},    # 巳年：未申酉
-            9: {11, 0, 1},   # 酉年：亥子丑
+            1: {3, 4, 5},  # 丑年：卯辰巳
+            5: {7, 8, 9},  # 巳年：未申酉
+            9: {11, 0, 1},  # 酉年：亥子丑
         }
         # 用年支（从 life_b 附近推导；此处简化：用 day_b）
         # 实际应传入 year_branch，但为简化 API 参数，用 natal_b 代替年支
@@ -504,7 +514,7 @@ def _purpose_bonus(
             guan_b = (BRANCHES.index(BRANCHES[life_b]) + 8) % 12
             for g in _SANHE:
                 if day_b in g and guan_b in g:
-                    return 8, f"事业吉：日支与官禄宫三合（+8）"
+                    return 8, "事业吉：日支与官禄宫三合（+8）"
 
     return 0, ""
 
@@ -515,9 +525,37 @@ def _purpose_bonus(
 
 _LUNAR_MONTH_ZH = ["", "正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
 _LUNAR_DAY_ZH = [
-    "", "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
-    "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
-    "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十",
+    "",
+    "初一",
+    "初二",
+    "初三",
+    "初四",
+    "初五",
+    "初六",
+    "初七",
+    "初八",
+    "初九",
+    "初十",
+    "十一",
+    "十二",
+    "十三",
+    "十四",
+    "十五",
+    "十六",
+    "十七",
+    "十八",
+    "十九",
+    "二十",
+    "廿一",
+    "廿二",
+    "廿三",
+    "廿四",
+    "廿五",
+    "廿六",
+    "廿七",
+    "廿八",
+    "廿九",
+    "三十",
 ]
 
 

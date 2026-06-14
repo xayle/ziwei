@@ -7,47 +7,61 @@
   五行互补      20 分
   天干合        10 分
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
 # ── 五行基础数据 ─────────────────────────────────────────────────
 STEM_ELEM: dict[str, str] = {
-    "甲": "wood", "乙": "wood",
-    "丙": "fire", "丁": "fire",
-    "戊": "earth","己": "earth",
-    "庚": "metal","辛": "metal",
-    "壬": "water","癸": "water",
+    "甲": "wood",
+    "乙": "wood",
+    "丙": "fire",
+    "丁": "fire",
+    "戊": "earth",
+    "己": "earth",
+    "庚": "metal",
+    "辛": "metal",
+    "壬": "water",
+    "癸": "water",
 }
 
 BRANCH_ELEM: dict[str, str] = {
-    "子": "water", "丑": "earth", "寅": "wood",  "卯": "wood",
-    "辰": "earth", "巳": "fire",  "午": "fire",  "未": "earth",
-    "申": "metal", "酉": "metal", "戌": "earth", "亥": "water",
+    "子": "water",
+    "丑": "earth",
+    "寅": "wood",
+    "卯": "wood",
+    "辰": "earth",
+    "巳": "fire",
+    "午": "fire",
+    "未": "earth",
+    "申": "metal",
+    "酉": "metal",
+    "戌": "earth",
+    "亥": "water",
 }
 
-ELEM_CN: dict[str, str] = {
-    "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"
-}
+ELEM_CN: dict[str, str] = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
 
 # 五行生克
-_PRODUCES: dict[str, str] = {
-    "wood": "fire", "fire": "earth", "earth": "metal", "metal": "water", "water": "wood"
-}
-_CONTROLS: dict[str, str] = {
-    "wood": "earth", "earth": "water", "water": "fire", "fire": "metal", "metal": "wood"
-}
+_PRODUCES: dict[str, str] = {"wood": "fire", "fire": "earth", "earth": "metal", "metal": "water", "water": "wood"}
+_CONTROLS: dict[str, str] = {"wood": "earth", "earth": "water", "water": "fire", "fire": "metal", "metal": "wood"}
 
 
 def elem_relation(a: str, b: str) -> str:
     """返回 a 对 b 的关系: same/produces/controls/produced_by/controlled_by"""
-    if a == b:                        return "same"
-    if _PRODUCES.get(a) == b:         return "produces"
-    if _CONTROLS.get(a) == b:         return "controls"
-    if _PRODUCES.get(b) == a:         return "produced_by"
-    if _CONTROLS.get(b) == a:         return "controlled_by"
+    if a == b:
+        return "same"
+    if _PRODUCES.get(a) == b:
+        return "produces"
+    if _CONTROLS.get(a) == b:
+        return "controls"
+    if _PRODUCES.get(b) == a:
+        return "produced_by"
+    if _CONTROLS.get(b) == a:
+        return "controlled_by"
     return "neutral"
 
 
@@ -103,7 +117,6 @@ def _get_pillars(dt_local: datetime, lon: float, tz: str) -> dict[str, Any]:
     加上五行权重 dict。
     使用 verify_full（与主八字引擎一致）。
     """
-    from zoneinfo import ZoneInfo
 
     from services.bazi_full_service import BRANCH_ELEMENT as _BE
     from services.bazi_full_service import STEM_META
@@ -117,10 +130,10 @@ def _get_pillars(dt_local: datetime, lon: float, tz: str) -> dict[str, Any]:
     p = result.pillars_primary
 
     pillars = {
-        "year":  {"stem": p.year.stem,  "branch": p.year.branch},
+        "year": {"stem": p.year.stem, "branch": p.year.branch},
         "month": {"stem": p.month.stem, "branch": p.month.branch},
-        "day":   {"stem": p.day.stem,   "branch": p.day.branch},
-        "hour":  {"stem": p.hour.stem,  "branch": p.hour.branch},
+        "day": {"stem": p.day.stem, "branch": p.day.branch},
+        "hour": {"stem": p.hour.stem, "branch": p.hour.branch},
     }
 
     # 五行权重（天干+地支各1点，藏干不计）
@@ -138,8 +151,12 @@ def _get_pillars(dt_local: datetime, lon: float, tz: str) -> dict[str, Any]:
 
 # ── 核心评分 ─────────────────────────────────────────────────────
 def compute_compatibility(
-    a_dt: datetime, a_lon: float, a_tz: str,
-    b_dt: datetime, b_lon: float, b_tz: str,
+    a_dt: datetime,
+    a_lon: float,
+    a_tz: str,
+    b_dt: datetime,
+    b_lon: float,
+    b_tz: str,
 ) -> dict[str, Any]:
     """
     四柱合婚综合评分。
@@ -176,22 +193,27 @@ def compute_compatibility(
     a_day_elem = STEM_ELEM.get(ap["day"]["stem"], "")
     b_day_elem = STEM_ELEM.get(bp["day"]["stem"], "")
     rel = elem_relation(a_day_elem, b_day_elem) if a_day_elem and b_day_elem else "neutral"
-    day_score = {"same": 30, "produces": 40, "produced_by": 35, "controls": 15, "controlled_by": 15, "neutral": 20}.get(rel, 20)
+    day_score = {"same": 30, "produces": 40, "produced_by": 35, "controls": 15, "controlled_by": 15, "neutral": 20}.get(
+        rel, 20
+    )
     rel_cn = {
-        "same":          f"同为{ELEM_CN.get(a_day_elem,'?')}，比和",
-        "produces":      f"{ELEM_CN.get(a_day_elem,'?')}生{ELEM_CN.get(b_day_elem,'?')}",
-        "produced_by":   f"{ELEM_CN.get(b_day_elem,'?')}生{ELEM_CN.get(a_day_elem,'?')}",
-        "controls":      f"{ELEM_CN.get(a_day_elem,'?')}克{ELEM_CN.get(b_day_elem,'?')}",
-        "controlled_by": f"{ELEM_CN.get(b_day_elem,'?')}克{ELEM_CN.get(a_day_elem,'?')}",
-        "neutral":       "五行中性",
+        "same": f"同为{ELEM_CN.get(a_day_elem, '?')}，比和",
+        "produces": f"{ELEM_CN.get(a_day_elem, '?')}生{ELEM_CN.get(b_day_elem, '?')}",
+        "produced_by": f"{ELEM_CN.get(b_day_elem, '?')}生{ELEM_CN.get(a_day_elem, '?')}",
+        "controls": f"{ELEM_CN.get(a_day_elem, '?')}克{ELEM_CN.get(b_day_elem, '?')}",
+        "controlled_by": f"{ELEM_CN.get(b_day_elem, '?')}克{ELEM_CN.get(a_day_elem, '?')}",
+        "neutral": "五行中性",
     }.get(rel, "")
     total += day_score
-    details.append({
-        "dimension": "日主五行",
-        "score": day_score, "max": 40,
-        "description": f"甲方日干 {ap['day']['stem']}（{ELEM_CN.get(a_day_elem,'?')}）× 乙方日干 {bp['day']['stem']}（{ELEM_CN.get(b_day_elem,'?')}）— {rel_cn}",
-        "level": "佳" if day_score >= 35 else ("中" if day_score >= 25 else "差"),
-    })
+    details.append(
+        {
+            "dimension": "日主五行",
+            "score": day_score,
+            "max": 40,
+            "description": f"甲方日干 {ap['day']['stem']}（{ELEM_CN.get(a_day_elem, '?')}）× 乙方日干 {bp['day']['stem']}（{ELEM_CN.get(b_day_elem, '?')}）— {rel_cn}",
+            "level": "佳" if day_score >= 35 else ("中" if day_score >= 25 else "差"),
+        }
+    )
 
     # ── 2. 年支合冲（30分） ─────────────────────────────────────
     ay = ap["year"]["branch"]
@@ -212,12 +234,15 @@ def compute_compatibility(
         branch_score = 15
         branch_note = f"年支无特殊关系（{ay} / {by_}）"
     total += branch_score
-    details.append({
-        "dimension": "年支合冲",
-        "score": branch_score, "max": 30,
-        "description": branch_note,
-        "level": "佳" if branch_score >= 25 else ("中" if branch_score >= 12 else "差"),
-    })
+    details.append(
+        {
+            "dimension": "年支合冲",
+            "score": branch_score,
+            "max": 30,
+            "description": branch_note,
+            "level": "佳" if branch_score >= 25 else ("中" if branch_score >= 12 else "差"),
+        }
+    )
 
     # ── 3. 五行互补（20分） ──────────────────────────────────────
     # 衡量：乙方五行能否填补甲方的五行缺口
@@ -230,8 +255,8 @@ def compute_compatibility(
     # 互补度：缺口越大且对方越强越好
     complement_score = 0.0
     for e in elems:
-        gap_a = max(0.0, 0.2 - na[e])   # 甲方缺口（均衡基准 20%）
-        fill  = nb[e]                     # 乙方填补
+        gap_a = max(0.0, 0.2 - na[e])  # 甲方缺口（均衡基准 20%）
+        fill = nb[e]  # 乙方填补
         complement_score += gap_a * fill
         gap_b = max(0.0, 0.2 - nb[e])
         fill2 = na[e]
@@ -241,62 +266,65 @@ def compute_compatibility(
     # 找出甲方最弱元素
     weakest_a = min(aw, key=aw.get)
     weakest_b = min(bw, key=bw.get)
-    details.append({
-        "dimension": "五行互补",
-        "score": round(comp_norm, 1), "max": 20,
-        "description": (
-            f"甲方最弱：{ELEM_CN[weakest_a]}（{aw[weakest_a]:.0f}%），"
-            f"乙方最弱：{ELEM_CN[weakest_b]}（{bw[weakest_b]:.0f}%）"
-        ),
-        "level": "佳" if comp_norm >= 14 else ("中" if comp_norm >= 7 else "差"),
-    })
+    details.append(
+        {
+            "dimension": "五行互补",
+            "score": round(comp_norm, 1),
+            "max": 20,
+            "description": (
+                f"甲方最弱：{ELEM_CN[weakest_a]}（{aw[weakest_a]:.0f}%），"
+                f"乙方最弱：{ELEM_CN[weakest_b]}（{bw[weakest_b]:.0f}%）"
+            ),
+            "level": "佳" if comp_norm >= 14 else ("中" if comp_norm >= 7 else "差"),
+        }
+    )
 
     # ── 4. 天干合（10分） ───────────────────────────────────────
     stems_a = {ap[col]["stem"] for col in ("year", "month", "day", "hour")}
     stems_b = {bp[col]["stem"] for col in ("year", "month", "day", "hour")}
-    he_pairs = [
-        f"{list(p)[0]}{list(p)[1]}合"
-        for p in _STEM_HE
-        if p & stems_a and p & stems_b
-    ]
-    chong_pairs = [
-        f"{list(p)[0]}{list(p)[1]}冲"
-        for p in _STEM_CHONG
-        if p & stems_a and p & stems_b
-    ]
+    he_pairs = [f"{list(p)[0]}{list(p)[1]}合" for p in _STEM_HE if p & stems_a and p & stems_b]
+    chong_pairs = [f"{list(p)[0]}{list(p)[1]}冲" for p in _STEM_CHONG if p & stems_a and p & stems_b]
     stem_score = min(10, len(he_pairs) * 5) - len(chong_pairs) * 3
     stem_score = max(0, stem_score)
     total += stem_score
     stem_note = (", ".join(he_pairs) if he_pairs else "无天干合") + (
         "；" + ", ".join(chong_pairs) if chong_pairs else ""
     )
-    details.append({
-        "dimension": "天干合化",
-        "score": stem_score, "max": 10,
-        "description": stem_note,
-        "level": "佳" if stem_score >= 7 else ("中" if stem_score >= 3 else "差"),
-    })
+    details.append(
+        {
+            "dimension": "天干合化",
+            "score": stem_score,
+            "max": 10,
+            "description": stem_note,
+            "level": "佳" if stem_score >= 7 else ("中" if stem_score >= 3 else "差"),
+        }
+    )
 
     final_score = round(total)
-    if   final_score >= 85: grade = "上上"
-    elif final_score >= 70: grade = "上"
-    elif final_score >= 50: grade = "中"
-    elif final_score >= 30: grade = "下"
-    else:                   grade = "下下"
+    if final_score >= 85:
+        grade = "上上"
+    elif final_score >= 70:
+        grade = "上"
+    elif final_score >= 50:
+        grade = "中"
+    elif final_score >= 30:
+        grade = "下"
+    else:
+        grade = "下下"
 
     summaries = {
         "上上": "天生一对，五行相辅，年支相合，是难得的良配。",
-        "上":   "整体搭配良好，略有磨合，相互扶持则感情稳固。",
-        "中":   "五行各有长短，需要多沟通包容，婚后共同努力可白头。",
-        "下":   "五行冲克明显，建议选择吉日化解，多采用调和方案。",
+        "上": "整体搭配良好，略有磨合，相互扶持则感情稳固。",
+        "中": "五行各有长短，需要多沟通包容，婚后共同努力可白头。",
+        "下": "五行冲克明显，建议选择吉日化解，多采用调和方案。",
         "下下": "冲克严重，年支相冲，相处需特别谨慎，建议择日择地化解。",
     }
 
     return {
-        "score":    final_score,
-        "grade":    grade,
-        "summary":  summaries[grade],
-        "details":  details,
+        "score": final_score,
+        "grade": grade,
+        "summary": summaries[grade],
+        "details": details,
         "person_a": {
             "pillars": ap,
             "weights": {k: round(v / (sum(aw.values()) or 1) * 100, 1) for k, v in aw.items()},

@@ -4,6 +4,7 @@ services/ziwei_engine/analysis.py — 逐宫文字解读模板
 提供各宫主星组合的简要性质描述，
 以及命宫/夫妻/事业/财帛等核心宫位解读。
 """
+
 from __future__ import annotations
 
 from .stars_main import StarPosition
@@ -66,29 +67,46 @@ AUX_STAR_DESC: dict[str, str] = {
 # 三段式结构化解读数据表
 # ──────────────────────────────────────────────────────────────
 STAR_TRAIT: dict[str, str] = {
-    "紫微": "尊贵自主、领导力强",   "天机": "聪敏机变、善于谋划",
-    "太阳": "光明热情、公众导向",   "武曲": "务实果断、财务强势",
-    "天同": "温和享福、贵人多助",   "廉贞": "多才多艺、是非较多",
-    "天府": "稳健保守、积累财富",   "太阴": "感性细腻、内敛财聚",
-    "贪狼": "多才多欲、桃花丰沛",   "巨门": "口才出众、明暗是非",
-    "天相": "忠厚助人、服务协调",   "天梁": "清高孤傲、长辈缘深",
-    "七杀": "勇猛果断、开创冲劲",   "破军": "变动不休、破旧立新",
+    "紫微": "尊贵自主、领导力强",
+    "天机": "聪敏机变、善于谋划",
+    "太阳": "光明热情、公众导向",
+    "武曲": "务实果断、财务强势",
+    "天同": "温和享福、贵人多助",
+    "廉贞": "多才多艺、是非较多",
+    "天府": "稳健保守、积累财富",
+    "太阴": "感性细腻、内敛财聚",
+    "贪狼": "多才多欲、桃花丰沛",
+    "巨门": "口才出众、明暗是非",
+    "天相": "忠厚助人、服务协调",
+    "天梁": "清高孤傲、长辈缘深",
+    "七杀": "勇猛果断、开创冲劲",
+    "破军": "变动不休、破旧立新",
 }
 
 STAR_CONCERN_SHORT: dict[str, str] = {
-    "紫微": "注意高傲孤立、过度自我要求",  "天机": "防情感多变、过度谋算",
-    "太阳": "防好面子、情绪起伏",          "武曲": "防感情强硬、冲突加剧",
-    "天同": "防过度安逸、进取不足",        "廉贞": "防口舌是非、感情纠缠",
-    "天府": "防过度保守、错失机遇",        "太阴": "防情绪化、优柔寡断",
-    "贪狼": "防欲望泛滥、定力不足",        "巨门": "防是非缠身、多疑难信",
-    "天相": "防依赖过强、决断力弱",        "天梁": "防清高孤僻、不合群",
-    "七杀": "防冲劲过猛、伤及自他",        "破军": "防变动耗散、难以积累",
+    "紫微": "注意高傲孤立、过度自我要求",
+    "天机": "防情感多变、过度谋算",
+    "太阳": "防好面子、情绪起伏",
+    "武曲": "防感情强硬、冲突加剧",
+    "天同": "防过度安逸、进取不足",
+    "廉贞": "防口舌是非、感情纠缠",
+    "天府": "防过度保守、错失机遇",
+    "太阴": "防情绪化、优柔寡断",
+    "贪狼": "防欲望泛滥、定力不足",
+    "巨门": "防是非缠身、多疑难信",
+    "天相": "防依赖过强、决断力弱",
+    "天梁": "防清高孤僻、不合群",
+    "七杀": "防冲劲过猛、伤及自他",
+    "破军": "防变动耗散、难以积累",
 }
 
 SHA_SHORT: dict[str, str] = {
-    "擎羊": "刀伤血光与是非竞争",  "陀罗": "拖延纠缠与暗中阻力",
-    "火星": "暴烈冲动与突发变化",  "铃星": "暗耗纠缠与迟缓变化",
-    "地空": "空想耗散与思路发散",  "地劫": "劫财破耗与意外损失",
+    "擎羊": "刀伤血光与是非竞争",
+    "陀罗": "拖延纠缠与暗中阻力",
+    "火星": "暴烈冲动与突发变化",
+    "铃星": "暗耗纠缠与迟缓变化",
+    "地空": "空想耗散与思路发散",
+    "地劫": "劫财破耗与意外损失",
 }
 
 HUA_SHORT: dict[str, str] = {
@@ -99,25 +117,33 @@ HUA_SHORT: dict[str, str] = {
 }
 
 PALACE_DOMAIN: dict[str, str] = {
-    "命宫": "性格格局", "兄弟宫": "兄弟财库", "夫妻宫": "婚恋感情",
-    "子女宫": "子嗣下属", "财帛宫": "财运进财", "疾厄宫": "健康体质",
-    "迁移宫": "外出社交", "奴仆宫": "交友合作", "官禄宫": "事业仕途",
-    "田宅宫": "家宅资产", "福德宫": "精神享乐", "父母宫": "父母上司",
+    "命宫": "性格格局",
+    "兄弟宫": "兄弟财库",
+    "夫妻宫": "婚恋感情",
+    "子女宫": "子嗣下属",
+    "财帛宫": "财运进财",
+    "疾厄宫": "健康体质",
+    "迁移宫": "外出社交",
+    "奴仆宫": "交友合作",
+    "官禄宫": "事业仕途",
+    "田宅宫": "家宅资产",
+    "福德宫": "精神享乐",
+    "父母宫": "父母上司",
 }
 
 PALACE_SUGGESTION: dict[str, str] = {
-    "命宫":  "充分了解自身先天优势与局限，以主动成长代替宿命论，将命宫特质转化为事业与人际的核心竞争力。",
-    "兄弟宫":"与手足及同辈合作时务必以书面约定权责与财务，感情再好也应保持清晰边界。",
-    "夫妻宫":"感情上主动而不强势，尊重对方节奏；婚前了解核心价值观，婚后保持各自独立空间。",
-    "子女宫":"对子女或下属以引导代替控制，容许失败与成长；创意类短期投资小额分散，做好止损预案。",
-    "财帛宫":"建立多元进财渠道，制定理财计划，避免冲动决策；遭遇财务波动时优先保住本金。",
-    "疾厄宫":"养成规律作息与运动习惯，定期体检；做好心理压力管理，关注先天易发病部位。",
-    "迁移宫":"主动把握出行与展示机会，拓宽视野与人脉；出行前做好风险预案与应急准备。",
-    "奴仆宫":"与合作伙伴建立清晰规则与契约，以长期信任代替短期利益；冲突时优先协商而非对抗。",
-    "官禄宫":"选择与命盘星性契合的职业方向，稳步积累专业声望；职场争议中以实力说话，避免过早锋芒毕露。",
-    "田宅宫":"用心维护家庭关系，不动产决策宜稳健；改善居家环境有助身心与运势共同提升。",
-    "福德宫":"培养内在充实感，减少向外寻求认可；精神投资（学习、兴趣、信仰）回报最为持久。",
-    "父母宫":"主动改善与父母、上司的沟通方式；争取支持时选择恰当时机与情绪平稳的表达方式。",
+    "命宫": "充分了解自身先天优势与局限，以主动成长代替宿命论，将命宫特质转化为事业与人际的核心竞争力。",
+    "兄弟宫": "与手足及同辈合作时务必以书面约定权责与财务，感情再好也应保持清晰边界。",
+    "夫妻宫": "感情上主动而不强势，尊重对方节奏；婚前了解核心价值观，婚后保持各自独立空间。",
+    "子女宫": "对子女或下属以引导代替控制，容许失败与成长；创意类短期投资小额分散，做好止损预案。",
+    "财帛宫": "建立多元进财渠道，制定理财计划，避免冲动决策；遭遇财务波动时优先保住本金。",
+    "疾厄宫": "养成规律作息与运动习惯，定期体检；做好心理压力管理，关注先天易发病部位。",
+    "迁移宫": "主动把握出行与展示机会，拓宽视野与人脉；出行前做好风险预案与应急准备。",
+    "奴仆宫": "与合作伙伴建立清晰规则与契约，以长期信任代替短期利益；冲突时优先协商而非对抗。",
+    "官禄宫": "选择与命盘星性契合的职业方向，稳步积累专业声望；职场争议中以实力说话，避免过早锋芒毕露。",
+    "田宅宫": "用心维护家庭关系，不动产决策宜稳健；改善居家环境有助身心与运势共同提升。",
+    "福德宫": "培养内在充实感，减少向外寻求认可；精神投资（学习、兴趣、信仰）回报最为持久。",
+    "父母宫": "主动改善与父母、上司的沟通方式；争取支持时选择恰当时机与情绪平稳的表达方式。",
 }
 
 
@@ -132,10 +158,7 @@ def _stars_in_palace(
         for name, pos in main_stars.items()
         if pos.branch_idx == palace_branch
     ]
-    auxes = [
-        name for name, b in aux_stars.items()
-        if b == palace_branch and not name.endswith("placeholder")
-    ]
+    auxes = [name for name, b in aux_stars.items() if b == palace_branch and not name.endswith("placeholder")]
     return mains, auxes
 
 
@@ -224,10 +247,9 @@ def generate_palace_analysis(
     else:
         # 空宫：借对宫星曜论命
         opp_branch = _opposite_branch(palace_branch, main_stars)
-        opp_mains = [
-            pos for pos in main_stars.values()
-            if pos.branch_idx == opp_branch
-        ] if opp_branch is not None else []
+        opp_mains = (
+            [pos for pos in main_stars.values() if pos.branch_idx == opp_branch] if opp_branch is not None else []
+        )
 
         if opp_mains:
             opp_names = "、".join(p.name for p in opp_mains)
@@ -280,14 +302,12 @@ def generate_palace_structured(
     mains = [pos for pos in main_stars.values() if pos.branch_idx == palace_branch]
     aux_in = [name for name, b in aux_stars.items() if b == palace_branch]
     sha_in = [s for s in SHA_SHORT if s in aux_in]
-    ji_in  = [s for s in _JI_STARS if s in aux_in]
+    ji_in = [s for s in _JI_STARS if s in aux_in]
 
     # ── 结论 ─────────────────────────────────────────────────
     if mains:
         star_part = "、".join(pos.name for pos in mains)
-        traits = "、".join(
-            dict.fromkeys(STAR_TRAIT.get(pos.name, pos.name) for pos in mains)
-        )
+        traits = "、".join(dict.fromkeys(STAR_TRAIT.get(pos.name, pos.name) for pos in mains))
         all_hua = []
         for pos in mains:
             for t in pos.transforms:
@@ -324,18 +344,14 @@ def generate_palace_structured(
                 bri = f"（{pos.brightness}·力量平淡）"
             else:
                 bri = ""
-            hua_items = [
-                f"{t}→{HUA_SHORT[t]}" for t in pos.transforms if t in HUA_SHORT
-            ]
+            hua_items = [f"{t}→{HUA_SHORT[t]}" for t in pos.transforms if t in HUA_SHORT]
             hua_s = "；".join(hua_items)
             line = f"■ {pos.name}{bri}：{base}"
             if hua_s:
                 line += f"；{hua_s}"
             exp_lines.append(line + "。")
     else:
-        exp_lines.append(
-            f"■ {palace_name}无主星入宫（空宫），以对宫星曜照射，宫位特质延迟或隐性显现。"
-        )
+        exp_lines.append(f"■ {palace_name}无主星入宫（空宫），以对宫星曜照射，宫位特质延迟或隐性显现。")
 
     aux_parts: list[str] = []
     for ax in aux_in[:5]:
@@ -361,10 +377,7 @@ def generate_palace_structured(
 
     # ── Tooltip ───────────────────────────────────────────────
     if mains:
-        star_tt = "，".join(
-            pos.name + ("·" + pos.transforms[0] if pos.transforms else "")
-            for pos in mains
-        )
+        star_tt = "，".join(pos.name + ("·" + pos.transforms[0] if pos.transforms else "") for pos in mains)
         trait_tt = STAR_TRAIT.get(mains[0].name, "")
         sha_tt = f"；注意{SHA_SHORT[sha_in[0]][:8]}" if sha_in else ""
         tooltip = f"{star_tt}：{trait_tt}{sha_tt}。"
@@ -432,13 +445,19 @@ def generate_summary(
         lines.append("命宫：空宫，借对宫论断")
 
     # 检查吉凶杂星
-    sha_stars = [s for s in ["擎羊", "陀罗", "火星", "铃星", "地空", "地劫"]
-                 if s in aux_stars and aux_stars[s] == life_palace_branch]
+    sha_stars = [
+        s
+        for s in ["擎羊", "陀罗", "火星", "铃星", "地空", "地劫"]
+        if s in aux_stars and aux_stars[s] == life_palace_branch
+    ]
     if sha_stars:
         lines.append(f"命宫煞星：{'、'.join(sha_stars)} — 性格强烈，人生多波折，需磨砺成长")
 
-    ji_stars = [s for s in ["文昌", "文曲", "天魁", "天钺", "左辅", "右弼"]
-                if s in aux_stars and aux_stars[s] == life_palace_branch]
+    ji_stars = [
+        s
+        for s in ["文昌", "文曲", "天魁", "天钺", "左辅", "右弼"]
+        if s in aux_stars and aux_stars[s] == life_palace_branch
+    ]
     if ji_stars:
         lines.append(f"命宫吉星：{'、'.join(ji_stars)} — 贵人助力，学业事业顺遂")
 

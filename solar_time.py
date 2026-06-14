@@ -10,15 +10,13 @@
 
     当前状态：仍被 verify.py 调用，M1.02 完成前保持可用。
 """
-from __future__ import annotations
 
-import warnings
-from typing import Tuple
+from __future__ import annotations
 
 from constants import DEFAULT_LON
 
 
-def compute_solar_correction_minutes(lon: float) -> Tuple[float, float]:
+def compute_solar_correction_minutes(lon: float) -> tuple[float, float]:
     """Return (longitude_delta_deg, solar_correction_minutes).
 
     ⚠️ 仅含经度修正，缺 Spencer EoT，误差最大 ±16 分钟。

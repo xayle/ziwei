@@ -12,21 +12,28 @@ M1 任务 1.06: 5分支决策树 [S8/P61]
   特殊格局 — 专旺/从旺等（当前版本仅检测极端情况）
   调候法 — 月令寒暖，以调适为先
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
 from services.bazi_engine.strength import StrengthResult
-from services.bazi_engine.wuxing import ELEMENTS, WuxingResult
+from services.bazi_engine.wuxing import WuxingResult
 
 # 五行相生相克
 SHENG: dict[str, str] = {
-    "wood": "fire", "fire": "earth", "earth": "metal",
-    "metal": "water", "water": "wood",
+    "wood": "fire",
+    "fire": "earth",
+    "earth": "metal",
+    "metal": "water",
+    "water": "wood",
 }
 KE: dict[str, str] = {
-    "wood": "earth", "earth": "water", "water": "fire",
-    "fire": "metal", "metal": "wood",
+    "wood": "earth",
+    "earth": "water",
+    "water": "fire",
+    "fire": "metal",
+    "metal": "wood",
 }
 # 我的父母五行（生我）
 SHENG_REV = {v: k for k, v in SHENG.items()}
@@ -38,10 +45,11 @@ KE_REV = {v: k for k, v in KE.items()}
 @dataclass
 class YongshenResult:
     """用神结果"""
-    branch: str                        # 分支: 扶抑/从强/从弱/特殊格局/调候
-    favor: list[str]                   # 喜用五行（元素名）
-    avoid: list[str]                   # 忌神五行（元素名）
-    rationale: str                     # 白话说明
+
+    branch: str  # 分支: 扶抑/从强/从弱/特殊格局/调候
+    favor: list[str]  # 喜用五行（元素名）
+    avoid: list[str]  # 忌神五行（元素名）
+    rationale: str  # 白话说明
     inference_tags: list[str] = field(default_factory=list)
 
 
@@ -55,9 +63,9 @@ def _get_fuyi_yongshen(
     适用: 中和/偏旺/偏弱（占命局~80%）
     """
     parent_elem = SHENG_REV.get(day_elem, "")  # 生我（印星）
-    child_elem = SHENG.get(day_elem, "")        # 我生（食伤）
-    ke_me = KE_REV.get(day_elem, "")            # 克我（官杀）
-    i_ke = KE.get(day_elem, "")                 # 我克（财星）
+    child_elem = SHENG.get(day_elem, "")  # 我生（食伤）
+    ke_me = KE_REV.get(day_elem, "")  # 克我（官杀）
+    i_ke = KE.get(day_elem, "")  # 我克（财星）
 
     if strength.is_weak:
         favor = [day_elem, parent_elem]
@@ -83,8 +91,7 @@ def _get_fuyi_yongshen(
         avoid = [ke_me]
         tag = "中和命局，顺势而为"
         rationale = (
-            f"日主{strength.day_stem}（{day_elem}）中和，"
-            f"以{parent_elem}（印）调气，{child_elem}（食伤）发挥为佳。"
+            f"日主{strength.day_stem}（{day_elem}）中和，以{parent_elem}（印）调气，{child_elem}（食伤）发挥为佳。"
         )
 
     return YongshenResult(
@@ -108,10 +115,7 @@ def _get_congqiang_yongshen(day_elem: str) -> YongshenResult:
         branch="从强",
         favor=[day_elem, parent_elem],
         avoid=[ke_me, child_elem],
-        rationale=(
-            f"从强格：日主{day_elem}极旺，顺势取{day_elem}和{parent_elem}为喜用，"
-            f"忌{ke_me}来克（逆之则祸）。"
-        ),
+        rationale=(f"从强格：日主{day_elem}极旺，顺势取{day_elem}和{parent_elem}为喜用，忌{ke_me}来克（逆之则祸）。"),
         inference_tags=["极旺从强格"],
     )
 
@@ -183,8 +187,8 @@ def _get_jianluge_yongshen(
     取四柱透干中官/杀/财/食最旺者为用神。
     优先级：官杀（克我）> 财星（我克）> 食伤（我生）
     """
-    ke_me = KE_REV.get(day_elem, "")     # 克我（官杀）
-    i_ke = KE.get(day_elem, "")           # 我克（财星）
+    ke_me = KE_REV.get(day_elem, "")  # 克我（官杀）
+    i_ke = KE.get(day_elem, "")  # 我克（财星）
     child_elem = SHENG.get(day_elem, "")  # 我生（食伤）
     parent_elem = SHENG_REV.get(day_elem, "")  # 生我（印星）
 
@@ -214,8 +218,8 @@ def _get_yangrenge_yongshen(day_elem: str) -> YongshenResult:
     羊刃格用神：刃旺须制，官杀制刃为首要用神，财星辅之。
     忌印比再增旺。
     """
-    ke_me = KE_REV.get(day_elem, "")   # 官杀（克我）
-    i_ke = KE.get(day_elem, "")         # 财星（我克）
+    ke_me = KE_REV.get(day_elem, "")  # 官杀（克我）
+    i_ke = KE.get(day_elem, "")  # 财星（我克）
     parent_elem = SHENG_REV.get(day_elem, "")  # 印星（生我）
 
     favor = [e for e in [ke_me, i_ke] if e]
@@ -270,17 +274,16 @@ def compute_yongshen(
 
     # ② 极旺 → 判断是否从强（需要同类占绝对优势）
     if strength.tier == "极旺":
-        same_or_parent_score = (
-            wuxing.scores_weighted.get(day_elem, 0)
-            + wuxing.scores_weighted.get(SHENG_REV.get(day_elem, ""), 0)
+        same_or_parent_score = wuxing.scores_weighted.get(day_elem, 0) + wuxing.scores_weighted.get(
+            SHENG_REV.get(day_elem, ""), 0
         )
         if same_or_parent_score >= 70:
             return _get_congqiang_yongshen(day_elem)
 
     # ③ 极弱 → 判断是否从弱
-    if strength.tier == "极弱":        # P2-F: 防护 scores_weighted 为空时 max() 抛 ValueError
+    if strength.tier == "极弱":  # P2-F: 防护 scores_weighted 为空时 max() 抛 ValueError
         if not wuxing.scores_weighted:
-            return _get_fuyi_yongshen(day_elem, strength, wuxing)        # 找出最强五行
+            return _get_fuyi_yongshen(day_elem, strength, wuxing)  # 找出最强五行
         dominant_elem = max(wuxing.scores_weighted, key=lambda e: wuxing.scores_weighted[e])
         same_score = wuxing.scores_weighted.get(day_elem, 0)
         parent_score = wuxing.scores_weighted.get(SHENG_REV.get(day_elem, ""), 0)

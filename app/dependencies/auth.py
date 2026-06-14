@@ -1,9 +1,10 @@
 """Shared authentication and dependency injection."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import os
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends, Request
 from sqlmodel import Session, select
@@ -26,7 +27,7 @@ def _auth_bypass_enabled() -> bool:
 
 def _local_dummy_user() -> User:
     """提供本地绕过认证时的占位用户。"""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return User(
         id=0,
         username="local",
@@ -57,7 +58,7 @@ def _get_or_create_bypass_user(session: Session) -> User:
             session.refresh(existing)
         return existing
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     user = User(
         username="local_bypass",
         email="local_bypass@example.com",
@@ -74,20 +75,17 @@ def _get_or_create_bypass_user(session: Session) -> User:
     return user
 
 
-def get_current_user(
-    request: Request,
-    session: Session = Depends(get_session)
-) -> Optional[User]:
+def get_current_user(request: Request, session: Session = Depends(get_session)) -> User | None:
     """
     从Bearer token获取当前用户（可选认证）
-    
+
     如果token无效或不存在，返回None。
     需要强制认证的端点应该使用 require_user 装饰器。
-    
+
     Args:
         request: FastAPI Request
         session: 数据库连接
-    
+
     Returns:
         User 对象或 None（如果未认证）
     """
@@ -102,7 +100,7 @@ def get_current_user(
                 # 兜底：极端情况下（例如数据库瞬时不可用）仍返回内存用户，避免开发流程完全阻断
                 return _local_dummy_user()
         return None
-    
+
     try:
         scheme, token = auth_header.split()
         if scheme.lower() != "bearer":
@@ -112,35 +110,33 @@ def get_current_user(
     payload = verify_token(token)
     if not payload:
         return None
-    
+
     # 从数据库获取完整用户对象
     user = session.exec(
         select(User).where(
             User.id == payload.user_id,
-            User.deleted_at.is_(None)  # type: ignore
+            User.deleted_at.is_(None),  # type: ignore
         )
     ).first()
-    
+
     if not user or not user.is_active:
         return None
-    
+
     return user
 
 
-def require_user(
-    user: Optional[User] = Depends(get_current_user)
-) -> User:
+def require_user(user: User | None = Depends(get_current_user)) -> User:
     """
     强制认证的依赖函数。如果user为None，抛出401错误。
-    
+
     用于需要认证的endpoint。
-    
+
     Args:
         user: 从 get_current_user 获取
-    
+
     Returns:
         User 对象
-    
+
     Raises:
         AuthenticationException: 如果未认证
     """
@@ -155,5 +151,5 @@ def require_user(
 
 
 # 类型注解快捷方式
-CurrentUser = Annotated[Optional[User], Depends(get_current_user)]
+CurrentUser = Annotated[User | None, Depends(get_current_user)]
 RequiredUser = Annotated[User, Depends(require_user)]

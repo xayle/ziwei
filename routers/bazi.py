@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import re
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -56,6 +56,7 @@ def api_bazi_full(
 # A1  流年分域预测  POST /api/v1/bazi/liunian-domain
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class LiunianDomainRequest(BaseModel):
     case_id: str
     year: int
@@ -95,6 +96,7 @@ def api_liunian_domain(
 
     # 运行完整计算（已有 TTLCache，重复请求不会重新算）
     from services.bazi_engine_service import calculate
+
     result = calculate(dt, case.lon, case.tz, False, "single", case.gender)
     vr = result.verify_response
     rp = vr.pillars_primary
@@ -102,27 +104,33 @@ def api_liunian_domain(
     # 提取用神与五行评分
     favor: list[str] = list(vr.yongshen.favor) if vr.yongshen and vr.yongshen.favor else []
     wx = vr.wuxing_score
-    wx_scores: dict[str, float] = {
-        e: float(getattr(wx, e, 0.0)) for e in ("wood", "fire", "earth", "metal", "water")
-    } if wx else {}
+    wx_scores: dict[str, float] = (
+        {e: float(getattr(wx, e, 0.0)) for e in ("wood", "fire", "earth", "metal", "water")} if wx else {}
+    )
 
     # 重新计算十神得分（shishen_scores 不存储在 VerifyResponse 中）
     from services.bazi_engine.wuxing import compute_shishen_scores
+
     shishen_scores = compute_shishen_scores(
         day_stem=rp.day.stem,
-        year_stem=rp.year.stem, month_stem=rp.month.stem, hour_stem=rp.hour.stem,
-        year_branch=rp.year.branch, month_branch=rp.month.branch,
-        day_branch=rp.day.branch, hour_branch=rp.hour.branch,
+        year_stem=rp.year.stem,
+        month_stem=rp.month.stem,
+        hour_stem=rp.hour.stem,
+        year_branch=rp.year.branch,
+        month_branch=rp.month.branch,
+        day_branch=rp.day.branch,
+        hour_branch=rp.hour.branch,
     )
 
     # 流年天干地支
-    _STEMS    = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+    _STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
     _BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
     y = payload.year
-    year_stem   = _STEMS[(y - 4) % 10]
+    year_stem = _STEMS[(y - 4) % 10]
     year_branch = _BRANCHES[(y - 4) % 12]
 
     from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
+
     domain = compute_liunian_domain_forecasts(
         year=y,
         year_stem=year_stem,
@@ -146,15 +154,16 @@ def api_liunian_domain(
 # A2  大运叙述报告  POST /api/v1/bazi/dayun-report
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class DayunReportRequest(BaseModel):
     case_id: str
 
 
 class DayunReportItem(BaseModel):
     ganzhi: str
-    start_age: Optional[int] = None
-    end_age: Optional[int] = None
-    ten_god: Optional[str] = None
+    start_age: int | None = None
+    end_age: int | None = None
+    ten_god: str | None = None
     narrative: str
 
 
@@ -188,6 +197,7 @@ def api_dayun_report(
         raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
 
     from services.bazi_engine_service import calculate
+
     result = calculate(dt, case.lon, case.tz, False, "single", case.gender)
     vr = result.verify_response
 
@@ -198,27 +208,19 @@ def api_dayun_report(
             ganzhi = (it.stem or "") + (it.branch or "")
             # 计算结束年龄
             if i + 1 < len(dayun_list):
-                end_age = int((dayun_list[i + 1].start_age or 0)) - 1
+                end_age = int(dayun_list[i + 1].start_age or 0) - 1
             else:
-                end_age = int((it.start_age or 0)) + 9
+                end_age = int(it.start_age or 0) + 9
 
             # 若 M3.02 已生成 narrative，直接使用；否则调用引擎补生成
             narrative = it.narrative or ""
             if not narrative:
                 try:
-                    favor: list[str] = (
-                        list(vr.yongshen.favor)
-                        if vr.yongshen and vr.yongshen.favor else []
-                    )
-                    geju_name = (
-                        vr.geju.geju_name
-                        if vr.geju and vr.geju.geju_name else "普通格"
-                    )
-                    strength_tier = (
-                        vr.day_master_strength.tier
-                        if vr.day_master_strength else "中和"
-                    ) or "中和"
+                    favor: list[str] = list(vr.yongshen.favor) if vr.yongshen and vr.yongshen.favor else []
+                    geju_name = vr.geju.geju_name if vr.geju and vr.geju.geju_name else "普通格"
+                    strength_tier = (vr.day_master_strength.tier if vr.day_master_strength else "中和") or "中和"
                     from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
+
                     narrative = generate_dayun_narrative(
                         stem=it.stem or "",
                         branch=it.branch or "",
@@ -236,13 +238,15 @@ def api_dayun_report(
                 except Exception:
                     narrative = f"{ganzhi}大运（{it.start_age}–{end_age}岁）"
 
-            items.append(DayunReportItem(
-                ganzhi=ganzhi,
-                start_age=int(it.start_age) if it.start_age is not None else None,
-                end_age=end_age,
-                ten_god=it.ten_god,
-                narrative=narrative,
-            ))
+            items.append(
+                DayunReportItem(
+                    ganzhi=ganzhi,
+                    start_age=int(it.start_age) if it.start_age is not None else None,
+                    end_age=end_age,
+                    ten_god=it.ten_god,
+                    narrative=narrative,
+                )
+            )
 
     total_chars = sum(len(it.narrative) for it in items)
     return DayunReportResponse(items=items, narrative_total_chars=total_chars)
@@ -252,11 +256,12 @@ def api_dayun_report(
 # A3  无状态八字合盘  POST /api/v1/bazi/compatibility
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class CompatibilitySubject(BaseModel):
-    birth_dt: str                           # ISO 8601
+    birth_dt: str  # ISO 8601
     lon: float = Field(116.4, ge=73.0, le=135.0)
     tz: str = "Asia/Shanghai"
-    gender: Optional[str] = None
+    gender: str | None = None
 
 
 class CompatibilityRequest(BaseModel):
@@ -273,14 +278,32 @@ class CompatibilityResponse(BaseModel):
 
 
 _BRANCH_CHONG: dict[str, str] = {
-    "子": "午", "午": "子", "丑": "未", "未": "丑",
-    "寅": "申", "申": "寅", "卯": "酉", "酉": "卯",
-    "辰": "戌", "戌": "辰", "巳": "亥", "亥": "巳",
+    "子": "午",
+    "午": "子",
+    "丑": "未",
+    "未": "丑",
+    "寅": "申",
+    "申": "寅",
+    "卯": "酉",
+    "酉": "卯",
+    "辰": "戌",
+    "戌": "辰",
+    "巳": "亥",
+    "亥": "巳",
 }
 _BRANCH_HE: dict[str, str] = {
-    "子": "丑", "丑": "子", "寅": "亥", "亥": "寅",
-    "卯": "戌", "戌": "卯", "辰": "酉", "酉": "辰",
-    "巳": "申", "申": "巳", "午": "未", "未": "午",
+    "子": "丑",
+    "丑": "子",
+    "寅": "亥",
+    "亥": "寅",
+    "卯": "戌",
+    "戌": "卯",
+    "辰": "酉",
+    "酉": "辰",
+    "巳": "申",
+    "申": "巳",
+    "午": "未",
+    "未": "午",
 }
 _BRANCH_SANHE = [
     frozenset(["申", "子", "辰"]),
@@ -289,17 +312,25 @@ _BRANCH_SANHE = [
     frozenset(["巳", "酉", "丑"]),
 ]
 _WUXING_ZH: dict[str, str] = {
-    "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水",
+    "wood": "木",
+    "fire": "火",
+    "earth": "土",
+    "metal": "金",
+    "water": "水",
 }
 _WUXING_SHENG: dict[str, str] = {
-    "wood": "fire", "fire": "earth", "earth": "metal",
-    "metal": "water", "water": "wood",
+    "wood": "fire",
+    "fire": "earth",
+    "earth": "metal",
+    "metal": "water",
+    "water": "wood",
 }
 
 
 def _build_profile(subj: CompatibilitySubject):
     """无状态计算单人命盘基础信息（不写 DB）。"""
     from services.bazi_engine_service import calculate
+
     try:
         dt = datetime.fromisoformat(subj.birth_dt)
     except ValueError:
@@ -404,6 +435,7 @@ def api_compatibility(
 # A4  年度月历运势  POST /api/v1/bazi/monthly
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class MonthlyRequest(BaseModel):
     case_id: str
     year: int = Field(description="公历年份，如 2025")
@@ -416,7 +448,7 @@ class MonthlyItemOut(BaseModel):
     luck_level: str
     color_hint: str
     tip: str
-    clash_with: Optional[str] = None
+    clash_with: str | None = None
 
 
 class MonthlyResponse(BaseModel):
@@ -446,24 +478,33 @@ def api_monthly(
         raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
 
     from services.bazi_engine_service import calculate
+
     result = calculate(dt, case.lon, case.tz, False, "single", case.gender)
     vr = result.verify_response
     rp = vr.pillars_primary
 
-    favor  = list(vr.yongshen.favor)  if vr.yongshen and vr.yongshen.favor  else []
-    avoid  = list(vr.yongshen.avoid)  if vr.yongshen and vr.yongshen.avoid  else []
+    favor = list(vr.yongshen.favor) if vr.yongshen and vr.yongshen.favor else []
+    avoid = list(vr.yongshen.avoid) if vr.yongshen and vr.yongshen.avoid else []
 
     # 构建12个月干支
-    _STEMS12    = ["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"]
-    _BRANCHES12 = ["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"]
+    _STEMS12 = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+    _BRANCHES12 = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
     y = payload.year
-    year_stem   = _STEMS12[(y - 4) % 10]
+    year_stem = _STEMS12[(y - 4) % 10]
     year_branch = _BRANCHES12[(y - 4) % 12]
 
     # 五虎遁年起月干：甲己→丙、乙庚→戊、丙辛→庚、丁壬→壬、戊癸→甲
     _MONTH_START: dict[str, int] = {
-        "甲": 2, "己": 2, "乙": 4, "庚": 4,
-        "丙": 6, "辛": 6, "丁": 8, "壬": 8, "戊": 0, "癸": 0,
+        "甲": 2,
+        "己": 2,
+        "乙": 4,
+        "庚": 4,
+        "丙": 6,
+        "辛": 6,
+        "丁": 8,
+        "壬": 8,
+        "戊": 0,
+        "癸": 0,
     }
     start_idx = _MONTH_START.get(year_stem, 2)
     month_ganzhis = [
@@ -472,6 +513,7 @@ def api_monthly(
     ]
 
     from services.bazi_engine.analysis.monthly import compute_monthly
+
     monthly_list = compute_monthly(
         day_branch=rp.day.branch,
         yongshen_favor=favor,
@@ -485,15 +527,17 @@ def api_monthly(
     items: list[MonthlyItemOut] = []
     for i, m in enumerate(monthly_list):
         gz = month_ganzhis[i] if i < len(month_ganzhis) else ""
-        items.append(MonthlyItemOut(
-            month=m.month,
-            month_ganzhi=gz,
-            month_dizhi=m.month_dizhi,
-            luck_level=m.luck_level,
-            color_hint=m.color_hint or "",
-            tip=m.tip or "",
-            clash_with=m.clash_with,
-        ))
+        items.append(
+            MonthlyItemOut(
+                month=m.month,
+                month_ganzhi=gz,
+                month_dizhi=m.month_dizhi,
+                luck_level=m.luck_level,
+                color_hint=m.color_hint or "",
+                tip=m.tip or "",
+                clash_with=m.clash_with,
+            )
+        )
 
     return MonthlyResponse(
         year=y,
@@ -506,18 +550,31 @@ def api_monthly(
 # A5  模块化按需分析  POST /api/v1/bazi/analyze
 # ─────────────────────────────────────────────────────────────────────────────
 
-_ALLOWED_TABS = frozenset([
-    "pillars", "geju", "yongshen", "wuxing", "dayun",
-    "life_arc", "lucky", "wealth", "career", "marriage",
-    "health", "personality", "monthly", "liunian",
-])
+_ALLOWED_TABS = frozenset(
+    [
+        "pillars",
+        "geju",
+        "yongshen",
+        "wuxing",
+        "dayun",
+        "life_arc",
+        "lucky",
+        "wealth",
+        "career",
+        "marriage",
+        "health",
+        "personality",
+        "monthly",
+        "liunian",
+    ]
+)
 
 
 class AnalyzeRequest(BaseModel):
-    birth_dt: str                               # ISO 8601
+    birth_dt: str  # ISO 8601
     lon: float = Field(116.4, ge=73.0, le=135.0)
     tz: str = "Asia/Shanghai"
-    gender: Optional[str] = None
+    gender: str | None = None
     tabs: list[str] = Field(
         default_factory=lambda: ["life_arc", "lucky"],
         description=f"需要的字段子集，可选值: {sorted(_ALLOWED_TABS)}",
@@ -539,6 +596,7 @@ def api_analyze(
         raise HTTPException(status_code=422, detail=f"不支持的 tab: {sorted(unknown)}")
 
     from services.bazi_engine_service import calculate
+
     try:
         dt = datetime.fromisoformat(payload.birth_dt)
     except ValueError:
@@ -548,20 +606,20 @@ def api_analyze(
     vr = result.verify_response
 
     _tab_map: dict[str, Any] = {
-        "pillars":     vr.pillars_primary,
-        "geju":        vr.geju,
-        "yongshen":    vr.yongshen,
-        "wuxing":      vr.wuxing_score,
-        "dayun":       vr.dayun,
-        "life_arc":    vr.life_arc,
-        "lucky":       vr.lucky,
-        "wealth":      vr.wealth_analysis,
-        "career":      vr.career,           # VerifyResponse 字段名为 career（非 career_analysis）
-        "marriage":    vr.marriage_analysis,
-        "health":      vr.health,           # VerifyResponse 字段名为 health（非 health_analysis）
+        "pillars": vr.pillars_primary,
+        "geju": vr.geju,
+        "yongshen": vr.yongshen,
+        "wuxing": vr.wuxing_score,
+        "dayun": vr.dayun,
+        "life_arc": vr.life_arc,
+        "lucky": vr.lucky,
+        "wealth": vr.wealth_analysis,
+        "career": vr.career,  # VerifyResponse 字段名为 career（非 career_analysis）
+        "marriage": vr.marriage_analysis,
+        "health": vr.health,  # VerifyResponse 字段名为 health（非 health_analysis）
         "personality": vr.personality,
-        "monthly":     vr.monthly_fortune,
-        "liunian":     vr.liunian_detail,
+        "monthly": vr.monthly_fortune,
+        "liunian": vr.liunian_detail,
     }
 
     out: dict[str, Any] = {}
@@ -581,11 +639,12 @@ def api_analyze(
 # A7  节气精准时刻  GET /api/v1/calendar/jieqi
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 # 注：A7 挂在 bazi router 中，但通过 app.include_router 时 prefix 可改
 # 对外路径：GET /api/v1/bazi/jieqi?year=2025
 class JieqiItemOut(BaseModel):
     name: str
-    dt_local: str   # ISO 8601 Asia/Shanghai
+    dt_local: str  # ISO 8601 Asia/Shanghai
 
 
 class JieqiResponse(BaseModel):
@@ -604,6 +663,7 @@ def api_jieqi(
     命理师判断月柱必用，精度到秒。
     """
     from backends import BackendUnavailable, SxtwlBackend
+
     try:
         backend = SxtwlBackend()
     except BackendUnavailable:
@@ -618,15 +678,22 @@ def api_jieqi(
                 dd = backend.sxtwl.JD2DD(info.jd)
                 from datetime import datetime
                 from zoneinfo import ZoneInfo
+
                 dt = datetime(
-                    dd.Y, dd.M, dd.D,
-                    int(dd.h), int(dd.m), int(dd.s),
+                    dd.Y,
+                    dd.M,
+                    dd.D,
+                    int(dd.h),
+                    int(dd.m),
+                    int(dd.s),
                     tzinfo=ZoneInfo("Asia/Shanghai"),
                 )
-                all_items.append(JieqiItemOut(
-                    name=backend.JIE_NAMES[idx],
-                    dt_local=dt.isoformat(),
-                ))
+                all_items.append(
+                    JieqiItemOut(
+                        name=backend.JIE_NAMES[idx],
+                        dt_local=dt.isoformat(),
+                    )
+                )
         # 按时间排序
         all_items.sort(key=lambda x: x.dt_local)
     except Exception as exc:
@@ -639,11 +706,12 @@ def api_jieqi(
 # A8  格局专项接口  POST /api/v1/bazi/geju
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class GejuSubjectRequest(BaseModel):
     birth_dt: str
     lon: float = Field(116.4, ge=73.0, le=135.0)
     tz: str = "Asia/Shanghai"
-    gender: Optional[str] = None
+    gender: str | None = None
 
 
 class GejuLightResponse(BaseModel):
@@ -665,6 +733,7 @@ def api_geju(
     不走数据库，直接无状态计算。
     """
     from services.bazi_engine_service import calculate
+
     try:
         dt = datetime.fromisoformat(payload.birth_dt)
     except ValueError:
@@ -675,8 +744,12 @@ def api_geju(
     g = vr.geju
     if g is None:
         return GejuLightResponse(
-            geju_name="普通格", confidence=0.0, is_broken=False,
-            note="格局未能判断", classic_ref="", ten_god="",
+            geju_name="普通格",
+            confidence=0.0,
+            is_broken=False,
+            note="格局未能判断",
+            classic_ref="",
+            ten_god="",
         )
     return GejuLightResponse(
         geju_name=g.geju_name,
@@ -692,6 +765,7 @@ def api_geju(
 # A9  多历法精度对比  POST /api/v1/bazi/calendar-compare  [ADMIN]
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class CalendarCompareRequest(BaseModel):
     birth_dt: str
     lon: float = Field(116.4, ge=73.0, le=135.0)
@@ -706,8 +780,8 @@ class PillarOut(BaseModel):
 
 
 class CalendarCompareResponse(BaseModel):
-    sxtwl: Optional[PillarOut] = None
-    cnlunar: Optional[PillarOut] = None
+    sxtwl: PillarOut | None = None
+    cnlunar: PillarOut | None = None
     diff_fields: list[str]
     warnings: list[str]
 
@@ -721,6 +795,7 @@ def api_calendar_compare(
     A9 多历法精度对比（ADMIN 工具）：sxtwl vs cnlunar 四柱并排对比。
     """
     from app.exceptions import AuthorizationException, ErrorCode
+
     if not current_user.is_admin:
         raise AuthorizationException(
             code=ErrorCode.AUTHZ_PERMISSION_DENIED,
@@ -732,23 +807,23 @@ def api_calendar_compare(
     from backends import CnlunarBackend, get_sxtwl_backend
 
     try:
-        dt = datetime.fromisoformat(payload.birth_dt).replace(
-            tzinfo=ZoneInfo(payload.tz)
-        )
+        dt = datetime.fromisoformat(payload.birth_dt).replace(tzinfo=ZoneInfo(payload.tz))
     except (ValueError, KeyError) as exc:
         raise HTTPException(status_code=422, detail=f"参数无效: {exc}")
 
     warnings_out: list[str] = []
-    sxtwl_out: Optional[PillarOut] = None
-    cnlunar_out: Optional[PillarOut] = None
+    sxtwl_out: PillarOut | None = None
+    cnlunar_out: PillarOut | None = None
 
     # sxtwl
     try:
         sx = get_sxtwl_backend()
         px = sx.get_pillars(dt)
         sxtwl_out = PillarOut(
-            year=px.year.ganzhi, month=px.month.ganzhi,
-            day=px.day.ganzhi,   hour=px.hour.ganzhi,
+            year=px.year.ganzhi,
+            month=px.month.ganzhi,
+            day=px.day.ganzhi,
+            hour=px.hour.ganzhi,
         )
     except Exception as exc:
         warnings_out.append(f"sxtwl_error: {exc}")
@@ -758,8 +833,10 @@ def api_calendar_compare(
         cn = CnlunarBackend()
         pc = cn.get_pillars(dt)
         cnlunar_out = PillarOut(
-            year=pc.year.ganzhi, month=pc.month.ganzhi,
-            day=pc.day.ganzhi,   hour=pc.hour.ganzhi,
+            year=pc.year.ganzhi,
+            month=pc.month.ganzhi,
+            day=pc.day.ganzhi,
+            hour=pc.hour.ganzhi,
         )
     except Exception as exc:
         warnings_out.append(f"cnlunar_error: {exc}")
@@ -785,8 +862,10 @@ def api_calendar_compare(
 # W2  批量命盘对比  POST /api/v1/bazi/batch-compare
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class BatchCompareRequest(BaseModel):
     """W2 批量命盘对比请求：最多 10 个 case_id，并排对比关键字段。"""
+
     case_ids: list[str] = Field(..., min_length=2, max_length=10)
 
 
@@ -803,8 +882,8 @@ class BatchCaseProfile(BaseModel):
 class BatchCompareResponse(BaseModel):
     count: int
     profiles: list[BatchCaseProfile]
-    common_favor: list[str]    # 所有人共同喜用神
-    common_avoid: list[str]    # 所有人共同忌神
+    common_favor: list[str]  # 所有人共同喜用神
+    common_avoid: list[str]  # 所有人共同忌神
 
 
 @router.post(
@@ -828,9 +907,7 @@ def api_bazi_batch_compare(
     all_avoids: list[set[str]] = []
 
     for cid in payload.case_ids:
-        case = session.exec(
-            _select(_Case).where(_Case.id == cid, _Case.deleted_at.is_(None))
-        ).first()
+        case = session.exec(_select(_Case).where(_Case.id == cid, _Case.deleted_at.is_(None))).first()
         if not case:
             profiles.append(BatchCaseProfile(case_id=cid, error="案例不存在"))
             continue
@@ -842,6 +919,7 @@ def api_bazi_batch_compare(
             import zoneinfo as _zi
 
             from services.bazi_engine_service import calculate
+
             birth_dt = _dt.fromisoformat(case.birth_dt_local)
             lon = float(case.longitude or 116.4)
             tz_name = case.timezone or "Asia/Shanghai"
@@ -861,14 +939,16 @@ def api_bazi_batch_compare(
                     v = getattr(wx_raw, el, None)
                     if v is not None:
                         wx_scores[el] = float(v)
-            profiles.append(BatchCaseProfile(
-                case_id=cid,
-                name=case.name or "",
-                geju_name=geju,
-                yongshen_favor=favor,
-                yongshen_avoid=avoid,
-                wuxing_scores=wx_scores,
-            ))
+            profiles.append(
+                BatchCaseProfile(
+                    case_id=cid,
+                    name=case.name or "",
+                    geju_name=geju,
+                    yongshen_favor=favor,
+                    yongshen_avoid=avoid,
+                    wuxing_scores=wx_scores,
+                )
+            )
             all_favors.append(set(favor))
             all_avoids.append(set(avoid))
         except Exception as exc:
@@ -909,8 +989,8 @@ def _load_golden_cases() -> list[dict]:
     description="返回预置命理黄金案例，可按格局名称或标签过滤。无需认证。",
 )
 def get_golden_cases(
-    geju: Optional[str] = None,
-    tag: Optional[str] = None,
+    geju: str | None = None,
+    tag: str | None = None,
     limit: int = 50,
 ):
     """
@@ -924,18 +1004,15 @@ def get_golden_cases(
         cases = [c for c in cases if c.get("id", "").upper().startswith(tag.upper())]
     if geju:
         geju_lower = geju.lower()
-        cases = [
-            c for c in cases
-            if geju_lower in str(c.get("computed_pattern", {}).get("geju_name", "")).lower()
-        ]
+        cases = [c for c in cases if geju_lower in str(c.get("computed_pattern", {}).get("geju_name", "")).lower()]
     limit = max(1, min(limit, 200))
     return {"total": len(cases), "cases": cases[:limit]}
 
 
 # ─────────────────────────── D4: 流年年度报告（异步 202） ────────────────────────────────
 import asyncio as _asyncio  # noqa: E402
+from datetime import UTC
 from datetime import datetime as _dt_cls  # noqa: E402
-from datetime import timezone as _tz  # noqa: E402
 import uuid as _uuid  # noqa: E402
 
 # 进程内任务存储（生产环境应替换为 Redis/DB）
@@ -954,38 +1031,125 @@ class LiunianReportResponse(BaseModel):
     year: int
     case_id: str
     submitted_at: str
-    result: Optional[dict] = None
-    error: Optional[str] = None
+    result: dict | None = None
+    error: str | None = None
 
 
 async def _build_liunian_report(task_id: str, case_id: str, year: int, include_months: bool) -> None:
-    """后台异步生成流年年度报告"""
+    """后台异步生成流年年度报告（接通真实流年引擎）"""
     _liunian_tasks[task_id]["status"] = "running"
     try:
-        # 模拟耗时计算（生产环境替换为真实流年引擎调用）
-        await _asyncio.sleep(0.1)
+        from datetime import datetime as _dt
+        from zoneinfo import ZoneInfo as _ZoneInfo
+
+        from sqlmodel import Session as _Session
+
+        from app.models import Case as _CaseModel
+        from db import get_engine as _get_engine
+        from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
+        from services.bazi_engine_service import calculate as _calculate
+        from services.bazi_full_service import ganzhi_for_year as _gz_year
+        from services.bazi_full_service import ten_god as _ten_god
+
+        # 1. 读取案例
+        with _Session(_get_engine()) as _sess:
+            case = _sess.get(_CaseModel, case_id)
+            if case is None or case.deleted_at is not None:
+                raise ValueError(f"案例 {case_id!r} 不存在或已删除")
+            _birth_dt_local = case.birth_dt_local
+            _lon = float(case.lon)
+            _tz_name = case.tz or "Asia/Shanghai"
+            _gender = case.gender or "male"
+
+        # 2. 计算命盘
+        birth_dt = _dt.fromisoformat(_birth_dt_local)
+        try:
+            _ZoneInfo(_tz_name)
+        except Exception:
+            _tz_name = "Asia/Shanghai"
+        calc = _calculate(birth_dt, _lon, _tz_name, gender=_gender)
+        vr = calc.verify_response
+
+        # 3. 提取基础字段
+        day_stem = vr.pillars_primary.day.stem
+        day_branch = vr.pillars_primary.day.branch
+        yongshen_favor = list(getattr(vr.yongshen, "favor", []) or [])
+        wx = vr.wuxing_score
+        wuxing_scores: dict[str, float] = (
+            {
+                "wood": float(wx.wood),
+                "fire": float(wx.fire),
+                "earth": float(wx.earth),
+                "metal": float(wx.metal),
+                "water": float(wx.water),
+            }
+            if wx
+            else {}
+        )
+
+        # 4. 构建命局十神分布（年月时三柱天干对日主）
+        shishen_scores: dict[str, float] = {}
+        for _s in [vr.pillars_primary.year.stem, vr.pillars_primary.month.stem, vr.pillars_primary.hour.stem]:
+            _tg = _ten_god(day_stem, _s)
+            if _tg:
+                shishen_scores[_tg] = shishen_scores.get(_tg, 0) + 1.0
+
+        # 5. 流年干支（修复：使用 ganzhi_for_year 正确计算）
+        year_stem, year_branch = _gz_year(year)
+        year_ten_god = _ten_god(day_stem, year_stem) or ""
+
+        # 6. 调用四维预测
+        forecasts = compute_liunian_domain_forecasts(
+            year=year,
+            year_stem=year_stem,
+            year_branch=year_branch,
+            day_stem=day_stem,
+            day_branch=day_branch,
+            shishen_scores=shishen_scores,
+            yongshen_favor=yongshen_favor,
+            wuxing_scores=wuxing_scores,
+            gender=_gender,
+            year_ten_god=year_ten_god,
+        )
+
+        # 7. 构建流月数据（如需要）
         months_data = []
         if include_months:
-            month_names = ["壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未",
-                          "戊申", "己酉", "庚戌", "辛亥", "壬子", "癸丑"]
-            months_data = [
-                {"month": i + 1, "gz": month_names[i % 12], "advice": f"{year}年{i+1}月稳步前行"}
-                for i in range(12)
-            ]
+            # 流月：从流年月柱顺推（简化版：取流年各月干支）
+            _BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+            _STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
+            _yr_stem_idx = _STEMS.index(year_stem) if year_stem in _STEMS else 0
+            for i in range(12):
+                _m_stem = _STEMS[(_yr_stem_idx * 2 + i) % 10]
+                _m_branch = _BRANCHES[(2 + i) % 12]  # 寅月起
+                _m_tg = _ten_god(day_stem, _m_stem) or ""
+                months_data.append(
+                    {
+                        "month": i + 1,
+                        "gz": f"{_m_stem}{_m_branch}",
+                        "ten_god": _m_tg,
+                        "advice": f"{year}年{i + 1}月，{_m_tg}月，宜顺势而为。"
+                        if _m_tg
+                        else f"{year}年{i + 1}月稳步前行",
+                    }
+                )
+
         result = {
             "year": year,
+            "year_gz": f"{year_stem}{year_branch}",
             "case_id": case_id,
-            "liunian_gz": f"甲{'子乙丑丙寅丁卯戊辰己巳庚午辛未壬申癸酉甲戌乙亥'.split('')[year % 10]}",
-            "overall_advice": f"{year}年流年运势：宜稳健发展，规避风险，把握上半年机遇。",
-            "career": "事业宜积累实力，下半年有晋升机会。",
-            "wealth": "财运平稳，偏财运较旺，适合进行稳健投资。",
-            "relationship": "感情运较顺，已婚者家庭和谐，单身者有机会遇良缘。",
-            "health": "注意肝胆及心血管，保持规律作息。",
+            "day_stem": day_stem,
+            "year_ten_god": year_ten_god,
+            "overall_advice": f"{year}年（{year_stem}{year_branch}年）流年运势综合研判。",
+            "career": forecasts.get("事业", ""),
+            "wealth": forecasts.get("财运", ""),
+            "relationship": forecasts.get("婚恋", ""),
+            "health": forecasts.get("健康", ""),
             "months": months_data,
         }
         _liunian_tasks[task_id]["status"] = "done"
         _liunian_tasks[task_id]["result"] = result
-        _liunian_tasks[task_id]["finished_at"] = _dt_cls.now(_tz.utc).isoformat()
+        _liunian_tasks[task_id]["finished_at"] = _dt_cls.now(UTC).isoformat()
     except Exception as exc:
         _liunian_tasks[task_id]["status"] = "failed"
         _liunian_tasks[task_id]["error"] = str(exc)
@@ -1010,12 +1174,13 @@ async def submit_liunian_report(
     """
     # 验证案例存在
     from app.models import Case as _Case2
+
     case = session.get(_Case2, payload.case_id)
     if case is None or case.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"案例 {payload.case_id!r} 不存在")
 
     task_id = str(_uuid.uuid4())
-    now_iso = _dt_cls.now(_tz.utc).isoformat()
+    now_iso = _dt_cls.now(UTC).isoformat()
     _liunian_tasks[task_id] = {
         "task_id": task_id,
         "status": "queued",
@@ -1026,9 +1191,7 @@ async def submit_liunian_report(
         "error": None,
     }
     # 启动后台任务
-    _asyncio.create_task(
-        _build_liunian_report(task_id, payload.case_id, payload.year, payload.include_months)
-    )
+    _asyncio.create_task(_build_liunian_report(task_id, payload.case_id, payload.year, payload.include_months))
     return _liunian_tasks[task_id]
 
 
@@ -1051,4 +1214,3 @@ def get_liunian_report(
     if task is None:
         raise HTTPException(status_code=404, detail=f"任务 {task_id!r} 不存在或已过期")
     return task
-

@@ -7,61 +7,71 @@ LifeArcModel 生成:
   峰值期(peak_periods) / 谨慎期(caution_periods)
   早中晚年运势描述
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import dataclass
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 四因子评分权重
 # ──────────────────────────────────────────────────────────────────────────────
 
 LIFE_ARC_WEIGHTS = {
-    "dayun":    0.35,   # 大运趋势综合评分
-    "geju":     0.25,   # 格局等级
-    "strength": 0.20,   # 日主强弱（以中和为优）
-    "yongshen": 0.20,   # 用神在命局中的得力程度
+    "dayun": 0.35,  # 大运趋势综合评分
+    "geju": 0.25,  # 格局等级
+    "strength": 0.20,  # 日主强弱（以中和为优）
+    "yongshen": 0.20,  # 用神在命局中的得力程度
 }
 assert abs(sum(LIFE_ARC_WEIGHTS.values()) - 1.0) < 1e-9
 
 # 格局等级分值映射（百分制）
 _GEJU_SCORE: dict[str, float] = {
-    "正官格": 85.0, "正印格": 82.0, "食神格": 80.0, "建禄格": 78.0,
-    "一气专旺格": 90.0, "羊刃驾杀格": 88.0,
-    "七杀格": 72.0, "偏印格": 68.0, "正财格": 75.0, "偏财格": 70.0,
-    "伤官格": 65.0, "羊刃格": 62.0,
+    "正官格": 85.0,
+    "正印格": 82.0,
+    "食神格": 80.0,
+    "建禄格": 78.0,
+    "一气专旺格": 90.0,
+    "羊刃驾杀格": 88.0,
+    "七杀格": 72.0,
+    "偏印格": 68.0,
+    "正财格": 75.0,
+    "偏财格": 70.0,
+    "伤官格": 65.0,
+    "羊刃格": 62.0,
 }
 _GEJU_DEFAULT = 60.0
-_GEJU_BROKEN  = 40.0
+_GEJU_BROKEN = 40.0
 
 # 强弱层次分值（中和最优）
 _STRENGTH_SCORE: dict[str, float] = {
-    "极旺": 50.0, "偏旺": 70.0, "中和": 100.0,
-    "偏弱": 70.0, "极弱": 50.0,
+    "极旺": 50.0,
+    "偏旺": 70.0,
+    "中和": 100.0,
+    "偏弱": 70.0,
+    "极弱": 50.0,
 }
 
 
 @dataclass
 class LifeArcModel:
     """人生弧线结果（M3 返回值）"""
-    overall_tier:    str              # 局高 / 局中 / 局小
-    total_score:     float            # 综合分 [0-100]
-    early_fortune:   str              # 幼年～青年（0-25岁）
-    mid_fortune:     str              # 壮年（25-55岁）
-    late_fortune:    str              # 晚年（55岁+）
-    peak_periods:    list[str]        # 峰值期，如 ["35-45岁：甲午大运，财官双旺"]
-    caution_periods: list[str]        # 谨慎期
-    factor_scores:   dict[str, float] # 四因子明细分
-    summary:         str              # 30字以内总结
-    disclaimer: str = (
-        "人生弧线为八字综合推演结果，仅供学术研究参考，"
-        "不构成任何形式的预测或建议。"
-    )
+
+    overall_tier: str  # 局高 / 局中 / 局小
+    total_score: float  # 综合分 [0-100]
+    early_fortune: str  # 幼年～青年（0-25岁）
+    mid_fortune: str  # 壮年（25-55岁）
+    late_fortune: str  # 晚年（55岁+）
+    peak_periods: list[str]  # 峰值期，如 ["35-45岁：甲午大运，财官双旺"]
+    caution_periods: list[str]  # 谨慎期
+    factor_scores: dict[str, float]  # 四因子明细分
+    summary: str  # 30字以内总结
+    disclaimer: str = "人生弧线为八字综合推演结果，仅供学术研究参考，不构成任何形式的预测或建议。"
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 内部辅助函数
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def _compute_dayun_factor(dayun_list: list[dict]) -> float:
     """
@@ -142,7 +152,7 @@ def _build_phase_text(dayun_list: list[dict], phase: str) -> str:
         quality = "逆运居多，宜低调守成、积德蓄势，待时而动"
 
     ganzhi_list = "、".join(
-        d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
+        d.get("ganzhi") or (d.get("stem", "") + d.get("branch", ""))
         for d in relevant
         if d.get("ganzhi") or (d.get("stem") and d.get("branch"))
     )
@@ -156,10 +166,10 @@ def _find_peak_periods(dayun_list: list[dict]) -> list[str]:
     peaks = []
     for d in dayun_list:
         if d.get("is_favorable", False) and d.get("trend") in ("上升", "平稳"):
-            ganzhi = d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
-            start  = d.get("start_age", "?")
-            end    = d.get("end_age",   "?")
-            trend  = d.get("trend", "上升")
+            ganzhi = d.get("ganzhi") or (d.get("stem", "") + d.get("branch", ""))
+            start = d.get("start_age", "?")
+            end = d.get("end_age", "?")
+            trend = d.get("trend", "上升")
             ten_god = d.get("ten_god", "")
             ten_god_part = f"，{ten_god}当令" if ten_god else ""
             action = "宜积极进取、抓住机遇" if trend == "上升" else "宜稳中求进、逐步积累"
@@ -172,10 +182,10 @@ def _find_caution_periods(dayun_list: list[dict]) -> list[str]:
     cautions = []
     for d in dayun_list:
         if not d.get("is_favorable", True):
-            ganzhi = d.get("ganzhi") or (d.get("stem","") + d.get("branch",""))
-            start  = d.get("start_age", "?")
-            end    = d.get("end_age",   "?")
-            trend  = d.get("trend", "下降")
+            ganzhi = d.get("ganzhi") or (d.get("stem", "") + d.get("branch", ""))
+            start = d.get("start_age", "?")
+            end = d.get("end_age", "?")
+            trend = d.get("trend", "下降")
             ten_god = d.get("ten_god", "")
             ten_god_part = f"（{ten_god}）" if ten_god else ""
             advice = "宜控险守成，避免大额投资" if trend == "下降" else "宜低调蓄势，稳步度过"
@@ -186,6 +196,7 @@ def _find_caution_periods(dayun_list: list[dict]) -> list[str]:
 # ──────────────────────────────────────────────────────────────────────────────
 # 主函数
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def compute_life_arc(
     dayun_list: list[dict],
@@ -212,17 +223,17 @@ def compute_life_arc(
         LifeArcModel 实例
     """
     # 四因子原始分
-    f_dayun    = _compute_dayun_factor(dayun_list)
-    f_geju     = _compute_geju_factor(geju_name, is_broken)
+    f_dayun = _compute_dayun_factor(dayun_list)
+    f_geju = _compute_geju_factor(geju_name, is_broken)
     f_strength = _compute_strength_factor(strength_tier)
     f_yongshen = _compute_yongshen_factor(yongshen_favor, wuxing_scores)
 
     # 加权合分
     total = (
-        f_dayun    * LIFE_ARC_WEIGHTS["dayun"]    +
-        f_geju     * LIFE_ARC_WEIGHTS["geju"]     +
-        f_strength * LIFE_ARC_WEIGHTS["strength"] +
-        f_yongshen * LIFE_ARC_WEIGHTS["yongshen"]
+        f_dayun * LIFE_ARC_WEIGHTS["dayun"]
+        + f_geju * LIFE_ARC_WEIGHTS["geju"]
+        + f_strength * LIFE_ARC_WEIGHTS["strength"]
+        + f_yongshen * LIFE_ARC_WEIGHTS["yongshen"]
     )
     total = round(total, 2)
 
@@ -238,34 +249,34 @@ def compute_life_arc(
         summary = f"命局综合评分{total:.1f}，格局偏小，宜踏实积累，以平常心处之"
 
     return LifeArcModel(
-        overall_tier    = tier,
-        total_score     = total,
-        early_fortune   = _build_phase_text(dayun_list, "early"),
-        mid_fortune     = _build_phase_text(dayun_list, "mid"),
-        late_fortune    = _build_phase_text(dayun_list, "late"),
-        peak_periods    = _find_peak_periods(dayun_list),
-        caution_periods = _find_caution_periods(dayun_list),
-        factor_scores   = {
-            "dayun":    f_dayun,
-            "geju":     f_geju,
+        overall_tier=tier,
+        total_score=total,
+        early_fortune=_build_phase_text(dayun_list, "early"),
+        mid_fortune=_build_phase_text(dayun_list, "mid"),
+        late_fortune=_build_phase_text(dayun_list, "late"),
+        peak_periods=_find_peak_periods(dayun_list),
+        caution_periods=_find_caution_periods(dayun_list),
+        factor_scores={
+            "dayun": f_dayun,
+            "geju": f_geju,
             "strength": f_strength,
             "yongshen": f_yongshen,
         },
-        summary = summary,
+        summary=summary,
     )
 
 
 def life_arc_to_dict(model: LifeArcModel) -> dict:
     """转换为 JSON 可序列化字典"""
     return {
-        "overall_tier":    model.overall_tier,
-        "total_score":     model.total_score,
-        "early_fortune":   model.early_fortune,
-        "mid_fortune":     model.mid_fortune,
-        "late_fortune":    model.late_fortune,
-        "peak_periods":    model.peak_periods,
+        "overall_tier": model.overall_tier,
+        "total_score": model.total_score,
+        "early_fortune": model.early_fortune,
+        "mid_fortune": model.mid_fortune,
+        "late_fortune": model.late_fortune,
+        "peak_periods": model.peak_periods,
         "caution_periods": model.caution_periods,
-        "factor_scores":   model.factor_scores,
-        "summary":         model.summary,
-        "disclaimer":      model.disclaimer,
+        "factor_scores": model.factor_scores,
+        "summary": model.summary,
+        "disclaimer": model.disclaimer,
     }

@@ -1,4 +1,5 @@
 """Rate limiting setup."""
+
 import os
 import uuid
 
@@ -37,8 +38,7 @@ def _rate_limit_key(request):
 #   代码自动检测并切换到 Redis 存储，未设置时回退内存模式（单进程开发相容）。
 _redis_url = os.environ.get("REDIS_URL", "")
 if _redis_url:
-    limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"],
-                      storage_uri=_redis_url)
+    limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"], storage_uri=_redis_url)
 else:
     # 单进程开发模式 / Docker 单实例：内存存储即可
     limiter = Limiter(key_func=_rate_limit_key, default_limits=["60/minute"])

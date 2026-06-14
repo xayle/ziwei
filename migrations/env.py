@@ -1,18 +1,16 @@
 """Alembic migration environment - supports SQLModel and environment variables"""
+
 from logging.config import fileConfig
 import os
-from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+from sqlmodel import SQLModel
 
 # Import database config from app.config
 from app.config import settings
 
 # Import all SQLModel models for migration generation
-from app.models import (
-    User, RefreshToken, Case, Snapshot, Member, Event, 
-    Scenario, Delegation, AuditLog, ChartReview
-)
-from sqlmodel import SQLModel
 
 # Alembic Config object
 config = context.config
@@ -24,6 +22,7 @@ if config.config_file_name is not None:
 # Set target_metadata (for autogenerate support)
 # Use SQLModel metadata
 target_metadata = SQLModel.metadata
+
 
 # Get database URL from environment variable or app.config
 def get_sqlalchemy_url() -> str:
@@ -42,12 +41,12 @@ def get_sqlalchemy_url() -> str:
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode
-    
+
     This only configures URL without actual database connection.
     Good for generating SQL scripts.
     """
     url = get_sqlalchemy_url()
-    
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -63,15 +62,15 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode
-    
+
     Creates actual database engine and executes migrations.
     """
     url = get_sqlalchemy_url()
-    
+
     # Configure SQLAlchemy engine
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = url
-    
+
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

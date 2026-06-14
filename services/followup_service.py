@@ -4,6 +4,7 @@ services/followup_service.py — 年份事件追问问题库
 为每个事件类别提供 5 条常见追问，AI 咨询后展示在界面底部，
 引导用户进行更深入的运势咨询。
 """
+
 from __future__ import annotations
 
 FOLLOWUP_MAP: dict[str, list[str]] = {
@@ -47,10 +48,10 @@ FOLLOWUP_MAP: dict[str, list[str]] = {
 # 中文展示名
 EVENT_DISPLAY_NAMES: dict[str, str] = {
     "marriage": "婚姻感情",
-    "wealth":   "财运财务",
+    "wealth": "财运财务",
     "property": "置业动产",
-    "career":   "事业发展",
-    "health":   "健康状态",
+    "career": "事业发展",
+    "health": "健康状态",
 }
 
 

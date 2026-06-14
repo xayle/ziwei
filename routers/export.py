@@ -5,12 +5,13 @@ routers/export.py — §14 命盘数据导出
     GET /api/v1/cases/{case_id}/export          — 下载含最新快照的完整 JSON 包
     GET /api/v1/cases/{case_id}/export/meta     — 仅返回 input_snapshot 元数据（JSON）
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import json
 import logging
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
@@ -37,7 +38,8 @@ _EXPORT_FORMAT_VERSION = "1.0"
 # 辅助：构建导出包
 # ─────────────────────────────────────────────────────────────
 
-def _build_export(case: Case, snapshot: Optional[Snapshot]) -> dict:
+
+def _build_export(case: Case, snapshot: Snapshot | None) -> dict:
     """将 Case + Snapshot 合并为标准导出包。"""
     input_snapshot = {
         "id": case.id,
@@ -56,8 +58,8 @@ def _build_export(case: Case, snapshot: Optional[Snapshot]) -> dict:
         "updated_at": case.updated_at.isoformat() if case.updated_at else None,
     }
 
-    compute_result: Optional[dict] = None
-    snapshot_meta: Optional[dict] = None
+    compute_result: dict | None = None
+    snapshot_meta: dict | None = None
     if snapshot:
         compute_result = snapshot.output_json
         snapshot_meta = {
@@ -72,7 +74,7 @@ def _build_export(case: Case, snapshot: Optional[Snapshot]) -> dict:
 
     return {
         "export_format_version": _EXPORT_FORMAT_VERSION,
-        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "exported_at": datetime.now(UTC).isoformat(),
         "input_snapshot": input_snapshot,
         "snapshot_meta": snapshot_meta,
         "compute_result": compute_result,
@@ -88,6 +90,7 @@ def _safe_filename(name: str) -> str:
 # ─────────────────────────────────────────────────────────────
 # GET /api/v1/cases/{case_id}/export — 完整 JSON 下载
 # ─────────────────────────────────────────────────────────────
+
 
 @router.get(
     "/{case_id}/export",
@@ -125,7 +128,7 @@ def export_case_json(
         .where(
             Snapshot.case_id == case_id,
             Snapshot.output_json.is_not(None),  # type: ignore[union-attr]
-            Snapshot.deleted_at.is_(None),       # type: ignore[union-attr]
+            Snapshot.deleted_at.is_(None),  # type: ignore[union-attr]
         )
         .order_by(desc(Snapshot.created_at))
         .limit(1)
@@ -137,7 +140,8 @@ def export_case_json(
 
     logger.info(
         "命盘导出: case_id=%s user=%s snapshot=%s bytes=%d",
-        case_id, current_user.id,
+        case_id,
+        current_user.id,
         snapshot.id if snapshot else "none",
         len(json_bytes),
     )
@@ -146,7 +150,7 @@ def export_case_json(
         content=json_bytes,
         media_type="application/json; charset=utf-8",
         headers={
-            "Content-Disposition": f'attachment; filename*=UTF-8\'\'{filename}.json',
+            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}.json",
             "Content-Length": str(len(json_bytes)),
         },
     )
@@ -155,6 +159,7 @@ def export_case_json(
 # ─────────────────────────────────────────────────────────────
 # GET /api/v1/cases/{case_id}/export/meta — 仅 input_snapshot
 # ─────────────────────────────────────────────────────────────
+
 
 @router.get(
     "/{case_id}/export/meta",
@@ -176,6 +181,7 @@ def export_case_meta(
     payload = _build_export(case, None)
     return {"input_snapshot": payload["input_snapshot"]}
 
+
 @router.get(
     "/{case_id}/export/pdf",
     summary="导出命盘为 PDF (需后端 playwright 支持)",
@@ -188,19 +194,16 @@ async def export_case_pdf(
 ) -> Response:
     from datetime import datetime
     import os
-    
+
     case = session.get(Case, case_id)
     if case is None or case.deleted_at is not None or case.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"命盘 {case_id} 不存在"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"命盘 {case_id} 不存在")
+
     try:
         dt = datetime.fromisoformat(case.birth_dt_local)
     except ValueError:
         raise HTTPException(status_code=400, detail="时间提取异常")
-        
+
     params = {
         "y": dt.year,
         "m": dt.month,
@@ -210,17 +213,18 @@ async def export_case_pdf(
         "g": case.gender or "女",
         "lo": case.lon or 116.4,
     }
-    
+
     base_url = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
-    
+
     from services.pdf_exporter import generate_pdf
+
     try:
         pdf_bytes = await generate_pdf(base_url, params)
         safe_name = _safe_filename(case.name or "命盘")
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=\"{safe_name}.pdf\""}
+            headers={"Content-Disposition": f'attachment; filename="{safe_name}.pdf"'},
         )
     except Exception as e:
         logger.error(f"PDF 导出失败: {e}")

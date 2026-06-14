@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import HTTPException, status
 
@@ -18,8 +18,8 @@ def validate_lon_strict(lon: float) -> float:
     return lon
 
 
-def warn_lon_cn_range(tz: str, lon: float) -> List[Dict[str, Any]]:
-    warnings: List[Dict[str, Any]] = []
+def warn_lon_cn_range(tz: str, lon: float) -> list[dict[str, Any]]:
+    warnings: list[dict[str, Any]] = []
     if tz == "Asia/Shanghai" and (lon < CN_MIN_LON or lon > CN_MAX_LON):
         warnings.append(
             {
