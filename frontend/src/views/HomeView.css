@@ -1,0 +1,161 @@
+/* ════ 页面容器 ════ */
+.home-page {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafaf9;
+  overflow-y: auto;
+}
+
+.form-center {
+  width: 100%;
+  max-width: 640px;
+  padding: 32px 20px;
+}
+
+/* ════ 快速表单卡 ════ */
+.quick-form {
+  background: #fff;
+  border: 1px solid #e7e5e4;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(28,25,23,.08);
+}
+
+/* 两列行 */
+.qf-row-2 {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: end;
+}
+
+.qf-group { display: flex; flex-direction: column; gap: 5px; }
+
+.qf-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #78716c;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.qf-input {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d6d3d1;
+  border-radius: 11px;
+  font-size: 14px;
+  color: #1c1917;
+  background: #fafaf9;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.qf-input:focus { border-color: #b45309; background: #fff; }
+.qf-input::placeholder { color: #a8a29e; }
+
+/* 性别 */
+.qf-gender { width: fit-content; }
+.gender-toggle {
+  display: flex;
+  height: 42px;
+  border: 1px solid #d6d3d1;
+  border-radius: 11px;
+  overflow: hidden;
+}
+.gender-btn {
+  width: 48px;
+  border: none;
+  background: #fafaf9;
+  font-size: 14px;
+  font-weight: 600;
+  color: #57534e;
+  cursor: pointer;
+  transition: all .15s;
+}
+.gender-btn + .gender-btn { border-left: 1px solid #e7e5e4; }
+.gender-btn.active { background: #1c1917; color: #fff; }
+
+/* 城市 */
+.qf-city { width: 220px; }
+.qf-city :deep(select) {
+  height: 42px;
+  border-radius: 11px;
+  font-size: 14px;
+  border-color: #d6d3d1;
+  background: #fafaf9;
+  padding: 0 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ════ 服务 Tabs ════ */
+.service-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.svc-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 4px;
+  border: 2px solid #e7e5e4;
+  border-radius: 13px;
+  background: #fafaf9;
+  font-size: 12px;
+  font-weight: 600;
+  color: #57534e;
+  cursor: pointer;
+  transition: all .15s;
+}
+.svc-tab:hover { border-color: #a8a29e; }
+.svc-tab.active { border-color: #1c1917; background: #1c1917; color: #fff; }
+
+.svc-tab-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  background: rgba(0,0,0,.05);
+}
+.svc-tab.active .svc-tab-icon { background: rgba(255,255,255,.15); }
+
+/* ════ 开始按钮 ════ */
+.btn-start {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 99px;
+  background: #b45309;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(180,83,9,.22);
+  transition: all .15s;
+}
+.btn-start:hover { background: #92400e; transform: translateY(-1px); }
+.btn-arrow { font-size: 18px; }
+
+/* ════ 响应式 ════ */
+@media (max-width: 560px) {
+  .qf-row-2 { grid-template-columns: 1fr; }
+  .qf-city { width: 100%; }
+  .form-center { padding: 16px 12px; }
+  .quick-form { padding: 18px; }
+}
