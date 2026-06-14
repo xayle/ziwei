@@ -31,7 +31,7 @@ def test_wuxing_breakdown_sums_to_score():
         assert abs(total - score[elem]) < 1e-6
 
     strength = data["day_master_strength"]
-    assert strength["tier"] in ["strong", "balanced", "weak"]
+    assert strength["tier"] in ["\u6781\u65fa", "\u504f\u65fa", "\u4e2d\u548c", "\u504f\u5f31", "\u6781\u5f31"]
 
     yongshen = data["yongshen"]
     assert len(yongshen["favor"]) >= 1

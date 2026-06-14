@@ -11,12 +11,10 @@ API v2 Python 调用示例（完整可运行）
     export BASE_URL=http://localhost:8000
     python docs/samples/python_v2_example.py
 """
+
 from __future__ import annotations
 
-import json
 import os
-import sys
-from datetime import datetime
 
 import httpx
 
@@ -156,7 +154,7 @@ def example_batch_verify() -> None:
         pillars = r.get("pillars_primary", {})
         day = pillars.get("day", {})
         geju = r.get("geju", {})
-        print(f"  [{i}] 日柱={day.get('stem','?')}{day.get('branch','?')}  格局={geju.get('geju_name','?')}")
+        print(f"  [{i}] 日柱={day.get('stem', '?')}{day.get('branch', '?')}  格局={geju.get('geju_name', '?')}")
 
     for f in failed:
         print(f"  [FAIL] index={f['index']}  error={f['error']}")

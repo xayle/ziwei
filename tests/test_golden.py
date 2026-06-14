@@ -105,8 +105,8 @@ class TestGolden01:
         if strength is None:
             pytest.skip("day_master_strength 未返回")
         tier = strength.get("tier", "")
-        # 接受"弱"/"偏弱"/"极弱"/"balanced"（旧引擎阈值宽松）
-        assert tier in ("偏弱", "弱", "极弱", "balanced"), (
+        # 接受"弱"/"偏弱"/"极弱"/"balanced"/"中和"（旧引擎阈值宽松，中和=balanced）
+        assert tier in ("偏弱", "弱", "极弱", "balanced", "中和"), (
             f"tier={tier!r} 不在预期强弱层级中"
         )
 
