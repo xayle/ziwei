@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "ci": "npm run type-check && npm run lint && npm run test && npm run build"
+    "ci": "npm run type-check && npm run lint && npm run test && npm run build",
+    "gen:types": "openapi-typescript ../docs/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {
     "@lucide/vue": "^1.16.0",
@@ -37,6 +38,7 @@
     "eslint-plugin-vue": "^10.9.1",
     "globals": "^17.6.0",
     "jsdom": "^29.0.1",
+    "openapi-typescript": "^7.13.0",
     "typescript": "~5.7.2",
     "vite": "^6.0.11",
     "vitest": "^4.1.1",
