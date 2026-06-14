@@ -46,6 +46,7 @@ const props = defineProps<{
   daxianSihuaMap: Record<string, string>
   liunianSihuaMap: Record<string, string>
   liuyueSihuaMap: Record<string, string>
+  xiaoxianSihuaMap: Record<string, string>
   tfColorStyle: (transform: string) => Record<string, string>
   tfOutlineStyle: (transform: string) => Record<string, string>
 }>()
@@ -155,6 +156,13 @@ function handleToggleBookmark() {
         >
           月{{ liuyueSihuaMap[star.name].slice(1) }}
         </span>
+        <span
+          v-if="overlayOpts.showXiaoxian && xiaoxianSihuaMap[star.name]"
+          class="pc-tf pc-tf-xiaoxian"
+          :style="tfOutlineStyle(xiaoxianSihuaMap[star.name])"
+        >
+          小{{ xiaoxianSihuaMap[star.name].slice(1) }}
+        </span>
       </div>
     </div>
 
@@ -184,6 +192,11 @@ function handleToggleBookmark() {
           class="pc-tf pc-tf-liuyue"
           :style="tfOutlineStyle(liuyueSihuaMap[aux.name])"
         >月{{ liuyueSihuaMap[aux.name].slice(1) }}</span>
+        <span
+          v-if="overlayOpts.showXiaoxian && xiaoxianSihuaMap[aux.name]"
+          class="pc-tf pc-tf-xiaoxian"
+          :style="tfOutlineStyle(xiaoxianSihuaMap[aux.name])"
+        >小{{ xiaoxianSihuaMap[aux.name].slice(1) }}</span>
       </template>
     </div>
   </div>
@@ -498,27 +511,40 @@ function handleToggleBookmark() {
   color: #334155 !important;
 }
 
+.pc-tf-xiaoxian {
+  font-size: 8px;
+  opacity: 0.9;
+  border: 1.5px double currentColor;
+  border-radius: 3px;
+  background: transparent !important;
+  color: #334155 !important;
+}
+
 .pc-tf-daxian[style*='化禄'],
 .pc-tf-liunian[style*='化禄'],
-.pc-tf-liuyue[style*='化禄'] {
+.pc-tf-liuyue[style*='化禄'],
+.pc-tf-xiaoxian[style*='化禄'] {
   color: #166534 !important;
 }
 
 .pc-tf-daxian[style*='化权'],
 .pc-tf-liunian[style*='化权'],
-.pc-tf-liuyue[style*='化权'] {
+.pc-tf-liuyue[style*='化权'],
+.pc-tf-xiaoxian[style*='化权'] {
   color: #991b1b !important;
 }
 
 .pc-tf-daxian[style*='化科'],
 .pc-tf-liunian[style*='化科'],
-.pc-tf-liuyue[style*='化科'] {
+.pc-tf-liuyue[style*='化科'],
+.pc-tf-xiaoxian[style*='化科'] {
   color: #1e40af !important;
 }
 
 .pc-tf-daxian[style*='化忌'],
 .pc-tf-liunian[style*='化忌'],
-.pc-tf-liuyue[style*='化忌'] {
+.pc-tf-liuyue[style*='化忌'],
+.pc-tf-xiaoxian[style*='化忌'] {
   color: #5b21b6 !important;
 }
 

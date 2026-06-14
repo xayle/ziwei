@@ -233,8 +233,17 @@ export interface MultiCompatResponse { person_count: number; pairs: MultiCompatP
 export interface ZiweiFlyingRequest { year: number; month: number; day: number; hour: number; minute?: number; gender: string; longitude?: number }
 
 // ── API 函数 ────────────────────────────────────────────────
+function normalizeZiweiGender(gender: string): '男' | '女' {
+  const value = String(gender ?? '').trim().toLowerCase()
+  if (value === '女' || value === 'female' || value === 'f') return '女'
+  return '男'
+}
+
 export async function computeZiwei(req: ZiweiRequest): Promise<ZiweiResponse> {
-  const { data } = await apiClient.post<ZiweiResponse>('/api/v1/ziwei/full', req)
+  const { data } = await apiClient.post<ZiweiResponse>('/api/v1/ziwei/full', {
+    ...req,
+    gender: normalizeZiweiGender(req.gender),
+  })
   return data
 }
 
@@ -270,6 +279,9 @@ export async function ziweiBatch(file: File, templateVersion?: string): Promise<
 
 /** POST /api/v1/ziwei/flying — 飞星盘 */
 export async function ziweiFlying(req: ZiweiFlyingRequest): Promise<FlyingChartResponse> {
-  const { data } = await apiClient.post<FlyingChartResponse>('/api/v1/ziwei/flying', req)
+  const { data } = await apiClient.post<FlyingChartResponse>('/api/v1/ziwei/flying', {
+    ...req,
+    gender: normalizeZiweiGender(req.gender),
+  })
   return data
 }

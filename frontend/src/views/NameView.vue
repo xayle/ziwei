@@ -2,8 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProfileStore } from '@/stores/profile'
-import { analyzeName } from '@/api/name'
-import type { NameAnalysisResponse } from '@/api/name'
+import { analyzeName, suggestNames } from '@/api/name'
+import type { NameAnalysisResponse, NameSuggestResponse, NameSuggestionItem } from '@/api/name'
 
 const route = useRoute()
 const profile   = useProfileStore()
@@ -75,6 +75,56 @@ function fiveGrids(r: NameAnalysisResponse) {
 function exportPDF() {
   window.print()
 }
+
+// ── 起名推荐（含五行用神过滤）──────────────────────────────
+const suggestSurname    = ref('')
+const suggestLength     = ref<1 | 2>(2)
+const suggestTopN       = ref(10)
+const suggestMinScore   = ref(70)
+const suggestElements   = ref<string[]>([])
+const suggestResult     = ref<NameSuggestResponse | null>(null)
+const suggestLoading    = ref(false)
+const suggestError      = ref('')
+
+const WX_ELEMENT_OPTIONS = ['木', '火', '土', '金', '水']
+
+function toggleElement(el: string) {
+  const idx = suggestElements.value.indexOf(el)
+  if (idx >= 0) {
+    suggestElements.value.splice(idx, 1)
+  } else {
+    suggestElements.value.push(el)
+  }
+}
+
+async function doSuggest() {
+  if (!suggestSurname.value.trim()) { suggestError.value = '请填写姓氏'; return }
+  suggestLoading.value = true
+  suggestError.value = ''
+  suggestResult.value = null
+  try {
+    suggestResult.value = await suggestNames({
+      surname: suggestSurname.value.trim(),
+      name_length: suggestLength.value,
+      preferred_elements: suggestElements.value.length ? suggestElements.value : undefined,
+      top_n: suggestTopN.value,
+      min_score: suggestMinScore.value,
+    })
+  } catch (e: unknown) {
+    suggestError.value = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '推荐失败，请稍后重试'
+  } finally {
+    suggestLoading.value = false
+  }
+}
+
+function elemColor(el: string) {
+  return WX_COLORS[el] ?? 'var(--text-2)'
+}
+
+function copyName(item: NameSuggestionItem) {
+  const text = `${suggestResult.value?.surname ?? ''}${item.given_name}`
+  navigator.clipboard?.writeText(text).catch(() => {})
+}
 </script>
 
 <template>
@@ -134,6 +184,89 @@ function exportPDF() {
         <!-- 导出按钮 -->
         <div class="export-row no-print">
           <button class="btn-export" @click="exportPDF">⬇ 导出 PDF 报告</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 起名推荐（含五行用神过滤）─────────────────────── -->
+    <section class="tab-panel suggest-section">
+      <h2 class="section-title">🌿 起名推荐</h2>
+      <form class="card form-card suggest-form" @submit.prevent="doSuggest">
+        <div class="form-row">
+          <label>姓氏</label>
+          <input v-model="suggestSurname" placeholder="张" maxlength="3" required />
+        </div>
+        <div class="form-row">
+          <label>字数</label>
+          <label class="radio-opt"><input type="radio" v-model="suggestLength" :value="1" /> 单字名</label>
+          <label class="radio-opt"><input type="radio" v-model="suggestLength" :value="2" /> 双字名</label>
+        </div>
+        <div class="form-row">
+          <label>最低分</label>
+          <input type="number" min="0" max="100" v-model.number="suggestMinScore" style="width:80px" />
+          <span class="form-hint">建议 70 以上</span>
+        </div>
+        <div class="form-row">
+          <label>候选数</label>
+          <input type="number" min="1" max="50" v-model.number="suggestTopN" style="width:80px" />
+        </div>
+        <!-- 五行用神过滤 -->
+        <div class="form-row wx-filter-row">
+          <label>用神五行</label>
+          <div class="wx-chips">
+            <button
+              v-for="el in WX_ELEMENT_OPTIONS"
+              :key="el"
+              type="button"
+              class="wx-chip"
+              :class="{ selected: suggestElements.includes(el) }"
+              :style="suggestElements.includes(el) ? { background: elemColor(el), borderColor: elemColor(el), color: '#fff' } : {}"
+              @click="toggleElement(el)"
+            >{{ el }}</button>
+          </div>
+          <span class="form-hint">不选则不限</span>
+        </div>
+        <button type="submit" class="btn-primary" :disabled="suggestLoading">
+          {{ suggestLoading ? '生成中…' : '生成候选名' }}
+        </button>
+        <p v-if="suggestError" class="error-msg">{{ suggestError }}</p>
+      </form>
+
+      <!-- 推荐结果 -->
+      <div v-if="suggestResult" class="card suggest-result-card">
+        <div class="suggest-meta">
+          <span class="suggest-surname">「{{ suggestResult.surname }}」</span>
+          <span class="suggest-len">{{ suggestResult.name_length === 1 ? '单字名' : '双字名' }}</span>
+          <span v-if="suggestResult.preferred_elements?.length" class="suggest-elements">
+            用神：<span v-for="e in suggestResult.preferred_elements" :key="e" :style="{ color: elemColor(e) }">{{ e }} </span>
+          </span>
+          <span class="suggest-total">共评估 {{ suggestResult.total_candidates_evaluated }} 个候选</span>
+        </div>
+
+        <div v-if="!suggestResult.suggestions.length" class="suggest-empty">
+          未找到符合条件的名字，尝试降低最低分或取消五行限制。
+        </div>
+        <div v-else class="suggest-list">
+          <div
+            v-for="(item, i) in suggestResult.suggestions"
+            :key="item.given_name"
+            class="suggest-item"
+          >
+            <span class="suggest-rank">{{ i + 1 }}</span>
+            <span class="suggest-name">{{ suggestResult.surname }}{{ item.given_name }}</span>
+            <span class="suggest-score score-badge" :class="scoreClass(item.overall_score)">{{ item.overall_score }}分</span>
+            <div class="suggest-elements-row">
+              <span
+                v-for="el in item.element_composition"
+                :key="el"
+                class="wx-tag"
+                :style="{ color: elemColor(el) }"
+              >{{ el }}</span>
+            </div>
+            <span class="suggest-sancai">三才 {{ item.sancai_pattern }}</span>
+            <p class="suggest-summary">{{ item.summary }}</p>
+            <button class="btn-copy" @click="copyName(item)" title="复制姓名">📋</button>
+          </div>
         </div>
       </div>
     </section>
@@ -228,6 +361,42 @@ function exportPDF() {
 
 .summary-text { font-size: var(--fs-md); color: var(--text); line-height: 1.7; }
 .algo-ver { font-size: var(--fs-xs); color: var(--text-3); margin-top: var(--sp-2); }
+
+/* 起名推荐区块 */
+.suggest-section { margin-top: var(--sp-6); }
+.section-title { font-size: var(--fs-lg); font-weight: 700; margin-bottom: var(--sp-4); color: var(--text); }
+.suggest-form { max-width: 600px; }
+.radio-opt { display: flex; align-items: center; gap: 4px; font-size: var(--fs-sm); cursor: pointer; }
+.form-hint { font-size: var(--fs-xs); color: var(--text-3); }
+.wx-filter-row { flex-wrap: wrap; gap: var(--sp-2); }
+.wx-chips { display: flex; gap: 6px; }
+.wx-chip {
+  padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid var(--border-md); background: var(--surface); color: var(--text-2);
+  cursor: pointer; transition: all var(--dur-fast);
+}
+.wx-chip:hover { border-color: var(--accent); color: var(--accent); }
+.suggest-result-card { margin-top: var(--sp-4); max-width: 760px; }
+.suggest-meta { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-size: var(--fs-sm); margin-bottom: var(--sp-4); padding-bottom: var(--sp-3); border-bottom: 1px solid var(--border); }
+.suggest-surname { font-size: var(--fs-lg); font-weight: 700; }
+.suggest-len { background: var(--surface-alt); padding: 2px 8px; border-radius: 99px; }
+.suggest-total { color: var(--text-3); margin-left: auto; }
+.suggest-empty { text-align: center; color: var(--text-3); padding: var(--sp-5); }
+.suggest-list { display: flex; flex-direction: column; gap: 10px; }
+.suggest-item {
+  display: grid; grid-template-columns: 24px 120px 60px auto auto 1fr auto;
+  align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg);
+}
+.suggest-rank { font-size: 11px; color: var(--text-3); font-weight: 600; }
+.suggest-name { font-size: var(--fs-lg); font-weight: 700; color: var(--text-1); }
+.suggest-elements-row { display: flex; gap: 4px; }
+.wx-tag { font-size: 12px; font-weight: 700; }
+.suggest-sancai { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.suggest-summary { font-size: 12px; color: var(--text-2); margin: 0; }
+.btn-copy { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; opacity: 0.5; }
+.btn-copy:hover { opacity: 1; }
 
 /* 导出按钮 */
 .export-row { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--border); }

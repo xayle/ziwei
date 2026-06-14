@@ -94,7 +94,8 @@ export function useZiweiDerivedCollections(options: UseZiweiDerivedCollectionsOp
       palace.main_stars?.forEach((star) => {
         star.transforms?.forEach((transform) => {
           paths.push({
-            type: transform as SihuaPath['type'],
+            // transforms[] 值为 "化禄" 等，SihuaPath.type 为 '禄'/'权'，需去掉前缀
+            type: transform.replace('化', '') as SihuaPath['type'],
             star: star.name,
             source: palace.name,
             sourcePalaceIdx: palaceIdx,
@@ -105,7 +106,7 @@ export function useZiweiDerivedCollections(options: UseZiweiDerivedCollectionsOp
       options.getAuxStars(palace).forEach((star) => {
         options.getStarTransforms(star).forEach((transform) => {
           paths.push({
-            type: transform as SihuaPath['type'],
+            type: transform.replace('化', '') as SihuaPath['type'],
             star: options.getStarName(star),
             source: palace.name,
             sourcePalaceIdx: palaceIdx,

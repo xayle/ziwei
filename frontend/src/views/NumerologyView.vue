@@ -1,16 +1,45 @@
 <script setup lang="ts">
 /**
  * NumerologyView.vue — 数字学（§7.1）
- * 皮达哥拉斯数字学（Pythagorean Numerology）
- * 纯前端计算，无需后端
+ * 皮达哥拉斯数字学（Pythagorean Numerology）+ 中文姓名笔画数字学
  */
 import { ref, computed } from 'vue'
+import apiClient from '@/api/client'
 
 // ── 表单 ──────────────────────────────────────────────────────
 const form = ref({
   date: '',
   name: '',
 })
+
+// ── 中文姓名模式 ──────────────────────────────────────────────
+const cnNameMode = ref(false)
+const cnName = ref('')
+const cnLoading = ref(false)
+const cnError = ref('')
+
+interface CharStrokeInfo { char: string; strokes: number; numerology_digit: number }
+interface StrokesResponse {
+  name: string; chars: CharStrokeInfo[]
+  total_strokes: number; expression_number: number
+}
+const cnResult = ref<StrokesResponse | null>(null)
+
+async function analyzeCnName() {
+  if (!cnName.value.trim()) return
+  cnLoading.value = true
+  cnError.value = ''
+  cnResult.value = null
+  try {
+    const { data } = await apiClient.post<StrokesResponse>('/api/v1/name/strokes', { name: cnName.value.trim() })
+    cnResult.value = data
+  } catch (e: any) {
+    cnError.value = e?.response?.data?.detail ?? '查询失败，请稍后再试'
+  } finally {
+    cnLoading.value = false
+  }
+}
+
 
 // ── 皮达哥拉斯字母-数字映射 ────────────────────────────────────
 // 1=A,J,S  2=B,K,T  3=C,L,U  4=D,M,V  5=E,N,W  6=F,O,X  7=G,P,Y  8=H,Q,Z  9=I,R
@@ -228,9 +257,21 @@ const numCards = computed<NumCard[]>(() => [
     <!-- 标题 -->
     <div class="nm-header">
       <h1 class="nm-title">数字学 · 使命数解析</h1>
-      <p class="nm-subtitle">§7.1 皮达哥拉斯数字学（Pythagorean Numerology）—— 纯前端计算，无需网络</p>
+      <p class="nm-subtitle">§7.1 皮达哥拉斯数字学（Pythagorean Numerology）+ 中文姓名笔画数字学</p>
     </div>
 
+    <!-- 模式切换 -->
+    <div class="nm-mode-bar">
+      <button class="nm-mode-btn" :class="{ active: !cnNameMode }" @click="cnNameMode = false">
+        🔤 英文 / 拼音模式
+      </button>
+      <button class="nm-mode-btn" :class="{ active: cnNameMode }" @click="cnNameMode = true">
+        汉 中文笔画模式
+      </button>
+    </div>
+
+    <!-- ── 英文/拼音模式 ─────────────────────────────────────── -->
+    <template v-if="!cnNameMode">
     <!-- 输入表单 -->
     <div class="nm-form-card">
       <div class="nm-form-row">
@@ -331,6 +372,102 @@ const numCards = computed<NumCard[]>(() => [
       J=1 K=2 L=3 M=4 N=5 O=6 P=7 Q=8 R=9 &nbsp;|&nbsp;
       S=1 T=2 U=3 V=4 W=5 X=6 Y=7 Z=8
     </div>
+    </template>
+
+    <!-- ── 中文笔画数字学模式 ─────────────────────────────────── -->
+    <template v-else>
+      <div class="nm-form-card">
+        <div class="nm-form-row">
+          <div class="nm-field">
+            <label class="nm-label">出生日期（可选，用于生命路径数）</label>
+            <input v-model="form.date" type="date" class="nm-input" />
+          </div>
+          <div class="nm-field nm-field-wide">
+            <label class="nm-label">中文姓名</label>
+            <div class="nm-cn-row">
+              <input v-model="cnName" type="text" class="nm-input nm-input-cn"
+                placeholder="如：张伟 / 李晓月" maxlength="10"
+                @keyup.enter="analyzeCnName" />
+              <button class="nm-cn-btn" :disabled="cnLoading || !cnName.trim()" @click="analyzeCnName">
+                {{ cnLoading ? '计算中…' : '计算笔画' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <p v-if="cnError" class="nm-cn-error">{{ cnError }}</p>
+      </div>
+
+      <!-- 中文笔画结果 -->
+      <template v-if="cnResult">
+        <!-- 每字笔画拆解 -->
+        <div class="nm-cn-breakdown">
+          <span class="nm-digits-hint">逐字笔画：</span>
+          <div v-for="ci in cnResult.chars" :key="ci.char" class="nm-cn-char-pill">
+            <span class="nm-cn-char">{{ ci.char }}</span>
+            <span class="nm-cn-strokes">{{ ci.strokes }}画</span>
+            <span class="nm-cn-digit" :style="{ color: getMeaning(ci.numerology_digit)?.color }">→ {{ ci.numerology_digit }}</span>
+          </div>
+          <span class="nm-eq">总笔画 {{ cnResult.total_strokes }}</span>
+        </div>
+
+        <!-- 生命路径数（若填了日期） + 表达数 -->
+        <div class="nm-cards-grid">
+          <div v-if="lifePath !== null" class="nm-card"
+            :style="{ borderLeftColor: getMeaning(lifePath)?.color ?? '#94a3b8' }">
+            <div class="nm-big-num"
+              :style="{ color: getMeaning(lifePath)?.color, background: getMeaning(lifePath)?.bg }">
+              {{ lifePath }}
+            </div>
+            <div class="nm-card-body">
+              <div class="nm-card-label">生命路径数</div>
+              <div class="nm-card-sub">Life Path Number</div>
+              <div class="nm-card-meaning-title">
+                {{ getMeaning(lifePath)?.title }}
+                <span class="nm-card-en">{{ getMeaning(lifePath)?.en }}</span>
+              </div>
+              <div class="nm-keywords">
+                <span v-for="kw in getMeaning(lifePath)?.keywords" :key="kw" class="nm-kw"
+                  :style="{ background: (getMeaning(lifePath)?.color ?? '#94a3b8') + '22', color: getMeaning(lifePath)?.color }">{{ kw }}</span>
+              </div>
+              <p class="nm-card-desc">{{ getMeaning(lifePath)?.desc }}</p>
+            </div>
+          </div>
+
+          <div class="nm-card"
+            :style="{ borderLeftColor: getMeaning(cnResult.expression_number)?.color ?? '#94a3b8' }">
+            <div class="nm-big-num"
+              :style="{ color: getMeaning(cnResult.expression_number)?.color, background: getMeaning(cnResult.expression_number)?.bg }">
+              {{ cnResult.expression_number }}
+            </div>
+            <div class="nm-card-body">
+              <div class="nm-card-label">表达数（笔画化减）</div>
+              <div class="nm-card-sub">Expression Number · Stroke-based</div>
+              <div class="nm-card-meaning-title">
+                {{ getMeaning(cnResult.expression_number)?.title }}
+                <span class="nm-card-en">{{ getMeaning(cnResult.expression_number)?.en }}</span>
+              </div>
+              <div class="nm-keywords">
+                <span v-for="kw in getMeaning(cnResult.expression_number)?.keywords" :key="kw" class="nm-kw"
+                  :style="{ background: (getMeaning(cnResult.expression_number)?.color ?? '#94a3b8') + '22', color: getMeaning(cnResult.expression_number)?.color }">{{ kw }}</span>
+              </div>
+              <p class="nm-card-desc">{{ getMeaning(cnResult.expression_number)?.desc }}</p>
+              <div class="nm-card-tip">💡 中文姓名「{{ cnResult.name }}」总笔画 {{ cnResult.total_strokes }}，化减为表达数 {{ cnResult.expression_number }}。</div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 空态 -->
+      <div v-else class="nm-empty">
+        <div class="nm-empty-icon">汉</div>
+        <p>输入中文姓名，系统将逐字查询笔画数并进行命理化减</p>
+        <div class="nm-sys-note">
+          <strong>笔画数字学：</strong>每个汉字的笔画数对应数字能量，
+          全名笔画总数经过命理化减（保留主命数11/22/33），得出表达数。
+          适合结合八字用神、五行喜忌选择姓名。
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -532,4 +669,43 @@ const numCards = computed<NumCard[]>(() => [
   .nm-card { flex-direction: column; }
   .nm-big-num { align-self: center; }
 }
+
+/* ── 模式切换 ───────────────────────────────────────────────── */
+.nm-mode-bar {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.nm-mode-btn {
+  padding: 7px 18px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-2); cursor: pointer;
+  font-size: 13px; font-family: var(--font-cn); transition: all .15s;
+}
+.nm-mode-btn.active {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+
+/* ── 中文模式相关 ───────────────────────────────────────────── */
+.nm-cn-row { display: flex; gap: 8px; }
+.nm-input-cn { flex: 1; font-family: var(--font-cn); font-size: 16px; }
+.nm-cn-btn {
+  padding: 9px 18px; border-radius: 8px; border: none;
+  background: var(--accent); color: #fff; cursor: pointer;
+  font-size: 13px; font-family: var(--font-cn); white-space: nowrap;
+  transition: opacity .15s;
+}
+.nm-cn-btn:disabled { opacity: .5; cursor: not-allowed; }
+.nm-cn-error { color: #ef4444; font-size: 12px; margin-top: 6px; }
+
+.nm-cn-breakdown {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 14px 16px; background: var(--surface-2); border-radius: 10px;
+  margin-bottom: 16px;
+}
+.nm-cn-char-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px;
+}
+.nm-cn-char  { font-size: 22px; font-weight: 700; font-family: var(--font-cn); line-height: 1; }
+.nm-cn-strokes { font-size: 11px; color: var(--text-3); }
+.nm-cn-digit { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
 </style>

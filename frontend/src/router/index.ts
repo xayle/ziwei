@@ -151,6 +151,18 @@ const router = createRouter({
       meta: { title: '命理报告书' },
     },
     {
+      path: '/scenarios',
+      name: 'scenarios',
+      component: () => import('@/views/ScenarioView.vue'),
+      meta: { title: '情景推演' },
+    },
+    {
+      path: '/members',
+      name: 'members',
+      component: () => import('@/views/MemberView.vue'),
+      meta: { title: '成员管理' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),

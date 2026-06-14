@@ -354,12 +354,21 @@ export async function computeFullBazi(req: BaziFullRequest): Promise<BaziFullRes
   return data
 }
 
+function normalizeZiweiGender(gender: string): '男' | '女' {
+  const value = String(gender ?? '').trim().toLowerCase()
+  if (value === '女' || value === 'female' || value === 'f') return '女'
+  return '男'
+}
+
 export async function computeZiwei(req: {
   year: number; month: number; day: number; hour: number; minute?: number
   gender: '男' | '女'
   liunian_year?: number; longitude?: number; template_version?: string
 }): Promise<ZiweiResponse> {
-  const { data } = await apiClient.post<ZiweiResponse>('/api/v1/ziwei/full', req)
+  const { data } = await apiClient.post<ZiweiResponse>('/api/v1/ziwei/full', {
+    ...req,
+    gender: normalizeZiweiGender(req.gender),
+  })
   return data
 }
 

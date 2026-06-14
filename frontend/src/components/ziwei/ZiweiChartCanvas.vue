@@ -130,6 +130,7 @@ const props = defineProps<{
   daxianSihuaMap: Record<string, string>
   liunianSihuaMap: Record<string, string>
   liuyueSihuaMap: Record<string, string>
+  xiaoxianSihuaMap: Record<string, string>
   tfColorStyle: (transform: string) => Record<string, string>
   tfOutlineStyle: (transform: string) => Record<string, string>
   selectPalace: (palace: PalaceResponse) => void
@@ -202,6 +203,7 @@ const props = defineProps<{
             :daxian-sihua-map="props.daxianSihuaMap"
             :liunian-sihua-map="props.liunianSihuaMap"
             :liuyue-sihua-map="props.liuyueSihuaMap"
+            :xiaoxian-sihua-map="props.xiaoxianSihuaMap"
             :tf-color-style="props.tfColorStyle"
             :tf-outline-style="props.tfOutlineStyle"
             @select="props.selectPalace"

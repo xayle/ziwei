@@ -45,7 +45,7 @@ describe('AppNav — 未登录状态', () => {
 
   it('未登录时不渲染导航链接', () => {
     const wrapper = mountNav()
-    expect(wrapper.find('.nav-links').exists()).toBe(false)
+    expect(wrapper.find('.nav-center').exists()).toBe(false)
   })
 
   it('未登录时不显示退出按钮', () => {
@@ -75,22 +75,11 @@ describe('AppNav — 已登录状态', () => {
     expect(wrapper.text()).toContain('天机')
   })
 
-  it('显示十一条导航链接', async () => {
+  it('显示案例中心导航链接', async () => {
     const wrapper = await mountLoggedIn()
     const links = wrapper.findAll('.nav-link')
-    expect(links).toHaveLength(11)
-    const labels = links.map(l => l.text())
-    expect(labels).toContain('案例中心')
-    expect(labels).toContain('报告书')
-    expect(labels).toContain('八字排盘')
-    expect(labels).toContain('紫微斗数')
-    expect(labels).toContain('姓名学')
-    expect(labels).toContain('择日')
-    expect(labels).toContain('西方占星')
-    expect(labels).toContain('数字学')
-    expect(labels).toContain('合婚')
-    expect(labels).toContain('塔罗')
-    expect(labels).toContain('管理后台')
+    expect(links).toHaveLength(1)
+    expect(links[0].text()).toContain('案例中心')
   })
 
   it('点击退出清除 token 并跳转 /login', async () => {

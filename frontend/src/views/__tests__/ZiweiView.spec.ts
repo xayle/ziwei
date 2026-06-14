@@ -239,9 +239,9 @@ describe('ZiweiView — 演示盘', () => {
 describe('ZiweiView — Tab 切换', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it('切换至「大运」Tab 显示大运干支', async () => {
+  it('切换至「时间线」Tab 显示大运干支', async () => {
     const wrapper = await mountWithResult()
-    const dayunTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('大运'))
+    const dayunTab = wrapper.findAll('.vt-btn').find(b => b.text().includes('时间线'))
     expect(dayunTab).toBeDefined()
     await dayunTab!.trigger('click')
     await wrapper.vm.$nextTick()
@@ -251,9 +251,9 @@ describe('ZiweiView — Tab 切换', () => {
     expect(wrapper.text()).toContain('4岁起运')
   })
 
-  it('切换至「格局」Tab 显示格局名称和描述', async () => {
+  it('切换至「格局·宫位」Tab 显示格局名称和描述', async () => {
     const wrapper = await mountWithResult()
-    const patternTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('格局'))
+    const patternTab = wrapper.findAll('.vt-btn').find(b => b.text().includes('格局'))
     expect(patternTab).toBeDefined()
     await patternTab!.trigger('click')
     await wrapper.vm.$nextTick()
@@ -262,9 +262,9 @@ describe('ZiweiView — Tab 切换', () => {
     expect(wrapper.text()).toContain('贵格之命')
   })
 
-  it('切换至「建议」Tab 显示化解与生活建议', async () => {
+  it('切换至「预测·建议」Tab 显示化解与生活建议', async () => {
     const wrapper = await mountWithResult()
-    const suggestTab = wrapper.findAll('.tab-btn').find(b => b.text().includes('建议'))
+    const suggestTab = wrapper.findAll('.vt-btn').find(b => b.text().includes('建议'))
     expect(suggestTab).toBeDefined()
     await suggestTab!.trigger('click')
     await wrapper.vm.$nextTick()
@@ -394,7 +394,7 @@ describe('ZiweiView — A组阅读增强', () => {
     URL.createObjectURL = vi.fn(() => 'blob:test')
     URL.revokeObjectURL = vi.fn()
 
-    const tabBtn = wrapper.findAll('.tab-btn').find((b) => b.text().includes('建议'))
+    const tabBtn = wrapper.findAll('.vt-btn').find((b) => b.text().includes('建议'))
     expect(tabBtn).toBeDefined()
     await tabBtn!.trigger('click')
     await flushPromises()

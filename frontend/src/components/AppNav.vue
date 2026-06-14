@@ -7,20 +7,6 @@ const route  = useRoute()
 const router = useRouter()
 const auth   = useAuthStore()
 
-const navItems = [
-  { path: '/cases',     label: '案例中心' },
-  { path: '/report',    label: '报告书' },
-  { path: '/bazi',      label: '八字排盘' },
-  { path: '/ziwei',     label: '紫微斗数' },
-  { path: '/name',      label: '姓名学' },
-  { path: '/zeri',      label: '择日' },
-  { path: '/western',   label: '西方占星' },
-  { path: '/numerology',label: '数字学' },
-  { path: '/compat',    label: '合婚' },
-  { path: '/tarot',     label: '塔罗' },
-  { path: '/admin',     label: '管理后台' },
-]
-
 const { theme, toggleTheme } = useThemePreference()
 
 function logout() {
@@ -33,16 +19,12 @@ function logout() {
   <header class="app-nav">
     <div class="nav-wrap">
       <RouterLink class="nav-logo" to="/">命理系统</RouterLink>
-      <nav class="nav-links" v-if="auth.isLoggedIn">
+      <div class="nav-center" v-if="auth.isLoggedIn">
         <RouterLink
-          v-for="item in navItems"
-          :key="item.path"
-          :to="item.path"
-          :class="['nav-link', { active: route.path.startsWith(item.path) }]"
-        >
-          {{ item.label }}
-        </RouterLink>
-      </nav>
+          to="/cases"
+          :class="['nav-link', { active: route.path.startsWith('/cases') }]"
+        >🗂 案例中心</RouterLink>
+      </div>
       <div class="nav-right">
         <button class="btn-theme" :title="theme === 'bazi' ? '切换科技主题' : '切换山水主题'" @click="toggleTheme">
           {{ theme === 'bazi' ? '☉' : '☯' }}
@@ -82,6 +64,13 @@ function logout() {
   letter-spacing: 0.02em;
   text-decoration: none;
   flex-shrink: 0;
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex: 1;
 }
 
 .nav-links {

@@ -125,6 +125,7 @@ export type ZiweiChartCanvasBindings = {
   daxianSihuaMap: Record<string, string>
   liunianSihuaMap: Record<string, string>
   liuyueSihuaMap: Record<string, string>
+  xiaoxianSihuaMap: Record<string, string>
   tfColorStyle: (transform: string) => Record<string, string>
   tfOutlineStyle: (transform: string) => Record<string, string>
   selectPalace: (palace: PalaceResponse) => void
@@ -175,6 +176,7 @@ type UseZiweiChartCanvasBindingsOptions = {
   daxianSihuaMap: MaybeRef<Record<string, string>>
   liunianSihuaMap: MaybeRef<Record<string, string>>
   liuyueSihuaMap: MaybeRef<Record<string, string>>
+  xiaoxianSihuaMap: MaybeRef<Record<string, string>>
   tfColorStyle: (transform: string) => Record<string, string>
   tfOutlineStyle: (transform: string) => Record<string, string>
   selectPalace: (palace: PalaceResponse) => void
@@ -242,6 +244,7 @@ export function useZiweiChartCanvasBindings(options: UseZiweiChartCanvasBindings
     daxianSihuaMap: options.daxianSihuaMap.value,
     liunianSihuaMap: options.liunianSihuaMap.value,
     liuyueSihuaMap: options.liuyueSihuaMap.value,
+    xiaoxianSihuaMap: options.xiaoxianSihuaMap.value,
     tfColorStyle: options.tfColorStyle,
     tfOutlineStyle: options.tfOutlineStyle,
     selectPalace: options.selectPalace,

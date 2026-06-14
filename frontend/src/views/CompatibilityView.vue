@@ -8,6 +8,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getBaziCompat } from '@/api/compat'
+import { computeRelationCompat, type RelationComputeResponse } from '@/api/relations'
 
 type ViewMode = 'bazi' | 'synastry'
 
@@ -184,6 +185,44 @@ function radarLabels(cx: number, cy: number, r: number) {
       label: elems[i],
     }
   })
+}
+
+// ── 关系合盘评分 (T1.3) ─────────────────────────────────────
+const relCaseA   = ref('')
+const relCaseB   = ref('')
+const relType    = ref('love')
+const relLoading = ref(false)
+const relError   = ref<string | null>(null)
+const relResult  = ref<RelationComputeResponse | null>(null)
+
+const RELATION_TYPE_OPTIONS = [
+  { value: 'love',        label: '恋爱关系' },
+  { value: 'marriage',    label: '婚姻关系' },
+  { value: 'friendship',  label: '友谊关系' },
+  { value: 'business',    label: '合伙关系' },
+  { value: 'parent_child',label: '亲子关系' },
+  { value: 'colleague',   label: '同事关系' },
+]
+
+async function queryRelation() {
+  if (!relCaseA.value.trim() || !relCaseB.value.trim()) {
+    relError.value = '请填写双方案例 ID'
+    return
+  }
+  relLoading.value = true
+  relError.value = null
+  relResult.value = null
+  try {
+    relResult.value = await computeRelationCompat({
+      case_a_id: relCaseA.value.trim(),
+      case_b_id: relCaseB.value.trim(),
+      relation_type: relType.value,
+    })
+  } catch (e: unknown) {
+    relError.value = (e as Error).message ?? '关系分析失败'
+  } finally {
+    relLoading.value = false
+  }
 }
 
 const PILLAR_LABELS = ['年', '月', '日', '时']
@@ -434,6 +473,73 @@ const STEM_ELEM_CH: Record<string, string> = {
       <div v-if="!result && !loading" class="cp-empty">
         <div class="cp-empty-icon">💑</div>
         <p>填写双方出生信息后点击「开始合婚」查看配对分析</p>
+      </div>
+
+      <!-- 关系合盘评分 (T1.3) -->
+      <div class="cp-rel-section">
+        <h2 class="cp-sec-title">🔗 关系合盘评分</h2>
+        <p class="cp-rel-desc">基于案例 ID 计算双方综合关系得分，包含支持点、冲突点与建议。</p>
+        <div class="cp-rel-form">
+          <div class="cp-rel-inputs">
+            <div class="cp-rel-field">
+              <label class="cp-label">甲方案例 ID</label>
+              <input class="cp-rel-input" v-model="relCaseA" placeholder="如 GT01 或数字 ID" />
+            </div>
+            <div class="cp-rel-field">
+              <label class="cp-label">乙方案例 ID</label>
+              <input class="cp-rel-input" v-model="relCaseB" placeholder="如 GT02" />
+            </div>
+            <div class="cp-rel-field">
+              <label class="cp-label">关系类型</label>
+              <select class="cp-rel-input" v-model="relType">
+                <option v-for="opt in RELATION_TYPE_OPTIONS" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+            <button class="cp-rel-btn" :disabled="relLoading" @click="queryRelation">
+              {{ relLoading ? '分析中…' : '开始分析' }}
+            </button>
+          </div>
+
+          <div v-if="relError" class="cp-rel-error">{{ relError }}</div>
+
+          <div v-if="relResult" class="cp-rel-result">
+            <div class="cp-rel-score-row">
+              <div class="cp-rel-names">
+                <span class="cp-rel-name-a">{{ relResult.case_a.name }}</span>
+                <span class="cp-rel-vs">♥</span>
+                <span class="cp-rel-name-b">{{ relResult.case_b.name }}</span>
+              </div>
+              <div class="cp-rel-score">
+                <span class="cp-rel-score-num">{{ relResult.result.compatibility_score }}</span>
+                <span class="cp-rel-score-denom"> / 100</span>
+              </div>
+            </div>
+            <div class="cp-rel-score-track">
+              <div class="cp-rel-score-fill" :style="{ width: relResult.result.compatibility_score + '%' }"></div>
+            </div>
+            <p class="cp-rel-summary">{{ relResult.result.summary }}</p>
+
+            <div class="cp-rel-points">
+              <div class="cp-rel-col" v-if="relResult.result.support_points?.length">
+                <h3 class="cp-rel-col-title cp-rel-support">❤️ 相得益彰</h3>
+                <div v-for="p in relResult.result.support_points" :key="p.tag" class="cp-rel-point">
+                  <span class="cp-rel-tag">{{ p.tag }}</span>
+                  <span class="cp-rel-detail">{{ p.detail }}</span>
+                </div>
+              </div>
+              <div class="cp-rel-col" v-if="relResult.result.conflict_points?.length">
+                <h3 class="cp-rel-col-title cp-rel-conflict">⚠️ 在意事项</h3>
+                <div v-for="p in relResult.result.conflict_points" :key="p.tag" class="cp-rel-point">
+                  <span class="cp-rel-tag">{{ p.tag }}</span>
+                  <span class="cp-rel-detail">{{ p.detail }}</span>
+                </div>
+              </div>
+            </div>
+            <p v-if="relResult.result.advice" class="cp-rel-advice">💡 {{ relResult.result.advice }}</p>
+          </div>
+        </div>
       </div>
     </template>
   </div>
@@ -876,6 +982,40 @@ svg .radar-legend { font-size: 10px; fill: var(--text-3); font-family: var(--fon
 
 .cp-empty-icon { font-size: 52px; opacity: 0.3; }
 .cp-empty p { font-size: 14px; font-family: var(--font-cn); }
+
+/* ── 关系合盘评分 ─────────────────────────────────── */
+.cp-rel-section { margin-top: 32px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.cp-rel-desc { font-size: 13px; color: var(--text-2); margin: 4px 0 16px; }
+.cp-rel-form { display: flex; flex-direction: column; gap: 16px; }
+.cp-rel-inputs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.cp-rel-field { display: flex; flex-direction: column; gap: 4px; min-width: 160px; flex: 1; }
+.cp-rel-input { border: 1px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; background: var(--bg); color: var(--text-1); }
+.cp-rel-input:focus { outline: none; border-color: var(--accent); }
+.cp-rel-btn { padding: 8px 20px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; white-space: nowrap; align-self: flex-end; }
+.cp-rel-btn:hover { opacity: 0.9; }
+.cp-rel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cp-rel-error { color: var(--danger, #ef4444); font-size: 13px; }
+.cp-rel-result { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+.cp-rel-score-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cp-rel-names { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+.cp-rel-name-a { color: #ef4444; }
+.cp-rel-name-b { color: #3b82f6; }
+.cp-rel-vs { color: var(--text-3); }
+.cp-rel-score { font-size: 22px; font-weight: 700; }
+.cp-rel-score-num { color: var(--accent); }
+.cp-rel-score-denom { font-size: 14px; color: var(--text-3); }
+.cp-rel-score-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.cp-rel-score-fill { height: 100%; background: linear-gradient(90deg, #ef4444, #f97316, #22c55e); border-radius: 4px; transition: width 0.6s ease; }
+.cp-rel-summary { font-size: 14px; color: var(--text-1); }
+.cp-rel-points { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cp-rel-col { display: flex; flex-direction: column; gap: 8px; }
+.cp-rel-col-title { font-size: 13px; font-weight: 700; margin: 0 0 4px; }
+.cp-rel-support { color: #22c55e; }
+.cp-rel-conflict { color: #f59e0b; }
+.cp-rel-point { display: flex; flex-direction: column; gap: 2px; padding: 8px; background: var(--surface-alt); border-radius: var(--radius-sm); }
+.cp-rel-tag { font-size: 12px; font-weight: 700; color: var(--text-2); }
+.cp-rel-detail { font-size: 12px; color: var(--text-1); }
+.cp-rel-advice { font-size: 13px; color: var(--text-2); padding: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: var(--radius-sm); border-left: 3px solid var(--accent); }
 
 @media (max-width: 1024px) {
   .cp-result-grid,
