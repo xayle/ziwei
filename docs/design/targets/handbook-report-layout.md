@@ -2,12 +2,12 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | target-report-1.0 |
-| **日期** | 2026-07-12 |
-| **任务** | F1-2 · T011 |
+| **版本** | target-report-1.1 |
+| **日期** | 2026-07-13 |
+| **任务** | F1-2 · T011 · **W102-19** |
 | **页面** | `/report` · `ReportView.vue`（F4 重构） |
 | **母版** | Volume-Centric（连续阅读） |
-| **对照样页** | [`../skin-preview.html`](../skin-preview.html) §09 `#volumes` |
+| **对照样页** | [`../pdf-template-preview.html`](../pdf-template-preview.html)（W102-19 六卷 print/PDF 样张） |
 | **截图门禁** | [`report-toc.png`](report-toc.png) |
 
 ---
@@ -84,3 +84,16 @@ Shell 篇题：报告 · 六卷辑录
 
 - 数据层：`frontend/src/types/life-volume.ts` · `buildLifeVolumes.ts`（T025）
 - 执行：INTEGRATED §5.7 F4 · EXECUTION-PRIORITY T036–T048
+- 样张：`docs/design/pdf-template-preview.html`（W102-19）
+
+---
+
+## 7. W102-19 样张验收
+
+| 项 | 标准 |
+|----|------|
+| 卷目 IA | 与 §2 一致；样张见 `pdf-template-preview.html` |
+| 品牌 Token | `--brand-ink` / `--brand-gold` / `--font-display` 对齐 `variables.css` |
+| 打印 | `@media print` 隐 hero；卷 `page-break-inside: avoid` |
+| PDF algo | 跋区展示 `year_divide` / `late_zishi` / `birth_time_precision` 等 meta |
+| 请求预算 | archive-bundle + explain×2（§5） |
