@@ -40,7 +40,7 @@ Compare JSON: `docs/reports/R079-targets-compare-latest.json`（`generated_at` 2
 |------|------|------|
 | 设计 | DS proxy（live/frozen 并排 + Q5 锚点表） | 2026-07-13 |
 | 前端 | auto（E2E anti-slop + targets compare） | 2026-07-13 |
-| 产品 | 待正式姓名补签 | — |
+| 产品 | W102-21 收口试读 | 2026-07-13 | ☑ 15/15 · [签字](R102-W102-21-product-signoff-2026-07-13.md) |
 
 ## Screenshot capture
 
@@ -55,4 +55,4 @@ Compare against frozen: `docs/design/targets/{bazi,ziwei,report-toc}.png`
 
 ---
 
-**R071 / R085 / R103 #3：** 结构 15/15 ☑；产品姓名行待补签后 R107 可勾。
+**R071 / R085 / R103 #3：** 结构 15/15 ☑；产品行 **W102-21 ☑**。

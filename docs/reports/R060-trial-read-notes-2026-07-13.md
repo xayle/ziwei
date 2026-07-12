@@ -69,3 +69,5 @@
 - 差距 backlog：[R102 §一](R102-product-rebuild-plan-2026-07-13.md#一ui-差距清单对照-skin-preview--targets) · [DEV-AUDIT](../DEV-AUDIT-2026-07-13.md) P2-3/P2-4
 
 **结论：** Week1 **P1 试读结构**达标；step 10 **7.5/10 通过**；内容/宋式差距记入 Week2 TOP3。
+
+**Week4 复评（W102-21）：** step 10 **8.0/10** · 见 [R102-W102-21-product-signoff-2026-07-13.md](R102-W102-21-product-signoff-2026-07-13.md)
