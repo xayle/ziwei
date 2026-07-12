@@ -65,7 +65,7 @@
 | R106 pass 4 | **绿** | [`R106-final-verify-2026-07-13-pass4.md`](reports/R106-final-verify-2026-07-13-pass4.md) |
 | 债务扫描 | **0 命中** | `VolumeHead` 重命名 + 去 gradient |
 | targets compare | **PASS** | `scripts/compare-live-targets.mjs` |
-| 最近提交 | `cd366bd` | OpenAPI + types + gate 文档 + 部分路由 |
+| 最近提交 | `d9b25d8` · `4733964` | handbook pass4 + 完整 SPA 源码/E2E |
 
 ### 2.4 Git / 工程态
 
