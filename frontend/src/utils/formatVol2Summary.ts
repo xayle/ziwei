@@ -1,6 +1,19 @@
 import type { BaziResponse } from '@/api/bazi'
 import { formatRelationLines } from '@/utils/buildEngineTrustDisplay'
 
+function relationItemLine(item: NonNullable<NonNullable<BaziResponse['relations_summary']>['items']>[number]): string {
+  const summary = item.summary?.trim()
+  if (summary) return summary
+  const legacy = item.detail?.trim()
+  if (legacy) return legacy
+  const type = item.type?.trim() ?? ''
+  const subject = item.subject?.trim() ?? ''
+  const target = item.target?.trim()
+  const core = [type, subject, target].filter(Boolean).join(' ')
+  if (core) return core
+  return item.pillars?.trim() ?? ''
+}
+
 export function formatRelationsSummaryText(bazi: BaziResponse | null | undefined): string {
   const rs = bazi?.relations_summary
   if (rs) {
@@ -9,14 +22,16 @@ export function formatRelationsSummaryText(bazi: BaziResponse | null | undefined
       rs.clash_summary,
       rs.combine_summary,
       rs.harm_summary,
-    ].filter((s) => s?.trim())
+    ].filter((s): s is string => typeof s === 'string' && Boolean(s.trim()))
     if (parts.length) return parts.join('；')
     if (rs.items?.length) {
-      return rs.items.slice(0, 6).map((i) => i.detail || i.type || '').filter(Boolean).join('；')
+      const lines = rs.items.map(relationItemLine).filter(Boolean)
+      if (lines.length) return lines.slice(0, 6).join('；')
     }
   }
   const fallback = formatRelationLines(bazi)
-  return fallback.slice(0, 4).join('；') || '暂无干支关系摘要'
+  if (fallback.length) return fallback.slice(0, 4).join('；')
+  return '暂无干支关系摘要'
 }
 
 export function formatShenshaSummaryText(bazi: BaziResponse | null | undefined): string {

@@ -520,7 +520,16 @@ export interface ValidationModel {
 
 // ── 卷二上浮摘要（BE-P3-05）────────────────────────────────
 export interface RelationsSummaryModel {
-  items?: Array<{ type?: string; pillars?: string; detail?: string }>
+  items?: Array<{
+    type?: string
+    subject?: string
+    target?: string | null
+    summary?: string
+    strength?: string
+    /** legacy alias */
+    detail?: string
+    pillars?: string
+  }>
   clash_summary?: string
   combine_summary?: string
   harm_summary?: string

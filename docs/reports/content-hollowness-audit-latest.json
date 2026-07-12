@@ -17,10 +17,10 @@
     },
     "vol2": {
       "blocks": 3,
-      "fallback_pct": 33.3,
-      "thin_pct": 33.3,
+      "fallback_pct": 0.0,
+      "thin_pct": 100.0,
       "trunc_pct": 0.0,
-      "avg_chars": 29.0
+      "avg_chars": 25.7
     },
     "vol3": {
       "blocks": 9,
@@ -93,18 +93,18 @@
     ],
     "vol2": [
       {
-        "chars": 8,
-        "fallback": true,
-        "truncated": false,
-        "thin": false,
-        "preview": "暂无干支关系摘要"
-      },
-      {
-        "chars": 57,
+        "chars": 22,
         "fallback": false,
         "truncated": false,
-        "thin": false,
-        "preview": "劫煞、天乙贵人、天德贵人、天德贵人、月德贵人、月德贵人、魁罡、天喜、天喜、灾煞、金舆、华盖、华盖、地网、寡宿、寡宿"
+        "thin": true,
+        "preview": "拱合；丁[火]克庚[金]；丁[火]克庚[金]"
+      },
+      {
+        "chars": 33,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "劫煞、天乙贵人、天德贵人、天德贵人、月德贵人、月德贵人、魁罡、天喜"
       },
       {
         "chars": 22,

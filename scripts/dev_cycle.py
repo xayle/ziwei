@@ -82,7 +82,7 @@ def _git_commit(message: str, *, allow_advisory_fail: bool, advisory_ok: bool) -
         return {"ok": False, "detail": status_out}
     if not status_out.strip():
         return {"ok": True, "detail": "nothing to commit"}
-    add_ok, add_out = _run(["git", "add", "-A"])
+    add_ok, add_out = _run(["git", "add", "-u"])
     if not add_ok:
         return {"ok": False, "detail": add_out}
     commit_ok, commit_out = _run(["git", "commit", "-m", message])

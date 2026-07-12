@@ -75,6 +75,86 @@ def summarize(blocks: list[dict]) -> dict:
     }
 
 
+def format_relations_summary_text(bazi: dict) -> str:
+    """Mirror frontend formatRelationsSummaryText (formatVol2Summary.ts)."""
+    rs = bazi.get("relations_summary") or {}
+    if isinstance(rs, dict):
+        parts = [
+            str(rs.get(key) or "").strip()
+            for key in ("interaction_summary", "clash_summary", "combine_summary", "harm_summary")
+        ]
+        parts = [p for p in parts if p]
+        if parts:
+            return "；".join(parts)
+        lines: list[str] = []
+        for item in (rs.get("items") or [])[:6]:
+            if not isinstance(item, dict):
+                continue
+            summary = str(item.get("summary") or "").strip()
+            if summary:
+                lines.append(summary)
+                continue
+            legacy = str(item.get("detail") or "").strip()
+            if legacy:
+                lines.append(legacy)
+                continue
+            core = " ".join(
+                x
+                for x in (
+                    str(item.get("type") or "").strip(),
+                    str(item.get("subject") or "").strip(),
+                    str(item.get("target") or "").strip(),
+                )
+                if x
+            )
+            if core:
+                lines.append(core)
+        if lines:
+            return "；".join(lines)
+    rel_lines: list[str] = []
+    for rel in bazi.get("dizhi_relations") or []:
+        if not isinstance(rel, dict):
+            continue
+        type_ = str(rel.get("type") or rel.get("relation") or "").strip()
+        branches = str(rel.get("branches") or rel.get("pair") or "").strip()
+        note = str(rel.get("note") or rel.get("desc") or "").strip()
+        text = " · ".join(x for x in (type_, branches, note) if x)
+        if text:
+            rel_lines.append(text)
+    for clash in bazi.get("tiangan_clashes") or []:
+        if not isinstance(clash, dict):
+            continue
+        stems = str(clash.get("stems") or clash.get("pair") or "").strip()
+        note = str(clash.get("note") or clash.get("type") or "天干冲").strip()
+        text = " · ".join(x for x in (note, stems) if x)
+        if text:
+            rel_lines.append(text)
+    if rel_lines:
+        return "；".join(rel_lines[:4])
+    return "暂无干支关系摘要"
+
+
+def format_shensha_summary_text(bazi: dict) -> str:
+    ss = bazi.get("shensha_summary") or {}
+    if isinstance(ss, dict):
+        highlights = ss.get("highlights") or []
+        if highlights:
+            names = [str(x) for x in highlights if x]
+            if names:
+                return "、".join(names[:8])
+        raw = ss.get("items") or []
+        names = [x.get("name", "") if isinstance(x, dict) else str(x) for x in raw]
+        names = [n for n in names if n]
+        if names:
+            return "、".join(names[:8])
+    fallback = [
+        str(item.get("name") or "")
+        for item in (bazi.get("shensha") or [])
+        if isinstance(item, dict) and item.get("name")
+    ]
+    return "、".join(fallback[:8]) if fallback else "暂无神煞摘要"
+
+
 def main() -> None:
     breq = BaziFullRequest(
         dt=datetime.fromisoformat("1990-01-15T08:30:00"),
@@ -127,15 +207,8 @@ def main() -> None:
         for bl in sec.get("blocks", []):
             vol1.append(str(bl.get("text", ""))[:320])
 
-    rels = bazi.get("relations") or []
-    rel_line = "；".join(f"{r.get('type', '')} {r.get('subject', '')}" for r in rels[:6]) or "暂无干支关系摘要"
-    ss = bazi.get("shensha_summary") or {}
-    if isinstance(ss, dict):
-        raw_names = ss.get("highlight_names") or ss.get("items") or []
-        names = [x if isinstance(x, str) else x.get("name", "") for x in raw_names]
-        ss_line = "、".join(n for n in names if n) or "暂无神煞摘要"
-    else:
-        ss_line = str(ss) or "暂无神煞摘要"
+    rel_line = format_relations_summary_text(bazi)
+    ss_line = format_shensha_summary_text(bazi)
     vol2 = [rel_line, ss_line]
     for sec in bex.get("sections", []):
         if sec.get("section_id") == "relations":

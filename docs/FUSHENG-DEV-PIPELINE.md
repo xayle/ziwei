@@ -145,7 +145,7 @@ pre-commit run --all-files   # 首次或大改后
 | ☐ | **W102-03** | FE | 紫微：去掉 VolumeHead + section 重复 h2 | E2E risk-alert 绿 | R102 Z2 |
 | ☐ | **W102-04** | FE | 报告卷首：封面-only，meta 下沉 | E2E report 绿 | R102 R1 |
 | ☐ | **W102-05** | FE | 三页 flat 卡 ≤4（含首页 KPI 降权） | 目检 + anti-slop | R102 B9/H2 |
-| ☐ | **W102-06** | FE+BE | 修 `formatRelationsSummaryText` fallback | audit vol2 fallback 0% | TD-08 |
+| ☑ | **W102-06** | FE+BE | 修 `formatRelationsSummaryText` fallback | audit vol2 fallback 0% | TD-08 |
 | ☐ | **W102-07** | BE | audit 脚本 vol2 对齐 FE `relations_summary` | 脚本与 UI 一致 | TD-27 |
 | ☐ | **W102-08** | PM | R060 15 分钟试读 + 记录 ≥7/10 或 TOP3 | 试读笔记 | R102 Week1 |
 

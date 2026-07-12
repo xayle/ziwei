@@ -11,6 +11,8 @@
 | `03-report-cross.drawio` | `/report` | 六卷卷目 + 跋 advisory |
 | `04-ziwei-timeline.drawio` | `/new/ziwei/timeline` | 卷三运限叙事（F5-4） |
 | `05-ziwei-plate.drawio` | `/new/ziwei` | 方盘 Hero、纯色底（F5-3） |
+| [`05-home-song-target.html`](05-home-song-target.html) | `/` | **首页高保真目标稿**（母版 B · Live Server 预览） |
+| [`fusheng-home-song-aesthetic-mockup.png`](fusheng-home-song-aesthetic-mockup.png) | `/` | AI 概念稿（参考气质，非像素真源） |
 
 ## 如何打开
 
