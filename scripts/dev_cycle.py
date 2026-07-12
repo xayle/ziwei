@@ -54,14 +54,20 @@ def _product_advisory() -> dict:
     if not CONTENT_AUDIT.is_file():
         return {"ok": False, "reason": "missing content-hollowness-audit-latest.json"}
     data = json.loads(CONTENT_AUDIT.read_text(encoding="utf-8"))
+    rollup = data.get("rollup")
+    if rollup:
+        thin_pct = float(rollup.get("thin_pct") or 100) / 100.0
+        blocks = int(rollup.get("blocks_total") or 0)
+    else:
+        volumes = data.get("volumes") or {}
+        blocks = 0
+        thin = 0
+        for vol in volumes.values():
+            n = int(vol.get("blocks") or 0)
+            blocks += n
+            thin += int(round((vol.get("thin_pct") or 0) * n / 100))
+        thin_pct = (thin / blocks) if blocks else 1.0
     volumes = data.get("volumes") or {}
-    blocks = 0
-    thin = 0
-    for vol in volumes.values():
-        n = int(vol.get("blocks") or 0)
-        blocks += n
-        thin += int(round((vol.get("thin_pct") or 0) * n / 100))
-    thin_pct = (thin / blocks) if blocks else 1.0
     vol2 = volumes.get("vol2") or {}
     fallback_pct = float(vol2.get("fallback_pct") or 0) / 100.0
     ok = thin_pct <= THIN_TARGET and fallback_pct <= VOL2_FALLBACK_TARGET
@@ -69,6 +75,7 @@ def _product_advisory() -> dict:
         "ok": ok,
         "thin_pct": round(thin_pct, 4),
         "thin_target": THIN_TARGET,
+        "blocks_total": blocks if rollup else sum(int(v.get("blocks") or 0) for v in volumes.values()),
         "vol2_fallback_pct": fallback_pct,
         "vol2_fallback_target": VOL2_FALLBACK_TARGET,
     }

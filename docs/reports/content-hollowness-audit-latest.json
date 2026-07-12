@@ -58,6 +58,15 @@
       "avg_chars": 55.0
     }
   },
+  "rollup": {
+    "blocks_total": 55,
+    "thin_blocks": 10,
+    "thin_pct": 18.2,
+    "fallback_blocks": 8,
+    "fallback_pct": 14.5,
+    "week4_target_thin_pct": 35.0,
+    "thin_target_met": true
+  },
   "volume_samples": {
     "preface": [
       {

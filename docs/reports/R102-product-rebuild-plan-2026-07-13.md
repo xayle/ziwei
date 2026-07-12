@@ -294,14 +294,14 @@ make audit-content
 | TD-14 | Q12 页面 explain 常量未接线 | ✅ 八字 + 紫微页 | Week2 |
 | TD-15 | `fetchLifeVolumes` 失败静默 fallback | `api/life.ts` · `ReportView` | Week2 |
 | TD-16 | CI 跑 `auto_verify_w14` ≠ 本地 autopilot 全量 | `.github/workflows/ci.yml` | W102-P3-02 |
-| TD-17 | `audit-content` 未进 CI | Makefile 有 · CI 无 | Week4 |
+| TD-17 | `audit-content` 未进 CI | Makefile 有 · CI 无 | ✅ W102-20 · advisory |
 | TD-18 | `verify_surface_levels.py`（A45）未进 CI | AUTOPILOT | Week4 |
 | TD-19 | `auto_verify_r007` 只验 markdown 不验实现 | FE-BE Q12/Q6/Q9 | 🟡 |
 | TD-20 | AUTOPILOT 文称 A30–A59，脚本止于 A50 | 编号口径 | ✅ W102-00b 修正 |
 | TD-21 | 扩展页 partner 经度/性别（CompatView · ZiweiCompatView） | `extensions/*` | R086 之后 |
 | TD-22 | `profile/summary` 精简排盘 vs workbench 不一致 | `profile_summary.py` | Week3 |
 | TD-23 | Q6 `source_page` FE 未展示 | FE-BE W12 | Week4 |
-| TD-24 | audit JSON 缺 rollup 字段（thin 合计等） | `audit_content_hollowness.py` | 🟡 低 |
+| TD-24 | audit JSON 缺 rollup 字段（thin 合计等） | `audit_content_hollowness.py` | ✅ W102-20 |
 | TD-25 | `explain.ts` / life API 等静默失败（除 TD-05） | 见 DEV-AUDIT P2-9 链 | Week2 |
 | TD-27 | audit vol2 路径 ≠ FE | ✅ W102-07 | — |
 | TD-30 | EXECUTION-REMAINING 与 AUTOPILOT pass 叙事冲突 | 文档 | P3-13 |

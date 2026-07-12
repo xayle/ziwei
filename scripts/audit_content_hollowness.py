@@ -75,6 +75,27 @@ def summarize(blocks: list[dict]) -> dict:
     }
 
 
+def compute_rollup(volumes_report: dict[str, dict]) -> dict:
+    blocks = 0
+    thin = 0
+    fallback = 0
+    for vol in volumes_report.values():
+        n = int(vol.get("blocks") or 0)
+        blocks += n
+        thin += int(round((vol.get("thin_pct") or 0) * n / 100))
+        fallback += int(round((vol.get("fallback_pct") or 0) * n / 100))
+    thin_pct = round(100 * thin / blocks, 1) if blocks else 100.0
+    return {
+        "blocks_total": blocks,
+        "thin_blocks": thin,
+        "thin_pct": thin_pct,
+        "fallback_blocks": fallback,
+        "fallback_pct": round(100 * fallback / blocks, 1) if blocks else 100.0,
+        "week4_target_thin_pct": 35.0,
+        "thin_target_met": thin_pct <= 35.0,
+    }
+
+
 def format_relations_summary_text(bazi: dict) -> str:
     """Mirror frontend formatRelationsSummaryText (formatVol2Summary.ts)."""
     rs = bazi.get("relations_summary") or {}
@@ -483,6 +504,7 @@ def main() -> None:
     out = {
         "profile": "1990-01-15 08:30 male Beijing",
         "volumes": report,
+        "rollup": compute_rollup(report),
         "volume_samples": {
             vid: [audit_block(t) for t in texts[:3]]
             for vid, texts in volumes.items()

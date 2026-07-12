@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-12T23:46:20.915489+00:00",
+  "timestamp": "2026-07-12T23:47:50.639727+00:00",
   "pass": true,
   "quick": true,
   "only": null,
@@ -21,8 +21,9 @@
   ],
   "product_advisory": {
     "ok": true,
-    "thin_pct": 0.1818,
+    "thin_pct": 0.182,
     "thin_target": 0.35,
+    "blocks_total": 55,
     "vol2_fallback_pct": 0.0,
     "vol2_fallback_target": 0.0
   },

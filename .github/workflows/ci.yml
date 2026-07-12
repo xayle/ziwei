@@ -109,6 +109,20 @@ jobs:
       - name: Run tests (excluding legacy)
         run: make test-fast
 
+      - name: Dev cycle quick (W102-20 · content advisory)
+        run: python scripts/dev_cycle.py --quick
+        continue-on-error: true
+
+      - name: Upload dev-cycle reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-cycle-reports
+          path: |
+            docs/reports/dev-cycle-latest.json
+            docs/reports/content-hollowness-audit-latest.json
+          if-no-files-found: ignore
+
       - name: sxtwl tests (best-effort)
         run: |
           python - <<'PY'
