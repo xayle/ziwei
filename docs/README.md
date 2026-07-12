@@ -15,6 +15,7 @@
 | **规矩·命令（旧手册）** | [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md) |
 | **文档地图 / 周计划索引** | [**`DEVELOPMENT.md`**](DEVELOPMENT.md) |
 | **当前进度与问题总览** | [**`DEV-AUDIT-2026-07-13.md`**](DEV-AUDIT-2026-07-13.md) ⭐ · [STATUS 历史快照](FUSHENG-DEV-STATUS-2026-07-13.md) |
+| **W5 产品重建（R102）** | UI 差距 · 内容 · 4 周 | [`reports/R102-product-rebuild-plan-2026-07-13.md`](reports/R102-product-rebuild-plan-2026-07-13.md) |
 | 前后端 W1–W16 执行 | [`plan/FUSHENG-INTEGRATED-DEV-PLAN.md`](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) |
 | **开工前就绪自检** | [**`DEV-READINESS.md`**](DEV-READINESS.md) |
 | **按编号依次开发（免对话）** | [**`plan/FUSHENG-EXECUTION-PRIORITY.md`**](plan/FUSHENG-EXECUTION-PRIORITY.md) |
@@ -57,7 +58,9 @@
 
 ### 设计层
 
-- [`design/FUSHENG-DESIGN-MASTERPLAN.md`](design/FUSHENG-DESIGN-MASTERPLAN.md)
+- [`design/FUSHENG-DESIGN-MASTERPLAN.md`](design/FUSHENG-DESIGN-MASTERPLAN.md) — v1 暖纸定案（对照）
+- [**`design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md`**](design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md) — **v2 数字书房 · 瓷色 · 提案**
+- [`design/mockups/05-home-song-target.html`](design/mockups/05-home-song-target.html) — 首页 v2 样张
 - [`design/skin-preview.html`](design/skin-preview.html)
 - [`design/targets/handbook-bazi-layout.md`](design/targets/handbook-bazi-layout.md)
 - [`design/SONG-AESTHETICS-REFERENCES.md`](design/SONG-AESTHETICS-REFERENCES.md)

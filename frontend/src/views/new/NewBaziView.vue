@@ -432,14 +432,17 @@ onMounted(() => {
 
         <section
           v-if="depth === 'overview' && (missingFields.length || provenanceRows.length)"
-          class="fs-card fs-card--flat"
+          class="fs-trust-footnote"
           data-testid="bazi-trust-overview"
         >
-          <EngineTrustPanel
-            compact
-            :missing-fields="missingFields"
-            :provenance-rows="provenanceRows.slice(0, 4)"
-          />
+          <details>
+            <summary>校勘提示（{{ missingFields.length }} 项）</summary>
+            <EngineTrustPanel
+              compact
+              :missing-fields="missingFields"
+              :provenance-rows="provenanceRows.slice(0, 4)"
+            />
+          </details>
         </section>
 
         <div class="bazi-page__depth-row" role="group" aria-label="阅读深度">

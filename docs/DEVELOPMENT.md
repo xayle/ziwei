@@ -41,7 +41,7 @@
 | **开工前节点清单** | 每阶段注意什么、用什么插件 | HANDBOOK §二–§七 · [NODE-CHECKLIST](guides/FUSHENG-NODE-CHECKLIST.md)（→ HANDBOOK） |
 | **防翻车** | 三门禁、R-01~R-05 | [INTEGRATED §5.11](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#511-前端落地预警risk-alert-并入) |
 | **后端细节** | ChartSnapshot、explain、校勘 | [BACKEND-MASTER](plan/BACKEND-MASTER-PLAN-2026-07-12.md) |
-| **接口决议** | 15 项 FE-BE | [FE-BE-DECISIONS](plan/FE-BE-DECISIONS.md) |
+| **接口决议** | Q1–Q20 FE-BE | [FE-BE-DECISIONS](plan/FE-BE-DECISIONS.md) |
 | **六卷 JSON** | 契约 | [life-volume.schema.json](contracts/life-volume.schema.json) · [explain-section-map.json](contracts/explain-section-map.json) |
 
 ---

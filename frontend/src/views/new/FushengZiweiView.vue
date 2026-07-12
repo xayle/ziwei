@@ -204,7 +204,7 @@ onMounted(() => {
         </div>
 
         <section class="ziwei-hero fs-card fs-card--hero" data-testid="ziwei-layer-plate">
-          <h2>传统方盘（本命）</h2>
+          <p class="fs-section-kicker">传统方盘（本命）</p>
           <p v-if="depth === 'overview'" class="natal-scope-note natal-scope-note--compact">
             运限时间轴见
             <router-link to="/new/ziwei/timeline">紫微运限</router-link>。
@@ -288,6 +288,14 @@ onMounted(() => {
   gap: 14px;
   min-width: 0;
   overflow-x: clip;
+}
+
+.fs-section-kicker {
+  margin: 0 0 10px;
+  font-family: var(--font-cn);
+  font-size: 13px;
+  color: var(--brand-mist);
+  letter-spacing: 0.04em;
 }
 
 .fs-card h2 {

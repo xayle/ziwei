@@ -45,7 +45,7 @@
 | `guides/FUSHENG-QUICKSTART.md` | 上手 |
 | `design/skin-preview.html` | 样张真源（T009） |
 | `design/targets/*.md` · `*.png` | handbook 三页 + 截图门禁 |
-| `guides/NODE-CHECKLIST.md` | 节点 + 插件 |
+| `guides/FUSHENG-NODE-CHECKLIST.md` | 节点 + 插件 |
 | `guides/FUSHENG-SONG-DEVELOPMENT.md` | 停用 stub |
 
 > **勿执行**：`archive/superseded/` 内 v3/SONG 全文；BOOK-GTM「合并来源」仅历史元数据。
@@ -94,7 +94,7 @@
 ```
 
 主设计：`design/FUSHENG-DESIGN-MASTERPLAN.md`  
-主执行：`plan/FUSHENG-EXECUTION-PRIORITY.md`（日常）· `plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md`（细节）
+主执行：**[`FUSHENG-DEV-PIPELINE.md`](FUSHENG-DEV-PIPELINE.md)**（W102 顺序 · dev_cycle）· [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md)（A 表）· `plan/FUSHENG-EXECUTION-PRIORITY.md`（T001–T070 历史）· `plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md`（细节）
 
 ---
 

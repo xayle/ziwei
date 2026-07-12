@@ -101,6 +101,8 @@ test.describe('八字紫微页面打磨', () => {
     })
     await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
+    await expect(page.getByTestId('bazi-trust-overview')).toBeVisible({ timeout: 15_000 })
+    await page.getByTestId('bazi-trust-overview').locator('summary').click()
     await expect(page.getByTestId('bazi-trust-overview').getByTestId('missing-fields')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('missing-fields')).toContainText('hour_pillar')
   })
@@ -108,6 +110,8 @@ test.describe('八字紫微页面打磨', () => {
   test('八字速览首屏可见 provenance', async ({ page }) => {
     await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
+    await expect(page.getByTestId('bazi-trust-overview')).toBeVisible({ timeout: 15_000 })
+    await page.getByTestId('bazi-trust-overview').locator('summary').click()
     await expect(page.getByTestId('bazi-trust-overview').getByTestId('provenance-section')).toBeVisible({ timeout: 15_000 })
   })
 

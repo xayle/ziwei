@@ -285,9 +285,28 @@ make audit-content
 | TD-05 | `explain.ts` 吞错 → `{ sections: [] }` 静默 | 八字/紫微页无失败 banner | Week2 |
 | TD-06 | `api/bazi.ts` 重复声明 `city_tier` / `industry` | 工程卫生 | Week4 |
 | TD-07 | 手写 API types 与 `schema.d.ts` 双轨 | `make sync-frontend-types` 后仍手写 | Week4 |
-| TD-08 | `formatRelationsSummaryText` 仍 fallback「暂无干支关系摘要」 | 与 BZ046 ☑ 矛盾 | Week1 |
+| TD-08 | `formatRelationsSummaryText` fallback | ✅ W102-06 · vol2 0% | — |
 | TD-09 | 卷三大运展示 `0.0岁起`（float 未格式化） | `buildLifeVolumes` 卷三 adapter | Week2 |
 | TD-10 | 六卷 PDF 与合盘 PDF 共用 `render_html_to_pdf` | 合盘 P3 见 [R086 §五](R086-relation-compat-sample-pdf-review-2026-07-13.md#五差距与优先级) | R102 之后 |
+| TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | Week3 |
+| TD-12 | `archive-bundle` 参数缺口 + FE 零调用 | `fusheng_archive.py` · 无 TS client | Week3 |
+| TD-13 | `lateZishi` 仅存 case tags，bundle 不读 | `profileCaseSync.ts` · `Case` 无列 | Week3 |
+| TD-14 | Q12 页面 explain 常量未接线 | `feBeContract.ts` · 无 view import | Week2 |
+| TD-15 | `fetchLifeVolumes` 失败静默 fallback | `api/life.ts` · `ReportView` | Week2 |
+| TD-16 | CI 跑 `auto_verify_w14` ≠ 本地 autopilot 全量 | `.github/workflows/ci.yml` | W102-P3-02 |
+| TD-17 | `audit-content` 未进 CI | Makefile 有 · CI 无 | Week4 |
+| TD-18 | `verify_surface_levels.py`（A45）未进 CI | AUTOPILOT | Week4 |
+| TD-19 | `auto_verify_r007` 只验 markdown 不验实现 | FE-BE Q12/Q6/Q9 | 🟡 |
+| TD-20 | AUTOPILOT 文称 A30–A59，脚本止于 A50 | 编号口径 | ✅ W102-00b 修正 |
+| TD-21 | 扩展页 partner 经度/性别（CompatView · ZiweiCompatView） | `extensions/*` | R086 之后 |
+| TD-22 | `profile/summary` 精简排盘 vs workbench 不一致 | `profile_summary.py` | Week3 |
+| TD-23 | Q6 `source_page` FE 未展示 | FE-BE W12 | Week4 |
+| TD-24 | audit JSON 缺 rollup 字段（thin 合计等） | `audit_content_hollowness.py` | 🟡 低 |
+| TD-25 | `explain.ts` / life API 等静默失败（除 TD-05） | 见 DEV-AUDIT P2-9 链 | Week2 |
+| TD-27 | audit vol2 路径 ≠ FE | ✅ W102-07 | — |
+| TD-30 | EXECUTION-REMAINING 与 AUTOPILOT pass 叙事冲突 | 文档 | P3-13 |
+| TD-31 | `static/app/assets` 与源码 build 漂移 | 部署 | P3-17 |
+| TD-32 | 报告 E2E A15/A17/A43 本地红 | `fusheng-report` spec | P2-9 |
 
 ---
 
@@ -297,6 +316,7 @@ make audit-content
 |------|------|------|
 | r102-1.0 | 2026-07-13 | 初版：UI 差距 · 内容审计 · 4 周路线图；挂 DEV-AUDIT W5 |
 | r102-1.1 | 2026-07-13 | §十一 未收录技术债；§四 `make audit-content` |
+| r102-1.2 | 2026-07-13 | TD-08/27 ✅ · TD-11～32 第二轮 · P2-6 closeout |
 
 ---
 
