@@ -71,19 +71,32 @@ export async function fetchBaziExplainBatch(
   return result.data
 }
 
-export async function fetchZiweiExplainBatch(
+export async function fetchZiweiExplainBatchWithMeta(
   sections: string[],
   profilePayload: Record<string, unknown>,
-): Promise<ExplainBatchResponse> {
+): Promise<ExplainBatchResult> {
   try {
     const { data } = await apiClient.post<ExplainBatchResponse>('/api/v1/ziwei/explain/batch', {
       sections,
       ...profilePayload,
     })
-    return data
-  } catch {
-    return { sections: [] }
+    return { ok: true, data }
+  } catch (e: unknown) {
+    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    return {
+      ok: false,
+      data: { sections: [] },
+      error: typeof detail === 'string' ? detail : 'explain batch failed',
+    }
   }
+}
+
+export async function fetchZiweiExplainBatch(
+  sections: string[],
+  profilePayload: Record<string, unknown>,
+): Promise<ExplainBatchResponse> {
+  const result = await fetchZiweiExplainBatchWithMeta(sections, profilePayload)
+  return result.data
 }
 
 /** 报告页标准 explain 批次（FE-BE Q9 · ≤2 POST） */

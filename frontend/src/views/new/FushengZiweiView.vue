@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import AnalysisPanel, { type AnalysisBlock } from '@/components/fusheng/AnalysisPanel.vue'
@@ -7,6 +7,7 @@ import FushengZiweiPlate from '@/components/fusheng/FushengZiweiPlate.vue'
 import ResultStateCard from '@/components/new/ResultStateCard.vue'
 import { useFushengFlow } from '@/composables/useFushengFlow'
 import { useFushengReport } from '@/composables/useFushengReport'
+import { useZiweiPageExplain } from '@/composables/useZiweiPageExplain'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
@@ -34,6 +35,13 @@ const {
   requestMeta,
   loadZiwei,
 } = useFushengReport()
+const {
+  loadingExplain,
+  explainFailed,
+  explainAnalysisBlocks,
+  loadPageExplain,
+  resetPageExplain,
+} = useZiweiPageExplain()
 const {
   missingFields,
   provenanceRows,
@@ -113,17 +121,33 @@ const metaText = computed(() => {
   return `${meta.precisionLabel} · ${meta.calendarNote} · ${meta.timeRiskLabel}`
 })
 
+const defaultExplainOpenId = computed(() => explainAnalysisBlocks.value[0]?.id ?? 'explain-palaces')
+const explainPanelKey = computed(() => (
+  explainAnalysisBlocks.value.map((block) => block.id).join('|') || 'pending'
+))
+
 async function load() {
   await loadZiwei()
 }
 
+watch(depth, (level) => {
+  if (level !== 'deep' || !ziwei.value) return
+  void loadPageExplain(profile.asProfileData())
+})
+
+watch(() => ziwei.value, () => {
+  resetPageExplain()
+})
+
 function onBrightnessMethod(value: 'standard' | 'zhongzhou' | 'mod1' | 'mod2') {
   profile.setProfile({ ziweiBrightnessMethod: value })
+  resetPageExplain()
   void loadZiwei(true)
 }
 
 function onYoubiMethod(value: 'month' | 'hour') {
   profile.setProfile({ ziweiYoubiMethod: value })
+  resetPageExplain()
   void loadZiwei(true)
 }
 
@@ -255,6 +279,23 @@ onMounted(() => {
             :provenance="ziwei.provenance"
             @update:brightness-method="onBrightnessMethod"
             @update:youbi-method="onYoubiMethod"
+          />
+        </section>
+
+        <section v-if="depth === 'deep'" class="fs-card" data-testid="ziwei-layer-explain">
+          <h2>卷四·星之命（解读）</h2>
+          <div v-if="explainFailed" data-testid="ziwei-explain-banner">
+            <TrustDegradedBanner
+              message="典籍解读暂不可用，下方为引擎宫论与格局摘要。"
+              status="warn"
+            />
+          </div>
+          <p v-else-if="loadingExplain" class="fs-hint fs-hint--cache">正在加载典籍解读…</p>
+          <AnalysisPanel
+            v-else-if="explainAnalysisBlocks.length"
+            :key="explainPanelKey"
+            :blocks="explainAnalysisBlocks"
+            :default-open-id="defaultExplainOpenId"
           />
         </section>
 

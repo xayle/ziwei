@@ -188,6 +188,10 @@ export const mockZiweiExplainBatch = {
       ],
     },
     {
+      section_id: 'reading',
+      blocks: [{ text: '先读方盘，再展开宫论与典籍。', layer: 'fact' }],
+    },
+    {
       section_id: 'fortune',
       blocks: [{ text: '大限 3–12岁 命宫', layer: 'fact' }],
     },
