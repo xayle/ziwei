@@ -90,6 +90,12 @@ describe('buildChartRequests', () => {
     expect(req.industry).toBe('金融IT')
   })
 
+  it('passes birth_time_precision from profile', () => {
+    expect(buildBaziRequest(profile).birth_time_precision).toBe('exact')
+    const req = buildBaziRequest({ ...profile, birthTimePrecision: 'unknown' })
+    expect(req.birth_time_precision).toBe('unknown')
+  })
+
   it('builds pdf request aligned with chart requests', () => {
     const req = buildFushengReportPdfRequest(profile, { label: '测试', notes: '批注' })
     expect(req.birth_dt).toContain('1990-01-15')

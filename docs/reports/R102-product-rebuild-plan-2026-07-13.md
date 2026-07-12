@@ -278,7 +278,7 @@ make audit-content
 
 | ID | 问题 | 位置 / 说明 | 计划周 |
 |----|------|-------------|--------|
-| TD-01 | `buildBaziRequest()` 未传 `birth_time_precision` | `frontend/src/api/bazi.ts` → `/bazi/full` | Week3 |
+| TD-01 | `buildBaziRequest()` 未传 `birth_time_precision` | `frontend/src/api/bazi.ts` → `/bazi/full` | ✅ W102-18 |
 | TD-02 | 报告 PDF 缺紫微 algo 参数（`late_zishi` 等） | `build_fusheng_report_payload()` / `FushengReportPdfRequest` | ✅ W102-15 |
 | TD-03 | `archive-bundle` ziwei `gender` 用 `male`/`female` 非 `男`/`女` | `_case_to_ziwei_request` | ✅ W102-16 |
 | TD-04 | 报告仍并行 `computeBazi` + `computeZiwei`，未走 `archive-bundle` | `ReportView` / report store | ✅ W102-17 |

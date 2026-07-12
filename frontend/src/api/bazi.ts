@@ -16,6 +16,7 @@ export interface BaziRequest {
   target_hour?: number  // 0-23，流时小时
   include_liuri?: boolean // 默认 true；未传 target_date 时使用当天
   zi_day_rule?: 'sxtwl' | 'early_zi_prev_day' | 'early_zi_same_day'
+  birth_time_precision?: 'exact' | 'hour' | 'approximate' | 'unknown'
 }
 
 // ── 响应子类型 ──────────────────────────────────────────

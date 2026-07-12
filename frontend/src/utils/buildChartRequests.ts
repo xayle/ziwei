@@ -91,6 +91,7 @@ export function buildBaziRequest(data: ProfileData, targetDate?: string): BaziRe
     solar_time_enabled: data.solarTime ?? false,
     ...(data.gender === 'male' || data.gender === 'female' ? { gender: data.gender } : {}),
     zi_day_rule: data.ziDayRule ?? 'sxtwl',
+    birth_time_precision: data.birthTimePrecision || 'exact',
     ...(data.cityTier ? { city_tier: data.cityTier } : {}),
     ...(data.industry ? { industry: data.industry } : {}),
     include_liuri: true,
