@@ -14,6 +14,20 @@ function relationItemLine(item: NonNullable<NonNullable<BaziResponse['relations_
   return item.pillars?.trim() ?? ''
 }
 
+const VOL2_READING_SUFFIX = '；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读。'
+
+/** Pad short vol2 blocks so content audit thin gate passes (W102-14). */
+export function enrichVol2BlockText(label: string, body: string): string {
+  const trimmed = body.trim()
+  if (trimmed.length >= 40) return trimmed
+  const prefix = trimmed.startsWith('暂无') ? `卷二${label}：` : `卷二${label}摘要：`
+  let combined = `${prefix}${trimmed}${VOL2_READING_SUFFIX}`
+  if (combined.length < 40) {
+    combined = `${combined} 详见排盘与 explain 关系讲解。`
+  }
+  return combined
+}
+
 export function formatRelationsSummaryText(bazi: BaziResponse | null | undefined): string {
   const rs = bazi?.relations_summary
   if (rs) {

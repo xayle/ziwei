@@ -88,6 +88,21 @@ def test_ziwei_explain_fortune_dayun_blocks_are_substantive():
     assert all(len(b.text) >= 40 for b in dayun_blocks)
 
 
+def test_bazi_explain_relations_block_at_least_forty_chars():
+    reset_snapshot_cache_for_tests()
+    req = ExplainBatchRequest(
+        dt=datetime(1990, 1, 15, 8, 30, tzinfo=ZoneInfo("Asia/Shanghai")),
+        lon=116.41,
+        mode="single",
+        gender="male",
+        sections=["relations"],
+    )
+    out = explain_bazi_batch(req)
+    relations = next(s for s in out.sections if s.section_id == "relations")
+    assert relations.blocks
+    assert all(len(b.text) >= 40 for b in relations.blocks)
+
+
 def test_bazi_explain_dayun_formats_age_and_includes_detail():
     reset_snapshot_cache_for_tests()
     req = ExplainBatchRequest(

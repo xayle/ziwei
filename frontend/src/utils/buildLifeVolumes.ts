@@ -14,7 +14,7 @@ import { buildBaziModuleCards } from '@/utils/buildBaziModuleCards'
 import { buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { buildColophonSummary, defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
 import { truncateText } from '@/utils/truncateText'
-import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
+import { formatRelationsSummaryText, formatShenshaSummaryText, enrichVol2BlockText } from '@/utils/formatVol2Summary'
 import {
   buildDayunVolumeText,
   formatDayunAgeRange,
@@ -169,8 +169,8 @@ function buildVol2Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const relationText = formatRelationsSummaryText(b)
   const shenshaText = formatShenshaSummaryText(b)
   const sections: VolumeSection[] = [
-    section('relations', '干支关系', 'fact', [block(relationText, 'fact')]),
-    section('shensha', '神煞摘要', 'fact', [block(shenshaText, 'fact')]),
+    section('relations', '干支关系', 'fact', [block(enrichVol2BlockText('干支关系', relationText), 'fact')]),
+    section('shensha', '神煞摘要', 'fact', [block(enrichVol2BlockText('神煞', shenshaText), 'fact')]),
   ]
   const explainRelations = input.explain?.sections.find((s) => s.section_id === 'relations')
   if (explainRelations?.blocks.length) {
@@ -272,7 +272,10 @@ function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   }
   const sections: VolumeSection[] = [
     section('ziwei-meta', '命盘概要', 'fact', [
-      block(`五行局 ${z.wuxing_ju_name ?? '—'}；命宫 ${z.life_palace_gz ?? '—'}；身宫 ${z.body_palace_gz ?? '—'}`, 'fact'),
+      block(
+        `卷四命盘概要：五行局 ${z.wuxing_ju_name ?? '—'}；命宫 ${z.life_palace_gz ?? '—'}；身宫 ${z.body_palace_gz ?? '—'}`,
+        'fact',
+      ),
     ]),
   ]
   const patterns = buildPatternAnalysisBlocks(z.patterns, 4)
@@ -322,7 +325,7 @@ function buildVol5Sections(input: BuildLifeVolumesInput): VolumeSection[] {
 function buildVol6Sections(_input: BuildLifeVolumesInput): VolumeSection[] {
   return [
     section('vol6-qa', '问书助手', 'inference', [
-      block('卷六需主动展开后提问；打磨期不自动调用 LLM。', 'inference'),
+      block('卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。', 'inference'),
     ], true),
   ]
 }

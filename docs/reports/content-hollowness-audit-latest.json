@@ -4,23 +4,23 @@
     "preface": {
       "blocks": 1,
       "fallback_pct": 0.0,
-      "thin_pct": 100.0,
+      "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 32.0
+      "avg_chars": 84.0
     },
     "vol1": {
       "blocks": 13,
       "fallback_pct": 0.0,
-      "thin_pct": 53.8,
+      "thin_pct": 46.2,
       "trunc_pct": 0.0,
-      "avg_chars": 89.8
+      "avg_chars": 93.2
     },
     "vol2": {
       "blocks": 3,
       "fallback_pct": 0.0,
-      "thin_pct": 100.0,
+      "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 25.7
+      "avg_chars": 72.7
     },
     "vol3": {
       "blocks": 16,
@@ -34,7 +34,7 @@
       "fallback_pct": 0.0,
       "thin_pct": 23.5,
       "trunc_pct": 0.0,
-      "avg_chars": 62.0
+      "avg_chars": 62.4
     },
     "vol5": {
       "blocks": 3,
@@ -46,26 +46,26 @@
     "vol6": {
       "blocks": 1,
       "fallback_pct": 0.0,
-      "thin_pct": 100.0,
+      "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 24.0
+      "avg_chars": 45.0
     },
     "colophon": {
       "blocks": 1,
       "fallback_pct": 0.0,
-      "thin_pct": 100.0,
+      "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 25.0
+      "avg_chars": 55.0
     }
   },
   "volume_samples": {
     "preface": [
       {
-        "chars": 32,
+        "chars": 84,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "卷一至卷五按 fact·cite·inference 分层阅读。"
+        "thin": false,
+        "preview": "卷一至卷五按 fact（排盘推算）· cite（典籍依据）· inference（经验推断）分层阅读；卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷"
       }
     ],
     "vol1": [
@@ -93,25 +93,25 @@
     ],
     "vol2": [
       {
-        "chars": 22,
+        "chars": 72,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "拱合；丁[火]克庚[金]；丁[火]克庚[金]"
+        "thin": false,
+        "preview": "卷二干支关系摘要：拱合；丁[火]克庚[金]；丁[火]克庚[金]；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读。"
       },
       {
-        "chars": 33,
+        "chars": 81,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "劫煞、天乙贵人、天德贵人、天德贵人、月德贵人、月德贵人、魁罡、天喜"
+        "thin": false,
+        "preview": "卷二神煞摘要：劫煞、天乙贵人、天德贵人、天德贵人、月德贵人、月德贵人、魁罡、天喜；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读"
       },
       {
-        "chars": 22,
+        "chars": 65,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "丁[火]克庚[金] 拱合；丁[火]克庚[金]"
+        "thin": false,
+        "preview": "卷二干支关系摘要：丁[火]克庚[金]；拱合；丁[火]克庚[金]；拱合；合冲刑害以排盘 fact 为准，下接神煞与 cite 讲解。"
       }
     ],
     "vol3": [
@@ -139,11 +139,11 @@
     ],
     "vol4": [
       {
-        "chars": 19,
+        "chars": 26,
         "fallback": false,
         "truncated": false,
         "thin": true,
-        "preview": "五行局 金四局；命宫 癸酉；身宫 己巳"
+        "preview": "卷四命盘概要：五行局 金四局；命宫 癸酉；身宫 己巳"
       },
       {
         "chars": 32,
@@ -185,20 +185,20 @@
     ],
     "vol6": [
       {
-        "chars": 24,
+        "chars": 45,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "卷六需主动展开后提问；打磨期不自动调用 LLM。"
+        "thin": false,
+        "preview": "卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。"
       }
     ],
     "colophon": [
       {
-        "chars": 25,
+        "chars": 55,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "校勘摘要（missing/iztro/wenmo）"
+        "thin": false,
+        "preview": "校勘摘要：排盘字段齐备时可核对 missing/iztro/wenmo；详见 expandable 校勘脚注。"
       }
     ]
   },
@@ -207,7 +207,7 @@
     "ziwei_sections": 2,
     "bazi_blocks": 8,
     "ziwei_blocks": 19,
-    "bazi_avg_chars": 83.9
+    "bazi_avg_chars": 89.2
   },
   "bazi_ui_sample_fallback_pct": 0.0,
   "geju_has_classic_ref": true,

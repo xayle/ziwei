@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { BaziResponse } from '@/api/bazi'
-import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
+import { enrichVol2BlockText, formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
 
 describe('formatVol2Summary', () => {
   it('formatRelationsSummaryText uses relations_summary summary fields', () => {
@@ -41,5 +41,11 @@ describe('formatVol2Summary', () => {
       shensha_summary: { highlights: ['天乙', '文昌'] },
     } as BaziResponse
     expect(formatShenshaSummaryText(bazi)).toBe('天乙、文昌')
+  })
+
+  it('enrichVol2BlockText pads short summaries to at least 40 chars', () => {
+    const enriched = enrichVol2BlockText('干支关系', '辰戌冲')
+    expect(enriched.length).toBeGreaterThanOrEqual(40)
+    expect(enriched).toContain('卷二')
   })
 })

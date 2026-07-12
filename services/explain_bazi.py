@@ -179,30 +179,33 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
 
     elif section_id == "relations":
         rs = resp.relations_summary
+        parts: list[str] = []
         if rs:
-            parts = [
-                p
-                for p in (
-                    rs.clash_summary,
-                    rs.combine_summary,
-                    rs.harm_summary,
-                    rs.interaction_summary,
-                )
-                if p
-            ]
-            if parts:
-                blocks.append(_block(" ".join(parts), "fact"))
-            elif rs.items:
-                blocks.append(
-                    _block(
-                        "；".join(f"{it.type}:{it.summary}" for it in rs.items[:8]),
-                        "fact",
-                    )
-                )
-            else:
-                blocks.append(_block("干支关系摘要已生成，详见卷二 fact 层。", "fact"))
+            for field in (rs.clash_summary, rs.combine_summary, rs.harm_summary, rs.interaction_summary):
+                text = str(field or "").strip()
+                if text:
+                    parts.append(text)
+            if rs.items:
+                for item in rs.items[:6]:
+                    summary = str(getattr(item, "summary", "") or "").strip()
+                    if summary:
+                        parts.append(summary)
+                    else:
+                        detail = str(getattr(item, "detail", "") or "").strip()
+                        if detail:
+                            parts.append(detail)
+        if parts:
+            body = "；".join(parts)
+            if len(body) < 40:
+                body = f"卷二干支关系摘要：{body}；合冲刑害以排盘 fact 为准，下接神煞与 cite 讲解。"
+            blocks.append(_block(body, "fact"))
         else:
-            blocks.append(_block("暂无结构化关系摘要。", "fact"))
+            blocks.append(
+                _block(
+                    "卷二干支关系：暂无结构化摘要；请核对排盘 fact 层地支关系与天干冲合，再读 infer 层讲解。",
+                    "fact",
+                )
+            )
 
     elif section_id == "dayun":
         items = (resp.dayun.items if resp.dayun else None) or (resp.dayun.cycles if resp.dayun else None) or []

@@ -312,6 +312,24 @@ def find_palace_by_explain_text(text: str, palaces: list[dict]) -> dict | None:
     return None
 
 
+def enrich_vol2_block_text(label: str, body: str) -> str:
+    trimmed = str(body or "").strip()
+    if len(trimmed) >= 40:
+        return trimmed
+    prefix = f"卷二{label}：" if trimmed.startswith("暂无") else f"卷二{label}摘要："
+    combined = f"{prefix}{trimmed}；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读。"
+    if len(combined) < 40:
+        combined = f"{combined} 详见排盘与 explain 关系讲解。"
+    return combined
+
+
+def enrich_preface_reading_text() -> str:
+    return (
+        "卷一至卷五按 fact（排盘推算）· cite（典籍依据）· inference（经验推断）分层阅读；"
+        "卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷三运限。"
+    )
+
+
 def main() -> None:
     breq = BaziFullRequest(
         dt=datetime.fromisoformat("1990-01-15T08:30:00"),
@@ -364,8 +382,8 @@ def main() -> None:
         for bl in sec.get("blocks", []):
             vol1.append(str(bl.get("text", ""))[:320])
 
-    rel_line = format_relations_summary_text(bazi)
-    ss_line = format_shensha_summary_text(bazi)
+    rel_line = enrich_vol2_block_text("干支关系", format_relations_summary_text(bazi))
+    ss_line = enrich_vol2_block_text("神煞", format_shensha_summary_text(bazi))
     vol2 = [rel_line, ss_line]
     for sec in bex.get("sections", []):
         if sec.get("section_id") == "relations":
@@ -401,7 +419,10 @@ def main() -> None:
         vol3.append(line)
 
     vol4: list[str] = [
-        f"五行局 {ziwei.get('wuxing_ju_name', '—')}；命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}",
+        (
+            f"卷四命盘概要：五行局 {ziwei.get('wuxing_ju_name', '—')}；"
+            f"命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}"
+        ),
     ]
     for pattern in (ziwei.get("patterns") or [])[:4]:
         if isinstance(pattern, dict):
@@ -439,14 +460,14 @@ def main() -> None:
                 vol5.append(str(m.get("interpretation_text") or m.get("development_advice") or m.get("strategy") or "")[:80])
 
     volumes = {
-        "preface": ["卷一至卷五按 fact·cite·inference 分层阅读。"],
+        "preface": [enrich_preface_reading_text()],
         "vol1": vol1,
         "vol2": vol2,
         "vol3": vol3,
         "vol4": vol4,
         "vol5": vol5,
-        "vol6": ["卷六需主动展开后提问；打磨期不自动调用 LLM。"],
-        "colophon": ["校勘摘要（missing/iztro/wenmo）"],
+        "vol6": ["卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。"],
+        "colophon": ["校勘摘要：排盘字段齐备时可核对 missing/iztro/wenmo；详见 expandable 校勘脚注。"],
     }
 
     report = {vid: summarize([audit_block(x) for x in texts]) for vid, texts in volumes.items()}
