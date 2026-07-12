@@ -1,6 +1,26 @@
 import apiClient from './client'
+import type { BaziResponse } from './bazi'
+import type { ZiweiResponse } from './ziwei'
 
+export interface ArchiveBundleRequest {
+  case_id: string
+  include_ziwei?: boolean
+}
 
+export interface ArchiveBundleResponse {
+  case_id: string
+  bazi: BaziResponse
+  ziwei?: ZiweiResponse | null
+  missing_fields?: string[]
+}
+
+export async function fetchArchiveBundle(payload: ArchiveBundleRequest): Promise<ArchiveBundleResponse> {
+  const { data } = await apiClient.post<ArchiveBundleResponse>('/api/v1/fusheng/archive-bundle', {
+    include_ziwei: true,
+    ...payload,
+  })
+  return data
+}
 
 export interface FushengReportPdfRequest {
 

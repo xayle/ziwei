@@ -381,6 +381,19 @@ export async function setupChartApiMocks(page: Page) {
     })
   })
 
+  await page.route('**/api/v1/fusheng/archive-bundle', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        case_id: 'case-e2e-001',
+        bazi: mockBaziPayload,
+        ziwei: mockZiweiPayload,
+        missing_fields: [],
+      }),
+    })
+  })
+
   await page.route('**/api/v1/ziwei/full', async (route) => {
     let payload = mockZiweiPayload
     try {

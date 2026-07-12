@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-07-12T23:43:58.585482+00:00",
+  "pass": true,
+  "quick": true,
+  "only": null,
+  "sections": [
+    {
+      "name": "env",
+      "command": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe scripts/auto_verify_env.py",
+      "ok": true,
+      "required": true,
+      "detail_tail": "{\"pass\": true, \"checks\": {\"python\": true, \"node\": true, \"npm\": true, \"frontend_node_modules\": true, \"playwright_cli\": true, \"vitest_bin\": true, \"requirements_txt\": true}}"
+    },
+    {
+      "name": "audit-content",
+      "command": "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python314\\python.exe scripts/audit_content_hollowness.py",
+      "ok": true,
+      "required": false,
+      "detail_tail": "     \"thin\": false,\n        \"preview\": \"3. 甲戌 · 20–29岁 · 2010–2019年 · 十神 偏财 · 纳音 山头火。【20岁—29岁·甲戌大运】天干甲：参天大树，昂扬进取；地支戌：戌土燥\"\n      }\n    ],\n    \"vol4\": [\n      {\n        \"chars\": 26,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": true,\n        \"preview\": \"卷四命盘概要：五行局 金四局；命宫 癸酉；身宫 己巳\"\n      },\n      {\n        \"chars\": 32,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": true,\n        \"preview\": \"武贪格：武曲贪狼同坐官禄宫，偏财武职皆有机缘，中年以后财运渐旺。\"\n      },\n      {\n        \"chars\": 42,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": false,\n        \"preview\": \"天才天寿加会：天才、天寿齐聚三方，聪明伶俐而且长寿有福，学术研究或技艺方面尤为突出。\"\n      }\n    ],\n    \"vol5\": [\n      {\n        \"chars\": 91,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": false,\n        \"preview\": \"财运：财运属弱势层，守成减负是首要任务，修复财务漏洞和高息负债。在此阶段重点积累专业技能和行业资源，为下一个财运高峰提前积蓄力量。尽量避免借贷或为他人担保，勿在\"\n      },\n      {\n        \"chars\": 123,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": false,\n        \"preview\": \"事业：官杀有力且日主中和，具备较高的领导潜质，建议主动争取管理职位或项目负责人。利用正印格格局特点，在公司或行业内拓展多方人脉，建立跳跃式资源网络。规划未来 3\"\n      },\n      {\n        \"chars\": 73,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": false,\n        \"preview\": \"性格：在表达强烈立场前先主动倾听对方1-2分钟，寻找共识后再提建议；将果断转化为「攻心」而非「攻势」，以认同感代替对抗感，建立更强大的人际影响力。\"\n      }\n    ],\n    \"vol6\": [\n      {\n        \"chars\": 45,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": false,\n        \"preview\": \"卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。\"\n      }\n    ],\n    \"colophon\": [\n      {\n        \"chars\": 55,\n        \"fallback\": false,\n        \"truncated\": false,\n        \"thin\": false,\n        \"preview\": \"校勘摘要：排盘字段齐备时可核对 missing/iztro/wenmo；详见 expandable 校勘脚注。\"\n      }\n    ]\n  },\n  \"explain\": {\n    \"bazi_sections\": 4,\n    \"ziwei_sections\": 2,\n    \"bazi_blocks\": 8,\n    \"ziwei_blocks\": 19,\n    \"bazi_avg_chars\": 89.2\n  },\n  \"bazi_ui_sample_fallback_pct\": 0.0,\n  \"geju_has_classic_ref\": true,\n  \"geju_has_detail\": true\n}"
+    }
+  ],
+  "product_advisory": {
+    "ok": true,
+    "thin_pct": 0.1818,
+    "thin_target": 0.35,
+    "vol2_fallback_pct": 0.0,
+    "vol2_fallback_target": 0.0
+  },
+  "commit": null
+}

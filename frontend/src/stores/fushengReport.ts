@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { analyzeName, suggestNames, type NameAnalysisResponse, type NameSuggestResponse } from '@/api/name'
 import { computeBazi, dayunReportInline, type BaziResponse, type DayunReportResponse } from '@/api/bazi'
+import { fetchArchiveBundle } from '@/api/fushengReport'
 import { computeZiwei, type ZiweiResponse } from '@/api/ziwei'
 import { useProfileStore } from '@/stores/profile'
 import { useAuthStore } from '@/stores/auth'
@@ -271,6 +272,59 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
     }
   }
 
+  async function resolveRemoteCaseId(): Promise<string | null> {
+    const profileStore = useProfileStore()
+    const remoteCaseId = profileStore.activeProfile?.remoteCaseId
+    if (remoteCaseId) return remoteCaseId
+
+    const auth = useAuthStore()
+    if (!auth.isLoggedIn) return null
+
+    const sync = await profileStore.syncRemoteCase()
+    return sync.ok && sync.caseId ? sync.caseId : null
+  }
+
+  async function loadChartsViaBundle(caseId: string): Promise<{ bazi: BaziResponse | null; ziwei: ZiweiResponse | null; error?: string }> {
+    try {
+      const bundle = await fetchArchiveBundle({ case_id: caseId })
+      return {
+        bazi: bundle.bazi,
+        ziwei: bundle.ziwei ?? null,
+      }
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      return {
+        bazi: null,
+        ziwei: null,
+        error: typeof detail === 'string' ? detail : '档案快照加载失败',
+      }
+    }
+  }
+
+  async function loadChartsViaCompute(data: ReturnType<typeof readProfileData>): Promise<{ bazi: BaziResponse | null; ziwei: ZiweiResponse | null; failures: string[] }> {
+    const failures: string[] = []
+    const settled = await Promise.allSettled([
+      computeBazi(buildBaziRequest(data)),
+      computeZiwei(buildZiweiRequest(data)),
+    ])
+
+    let baziRes: BaziResponse | null = null
+    let ziweiRes: ZiweiResponse | null = null
+
+    settled.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        if (idx === 0) baziRes = result.value
+        else ziweiRes = result.value
+        return
+      }
+      const detail = (result.reason as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      const message = typeof detail === 'string' ? detail : '加载失败'
+      failures.push(idx === 0 ? `八字：${message}` : `紫微：${message}`)
+    })
+
+    return { bazi: baziRes, ziwei: ziweiRes, failures }
+  }
+
   async function persistReportSnapshot(signature: string) {
     if (skipSnapshotPersistAfterRestore.value) {
       skipSnapshotPersistAfterRestore.value = false
@@ -334,46 +388,38 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
     error.value = ''
 
     try {
-      type TaskKey = 'bazi' | 'ziwei' | 'name'
-      const taskList: Array<{ key: TaskKey; promise: Promise<unknown> }> = [
-        { key: 'bazi', promise: computeBazi(buildBaziRequest(data)) },
-        { key: 'ziwei', promise: computeZiwei(buildZiweiRequest(data)) },
-      ]
-      if (canAnalyzeName(data)) {
-        taskList.push({
-          key: 'name',
-          promise: analyzeName({
-            surname: data.surname.trim(),
-            given_name: data.givenName.trim(),
-          }),
-        })
+      const failures: string[] = []
+      const remoteCaseId = await resolveRemoteCaseId()
+
+      if (remoteCaseId) {
+        const bundle = await loadChartsViaBundle(remoteCaseId)
+        bazi.value = bundle.bazi
+        ziwei.value = bundle.ziwei
+        if (bundle.error) {
+          failures.push(bundle.error)
+        } else {
+          if (!bundle.bazi) failures.push('八字：档案快照未返回')
+          if (!bundle.ziwei) failures.push('紫微：档案快照未返回')
+        }
+      } else {
+        const computed = await loadChartsViaCompute(data)
+        bazi.value = computed.bazi
+        ziwei.value = computed.ziwei
+        failures.push(...computed.failures)
       }
 
-      const settled = await Promise.allSettled(taskList.map((task) => task.promise))
-      const failures: string[] = []
-
-      settled.forEach((result, idx) => {
-        const key = taskList[idx].key
-        if (result.status === 'fulfilled') {
-          if (key === 'bazi') bazi.value = result.value as BaziResponse
-          else if (key === 'ziwei') ziwei.value = result.value as ZiweiResponse
-          else nameAnalysis.value = result.value as NameAnalysisResponse
-          return
-        }
-
-        const detail = (result.reason as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        const message = typeof detail === 'string' ? detail : '加载失败'
-        if (key === 'bazi') {
-          bazi.value = null
-          failures.push(`八字：${message}`)
-        } else if (key === 'ziwei') {
-          ziwei.value = null
-          failures.push(`紫微：${message}`)
-        } else {
+      if (canAnalyzeName(data)) {
+        try {
+          nameAnalysis.value = await analyzeName({
+            surname: data.surname.trim(),
+            given_name: data.givenName.trim(),
+          })
+        } catch (e: unknown) {
+          const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
           nameAnalysis.value = null
-          failures.push(`姓名：${message}`)
+          failures.push(`姓名：${typeof detail === 'string' ? detail : '加载失败'}`)
         }
-      })
+      }
 
       if (!bazi.value && !ziwei.value) {
         error.value = failures.join('；') || '报告生成失败，请稍后重试。'

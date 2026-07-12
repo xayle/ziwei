@@ -103,8 +103,7 @@ test.describe('报告与新功能', () => {
 
   test('报告首屏 chart waterfall ≤4 请求（R082）', async ({ page }) => {
     const chartUrls = [
-      '/api/v1/bazi/full',
-      '/api/v1/ziwei/full',
+      '/api/v1/fusheng/archive-bundle',
       '/api/v1/bazi/explain/batch',
       '/api/v1/ziwei/explain/batch',
     ]
@@ -115,6 +114,10 @@ test.describe('报告与新功能', () => {
       if (hit) seen.add(hit)
     })
 
+    const bundleDone = page.waitForResponse(
+      (res) => res.url().includes('/api/v1/fusheng/archive-bundle') && res.ok(),
+      { timeout: 20_000 },
+    )
     const baziExplainDone = page.waitForResponse(
       (res) => res.url().includes('/api/v1/bazi/explain/batch') && res.ok(),
       { timeout: 20_000 },
@@ -124,18 +127,19 @@ test.describe('报告与新功能', () => {
       { timeout: 20_000 },
     )
 
-    await fillMinimalProfile(page)
     await setupChartApiMocks(page)
+    await setupLoggedInApiMocks(page)
+    await seedLoggedInProfileWithRemoteCase(page)
     await gotoApp(page, 'report')
 
     await expect(page.getByText('正在生成报告…')).toHaveCount(0, { timeout: 20_000 })
     await expect(page.getByTestId('report-vol5-chapter')).toBeVisible({ timeout: 15_000 })
+    await bundleDone
     await baziExplainDone
     await ziweiExplainDone
 
     expect(seen.size).toBeLessThanOrEqual(4)
-    expect(seen.has('/api/v1/bazi/full')).toBe(true)
-    expect(seen.has('/api/v1/ziwei/full')).toBe(true)
+    expect(seen.has('/api/v1/fusheng/archive-bundle')).toBe(true)
     expect(seen.has('/api/v1/bazi/explain/batch')).toBe(true)
     expect(seen.has('/api/v1/ziwei/explain/batch')).toBe(true)
   })
