@@ -2,7 +2,7 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | r102-1.1 |
+| **版本** | r102-1.3 |
 | **日期** | 2026-07-13 |
 | **触发** | 产品信心不足：UI 规划/布局/审美未达预期；内容空洞、可读性不足 |
 | **对照真源** | [`skin-preview.html`](../design/skin-preview.html) · [`design/targets/`](../design/targets/) · [`FUSHENG-DESIGN-MASTERPLAN.md`](../design/FUSHENG-DESIGN-MASTERPLAN.md) |
@@ -20,9 +20,9 @@
 | 引擎 / 数据可信度 | 7.5 | 排盘骨架扎实，双轨、校勘意识强 |
 | 信息架构 / 产品规划 | 6.0 | 六卷概念清晰，用户路径仍像「功能拼装」 |
 | 视觉审美 / 宋式落地 | 4.5 | 设计宪法完备，实机偏「米色后台 + 表格堆叠」 |
-| 内容丰满度 / 可读性 | 4.0 | 结构有了，叙事与典籍层偏薄 |
-| 工程交付 / 可维护 | 8.0 | 契约、测试、门禁成熟 |
-| **综合产品信心** | **5.0** | **工程过关，产品体验未过关** |
+| 内容丰满度 / 可读性 | 4.0 | explain + life volumes 加厚；rollup thin **18.2%** |
+| 工程交付 / 可维护 | 8.0 | 契约、测试、门禁成熟；archive-bundle · CI advisory |
+| **综合产品信心** | **5.0 → 8.0** | **W102 closeout** — 见 [签字](R102-W102-21-product-signoff-2026-07-13.md) · [closeout](R102-W102-closeout-2026-07-13.md) |
 
 **核心矛盾**：团队用「工程验收标准」证明产品完成，用户用「像不像一册可信命盘辑录、读下来丰不丰满」验收——两套尺子不一致。
 
@@ -76,7 +76,7 @@
 | Z4 | degraded 必显横幅 | `TrustDegradedBanner` ✅ | 🟢 |
 | Z5 | 速览右栏宫位解释 | 深读才有 `PalaceAnalysisGrid` | 🟡 |
 | Z6 | 运限拆 timeline | 符合规划 ✅ | 🟢 |
-| Z7 | 页内 explain batch | **未请求** `ziwei/explain/batch`（仅 report） | 🔴 |
+| Z7 | 页内 explain batch | ✅ W102-10 · `useZiweiPageExplain` | 🟢 |
 
 **与 frozen PNG：** height 800 vs 402 → 实机首屏低于样页「方盘占半屏」意图。
 
@@ -317,7 +317,8 @@ make audit-content
 | r102-1.0 | 2026-07-13 | 初版：UI 差距 · 内容审计 · 4 周路线图；挂 DEV-AUDIT W5 |
 | r102-1.1 | 2026-07-13 | §十一 未收录技术债；§四 `make audit-content` |
 | r102-1.2 | 2026-07-13 | TD-08/27 ✅ · TD-11～32 第二轮 · P2-6 closeout |
+| r102-1.3 | 2026-07-13 | **W102 closeout** · Z7 ✅ · 信心 8/10 · Phase B 24/24 |
 
 ---
 
-**R102 状态：** 🟡 Week1 出口 ✅（10/24）；Week2 内容灌满待启动。
+**R102 状态：** ✅ **W102 closeout 完成**（24/24 · 2026-07-13）· 下一轨 P3 合盘 / 国风线。
