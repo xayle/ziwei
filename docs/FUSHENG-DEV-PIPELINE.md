@@ -133,7 +133,7 @@ pre-commit run --all-files   # 首次或大改后
 
 | ☐ | ID | 角色 | 任务 | 验收 | 参考 |
 |---|-----|------|------|------|------|
-| ☐ | **W102-00a** | ALL | R102 + audit 脚本 + JSON + DEV-AUDIT 1.3 入库 | `git ls-files` 含 R102 | DEV-AUDIT W5-0 |
+| ☑ | **W102-00a** | ALL | R102 + audit 脚本 + JSON + DEV-AUDIT 1.3 入库 | `git ls-files` 含 R102 | DEV-AUDIT W5-0 |
 | ☐ | **W102-00b** | ALL | DEV-AUDIT / R102 补 P3-5～TD-29 第二轮遗漏 | 文档 revision  bump | 上轮 gap 审查 |
 
 ### 块 1 · Week1 — 对齐真源 + 视觉减法
