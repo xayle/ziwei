@@ -19,7 +19,9 @@ from app.exceptions import (
 from app.models import Case, Snapshot
 from app.schemas import CaseCreate, CaseListResponse, CaseOut, CasePatch
 from db import get_session
+from services.case_leap_month import infer_case_leap_month
 from services.delegation_service import log_action
+from services.normalize_input import normalize_birth_datetime
 
 router = APIRouter(prefix="/api/v1/cases", tags=["cases"])
 
@@ -28,10 +30,42 @@ def _now_utc() -> datetime:
     return datetime.now(UTC)
 
 
+def _apply_inferred_leap_month(case: Case) -> Case:
+    inferred = infer_case_leap_month(case.birth_dt_local, case.calendar_mode)
+    if inferred is not None:
+        case.is_leap_month = inferred
+    return case
+
+
+def _build_case_out(case: Case, latest_verify_summary: dict | None = None) -> CaseOut:
+    inferred = infer_case_leap_month(case.birth_dt_local, case.calendar_mode)
+    if inferred is not None:
+        case.is_leap_month = inferred
+    co = CaseOut.model_validate(case)
+    co.latest_verify_summary = latest_verify_summary
+    co.is_leap_month_inferred = inferred
+    return co
+
+
 @router.post("", response_model=CaseOut, status_code=status.HTTP_201_CREATED)
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def create_case(payload: CaseCreate, current_user: RequiredUser, session: Session = Depends(get_session)):
-    case = Case(**payload.model_dump())
+    case_data = payload.model_dump()
+    try:
+        normalized_birth = normalize_birth_datetime(
+            datetime.fromisoformat(payload.birth_dt_local),
+            payload.tz,
+            auto_dst=payload.solar_time_enabled,
+            precision=payload.birth_time_precision,
+            unknown_time_fallback=payload.unknown_time_fallback,
+        )
+        case_data["birth_dt"] = normalized_birth.normalized_birth_dt_utc
+    except Exception:
+        case_data["birth_dt"] = None
+    inferred_leap_month = infer_case_leap_month(case_data.get("birth_dt_local"), case_data.get("calendar_mode"))
+    if inferred_leap_month is not None:
+        case_data["is_leap_month"] = inferred_leap_month
+    case = Case(**case_data)
     # 本地 bypass 兜底场景下，current_user.id 可能为空或无效。
     # 仅在用户 ID 有效时写入 owner_id，避免外键约束导致 500。
     if isinstance(current_user.id, int) and current_user.id > 0:
@@ -52,7 +86,8 @@ def create_case(payload: CaseCreate, current_user: RequiredUser, session: Sessio
         resource_id=str(case.id),
         details={"name": case.name},
     )
-    return CaseOut.model_validate(case)
+    case = _apply_inferred_leap_month(case)
+    return _build_case_out(case)
 
 
 @router.get("", response_model=CaseListResponse)
@@ -125,9 +160,8 @@ def list_cases(
                 "summary_warning_count": latest_verify.summary_warning_count,
                 "summary_diff_count": latest_verify.summary_diff_count,
             }
-        co = CaseOut.model_validate(c)
-        co.latest_verify_summary = summary
-        results.append(co)
+        c = _apply_inferred_leap_month(c)
+        results.append(_build_case_out(c, summary))
     return {
         "items": results,
         "total": total_count,
@@ -173,9 +207,8 @@ def get_case(case_id: str, current_user: RequiredUser, session: Session = Depend
             "summary_warning_count": latest_verify.summary_warning_count,
             "summary_diff_count": latest_verify.summary_diff_count,
         }
-    co = CaseOut.model_validate(case)
-    co.latest_verify_summary = summary
-    return co
+    case = _apply_inferred_leap_month(case)
+    return _build_case_out(case, summary)
 
 
 @router.patch("/{case_id}", response_model=CaseOut)
@@ -198,6 +231,20 @@ def patch_case(case_id: str, payload: CasePatch, current_user: RequiredUser, ses
     data = payload.model_dump(exclude_unset=True)
     for key, value in data.items():
         setattr(case, key, value)
+    try:
+        normalized_birth = normalize_birth_datetime(
+            datetime.fromisoformat(case.birth_dt_local),
+            case.tz,
+            auto_dst=case.solar_time_enabled,
+            precision=case.birth_time_precision,
+            unknown_time_fallback=case.unknown_time_fallback,
+        )
+        case.birth_dt = normalized_birth.normalized_birth_dt_utc
+    except Exception:
+        case.birth_dt = None
+    inferred_leap_month = infer_case_leap_month(case.birth_dt_local, case.calendar_mode)
+    if inferred_leap_month is not None:
+        case.is_leap_month = inferred_leap_month
     case.updated_at = _now_utc()
     session.add(case)
     session.commit()
@@ -210,8 +257,8 @@ def patch_case(case_id: str, payload: CasePatch, current_user: RequiredUser, ses
         resource_id=str(case.id),
         details={k: str(v) for k, v in data.items()},
     )
-    co = CaseOut.model_validate(case)
-    return co
+    case = _apply_inferred_leap_month(case)
+    return _build_case_out(case)
 
 
 @router.delete("/{case_id}", status_code=status.HTTP_204_NO_CONTENT)

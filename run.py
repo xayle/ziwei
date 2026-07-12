@@ -48,14 +48,11 @@ try:
 except ImportError:
     pass  # structlog 未安装，降级为标准 logging
 
-from app.bootstrap import backend_status, create_app  # noqa: E402
-from app.metrics_routes_setup import _is_metrics_allowed as is_metrics_allowed  # noqa: E402
-from app.docs_routes_setup import configure_docs_routes  # noqa: E402
-from app.lifecycle import APP_START_TIME, create_lifespan  # noqa: E402
+from app.entrypoint_factory import create_application  # noqa: E402
+from app.lifecycle import create_lifespan  # noqa: E402
 
 lifespan = create_lifespan(logger)
-app = create_app(logger=logger, lifespan=lifespan, app_start_time=APP_START_TIME)
-configure_docs_routes(app)
+app = create_application(logger=logger)
 
 # ── backward-compat re-exports ────────────────────────────────────────────────
 # Tests import / patch these names via "run.*" — do NOT remove.
@@ -66,10 +63,9 @@ configure_docs_routes(app)
 #   patch("app.metrics_routes_setup._is_metrics_allowed") — for /metrics tests
 # The re-exports below keep *direct import* usages (``from run import X``) working.
 # fmt: off
-from app.bootstrap import backend_status as _backend_status  # noqa: F401,E402
 from app.metrics_routes_setup import _is_metrics_allowed  # noqa: F401,E402
+from app.pkg_utils import backend_status as _backend_status  # noqa: F401,E402
 from app.static_routes_setup import _spa_index, _static_dir  # noqa: F401,E402
-from init_db import init_db  # noqa: F401,E402
 from routers.verify import (  # noqa: F401,E402
     UnescapedJSONResponse,
     _build_legacy_verify_response,
@@ -77,6 +73,7 @@ from routers.verify import (  # noqa: F401,E402
     _safe_offset,
     _sanitize_request_id,
 )
+from scripts.init_db import init_db  # noqa: F401,E402
 from services.bazi_engine.relations import (
     get_branch_relations,  # noqa: F401,E402
     get_stem_clashes,  # noqa: F401,E402

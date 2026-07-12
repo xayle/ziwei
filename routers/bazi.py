@@ -4,6 +4,7 @@ from datetime import datetime
 import re
 from typing import Any
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -11,10 +12,14 @@ from sqlmodel import Session
 
 from app.dependencies import RequiredUser
 from app.models import Case
-from app.schemas import BaziFullRequest, BaziFullResponse, WarningModel
+from app.schemas import BaziFullRequest, BaziFullResponse, LiuriLiushiEndpointResponse, LiuriLiushiRequest, WarningModel
+from app.schemas.explain import ExplainBatchRequest, ExplainBatchResponse
 from db import get_session
-from services.bazi_full_service import bazi_full
+from services.bazi_full_service import bazi_full, compute_liuri_liushi
+from services.normalize_input import normalize_birth_datetime
+from services.quota_service import enforce_quota
 from services.rate_limit import limiter
+from services.structured_export_service import build_bazi_structured_export
 
 router = APIRouter(prefix="/api/v1/bazi", tags=["bazi"])
 # ✅ 0.14: /bazi/full 速率限制 20 req/min
@@ -37,6 +42,34 @@ def _sanitize_request_id(candidate: str | None, warnings: list[WarningModel]) ->
     return rid
 
 
+def _normalize_birth_dt_text(
+    dt_text: str,
+    tz_name: str,
+    *,
+    precision: str = "exact",
+    unknown_time_fallback: str = "midday",
+) -> datetime:
+    """把字符串出生时间统一解析成后端标准的本地时间。"""
+    try:
+        dt = datetime.fromisoformat(dt_text)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=f"birth_dt 格式无效: {dt_text}") from exc
+
+    if dt.tzinfo is None or dt.utcoffset() is None:
+        try:
+            dt = dt.replace(tzinfo=ZoneInfo(tz_name or "Asia/Shanghai"))
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail=f"tz 格式无效: {tz_name}") from exc
+
+    return normalize_birth_datetime(
+        dt,
+        tz_name or "Asia/Shanghai",
+        auto_dst=True,
+        precision=precision,
+        unknown_time_fallback=unknown_time_fallback,
+    ).local_dt
+
+
 @router.post("/full", response_model=BaziFullResponse)
 @limiter.limit("20/minute")  # 0.14: /bazi/full 速率限制 20 req/min
 def api_bazi_full(
@@ -50,6 +83,53 @@ def api_bazi_full(
     if warnings:
         result.warnings.extend(warnings)
     return result
+
+
+class StructuredTextResponse(BaseModel):
+    format: str
+    markdown: str
+    json_payload: dict = Field(..., alias="json")
+
+    model_config = {"populate_by_name": True}
+
+
+@router.post(
+    "/structured-text",
+    response_model=StructuredTextResponse,
+    summary="结构化命盘导出（Markdown+JSON，供 LLM/第三方）",
+)
+@limiter.limit("30/minute")
+def api_bazi_structured_text(
+    request: Request,
+    payload: BaziFullRequest,
+    x_request_id: str | None = Header(None, alias="X-Request-Id"),
+):
+    """
+    文墨式工作流：将 /bazi/full 结果转为 Markdown + JSON 双格式。
+    含 provenance 脚注与 missing_fields。
+    流年默认窗口：当前年±2；目标年流日见 liuri_liushi.target_date（BE-A07）。
+    """
+    enforce_quota(request, "structured_text")
+    warnings: list[WarningModel] = []
+    request_id = _sanitize_request_id(x_request_id, warnings)
+    result = bazi_full(payload, request_id=request_id)
+    if warnings:
+        result.warnings.extend(warnings)
+    export = build_bazi_structured_export(result.model_dump(mode="json"))
+    return StructuredTextResponse(**export)
+
+
+@router.post("/liuri-liushi", response_model=LiuriLiushiEndpointResponse)
+@limiter.limit("30/minute")
+def api_bazi_liuri_liushi(
+    request: Request,
+    payload: LiuriLiushiRequest,
+    x_request_id: str | None = Header(None, alias="X-Request-Id"),
+):
+    """独立流日/流时计算：干支、十神、大运/流年联动评分与换运提醒。"""
+    warnings: list[WarningModel] = []
+    request_id = _sanitize_request_id(x_request_id, warnings)
+    return compute_liuri_liushi(payload, request_id=request_id)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,10 +169,7 @@ def api_liunian_domain(
         raise HTTPException(status_code=404, detail="case not found")
 
     # 解析出生时间
-    try:
-        dt = datetime.fromisoformat(case.birth_dt_local)
-    except ValueError:
-        raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
+    dt = _normalize_birth_dt_text(case.birth_dt_local, case.tz or "Asia/Shanghai")
 
     # 运行完整计算（已有 TTLCache，重复请求不会重新算）
     from services.bazi_engine_service import calculate
@@ -172,6 +249,57 @@ class DayunReportResponse(BaseModel):
     narrative_total_chars: int
 
 
+def _build_dayun_report_items(vr) -> list[DayunReportItem]:
+    """从 VerifyResponse 提取大运叙事列表（case / inline 共用）。"""
+    items: list[DayunReportItem] = []
+    if not vr.dayun or not vr.dayun.items:
+        return items
+
+    dayun_list = vr.dayun.items
+    for i, it in enumerate(dayun_list):
+        ganzhi = (it.stem or "") + (it.branch or "")
+        if i + 1 < len(dayun_list):
+            end_age = int(dayun_list[i + 1].start_age or 0) - 1
+        else:
+            end_age = int(it.start_age or 0) + 9
+
+        narrative = it.narrative or ""
+        if not narrative:
+            try:
+                favor: list[str] = list(vr.yongshen.favor) if vr.yongshen and vr.yongshen.favor else []
+                geju_name = vr.geju.geju_name if vr.geju and vr.geju.geju_name else "普通格"
+                strength_tier = (vr.day_master_strength.tier if vr.day_master_strength else "中和") or "中和"
+                from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
+
+                narrative = generate_dayun_narrative(
+                    stem=it.stem or "",
+                    branch=it.branch or "",
+                    ganzhi=ganzhi,
+                    ten_god=it.ten_god or "",
+                    start_age=int(it.start_age or 0),
+                    end_age=end_age,
+                    yongshen_favor=favor,
+                    geju_name=geju_name,
+                    strength_tier=strength_tier,
+                    wealth_tier="中格",
+                    is_favorable=(it.flow_wuxing or "") in favor,
+                    day_stem=vr.pillars_primary.day.stem if vr.pillars_primary else "",
+                )
+            except Exception:
+                narrative = f"{ganzhi}大运（{it.start_age}–{end_age}岁）"
+
+        items.append(
+            DayunReportItem(
+                ganzhi=ganzhi,
+                start_age=int(it.start_age) if it.start_age is not None else None,
+                end_age=end_age,
+                ten_god=it.ten_god,
+                narrative=narrative,
+            )
+        )
+    return items
+
+
 @router.post("/dayun-report", response_model=DayunReportResponse)
 def api_dayun_report(
     payload: DayunReportRequest,
@@ -191,63 +319,41 @@ def api_dayun_report(
     if not case:
         raise HTTPException(status_code=404, detail="case not found")
 
-    try:
-        dt = datetime.fromisoformat(case.birth_dt_local)
-    except ValueError:
-        raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
+    dt = _normalize_birth_dt_text(case.birth_dt_local, case.tz or "Asia/Shanghai")
 
     from services.bazi_engine_service import calculate
 
     result = calculate(dt, case.lon, case.tz, False, "single", case.gender)
     vr = result.verify_response
 
-    items: list[DayunReportItem] = []
-    if vr.dayun and vr.dayun.items:
-        dayun_list = vr.dayun.items
-        for i, it in enumerate(dayun_list):
-            ganzhi = (it.stem or "") + (it.branch or "")
-            # 计算结束年龄
-            if i + 1 < len(dayun_list):
-                end_age = int(dayun_list[i + 1].start_age or 0) - 1
-            else:
-                end_age = int(it.start_age or 0) + 9
+    items = _build_dayun_report_items(vr)
+    total_chars = sum(len(it.narrative) for it in items)
+    return DayunReportResponse(items=items, narrative_total_chars=total_chars)
 
-            # 若 M3.02 已生成 narrative，直接使用；否则调用引擎补生成
-            narrative = it.narrative or ""
-            if not narrative:
-                try:
-                    favor: list[str] = list(vr.yongshen.favor) if vr.yongshen and vr.yongshen.favor else []
-                    geju_name = vr.geju.geju_name if vr.geju and vr.geju.geju_name else "普通格"
-                    strength_tier = (vr.day_master_strength.tier if vr.day_master_strength else "中和") or "中和"
-                    from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
 
-                    narrative = generate_dayun_narrative(
-                        stem=it.stem or "",
-                        branch=it.branch or "",
-                        ganzhi=ganzhi,
-                        ten_god=it.ten_god or "",
-                        start_age=int(it.start_age or 0),
-                        end_age=end_age,
-                        yongshen_favor=favor,
-                        geju_name=geju_name,
-                        strength_tier=strength_tier,
-                        wealth_tier="中格",
-                        is_favorable=(it.flow_wuxing or "") in favor,
-                        day_stem=vr.pillars_primary.day.stem if vr.pillars_primary else "",
-                    )
-                except Exception:
-                    narrative = f"{ganzhi}大运（{it.start_age}–{end_age}岁）"
+@router.post("/dayun-report/inline", response_model=DayunReportResponse)
+@limiter.limit("20/minute")
+def api_dayun_report_inline(
+    request: Request,
+    payload: BaziFullRequest,
+):
+    """
+    档案驱动大运叙述：无需 case_id / 登录，入参与 /bazi/full 一致。
+    """
+    dt = _normalize_birth_dt_text(payload.dt.isoformat(), payload.tz or "Asia/Shanghai")
 
-            items.append(
-                DayunReportItem(
-                    ganzhi=ganzhi,
-                    start_age=int(it.start_age) if it.start_age is not None else None,
-                    end_age=end_age,
-                    ten_god=it.ten_god,
-                    narrative=narrative,
-                )
-            )
+    from services.bazi_engine_service import calculate
 
+    result = calculate(
+        dt,
+        payload.lon,
+        payload.tz,
+        payload.solar_time_enabled,
+        payload.mode,
+        payload.gender,
+    )
+    vr = result.verify_response
+    items = _build_dayun_report_items(vr)
     total_chars = sum(len(it.narrative) for it in items)
     return DayunReportResponse(items=items, narrative_total_chars=total_chars)
 
@@ -332,9 +438,9 @@ def _build_profile(subj: CompatibilitySubject):
     from services.bazi_engine_service import calculate
 
     try:
-        dt = datetime.fromisoformat(subj.birth_dt)
-    except ValueError:
-        raise HTTPException(status_code=422, detail=f"birth_dt 格式无效: {subj.birth_dt}")
+        dt = _normalize_birth_dt_text(subj.birth_dt, subj.tz or "Asia/Shanghai")
+    except HTTPException:
+        raise
     result = calculate(dt, subj.lon, subj.tz, False, "single", subj.gender)
     vr = result.verify_response
     rp = vr.pillars_primary
@@ -472,10 +578,7 @@ def api_monthly(
     if not case:
         raise HTTPException(status_code=404, detail="case not found")
 
-    try:
-        dt = datetime.fromisoformat(case.birth_dt_local)
-    except ValueError:
-        raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
+    dt = _normalize_birth_dt_text(case.birth_dt_local, case.tz or "Asia/Shanghai")
 
     from services.bazi_engine_service import calculate
 
@@ -598,9 +701,9 @@ def api_analyze(
     from services.bazi_engine_service import calculate
 
     try:
-        dt = datetime.fromisoformat(payload.birth_dt)
-    except ValueError:
-        raise HTTPException(status_code=422, detail=f"birth_dt 格式无效: {payload.birth_dt}")
+        dt = _normalize_birth_dt_text(payload.birth_dt, payload.tz or "Asia/Shanghai")
+    except HTTPException:
+        raise
 
     result = calculate(dt, payload.lon, payload.tz, False, "single", payload.gender)
     vr = result.verify_response
@@ -735,9 +838,9 @@ def api_geju(
     from services.bazi_engine_service import calculate
 
     try:
-        dt = datetime.fromisoformat(payload.birth_dt)
-    except ValueError:
-        raise HTTPException(status_code=422, detail=f"birth_dt 格式无效: {payload.birth_dt}")
+        dt = _normalize_birth_dt_text(payload.birth_dt, payload.tz or "Asia/Shanghai")
+    except HTTPException:
+        raise
 
     result = calculate(dt, payload.lon, payload.tz, False, "single", payload.gender)
     vr = result.verify_response
@@ -759,6 +862,60 @@ def api_geju(
         classic_ref=g.classic_ref or "",
         ten_god=g.month_stem_shishen or "",
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 农历 → 公历（档案录入辅助）
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class LunarToSolarRequest(BaseModel):
+    lunar_year: int = Field(..., ge=1800, le=2200)
+    lunar_month: int = Field(..., ge=1, le=12)
+    lunar_day: int = Field(..., ge=1, le=30)
+    hour: int = Field(0, ge=0, le=23)
+    minute: int = Field(0, ge=0, le=59)
+    is_leap_month: bool = False
+
+
+class LunarToSolarResponse(BaseModel):
+    solar_dt: str
+    solar_year: int
+    solar_month: int
+    solar_day: int
+    lunar_label: str
+    warnings: list[str] = Field(default_factory=list)
+
+
+@router.post("/lunar-to-solar", response_model=LunarToSolarResponse)
+def api_lunar_to_solar(payload: LunarToSolarRequest) -> LunarToSolarResponse:
+    """将农历日期时间转换为公历 naive ISO（供 Fusheng 档案农历模式使用）。"""
+    import sxtwl  # type: ignore[import]
+
+    warnings: list[str] = []
+    try:
+        day = sxtwl.fromLunar(
+            payload.lunar_year,
+            payload.lunar_month,
+            payload.lunar_day,
+            payload.is_leap_month,
+        )
+        y = int(day.getSolarYear())
+        m = int(day.getSolarMonth())
+        d = int(day.getSolarDay())
+        solar_dt = f"{y:04d}-{m:02d}-{d:02d}T{payload.hour:02d}:{payload.minute:02d}:00"
+        leap = "闰" if payload.is_leap_month else ""
+        lunar_label = f"农历{payload.lunar_year}年{leap}{payload.lunar_month}月{payload.lunar_day}日"
+        return LunarToSolarResponse(
+            solar_dt=solar_dt,
+            solar_year=y,
+            solar_month=m,
+            solar_day=d,
+            lunar_label=lunar_label,
+            warnings=warnings,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"lunar_to_solar_failed: {exc}") from exc
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -802,14 +959,9 @@ def api_calendar_compare(
             message="calendar-compare 仅限管理员使用",
         )
 
-    from zoneinfo import ZoneInfo
-
     from backends import CnlunarBackend, get_sxtwl_backend
 
-    try:
-        dt = datetime.fromisoformat(payload.birth_dt).replace(tzinfo=ZoneInfo(payload.tz))
-    except (ValueError, KeyError) as exc:
-        raise HTTPException(status_code=422, detail=f"参数无效: {exc}")
+    dt = _normalize_birth_dt_text(payload.birth_dt, payload.tz, precision="exact")
 
     warnings_out: list[str] = []
     sxtwl_out: PillarOut | None = None
@@ -915,18 +1067,17 @@ def api_bazi_batch_compare(
             profiles.append(BatchCaseProfile(case_id=cid, error="无权访问"))
             continue
         try:
-            from datetime import datetime as _dt
             import zoneinfo as _zi
 
             from services.bazi_engine_service import calculate
 
-            birth_dt = _dt.fromisoformat(case.birth_dt_local)
             lon = float(case.longitude or 116.4)
             tz_name = case.timezone or "Asia/Shanghai"
             try:
                 _zi.ZoneInfo(tz_name)
             except Exception:
                 tz_name = "Asia/Shanghai"
+            birth_dt = _normalize_birth_dt_text(case.birth_dt_local, tz_name)
             result = calculate(birth_dt, lon, tz_name, gender=case.gender)
             vr = result.verify_response
             favor = list(getattr(vr.yongshen, "favor", []))
@@ -1009,14 +1160,17 @@ def get_golden_cases(
     return {"total": len(cases), "cases": cases[:limit]}
 
 
-# ─────────────────────────── D4: 流年年度报告（异步 202） ────────────────────────────────
+# ─────────────────────────── D4: 流年年度报告（异步 202 · DB 持久化） ────────────────────────────────
 import asyncio as _asyncio  # noqa: E402
-from datetime import UTC
-from datetime import datetime as _dt_cls  # noqa: E402
-import uuid as _uuid  # noqa: E402
 
-# 进程内任务存储（生产环境应替换为 Redis/DB）
-_liunian_tasks: dict[str, dict] = {}
+from services.liunian_report_service import (
+    build_liunian_report as _run_liunian_report_task,
+)
+from services.liunian_report_service import (
+    create_liunian_task,
+    get_liunian_task,
+    task_to_response_dict,
+)
 
 
 class LiunianReportRequest(BaseModel):
@@ -1031,128 +1185,9 @@ class LiunianReportResponse(BaseModel):
     year: int
     case_id: str
     submitted_at: str
+    finished_at: str | None = None
     result: dict | None = None
     error: str | None = None
-
-
-async def _build_liunian_report(task_id: str, case_id: str, year: int, include_months: bool) -> None:
-    """后台异步生成流年年度报告（接通真实流年引擎）"""
-    _liunian_tasks[task_id]["status"] = "running"
-    try:
-        from datetime import datetime as _dt
-        from zoneinfo import ZoneInfo as _ZoneInfo
-
-        from sqlmodel import Session as _Session
-
-        from app.models import Case as _CaseModel
-        from db import get_engine as _get_engine
-        from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
-        from services.bazi_engine_service import calculate as _calculate
-        from services.bazi_full_service import ganzhi_for_year as _gz_year
-        from services.bazi_full_service import ten_god as _ten_god
-
-        # 1. 读取案例
-        with _Session(_get_engine()) as _sess:
-            case = _sess.get(_CaseModel, case_id)
-            if case is None or case.deleted_at is not None:
-                raise ValueError(f"案例 {case_id!r} 不存在或已删除")
-            _birth_dt_local = case.birth_dt_local
-            _lon = float(case.lon)
-            _tz_name = case.tz or "Asia/Shanghai"
-            _gender = case.gender or "male"
-
-        # 2. 计算命盘
-        birth_dt = _dt.fromisoformat(_birth_dt_local)
-        try:
-            _ZoneInfo(_tz_name)
-        except Exception:
-            _tz_name = "Asia/Shanghai"
-        calc = _calculate(birth_dt, _lon, _tz_name, gender=_gender)
-        vr = calc.verify_response
-
-        # 3. 提取基础字段
-        day_stem = vr.pillars_primary.day.stem
-        day_branch = vr.pillars_primary.day.branch
-        yongshen_favor = list(getattr(vr.yongshen, "favor", []) or [])
-        wx = vr.wuxing_score
-        wuxing_scores: dict[str, float] = (
-            {
-                "wood": float(wx.wood),
-                "fire": float(wx.fire),
-                "earth": float(wx.earth),
-                "metal": float(wx.metal),
-                "water": float(wx.water),
-            }
-            if wx
-            else {}
-        )
-
-        # 4. 构建命局十神分布（年月时三柱天干对日主）
-        shishen_scores: dict[str, float] = {}
-        for _s in [vr.pillars_primary.year.stem, vr.pillars_primary.month.stem, vr.pillars_primary.hour.stem]:
-            _tg = _ten_god(day_stem, _s)
-            if _tg:
-                shishen_scores[_tg] = shishen_scores.get(_tg, 0) + 1.0
-
-        # 5. 流年干支（修复：使用 ganzhi_for_year 正确计算）
-        year_stem, year_branch = _gz_year(year)
-        year_ten_god = _ten_god(day_stem, year_stem) or ""
-
-        # 6. 调用四维预测
-        forecasts = compute_liunian_domain_forecasts(
-            year=year,
-            year_stem=year_stem,
-            year_branch=year_branch,
-            day_stem=day_stem,
-            day_branch=day_branch,
-            shishen_scores=shishen_scores,
-            yongshen_favor=yongshen_favor,
-            wuxing_scores=wuxing_scores,
-            gender=_gender,
-            year_ten_god=year_ten_god,
-        )
-
-        # 7. 构建流月数据（如需要）
-        months_data = []
-        if include_months:
-            # 流月：从流年月柱顺推（简化版：取流年各月干支）
-            _BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
-            _STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
-            _yr_stem_idx = _STEMS.index(year_stem) if year_stem in _STEMS else 0
-            for i in range(12):
-                _m_stem = _STEMS[(_yr_stem_idx * 2 + i) % 10]
-                _m_branch = _BRANCHES[(2 + i) % 12]  # 寅月起
-                _m_tg = _ten_god(day_stem, _m_stem) or ""
-                months_data.append(
-                    {
-                        "month": i + 1,
-                        "gz": f"{_m_stem}{_m_branch}",
-                        "ten_god": _m_tg,
-                        "advice": f"{year}年{i + 1}月，{_m_tg}月，宜顺势而为。"
-                        if _m_tg
-                        else f"{year}年{i + 1}月稳步前行",
-                    }
-                )
-
-        result = {
-            "year": year,
-            "year_gz": f"{year_stem}{year_branch}",
-            "case_id": case_id,
-            "day_stem": day_stem,
-            "year_ten_god": year_ten_god,
-            "overall_advice": f"{year}年（{year_stem}{year_branch}年）流年运势综合研判。",
-            "career": forecasts.get("事业", ""),
-            "wealth": forecasts.get("财运", ""),
-            "relationship": forecasts.get("婚恋", ""),
-            "health": forecasts.get("健康", ""),
-            "months": months_data,
-        }
-        _liunian_tasks[task_id]["status"] = "done"
-        _liunian_tasks[task_id]["result"] = result
-        _liunian_tasks[task_id]["finished_at"] = _dt_cls.now(UTC).isoformat()
-    except Exception as exc:
-        _liunian_tasks[task_id]["status"] = "failed"
-        _liunian_tasks[task_id]["error"] = str(exc)
 
 
 @router.post(
@@ -1164,35 +1199,32 @@ async def _build_liunian_report(task_id: str, case_id: str, year: int, include_m
 async def submit_liunian_report(
     request: Request,
     payload: LiunianReportRequest,
-    _user: RequiredUser,
+    user: RequiredUser,
     session: Session = Depends(get_session),
 ):
     """
-    D4: 异步生成流年年度报告。
+    D4: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。
     - 立即返回 202 Accepted + task_id
     - 轮询 GET /api/v1/bazi/liunian-report/{task_id} 获取结果
     """
-    # 验证案例存在
     from app.models import Case as _Case2
 
     case = session.get(_Case2, payload.case_id)
     if case is None or case.deleted_at is not None:
         raise HTTPException(status_code=404, detail=f"案例 {payload.case_id!r} 不存在")
 
-    task_id = str(_uuid.uuid4())
-    now_iso = _dt_cls.now(UTC).isoformat()
-    _liunian_tasks[task_id] = {
-        "task_id": task_id,
-        "status": "queued",
-        "year": payload.year,
-        "case_id": payload.case_id,
-        "submitted_at": now_iso,
-        "result": None,
-        "error": None,
-    }
-    # 启动后台任务
-    _asyncio.create_task(_build_liunian_report(task_id, payload.case_id, payload.year, payload.include_months))
-    return _liunian_tasks[task_id]
+    task = create_liunian_task(
+        session,
+        case_id=payload.case_id,
+        user_id=int(user.id),
+        year=payload.year,
+        include_months=payload.include_months,
+    )
+    _bg_task = _asyncio.create_task(
+        _run_liunian_report_task(task.id, payload.case_id, payload.year, payload.include_months)
+    )
+    del _bg_task
+    return task_to_response_dict(task)
 
 
 @router.get(
@@ -1203,14 +1235,31 @@ async def submit_liunian_report(
 def get_liunian_report(
     task_id: str,
     _user: RequiredUser,
+    session: Session = Depends(get_session),
 ):
     """
-    D4: 轮询流年报告任务状态。
+    D4: 轮询流年报告任务状态（DB 持久化）。
     - status=queued/running → 继续轮询
     - status=done → result 中含完整报告
     - status=failed → error 中含错误信息
     """
-    task = _liunian_tasks.get(task_id)
+    task = get_liunian_task(session, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail=f"任务 {task_id!r} 不存在或已过期")
-    return task
+    return task_to_response_dict(task)
+
+
+@router.post("/explain/batch", summary="八字讲解 batch（≤4 sections）")
+@limiter.limit("30/minute")
+def api_bazi_explain_batch(
+    request: Request,
+    payload: ExplainBatchRequest,
+    x_request_id: str | None = Header(None, alias="X-Request-Id"),
+) -> ExplainBatchResponse:
+    """一次请求最多 4 个 explain section，供报告/八字页填充 cite/fact 层。"""
+    from services.explain_service import explain_bazi_batch
+
+    enforce_quota(request, "bazi_explain_batch")
+    warnings: list[WarningModel] = []
+    request_id = _sanitize_request_id(x_request_id, warnings)
+    return explain_bazi_batch(payload, request_id=request_id)

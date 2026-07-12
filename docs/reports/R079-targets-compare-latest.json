@@ -1,0 +1,63 @@
+{
+  "generated_at": "2026-07-12T16:06:37.884Z",
+  "pass": true,
+  "pairs": [
+    {
+      "live": "live-bazi.png",
+      "frozen": "bazi.png",
+      "ok": true,
+      "notes": [
+        "height advisory: live 800 vs frozen 564 (viewport vs skin-preview crop)"
+      ],
+      "liveMeta": {
+        "width": 1120,
+        "height": 800,
+        "bytes": 52094
+      },
+      "frozenMeta": {
+        "width": 1064,
+        "height": 564,
+        "bytes": 41739
+      },
+      "sizeRatio": 1.248
+    },
+    {
+      "live": "live-ziwei.png",
+      "frozen": "ziwei.png",
+      "ok": true,
+      "notes": [
+        "height advisory: live 800 vs frozen 402 (viewport vs skin-preview crop)"
+      ],
+      "liveMeta": {
+        "width": 1120,
+        "height": 800,
+        "bytes": 56377
+      },
+      "frozenMeta": {
+        "width": 1064,
+        "height": 402,
+        "bytes": 39822
+      },
+      "sizeRatio": 1.416
+    },
+    {
+      "live": "live-report-toc.png",
+      "frozen": "report-toc.png",
+      "ok": true,
+      "notes": [
+        "height advisory: live 800 vs frozen 582 (viewport vs skin-preview crop)"
+      ],
+      "liveMeta": {
+        "width": 1120,
+        "height": 800,
+        "bytes": 70182
+      },
+      "frozenMeta": {
+        "width": 1064,
+        "height": 582,
+        "bytes": 46696
+      },
+      "sizeRatio": 1.503
+    }
+  ]
+}

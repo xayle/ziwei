@@ -11,26 +11,38 @@ import asyncio
 import time as _time
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 from starlette.requests import Request
 
+from app.schemas.explain import ExplainBatchResponse, ZiweiExplainBatchRequest
+from app.schemas.provenance import ResponseProvenance
 from app.schemas.ziwei import (
+    BorrowedStarSourceModel,
     CompatibilityDimensionResponse,
     CompatibilityRequest,
     CompatibilityResponse,
     DayunItemResponse,
     DayunResponse,
     EventTagResponse,
+    EvidenceItemModel,
     FlyingChartResponse,
     FlyingPalaceResponse,
     ForecastResultResponse,
+    IztroCrosscheckResponse,
+    IztroDualTrackResponse,
     LifeSuggestionResponse,
     LiunianResponse,
+    LiuriItem,
+    LiuriLiushiResponse,
+    LiushiItem,
     LiuyueItem,
     LunarResponse,
     MultiCompatPairResponse,
     MultiCompatRequest,
     MultiCompatResponse,
     PalaceResponse,
+    PalaceStructuredAnalysis,
+    PalaceWeightModel,
     PatternResponse,
     PeriodForecastResponse,
     RemedyResponse,
@@ -43,8 +55,21 @@ from services.prometheus_monitoring import (
     record_ziwei_batch,
     record_ziwei_calc,
 )
+from services.quota_service import enforce_quota
 from services.rate_limit import limiter
+from services.structured_export_service import build_ziwei_structured_export
+from services.ziwei_classic_refs import build_chart_classic_refs, pattern_candidates
 from services.ziwei_engine import ZiweiChart, ziwei_full
+from services.ziwei_engine.iztro_crosscheck import compare_chart_to_iztro
+from services.ziwei_engine.structural_summary import (
+    build_chart_structural_summary,
+    build_key_months,
+    build_key_years,
+    build_sanfang_structure,
+    build_sihua_trace_entries,
+    build_ziwei_structural_summary,
+)
+from services.ziwei_provenance import build_ziwei_provenance
 
 # 限制并发计算线程数，防止 ThreadPoolExecutor 耐尽
 # asyncio.to_thread 默认线程池大小=min(32, cpu+4)，每个请求占用该线程 1-4 秒。
@@ -57,11 +82,144 @@ router = APIRouter(prefix="/api/v1/ziwei", tags=["紫微斗数"])
 _TPL_SIMPLE = "simple"
 _TPL_STANDARD = "standard"
 _TPL_PRO = "pro"
+_PALACE_TEXT_MAX = 80
+
+
+def _trim_palace_text(text: str | None) -> str:
+    if not text:
+        return ""
+    if len(text) <= _PALACE_TEXT_MAX:
+        return text
+    return text[:_PALACE_TEXT_MAX].rstrip() + "…"
+
+
+# 黄金演示案例（与 GET /demo 一致）
+_DEMO_REQUEST = ZiweiRequest(
+    year=2002,
+    month=3,
+    day=13,
+    hour=14,
+    minute=55,
+    gender="女",
+)
+
+_CSV_INT_OPTIONAL = (
+    "liunian_year",
+    "flow_lunar_day",
+    "flow_liuyue_month",
+    "flow_hour_branch",
+)
+_CSV_FLOAT_OPTIONAL = ("longitude",)
+_CSV_STR_METHOD_OPTIONAL = (
+    "leap_month_method",
+    "year_divide",
+    "day_divide",
+    "kuiyue_method",
+    "tianma_method",
+    "tiankong_method",
+    "brightness_method",
+    "jiukong_method",
+    "tianshang_method",
+    "mingzhu_method",
+    "liunian_sihua_method",
+    "changsheng_method",
+    "wenchang_method",
+    "youbi_method",
+    "liunian_life_method",
+    "liuyue_method",
+    "xiaoxian_start_method",
+)
+
+
+def _normalize_csv_row(row: dict) -> dict[str, str]:
+    return {str(k).strip().lower(): (v.strip() if isinstance(v, str) else str(v).strip()) for k, v in row.items()}
+
+
+def _ziwei_request_from_csv_row(row: dict, template_version: str = _TPL_STANDARD) -> ZiweiRequest:
+    """Build ZiweiRequest from a CSV row (supports optional method columns)."""
+    r = _normalize_csv_row(row)
+    payload: dict = {
+        "year": int(r["year"]),
+        "month": int(r["month"]),
+        "day": int(r["day"]),
+        "hour": int(r["hour"]),
+        "minute": int(r.get("minute") or "0"),
+        "gender": r["gender"],
+        "template_version": (
+            template_version if template_version in (_TPL_SIMPLE, _TPL_STANDARD, _TPL_PRO) else _TPL_STANDARD
+        ),
+    }
+    for key in _CSV_INT_OPTIONAL:
+        if r.get(key):
+            payload[key] = int(r[key])
+    for key in _CSV_FLOAT_OPTIONAL:
+        if r.get(key):
+            payload[key] = float(r[key])
+    for key in _CSV_STR_METHOD_OPTIONAL:
+        if r.get(key):
+            payload[key] = r[key]
+    if r.get("late_zishi"):
+        payload["late_zishi"] = r["late_zishi"].lower() not in {"0", "false", "no", "n"}
+    return ZiweiRequest(**payload)
+
+
+def _ziwei_full_args(req: ZiweiRequest) -> tuple:
+    """Unpack ZiweiRequest into ziwei_full() positional args."""
+    from services.ziwei_engine.flow_defaults import resolve_flow_params
+
+    flow_day, flow_month, flow_hour = resolve_flow_params(
+        template_version=req.template_version,
+        include_flow_liuri=req.include_flow_liuri,
+        liunian_year=req.liunian_year,
+        birth_year=req.year,
+        birth_month=req.month,
+        birth_day=req.day,
+        birth_hour=req.hour,
+        birth_minute=req.minute,
+        leap_month_method=req.leap_month_method,
+        flow_lunar_day=req.flow_lunar_day,
+        flow_liuyue_month=req.flow_liuyue_month,
+        flow_hour_branch=req.flow_hour_branch,
+    )
+    return (
+        req.year,
+        req.month,
+        req.day,
+        req.hour,
+        req.minute,
+        req.gender,
+        req.liunian_year,
+        req.longitude,
+        req.late_zishi,
+        req.sihua_stem_indices,
+        req.leap_month_method,
+        req.year_divide,
+        req.day_divide,
+        req.kuiyue_method,
+        req.tianma_method,
+        req.tiankong_method,
+        req.brightness_method,
+        req.jiukong_method,
+        req.tianshang_method,
+        req.mingzhu_method,
+        req.liunian_sihua_method,
+        req.changsheng_method,
+        req.wenchang_method,
+        req.youbi_method,
+        req.liunian_life_method,
+        req.liuyue_method,
+        req.xiaoxian_start_method,
+        flow_day,
+        flow_month,
+        flow_hour,
+    )
 
 
 def _chart_to_response(
     chart: ZiweiChart,
     template: str = _TPL_STANDARD,
+    birth: dict | None = None,
+    req: ZiweiRequest | None = None,
 ) -> ZiweiResponse:
     """将 ZiweiChart 数据对象转换为 Pydantic 响应模型。
 
@@ -85,6 +243,8 @@ def _chart_to_response(
         jieqi_month_gz=chart.lunar.jieqi_month_gz,
         day_gz=chart.lunar.day_gz,
         hour_gz=chart.lunar.hour_gz,
+        year_divide=getattr(chart.lunar, "year_divide", "lichun"),
+        day_divide=getattr(chart.lunar, "day_divide", "solar_next"),
     )
 
     palaces_resp = [
@@ -112,14 +272,28 @@ def _chart_to_response(
                 for s in p.aux_stars
             ],
             flying_out=p.flying_out,
-            analysis=p.analysis,
+            borrowed_main_stars=[
+                {
+                    "name": s["name"],
+                    "brightness": s["brightness"],
+                    "brightness_val": s["brightness_val"],
+                    "transforms": s.get("transforms", []),
+                }
+                for s in (next((opp.main_stars for opp in chart.palaces if opp.name == p.opposition_name), []))
+            ]
+            if not p.main_stars and p.opposition_name
+            else [],
+            borrowed_from_palace=p.opposition_name if not p.main_stars and p.opposition_name else None,
+            borrowed_reason="空宫借对宫主星论命" if not p.main_stars and p.opposition_name else None,
+            is_empty_palace=not bool(p.main_stars),
+            analysis=_trim_palace_text(p.analysis) if not _is_simple else p.analysis,
             analysis_tags=p.analysis_tags,
             xiaoxian_ages=p.xiaoxian_ages,
             opposition_name=p.opposition_name,
-            conclusion=p.conclusion,
-            explanation=p.explanation,
-            suggestion=p.suggestion,
-            tooltip=p.tooltip,
+            conclusion=_trim_palace_text(p.conclusion) if not _is_simple else p.conclusion,
+            explanation=_trim_palace_text(p.explanation) if not _is_simple else p.explanation,
+            suggestion=_trim_palace_text(p.suggestion) if not _is_simple else p.suggestion,
+            tooltip=_trim_palace_text(p.tooltip) if not _is_simple else p.tooltip,
             dayun_boshi=p.dayun_boshi,
             changsheng=p.changsheng,
             jiangqian_star=p.jiangqian_star,
@@ -137,6 +311,7 @@ def _chart_to_response(
             DayunItemResponse(
                 index=d.index,
                 ganzhi=d.ganzhi,
+                branch_idx=d.branch_idx,
                 start_age=d.start_age,
                 end_age=d.end_age,
                 start_year=d.start_year,
@@ -176,12 +351,12 @@ def _chart_to_response(
 
     liuyue_resp = [
         LiuyueItem(
-            month=d["month"],
-            month_name=d["month_name"],
-            month_gz=d["month_gz"],
-            life_palace_branch=d["life_palace_branch"],
-            palace_name=d["palace_name"],
-            sihua=d.get("sihua", {}),
+            month=d.month,
+            month_name=d.month_name,
+            month_gz=d.month_gz,
+            life_palace_branch=d.life_palace_branch,
+            palace_name=d.palace_name,
+            sihua=d.sihua,
         )
         for d in chart.liuyue_data
     ]
@@ -212,6 +387,8 @@ def _chart_to_response(
                 events=_map_events(p.events),
                 advice=p.advice,
                 score=p.score,
+                tier=getattr(p, "tier", "neutral"),
+                layer=getattr(p, "layer", "heuristic"),
             )
 
         forecast_resp = ForecastResultResponse(
@@ -219,20 +396,143 @@ def _chart_to_response(
             yearly=_map_period(fc.yearly),
             monthly=[_map_period(m) for m in fc.monthly],
             current_month=_map_period(fc.current_month) if fc.current_month else None,
+            layer=getattr(fc, "layer", "heuristic"),
         )
 
-    patterns_resp = [
-        PatternResponse(
-            name=pt.name,
-            level=pt.level,
-            description=pt.description,
-            palaces=pt.palaces,
-            stars=pt.stars,
-            # pro 模板始终保留出典；其他模板也保留（出典默认为空时无影响）
-            source=getattr(pt, "source", ""),
+    patterns_resp = []
+    for pt in chart.patterns:
+        refs = pattern_candidates(pt.name, limit=2)
+        patterns_resp.append(
+            PatternResponse(
+                name=pt.name,
+                level=pt.level,
+                description=pt.description,
+                palaces=pt.palaces,
+                stars=pt.stars,
+                source=getattr(pt, "source", ""),
+                rule_id=getattr(pt, "rule_id", "") or "",
+                tier=getattr(pt, "tier", "heuristic") or "heuristic",
+                classic_ref=refs[0].get("text", "") if refs else "",
+                classic_refs=refs,
+            )
         )
-        for pt in chart.patterns
+
+    # ── 报告层摘要：三方四正 / 四化追踪 / 关键年份 / 关键月份 ──────────
+    life_palace = next((p for p in chart.palaces if p.index == 0), chart.palaces[0] if chart.palaces else None)
+    life_name = life_palace.name if life_palace else "命宫"
+    life_branch = life_palace.branch if life_palace else ""
+    opposite = next((p for p in chart.palaces if p.index == (0 + 6) % 12), None)
+    sanfang = build_sanfang_structure(chart)
+    chart_structural_summary = build_chart_structural_summary(chart)
+    sihua_trace = build_sihua_trace_entries(chart)
+    key_years = build_key_years(chart)
+    key_months = build_key_months(chart)
+
+    palace_weights = [
+        PalaceWeightModel(
+            palace_name=p.name,
+            weight=1.0
+            if p.branch_idx == chart.life_palace_branch
+            else (0.78 if p.branch_idx == chart.body_palace_branch else 0.55),
+            reason="命宫/身宫主轴"
+            if p.branch_idx in {chart.life_palace_branch, chart.body_palace_branch}
+            else "普通宫位",
+        )
+        for p in chart.palaces[:6]
     ]
+
+    def _star_field(star: object, field: str, default: str = "") -> str:
+        if isinstance(star, dict):
+            value = star.get(field, default)
+        else:
+            value = getattr(star, field, default)
+        return value if isinstance(value, str) else str(value)
+
+    brightness_map: dict[str, str] = {}
+    strong_stars: list[str] = []
+    weak_stars: list[str] = []
+    for palace in chart.palaces:
+        for star in palace.main_stars:
+            star_name = _star_field(star, "name")
+            brightness = _star_field(star, "brightness")
+            brightness_map[star_name] = brightness
+            if brightness in {"庙", "旺"} and star_name not in strong_stars:
+                strong_stars.append(star_name)
+            if brightness in {"陷", "不"} and star_name not in weak_stars:
+                weak_stars.append(star_name)
+
+    evidence_chain = [
+        EvidenceItemModel(title="命宫", value=chart.life_palace_gz, source="life_palace", confidence="high"),
+        EvidenceItemModel(title="身宫", value=chart.body_palace_gz, source="body_palace", confidence="high"),
+        EvidenceItemModel(title="五行局", value=chart.wuxing_ju_name, source="wuxing_ju", confidence="high"),
+    ]
+    for pt in chart.patterns[:6]:
+        evidence_chain.append(
+            EvidenceItemModel(
+                title=pt.name,
+                value=pt.description,
+                source=getattr(pt, "rule_id", "") or getattr(pt, "source", "") or "patterns",
+                confidence="high" if pt.level in ("大吉", "吉") else "medium",
+            )
+        )
+
+    has_empty_palace = any(not p.main_stars for p in chart.palaces)
+    borrowed_palace_rows = [
+        {
+            "palace": p.name,
+            "borrowed_from": p.opposition_name,
+            "borrowed_reason": "空宫借对宫主星论命",
+            "borrowed_main_stars": [
+                {
+                    "name": s["name"],
+                    "brightness": s["brightness"],
+                    "brightness_val": s["brightness_val"],
+                    "transforms": s.get("transforms", []),
+                }
+                for s in (next((opp.main_stars for opp in chart.palaces if opp.name == p.opposition_name), []))
+            ],
+        }
+        for p in chart.palaces
+        if not p.main_stars and p.opposition_name
+    ]
+    borrowed_source_rows = [
+        BorrowedStarSourceModel(
+            palace_name=row["borrowed_from"],
+            branch=next((pp.branch for pp in chart.palaces if pp.name == row["borrowed_from"]), None),
+            stem=next((pp.stem for pp in chart.palaces if pp.name == row["borrowed_from"]), None),
+            main_stars=row["borrowed_main_stars"],
+            analysis_tags=next((pp.analysis_tags for pp in chart.palaces if pp.name == row["borrowed_from"]), []),
+            conclusion=next((pp.conclusion for pp in chart.palaces if pp.name == row["borrowed_from"]), None),
+            explanation=next((pp.explanation for pp in chart.palaces if pp.name == row["borrowed_from"]), None),
+            suggestion=next((pp.suggestion for pp in chart.palaces if pp.name == row["borrowed_from"]), None),
+        )
+        for row in borrowed_palace_rows
+    ]
+
+    _branch_palace_map = {p.branch_idx: p for p in chart.palaces}
+    _body_palace = _branch_palace_map.get(chart.body_palace_branch)
+    _body_palace_name = _body_palace.name if _body_palace else chart.body_palace_branch_name or ""
+    _opposite_name = opposite.name if opposite else ""
+
+    ziwei_structural_summary = build_ziwei_structural_summary(
+        chart,
+        life_name=life_name,
+        sanfang=sanfang,
+        opposite_name=_opposite_name,
+        body_palace_name=_body_palace_name,
+        palace_weights=palace_weights,
+        borrowed_palace_rows=borrowed_palace_rows,
+        borrowed_source_rows=borrowed_source_rows,
+        patterns_resp=patterns_resp,
+        sihua_trace=sihua_trace,
+        key_years=key_years,
+        key_months=key_months,
+        evidence_chain=evidence_chain,
+        strong_stars=strong_stars,
+        weak_stars=weak_stars,
+        brightness_map=brightness_map,
+        has_empty_palace=has_empty_palace,
+    )
 
     # ── 模板过滤：simple 档位隐藏重运算字段 ──────────────────
     # simple：跳过 forecast/飞星/流月/详分析/建议（减少响应体积，加快前端渲染）
@@ -241,8 +541,75 @@ def _chart_to_response(
     _forecast_out = None if _is_simple else forecast_resp
     _liuyue_out = [] if _is_simple else liuyue_resp
     _analysis_out = {} if _is_simple else chart.analysis
+    _analysis_structured_out: list[PalaceStructuredAnalysis] = []
+    if not _is_simple:
+        _analysis_structured_out = [
+            PalaceStructuredAnalysis(
+                palace_index=p.index,
+                palace_name=p.name,
+                conclusion=p.conclusion,
+                explanation=p.explanation,
+                suggestion=p.suggestion,
+                tooltip=p.tooltip,
+                analysis_tags=p.analysis_tags,
+                is_empty_palace=not bool(p.main_stars),
+            )
+            for p in chart.palaces
+        ]
     _remedies_out = [] if _is_simple else (chart.remedies or [])
     _ls_out = [] if _is_simple else (chart.life_suggestions or [])
+
+    _liuri_out = None
+    if chart.liuri_liushi is not None:
+        bundle = chart.liuri_liushi
+        _liuri_out = LiuriLiushiResponse(
+            liuri=LiuriItem(
+                lunar_day=bundle.liuri.lunar_day,
+                life_palace_branch=bundle.liuri.life_palace_branch,
+                branch=bundle.liuri.branch,
+                palace_name=bundle.liuri.palace_name,
+                liuyue_month=bundle.liuri.liuyue_month,
+            ),
+            liushi=LiushiItem(
+                hour_branch_idx=bundle.liushi.hour_branch_idx,
+                life_palace_branch=bundle.liushi.life_palace_branch,
+                branch=bundle.liushi.branch,
+                palace_name=bundle.liushi.palace_name,
+                hour_label=bundle.liushi.hour_label,
+            ),
+            missing_fields=bundle.missing_fields,
+        )
+
+    _iztro_out = None
+    if birth:
+        _main_pos: dict[str, str] = {}
+        for p in chart.palaces:
+            for s in p.main_stars:
+                _main_pos[s["name"]] = p.branch
+        _raw = compare_chart_to_iztro(
+            year=birth["year"],
+            month=birth["month"],
+            day=birth["day"],
+            hour=birth["hour"],
+            minute=birth.get("minute", 0),
+            gender=birth["gender"],
+            engine_main=_main_pos,
+            engine_life_palace_gz=chart.life_palace_gz,
+            year_divide=birth.get("year_divide", "lichun"),
+            day_divide=birth.get("day_divide", "solar_next"),
+        )
+        if _raw:
+            _dual = _raw.get("dual_track")
+            _iztro_out = IztroCrosscheckResponse(
+                status=_raw.get("status", "unknown"),
+                main_match=_raw.get("main_match", 0),
+                main_total=_raw.get("main_total", 14),
+                life_palace_match=bool(_raw.get("life_palace_match", True)),
+                iztro_life_palace_gz=_raw.get("iztro_life_palace_gz"),
+                engine_life_palace_gz=_raw.get("engine_life_palace_gz"),
+                advisory=_raw.get("advisory"),
+                dual_track=IztroDualTrackResponse(**_dual) if _dual else None,
+            )
 
     return ZiweiResponse(
         template_version=template,
@@ -260,8 +627,13 @@ def _chart_to_response(
         liunian=liunian_resp,
         flying=_flying_out,
         liuyue=_liuyue_out,
+        liuri_liushi=_liuri_out,
+        missing_fields=getattr(chart, "missing_fields", []) or [],
+        engine_warnings=getattr(chart, "engine_warnings", []) or [],
+        iztro_crosscheck=_iztro_out,
         summary=chart.summary,
         analysis=_analysis_out,
+        analysis_structured=_analysis_structured_out,
         life_ruler_star=chart.life_ruler_star,
         body_ruler_star=chart.body_ruler_star,
         true_solar_time=chart.true_solar_time,
@@ -269,6 +641,19 @@ def _chart_to_response(
         laiyin_palace=getattr(chart, "laiyin_palace", ""),
         forecast=_forecast_out,
         patterns=patterns_resp,
+        chart_summary=(
+            f"命宫{life_name}，对宫{_opposite_name or '—'}，"
+            f"五行局{chart.wuxing_ju_name}；"
+            f"命宫地支{life_branch}，三合宫{', '.join(p.name for p in sanfang.triad_palaces) or '—'}。"
+        ),
+        structural_summary=chart_structural_summary,
+        sihua_trace=sihua_trace,
+        key_years=key_years,
+        key_months=key_months,
+        confidence_level="high" if chart.forecast or chart.patterns else "medium",
+        confidence_score=81 if chart.forecast else 72,
+        evidence_chain=evidence_chain,
+        ziwei_structural_summary=ziwei_structural_summary,
         remedies=[
             RemedyResponse(
                 id=r.id,
@@ -299,6 +684,8 @@ def _chart_to_response(
             )
             for s in _ls_out
         ],
+        provenance=build_ziwei_provenance(chart, req) if req else ResponseProvenance(),
+        classic_refs=build_chart_classic_refs(chart),
     )
 
 
@@ -320,50 +707,95 @@ async def compute_ziwei(request: Request, req: ZiweiRequest) -> ZiweiResponse:
     _t0 = _time.monotonic()
     try:
         async with _CALC_SEM:
-            chart = await asyncio.to_thread(
-                ziwei_full,
-                req.year,
-                req.month,
-                req.day,
-                req.hour,
-                req.minute,
-                req.gender,
-                req.liunian_year,
-                req.longitude,
-                req.late_zishi,
-                req.sihua_stem_indices,
-                req.leap_month_method,
-                req.kuiyue_method,
-                req.tianma_method,
-                req.tiankong_method,
-                req.brightness_method,
-                req.jiukong_method,
-                req.tianshang_method,
-                req.mingzhu_method,
-                req.liunian_sihua_method,
-                req.changsheng_method,
-            )
+            chart = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(req))
     except Exception as exc:
         record_ziwei_calc(req.gender, _time.monotonic() - _t0, success=False)
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     record_ziwei_calc(req.gender, _time.monotonic() - _t0, success=True)
-    return _chart_to_response(chart, template=req.template_version)
+    response = _chart_to_response(
+        chart,
+        template=req.template_version,
+        req=req,
+        birth={
+            "year": req.year,
+            "month": req.month,
+            "day": req.day,
+            "hour": req.hour,
+            "minute": req.minute or 0,
+            "gender": req.gender,
+            "year_divide": req.year_divide,
+            "day_divide": req.day_divide,
+        },
+    )
+    from services.content_policy import (
+        content_versions_meta,
+        default_disclaimer_block,
+        default_wenmo_advisory,
+    )
+    from services.ziwei_trust import apply_trust_level
+
+    return apply_trust_level(
+        response.model_copy(
+            update={
+                "disclaimer_block": default_disclaimer_block(),
+                "content_versions": content_versions_meta(),
+                "wenmo_advisory": default_wenmo_advisory(),
+            }
+        ),
+    )
+
+
+class ZiweiStructuredTextResponse(BaseModel):
+    format: str
+    markdown: str
+    json_payload: dict = Field(..., alias="json")
+
+    model_config = {"populate_by_name": True}
+
+
+@router.post(
+    "/structured-text",
+    response_model=ZiweiStructuredTextResponse,
+    summary="结构化紫微导出（Markdown+JSON）",
+)
+@limiter.limit("30/minute")
+async def ziwei_structured_text(request: Request, req: ZiweiRequest) -> ZiweiStructuredTextResponse:
+    enforce_quota(request, "structured_text")
+    async with _CALC_SEM:
+        chart = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(req))
+    resp = _chart_to_response(chart, template=req.template_version, req=req)
+    export = build_ziwei_structured_export(resp.model_dump(mode="json"))
+    return ZiweiStructuredTextResponse(**export)
 
 
 @router.get("/demo", response_model=ZiweiResponse, summary="演示命盘（壬午年正月三十未时女）")
 @limiter.limit("60/minute")
-async def demo_ziwei(request: Request) -> ZiweiResponse:
+async def demo_ziwei(request: Request, crosscheck: bool = False) -> ZiweiResponse:
     """
     黄金测试案例：2002-03-13 14:55 女
     预期：水二局，命宫丁未，紫微在辰宫，天府在子宫。
+
+    查询参数 `crosscheck=true` 时附带 iztro 交叉核验（需本地 iztro 依赖）。
     """
     try:
         async with _CALC_SEM:
-            chart = await asyncio.to_thread(ziwei_full, 2002, 3, 13, 14, 55, "女")
+            chart = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(_DEMO_REQUEST))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return _chart_to_response(chart)
+    birth = None
+    if crosscheck:
+        birth = {
+            "year": _DEMO_REQUEST.year,
+            "month": _DEMO_REQUEST.month,
+            "day": _DEMO_REQUEST.day,
+            "hour": _DEMO_REQUEST.hour,
+            "minute": _DEMO_REQUEST.minute or 0,
+            "gender": _DEMO_REQUEST.gender,
+            "year_divide": _DEMO_REQUEST.year_divide,
+            "day_divide": _DEMO_REQUEST.day_divide,
+        }
+    return _chart_to_response(chart, req=_DEMO_REQUEST, birth=birth)
 
 
 @router.post("/compatibility", response_model=CompatibilityResponse, summary="合盘六合度分析")
@@ -378,29 +810,9 @@ async def compute_compatibility(request: Request, req: CompatibilityRequest) -> 
     """
     try:
         async with _CALC_SEM:
-            chart_a = await asyncio.to_thread(
-                ziwei_full,
-                req.person_a.year,
-                req.person_a.month,
-                req.person_a.day,
-                req.person_a.hour,
-                req.person_a.minute,
-                req.person_a.gender,
-                req.person_a.liunian_year,
-                req.person_a.longitude,
-            )
+            chart_a = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(req.person_a))
         async with _CALC_SEM:
-            chart_b = await asyncio.to_thread(
-                ziwei_full,
-                req.person_b.year,
-                req.person_b.month,
-                req.person_b.day,
-                req.person_b.hour,
-                req.person_b.minute,
-                req.person_b.gender,
-                req.person_b.liunian_year,
-                req.person_b.longitude,
-            )
+            chart_b = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(req.person_b))
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -449,17 +861,7 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
     # 并发计算所有人的命盘
     async def _calc(p: ZiweiRequest) -> ZiweiChart:
         async with _CALC_SEM:
-            return await asyncio.to_thread(
-                ziwei_full,
-                p.year,
-                p.month,
-                p.day,
-                p.hour,
-                p.minute,
-                p.gender,
-                p.liunian_year,
-                p.longitude,
-            )
+            return await asyncio.to_thread(ziwei_full, *_ziwei_full_args(p))
 
     try:
         charts: list[ZiweiChart] = await asyncio.gather(*[_calc(p) for p in req.person_list])
@@ -533,7 +935,7 @@ _BATCH_MAX_ROWS = 200  # 单次最多 200 行
     summary="批量排盘",
     description=(
         "上传 CSV 文件（列：name,year,month,day,hour,minute,gender，"
-        "可选列：liunian_year,longitude），返回 ZIP 压缩包，"
+        "可选列：liunian_year,longitude 及全部 *_method / flow_* 参数），返回 ZIP 压缩包，"
         "内含每人命盘 JSON 文件和汇总 _summary.csv。\n\n"
         "查询参数 `template_version` 控制每份 JSON 的字段量级（simple/standard/pro，默认 standard）。"
     ),
@@ -558,7 +960,8 @@ async def batch_ziwei(
         张三,1990,5,20,8,30,男
         李四,1985,9,15,14,0,女
 
-    可选列：liunian_year（流年，默认当年），longitude（经度）。
+    可选列：liunian_year（流年，默认当年），longitude（经度），
+    以及 wenchang_method / youbi_method / flow_lunar_day 等算法参数（同 ZiweiRequest）。
 
     返回：ZIP 压缩包，每人一个 `{name}_{idx}.json`，
     以及 `_summary.csv`（name, life_palace_gz, wuxing_ju_name, patterns, status, error）。
@@ -604,42 +1007,22 @@ async def batch_ziwei(
             chart_json: dict = {}
 
             try:
-                year = int(row["year"].strip())
-                month = int(row["month"].strip())
-                day = int(row["day"].strip())
-                hour = int(row["hour"].strip())
-                minute = int(row.get("minute", "0").strip() or "0")
-                gender = row["gender"].strip()
-                liunian_year_str = row.get("liunian_year", "").strip()
-                liunian_year = int(liunian_year_str) if liunian_year_str else None
-                longitude_str = row.get("longitude", "").strip()
-                longitude = float(longitude_str) if longitude_str else None
+                req = _ziwei_request_from_csv_row(row, template_version=template_version)
 
                 async with _CALC_SEM:
-                    chart = await asyncio.to_thread(
-                        ziwei_full,
-                        year,
-                        month,
-                        day,
-                        hour,
-                        minute,
-                        gender,
-                        liunian_year,
-                        longitude,
-                    )
+                    chart = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(req))
 
-                tpl = template_version if template_version in (_TPL_SIMPLE, _TPL_STANDARD, _TPL_PRO) else _TPL_STANDARD
-                resp = _chart_to_response(chart, template=tpl)
+                resp = _chart_to_response(chart, template=req.template_version, req=req)
                 chart_json = resp.model_dump()
                 # 注入 input 快照
                 chart_json["_input"] = {
                     "name": name,
-                    "year": year,
-                    "month": month,
-                    "day": day,
-                    "hour": hour,
-                    "minute": minute,
-                    "gender": gender,
+                    "year": req.year,
+                    "month": req.month,
+                    "day": req.day,
+                    "hour": req.hour,
+                    "minute": req.minute,
+                    "gender": req.gender,
                 }
                 patterns_str = ", ".join(p.get("name", "") for p in (chart_json.get("patterns") or []))
 
@@ -709,28 +1092,14 @@ async def batch_ziwei(
 # A6: POST /api/v1/ziwei/flying  飞星专项端点（轻量）
 # ─────────────────────────────────────────────────────────────────────────────
 
-from pydantic import BaseModel as _BaseModel  # noqa: E402
-
-
-class ZiweiFlyingRequest(_BaseModel):
-    """A6 飞星请求：出生信息，返回飞星四化盘。"""
-
-    year: int
-    month: int
-    day: int
-    hour: int
-    minute: int = 0
-    gender: str
-    longitude: float | None = None
-
 
 @router.post(
     "/flying",
     response_model=FlyingChartResponse,
     summary="A6 飞星四化盘（轻量）",
-    description="仅返回飞星四化分析，不含完整命盘，速度更快。",
+    description="仅返回飞星四化分析，不含完整命盘；接受与 /full 相同的 ZiweiRequest 参数。",
 )
-async def api_ziwei_flying(payload: ZiweiFlyingRequest):
+async def api_ziwei_flying(payload: ZiweiRequest):
     """
     A6 飞星专项端点。
 
@@ -741,17 +1110,7 @@ async def api_ziwei_flying(payload: ZiweiFlyingRequest):
     - self_transforms: 全盘自化列表
     """
     async with _CALC_SEM:
-        chart: ZiweiChart = await asyncio.to_thread(
-            ziwei_full,
-            payload.year,
-            payload.month,
-            payload.day,
-            payload.hour,
-            payload.minute,
-            payload.gender,
-            None,  # liunian_year
-            payload.longitude,
-        )
+        chart: ZiweiChart = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(payload))
 
     flying = chart.flying
     if flying is None:
@@ -774,3 +1133,13 @@ async def api_ziwei_flying(payload: ZiweiFlyingRequest):
         chonged=dict(flying.chonged) if flying.chonged else {},
         self_transforms=list(flying.self_transforms) if flying.self_transforms else [],
     )
+
+
+@router.post("/explain/batch", summary="紫微讲解 batch（≤4 sections）")
+@limiter.limit("30/minute")
+async def api_ziwei_explain_batch(request: Request, payload: ZiweiExplainBatchRequest) -> ExplainBatchResponse:
+    """一次请求最多 4 个 explain section，供报告/紫微页填充 cite/fact 层。"""
+    from services.explain_service import explain_ziwei_batch
+
+    enforce_quota(request, "ziwei_explain_batch")
+    return explain_ziwei_batch(payload)

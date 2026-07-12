@@ -72,6 +72,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/new/{path}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Serve New */
+        get: operations["serve_new_new__path__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Serve New */
+        get: operations["serve_new_new_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bazi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Serve Bazi */
+        get: operations["serve_bazi_bazi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ziwei": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Serve Ziwei */
+        get: operations["serve_ziwei_ziwei_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Serve Admin */
+        get: operations["serve_admin_admin_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cases": {
         parameters: {
             query?: never;
@@ -101,11 +186,55 @@ export interface paths {
         get: operations["get_case_api_v1_cases__case_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Case
+         * @description 软删除 Case（设置 deleted_at）——需要所有权
+         */
+        delete: operations["delete_case_api_v1_cases__case_id__delete"];
         options?: never;
         head?: never;
         /** Patch Case */
         patch: operations["patch_case_api_v1_cases__case_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/cases/{case_id}/share-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Share Token
+         * @description B6: 生成 24h 匹名分享 token，返回链接（不含出生日期原始数据）
+         */
+        post: operations["create_share_token_api_v1_cases__case_id__share_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/share/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Shared Case
+         * @description B6: 凭 token 返回脆敏命盘（不含出生日期原始值）。token 过期 → 404
+         */
+        get: operations["get_shared_case_api_v1_share__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/relations/compat": {
@@ -142,6 +271,375 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/bazi/structured-text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 结构化命盘导出（Markdown+JSON，供 LLM/第三方）
+         * @description 文墨式工作流：将 /bazi/full 结果转为 Markdown + JSON 双格式。
+         *     含 provenance 脚注与 missing_fields。
+         *     流年默认窗口：当前年±2；目标年流日见 liuri_liushi.target_date（BE-A07）。
+         */
+        post: operations["api_bazi_structured_text_api_v1_bazi_structured_text_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/liuri-liushi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Bazi Liuri Liushi
+         * @description 独立流日/流时计算：干支、十神、大运/流年联动评分与换运提醒。
+         */
+        post: operations["api_bazi_liuri_liushi_api_v1_bazi_liuri_liushi_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/liunian-domain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Liunian Domain
+         * @description A1 流年分域预测：指定 case_id + year，返回该年财运/事业/婚恋/健康四域预测。
+         *
+         *     调用链：
+         *       Case(birth_dt_local, lon, tz, gender)
+         *         → calculate()  → VerifyResponse(pillars, yongshen, wuxing_score)
+         *         → compute_shishen_scores()
+         *         → compute_liunian_domain_forecasts(year=N, ...)
+         *         → {财运, 事业, 婚恋, 健康}
+         */
+        post: operations["api_liunian_domain_api_v1_bazi_liunian_domain_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/dayun-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Dayun Report
+         * @description A2 大运叙述报告：返回全部大运步骤的 400-600 字叙事段落。
+         *
+         *     调用链：
+         *       Case(birth_dt_local, lon, tz, gender)
+         *         → calculate()  → VerifyResponse(dayun.items[i].narrative)
+         *         → 每步大运已在 M3.02 中通过 generate_dayun_narrative() 填充
+         *         → 直接提取 narrative 字段返回
+         */
+        post: operations["api_dayun_report_api_v1_bazi_dayun_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/dayun-report/inline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Dayun Report Inline
+         * @description 档案驱动大运叙述：无需 case_id / 登录，入参与 /bazi/full 一致。
+         */
+        post: operations["api_dayun_report_inline_api_v1_bazi_dayun_report_inline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/compatibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Compatibility
+         * @description A3 无状态八字合盘：传入两人出生时间，即时返回合盘分析，不存入 DB。
+         *
+         *     算法：
+         *       五行互补 40分 + 地支无冲 40分 + 用神相助 20分
+         */
+        post: operations["api_compatibility_api_v1_bazi_compatibility_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Monthly
+         * @description A4 年度月历运势：返回指定年份 12 个月的运势数据（用于前端日历组件着色）。
+         *
+         *     调用链：Case → calculate() → compute_monthly()
+         */
+        post: operations["api_monthly_api_v1_bazi_monthly_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Analyze
+         * @description A5 模块化按需分析：calculate() 全量计算，只返回 tabs 指定字段。
+         *
+         *     默认 ["life_arc", "lucky"] 约 1KB，完整集约 12KB。
+         */
+        post: operations["api_analyze_api_v1_bazi_analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/jieqi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Api Jieqi
+         * @description A7 节气精准时刻：sxtwl 精算指定年份 24 节气的精确时分秒。
+         *     命理师判断月柱必用，精度到秒。
+         */
+        get: operations["api_jieqi_api_v1_bazi_jieqi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/geju": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Geju
+         * @description A8 格局专项接口：轻量接口，只返回 geju_name / confidence / is_broken。
+         *     不走数据库，直接无状态计算。
+         */
+        post: operations["api_geju_api_v1_bazi_geju_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/lunar-to-solar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Lunar To Solar
+         * @description 将农历日期时间转换为公历 naive ISO（供 Fusheng 档案农历模式使用）。
+         */
+        post: operations["api_lunar_to_solar_api_v1_bazi_lunar_to_solar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/calendar-compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Calendar Compare
+         * @description A9 多历法精度对比（ADMIN 工具）：sxtwl vs cnlunar 四柱并排对比。
+         */
+        post: operations["api_calendar_compare_api_v1_bazi_calendar_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/batch-compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * W2 批量命盘对比
+         * @description 并排对比最多 10 个案例的格局/用忌神/五行分布，快速发现家庭/团队命盘特征。
+         */
+        post: operations["api_bazi_batch_compare_api_v1_bazi_batch_compare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/golden-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 黄金案例公开查阅
+         * @description 返回预置命理黄金案例，可按格局名称或标签过滤。无需认证。
+         */
+        get: operations["get_golden_cases_api_v1_bazi_golden_cases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/liunian-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 提交流年年度报告生成任务（异步 202）
+         * @description D4: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。
+         *     - 立即返回 202 Accepted + task_id
+         *     - 轮询 GET /api/v1/bazi/liunian-report/{task_id} 获取结果
+         */
+        post: operations["submit_liunian_report_api_v1_bazi_liunian_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/liunian-report/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询流年报告生成状态（轮询）
+         * @description D4: 轮询流年报告任务状态（DB 持久化）。
+         *     - status=queued/running → 继续轮询
+         *     - status=done → result 中含完整报告
+         *     - status=failed → error 中含错误信息
+         */
+        get: operations["get_liunian_report_api_v1_bazi_liunian_report__task_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/explain/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 八字讲解 batch（≤4 sections）
+         * @description 一次请求最多 4 个 explain section，供报告/八字页填充 cite/fact 层。
+         */
+        post: operations["api_bazi_explain_batch_api_v1_bazi_explain_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cases/{case_id}/compute": {
         parameters: {
             query?: never;
@@ -169,7 +667,11 @@ export interface paths {
         /** List Snapshots */
         get: operations["list_snapshots_api_v1_cases__case_id__snapshots_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Snapshot
+         * @description 为指定 Case 创建新快照（保存排盘结果）。
+         */
+        post: operations["create_snapshot_api_v1_cases__case_id__snapshots_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -185,6 +687,30 @@ export interface paths {
         };
         /** Get Snapshot */
         get: operations["get_snapshot_api_v1_snapshots__snapshot_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Snapshot
+         * @description 软删除快照：验证归属权后设置 deleted_at。
+         */
+        delete: operations["delete_snapshot_api_v1_snapshots__snapshot_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/snapshots/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * W3 快照字段差异对比
+         * @description 对比两个快照的 output_json 字段，返回变更/新增/删除的键列表，用于算法升级前后验证。
+         */
+        get: operations["snapshot_diff_api_v1_snapshots_diff_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -293,10 +819,11 @@ export interface paths {
         put?: never;
         /**
          * Logout
-         * @description 用户登出 - 撤销刷新令牌
+         * @description 用户登出 - 同时吊销 Access Token（JTI 黑名单）和 Refresh Token
          *
          *     Args:
          *         body: 包含刷新令牌
+         *         request: HTTP请求对象（用于提取 Authorization header）
          *         session: 数据库会话
          */
         post: operations["logout_api_v1_auth_logout_post"];
@@ -392,7 +919,13 @@ export interface paths {
         delete: operations["delete_member_api_v1_members__member_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Patch Member
+         * @description 部分更新成员信息（仅修改提供的字段）
+         *     birth_date 不允许 PATCH — 出生日期更改需走完整 PUT
+         *     需要权限：UPDATE_MEMBER
+         */
+        patch: operations["patch_member_api_v1_members__member_id__patch"];
         trace?: never;
     };
     "/api/v1/delegations": {
@@ -565,6 +1098,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/expire-delegations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin Expire Delegations
+         * @description [ADMIN] O12 — 手动触发过期委托清理。
+         *     仅 is_admin=True 的用户可调用。
+         */
+        post: operations["admin_expire_delegations_api_v1_admin_expire_delegations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit-logs": {
         parameters: {
             query?: never;
@@ -574,7 +1128,7 @@ export interface paths {
         };
         /**
          * Get User Audit Logs
-         * @description 获取当前用户的审计日志
+         * @description 获取当前用户的审计日志（keyset 分页：传入 next_cursor 作为下次 before_id）
          */
         get: operations["get_user_audit_logs_api_v1_audit_logs_get"];
         put?: never;
@@ -594,7 +1148,7 @@ export interface paths {
         };
         /**
          * Get All Audit Logs
-         * @description 获取全局审计日志 - 仅限管理员或具有VIEW_AUDIT_LOG权限
+         * @description 获取全局审计日志 - 仅限管理员或具有VIEW_AUDIT_LOG权限（keyset 分页）
          */
         get: operations["get_all_audit_logs_api_v1_audit_logs_admin_get"];
         put?: never;
@@ -645,6 +1199,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Stats
+         * @description 管理员统计面板 — 仅限 is_admin=True 的用户
+         *     返回: 用户、审计日志、案例、快照、审核、相似盘库、API Key、实验等统计
+         */
+        get: operations["admin_stats_api_v1_admin_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events": {
         parameters: {
             query?: never;
@@ -681,6 +1256,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 事件类型分布统计
+         * @description D5: 统计当前用户的事件按 event_type 分组数量。
+         *     可选通过 date_from / date_to 过滤 created_at 范围（闭区间）。
+         *     返回 { total, by_type: [{event_type, count}] }
+         */
+        get: operations["get_events_stats_api_v1_events_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{event_id}": {
         parameters: {
             query?: never;
@@ -709,7 +1306,13 @@ export interface paths {
         delete: operations["delete_event_api_v1_events__event_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Patch Event
+         * @description 部分更新事件（仅修改提供的字段）
+         *     不允许修改 bazi_json：计算结果应通过重新计算生成
+         *     需要权限：UPDATE_EVENT
+         */
+        patch: operations["patch_event_api_v1_events__event_id__patch"];
         trace?: never;
     };
     "/api/v1/members/{member_id}/events": {
@@ -721,7 +1324,7 @@ export interface paths {
         };
         /**
          * List Member Events
-         * @description 获取特定成员的所有事件
+         * @description 获取特定成员的所有事件（游标分页）
          *     需要权限：READ_EVENT
          */
         get: operations["list_member_events_api_v1_members__member_id__events_get"];
@@ -805,6 +1408,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scenarios/{scenario_id}/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * W5 场景模拟（What-If 推演）
+         * @description 对已有场景执行 What-If 推演：可临时覆盖出生时间/经度/性别，重新计算八字关键指标并将结果回写到 scenario.results，不修改原始成员数据。
+         */
+        post: operations["simulate_scenario_api_v1_scenarios__scenario_id__simulate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/glossary": {
         parameters: {
             query?: never;
@@ -813,11 +1436,31 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 命理术语词汇表
-         * @description 返回命理术语词汇表，供前端 tooltip 使用。无需认证，数据来自 data/glossary.json，启动时加载至内存。按 category 分组，组内按 term 排序。可选参数 ?category= 客户端过滤。
+         * 命理术语词汇表（支持全文搜索）
+         * @description 返回命理术语词汇表。可选 ?q= 进行全文搜索（匹配 term/definition/pinyin）；可选 ?category= 分类过滤。无需认证，数据来自 data/glossary.json，启动时加载至内存。
          */
         get: operations["get_glossary_api_v1_glossary_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/glossary/{term}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 管理员更新词汇定义（D6）
+         * @description 需要管理员权限。更新 data/glossary.json 中指定词汇的定义（内存缓存同步更新）。
+         */
+        put: operations["update_glossary_term_api_v1_glossary__term__put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -833,12 +1476,72 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 城市经纬度列表
-         * @description 返回 36 个城市经纬度（4直辖+27省会+5计划单列市），供城市选择器使用。无需认证，数据来自 data/cities.json，启动时加载至内存，不访问 DB。按 city_type 分组（直辖市/省会/计划单列市），组内按城市名排序。
+         * 城市经纬度列表（支持智能搜索）
+         * @description 返回城市经纬度，可选 ?q= 进行城市名/省份模糊搜索（D3）。可选 ?city_type= 分类过滤。无需认证，数据来自 data/cities.json，启动时加载至内存，不访问 DB。
          */
         get: operations["get_cities_api_v1_cities_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/classics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 古籍原文 TF-IDF 全文检索（D2）
+         * @description 对 data/classics.json 古籍语料进行 TF-IDF 全文检索，按相关度排序。可选 ?query= 搜索关键词；?tag= 按标签过滤；?limit= 返回数量。无需认证。
+         */
+        get: operations["search_classics_api_v1_classics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/docs/concepts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 八字/紫微术语概念说明（C3）
+         * @description 返回命理术语概念列表，支持 ?category=bazi|ziwei 分类过滤与 ?q= 关键词搜索。数据来自 data/concepts.json，无需认证。
+         */
+        get: operations["get_concepts_api_v1_docs_concepts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/quickstart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 快捷建档+计算（一步完成）
+         * @description **新用户入口**：只需提供出生信息，系统自动建档并执行完整的八字+验证计算，返回案例档案和命盘快照。无需分步调用 POST /cases → POST /cases/{id}/compute。
+         */
+        post: operations["quickstart_api_v1_quickstart_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -879,16 +1582,1541 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Api Batch Verify
-         * @description N5.03 批量验证端点.
+         * 批量八字排盘 v2
+         * @description 批量排盘端点（N5.03）。
          *
-         *     - items 最多 50 条
-         *     - ENGINE_V2=false 时返回 501（R40）
-         *     - ThreadPoolExecutor(BATCH_WORKERS) 并行
-         *     - 整体超时 60s，单条超时 5s
-         *     - 部分成功返回（partial results on timeout）
+         *     - 最多 **50 条**请求（满足 R39）
+         *     - 整体 60s / 单条 5s 超时，超时后返回已完成的部分结果
+         *     - `ENGINE_V2=false` 时返回 **501**（满足 R40）
+         *     - 速率限制：**10次/分钟/用户**
          */
-        post: operations["api_batch_verify_api_v2_batch_verify_post"];
+        post: operations["v2_batch_verify_api_v2_batch_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/full": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 计算完整紫微命盘
+         * @description 输入公历出生时间和性别，返回完整紫微斗数命盘。
+         *
+         *     包含：农历信息、命宫身宫、五行局、14主星亮度、
+         *     辅星杂曜、四化、大运、流年、飞星盘、逐宫解读。
+         *
+         *     `template_version` 控制返回字段量级：
+         *     - **simple**   — 仅核心命盘（宫位/格局/摘要），响应最小，适合快速预览
+         *     - **standard** — 完整命盘（默认）
+         *     - **pro**      — 与 standard 相同，格局来源字段始终可见
+         */
+        post: operations["compute_ziwei_api_v1_ziwei_full_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/structured-text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 结构化紫微导出（Markdown+JSON） */
+        post: operations["ziwei_structured_text_api_v1_ziwei_structured_text_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/demo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 演示命盘（壬午年正月三十未时女）
+         * @description 黄金测试案例：2002-03-13 14:55 女
+         *     预期：水二局，命宫丁未，紫微在辰宫，天府在子宫。
+         *
+         *     查询参数 `crosscheck=true` 时附带 iztro 交叉核验（需本地 iztro 依赖）。
+         */
+        get: operations["demo_ziwei_api_v1_ziwei_demo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/compatibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 合盘六合度分析
+         * @description 输入两人出生信息，返回紫微斗数合盘六合度分析。
+         *
+         *     维度包括：命宫相合、五行相生、年支缘分、夸妻宫缘、阴阳互补。
+         *     总分 100 分，输出各维度得分与详细说明。
+         */
+        post: operations["compute_compatibility_api_v1_ziwei_compatibility_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/multi_compat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 多人合盘（2-4人）
+         * @description 输入 2-4 人出生信息，返回所有两两组合的合盘分析，
+         *     以及 N×N 缘分矩阵和整体团队和谐指数。
+         *
+         *     矩阵对角线固定为 100（自身），非对角线为两人合盘总分。
+         *     团队和谐指数为所有两两组合均值。
+         */
+        post: operations["multi_compat_api_v1_ziwei_multi_compat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 批量排盘
+         * @description 上传 CSV 文件（列：name,year,month,day,hour,minute,gender，可选列：liunian_year,longitude 及全部 *_method / flow_* 参数），返回 ZIP 压缩包，内含每人命盘 JSON 文件和汇总 _summary.csv。
+         *
+         *     查询参数 `template_version` 控制每份 JSON 的字段量级（simple/standard/pro，默认 standard）。
+         */
+        post: operations["batch_ziwei_api_v1_ziwei_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/flying": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A6 飞星四化盘（轻量）
+         * @description 仅返回飞星四化分析，不含完整命盘；接受与 /full 相同的 ZiweiRequest 参数。
+         */
+        post: operations["api_ziwei_flying_api_v1_ziwei_flying_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/explain/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 紫微讲解 batch（≤4 sections）
+         * @description 一次请求最多 4 个 explain section，供报告/紫微页填充 cite/fact 层。
+         */
+        post: operations["api_ziwei_explain_batch_api_v1_ziwei_explain_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出审核记录 */
+        get: operations["list_reviews_api_v1_reviews_get"];
+        put?: never;
+        /** 提交命盘进审核队列 */
+        post: operations["submit_review_api_v1_reviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 审核记录统计 */
+        get: operations["review_stats_api_v1_reviews_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** W1 待审核队列 */
+        get: operations["review_queue_api_v1_reviews_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/my-queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** W1 我的审核队列 */
+        get: operations["my_review_queue_api_v1_reviews_my_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/bulk_action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 批量审核操作 */
+        post: operations["bulk_review_action_api_v1_reviews_bulk_action_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/assignees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 审核员候选列表 */
+        get: operations["review_assignees_api_v1_reviews_assignees_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/{review_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取单条审核详情 */
+        get: operations["get_review_api_v1_reviews__review_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除审核记录 */
+        delete: operations["delete_review_api_v1_reviews__review_id__delete"];
+        options?: never;
+        head?: never;
+        /** 审核员更新状态/备注 */
+        patch: operations["update_review_api_v1_reviews__review_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/reviews/{review_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取审核变更历史 */
+        get: operations["get_review_history_api_v1_reviews__review_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/{review_id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** W1 分配审核员 */
+        post: operations["assign_review_api_v1_reviews__review_id__assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出 A/B 实验 */
+        get: operations["list_experiments_api_v1_experiments_get"];
+        put?: never;
+        /** 创建 A/B 实验 */
+        post: operations["create_experiment_api_v1_experiments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{exp_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取单条实验详情 */
+        get: operations["get_experiment_api_v1_experiments__exp_id__get"];
+        /** 更新实验（状态/描述/假设等） */
+        put: operations["update_experiment_api_v1_experiments__exp_id__put"];
+        post?: never;
+        /** 软删除实验 */
+        delete: operations["delete_experiment_api_v1_experiments__exp_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{exp_id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 将会话分配到实验变体
+         * @description 无需登录。前端在页面加载时调用此接口，获取该会话所属变体。
+         *     - 实验状态必须为 running，否则返回 control 变体。
+         *     - 分配是确定性的（同一 session_id 始终返回同一变体）。
+         *     - 若已有 assigned 事件则不重复记录（幂等）。
+         */
+        post: operations["assign_variant_api_v1_experiments__exp_id__assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{exp_id}/event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 上报实验事件
+         * @description 无需登录。前端在用户执行关键操作时调用。
+         */
+        post: operations["record_event_api_v1_experiments__exp_id__event_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/experiments/{exp_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取实验结果统计 */
+        get: operations["get_results_api_v1_experiments__exp_id__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询当前 LLM provider 配置
+         * @description 无需登录。返回当前检测到的 provider 及可用状态。
+         */
+        get: operations["get_config_api_v1_llm_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/interpret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 同步生成并保存命盘解读草稿
+         * @description 提交命盘参数，调用 LLM 生成解读草稿并持久化。
+         *     若该 chart_hash 已有 pending_review 草稿，返回最新的已有记录（幂等）。
+         */
+        post: operations["interpret_api_v1_llm_interpret_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SSE 流式生成命盘解读草稿
+         * @description 返回 SSE 事件流。
+         *     生成完成后（event: done），调用方应再次 POST /api/v1/llm/interpret 保存草稿，
+         *     或直接使用 done 事件 payload 中的 full_text 自行展示。
+         */
+        get: operations["stream_api_v1_llm_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出 LLM 解读草稿 */
+        get: operations["list_drafts_api_v1_llm_drafts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/drafts/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取单条草稿详情 */
+        get: operations["get_draft_api_v1_llm_drafts__draft_id__get"];
+        put?: never;
+        post?: never;
+        /** 软删除草稿 */
+        delete: operations["delete_draft_api_v1_llm_drafts__draft_id__delete"];
+        options?: never;
+        head?: never;
+        /** 审核草稿（approved / rejected） */
+        patch: operations["review_draft_api_v1_llm_drafts__draft_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/llm/interpret-module": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 分模块 LLM 解读（D1）
+         * @description D1: 对指定案例的某一模块进行专项 LLM 解读。
+         *     module 枚举：dayun_narrative / liunian_advice / career_detail /
+         *                marriage_detail / wealth_detail / fengshui_suggestion
+         */
+        post: operations["interpret_module_api_v1_llm_interpret_module_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/interpret-bazi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 完整八字一键解读：case → bazi_full → 规则引擎 → Jinja2 → LLM（D3）
+         * @description D3: 根据 case_id 完整走通八字解读链：
+         *
+         *     1. 加载 Case → 构建 BaziFullRequest
+         *     2. 调用 bazi_full() 计算八字（含 rule_matches）
+         *     3. 提取关键词 → fetch_evidence() 检索古籍
+         *     4. render_summary() 渲染 Jinja2 事实摘要
+         *     5. generate_bazi_interpretation() 生成 LLM 解读文本
+         *     6. 保存 LlmDraft 并返回
+         */
+        post: operations["interpret_bazi_api_v1_llm_interpret_bazi_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/similarity/index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 索引命盘特征向量
+         * @description 存储命盘特征向量。若相同 chart_hash 已存在，则更新向量与摘要字段。
+         */
+        post: operations["index_case_api_v1_similarity_index_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/similarity/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查找相似命盘
+         * @description 返回与当前命盘最相似的 Top-K 历史命盘（按余弦相似度降序）。
+         *     当前命盘可不必先调用 /index。
+         */
+        get: operations["search_similar_api_v1_similarity_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/similarity/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出已索引命盘 */
+        get: operations["list_cases_api_v1_similarity_cases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/similarity/cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 软删除案例 */
+        delete: operations["delete_case_api_v1_similarity_cases__case_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 列出我的 API Keys */
+        get: operations["list_api_keys_api_v1_api_keys_get"];
+        put?: never;
+        /**
+         * 创建 API Key
+         * @description 为当前登录用户生成一个新的 API Key。
+         *
+         *     **⚠️ 注意**：完整密钥仅在响应的 `plaintext_key` 字段中出现一次，请立即保存。后续查询只显示前缀（如 `zw_a1b2c3d4…`）。
+         */
+        post: operations["create_api_key_api_v1_api_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看 API Key 详情 */
+        get: operations["get_api_key_api_v1_api_keys__key_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * 撤销 API Key
+         * @description 软撤销：设置 `revoked_at` 时间戳，不物理删除记录。撤销后该 Key 立即失效。
+         */
+        delete: operations["revoke_api_key_api_v1_api_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/zeri/purposes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 获取支持的择日用途列表
+         * @description 返回所有支持的用途及其中文标签。
+         */
+        get: operations["list_purposes_api_v1_zeri_purposes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/zeri/recommend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 按月择日推荐
+         * @description 根据命主紫微命盘参数（命宫地支、五行局）为指定年月逐日评分，返回吉日日历和推荐日期列表。
+         *
+         *     **无需登录**，但需提供命宫地支和五行局。
+         *
+         *     | 参数 | 说明 | 示例 |
+         *     |------|------|---------|
+         *     | `life_palace_branch` | 命宫地支 | `子` |
+         *     | `wuxing_ju_name` | 五行局（含数字局也可） | `水二局` |
+         *     | `natal_year_branch` | 本命年支（可选） | `午` |
+         *     | `purpose` | 用途 | `marriage` |
+         */
+        get: operations["recommend_api_v1_zeri_recommend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cases/{case_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 下载命盘完整 JSON
+         * @description 以 JSON 文件格式下载指定命盘的完整数据包，含：
+         *
+         *     - `input_snapshot`：出生信息与档案元数据
+         *     - `snapshot_meta`：计算快照版本信息（如有）
+         *     - `compute_result`：最新计算结果（含宫位、星曜、大运、格局等）
+         *
+         *     浏览器会自动弹出下载对话框。
+         */
+        get: operations["export_case_json_api_v1_cases__case_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cases/{case_id}/export/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 获取命盘元数据（仅 input_snapshot）
+         * @description 轻量接口：只返回出生信息与档案元数据，不含大体积计算结果。
+         */
+        get: operations["export_case_meta_api_v1_cases__case_id__export_meta_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cases/{case_id}/export/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 导出命盘为 PDF (需后端 playwright 支持) */
+        get: operations["export_case_pdf_api_v1_cases__case_id__export_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cases/{case_id}/export/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 导出命盘分享卡片 PNG */
+        get: operations["export_case_card_api_v1_cases__case_id__export_card_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fusheng/report/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 导出浮生命理档案 PDF
+         * @description 根据档案字段聚合八字、紫微、姓名分析，服务端渲染 HTML 并导出 PDF。
+         *     需本机安装 Playwright Chromium：`playwright install chromium`
+         */
+        post: operations["export_fusheng_report_pdf_api_v1_fusheng_report_pdf_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fusheng/archive-bundle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 八字+紫微一屏编排快照 */
+        post: operations["archive_bundle_api_v1_fusheng_archive_bundle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/life/volumes/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 人生六卷+跋（life-volume@1.0 草案）
+         * @description W16 权威读模型草案：聚合八字/紫微/explain，返回与 `life-volume.schema.json` 对齐的响应。
+         *
+         *     打磨期 FE 仍可用 `buildLifeVolumes` Adapter；本端点供契约联调与 U5 起步。
+         */
+        get: operations["get_life_volumes_api_v1_life_volumes__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 订阅通知（stub：记录订阅意图，不发真实推送） */
+        post: operations["subscribe_notifications_api_v1_notifications_subscribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 通知模块健康检查 */
+        get: operations["notifications_health_api_v1_notifications_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 支付 webhook stub（验签未实现，仅记录事件） */
+        post: operations["payment_webhook_api_v1_payment_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fengshui/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 获取风水助手可选项（朝向列表等）
+         * @description 返回房屋朝向列表，供前端下拉菜单使用。
+         */
+        get: operations["get_options_api_v1_fengshui_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fengshui/bagua": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 八宅命卦计算与方位推荐
+         * @description 根据出生年份与性别计算**命卦**，并返回四吉方、四凶方、床头/书桌/大门方位建议。
+         *
+         *     可选传入房屋朝向（`house_facing`），额外返回人宅相合判断。
+         *
+         *     **无需登录**。
+         *
+         *     | 参数 | 说明 | 示例 |
+         *     |------|------|---------|
+         *     | `birth_year` | 出生公历年份 | `1990` |
+         *     | `gender` | 性别 | `男` 或 `女` |
+         *     | `house_facing` | 房屋朝向（可选） | `S`（朝南）|
+         *
+         *     > ⚠ 本分析仅供参考，不构成专业风水建议。涉及结构改动请咨询专业人士。
+         */
+        get: operations["get_bagua_api_v1_fengshui_bagua_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/fengshui/room-layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 九宫格房间布局风水评估
+         * @description 根据命卦结果，对用户提交的**九宫格房间布局**进行逐区评估。
+         *
+         *     每个方位可分配一种房间类型，引擎依据八宅法吉凶标签打分，并返回整体评分、改善建议。
+         *
+         *     **支持的方位**：N / NE / E / SE / S / SW / W / NW
+         *
+         *     **支持的房间类型**：empty / master_bedroom / bedroom / study / child_room / living_room / entrance / dining_room / kitchen / bathroom / storage
+         *
+         *     > ⚠ 本分析仅供参考，不构成专业风水建议。涉及结构改动请咨询专业人士。
+         */
+        post: operations["room_layout_assess_api_v1_fengshui_room_layout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Rules
+         * @description 获取所有生活化建议推理规则
+         */
+        get: operations["get_rules_api_v1_rules_get"];
+        /**
+         * Update Rules
+         * @description 更新规则，并热重载后端引擎缓存
+         */
+        put: operations["update_rules_api_v1_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rules/remedies-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * W9 获取化劫规则列表
+         * @description 返回 data/remedies_rules.json 中的所有化劫规则，供客户端展示和编辑。
+         */
+        get: operations["get_remedies_rules_api_v1_rules_remedies_rules_get"];
+        /**
+         * W9 更新化劫规则
+         * @description 覆盖写入 data/remedies_rules.json，并热重载内存缓存。
+         */
+        put: operations["update_remedies_rules_api_v1_rules_remedies_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * W6 命理师仪表盘
+         * @description 返回当前用户的案例/快照/审核概况及最近 7 天操作活跃度。
+         */
+        get: operations["get_dashboard_api_v1_analytics_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/me/anonymize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * GDPR 用户数据匿名化（C1）
+         * @description 对当前登录用户的个人数据进行不可逆匿名化处理。
+         *     - `email` → 哈希脱敏
+         *     - `username` → `deleted_{id}`
+         *     - `password_hash` → 空字符串（账户失效）
+         *     - 案例出生时间、经度 → 清零
+         *     - RefreshToken → 物理删除
+         *     - AuditLog → 保留（合规要求）
+         *
+         *     请求体需携带 `{ "confirm": "ANONYMIZE" }` 防误操作。
+         */
+        post: operations["anonymize_user_api_v1_users_me_anonymize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/name/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 姓名五格三才分析
+         * @description 输入姓名，返回五格数理分析（天/人/地/外/总格）+ 三才五行配置。
+         *
+         *     **五格说明：**
+         *     - 天格：姓的格数（单姓 = 姓笔画+1）
+         *     - 人格：主格，决定主要运势
+         *     - 地格：名的格数（单名 = 名笔画+1）
+         *     - 外格：天格+地格-人格
+         *     - 总格：全名笔画总数
+         *
+         *     **评分：** 1=极凶, 5=中性, 8=吉, 10=大吉
+         */
+        post: operations["analyze_name_endpoint_api_v1_name_analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/name/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 改名字选建议
+         * @description 根据姓氏和期望五行，在字库中穷举候选名字并按五格数理评分返回最优建议。
+         *
+         *     **使用场景：**
+         *     - 宝宝取名、成人改名
+         *     - 结合八字分析，将命盘用神/喜神五行填入 `preferred_elements`，
+         *       自动推荐五行契合度高的名字
+         *
+         *     **preferred_elements 示例：**
+         *     - `["水"]`  — 只推荐含水元素字的名字
+         *     - `["水","木"]` — 推荐含水或木元素字的名字
+         *     - 不填 — 不限五行，从全字库搜索
+         *
+         *     **评分权重：** 人格 30%、三才 20%、地格 20%、总格 10%、天格/外格各 10%
+         */
+        post: operations["suggest_name_endpoint_api_v1_name_suggest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/name/strokes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 中文姓名笔画数字化
+         * @description 对中文姓名逐字查询笔画数，并进行数字命理化减，输出：
+         *     - 每个字对应笔画数及化减后数字（1-9，保留大师数11/22/33）
+         *     - 全名笔画总数及表达数（Expression Number）
+         *
+         *     可配合 NumerologyView 的中文模式使用。
+         */
+        post: operations["analyze_strokes_endpoint_api_v1_name_strokes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/western/chart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 西方出生盘计算（§6.1）
+         * @description 根据出生时间和地理坐标计算西方占星出生盘。
+         *
+         *     - 行星位置精度：太阳 ±0.01°，月亮 ±1°，其他行星 ±2-5°（判星座足够）
+         *     - 上升/中天精度：±0.1°
+         *
+         *     返回：行星在黄道上的位置、上升/中天、行星相位、元素/模式统计。
+         */
+        get: operations["get_western_chart_api_v1_western_chart_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/western/solar-return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 太阳回归年盘（§6.2）
+         * @description 计算指定年份的太阳回归年盘。
+         *
+         *     首先根据出生数据求出出生太阳黄经，
+         *     然后使用 Newton 迭代精确定位该年太阳回到相同黄经的时刻，
+         *     并在此时刻 + 给定地点计算完整星盘。
+         */
+        get: operations["get_solar_return_api_v1_western_solar_return_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compat/bazi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 四柱合婚评分（§5.1）[已弃用，请改用 POST /full]
+         * @deprecated
+         * @description 四柱合婚综合评分（0-100 分）。
+         *
+         *     评分维度：
+         *     - 日主五行生克（40分）：产生/被产生 > 同行 > 克/被克
+         *     - 年支合冲（30分）：六合 > 三合 > 无关系 > 六冲
+         *     - 五行互补（20分）：双方五行分布互补程度
+         *     - 天干合化（10分）：四柱天干间的五合/冲克数量
+         */
+        get: operations["get_bazi_compat_api_v1_compat_bazi_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compat/full": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 综合合婚——八字 + 紫微双引擎
+         * @description 综合合婚接口，同时调用八字与紫微双引擎，返回合并评分。
+         *
+         *     - 八字合婚：四柱生克冲合（最高100分）
+         *     - 紫微合盘：命宫、五行、年支等维度（最高100分）
+         *     - combined_score = 八字×0.5 + 紫微×0.5（若仅启用一项则权重100%）
+         */
+        post: operations["post_compat_full_api_v1_compat_full_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/year-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Year Events
+         * @description P0 核心端点：分析某人某年五大事件（婚姻、财运、置业、事业、健康）。
+         *
+         *     调用链：
+         *       Case → calculate() → analyze_year_events() → YearEventResponse
+         */
+        post: operations["api_year_events_api_v1_bazi_year_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/multi-year-trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Multi Year Trend
+         * @description 多年趋势分析：返回指定年份列表的年际对比摘要与 timeline_summary。
+         *
+         *     前端默认传入：[当前年-1, 当前年, 当前年+1, 当前年+2, 当前年+3]
+         */
+        post: operations["api_multi_year_trend_api_v1_bazi_multi_year_trend_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bazi/year-event-consult": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Api Year Event Consult
+         * @description AI 咨询式解读：针对用户提问，用 LLM 深入解读事件结果。
+         *
+         *     LLM 角色约束：仅解释引擎结论，不重新预测，不凭空添加新事件。
+         */
+        post: operations["api_year_event_consult_api_v1_bazi_year_event_consult_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/liuyao/cast/coins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cast With Coins
+         * @description 铜钱起卦 — 随机六爻
+         */
+        post: operations["cast_with_coins_api_v1_liuyao_cast_coins_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/liuyao/cast/time": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cast With Time
+         * @description 时间起卦 — 年月日时
+         */
+        post: operations["cast_with_time_api_v1_liuyao_cast_time_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/liuyao/gua/{gua_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Gua
+         * @description 查询卦信息
+         */
+        get: operations["get_gua_api_v1_liuyao_gua__gua_name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tarot/draw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 单张抽牌
+         * @description 随机从大阿尔卡那中抽取一张牌，约 30% 概率逆位。
+         */
+        post: operations["draw_single_api_v1_tarot_draw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tarot/spread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * N 张牌阵
+         * @description 随机抽取 N 张牌并按位置分配。
+         *
+         *     - 1 张：单牌指引
+         *     - 3 张：过去 / 现在 / 未来
+         *     - 其他：自动按序编号
+         */
+        post: operations["draw_spread_api_v1_tarot_spread_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tarot/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 获取所有大阿尔卡那牌义
+         * @description 返回全部 22 张大阿尔卡那牌义列表（按编号升序）。
+         */
+        get: operations["list_cards_api_v1_tarot_cards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tarot/card/{num}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 查询单张牌义
+         * @description 查询指定编号（0-21）大阿尔卡那牌的完整牌义。
+         */
+        get: operations["get_card_api_v1_tarot_card__num__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Api Verify */
+        post: operations["api_verify_api_v1_verify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -919,12 +3147,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Ready
-         * @description ✅ Priority 3.8: 健康检查 - 就绪探针 (Readiness Probe)
-         *     检查服务是否完全就绪（包括数据库连接）
-         *     返回 200 表示服务已就绪，500 表示未就绪
-         */
+        /** Ready */
         get: operations["ready_ready_get"];
         put?: never;
         post?: never;
@@ -941,31 +3164,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Health Detail
-         * @description N4.04: 详细健康检查
-         *     返回 {db_reachable, cache_size, engine_version, uptime_seconds}
-         */
+        /** Health Detail */
         get: operations["health_detail_health_detail_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Api Verify */
-        post: operations["api_verify_api_v1_verify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -998,6 +3200,233 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AdjustmentSummaryModel */
+        AdjustmentSummaryModel: {
+            /** Climate */
+            climate?: ("寒" | "暖" | "燥" | "湿" | "平") | null;
+            /** Climate Source */
+            climate_source?: string | null;
+            /** Climate Reason */
+            climate_reason?: string | null;
+            /** Tiaohou */
+            tiaohou?: string | null;
+            /** Balance Direction */
+            balance_direction?: string | null;
+            /** Season Summary */
+            season_summary?: string | null;
+            /** Rationale */
+            rationale?: string[];
+        };
+        /** AnalysisBlockModel */
+        AnalysisBlockModel: {
+            /** Text */
+            text: string;
+            /**
+             * Layer
+             * @default fact
+             * @enum {string}
+             */
+            layer: "fact" | "cite" | "inference";
+            /** Classic Id */
+            classic_id?: string | null;
+            /** Evidence Ids */
+            evidence_ids?: string[];
+        };
+        /** AnalyzeRequest */
+        AnalyzeRequest: {
+            /** Birth Dt */
+            birth_dt: string;
+            /**
+             * Lon
+             * @default 116.4
+             */
+            lon: number;
+            /**
+             * Tz
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /** Gender */
+            gender?: string | null;
+            /**
+             * Tabs
+             * @description 需要的字段子集，可选值: ['career', 'dayun', 'geju', 'health', 'life_arc', 'liunian', 'lucky', 'marriage', 'monthly', 'personality', 'pillars', 'wealth', 'wuxing', 'yongshen']
+             */
+            tabs?: string[];
+        };
+        /** AnonymizeConfirmRequest */
+        AnonymizeConfirmRequest: {
+            /** Confirm */
+            confirm: string;
+        };
+        /**
+         * ApiKeyCreate
+         * @description 创建新 API Key 的请求体。
+         */
+        ApiKeyCreate: {
+            /**
+             * Name
+             * @description 自定义标签，如 "生产环境集成"
+             */
+            name: string;
+            /**
+             * Scopes
+             * @description 权限范围，逗号分隔：read / write / admin
+             * @default read
+             */
+            scopes: string;
+            /**
+             * Rate Limit Per Min
+             * @description 每分钟最大请求数，0 = 继承全局限制
+             * @default 60
+             */
+            rate_limit_per_min: number;
+            /**
+             * Expires In Days
+             * @description 有效天数（从创建时起），None = 永不过期
+             */
+            expires_in_days?: number | null;
+        };
+        /**
+         * ApiKeyCreateResponse
+         * @description 创建成功后返回——含一次性明文密钥。
+         */
+        ApiKeyCreateResponse: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Key Prefix */
+            key_prefix: string;
+            /** Scopes */
+            scopes: string;
+            /** Rate Limit Per Min */
+            rate_limit_per_min: number;
+            /** Expires At */
+            expires_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Plaintext Key
+             * @description 完整 API Key，仅此一次展示，请立即保存
+             */
+            plaintext_key: string;
+        };
+        /**
+         * ApiKeyListResponse
+         * @description 分页列表响应。
+         */
+        ApiKeyListResponse: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["ApiKeyResponse"][];
+        };
+        /**
+         * ApiKeyResponse
+         * @description 列表 / 详情响应——不含明文密钥。
+         */
+        ApiKeyResponse: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Key Prefix */
+            key_prefix: string;
+            /** Scopes */
+            scopes: string;
+            /** Rate Limit Per Min */
+            rate_limit_per_min: number;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Expires At */
+            expires_at: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ArchiveBundleRequest */
+        ArchiveBundleRequest: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Include Ziwei
+             * @default true
+             */
+            include_ziwei: boolean;
+        };
+        /** ArchiveBundleResponse */
+        ArchiveBundleResponse: {
+            /** Case Id */
+            case_id: string;
+            /** Bazi */
+            bazi: {
+                [key: string]: unknown;
+            };
+            /** Ziwei */
+            ziwei?: {
+                [key: string]: unknown;
+            } | null;
+            /** Missing Fields */
+            missing_fields?: string[];
+        };
+        /** AspectItem */
+        AspectItem: {
+            /** Planet1 */
+            planet1: string;
+            /** Planet2 */
+            planet2: string;
+            /** Aspect Cn */
+            aspect_cn: string;
+            /** Aspect En */
+            aspect_en: string;
+            /** Angle */
+            angle: number;
+            /** Orb */
+            orb: number;
+            /** Color */
+            color: string;
+        };
+        /**
+         * AssignRequest
+         * @description 将会话分配到某个变体。
+         */
+        AssignRequest: {
+            /**
+             * Session Id
+             * @description 前端生成的会话 UUID
+             */
+            session_id: string;
+        };
+        /**
+         * AssignResponse
+         * @description 变体分配结果。
+         */
+        AssignResponse: {
+            /** Experiment Id */
+            experiment_id: number;
+            /** Session Id */
+            session_id: string;
+            /** Variant */
+            variant: string;
+            /**
+             * Is New
+             * @description True=首次分配，False=已有分配
+             */
+            is_new: boolean;
+        };
+        /** AssignReviewRequest */
+        AssignReviewRequest: {
+            /** Assignee */
+            assignee: string;
+        };
         /**
          * BackendInfo
          * @description 后端服务信息
@@ -1023,6 +3452,143 @@ export interface components {
              * @description cnlunar availability at request time
              */
             cnlunar_available: boolean;
+        };
+        /**
+         * BaguaResponse
+         * @description 八宅命卦分析完整响应。
+         */
+        BaguaResponse: {
+            /**
+             * Life Gua
+             * @description 命卦数（1/2/3/4/6/7/8/9）
+             */
+            life_gua: number;
+            /**
+             * Gua Name
+             * @description 卦名，如 '坎'
+             */
+            gua_name: string;
+            /**
+             * Gua Element
+             * @description 五行，如 '水'
+             */
+            gua_element: string;
+            /**
+             * Group
+             * @description 命组：东四命 / 西四命
+             */
+            group: string;
+            /** Birth Year */
+            birth_year: number;
+            /** Gender */
+            gender: string;
+            /**
+             * Auspicious
+             * @description 四吉方（生气/天医/延年/伏位）
+             */
+            auspicious: components["schemas"]["DirectionItemResponse"][];
+            /**
+             * Inauspicious
+             * @description 四凶方（绝命/五鬼/六煞/祸害）
+             */
+            inauspicious: components["schemas"]["DirectionItemResponse"][];
+            /** @description 床头方位建议 */
+            bed_tip?: components["schemas"]["FurnitureTipResponse"] | null;
+            /** @description 书桌/工位方位建议 */
+            desk_tip?: components["schemas"]["FurnitureTipResponse"] | null;
+            /** @description 大门方位建议 */
+            door_tip?: components["schemas"]["FurnitureTipResponse"] | null;
+            /**
+             * House Facing
+             * @description 房屋朝向代码
+             */
+            house_facing?: string | null;
+            /**
+             * House Gua
+             * @description 房屋卦数
+             */
+            house_gua?: number | null;
+            /**
+             * House Gua Name
+             * @description 房屋卦名
+             */
+            house_gua_name?: string | null;
+            /**
+             * House Group
+             * @description 房屋组：东四宅 / 西四宅
+             */
+            house_group?: string | null;
+            /**
+             * Compatibility
+             * @description 人宅相合：相合 / 不合
+             */
+            compatibility?: string | null;
+            /**
+             * Compatibility Note
+             * @description 相合说明
+             */
+            compatibility_note?: string | null;
+            /**
+             * Disclaimer
+             * @description 免责声明
+             */
+            disclaimer: string;
+        };
+        /** BatchCaseProfile */
+        BatchCaseProfile: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Geju Name
+             * @default
+             */
+            geju_name: string;
+            /**
+             * Yongshen Favor
+             * @default []
+             */
+            yongshen_favor: string[];
+            /**
+             * Yongshen Avoid
+             * @default []
+             */
+            yongshen_avoid: string[];
+            /**
+             * Wuxing Scores
+             * @default {}
+             */
+            wuxing_scores: {
+                [key: string]: number;
+            };
+            /**
+             * Error
+             * @default
+             */
+            error: string;
+        };
+        /**
+         * BatchCompareRequest
+         * @description W2 批量命盘对比请求：最多 10 个 case_id，并排对比关键字段。
+         */
+        BatchCompareRequest: {
+            /** Case Ids */
+            case_ids: string[];
+        };
+        /** BatchCompareResponse */
+        BatchCompareResponse: {
+            /** Count */
+            count: number;
+            /** Profiles */
+            profiles: components["schemas"]["BatchCaseProfile"][];
+            /** Common Favor */
+            common_favor: string[];
+            /** Common Avoid */
+            common_avoid: string[];
         };
         /**
          * BatchVerifyRequest
@@ -1095,6 +3661,49 @@ export interface components {
              * @description Optional liunian year span [-N, N]
              */
             liunian_years?: number[] | null;
+            /**
+             * Gender
+             * @description Gender for dayun direction: male/female
+             */
+            gender?: ("male" | "female") | null;
+            /**
+             * City Tier
+             * @description City tier for wealth estimate (M3.03)
+             */
+            city_tier?: ("一线" | "新一线" | "其余") | null;
+            /**
+             * Industry
+             * @description Industry name for wealth estimate (M3.03)
+             */
+            industry?: string | null;
+            /**
+             * Target Date
+             * @description Optional target date for liuri/liushi (B-P2-01)
+             */
+            target_date?: string | null;
+            /**
+             * Target Hour
+             * @description Target hour 0-23 for liushi
+             */
+            target_hour?: number | null;
+            /**
+             * Include Liuri
+             * @description 是否返回流日/流时；默认 True。未传 target_date 时使用当天。
+             */
+            include_liuri?: boolean | null;
+            /**
+             * Zi Day Rule
+             * @description 子时换日规则：sxtwl | early_zi_prev_day | early_zi_same_day
+             * @default sxtwl
+             */
+            zi_day_rule: string;
+            /**
+             * Birth Time Precision
+             * @description 出生时辰精度；unknown/approximate 时标注 hour_pillar advisory
+             * @default exact
+             * @enum {string}
+             */
+            birth_time_precision: "exact" | "hour" | "approximate" | "unknown";
         };
         /**
          * BaziFullResponse
@@ -1107,7 +3716,7 @@ export interface components {
             rule_version: string;
             /**
              * Schema Version
-             * @default bazi_full@5.0
+             * @default bazi_full@5.1
              */
             schema_version: string;
             /** Request Id */
@@ -1118,13 +3727,20 @@ export interface components {
             pillars_primary: components["schemas"]["PillarsModel"];
             pillars_secondary?: components["schemas"]["PillarsModel"] | null;
             ten_gods?: components["schemas"]["TenGodsModel"];
+            shishen_summary?: components["schemas"]["ShishenSummaryModel"] | null;
             day_master_strength?: components["schemas"]["DayMasterStrengthModel"];
             wuxing_score?: components["schemas"]["WuXingScoreModel"];
             wuxing_breakdown?: components["schemas"]["WuXingBreakdownModel"];
             yongshen?: components["schemas"]["YongShenModel"];
             dayun?: components["schemas"]["DaYunModel"];
             liunian?: components["schemas"]["LiuNianResultModel"];
+            /** Pillar Details */
+            pillar_details?: {
+                [key: string]: components["schemas"]["PillarDetailModel"];
+            };
             raw: components["schemas"]["BaziRawModel"];
+            validation?: components["schemas"]["ValidationModel"] | null;
+            risk_flags?: components["schemas"]["RiskFlagsModel"] | null;
             geju?: components["schemas"]["GejuModel"] | null;
             palace?: components["schemas"]["PalaceModel"] | null;
             /** Shensha */
@@ -1147,14 +3763,129 @@ export interface components {
             liunian_detail?: components["schemas"]["LiuNianDetailModel"][] | null;
             life_arc?: components["schemas"]["LifeArcModel"] | null;
             current_fortune_summary?: components["schemas"]["CurrentFortuneSummaryModel"] | null;
+            /** Rule Version Detail */
+            rule_version_detail?: {
+                [key: string]: string;
+            } | null;
+            /** Dizhi Relations */
+            dizhi_relations?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Tiangan Clashes */
+            tiangan_clashes?: {
+                [key: string]: unknown;
+            }[] | null;
+            /** Wuxing Balance Score */
+            wuxing_balance_score?: number | null;
+            /** Wuxing Weak */
+            wuxing_weak?: string[] | null;
+            /** Wuxing Strong */
+            wuxing_strong?: string[] | null;
+            /** Balance Advice */
+            balance_advice?: string | null;
+            /** Yearly Fortune */
+            yearly_fortune?: {
+                [key: string]: unknown;
+            }[] | null;
+            /**
+             * Start Dayun Age
+             * @description 大运起运年龄（精确到0.1岁，N5.07）
+             */
+            start_dayun_age?: number | null;
+            /** Kongwang */
+            kongwang?: string[];
+            /** Key Years */
+            key_years?: components["schemas"]["TimelinePointModel"][];
+            /** Key Months */
+            key_months?: components["schemas"]["TimelinePointModel"][];
+            /** Evidence Chain */
+            evidence_chain?: components["schemas"]["EvidenceItemModel"][];
+            /**
+             * Confidence Level
+             * @default medium
+             * @enum {string}
+             */
+            confidence_level: "high" | "medium" | "low";
+            /** Confidence Score */
+            confidence_score?: number | null;
+            bazi_structural_summary?: components["schemas"]["BaziStructuralSummaryModel"] | null;
+            /**
+             * Bazi Summary
+             * @description 命局综合总评（400-600字六段结构，已纳入日主天干特征、格局、应用神等维度）
+             * @default
+             */
+            bazi_summary: string;
+            /**
+             * Rule Matches
+             * @description 规则引擎命中结果（bazi_full@5.1，用于 LLM grounding）
+             */
+            rule_matches?: components["schemas"]["RuleMatchModel"][];
+            /**
+             * Evidence Ids
+             * @description 规则/典籍/证据链稳定 ID（P2-08，供 explain cite grounding）
+             */
+            evidence_ids?: string[];
+            /** @description 流日/流时（B-P2-01） */
+            liuri_liushi?: components["schemas"]["LiuriLiushiModel"] | null;
+            /**
+             * Missing Fields
+             * @description 缺失或未计算的字段名
+             */
+            missing_fields?: string[];
+            /** @description 各层可信度与典籍/启发式分层（9.5 目标计划） */
+            provenance?: components["schemas"]["ResponseProvenance"] | null;
+            /**
+             * Classic Refs
+             * @description 命局级古籍语料软提示（神煞/格局等聚合）
+             */
+            classic_refs?: {
+                [key: string]: unknown;
+            }[];
+            /** @description 地支/天干关系摘要（默认上浮，BE-P3-05） */
+            relations_summary?: components["schemas"]["RelationsSummaryModel"] | null;
+            /** @description 神煞摘要（默认上浮，BE-P3-05） */
+            shensha_summary?: components["schemas"]["ShenshaSummaryModel"] | null;
+            /** @description 合规免责声明块（P0-08） */
+            disclaimer_block?: components["schemas"]["DisclaimerBlockModel"] | null;
+            /**
+             * Content Versions
+             * @description 内容资产版本指纹（P0-05 classics/glossary/star_profiles 等）
+             */
+            content_versions?: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * BaziInterpretRequest
+         * @description D3 请求体：通过案例 ID 触发完整八字 → 规则 → 模板 → LLM 解读链。
+         */
+        BaziInterpretRequest: {
+            /** Case Id */
+            case_id: string;
+            /** Module */
+            module?: string | null;
+            /** Chart Hash */
+            chart_hash?: string | null;
         };
         /** BaziMethodsModel */
         BaziMethodsModel: {
             /**
              * Day Boundary Rule
-             * @default zi_initial
+             * @default sxtwl
              */
             day_boundary_rule: string;
+            /**
+             * Zi Day Rule
+             * @description 子时换日规则：sxtwl | early_zi_prev_day | early_zi_same_day
+             * @default sxtwl
+             */
+            zi_day_rule: string;
+            /**
+             * Pillars Layer
+             * @description 四柱计算层标识，如 bazi_engine.pillars.v2
+             * @default
+             */
+            pillars_layer: string;
             /**
              * Solar Time Rule
              * @default longitude_only
@@ -1308,6 +4039,124 @@ export interface components {
             };
             dayun?: components["schemas"]["BaziRawDayunModel"];
         };
+        /** BaziStructuralSummaryModel */
+        BaziStructuralSummaryModel: {
+            /** Core Snapshot */
+            core_snapshot?: {
+                [key: string]: unknown;
+            };
+            /** Relation Summary */
+            relation_summary?: {
+                [key: string]: unknown;
+            };
+            adjustment_summary?: components["schemas"]["AdjustmentSummaryModel"] | null;
+            /** Timeline Summary */
+            timeline_summary?: {
+                [key: string]: components["schemas"]["TimelinePointModel"][];
+            };
+            confidence_summary?: components["schemas"]["app__schemas__bazi__ConfidenceSummaryModel"] | null;
+            /** Report Summary */
+            report_summary?: {
+                [key: string]: unknown;
+            };
+        };
+        /** Body_batch_ziwei_api_v1_ziwei_batch_post */
+        Body_batch_ziwei_api_v1_ziwei_batch_post: {
+            /**
+             * File
+             * Format: binary
+             * @description CSV 文件，UTF-8 或 GB2312 编码
+             */
+            file: string;
+        };
+        /** BorrowedStarSourceModel */
+        BorrowedStarSourceModel: {
+            /** Palace Name */
+            palace_name: string;
+            /** Palace Index */
+            palace_index?: number | null;
+            /** Branch */
+            branch?: string | null;
+            /** Stem */
+            stem?: string | null;
+            /** Full Gz */
+            full_gz?: string | null;
+            /** Main Stars */
+            main_stars?: {
+                [key: string]: unknown;
+            }[];
+            /** Analysis Tags */
+            analysis_tags?: string[];
+            /** Conclusion */
+            conclusion?: string | null;
+            /** Explanation */
+            explanation?: string | null;
+            /** Suggestion */
+            suggestion?: string | null;
+        };
+        /**
+         * BulkReviewAction
+         * @description 批量审核操作请求体
+         */
+        BulkReviewAction: {
+            /** Ids */
+            ids: number[];
+            /** Action */
+            action: string;
+            /**
+             * Reviewer
+             * @default
+             */
+            reviewer: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Reject Reason
+             * @default
+             */
+            reject_reason: string;
+        };
+        /**
+         * BulkReviewResult
+         * @description 批量操作结果
+         */
+        BulkReviewResult: {
+            /** Succeeded */
+            succeeded: number[];
+            /** Failed */
+            failed: number[];
+            /** Total */
+            total: number;
+            /** Action */
+            action: string;
+        };
+        /** CalendarCompareRequest */
+        CalendarCompareRequest: {
+            /** Birth Dt */
+            birth_dt: string;
+            /**
+             * Lon
+             * @default 116.4
+             */
+            lon: number;
+            /**
+             * Tz
+             * @default Asia/Shanghai
+             */
+            tz: string;
+        };
+        /** CalendarCompareResponse */
+        CalendarCompareResponse: {
+            sxtwl?: components["schemas"]["PillarOut"] | null;
+            cnlunar?: components["schemas"]["PillarOut"] | null;
+            /** Diff Fields */
+            diff_fields: string[];
+            /** Warnings */
+            warnings: string[];
+        };
         /**
          * CareerAnalysisModel
          * @description 事业分析 §4.11-B
@@ -1338,6 +4187,12 @@ export interface components {
             fact_data?: {
                 [key: string]: unknown;
             } | null;
+            /** Entrepreneurship Assessment */
+            entrepreneurship_assessment?: string | null;
+            /** Five Year Roadmap */
+            five_year_roadmap?: string | null;
+            /** Collaboration Style */
+            collaboration_style?: string | null;
         };
         /**
          * CaseCreate
@@ -1358,11 +4213,99 @@ export interface components {
             city?: string | null;
             /** Lon */
             lon: number;
+            /** Current City */
+            current_city?: string | null;
+            /** Current Province */
+            current_province?: string | null;
+            /** Current Lon */
+            current_lon?: number | null;
+            /** Current Tz */
+            current_tz?: string | null;
+            /**
+             * Calendar Mode
+             * @default gregorian
+             */
+            calendar_mode: string;
+            /**
+             * Is Leap Month
+             * @default false
+             */
+            is_leap_month: boolean;
+            /**
+             * Birth Time Precision
+             * @default exact
+             */
+            birth_time_precision: string;
+            /**
+             * Unknown Time Fallback
+             * @default midday
+             */
+            unknown_time_fallback: string;
             /**
              * Solar Time Enabled
              * @default false
              */
             solar_time_enabled: boolean;
+            /**
+             * Year Divide
+             * @description 紫微年界：lichun | normal
+             * @default lichun
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @description 晚子换日：solar_next | forward | current
+             * @default solar_next
+             */
+            day_divide: string;
+            /**
+             * Zi Day Rule
+             * @description 八字子时换日：sxtwl | early_zi_prev_day | early_zi_same_day
+             * @default sxtwl
+             */
+            zi_day_rule: string;
+            /**
+             * Ziwei Brightness Method
+             * @description 紫微亮度：standard | zhongzhou | mod1 | mod2
+             * @default standard
+             */
+            ziwei_brightness_method: string;
+            /**
+             * Ziwei Youbi Method
+             * @description 紫微右弼：month | hour
+             * @default month
+             */
+            ziwei_youbi_method: string;
+            /**
+             * Ziwei Sihua Method
+             * @description 生年四化：quanshu | zhongzhou
+             * @default quanshu
+             */
+            ziwei_sihua_method: string;
+            /**
+             * Ziwei Liunian Sihua Method
+             * @description 流年四化：year_stem | life_palace_stem
+             * @default year_stem
+             */
+            ziwei_liunian_sihua_method: string;
+            /**
+             * Ziwei Kuiyue Method
+             * @description 魁钺安法
+             * @default standard
+             */
+            ziwei_kuiyue_method: string;
+            /**
+             * Ziwei Tianma Method
+             * @description 天马安法：year | month
+             * @default year
+             */
+            ziwei_tianma_method: string;
+            /**
+             * Ziwei Template Version
+             * @description 紫微模板：standard | pro | simple
+             * @default standard
+             */
+            ziwei_template_version: string;
             /** Notes */
             notes?: string | null;
             /** Tags */
@@ -1387,15 +4330,103 @@ export interface components {
             city?: string | null;
             /** Lon */
             lon: number;
+            /** Current City */
+            current_city?: string | null;
+            /** Current Province */
+            current_province?: string | null;
+            /** Current Lon */
+            current_lon?: number | null;
+            /** Current Tz */
+            current_tz?: string | null;
+            /**
+             * Calendar Mode
+             * @default gregorian
+             */
+            calendar_mode: string;
+            /**
+             * Is Leap Month
+             * @default false
+             */
+            is_leap_month: boolean;
+            /**
+             * Birth Time Precision
+             * @default exact
+             */
+            birth_time_precision: string;
+            /**
+             * Unknown Time Fallback
+             * @default midday
+             */
+            unknown_time_fallback: string;
             /**
              * Solar Time Enabled
              * @default false
              */
             solar_time_enabled: boolean;
+            /**
+             * Year Divide
+             * @description 紫微年界：lichun | normal
+             * @default lichun
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @description 晚子换日：solar_next | forward | current
+             * @default solar_next
+             */
+            day_divide: string;
+            /**
+             * Zi Day Rule
+             * @description 八字子时换日：sxtwl | early_zi_prev_day | early_zi_same_day
+             * @default sxtwl
+             */
+            zi_day_rule: string;
+            /**
+             * Ziwei Brightness Method
+             * @description 紫微亮度：standard | zhongzhou | mod1 | mod2
+             * @default standard
+             */
+            ziwei_brightness_method: string;
+            /**
+             * Ziwei Youbi Method
+             * @description 紫微右弼：month | hour
+             * @default month
+             */
+            ziwei_youbi_method: string;
+            /**
+             * Ziwei Sihua Method
+             * @description 生年四化：quanshu | zhongzhou
+             * @default quanshu
+             */
+            ziwei_sihua_method: string;
+            /**
+             * Ziwei Liunian Sihua Method
+             * @description 流年四化：year_stem | life_palace_stem
+             * @default year_stem
+             */
+            ziwei_liunian_sihua_method: string;
+            /**
+             * Ziwei Kuiyue Method
+             * @description 魁钺安法
+             * @default standard
+             */
+            ziwei_kuiyue_method: string;
+            /**
+             * Ziwei Tianma Method
+             * @description 天马安法：year | month
+             * @default year
+             */
+            ziwei_tianma_method: string;
+            /**
+             * Ziwei Template Version
+             * @description 紫微模板：standard | pro | simple
+             * @default standard
+             */
+            ziwei_template_version: string;
             /** Notes */
             notes?: string | null;
             /** Tags */
-            tags?: string | null;
+            tags?: string[] | null;
             /** Id */
             id: string;
             /**
@@ -1420,6 +4451,8 @@ export interface components {
             latest_verify_summary?: {
                 [key: string]: unknown;
             } | null;
+            /** Is Leap Month Inferred */
+            is_leap_month_inferred?: boolean | null;
         };
         /**
          * CasePatch
@@ -1440,12 +4473,90 @@ export interface components {
             city?: string | null;
             /** Lon */
             lon?: number | null;
+            /** Current City */
+            current_city?: string | null;
+            /** Current Province */
+            current_province?: string | null;
+            /** Current Lon */
+            current_lon?: number | null;
+            /** Current Tz */
+            current_tz?: string | null;
+            /** Calendar Mode */
+            calendar_mode?: string | null;
+            /** Is Leap Month */
+            is_leap_month?: boolean | null;
+            /** Birth Time Precision */
+            birth_time_precision?: string | null;
+            /** Unknown Time Fallback */
+            unknown_time_fallback?: string | null;
             /** Solar Time Enabled */
             solar_time_enabled?: boolean | null;
+            /** Year Divide */
+            year_divide?: string | null;
+            /** Day Divide */
+            day_divide?: string | null;
+            /** Zi Day Rule */
+            zi_day_rule?: string | null;
+            /** Ziwei Brightness Method */
+            ziwei_brightness_method?: string | null;
+            /** Ziwei Youbi Method */
+            ziwei_youbi_method?: string | null;
+            /** Ziwei Sihua Method */
+            ziwei_sihua_method?: string | null;
+            /** Ziwei Liunian Sihua Method */
+            ziwei_liunian_sihua_method?: string | null;
+            /** Ziwei Kuiyue Method */
+            ziwei_kuiyue_method?: string | null;
+            /** Ziwei Tianma Method */
+            ziwei_tianma_method?: string | null;
+            /** Ziwei Template Version */
+            ziwei_template_version?: string | null;
             /** Notes */
             notes?: string | null;
             /** Tags */
             tags?: string | null;
+        };
+        /** CaseResponse */
+        CaseResponse: {
+            /** Id */
+            id: number;
+            /** Chart Hash */
+            chart_hash: string;
+            /** Birth Year */
+            birth_year: number;
+            /** Birth Month */
+            birth_month: number;
+            /** Birth Day */
+            birth_day: number;
+            /** Birth Hour */
+            birth_hour: number;
+            /** Gender */
+            gender: string;
+            /** Wuxing Ju Name */
+            wuxing_ju_name: string;
+            /** Life Palace Gz */
+            life_palace_gz: string;
+            /** Pattern Summary */
+            pattern_summary: string;
+            /** Source Label */
+            source_label: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** CaseSummary */
+        CaseSummary: {
+            /** Case Id */
+            case_id: string;
+            /** Name */
+            name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * ChangePasswordRequest
@@ -1456,6 +4567,167 @@ export interface components {
             old_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** CharStrokeInfo */
+        CharStrokeInfo: {
+            /** Char */
+            char: string;
+            /** Strokes */
+            strokes: number;
+            /** Numerology Digit */
+            numerology_digit: number;
+        };
+        /** ChartPoint */
+        ChartPoint: {
+            /** Longitude */
+            longitude: number;
+            /** Sign Index */
+            sign_index: number;
+            /** Sign Cn */
+            sign_cn: string;
+            /** Sign En */
+            sign_en: string;
+            /** Sign Symbol */
+            sign_symbol: string;
+            /** Element */
+            element: string;
+            /** Element Cn */
+            element_cn: string;
+            /** Mode */
+            mode: string;
+            /** Mode Cn */
+            mode_cn: string;
+            /** Degree */
+            degree: number;
+            /** Degree Str */
+            degree_str: string;
+        };
+        /** ChartRelationSummaryModel */
+        ChartRelationSummaryModel: {
+            /** Minggong */
+            minggong?: string | null;
+            /** Shengong */
+            shengong?: string | null;
+            /** Wuxing Ju */
+            wuxing_ju?: string | null;
+            /** Triad Tetrad */
+            triad_tetrad?: string[];
+            /** Opposition */
+            opposition?: string[];
+            /** Palace Weights */
+            palace_weights?: components["schemas"]["PalaceWeightModel"][];
+            /** Key Palaces */
+            key_palaces?: string[];
+            /** Palace Influence Notes */
+            palace_influence_notes?: string[];
+            /** Source */
+            source?: string | null;
+            /** Missing */
+            missing?: string[];
+            /** Borrowed Palaces */
+            borrowed_palaces?: {
+                [key: string]: unknown;
+            }[];
+            /** Borrowed Sources */
+            borrowed_sources?: components["schemas"]["BorrowedStarSourceModel"][];
+        };
+        /**
+         * ChartReviewCreate
+         * @description 提交一条命盘进入审核队列
+         */
+        ChartReviewCreate: {
+            /** Report Hash */
+            report_hash: string;
+            /** Birth Info */
+            birth_info: string;
+            /**
+             * Life Palace Gz
+             * @default
+             */
+            life_palace_gz: string;
+            /**
+             * Wuxing Ju Name
+             * @default
+             */
+            wuxing_ju_name: string;
+            /**
+             * Pattern Summary
+             * @default
+             */
+            pattern_summary: string;
+            /**
+             * Template Version
+             * @default standard
+             */
+            template_version: string;
+        };
+        /** ChartReviewListResponse */
+        ChartReviewListResponse: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["ChartReviewResponse"][];
+        };
+        /** ChartReviewResponse */
+        ChartReviewResponse: {
+            /** Id */
+            id: number;
+            /** Report Hash */
+            report_hash: string;
+            /** Birth Info */
+            birth_info: string;
+            /** Life Palace Gz */
+            life_palace_gz: string;
+            /** Wuxing Ju Name */
+            wuxing_ju_name: string;
+            /** Pattern Summary */
+            pattern_summary: string;
+            /** Status */
+            status: string;
+            /** Reviewer */
+            reviewer: string;
+            /** Notes */
+            notes: string;
+            /** Reject Reason */
+            reject_reason: string;
+            /** Algorithm Version */
+            algorithm_version: string;
+            /** Template Version */
+            template_version: string;
+            /** Revision */
+            revision: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Deleted At */
+            deleted_at: string | null;
+        };
+        /**
+         * ChartReviewUpdate
+         * @description 审核员更新状态/备注
+         */
+        ChartReviewUpdate: {
+            /** Status */
+            status: string;
+            /**
+             * Reviewer
+             * @default
+             */
+            reviewer: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Reject Reason
+             * @default
+             */
+            reject_reason: string;
         };
         /** ChildHintModel */
         ChildHintModel: {
@@ -1480,7 +4752,153 @@ export interface components {
              * City Type
              * @enum {string}
              */
-            city_type: "直辖市" | "省会" | "计划单列市";
+            city_type: "直辖市" | "省会" | "计划单列市" | "地级市";
+        };
+        /** ClassicPassageModel */
+        ClassicPassageModel: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Author */
+            author: string;
+            /** Dynasty */
+            dynasty: string;
+            /** Tags */
+            tags: string[];
+            /** Passage */
+            passage: string;
+            /** Notes */
+            notes?: string | null;
+            /** Score */
+            score?: number | null;
+        };
+        /**
+         * ClassicalNote
+         * @description 古籍依据
+         */
+        ClassicalNote: {
+            /** Basis */
+            basis: string;
+            /** Source */
+            source: string;
+        };
+        /** ColophonModel */
+        ColophonModel: {
+            /** Summary Lines */
+            summary_lines?: string[];
+            /** Missing Fields */
+            missing_fields?: string[] | null;
+            /** Iztro Advisory */
+            iztro_advisory?: string | null;
+            /** Wenmo Advisory */
+            wenmo_advisory?: string | null;
+            /** Dual Track Note */
+            dual_track_note?: string | null;
+            /**
+             * Expandable
+             * @default true
+             */
+            expandable: boolean;
+        };
+        /** CompatDetail */
+        CompatDetail: {
+            /** Dimension */
+            dimension: string;
+            /** Score */
+            score: number;
+            /** Max */
+            max: number;
+            /** Description */
+            description: string;
+            /** Level */
+            level: string;
+        };
+        /** CompatFullRequest */
+        CompatFullRequest: {
+            person_a: components["schemas"]["PersonFullInput"];
+            person_b: components["schemas"]["PersonFullInput"];
+            /**
+             * Include Bazi
+             * @description 是否计算八字合婚
+             * @default true
+             */
+            include_bazi: boolean;
+            /**
+             * Include Ziwei
+             * @description 是否计算紫微合盘
+             * @default true
+             */
+            include_ziwei: boolean;
+        };
+        /** CompatFullResponse */
+        CompatFullResponse: {
+            bazi?: components["schemas"]["CompatResponse"] | null;
+            ziwei?: components["schemas"]["ZiweiCompatSection"] | null;
+            /**
+             * Combined Score
+             * @description 八字与紫微综合加权分（0-100）
+             * @default 0
+             */
+            combined_score: number;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+        };
+        /** CompatResponse */
+        CompatResponse: {
+            /** Score */
+            score: number;
+            /** Grade */
+            grade: string;
+            /** Summary */
+            summary: string;
+            /** Details */
+            details: components["schemas"]["CompatDetail"][];
+            person_a: components["schemas"]["PersonSummary"];
+            person_b: components["schemas"]["PersonSummary"];
+        };
+        /** CompatibilityDimensionResponse */
+        CompatibilityDimensionResponse: {
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Score
+             * @default 0
+             */
+            score: number;
+            /**
+             * Max Score
+             * @default 0
+             */
+            max_score: number;
+            /**
+             * Desc
+             * @default
+             */
+            desc: string;
+        };
+        /** CompatibilitySubject */
+        CompatibilitySubject: {
+            /** Birth Dt */
+            birth_dt: string;
+            /**
+             * Lon
+             * @default 116.4
+             */
+            lon: number;
+            /**
+             * Tz
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /** Gender */
+            gender?: string | null;
         };
         /**
          * ComputeRequest
@@ -1546,6 +4964,30 @@ export interface components {
             /** Message */
             message?: string | null;
         };
+        /** ConceptModel */
+        ConceptModel: {
+            /** Id */
+            id: string;
+            /** Term */
+            term: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "bazi" | "ziwei";
+            /** Definition */
+            definition: string;
+            /**
+             * Aliases
+             * @default []
+             */
+            aliases: string[];
+            /**
+             * Related
+             * @default []
+             */
+            related: string[];
+        };
         /**
          * CurrentFortuneSummaryModel
          * @description 当前运势摘要（Tab 0 精简卡片）
@@ -1578,6 +5020,31 @@ export interface components {
             branch?: string | null;
             /** Ten God */
             ten_god?: string | null;
+            /** Hidden Stems */
+            hidden_stems?: components["schemas"]["HiddenStemDetailModel"][];
+            /** Xingyun */
+            xingyun?: string | null;
+            /** Self Seat */
+            self_seat?: string | null;
+            /** Self Seat Source */
+            self_seat_source?: string | null;
+            /** Kongwang */
+            kongwang?: string[];
+            /** Kongwang Source */
+            kongwang_source?: string | null;
+            /**
+             * Kongwang Hit
+             * @default false
+             */
+            kongwang_hit: boolean;
+            /** Nayin */
+            nayin?: string | null;
+            /** Shensha */
+            shensha?: components["schemas"]["PillarShenshaDetailModel"][];
+            /** Wuxing */
+            wuxing?: string | null;
+            /** Yin Yang */
+            yin_yang?: string | null;
             /** Flow Wuxing */
             flow_wuxing?: string | null;
             wealth_range?: components["schemas"]["RangeModel"] | null;
@@ -1618,12 +5085,79 @@ export interface components {
             start_age?: number | null;
             /** Start Age Months */
             start_age_months?: number | null;
+            /**
+             * Start Age Days
+             * @description Birth-to-first-dayun days (B-P2-03)
+             */
+            start_age_days?: number | null;
+            /**
+             * Transition Hint
+             * @description 换运提示文案
+             */
+            transition_hint?: string | null;
+            /**
+             * Days To Next Transition
+             * @description 距下一运剩余天数（B-P2）
+             */
+            days_to_next_transition?: number | null;
+            /**
+             * Next Transition Age
+             * @description 下一运起运虚岁
+             */
+            next_transition_age?: number | null;
+            /**
+             * Next Transition Ganzhi
+             * @description 下一运干支
+             */
+            next_transition_ganzhi?: string | null;
+            /**
+             * Next Transition Hint
+             * @description 动态换运提醒文案
+             */
+            next_transition_hint?: string | null;
             /** Anchor Jieqi Name */
             anchor_jieqi_name?: string | null;
             /** Anchor Jieqi Dt */
             anchor_jieqi_dt?: string | null;
             /** Items */
             items?: components["schemas"]["DaYunItemModel"][];
+        };
+        /** DailyActivity */
+        DailyActivity: {
+            /** Date */
+            date: string;
+            /** Count */
+            count: number;
+        };
+        /** DashboardResponse */
+        DashboardResponse: {
+            /** Cases Total */
+            cases_total: number;
+            /** Cases This Month */
+            cases_this_month: number;
+            /** Snapshots Total */
+            snapshots_total: number;
+            /** Snapshots This Month */
+            snapshots_this_month: number;
+            /** Reviews Pending */
+            reviews_pending: number;
+            /** Reviews Approved */
+            reviews_approved: number;
+            /** Reviews Rejected */
+            reviews_rejected: number;
+            /** Reviews Revised */
+            reviews_revised: number;
+            /** Daily Activity */
+            daily_activity: components["schemas"]["DailyActivity"][];
+            /** Recent Cases */
+            recent_cases: components["schemas"]["CaseSummary"][];
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Owner Id */
+            owner_id: number | null;
         };
         /** DayMasterStrengthModel */
         DayMasterStrengthModel: {
@@ -1639,6 +5173,99 @@ export interface components {
             tier: string;
             /** Factors */
             factors?: components["schemas"]["StrengthFactorModel"][];
+            /**
+             * Strength Factors
+             * @description 旺衰多因子明细（B-02，与 factors 同源）
+             */
+            strength_factors?: components["schemas"]["StrengthFactorModel"][];
+        };
+        /** DayunItemResponse */
+        DayunItemResponse: {
+            /** Index */
+            index: number;
+            /** Ganzhi */
+            ganzhi: string;
+            /**
+             * Branch Idx
+             * @description 大限宫位地支索引（子=0）
+             * @default 0
+             */
+            branch_idx: number;
+            /** Start Age */
+            start_age: number;
+            /** End Age */
+            end_age: number;
+            /** Start Year */
+            start_year: number;
+            /**
+             * Sihua
+             * @default {}
+             */
+            sihua: {
+                [key: string]: string;
+            };
+            /**
+             * Boshi Stars
+             * @default {}
+             */
+            boshi_stars: {
+                [key: string]: string;
+            };
+        };
+        /** DayunReportItem */
+        DayunReportItem: {
+            /** Ganzhi */
+            ganzhi: string;
+            /** Start Age */
+            start_age?: number | null;
+            /** End Age */
+            end_age?: number | null;
+            /** Ten God */
+            ten_god?: string | null;
+            /** Narrative */
+            narrative: string;
+        };
+        /** DayunReportRequest */
+        DayunReportRequest: {
+            /** Case Id */
+            case_id: string;
+        };
+        /** DayunReportResponse */
+        DayunReportResponse: {
+            /** Items */
+            items: components["schemas"]["DayunReportItem"][];
+            /** Narrative Total Chars */
+            narrative_total_chars: number;
+        };
+        /** DayunResponse */
+        DayunResponse: {
+            /** Forward */
+            forward: boolean;
+            /** Start Age */
+            start_age: number;
+            /** Start Age Exact */
+            start_age_exact: number;
+            /**
+             * Start Age Text
+             * @default
+             */
+            start_age_text: string;
+            /** Items */
+            items: components["schemas"]["DayunItemResponse"][];
+        };
+        /**
+         * DayunTransitionModel
+         * @description 距下一大运起运的动态提醒。
+         */
+        DayunTransitionModel: {
+            /** Days To Next Transition */
+            days_to_next_transition?: number | null;
+            /** Next Transition Age */
+            next_transition_age?: number | null;
+            /** Next Transition Ganzhi */
+            next_transition_ganzhi?: string | null;
+            /** Next Transition Hint */
+            next_transition_hint?: string | null;
         };
         /**
          * DelegationCreateRequest
@@ -1681,6 +5308,84 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string | null;
+        };
+        /** DirectionItemResponse */
+        DirectionItemResponse: {
+            /**
+             * Direction
+             * @description 方向代码，如 'N'
+             */
+            direction: string;
+            /**
+             * Direction Zh
+             * @description 方向中文，如 '北'
+             */
+            direction_zh: string;
+            /**
+             * Label
+             * @description 能量标签，如 '生气'
+             */
+            label: string;
+            /**
+             * Level
+             * @description 吉凶级别，如 '最吉'
+             */
+            level: string;
+            /**
+             * Level Css
+             * @description CSS 类名，如 'ji1'
+             */
+            level_css: string;
+            /**
+             * Desc
+             * @description 描述说明
+             */
+            desc: string;
+        };
+        /** DisclaimerBlockModel */
+        DisclaimerBlockModel: {
+            /** Text */
+            text: string;
+            /** Version */
+            version: string;
+            /**
+             * Jurisdiction
+             * @default CN
+             */
+            jurisdiction: string | null;
+        };
+        /** DrawResponse */
+        DrawResponse: {
+            card: components["schemas"]["DrawnCard"];
+            /** Context */
+            context?: string | null;
+        };
+        /** DrawnCard */
+        DrawnCard: {
+            card: components["schemas"]["TarotCard"];
+            /** Is Reversed */
+            is_reversed: boolean;
+            /** Interpretation */
+            interpretation: string;
+        };
+        /**
+         * EventCreate
+         * @description 上报一个实验事件。
+         */
+        EventCreate: {
+            /** Session Id */
+            session_id: string;
+            /** Variant */
+            variant: string;
+            /** Event Type */
+            event_type: string;
+            /**
+             * Meta
+             * @description 附加数据（任意 JSON）
+             */
+            meta?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * EventCreateRequest
@@ -1759,6 +5464,386 @@ export interface components {
             updated_at: string;
         };
         /**
+         * EventResult
+         * @description 单类事件在某年的完整预测结果
+         */
+        EventResult: {
+            /** Event Type */
+            event_type: string;
+            /** Year */
+            year: number;
+            /**
+             * Risk Level
+             * @enum {string}
+             */
+            risk_level: "none" | "low" | "medium" | "medium_high" | "high";
+            /**
+             * Opportunity Level
+             * @enum {string}
+             */
+            opportunity_level: "none" | "low" | "medium" | "high";
+            /**
+             * Confidence
+             * @default 0.5
+             */
+            confidence: number;
+            /**
+             * Main Judgment
+             * @default
+             */
+            main_judgment: string;
+            /**
+             * Trigger Summary
+             * @default
+             */
+            trigger_summary: string;
+            /** Event Subtypes */
+            event_subtypes?: string[];
+            /** Signals */
+            signals?: components["schemas"]["EventSignal"][];
+            /** Possible Manifestations */
+            possible_manifestations?: string[];
+            /** Key Months */
+            key_months?: number[];
+            /** Omens */
+            omens?: string[];
+            /** Advice */
+            advice?: string[];
+            /** Classical Notes */
+            classical_notes?: components["schemas"]["ClassicalNote"][];
+            /** Avoid Overclaim */
+            avoid_overclaim?: string | null;
+        };
+        /**
+         * EventSignal
+         * @description 单条命理信号
+         */
+        EventSignal: {
+            /** Signal Key */
+            signal_key: string;
+            /** Label */
+            label: string;
+            /**
+             * Layer
+             * @enum {string}
+             */
+            layer: "natal_base" | "dayun_trigger" | "liunian_trigger" | "month_trigger";
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "primary" | "secondary" | "tertiary";
+            /** Rule Id */
+            rule_id?: string | null;
+        };
+        /**
+         * EventTagResponse
+         * @description 单个事件/警示标签。
+         */
+        EventTagResponse: {
+            /** Category */
+            category: string;
+            /** Level */
+            level: string;
+            /** Description */
+            description: string;
+            /** Source */
+            source: string;
+        };
+        /**
+         * EventUpdateRequest
+         * @description 部分更新事件请求（PATCH）— 所有字段可选，不允许修改计算结果 bazi_json
+         */
+        EventUpdateRequest: {
+            /** Name */
+            name?: string | null;
+            /** Event Type */
+            event_type?: string | null;
+            /** L Level */
+            L_level?: number | null;
+            /** Confidence Score */
+            confidence_score?: number | null;
+            /** Recommendation */
+            recommendation?: string | null;
+            /** Recommendation Engine */
+            recommendation_engine?: string | null;
+            /** Pillars Primary */
+            pillars_primary?: string | null;
+            /** Ten Gods */
+            ten_gods?: string | null;
+            /** Five Elements */
+            five_elements?: string | null;
+        };
+        /** EvidenceItemModel */
+        EvidenceItemModel: {
+            /** Title */
+            title: string;
+            /** Value */
+            value: string;
+            /** Source */
+            source?: string | null;
+            /** Confidence */
+            confidence?: ("high" | "medium" | "low") | null;
+        };
+        /**
+         * ExperimentCreate
+         * @description 创建实验请求体。
+         */
+        ExperimentCreate: {
+            /**
+             * Name
+             * @description 实验名称（唯一）
+             */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Variants
+             * @description 变体列表，最少 2 个
+             */
+            variants?: components["schemas"]["VariantDef"][];
+            /**
+             * Target Metric
+             * @default chart_generated
+             */
+            target_metric: string;
+            /**
+             * Hypothesis
+             * @default
+             */
+            hypothesis: string;
+            /**
+             * Min Sample Size
+             * @default 100
+             */
+            min_sample_size: number;
+        };
+        /** ExperimentListResponse */
+        ExperimentListResponse: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["ExperimentResponse"][];
+        };
+        /**
+         * ExperimentResponse
+         * @description 单个实验的完整响应。
+         */
+        ExperimentResponse: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Status */
+            status: string;
+            /** Variants */
+            variants: components["schemas"]["VariantDef"][];
+            /** Traffic Split */
+            traffic_split: {
+                [key: string]: number;
+            };
+            /** Target Metric */
+            target_metric: string;
+            /** Hypothesis */
+            hypothesis: string;
+            /** Min Sample Size */
+            min_sample_size: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Started At */
+            started_at: string | null;
+            /** Ended At */
+            ended_at: string | null;
+        };
+        /**
+         * ExperimentResults
+         * @description 实验结果汇总。
+         */
+        ExperimentResults: {
+            /** Experiment Id */
+            experiment_id: number;
+            /** Experiment Name */
+            experiment_name: string;
+            /** Status */
+            status: string;
+            /** Target Metric */
+            target_metric: string;
+            /** Min Sample Size */
+            min_sample_size: number;
+            /** Total Assigned */
+            total_assigned: number;
+            /** Variants */
+            variants: components["schemas"]["VariantStats"][];
+            /**
+             * Winner
+             * @description 转化率最高的变体名称（仅在 total_assigned >= min_sample_size 时设置）
+             */
+            winner?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /**
+         * ExperimentUpdate
+         * @description 更新实验请求体（所有字段可选）。
+         */
+        ExperimentUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Hypothesis */
+            hypothesis?: string | null;
+            /** Min Sample Size */
+            min_sample_size?: number | null;
+            /** Target Metric */
+            target_metric?: string | null;
+        };
+        /** ExplainBatchRequest */
+        ExplainBatchRequest: {
+            /**
+             * Dt
+             * Format: date-time
+             * @description Input datetime; aware or naive ISO-8601
+             */
+            dt: string;
+            /**
+             * Lon
+             * @description Longitude in degrees within supported range
+             */
+            lon: number;
+            /**
+             * Mode
+             * @description Requested mode
+             * @default dual
+             * @enum {string}
+             */
+            mode: "dual" | "single";
+            /**
+             * Solar Time Enabled
+             * @description Enable solar-time adjustment when true
+             * @default false
+             */
+            solar_time_enabled: boolean;
+            /**
+             * Tz
+             * @description Timezone used only when dt is naive
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /**
+             * Liunian Years
+             * @description Optional liunian year span [-N, N]
+             */
+            liunian_years?: number[] | null;
+            /**
+             * Gender
+             * @description Gender for dayun direction: male/female
+             */
+            gender?: ("male" | "female") | null;
+            /**
+             * City Tier
+             * @description City tier for wealth estimate (M3.03)
+             */
+            city_tier?: ("一线" | "新一线" | "其余") | null;
+            /**
+             * Industry
+             * @description Industry name for wealth estimate (M3.03)
+             */
+            industry?: string | null;
+            /**
+             * Target Date
+             * @description Optional target date for liuri/liushi (B-P2-01)
+             */
+            target_date?: string | null;
+            /**
+             * Target Hour
+             * @description Target hour 0-23 for liushi
+             */
+            target_hour?: number | null;
+            /**
+             * Include Liuri
+             * @description 是否返回流日/流时；默认 True。未传 target_date 时使用当天。
+             */
+            include_liuri?: boolean | null;
+            /**
+             * Zi Day Rule
+             * @description 子时换日规则：sxtwl | early_zi_prev_day | early_zi_same_day
+             * @default sxtwl
+             */
+            zi_day_rule: string;
+            /**
+             * Birth Time Precision
+             * @description 出生时辰精度；unknown/approximate 时标注 hour_pillar advisory
+             * @default exact
+             * @enum {string}
+             */
+            birth_time_precision: "exact" | "hour" | "approximate" | "unknown";
+            /** Sections */
+            sections: string[];
+        };
+        /** ExplainBatchResponse */
+        ExplainBatchResponse: {
+            /** Chart Hash */
+            chart_hash: string;
+            disclaimer_block: components["schemas"]["DisclaimerBlockModel"];
+            /** Content Versions */
+            content_versions?: {
+                [key: string]: string;
+            };
+            /**
+             * Wenmo Advisory
+             * @description 文墨对照轨说明（advisory only，供 colophon 展示）
+             */
+            wenmo_advisory?: string | null;
+            /** Sections */
+            sections?: components["schemas"]["ExplainSectionResultModel"][];
+        };
+        /** ExplainBlockModel */
+        ExplainBlockModel: {
+            /** Text */
+            text: string;
+            /**
+             * Layer
+             * @default fact
+             * @enum {string}
+             */
+            layer: "fact" | "cite" | "inference";
+            /** Classic Id */
+            classic_id?: string | null;
+            /** Evidence Ids */
+            evidence_ids?: string[];
+        };
+        /** ExplainSectionResultModel */
+        ExplainSectionResultModel: {
+            /** Section Id */
+            section_id: string;
+            /** Blocks */
+            blocks?: components["schemas"]["ExplainBlockModel"][];
+            /**
+             * Verified
+             * @default false
+             */
+            verified: boolean;
+        };
+        /**
          * FengshuiModel
          * @description 风水建议
          */
@@ -1780,6 +5865,214 @@ export interface components {
              * @default 仅供学术研究参考
              */
             disclaimer: string;
+        };
+        /** FlyingChartResponse */
+        FlyingChartResponse: {
+            /** Palaces */
+            palaces: components["schemas"]["FlyingPalaceResponse"][];
+            /** Received */
+            received: {
+                [key: string]: string[];
+            };
+            /**
+             * Chonged
+             * @default {}
+             */
+            chonged: {
+                [key: string]: string[];
+            };
+            /**
+             * Self Transforms
+             * @default []
+             */
+            self_transforms: string[];
+        };
+        /** FlyingPalaceResponse */
+        FlyingPalaceResponse: {
+            /** Palace Name */
+            palace_name: string;
+            /** Stem Name */
+            stem_name: string;
+            /** Flying Out */
+            flying_out: {
+                [key: string]: string;
+            };
+            /**
+             * Opposition Palace
+             * @default
+             */
+            opposition_palace: string;
+            /**
+             * Self Transforms
+             * @default []
+             */
+            self_transforms: string[];
+        };
+        /**
+         * ForecastResultResponse
+         * @description 完整运势预测结果。
+         */
+        ForecastResultResponse: {
+            /** Year */
+            year: number;
+            yearly: components["schemas"]["PeriodForecastResponse"];
+            /** Monthly */
+            monthly: components["schemas"]["PeriodForecastResponse"][];
+            current_month: components["schemas"]["PeriodForecastResponse"];
+            /**
+             * Layer
+             * @description forecast 整体可信度分层
+             * @default heuristic
+             */
+            layer: string;
+        };
+        /** FurnitureTipResponse */
+        FurnitureTipResponse: {
+            /**
+             * Item
+             * @description 家具/位置名称，如 '床头朝向'
+             */
+            item: string;
+            /**
+             * Direction
+             * @description 方向代码，如 'SE'
+             */
+            direction: string;
+            /**
+             * Direction Zh
+             * @description 方向中文，如 '东南'
+             */
+            direction_zh: string;
+            /**
+             * Label
+             * @description 能量标签，如 '生气'
+             */
+            label: string;
+            /**
+             * Reason
+             * @description 建议理由
+             */
+            reason: string;
+        };
+        /**
+         * FushengReportPdfRequest
+         * @description 档案驱动的浮生报告 PDF 请求（无需登录）。
+         */
+        FushengReportPdfRequest: {
+            /**
+             * Label
+             * @default 浮生报告
+             */
+            label: string;
+            /**
+             * Birth Dt
+             * @description 出生时间 ISO，如 1990-01-15T08:30:00
+             */
+            birth_dt: string;
+            /** Lon */
+            lon: number;
+            /**
+             * Tz
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /**
+             * Gender
+             * @enum {string}
+             */
+            gender: "male" | "female";
+            /**
+             * Solar Time Enabled
+             * @default false
+             */
+            solar_time_enabled: boolean;
+            /**
+             * Mode
+             * @default dual
+             * @enum {string}
+             */
+            mode: "dual" | "single";
+            /**
+             * City Name
+             * @default
+             */
+            city_name: string;
+            /**
+             * Calendar Mode
+             * @default gregorian
+             * @enum {string}
+             */
+            calendar_mode: "gregorian" | "lunar";
+            /**
+             * Is Leap Month
+             * @default false
+             */
+            is_leap_month: boolean;
+            /**
+             * Surname
+             * @default
+             */
+            surname: string;
+            /**
+             * Given Name
+             * @default
+             */
+            given_name: string;
+            /**
+             * Focus Topic
+             * @default
+             */
+            focus_topic: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Year Divide
+             * @description 紫微年界：lichun | normal（与 /ziwei/full 一致）
+             * @default lichun
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @description 晚子时换日：solar_next | forward | current
+             * @default solar_next
+             */
+            day_divide: string;
+            /**
+             * Include Liuri
+             * @description 八字是否附带流日/流时（与 /bazi/full 默认一致）
+             * @default true
+             */
+            include_liuri: boolean;
+            /**
+             * Zi Day Rule
+             * @description 子时换日：sxtwl | early_zi_prev_day | early_zi_same_day
+             * @default sxtwl
+             */
+            zi_day_rule: string;
+        };
+        /** GejuLightResponse */
+        GejuLightResponse: {
+            /** Geju Name */
+            geju_name: string;
+            /** Confidence */
+            confidence: number;
+            /** Is Broken */
+            is_broken: boolean;
+            /** Note */
+            note: string;
+            /**
+             * Classic Ref
+             * @default
+             */
+            classic_ref: string;
+            /**
+             * Ten God
+             * @default
+             */
+            ten_god: string;
         };
         /**
          * GejuModel
@@ -1823,6 +6116,62 @@ export interface components {
             confidence: number;
             /** Geju Detail */
             geju_detail?: string | null;
+            /**
+             * Derived Geju
+             * @description 衍生格名（不覆盖八正格 geju_name）
+             */
+            derived_geju?: string | null;
+            /**
+             * Geju Candidates
+             * @description 格局古籍语料软提示（非硬覆盖引擎结论）
+             */
+            geju_candidates?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Po Geju
+             * @description 破格/救应结构
+             */
+            po_geju?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Recorded Geju
+             * @description 古籍/recorded 口径（双轨时）
+             */
+            recorded_geju?: string | null;
+            /**
+             * Engine Geju
+             * @description 引擎判定格名
+             */
+            engine_geju?: string | null;
+            /**
+             * Dual Track Note
+             * @description 双轨说明
+             */
+            dual_track_note?: string | null;
+            /**
+             * Dual Track Id
+             * @description 双轨用例 ID，如 ZIP09
+             */
+            dual_track_id?: string | null;
+        };
+        /** GejuSubjectRequest */
+        GejuSubjectRequest: {
+            /** Birth Dt */
+            birth_dt: string;
+            /**
+             * Lon
+             * @default 116.4
+             */
+            lon: number;
+            /**
+             * Tz
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /** Gender */
+            gender?: string | null;
         };
         /** GlossaryItemModel */
         GlossaryItemModel: {
@@ -1839,6 +6188,31 @@ export interface components {
             category: "格局" | "神煞" | "五行" | "十神" | "大运" | "其他";
             /** Classic Source */
             classic_source?: string | null;
+        };
+        /** GlossaryUpdateRequest */
+        GlossaryUpdateRequest: {
+            /** Definition */
+            definition: string;
+            /** Pinyin */
+            pinyin?: string | null;
+            /** Classic Source */
+            classic_source?: string | null;
+        };
+        /**
+         * GridInfoResponse
+         * @description 单格（天/人/地/外/总格）分析结果。
+         */
+        GridInfoResponse: {
+            /** Number */
+            number: number;
+            /** Element */
+            element: string;
+            /** Lucky */
+            lucky: string;
+            /** Score */
+            score: number;
+            /** Desc */
+            desc: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1880,6 +6254,95 @@ export interface components {
             fact_data?: {
                 [key: string]: unknown;
             } | null;
+            /** Seasonal Health */
+            seasonal_health?: string | null;
+            /** Mental Health Advice */
+            mental_health_advice?: string | null;
+            /** Constitution Type */
+            constitution_type?: string | null;
+        };
+        /** HiddenStemDetailModel */
+        HiddenStemDetailModel: {
+            /** Stem */
+            stem: string;
+            /** Weight */
+            weight?: number | null;
+            /** Element */
+            element?: string | null;
+            /** Ten God */
+            ten_god?: string | null;
+            /** Source */
+            source?: string | null;
+        };
+        /**
+         * InterpretModule
+         * @enum {string}
+         */
+        InterpretModule: "dayun_narrative" | "liunian_advice" | "career_detail" | "marriage_detail" | "wealth_detail" | "fengshui_suggestion";
+        /**
+         * IztroCrosscheckResponse
+         * @description 与 iztro 库的 advisory 交叉核验（可选，不阻断排盘）。
+         */
+        IztroCrosscheckResponse: {
+            /** Status */
+            status: string;
+            /**
+             * Main Match
+             * @default 0
+             */
+            main_match: number;
+            /**
+             * Main Total
+             * @default 14
+             */
+            main_total: number;
+            /**
+             * Life Palace Match
+             * @default true
+             */
+            life_palace_match: boolean;
+            /** Iztro Life Palace Gz */
+            iztro_life_palace_gz?: string | null;
+            /** Engine Life Palace Gz */
+            engine_life_palace_gz?: string | null;
+            /** Advisory */
+            advisory?: string | null;
+            dual_track?: components["schemas"]["IztroDualTrackResponse"] | null;
+        };
+        /**
+         * IztroDualTrackResponse
+         * @description iztro 对照轨（典型：ZW03 立春前晚子时边界）。
+         */
+        IztroDualTrackResponse: {
+            /**
+             * Label
+             * @default iztro 对照轨
+             */
+            label: string;
+            /**
+             * Year Divide
+             * @default normal
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @default forward
+             */
+            day_divide: string;
+            /** Life Palace Gz */
+            life_palace_gz?: string | null;
+            /**
+             * Main Match
+             * @default 0
+             */
+            main_match: number;
+            /**
+             * Main Total
+             * @default 14
+             */
+            main_total: number;
+            /** Note */
+            note?: string | null;
         };
         /**
          * JewelryItemModel
@@ -1914,6 +6377,70 @@ export interface components {
              */
             disclaimer: string;
         };
+        /** JieqiItemOut */
+        JieqiItemOut: {
+            /** Name */
+            name: string;
+            /** Dt Local */
+            dt_local: string;
+        };
+        /** JieqiResponse */
+        JieqiResponse: {
+            /** Year */
+            year: number;
+            /** Items */
+            items: components["schemas"]["JieqiItemOut"][];
+            /** Backend */
+            backend: string;
+        };
+        /** KeyMonthPointModel */
+        KeyMonthPointModel: {
+            /** Month */
+            month: number;
+            /**
+             * Month Name
+             * @default
+             */
+            month_name: string;
+            /**
+             * Month Gz
+             * @default
+             */
+            month_gz: string;
+            /**
+             * Palace Name
+             * @default
+             */
+            palace_name: string;
+            /** Sihua */
+            sihua?: {
+                [key: string]: string;
+            };
+        };
+        /** KeyYearPointModel */
+        KeyYearPointModel: {
+            /** Label */
+            label: string;
+            /**
+             * Ganzhi
+             * @default
+             */
+            ganzhi: string;
+            /**
+             * Palace
+             * @default
+             */
+            palace: string;
+            /** Score */
+            score?: number | null;
+            /**
+             * Overall
+             * @default
+             */
+            overall: string;
+            /** Events */
+            events?: string[];
+        };
         /**
          * LifeArcModel
          * @description 一生运势总论（Tab 0 总览精简卡片 + Tab 5 摘要完整展示）
@@ -1947,6 +6474,96 @@ export interface components {
             disclaimer: string;
             /** Optimal Action */
             optimal_action?: string | null;
+        };
+        /** LifeSuggestionResponse */
+        LifeSuggestionResponse: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Category
+             * @default
+             */
+            category: string;
+            /**
+             * Category Label
+             * @default
+             */
+            category_label: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Priority
+             * @default 0
+             */
+            priority: number;
+            /**
+             * Cost Level
+             * @default
+             */
+            cost_level: string;
+            /**
+             * Valid Scope
+             * @default
+             */
+            valid_scope: string;
+            /**
+             * Short Desc
+             * @default
+             */
+            short_desc: string;
+            /**
+             * Actions
+             * @default []
+             */
+            actions: string[];
+        };
+        /** LifeVolumeModel */
+        LifeVolumeModel: {
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "preface" | "vol1" | "vol2" | "vol3" | "vol4" | "vol5" | "vol6" | "colophon";
+            /** Title */
+            title: string;
+            /**
+             * Locked
+             * @default false
+             */
+            locked: boolean;
+            /** Sections */
+            sections?: components["schemas"]["VolumeSectionModel"][];
+        };
+        /** LifeVolumeResponseModel */
+        LifeVolumeResponseModel: {
+            /**
+             * Schema Version
+             * @default life-volume@1.0
+             * @constant
+             */
+            schema_version: "life-volume@1.0";
+            /** Case Id */
+            case_id: string;
+            /** Chart Hash */
+            chart_hash: string;
+            /** Rule Version */
+            rule_version?: string | null;
+            /** Content Versions */
+            content_versions?: {
+                [key: string]: string;
+            };
+            disclaimer_block: components["schemas"]["DisclaimerBlockModel"];
+            /** Trust Level */
+            trust_level?: ("full" | "degraded") | null;
+            /** Volumes */
+            volumes: components["schemas"]["LifeVolumeModel"][];
+            colophon: components["schemas"]["ColophonModel"];
         };
         /**
          * LifestyleModel
@@ -2003,6 +6620,12 @@ export interface components {
              * @default 仅供学术研究参考
              */
             disclaimer: string;
+            /** Ten God */
+            ten_god?: string | null;
+            /** Flow Wuxing */
+            flow_wuxing?: string | null;
+            /** Clash */
+            clash?: string | null;
         };
         /** LiuNianItemModel */
         LiuNianItemModel: {
@@ -2014,6 +6637,31 @@ export interface components {
             branch?: string | null;
             /** Ten God */
             ten_god?: string | null;
+            /** Hidden Stems */
+            hidden_stems?: components["schemas"]["HiddenStemDetailModel"][];
+            /** Xingyun */
+            xingyun?: string | null;
+            /** Self Seat */
+            self_seat?: string | null;
+            /** Self Seat Source */
+            self_seat_source?: string | null;
+            /** Kongwang */
+            kongwang?: string[];
+            /** Kongwang Source */
+            kongwang_source?: string | null;
+            /**
+             * Kongwang Hit
+             * @default false
+             */
+            kongwang_hit: boolean;
+            /** Nayin */
+            nayin?: string | null;
+            /** Shensha */
+            shensha?: components["schemas"]["PillarShenshaDetailModel"][];
+            /** Wuxing */
+            wuxing?: string | null;
+            /** Yin Yang */
+            yin_yang?: string | null;
             /** Clash */
             clash?: string | null;
         };
@@ -2023,6 +6671,466 @@ export interface components {
             years_used?: number[];
             /** Items */
             items?: components["schemas"]["LiuNianItemModel"][];
+        };
+        /** LiunianDomainRequest */
+        LiunianDomainRequest: {
+            /** Case Id */
+            case_id: string;
+            /** Year */
+            year: number;
+        };
+        /** LiunianDomainResponse */
+        LiunianDomainResponse: {
+            /** Year */
+            year: number;
+            /** Year Ganzhi */
+            year_ganzhi: string;
+            /** Domains */
+            domains: {
+                [key: string]: string;
+            };
+        };
+        /** LiunianReportRequest */
+        LiunianReportRequest: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Year
+             * @description 流年年份
+             */
+            year: number;
+            /**
+             * Include Months
+             * @description 是否包含各月流月预测
+             * @default false
+             */
+            include_months: boolean;
+        };
+        /** LiunianReportResponse */
+        LiunianReportResponse: {
+            /** Task Id */
+            task_id: string;
+            /** Status */
+            status: string;
+            /** Year */
+            year: number;
+            /** Case Id */
+            case_id: string;
+            /** Submitted At */
+            submitted_at: string;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Result */
+            result?: {
+                [key: string]: unknown;
+            } | null;
+            /** Error */
+            error?: string | null;
+        };
+        /** LiunianResponse */
+        LiunianResponse: {
+            /** Year */
+            year: number;
+            /** Year Gz */
+            year_gz: string;
+            /** Life Palace Branch */
+            life_palace_branch: number;
+            /** Sihua */
+            sihua: {
+                [key: string]: string;
+            };
+        };
+        /** LiuriItem */
+        LiuriItem: {
+            /** Lunar Day */
+            lunar_day: number;
+            /** Life Palace Branch */
+            life_palace_branch: number;
+            /** Branch */
+            branch: string;
+            /**
+             * Palace Name
+             * @default
+             */
+            palace_name: string;
+            /**
+             * Liuyue Month
+             * @default 1
+             */
+            liuyue_month: number;
+        };
+        /**
+         * LiuriLiushiEndpointResponse
+         * @description 独立流日/流时 API 响应。
+         */
+        LiuriLiushiEndpointResponse: {
+            /** Request Id */
+            request_id: string;
+            liuri_liushi: components["schemas"]["LiuriLiushiModel"];
+            dayun_transition?: components["schemas"]["DayunTransitionModel"] | null;
+        };
+        /**
+         * LiuriLiushiModel
+         * @description 流日/流时最小输出（B-P2-01）。
+         */
+        LiuriLiushiModel: {
+            /** Date */
+            date: string;
+            /** Day Ganzhi */
+            day_ganzhi: string;
+            /** Day Stem */
+            day_stem: string;
+            /** Day Branch */
+            day_branch: string;
+            /** Hour Ganzhi */
+            hour_ganzhi: string;
+            /** Hour Stem */
+            hour_stem: string;
+            /** Hour Branch */
+            hour_branch: string;
+            /**
+             * Hour Branch Idx
+             * @default 0
+             */
+            hour_branch_idx: number;
+            /**
+             * Hour Label
+             * @default
+             */
+            hour_label: string;
+            /** Day Ten God */
+            day_ten_god?: string | null;
+            /** Hour Ten God */
+            hour_ten_god?: string | null;
+            /**
+             * Method
+             * @default ganzhi_day_pillar
+             */
+            method: string;
+            /** Missing Fields */
+            missing_fields?: string[];
+            /**
+             * Flow Score
+             * @description 流日运限联动评分 0-100（B-P2）
+             */
+            flow_score?: number | null;
+            /**
+             * Flow Score Dayun
+             * @description 流日大运维度分（B-P2）
+             */
+            flow_score_dayun?: number | null;
+            /**
+             * Flow Score Liunian
+             * @description 流日流年维度分（B-P2）
+             */
+            flow_score_liunian?: number | null;
+            /**
+             * Flow Score Geju
+             * @description 流日格局/用神维度分（B-P2）
+             */
+            flow_score_geju?: number | null;
+            /**
+             * Flow Tone
+             * @description 顺/平/逆
+             */
+            flow_tone?: string | null;
+            /**
+             * Transition Hint
+             * @description 换运/近运提醒文案（B-P2）
+             */
+            transition_hint?: string | null;
+            /**
+             * Dayun Link
+             * @description 与当前大运联动说明
+             */
+            dayun_link?: string | null;
+            /**
+             * Liunian Link
+             * @description 与流年联动说明
+             */
+            liunian_link?: string | null;
+            /** Current Dayun Ganzhi */
+            current_dayun_ganzhi?: string | null;
+            /** Current Liunian Ganzhi */
+            current_liunian_ganzhi?: string | null;
+            /**
+             * Flow Summary
+             * @description 流日运限联动摘要
+             */
+            flow_summary?: string | null;
+            /**
+             * Warnings
+             * @description 流日子时边界等提示（zi_day_rule 联动）
+             */
+            warnings?: string[];
+        };
+        /**
+         * LiuriLiushiRequest
+         * @description 独立流日/流时计算请求。
+         */
+        LiuriLiushiRequest: {
+            /**
+             * Dt
+             * Format: date-time
+             * @description Birth datetime (ISO-8601)
+             */
+            dt: string;
+            /**
+             * Lon
+             * @description Longitude in degrees
+             */
+            lon: number;
+            /**
+             * Tz
+             * @description Timezone when dt is naive
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /**
+             * Gender
+             * @description Gender for dayun linkage
+             */
+            gender?: ("male" | "female") | null;
+            /**
+             * Solar Time Enabled
+             * @description Enable solar-time adjustment
+             * @default false
+             */
+            solar_time_enabled: boolean;
+            /**
+             * Target Date
+             * @description Target date; defaults to today
+             */
+            target_date?: string | null;
+            /**
+             * Target Hour
+             * @description Target hour 0-23; defaults to birth hour
+             */
+            target_hour?: number | null;
+            /**
+             * Include Dayun Transition
+             * @description Include next dayun transition fields
+             * @default true
+             */
+            include_dayun_transition: boolean;
+        };
+        /** LiuriLiushiResponse */
+        LiuriLiushiResponse: {
+            liuri: components["schemas"]["LiuriItem"];
+            liushi: components["schemas"]["LiushiItem"];
+            /** Missing Fields */
+            missing_fields?: string[];
+        };
+        /** LiushiItem */
+        LiushiItem: {
+            /** Hour Branch Idx */
+            hour_branch_idx: number;
+            /** Life Palace Branch */
+            life_palace_branch: number;
+            /** Branch */
+            branch: string;
+            /**
+             * Palace Name
+             * @default
+             */
+            palace_name: string;
+            /**
+             * Hour Label
+             * @default
+             */
+            hour_label: string;
+        };
+        /** LiuyaoCastResponse */
+        LiuyaoCastResponse: {
+            /** Gua Name */
+            gua_name: string;
+            /** Gua Bian */
+            gua_bian: string;
+            /** Gua Hu */
+            gua_hu: string;
+            /** Palace */
+            palace: string;
+            /** Palace Element */
+            palace_element: string;
+            /** Ben Yao */
+            ben_yao: number[];
+            /** Bian Yao */
+            bian_yao: number[];
+            /** Dong Yao */
+            dong_yao: number[];
+            /** Shi Yao */
+            shi_yao: number;
+            /** Ying Yao */
+            ying_yao: number;
+            /** Yao Details */
+            yao_details: components["schemas"]["YaoDetail"][];
+        };
+        /** LiuyaoTimeRequest */
+        LiuyaoTimeRequest: {
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            /** Day */
+            day: number;
+            /** Hour */
+            hour: number;
+        };
+        /** LiuyueItem */
+        LiuyueItem: {
+            /** Month */
+            month: number;
+            /** Month Name */
+            month_name: string;
+            /** Month Gz */
+            month_gz: string;
+            /** Life Palace Branch */
+            life_palace_branch: number;
+            /** Palace Name */
+            palace_name: string;
+            /**
+             * Sihua
+             * @default {}
+             */
+            sihua: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * LlmConfigResponse
+         * @description 当前 LLM provider 配置状态。
+         */
+        LlmConfigResponse: {
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Available */
+            available: boolean;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** LlmDraftListResponse */
+        LlmDraftListResponse: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["LlmDraftResponse"][];
+        };
+        /**
+         * LlmDraftResponse
+         * @description 单条草稿的完整响应。
+         */
+        LlmDraftResponse: {
+            /** Id */
+            id: number;
+            /** Chart Hash */
+            chart_hash: string;
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Prompt Version */
+            prompt_version: string;
+            /** Draft Text */
+            draft_text: string;
+            /** Status */
+            status: string;
+            /** Reviewer */
+            reviewer: string;
+            /** Reviewer Notes */
+            reviewer_notes: string;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Cost Usd Estimate */
+            cost_usd_estimate: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Deleted At */
+            deleted_at: string | null;
+            /**
+             * Evidence Refs
+             * @description provenance 证据链
+             */
+            evidence_refs?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
+         * LlmDraftUpdate
+         * @description 审核/驳回草稿（仅 status / reviewer / reviewer_notes）。
+         */
+        LlmDraftUpdate: {
+            /** Status */
+            status: string;
+            /**
+             * Reviewer
+             * @default
+             */
+            reviewer: string;
+            /**
+             * Reviewer Notes
+             * @default
+             */
+            reviewer_notes: string;
+        };
+        /**
+         * LlmInterpretRequest
+         * @description 提交命盘草稿生成请求。
+         */
+        LlmInterpretRequest: {
+            /**
+             * Chart Hash
+             * @description 命盘唯一哈希（来自审核记录）
+             */
+            chart_hash: string;
+            /**
+             * Life Palace Gz
+             * @default
+             */
+            life_palace_gz: string;
+            /**
+             * Wuxing Ju Name
+             * @default
+             */
+            wuxing_ju_name: string;
+            /**
+             * Pattern Summary
+             * @default
+             */
+            pattern_summary: string;
+            /**
+             * Birth Info Summary
+             * @description 出生信息文字摘要
+             * @default
+             */
+            birth_info_summary: string;
+            /**
+             * Evidence Snippets
+             * @description 古籍关联片段列表，由 evidence_retriever 填充
+             */
+            evidence_snippets?: string[];
+            /**
+             * Geju Name
+             * @description 格局名称，如'正官格'
+             * @default
+             */
+            geju_name: string;
+            /**
+             * Yongshen Favor
+             * @description 用神喜用五行列表，如['水','木']
+             */
+            yongshen_favor?: string[];
         };
         /**
          * LoginRequest
@@ -2061,10 +7169,113 @@ export interface components {
             /** Interpretation Text */
             interpretation_text: string;
             /**
+             * Avoid Colors
+             * @default []
+             */
+            avoid_colors: string[];
+            /**
+             * Avoid Direction
+             * @default
+             */
+            avoid_direction: string;
+            /**
              * Disclaimer
              * @default 仅供学术研究参考
              */
             disclaimer: string;
+        };
+        /** LunarResponse */
+        LunarResponse: {
+            /** Lunar Year */
+            lunar_year: number;
+            /** Lunar Month */
+            lunar_month: number;
+            /** Lunar Day */
+            lunar_day: number;
+            /** Is Leap Month */
+            is_leap_month: boolean;
+            /** Year Gz */
+            year_gz: string;
+            /** Month Gz */
+            month_gz: string;
+            /** Hour Branch */
+            hour_branch: string;
+            /**
+             * Jieqi Month Gz
+             * @default
+             */
+            jieqi_month_gz: string;
+            /**
+             * Day Gz
+             * @default
+             */
+            day_gz: string;
+            /**
+             * Hour Gz
+             * @default
+             */
+            hour_gz: string;
+            /**
+             * Year Divide
+             * @default lichun
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @default solar_next
+             */
+            day_divide: string;
+        };
+        /** LunarToSolarRequest */
+        LunarToSolarRequest: {
+            /** Lunar Year */
+            lunar_year: number;
+            /** Lunar Month */
+            lunar_month: number;
+            /** Lunar Day */
+            lunar_day: number;
+            /**
+             * Hour
+             * @default 0
+             */
+            hour: number;
+            /**
+             * Minute
+             * @default 0
+             */
+            minute: number;
+            /**
+             * Is Leap Month
+             * @default false
+             */
+            is_leap_month: boolean;
+        };
+        /** LunarToSolarResponse */
+        LunarToSolarResponse: {
+            /** Solar Dt */
+            solar_dt: string;
+            /** Solar Year */
+            solar_year: number;
+            /** Solar Month */
+            solar_month: number;
+            /** Solar Day */
+            solar_day: number;
+            /** Lunar Label */
+            lunar_label: string;
+            /** Warnings */
+            warnings?: string[];
+        };
+        /**
+         * ManualAuditLogRequest
+         * @description 手动审计日志请求体
+         */
+        ManualAuditLogRequest: {
+            /** Action */
+            action: string;
+            /** Resource Type */
+            resource_type: string;
+            /** Resource Id */
+            resource_id?: string | null;
         };
         /**
          * MarriageAnalysisModel
@@ -2105,6 +7316,10 @@ export interface components {
             fact_data?: {
                 [key: string]: unknown;
             } | null;
+            /** Emotional Pitfalls */
+            emotional_pitfalls?: string | null;
+            /** Second Marriage Indicator */
+            second_marriage_indicator?: string | null;
         };
         /** MarriageFlagsModel */
         MarriageFlagsModel: {
@@ -2159,6 +7374,11 @@ export interface components {
             birth_time_hour?: number | null;
             /** Birth Time Minute */
             birth_time_minute?: number | null;
+            /**
+             * Birth Time
+             * @description 'HH:MM' 格式，等价于 birth_time_hour + birth_time_minute
+             */
+            birth_time?: string | null;
             /** Birth City */
             birth_city?: string | null;
             /** Birth Longitude */
@@ -2199,6 +7419,38 @@ export interface components {
             solar_time_enabled: boolean;
             /** Notes */
             notes: string | null;
+            /**
+             * Birth Time
+             * @description 输出 'HH:MM' 格式时间，方便前端时间选择器直接绑定。
+             */
+            readonly birth_time: string | null;
+        };
+        /**
+         * MemberUpdateRequest
+         * @description 部分更新成员请求（PATCH）— 所有字段可选
+         */
+        MemberUpdateRequest: {
+            /** Name */
+            name?: string | null;
+            /** Gender */
+            gender?: string | null;
+            /** Birth Time Hour */
+            birth_time_hour?: number | null;
+            /** Birth Time Minute */
+            birth_time_minute?: number | null;
+            /**
+             * Birth Time
+             * @description 'HH:MM' 格式，覆盖 birth_time_hour + birth_time_minute
+             */
+            birth_time?: string | null;
+            /** Birth City */
+            birth_city?: string | null;
+            /** Birth Longitude */
+            birth_longitude?: number | null;
+            /** Solar Time Enabled */
+            solar_time_enabled?: boolean | null;
+            /** Notes */
+            notes?: string | null;
         };
         /**
          * MilestoneModel
@@ -2226,6 +7478,27 @@ export interface components {
             /** Advice */
             advice: string;
         };
+        /** ModuleInterpretRequest */
+        ModuleInterpretRequest: {
+            /** Case Id */
+            case_id: string;
+            module: components["schemas"]["InterpretModule"];
+            /** Context */
+            context?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** ModuleInterpretResponse */
+        ModuleInterpretResponse: {
+            /** Case Id */
+            case_id: string;
+            /** Module */
+            module: string;
+            /** Interpretation */
+            interpretation: string;
+            /** Generated At */
+            generated_at: string;
+        };
         /**
          * MonthlyFortuneModel
          * @description 月运模型 §4.11-G
@@ -2233,6 +7506,11 @@ export interface components {
         MonthlyFortuneModel: {
             /** Month */
             month: number;
+            /**
+             * Lunar Month
+             * @description 农历月份（1-12）
+             */
+            lunar_month: number;
             /** Month Dizhi */
             month_dizhi: string;
             /**
@@ -2257,6 +7535,288 @@ export interface components {
              * @default 仅供学术研究参考
              */
             disclaimer: string;
+        };
+        /** MonthlyItemOut */
+        MonthlyItemOut: {
+            /** Month */
+            month: number;
+            /** Month Ganzhi */
+            month_ganzhi: string;
+            /** Month Dizhi */
+            month_dizhi: string;
+            /** Luck Level */
+            luck_level: string;
+            /** Color Hint */
+            color_hint: string;
+            /** Tip */
+            tip: string;
+            /** Clash With */
+            clash_with?: string | null;
+        };
+        /** MonthlyRequest */
+        MonthlyRequest: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Year
+             * @description 公历年份，如 2025
+             */
+            year: number;
+        };
+        /** MonthlyResponse */
+        MonthlyResponse: {
+            /** Year */
+            year: number;
+            /** Year Ganzhi */
+            year_ganzhi: string;
+            /** Items */
+            items: components["schemas"]["MonthlyItemOut"][];
+        };
+        /** MultiCompatPairResponse */
+        MultiCompatPairResponse: {
+            /**
+             * Person A Idx
+             * @default 0
+             */
+            person_a_idx: number;
+            /**
+             * Person B Idx
+             * @default 1
+             */
+            person_b_idx: number;
+            /**
+             * Total Score
+             * @default 0
+             */
+            total_score: number;
+            /**
+             * Max Score
+             * @default 100
+             */
+            max_score: number;
+            /**
+             * Level
+             * @default
+             */
+            level: string;
+        };
+        /** MultiCompatRequest */
+        MultiCompatRequest: {
+            /** Person List */
+            person_list: components["schemas"]["ZiweiRequest"][];
+        };
+        /** MultiCompatResponse */
+        MultiCompatResponse: {
+            /**
+             * Person Count
+             * @default 0
+             */
+            person_count: number;
+            /**
+             * Pairs
+             * @default []
+             */
+            pairs: components["schemas"]["MultiCompatPairResponse"][];
+            /**
+             * Matrix
+             * @default []
+             */
+            matrix: number[][];
+            /**
+             * Team Harmony Score
+             * @default 0
+             */
+            team_harmony_score: number;
+        };
+        /**
+         * MultiYearTrendRequest
+         * @description 多年趋势请求
+         */
+        MultiYearTrendRequest: {
+            /** Case Id */
+            case_id: string;
+            /** Years */
+            years: number[];
+        };
+        /**
+         * MultiYearTrendResponse
+         * @description 多年趋势响应
+         */
+        MultiYearTrendResponse: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Timeline Summary
+             * @default
+             */
+            timeline_summary: string;
+            /** Summaries */
+            summaries: components["schemas"]["YearSummary"][];
+        };
+        /**
+         * NameAnalysisResponse
+         * @description 完整姓名学分析响应。
+         */
+        NameAnalysisResponse: {
+            /** Surname */
+            surname: string;
+            /** Given Name */
+            given_name: string;
+            tianke: components["schemas"]["GridInfoResponse"];
+            renke: components["schemas"]["GridInfoResponse"];
+            dike: components["schemas"]["GridInfoResponse"];
+            waike: components["schemas"]["GridInfoResponse"];
+            zonge: components["schemas"]["GridInfoResponse"];
+            sancai: components["schemas"]["SancaiInfoResponse"];
+            /** Overall Score */
+            overall_score: number;
+            /** Summary */
+            summary: string;
+            /**
+             * Algorithm Version
+             * @default 1.0.0
+             */
+            algorithm_version: string;
+        };
+        /**
+         * NameRequest
+         * @description 姓名学分析请求。
+         * @example {
+         *       "given_name": "明",
+         *       "surname": "李"
+         *     }
+         */
+        NameRequest: {
+            /**
+             * Surname
+             * @description 姓（1-3个汉字）
+             */
+            surname: string;
+            /**
+             * Given Name
+             * @description 名（1-6个汉字）
+             */
+            given_name: string;
+        };
+        /**
+         * NameSuggestRequest
+         * @description 改名建议请求。
+         * @example {
+         *       "min_score": 65,
+         *       "name_length": 2,
+         *       "preferred_elements": [
+         *         "水",
+         *         "木"
+         *       ],
+         *       "surname": "张",
+         *       "top_n": 10
+         *     }
+         */
+        NameSuggestRequest: {
+            /**
+             * Surname
+             * @description 姓（1-3个汉字）
+             */
+            surname: string;
+            /**
+             * Name Length
+             * @description 期望名字字数：1 或 2
+             * @default 2
+             */
+            name_length: number;
+            /**
+             * Preferred Elements
+             * @description 希望名字包含的五行，如 ['水','木']。可从八字用神/喜神分析结果填入；不填则不限五行。
+             */
+            preferred_elements?: string[] | null;
+            /**
+             * Top N
+             * @description 返回建议数量（1-20）
+             * @default 10
+             */
+            top_n: number;
+            /**
+             * Min Score
+             * @description 最低综合评分（低于此分不返回）
+             * @default 60
+             */
+            min_score: number;
+        };
+        /**
+         * NameSuggestResponse
+         * @description 改名建议响应。
+         */
+        NameSuggestResponse: {
+            /** Surname */
+            surname: string;
+            /** Name Length */
+            name_length: number;
+            /** Preferred Elements */
+            preferred_elements: string[] | null;
+            /** Total Candidates Evaluated */
+            total_candidates_evaluated: number;
+            /** Suggestions */
+            suggestions: components["schemas"]["NameSuggestionItem"][];
+            /**
+             * Algorithm Version
+             * @default 1.0.0
+             */
+            algorithm_version: string;
+        };
+        /**
+         * NameSuggestionItem
+         * @description 单条改名建议。
+         */
+        NameSuggestionItem: {
+            /** Given Name */
+            given_name: string;
+            /** Overall Score */
+            overall_score: number;
+            /** Renke Score */
+            renke_score: number;
+            /** Sancai Score */
+            sancai_score: number;
+            /** Sancai Pattern */
+            sancai_pattern: string;
+            /** Element Composition */
+            element_composition: string[];
+            /** Summary */
+            summary: string;
+        };
+        /** NotificationSubscribeRequest */
+        NotificationSubscribeRequest: {
+            /**
+             * Channel
+             * @default email
+             * @enum {string}
+             */
+            channel: "email" | "webpush";
+            /**
+             * Event Type
+             * @default dayun_transition
+             * @enum {string}
+             */
+            event_type: "dayun_transition" | "liunian_digest";
+            /** Case Id */
+            case_id?: string | null;
+        };
+        /** NotificationSubscriptionResponse */
+        NotificationSubscriptionResponse: {
+            /** Subscription Id */
+            subscription_id: string;
+            /** Channel */
+            channel: string;
+            /** Event Type */
+            event_type: string;
+            /** Case Id */
+            case_id: string | null;
+            /**
+             * Status
+             * @default stub_active
+             */
+            status: string;
+            /** Created At */
+            created_at: string;
         };
         /**
          * PalaceItemModel
@@ -2306,6 +7866,327 @@ export interface components {
             } | null;
         };
         /**
+         * PalaceRefModel
+         * @description 宫位结构化引用（命/身/三方四正）。
+         */
+        PalaceRefModel: {
+            /** Index */
+            index: number;
+            /** Name */
+            name: string;
+            /** Branch */
+            branch: string;
+            /** Branch Idx */
+            branch_idx: number;
+            /**
+             * Stem
+             * @default
+             */
+            stem: string;
+            /**
+             * Ganzhi
+             * @default
+             */
+            ganzhi: string;
+            /**
+             * Is Empty Palace
+             * @default false
+             */
+            is_empty_palace: boolean;
+            /**
+             * Is Body Palace
+             * @default false
+             */
+            is_body_palace: boolean;
+        };
+        /** PalaceResponse */
+        PalaceResponse: {
+            /** Index */
+            index: number;
+            /** Name */
+            name: string;
+            /** Branch */
+            branch: string;
+            /** Stem */
+            stem: string;
+            /** Main Stars */
+            main_stars: components["schemas"]["StarInfo"][];
+            /** Aux Stars */
+            aux_stars: components["schemas"]["StarInfo"][];
+            /**
+             * Flying Out
+             * @default {}
+             */
+            flying_out: {
+                [key: string]: string;
+            };
+            /** Borrowed Main Stars */
+            borrowed_main_stars?: {
+                [key: string]: unknown;
+            }[];
+            /** Borrowed From Palace */
+            borrowed_from_palace?: string | null;
+            /** Borrowed Reason */
+            borrowed_reason?: string | null;
+            /**
+             * Is Empty Palace
+             * @default false
+             */
+            is_empty_palace: boolean;
+            /**
+             * Analysis
+             * @default
+             */
+            analysis: string;
+            /**
+             * Analysis Tags
+             * @default []
+             */
+            analysis_tags: string[];
+            /**
+             * Xiaoxian Ages
+             * @default []
+             */
+            xiaoxian_ages: number[];
+            /**
+             * Opposition Name
+             * @default
+             */
+            opposition_name: string;
+            /**
+             * Conclusion
+             * @default
+             */
+            conclusion: string;
+            /**
+             * Explanation
+             * @default
+             */
+            explanation: string;
+            /**
+             * Suggestion
+             * @default
+             */
+            suggestion: string;
+            /**
+             * Tooltip
+             * @default
+             */
+            tooltip: string;
+            /**
+             * Changsheng
+             * @default
+             */
+            changsheng: string;
+            /**
+             * Jiangqian Star
+             * @default
+             */
+            jiangqian_star: string;
+            /**
+             * Suiqian Star
+             * @default
+             */
+            suiqian_star: string;
+        };
+        /**
+         * PalaceStructuredAnalysis
+         * @description 宫位三段式结构化解读（与 prose analysis 字典互补）。
+         */
+        PalaceStructuredAnalysis: {
+            /** Palace Index */
+            palace_index: number;
+            /** Palace Name */
+            palace_name: string;
+            /**
+             * Conclusion
+             * @default
+             */
+            conclusion: string;
+            /**
+             * Explanation
+             * @default
+             */
+            explanation: string;
+            /**
+             * Suggestion
+             * @default
+             */
+            suggestion: string;
+            /**
+             * Tooltip
+             * @default
+             */
+            tooltip: string;
+            /** Analysis Tags */
+            analysis_tags?: string[];
+            /**
+             * Is Empty Palace
+             * @default false
+             */
+            is_empty_palace: boolean;
+        };
+        /** PalaceWeightModel */
+        PalaceWeightModel: {
+            /** Palace Name */
+            palace_name: string;
+            /** Weight */
+            weight: number;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** PatternResponse */
+        PatternResponse: {
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Level
+             * @default
+             */
+            level: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Palaces
+             * @default []
+             */
+            palaces: string[];
+            /**
+             * Stars
+             * @default []
+             */
+            stars: string[];
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+            /**
+             * Rule Id
+             * @description 格局规则 ID，如 ZRULE_001（B-P2 证据链）
+             * @default
+             */
+            rule_id: string;
+            /**
+             * Tier
+             * @description 格局可信度层级：canonical 典籍核心 / extended 双条件 / heuristic 启发式
+             * @default heuristic
+             * @enum {string}
+             */
+            tier: "canonical" | "extended" | "heuristic";
+            /**
+             * Classic Ref
+             * @description 格局典籍句式（soft narrative）
+             * @default
+             */
+            classic_ref: string;
+            /**
+             * Classic Refs
+             * @description 格局相关古籍语料软提示
+             */
+            classic_refs?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** PatternSummaryBlockModel */
+        PatternSummaryBlockModel: {
+            /** Patterns */
+            patterns?: {
+                [key: string]: unknown;
+            }[];
+            /** Special Pattern Names */
+            special_pattern_names?: string[];
+            /**
+             * Summary Text
+             * @default
+             */
+            summary_text: string;
+            /**
+             * Confidence
+             * @default medium
+             * @enum {string}
+             */
+            confidence: "high" | "medium" | "low";
+        };
+        /** PaymentWebhookPayload */
+        PaymentWebhookPayload: {
+            /**
+             * Provider
+             * @default stripe
+             * @enum {string}
+             */
+            provider: "stripe" | "wechat";
+            /**
+             * Event Type
+             * @description checkout.completed | subscription.updated 等
+             */
+            event_type: string;
+            /** User Id */
+            user_id?: number | null;
+            /**
+             * Plan
+             * @default pro
+             * @enum {string}
+             */
+            plan: "free" | "pro";
+            /** Raw */
+            raw?: {
+                [key: string]: unknown;
+            };
+        };
+        /** PaymentWebhookResponse */
+        PaymentWebhookResponse: {
+            /** Accepted */
+            accepted: boolean;
+            /** Plan Applied */
+            plan_applied: string;
+            /** Processed At */
+            processed_at: string;
+            /** Note */
+            note: string;
+        };
+        /**
+         * PeriodForecastResponse
+         * @description 一段时期（年/月）的运势摘要。
+         */
+        PeriodForecastResponse: {
+            /** Period */
+            period: string;
+            /** Ganzhi */
+            ganzhi: string;
+            /** Palace Name */
+            palace_name: string;
+            /** Overall */
+            overall: string;
+            /** Details */
+            details: {
+                [key: string]: string;
+            };
+            /** Events */
+            events: components["schemas"]["EventTagResponse"][];
+            /** Advice */
+            advice: string;
+            /** Score */
+            score: number;
+            /**
+             * Tier
+             * @default neutral
+             */
+            tier: string;
+            /**
+             * Layer
+             * @description provenance layer: classical | engine | heuristic
+             * @default heuristic
+             */
+            layer: string;
+        };
+        /**
          * PermissionRequestBody
          * @description 发起权限申请
          */
@@ -2321,6 +8202,55 @@ export interface components {
              * @default 30
              */
             expires_days: number;
+        };
+        /**
+         * PersonFullInput
+         * @description 同时满足八字和紫微双引擎所需的人员输入。
+         */
+        PersonFullInput: {
+            /**
+             * Birth Datetime
+             * @description 本地出生时间，ISO 8601 格式（如 1990-06-15T10:30:00）
+             */
+            birth_datetime: string;
+            /**
+             * Tz
+             * @description 时区，如 Asia/Shanghai
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /**
+             * Longitude
+             * @description 出生地经度（东经正数）
+             * @default 116.41
+             */
+            longitude: number;
+            /**
+             * Gender
+             * @description 性别：male / female / 男 / 女
+             * @default male
+             */
+            gender: string;
+            /**
+             * Liunian Year
+             * @description 流年年份（紫微用，不填默认当年）
+             */
+            liunian_year?: number | null;
+        };
+        /** PersonSummary */
+        PersonSummary: {
+            /** Pillars */
+            pillars: {
+                [key: string]: unknown;
+            };
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
+            /** Day Stem */
+            day_stem: string;
+            /** Day Elem */
+            day_elem: string;
         };
         /**
          * PersonalityModel
@@ -2352,6 +8282,50 @@ export interface components {
             fact_data?: {
                 [key: string]: unknown;
             } | null;
+            /** Communication Style */
+            communication_style?: string | null;
+            /** Stress Coping Mode */
+            stress_coping_mode?: string | null;
+            /** Potential Activation */
+            potential_activation?: string | null;
+        };
+        /** PillarDetailModel */
+        PillarDetailModel: {
+            /** Label */
+            label: string;
+            /** Stem */
+            stem?: string | null;
+            /** Branch */
+            branch?: string | null;
+            /** Ganzhi */
+            ganzhi?: string | null;
+            /** Ten God */
+            ten_god?: string | null;
+            /** Hidden Stems */
+            hidden_stems?: components["schemas"]["HiddenStemDetailModel"][];
+            /** Xingyun */
+            xingyun?: string | null;
+            /** Self Seat */
+            self_seat?: string | null;
+            /** Self Seat Source */
+            self_seat_source?: string | null;
+            /** Kongwang */
+            kongwang?: string[];
+            /** Kongwang Source */
+            kongwang_source?: string | null;
+            /**
+             * Kongwang Hit
+             * @default false
+             */
+            kongwang_hit: boolean;
+            /** Nayin */
+            nayin?: string | null;
+            /** Shensha */
+            shensha?: components["schemas"]["PillarShenshaDetailModel"][];
+            /** Wuxing */
+            wuxing?: string | null;
+            /** Yin Yang */
+            yin_yang?: string | null;
         };
         /** PillarModel */
         PillarModel: {
@@ -2371,12 +8345,167 @@ export interface components {
              */
             ganzhi?: string | null;
         };
+        /** PillarOut */
+        PillarOut: {
+            /** Year */
+            year: string;
+            /** Month */
+            month: string;
+            /** Day */
+            day: string;
+            /** Hour */
+            hour: string;
+        };
+        /** PillarShenshaDetailModel */
+        PillarShenshaDetailModel: {
+            /** Name */
+            name: string;
+            /** Priority */
+            priority: string;
+            /** Polarity */
+            polarity: string;
+            /** Pillar */
+            pillar: string;
+            /** Topic */
+            topic: string;
+            /** Note */
+            note: string;
+            /** Classic */
+            classic?: string | null;
+            /** Source */
+            source?: string | null;
+        };
         /** PillarsModel */
         PillarsModel: {
             year: components["schemas"]["PillarModel"];
             month: components["schemas"]["PillarModel"];
             day: components["schemas"]["PillarModel"];
             hour: components["schemas"]["PillarModel"];
+        };
+        /** PlanetDetail */
+        PlanetDetail: {
+            /** Name En */
+            name_en: string;
+            /** Name Cn */
+            name_cn: string;
+            /** Symbol */
+            symbol: string;
+            /** Longitude */
+            longitude: number;
+            /** Retrograde */
+            retrograde: boolean;
+            /** Sign Index */
+            sign_index: number;
+            /** Sign Cn */
+            sign_cn: string;
+            /** Sign En */
+            sign_en: string;
+            /** Sign Symbol */
+            sign_symbol: string;
+            /** Element */
+            element: string;
+            /** Element Cn */
+            element_cn: string;
+            /** Mode */
+            mode: string;
+            /** Mode Cn */
+            mode_cn: string;
+            /** Degree */
+            degree: number;
+            /** Degree Str */
+            degree_str: string;
+        };
+        /**
+         * ProvenanceLayer
+         * @description Credibility metadata for a response block or whole payload.
+         */
+        ProvenanceLayer: {
+            /**
+             * Layer
+             * @default engine
+             * @enum {string}
+             */
+            layer: "classical" | "engine" | "heuristic" | "modern_convention";
+            /**
+             * Confidence
+             * @default 0.75
+             */
+            confidence: number;
+            /** Method Registry Id */
+            method_registry_id?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * QuickstartRequest
+         * @description 一步建档+计算请求体
+         */
+        QuickstartRequest: {
+            /**
+             * Name
+             * @description 档案名称，例如：张三 2000年
+             */
+            name: string;
+            /**
+             * Birth Dt Local
+             * @description 出生时间（本地时间，ISO8601 无偏移），例如 '2000-01-15T08:30:00'
+             */
+            birth_dt_local: string;
+            /**
+             * Tz
+             * @description IANA 时区，例如 'Asia/Shanghai'
+             */
+            tz: string;
+            /**
+             * Lon
+             * @description 出生地经度，范围 -180~180
+             */
+            lon: number;
+            /**
+             * Gender
+             * @description 'male' 或 'female'
+             */
+            gender?: string | null;
+            /**
+             * City
+             * @description 出生城市名称
+             */
+            city?: string | null;
+            /**
+             * Solar Time Enabled
+             * @description 是否启用真太阳时修正
+             * @default false
+             */
+            solar_time_enabled: boolean;
+            /**
+             * Notes
+             * @description 备注
+             */
+            notes?: string | null;
+            /**
+             * Tags
+             * @description 标签列表
+             */
+            tags?: string[] | null;
+            /**
+             * Mode
+             * @description 计算模式：'dual'（双引擎）或 'single'
+             * @default dual
+             */
+            mode: string;
+            /**
+             * Liunian Years
+             * @description 流年范围（相对当前年，例如 [-2, 2] 表示前后2年）
+             */
+            liunian_years?: number[] | null;
+        };
+        /**
+         * QuickstartResponse
+         * @description 一步建档+计算响应体
+         */
+        QuickstartResponse: {
+            case: components["schemas"]["CaseOut"];
+            compute: components["schemas"]["ComputeResponse"];
         };
         /**
          * RangeModel
@@ -2464,6 +8593,22 @@ export interface components {
             /** Snapshots Created */
             snapshots_created?: string[];
         };
+        /** RelationItemModel */
+        RelationItemModel: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "刑" | "冲" | "合" | "害" | "破" | "空亡" | "干支互动";
+            /** Subject */
+            subject: string;
+            /** Target */
+            target?: string | null;
+            /** Summary */
+            summary: string;
+            /** Strength */
+            strength?: ("strong" | "medium" | "weak") | null;
+        };
         /** RelationPoint */
         RelationPoint: {
             /** Tag */
@@ -2516,6 +8661,36 @@ export interface components {
             };
         };
         /**
+         * RelationsSummaryModel
+         * @description 地支/天干关系上浮摘要（BE-P3-05）
+         */
+        RelationsSummaryModel: {
+            /** Items */
+            items?: components["schemas"]["RelationItemModel"][];
+            /**
+             * Clash Summary
+             * @default
+             */
+            clash_summary: string;
+            /**
+             * Combine Summary
+             * @default
+             */
+            combine_summary: string;
+            /**
+             * Harm Summary
+             * @default
+             */
+            harm_summary: string;
+            /**
+             * Interaction Summary
+             * @default
+             */
+            interaction_summary: string;
+            /** Missing */
+            missing?: string[];
+        };
+        /**
          * RelationshipAnalysisModel
          * @description 人际分析 §4.11-E
          */
@@ -2546,6 +8721,75 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** RemedyResponse */
+        RemedyResponse: {
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Priority
+             * @default 0
+             */
+            priority: number;
+            /**
+             * Cost Level
+             * @default
+             */
+            cost_level: string;
+            /**
+             * Valid Scope
+             * @default
+             */
+            valid_scope: string;
+            /**
+             * Actions
+             * @default []
+             */
+            actions: string[];
+            /**
+             * Evidence
+             * @default
+             */
+            evidence: string;
+            /**
+             * Disclaimer
+             * @default
+             */
+            disclaimer: string;
+        };
+        /** ReportSummaryBlockModel */
+        ReportSummaryBlockModel: {
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /** Highlights */
+            highlights?: string[];
+            /** Warnings */
+            warnings?: string[];
+            /**
+             * Annotation Prompt
+             * @default
+             */
+            annotation_prompt: string;
+            /** Source */
+            source?: string | null;
+            /** Missing */
+            missing?: string[];
+        };
         /**
          * ResponseMeta
          * @description API v2 响应元信息（满足红线 R38）.
@@ -2566,6 +8810,107 @@ export interface components {
              * @description 本次计算耗时（毫秒）
              */
             calc_ms: number;
+        };
+        /**
+         * ResponseProvenance
+         * @description Root-level provenance for bazi_full / ziwei_full.
+         */
+        ResponseProvenance: {
+            pillars?: components["schemas"]["ProvenanceLayer"];
+            geju?: components["schemas"]["ProvenanceLayer"];
+            yongshen?: components["schemas"]["ProvenanceLayer"];
+            dayun?: components["schemas"]["ProvenanceLayer"];
+            narrative?: components["schemas"]["ProvenanceLayer"];
+            analysis?: components["schemas"]["ProvenanceLayer"];
+            scoring?: components["schemas"]["ProvenanceLayer"];
+            forecast?: components["schemas"]["ProvenanceLayer"];
+            compatibility?: components["schemas"]["ProvenanceLayer"];
+            patterns?: components["schemas"]["ProvenanceLayer"];
+            stars?: components["schemas"]["ProvenanceLayer"];
+        };
+        /**
+         * ReviewAssigneeItem
+         * @description 可选审核员
+         */
+        ReviewAssigneeItem: {
+            /** Id */
+            id: number;
+            /** Username */
+            username: string;
+            /** Email */
+            email: string;
+            /** Role */
+            role: string;
+            /** Is Admin */
+            is_admin: boolean;
+            /**
+             * Is Current User
+             * @default false
+             */
+            is_current_user: boolean;
+        };
+        /**
+         * ReviewAssigneeListResponse
+         * @description 审核员候选列表
+         */
+        ReviewAssigneeListResponse: {
+            /** Current Username */
+            current_username: string;
+            /** Items */
+            items: components["schemas"]["ReviewAssigneeItem"][];
+        };
+        /**
+         * ReviewHistoryItem
+         * @description 单条审核历史记录
+         */
+        ReviewHistoryItem: {
+            /** Id */
+            id: number;
+            /** Review Id */
+            review_id: number;
+            /** Status */
+            status: string;
+            /** Reviewer */
+            reviewer: string;
+            /** Notes */
+            notes: string;
+            /** Reject Reason */
+            reject_reason: string;
+            /** Change Type */
+            change_type: string;
+            /**
+             * Changed At
+             * Format: date-time
+             */
+            changed_at: string;
+        };
+        /**
+         * ReviewHistoryResponse
+         * @description 审核历史列表
+         */
+        ReviewHistoryResponse: {
+            /** Review Id */
+            review_id: number;
+            /** Items */
+            items: components["schemas"]["ReviewHistoryItem"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * ReviewStats
+         * @description 审核记录统计
+         */
+        ReviewStats: {
+            /** Total */
+            total: number;
+            /** Pending */
+            pending: number;
+            /** Approved */
+            approved: number;
+            /** Rejected */
+            rejected: number;
+            /** Revised */
+            revised: number;
         };
         /** RiskFlagsModel */
         RiskFlagsModel: {
@@ -2597,6 +8942,142 @@ export interface components {
             minutes_to_jieqi_boundary?: number | null;
         };
         /**
+         * RoomLayoutRequest
+         * @description 房间布局评估请求。
+         */
+        RoomLayoutRequest: {
+            /**
+             * Birth Year
+             * @description 出生公历年份
+             */
+            birth_year: number;
+            /**
+             * Gender
+             * @description 性别：男 / 女
+             */
+            gender: string;
+            /**
+             * House Facing
+             * @description 房屋朝向（可选）：N/NE/E/SE/S/SW/W/NW
+             */
+            house_facing?: string | null;
+            /**
+             * Rooms
+             * @description 方位→房间类型映射，如 {"N": "kitchen", "E": "master_bedroom"}。支持的方位：N/NE/E/SE/S/SW/W/NW。支持的房间类型：empty/master_bedroom/bedroom/study/child_room/living_room/entrance/dining_room/kitchen/bathroom/storage
+             */
+            rooms: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * RoomLayoutResponse
+         * @description 房间布局整体评估响应。
+         */
+        RoomLayoutResponse: {
+            /**
+             * Life Gua
+             * @description 命卦数（1-9，无5）
+             */
+            life_gua: number;
+            /**
+             * Gua Name
+             * @description 卦名，如 '坎'
+             */
+            gua_name: string;
+            /**
+             * Score
+             * @description 加权整体评分 0~100
+             */
+            score: number;
+            /**
+             * Grade
+             * @description 等级文字：优秀/良好/一般/较差/待改善
+             */
+            grade: string;
+            /**
+             * Grade Css
+             * @description 等级 CSS 类：excellent/good/ok/caution/warning
+             */
+            grade_css: string;
+            /**
+             * Cells
+             * @description 各方位评估详情
+             */
+            cells: components["schemas"]["ZoneAssessmentResponse"][];
+            /**
+             * Suggestions
+             * @description 改善建议列表
+             */
+            suggestions: string[];
+            /**
+             * Disclaimer
+             * @description 免责声明
+             */
+            disclaimer: string;
+        };
+        /**
+         * RuleMatchModel
+         * @description 单条规则命中结果，由 bazi_rule_engine 生成，注入 BaziFullResponse。
+         */
+        RuleMatchModel: {
+            /**
+             * Rule Id
+             * @description 规则唯一标识，如 BRULE_001
+             */
+            rule_id: string;
+            /**
+             * Name
+             * @description 规则名称
+             */
+            name: string;
+            /**
+             * Flags
+             * @description 语义标签列表
+             */
+            flags?: string[];
+            /**
+             * Evidence Text
+             * @description 填充占位符后的规则文本，用于 LLM 提示词
+             */
+            evidence_text: string;
+            /**
+             * Classic Hint
+             * @description 来源古籍参考，如 '神峰通考'
+             * @default
+             */
+            classic_hint: string;
+            /**
+             * Disclaimer
+             * @description 免责声明
+             * @default 仅供学术研究参考
+             */
+            disclaimer: string;
+        };
+        /**
+         * SancaiInfoResponse
+         * @description 三才五行配置结果。
+         */
+        SancaiInfoResponse: {
+            /** Pattern */
+            pattern: string;
+            /** Lucky */
+            lucky: string;
+            /** Score */
+            score: number;
+            /** Desc */
+            desc: string;
+        };
+        /**
+         * SanfangStructureModel
+         * @description 三方四正结构化关系。
+         */
+        SanfangStructureModel: {
+            life_palace: components["schemas"]["PalaceRefModel"];
+            opposite_palace?: components["schemas"]["PalaceRefModel"] | null;
+            /** Triad Palaces */
+            triad_palaces?: components["schemas"]["PalaceRefModel"][];
+        };
+        /**
          * ScenarioCreateRequest
          * @description 创建场景请求
          */
@@ -2613,6 +9094,18 @@ export interface components {
             variations?: string | null;
             /** Results */
             results?: string | null;
+        };
+        /**
+         * ScenarioListResponse
+         * @description 场景分页列表响应
+         */
+        ScenarioListResponse: {
+            /** Items */
+            items: components["schemas"]["ScenarioResponse"][];
+            /** Total */
+            total: number;
+            /** Next Cursor */
+            next_cursor?: number | null;
         };
         /**
          * ScenarioResponse
@@ -2662,6 +9155,15 @@ export interface components {
             /** Results */
             results?: string | null;
         };
+        /** SearchResponse */
+        SearchResponse: {
+            /** Query Hash */
+            query_hash: string;
+            /** Total Indexed */
+            total_indexed: number;
+            /** Results */
+            results: components["schemas"]["SimilarResult"][];
+        };
         /**
          * ShenshaModel
          * @description 单神煞条目
@@ -2693,6 +9195,344 @@ export interface components {
             meaning: string;
             /** Classic Source */
             classic_source: string;
+            /**
+             * Classic Refs
+             * @description 神煞相关古籍语料软提示
+             */
+            classic_refs?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /**
+         * ShenshaSummaryModel
+         * @description 神煞上浮摘要（BE-P3-05）
+         */
+        ShenshaSummaryModel: {
+            /** Items */
+            items?: components["schemas"]["ShenshaModel"][];
+            /** Highlights */
+            highlights?: string[];
+            /** Missing */
+            missing?: string[];
+        };
+        /** ShishenContributionModel */
+        ShishenContributionModel: {
+            /**
+             * Pillar
+             * @enum {string}
+             */
+            pillar: "year" | "month" | "day" | "hour";
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "stem" | "hidden";
+            /** Stem */
+            stem: string;
+            /** Hidden Stem */
+            hidden_stem?: string | null;
+            /** Ten God */
+            ten_god?: string | null;
+            /**
+             * Weight
+             * @default 0
+             */
+            weight: number;
+            /** Element */
+            element?: string | null;
+        };
+        /** ShishenPillarSummaryModel */
+        ShishenPillarSummaryModel: {
+            /**
+             * Pillar
+             * @enum {string}
+             */
+            pillar: "year" | "month" | "day" | "hour";
+            /** Stem */
+            stem?: string | null;
+            /** Ten God */
+            ten_god?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ShishenSummaryModel */
+        ShishenSummaryModel: {
+            /** Day Stem */
+            day_stem: string;
+            /** Day Element */
+            day_element?: string | null;
+            /** Day Yinyang */
+            day_yinyang?: string | null;
+            /** Pillars */
+            pillars?: {
+                [key: string]: components["schemas"]["ShishenPillarSummaryModel"];
+            };
+            /**
+             * Score Total
+             * @default 0
+             */
+            score_total: number;
+            /** Score Breakdown */
+            score_breakdown?: {
+                [key: string]: number;
+            };
+            /** Score Share */
+            score_share?: {
+                [key: string]: number;
+            };
+            /** Dominant */
+            dominant?: string[];
+            /** Hidden Contrib By Ten God */
+            hidden_contrib_by_ten_god?: {
+                [key: string]: number;
+            };
+            /** Contributions */
+            contributions?: components["schemas"]["ShishenContributionModel"][];
+            /** Liuqin Summary */
+            liuqin_summary?: string[];
+            /**
+             * Summary Text
+             * @default
+             */
+            summary_text: string;
+        };
+        /**
+         * SihuaTraceEntryModel
+         * @description 生年四化链条目（宫位级）。
+         */
+        SihuaTraceEntryModel: {
+            /** Palace */
+            palace: string;
+            /**
+             * Stem
+             * @default
+             */
+            stem: string;
+            /** Flying Out */
+            flying_out?: {
+                [key: string]: string;
+            };
+            /**
+             * Conclusion
+             * @default
+             */
+            conclusion: string;
+            /**
+             * Opposition
+             * @default
+             */
+            opposition: string;
+            /**
+             * Source
+             * @default
+             */
+            source: string;
+            /**
+             * Missing
+             * @default false
+             */
+            missing: boolean;
+        };
+        /** SihuaTraceItemModel */
+        SihuaTraceItemModel: {
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "生年" | "大限" | "流年" | "流月";
+            /** Target */
+            target: string;
+            /** Transform */
+            transform: string;
+            /** Palace Name */
+            palace_name?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Source */
+            source?: string | null;
+            /**
+             * Missing
+             * @default false
+             */
+            missing: boolean;
+        };
+        /** SimilarResult */
+        SimilarResult: {
+            case: components["schemas"]["CaseResponse"];
+            /** Similarity */
+            similarity: number;
+        };
+        /** SimilarityIndexRequest */
+        SimilarityIndexRequest: {
+            /** Chart Hash */
+            chart_hash: string;
+            /**
+             * Birth Solar
+             * @default
+             */
+            birth_solar: string;
+            /**
+             * Birth Year
+             * @default 0
+             */
+            birth_year: number;
+            /**
+             * Birth Month
+             * @default 0
+             */
+            birth_month: number;
+            /**
+             * Birth Day
+             * @default 0
+             */
+            birth_day: number;
+            /**
+             * Birth Hour
+             * @default 0
+             */
+            birth_hour: number;
+            /**
+             * Gender
+             * @default
+             */
+            gender: string;
+            /**
+             * Wuxing Ju Name
+             * @default
+             */
+            wuxing_ju_name: string;
+            /**
+             * Life Palace Gz
+             * @default
+             */
+            life_palace_gz: string;
+            /**
+             * Patterns
+             * @default []
+             */
+            patterns: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Source Label
+             * @default user
+             */
+            source_label: string;
+        };
+        /**
+         * SimulateRequest
+         * @description W5 场景模拟请求：可选覆盖 birth_dt / longitude，触发重新计算并回写 results。
+         */
+        SimulateRequest: {
+            /** Birth Dt Override */
+            birth_dt_override?: string | null;
+            /** Longitude Override */
+            longitude_override?: number | null;
+            /** Gender Override */
+            gender_override?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** SimulateResponse */
+        SimulateResponse: {
+            /** Scenario Id */
+            scenario_id: number;
+            /**
+             * Geju Name
+             * @default
+             */
+            geju_name: string;
+            /**
+             * Yongshen Favor
+             * @default []
+             */
+            yongshen_favor: string[];
+            /**
+             * Yongshen Avoid
+             * @default []
+             */
+            yongshen_avoid: string[];
+            /**
+             * Wuxing Scores
+             * @default {}
+             */
+            wuxing_scores: {
+                [key: string]: number;
+            };
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /** Simulated At */
+            simulated_at: string;
+        };
+        /** SnapshotCreate */
+        SnapshotCreate: {
+            /**
+             * Kind
+             * @default ziwei
+             */
+            kind: string;
+            /** Compute Flags */
+            compute_flags?: {
+                [key: string]: unknown;
+            } | null;
+            /** Input Json */
+            input_json?: {
+                [key: string]: unknown;
+            } | null;
+            /** Output Json */
+            output_json?: {
+                [key: string]: unknown;
+            } | null;
+            /** Backend Json */
+            backend_json?: {
+                [key: string]: unknown;
+            } | null;
+            /** Api Version */
+            api_version?: string | null;
+            /** Rule Version */
+            rule_version?: string | null;
+            /**
+             * Schema Version
+             * @default snapshot@5.0
+             */
+            schema_version: string | null;
+            /** Summary Level */
+            summary_level?: string | null;
+            /** Summary Warning Count */
+            summary_warning_count?: number | null;
+            /** Summary Diff Count */
+            summary_diff_count?: number | null;
+            /** Summary Engine Primary */
+            summary_engine_primary?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** SnapshotDiffField */
+        SnapshotDiffField: {
+            /** Field */
+            field: string;
+            /** Value A */
+            value_a: unknown;
+            /** Value B */
+            value_b: unknown;
+        };
+        /** SnapshotDiffResponse */
+        SnapshotDiffResponse: {
+            /** Snapshot A */
+            snapshot_a: string;
+            /** Snapshot B */
+            snapshot_b: string;
+            /** Changed Fields */
+            changed_fields: components["schemas"]["SnapshotDiffField"][];
+            /** Added Fields */
+            added_fields: string[];
+            /** Removed Fields */
+            removed_fields: string[];
+            /** Total Changes */
+            total_changes: number;
         };
         /**
          * SnapshotOut
@@ -2756,14 +9596,171 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * SolarReturnResponse
+         * @description 太阳回归年盘响应（§6.2）
+         */
+        SolarReturnResponse: {
+            /** Julian Day */
+            julian_day: number;
+            /** Planets */
+            planets: components["schemas"]["PlanetDetail"][];
+            ascendant: components["schemas"]["ChartPoint"];
+            midheaven: components["schemas"]["ChartPoint"];
+            /** Aspects */
+            aspects: components["schemas"]["AspectItem"][];
+            /** Element Counts */
+            element_counts: {
+                [key: string]: number;
+            };
+            /** Mode Counts */
+            mode_counts: {
+                [key: string]: number;
+            };
+            /** Geocentric Longitudes */
+            geocentric_longitudes: {
+                [key: string]: number;
+            };
+            /** Heliocentric Longitudes */
+            heliocentric_longitudes: {
+                [key: string]: number;
+            };
+            /** Sr Dt Utc */
+            sr_dt_utc: string;
+            /** Sr Year */
+            sr_year: number;
+            /** Natal Sun Lon */
+            natal_sun_lon: number;
+        };
+        /** SpreadPosition */
+        SpreadPosition: {
+            /** Position */
+            position: string;
+            card: components["schemas"]["DrawnCard"];
+        };
+        /** SpreadRequest */
+        SpreadRequest: {
+            /**
+             * Count
+             * @description 抽取张数（1-10）
+             * @default 3
+             */
+            count: number;
+            /**
+             * Context
+             * @description 可选上下文说明，如「感情」「事业」等
+             */
+            context?: string | null;
+            /**
+             * Allow Reversed
+             * @description 是否允许逆位
+             * @default true
+             */
+            allow_reversed: boolean;
+        };
+        /** SpreadResponse */
+        SpreadResponse: {
+            /** Count */
+            count: number;
+            /** Positions */
+            positions: components["schemas"]["SpreadPosition"][];
+            /** Context */
+            context?: string | null;
+        };
+        /** StarBrightnessSummaryModel */
+        StarBrightnessSummaryModel: {
+            /** Strong */
+            strong?: string[];
+            /** Weak */
+            weak?: string[];
+            /** Details */
+            details?: {
+                [key: string]: string;
+            };
+        };
+        /** StarInfo */
+        StarInfo: {
+            /** Name */
+            name: string;
+            /** Brightness */
+            brightness: string;
+            /** Brightness Val */
+            brightness_val: number;
+            /**
+             * Transforms
+             * @default []
+             */
+            transforms: string[];
+        };
         /** StrengthFactorModel */
         StrengthFactorModel: {
             /** Name */
             name: string;
             /** Score */
             score: number;
+            /**
+             * Weight
+             * @description 因子权重 0-1（B-02）
+             */
+            weight?: number | null;
+            /**
+             * Weighted Score
+             * @description 加权得分
+             */
+            weighted_score?: number | null;
             /** Reason */
             reason?: string | null;
+        };
+        /** StrokesRequest */
+        StrokesRequest: {
+            /**
+             * Name
+             * @description 中文姓名，如'张伟'
+             */
+            name: string;
+        };
+        /** StrokesResponse */
+        StrokesResponse: {
+            /** Name */
+            name: string;
+            /** Chars */
+            chars: components["schemas"]["CharStrokeInfo"][];
+            /** Total Strokes */
+            total_strokes: number;
+            /** Expression Number */
+            expression_number: number;
+        };
+        /** StructuredTextResponse */
+        StructuredTextResponse: {
+            /** Format */
+            format: string;
+            /** Markdown */
+            markdown: string;
+            /** Json */
+            json: {
+                [key: string]: unknown;
+            };
+        };
+        /** TarotCard */
+        TarotCard: {
+            /** Num */
+            num: number;
+            /** Name */
+            name: string;
+            /** Cn */
+            cn: string;
+            /** Emoji */
+            emoji: string;
+            /** Keyword */
+            keyword: string;
+            /** Upright */
+            upright: string;
+            /** Reversed */
+            reversed: string;
+            /** Advice */
+            advice: string;
+            /** Color */
+            color: string;
         };
         /** TenGodsModel */
         TenGodsModel: {
@@ -2775,6 +9772,21 @@ export interface components {
             day?: string | null;
             /** Hour */
             hour?: string | null;
+        };
+        /** TimelinePointModel */
+        TimelinePointModel: {
+            /** Year */
+            year: number;
+            /** Label */
+            label: string;
+            /** Summary */
+            summary: string;
+            /**
+             * Tone
+             * @default neutral
+             * @enum {string}
+             */
+            tone: "danger" | "warn" | "neutral" | "info" | "current";
         };
         /**
          * TokenResponse
@@ -2866,6 +9878,47 @@ export interface components {
             warnings?: components["schemas"]["WarningModel"][];
         };
         /**
+         * VariantDef
+         * @description 单个变体定义。
+         */
+        VariantDef: {
+            /**
+             * Name
+             * @description 变体标识符，如 control / variant_a
+             */
+            name: string;
+            /**
+             * Description
+             * @description 变体描述
+             * @default
+             */
+            description: string;
+            /**
+             * Weight
+             * @description 流量权重（相对值）
+             * @default 50
+             */
+            weight: number;
+        };
+        /**
+         * VariantStats
+         * @description 单个变体的汇总统计。
+         */
+        VariantStats: {
+            /** Variant */
+            variant: string;
+            /** Assigned */
+            assigned: number;
+            /** Conversions */
+            conversions: number;
+            /** Conversion Rate */
+            conversion_rate: number;
+            /** Other Events */
+            other_events: {
+                [key: string]: number;
+            };
+        };
+        /**
          * VerifyRequest
          * @description 验证请求
          */
@@ -2917,6 +9970,21 @@ export interface components {
              * @default 其余
              */
             industry: ("金融IT" | "教育公务" | "其余") | null;
+            /**
+             * Target Date
+             * @description Optional target date for liuri/liushi
+             */
+            target_date?: string | null;
+            /**
+             * Target Hour
+             * @description Target hour 0-23 for liushi
+             */
+            target_hour?: number | null;
+            /**
+             * Include Liuri
+             * @description 是否返回流日/流时；verify 默认 False，设为 True 时未传 target_date 使用当天
+             */
+            include_liuri?: boolean | null;
         };
         /**
          * VerifyRequestV2
@@ -2971,6 +10039,21 @@ export interface components {
              */
             industry: ("金融IT" | "教育公务" | "其余") | null;
             /**
+             * Target Date
+             * @description Optional target date for liuri/liushi
+             */
+            target_date?: string | null;
+            /**
+             * Target Hour
+             * @description Target hour 0-23 for liushi
+             */
+            target_hour?: number | null;
+            /**
+             * Include Liuri
+             * @description 是否返回流日/流时；verify 默认 False，设为 True 时未传 target_date 使用当天
+             */
+            include_liuri?: boolean | null;
+            /**
              * Output Format
              * @description 响应格式：full=完整响应（等同 v1 VerifyResponse + meta）；minimal=精简5字段（geju/yongshen/dayun_current/wuxing_score/score）
              * @default full
@@ -2990,6 +10073,18 @@ export interface components {
              * @description API semantic version
              */
             api_version: string;
+            /**
+             * Engine Version
+             * @description Engine version used for calculation (R38)
+             * @default v1
+             */
+            engine_version: string;
+            /**
+             * Calc Ms
+             * @description Calculation elapsed time in milliseconds (R38)
+             * @default 0
+             */
+            calc_ms: number;
             /**
              * Rule Version
              * @description Rule/data version
@@ -3044,6 +10139,7 @@ export interface components {
             day_master_strength?: components["schemas"]["DayMasterStrengthModel"] | null;
             yongshen?: components["schemas"]["YongShenModel"] | null;
             ten_gods?: components["schemas"]["TenGodsModel"] | null;
+            shishen_summary?: components["schemas"]["ShishenSummaryModel"] | null;
             wealth?: components["schemas"]["WealthModel"] | null;
             marriage?: components["schemas"]["MarriageModel"] | null;
             social?: components["schemas"]["SocialModel"] | null;
@@ -3147,6 +10243,24 @@ export interface components {
                 [key: string]: unknown;
             }[] | null;
             /**
+             * Start Dayun Age
+             * @description 大运起运年龄（精确到0.1岁，N5.07）
+             */
+            start_dayun_age?: number | null;
+            /**
+             * Bazi Summary
+             * @description 命局综合总评（400-600字六段结构，已纳入日主天干特征、格局、应用神等维度）
+             * @default
+             */
+            bazi_summary: string;
+            /** @description 流日/流时（opt-in via include_liuri） */
+            liuri_liushi?: components["schemas"]["LiuriLiushiModel"] | null;
+            /**
+             * Missing Fields
+             * @description 缺失或未计算的字段名
+             */
+            missing_fields?: string[];
+            /**
              * @description Discriminator 字段（Pydantic v2 discriminated union 要求） (enum property replaced by openapi-typescript)
              * @enum {string}
              */
@@ -3200,6 +10314,25 @@ export interface components {
              */
             data: components["schemas"]["VerifyResponseFull"] | components["schemas"]["VerifyResponseMinimal"];
         };
+        /** VolumeSectionModel */
+        VolumeSectionModel: {
+            /** Id */
+            id: string;
+            /** Heading */
+            heading: string;
+            /**
+             * Layer
+             * @enum {string}
+             */
+            layer: "fact" | "cite" | "inference";
+            /**
+             * Collapsed Default
+             * @default false
+             */
+            collapsed_default: boolean;
+            /** Blocks */
+            blocks?: components["schemas"]["AnalysisBlockModel"][];
+        };
         /**
          * WarningModel
          * @description 统一的警告模型
@@ -3249,6 +10382,12 @@ export interface components {
             fact_data?: {
                 [key: string]: unknown;
             } | null;
+            /** Investment Preference */
+            investment_preference?: string | null;
+            /** Financial Taboos */
+            financial_taboos?: string | null;
+            /** Wealth Accumulation Phases */
+            wealth_accumulation_phases?: string | null;
         };
         /** WealthModel */
         WealthModel: {
@@ -3274,6 +10413,33 @@ export interface components {
             } | null;
         } & {
             [key: string]: unknown;
+        };
+        /** WesternChartResponse */
+        WesternChartResponse: {
+            /** Julian Day */
+            julian_day: number;
+            /** Planets */
+            planets: components["schemas"]["PlanetDetail"][];
+            ascendant: components["schemas"]["ChartPoint"];
+            midheaven: components["schemas"]["ChartPoint"];
+            /** Aspects */
+            aspects: components["schemas"]["AspectItem"][];
+            /** Element Counts */
+            element_counts: {
+                [key: string]: number;
+            };
+            /** Mode Counts */
+            mode_counts: {
+                [key: string]: number;
+            };
+            /** Geocentric Longitudes */
+            geocentric_longitudes: {
+                [key: string]: number;
+            };
+            /** Heliocentric Longitudes */
+            heliocentric_longitudes: {
+                [key: string]: number;
+            };
         };
         /** WuXingBreakdownModel */
         WuXingBreakdownModel: {
@@ -3322,6 +10488,129 @@ export interface components {
              */
             water: number;
         };
+        /** YaoDetail */
+        YaoDetail: {
+            /** Position */
+            position: number;
+            /** Value */
+            value: number;
+            /** Text */
+            text: string;
+            /** Is Yang */
+            is_yang: boolean;
+            /** Is Dong */
+            is_dong: boolean;
+            /** Is Shi */
+            is_shi: boolean;
+            /** Is Ying */
+            is_ying: boolean;
+            /** Najia Stem */
+            najia_stem: string;
+            /** Najia Branch */
+            najia_branch: string;
+            /** Najia */
+            najia: string;
+            /** Wuxing */
+            wuxing: string;
+            /** Liuqin */
+            liuqin: string;
+        };
+        /**
+         * YearEventConsultRequest
+         * @description AI 咨询请求
+         */
+        YearEventConsultRequest: {
+            /** Case Id */
+            case_id: string;
+            /** Year */
+            year: number;
+            /** Event Type */
+            event_type: string;
+            /** User Question */
+            user_question: string;
+        };
+        /**
+         * YearEventConsultResponse
+         * @description AI 咨询响应
+         */
+        YearEventConsultResponse: {
+            /** Case Id */
+            case_id: string;
+            /** Year */
+            year: number;
+            /** Event Type */
+            event_type: string;
+            /** Interpretation */
+            interpretation: string;
+            /** Followup Questions */
+            followup_questions: string[];
+        };
+        /**
+         * YearEventRequest
+         * @description 单年事件预测请求
+         */
+        YearEventRequest: {
+            /** Case Id */
+            case_id: string;
+            /** Year */
+            year: number;
+            /**
+             * Event Types
+             * @description 要预测的事件类别，默认全部5类
+             * @default [
+             *       "marriage",
+             *       "wealth",
+             *       "property",
+             *       "career",
+             *       "health"
+             *     ]
+             */
+            event_types: string[];
+        };
+        /**
+         * YearEventResponse
+         * @description 单年事件预测响应
+         */
+        YearEventResponse: {
+            /** Case Id */
+            case_id: string;
+            /** Year */
+            year: number;
+            /** Year Ganzhi */
+            year_ganzhi: string;
+            /** Events */
+            events: {
+                [key: string]: components["schemas"]["EventResult"];
+            };
+            /** Overall Year Score */
+            overall_year_score: number;
+        };
+        /**
+         * YearSummary
+         * @description 某年摘要（用于时间线展示）
+         */
+        YearSummary: {
+            /** Year */
+            year: number;
+            /** Year Ganzhi */
+            year_ganzhi: string;
+            /** Main Theme */
+            main_theme: string;
+            /** Top Events */
+            top_events: string[];
+            /**
+             * Risk
+             * @enum {string}
+             */
+            risk: "none" | "low" | "medium" | "medium_high" | "high";
+            /**
+             * Opportunity
+             * @enum {string}
+             */
+            opportunity: "none" | "low" | "medium" | "high";
+            /** Annual Score */
+            annual_score: number;
+        };
         /** YongShenModel */
         YongShenModel: {
             /** Favor */
@@ -3330,6 +10619,1087 @@ export interface components {
             avoid?: string[];
             /** Rationale */
             rationale?: string | null;
+            /**
+             * Recorded Favor
+             * @description 古籍/recorded 用神五行
+             */
+            recorded_favor?: string[];
+            /**
+             * Engine Favor
+             * @description 引擎 favor 口径
+             */
+            engine_favor?: string[];
+            /**
+             * Dual Track Note
+             * @description 用神双轨说明
+             */
+            dual_track_note?: string | null;
+            /**
+             * Dual Track Id
+             * @description 双轨用例 ID，如 ZIP01
+             */
+            dual_track_id?: string | null;
+        };
+        /**
+         * ZeriDayResponse
+         * @description 单日评分结果。
+         */
+        ZeriDayResponse: {
+            /**
+             * Date
+             * @description 公历日期，如 '2026-04-01'
+             */
+            date: string;
+            /**
+             * Weekday
+             * @description 星期，如 '一'～'日'
+             */
+            weekday: string;
+            /**
+             * Day Gz
+             * @description 日干支，如 '乙巳'
+             */
+            day_gz: string;
+            /**
+             * Day Stem
+             * @description 日天干
+             */
+            day_stem: string;
+            /**
+             * Day Branch
+             * @description 日地支
+             */
+            day_branch: string;
+            /**
+             * Lunar Info
+             * @description 农历简要，如 '三月初五'
+             */
+            lunar_info: string;
+            /**
+             * Score
+             * @description 综合评分 0-100
+             */
+            score: number;
+            /**
+             * Level
+             * @description 评级：大吉/吉/中/凶
+             */
+            level: string;
+            /**
+             * Level Css
+             * @description CSS 类名：daji/ji/zhong/xiong
+             */
+            level_css: string;
+            /**
+             * Evidence
+             * @description 得分依据说明列表
+             */
+            evidence: string[];
+            /**
+             * Is Break
+             * @description 是否岁破/月破日
+             */
+            is_break: boolean;
+            /**
+             * Is Virtue
+             * @description 是否天德/月德日
+             */
+            is_virtue: boolean;
+        };
+        /**
+         * ZeriMonthResponse
+         * @description 整月择日结果。
+         */
+        ZeriMonthResponse: {
+            /** Year */
+            year: number;
+            /** Month */
+            month: number;
+            /** Purpose */
+            purpose: string;
+            /**
+             * Purpose Label
+             * @description 用途中文名称
+             */
+            purpose_label: string;
+            /**
+             * Year Gz
+             * @description 年干支，如 '丙午'
+             */
+            year_gz: string;
+            /**
+             * Month Gz
+             * @description 月干支，如 '甲子'
+             */
+            month_gz: string;
+            /**
+             * Days
+             * @description 当月逐日评分
+             */
+            days: components["schemas"]["ZeriDayResponse"][];
+            /**
+             * Top Days
+             * @description 推荐日期列表（按评分排序，最多8个）
+             */
+            top_days: string[];
+        };
+        /**
+         * ZiweiChartStructuralSummaryModel
+         * @description 命盘宫位结构摘要（纯结构化，替代 loose dict）。
+         */
+        ZiweiChartStructuralSummaryModel: {
+            life_palace: components["schemas"]["PalaceRefModel"];
+            body_palace: components["schemas"]["PalaceRefModel"];
+            opposite_palace?: components["schemas"]["PalaceRefModel"] | null;
+            sanfang: components["schemas"]["SanfangStructureModel"];
+            /**
+             * Life Branch Idx
+             * @default 0
+             */
+            life_branch_idx: number;
+            /**
+             * Body Branch Idx
+             * @default 0
+             */
+            body_branch_idx: number;
+            /** Source */
+            source?: string | null;
+            /** Missing */
+            missing?: string[];
+        };
+        /** ZiweiCompatDimension */
+        ZiweiCompatDimension: {
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Score
+             * @default 0
+             */
+            score: number;
+            /**
+             * Max Score
+             * @default 0
+             */
+            max_score: number;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+        };
+        /** ZiweiCompatSection */
+        ZiweiCompatSection: {
+            /**
+             * Total Score
+             * @default 0
+             */
+            total_score: number;
+            /**
+             * Max Score
+             * @default 0
+             */
+            max_score: number;
+            /**
+             * Level
+             * @default
+             */
+            level: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /**
+             * Dimensions
+             * @default []
+             */
+            dimensions: components["schemas"]["ZiweiCompatDimension"][];
+            /**
+             * Harmony Points
+             * @default []
+             */
+            harmony_points: string[];
+            /**
+             * Conflict Points
+             * @default []
+             */
+            conflict_points: string[];
+        };
+        /**
+         * ZiweiCoreSnapshotModel
+         * @description 核心命盘快照。
+         */
+        ZiweiCoreSnapshotModel: {
+            /**
+             * Life Palace Gz
+             * @default
+             */
+            life_palace_gz: string;
+            /**
+             * Body Palace Gz
+             * @default
+             */
+            body_palace_gz: string;
+            /**
+             * Life Palace Branch Idx
+             * @default 0
+             */
+            life_palace_branch_idx: number;
+            /**
+             * Body Palace Branch Idx
+             * @default 0
+             */
+            body_palace_branch_idx: number;
+            /**
+             * Wuxing Ju
+             * @default 0
+             */
+            wuxing_ju: number;
+            /**
+             * Wuxing Ju Name
+             * @default
+             */
+            wuxing_ju_name: string;
+            /**
+             * Life Ruler Star
+             * @default
+             */
+            life_ruler_star: string;
+            /**
+             * Body Ruler Star
+             * @default
+             */
+            body_ruler_star: string;
+            /**
+             * Laiyin Palace
+             * @default
+             */
+            laiyin_palace: string;
+        };
+        /**
+         * ZiweiExplainBatchRequest
+         * @example {
+         *       "day": 13,
+         *       "gender": "女",
+         *       "hour": 14,
+         *       "minute": 55,
+         *       "month": 3,
+         *       "year": 2002
+         *     }
+         */
+        ZiweiExplainBatchRequest: {
+            /**
+             * Year
+             * @description 公历出生年
+             */
+            year: number;
+            /**
+             * Month
+             * @description 公历出生月
+             */
+            month: number;
+            /**
+             * Day
+             * @description 公历出生日
+             */
+            day: number;
+            /**
+             * Hour
+             * @description 出生小时（24小时制）
+             */
+            hour: number;
+            /**
+             * Minute
+             * @description 出生分钟
+             * @default 0
+             */
+            minute: number;
+            /**
+             * Gender
+             * @description 性别：男/女
+             */
+            gender: string;
+            /**
+             * Liunian Year
+             * @description 流年年份（不填默认当年）
+             */
+            liunian_year?: number | null;
+            /**
+             * Longitude
+             * @description 出生地经度（东经正数），用于真太阳时修正
+             */
+            longitude?: number | null;
+            /**
+             * Template Version
+             * @description 响应模板版本：standard, pro, simple
+             * @default standard
+             */
+            template_version: string;
+            /**
+             * Late Zishi
+             * @description 晚子时(23:00~00:00)视为次日（默认True）
+             * @default true
+             */
+            late_zishi: boolean;
+            /**
+             * Year Divide
+             * @description 年干支界：'lichun'=立春换年（默认，对齐八字节气年）| 'normal'=正月初一换年（对齐 iztro yearDivide=normal）
+             * @default lichun
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @description 晚子时换日：'solar_next'=公历进次日再排盘（默认）| 'forward'=公历不换日、安星农历日+1（对齐 iztro dayDivide=forward）| 'current'=不换日
+             * @default solar_next
+             */
+            day_divide: string;
+            /**
+             * Sihua Stem Indices
+             * @description 四化表per-stem方案选择，键=天干，值=方案索引(0=标准)。如 {"庚": 2} 选庚的阳武府同方案。可选天干: 甲(0/1) 戊(0/1) 庚(0-4) 辛(0/1) 壬(0-2) 癸(0/1)
+             */
+            sihua_stem_indices?: {
+                [key: string]: number;
+            } | null;
+            /**
+             * Leap Month Method
+             * @description 闰月处理方式：'mid'=月中分界(默认) | 'next'=视为下月 | 'same'=视为本月
+             * @default mid
+             */
+            leap_month_method: string;
+            /**
+             * Kuiyue Method
+             * @description 天魁天钺安法：'standard'(六辛逢虎马) | 'gengxin_mahu' | 'gengxin_huima' | 'liuxin_mahu'
+             * @default standard
+             */
+            kuiyue_method: string;
+            /**
+             * Tianma Method
+             * @description 天马安法：'year'=依据年支（默认） | 'month'=依据月支
+             * @default year
+             */
+            tianma_method: string;
+            /**
+             * Tiankong Method
+             * @description 天空安法：'standard'=常规排法（戌起年支顺）| 'shun'=顺加生时
+             * @default standard
+             */
+            tiankong_method: string;
+            /**
+             * Brightness Method
+             * @description 星曜亮度：'standard'=斗数全书（默认）| 'zhongzhou'=中州派 | 'mod1'=现代修订一 | 'mod2'=现代修订二
+             * @default standard
+             */
+            brightness_method: string;
+            /**
+             * Jiukong Method
+             * @description 截空旬空安法：'dual'=正副双星法（默认）| 'single'=常规单星法 | 'zhanyan'=占验派排法
+             * @default dual
+             */
+            jiukong_method: string;
+            /**
+             * Tianshang Method
+             * @description 天使天伤安法：'standard'=常规（默认）| 'zhongzhou'=中州派
+             * @default standard
+             */
+            tianshang_method: string;
+            /**
+             * Mingzhu Method
+             * @description 命主安法：'quanshu'=依据斗数全书（默认）| 'zhongzhou'=依据中州派理论
+             * @default quanshu
+             */
+            mingzhu_method: string;
+            /**
+             * Liunian Sihua Method
+             * @description 流年四化来源：'year_stem'=依据流年天干（默认，《全书》口径）| 'life_palace_stem'=依据流年命宫天干（陆斌兆体系）
+             * @default year_stem
+             */
+            liunian_sihua_method: string;
+            /**
+             * Changsheng Method
+             * @description 长生十二神安法：'standard'=区分阴阳顺逆（默认）| 'water_earth'=水土共长生 | 'fire_earth'=火土共长生
+             * @default standard
+             */
+            changsheng_method: string;
+            /**
+             * Wenchang Method
+             * @description 文昌文曲安法：'hour'=依生时（默认）| 'year_branch'=依年支（legacy）
+             * @default hour
+             */
+            wenchang_method: string;
+            /**
+             * Youbi Method
+             * @description 右弼安法：'month'=依生月（默认）| 'hour'=依生时（legacy）
+             * @default month
+             */
+            youbi_method: string;
+            /**
+             * Liunian Life Method
+             * @description 流年命宫：'taisui'=太岁起宫（默认）| 'yin_start'=寅宫起（legacy）
+             * @default taisui
+             */
+            liunian_life_method: string;
+            /**
+             * Liuyue Method
+             * @description 流月排法：'doujun'=斗君法（默认）| 'simplified'=简化法（legacy）
+             * @default doujun
+             */
+            liuyue_method: string;
+            /**
+             * Xiaoxian Start Method
+             * @description 小限起点：'standard'=标准（默认）| 'gender_split'=男女分宫（legacy）
+             * @default standard
+             */
+            xiaoxian_start_method: string;
+            /**
+             * Flow Lunar Day
+             * @description 流日农历日（1-30），需配合 flow_liuyue_month
+             */
+            flow_lunar_day?: number | null;
+            /**
+             * Flow Liuyue Month
+             * @description 流月序号（1-12），配合 flow_lunar_day 计算流日/流时
+             */
+            flow_liuyue_month?: number | null;
+            /**
+             * Flow Hour Branch
+             * @description 流时时辰地支索引（子=0…亥=11），缺省取生时
+             */
+            flow_hour_branch?: number | null;
+            /**
+             * Include Flow Liuri
+             * @description standard/pro 默认 True：未传 flow_* 时按流年参考日自动计算流日/流时
+             */
+            include_flow_liuri?: boolean | null;
+            /** Sections */
+            sections: string[];
+        };
+        /**
+         * ZiweiRequest
+         * @description 紫微命盘请求。
+         * @example {
+         *       "day": 13,
+         *       "gender": "女",
+         *       "hour": 14,
+         *       "minute": 55,
+         *       "month": 3,
+         *       "year": 2002
+         *     }
+         */
+        ZiweiRequest: {
+            /**
+             * Year
+             * @description 公历出生年
+             */
+            year: number;
+            /**
+             * Month
+             * @description 公历出生月
+             */
+            month: number;
+            /**
+             * Day
+             * @description 公历出生日
+             */
+            day: number;
+            /**
+             * Hour
+             * @description 出生小时（24小时制）
+             */
+            hour: number;
+            /**
+             * Minute
+             * @description 出生分钟
+             * @default 0
+             */
+            minute: number;
+            /**
+             * Gender
+             * @description 性别：男/女
+             */
+            gender: string;
+            /**
+             * Liunian Year
+             * @description 流年年份（不填默认当年）
+             */
+            liunian_year?: number | null;
+            /**
+             * Longitude
+             * @description 出生地经度（东经正数），用于真太阳时修正
+             */
+            longitude?: number | null;
+            /**
+             * Template Version
+             * @description 响应模板版本：standard, pro, simple
+             * @default standard
+             */
+            template_version: string;
+            /**
+             * Late Zishi
+             * @description 晚子时(23:00~00:00)视为次日（默认True）
+             * @default true
+             */
+            late_zishi: boolean;
+            /**
+             * Year Divide
+             * @description 年干支界：'lichun'=立春换年（默认，对齐八字节气年）| 'normal'=正月初一换年（对齐 iztro yearDivide=normal）
+             * @default lichun
+             */
+            year_divide: string;
+            /**
+             * Day Divide
+             * @description 晚子时换日：'solar_next'=公历进次日再排盘（默认）| 'forward'=公历不换日、安星农历日+1（对齐 iztro dayDivide=forward）| 'current'=不换日
+             * @default solar_next
+             */
+            day_divide: string;
+            /**
+             * Sihua Stem Indices
+             * @description 四化表per-stem方案选择，键=天干，值=方案索引(0=标准)。如 {"庚": 2} 选庚的阳武府同方案。可选天干: 甲(0/1) 戊(0/1) 庚(0-4) 辛(0/1) 壬(0-2) 癸(0/1)
+             */
+            sihua_stem_indices?: {
+                [key: string]: number;
+            } | null;
+            /**
+             * Leap Month Method
+             * @description 闰月处理方式：'mid'=月中分界(默认) | 'next'=视为下月 | 'same'=视为本月
+             * @default mid
+             */
+            leap_month_method: string;
+            /**
+             * Kuiyue Method
+             * @description 天魁天钺安法：'standard'(六辛逢虎马) | 'gengxin_mahu' | 'gengxin_huima' | 'liuxin_mahu'
+             * @default standard
+             */
+            kuiyue_method: string;
+            /**
+             * Tianma Method
+             * @description 天马安法：'year'=依据年支（默认） | 'month'=依据月支
+             * @default year
+             */
+            tianma_method: string;
+            /**
+             * Tiankong Method
+             * @description 天空安法：'standard'=常规排法（戌起年支顺）| 'shun'=顺加生时
+             * @default standard
+             */
+            tiankong_method: string;
+            /**
+             * Brightness Method
+             * @description 星曜亮度：'standard'=斗数全书（默认）| 'zhongzhou'=中州派 | 'mod1'=现代修订一 | 'mod2'=现代修订二
+             * @default standard
+             */
+            brightness_method: string;
+            /**
+             * Jiukong Method
+             * @description 截空旬空安法：'dual'=正副双星法（默认）| 'single'=常规单星法 | 'zhanyan'=占验派排法
+             * @default dual
+             */
+            jiukong_method: string;
+            /**
+             * Tianshang Method
+             * @description 天使天伤安法：'standard'=常规（默认）| 'zhongzhou'=中州派
+             * @default standard
+             */
+            tianshang_method: string;
+            /**
+             * Mingzhu Method
+             * @description 命主安法：'quanshu'=依据斗数全书（默认）| 'zhongzhou'=依据中州派理论
+             * @default quanshu
+             */
+            mingzhu_method: string;
+            /**
+             * Liunian Sihua Method
+             * @description 流年四化来源：'year_stem'=依据流年天干（默认，《全书》口径）| 'life_palace_stem'=依据流年命宫天干（陆斌兆体系）
+             * @default year_stem
+             */
+            liunian_sihua_method: string;
+            /**
+             * Changsheng Method
+             * @description 长生十二神安法：'standard'=区分阴阳顺逆（默认）| 'water_earth'=水土共长生 | 'fire_earth'=火土共长生
+             * @default standard
+             */
+            changsheng_method: string;
+            /**
+             * Wenchang Method
+             * @description 文昌文曲安法：'hour'=依生时（默认）| 'year_branch'=依年支（legacy）
+             * @default hour
+             */
+            wenchang_method: string;
+            /**
+             * Youbi Method
+             * @description 右弼安法：'month'=依生月（默认）| 'hour'=依生时（legacy）
+             * @default month
+             */
+            youbi_method: string;
+            /**
+             * Liunian Life Method
+             * @description 流年命宫：'taisui'=太岁起宫（默认）| 'yin_start'=寅宫起（legacy）
+             * @default taisui
+             */
+            liunian_life_method: string;
+            /**
+             * Liuyue Method
+             * @description 流月排法：'doujun'=斗君法（默认）| 'simplified'=简化法（legacy）
+             * @default doujun
+             */
+            liuyue_method: string;
+            /**
+             * Xiaoxian Start Method
+             * @description 小限起点：'standard'=标准（默认）| 'gender_split'=男女分宫（legacy）
+             * @default standard
+             */
+            xiaoxian_start_method: string;
+            /**
+             * Flow Lunar Day
+             * @description 流日农历日（1-30），需配合 flow_liuyue_month
+             */
+            flow_lunar_day?: number | null;
+            /**
+             * Flow Liuyue Month
+             * @description 流月序号（1-12），配合 flow_lunar_day 计算流日/流时
+             */
+            flow_liuyue_month?: number | null;
+            /**
+             * Flow Hour Branch
+             * @description 流时时辰地支索引（子=0…亥=11），缺省取生时
+             */
+            flow_hour_branch?: number | null;
+            /**
+             * Include Flow Liuri
+             * @description standard/pro 默认 True：未传 flow_* 时按流年参考日自动计算流日/流时
+             */
+            include_flow_liuri?: boolean | null;
+        };
+        /**
+         * ZiweiResponse
+         * @description 完整紫微命盘响应。
+         */
+        ZiweiResponse: {
+            /** Birth Solar */
+            birth_solar: string;
+            /** Gender */
+            gender: string;
+            lunar: components["schemas"]["LunarResponse"];
+            /** Life Palace Gz */
+            life_palace_gz: string;
+            /** Body Palace Gz */
+            body_palace_gz: string;
+            /**
+             * Life Palace Branch Idx
+             * @default 0
+             */
+            life_palace_branch_idx: number;
+            /**
+             * Body Palace Branch Idx
+             * @default 0
+             */
+            body_palace_branch_idx: number;
+            /**
+             * Body Palace Branch Name
+             * @default
+             */
+            body_palace_branch_name: string;
+            /** Wuxing Ju */
+            wuxing_ju: number;
+            /** Wuxing Ju Name */
+            wuxing_ju_name: string;
+            /** Palaces */
+            palaces: components["schemas"]["PalaceResponse"][];
+            dayun: components["schemas"]["DayunResponse"];
+            liunian?: components["schemas"]["LiunianResponse"] | null;
+            flying?: components["schemas"]["FlyingChartResponse"] | null;
+            /**
+             * Liuyue
+             * @default []
+             */
+            liuyue: components["schemas"]["LiuyueItem"][];
+            liuri_liushi?: components["schemas"]["LiuriLiushiResponse"] | null;
+            /** Missing Fields */
+            missing_fields?: string[];
+            /** Engine Warnings */
+            engine_warnings?: string[];
+            iztro_crosscheck?: components["schemas"]["IztroCrosscheckResponse"] | null;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /**
+             * Chart Summary
+             * @default
+             */
+            chart_summary: string;
+            structural_summary?: components["schemas"]["ZiweiChartStructuralSummaryModel"] | null;
+            /** Sihua Trace */
+            sihua_trace?: components["schemas"]["SihuaTraceEntryModel"][];
+            /** Key Years */
+            key_years?: components["schemas"]["KeyYearPointModel"][];
+            /** Key Months */
+            key_months?: components["schemas"]["KeyMonthPointModel"][];
+            /**
+             * Confidence Level
+             * @default medium
+             * @enum {string}
+             */
+            confidence_level: "high" | "medium" | "low";
+            /** Confidence Score */
+            confidence_score?: number | null;
+            /** Evidence Chain */
+            evidence_chain?: components["schemas"]["EvidenceItemModel"][];
+            ziwei_structural_summary?: components["schemas"]["ZiweiStructuralSummaryModel"] | null;
+            /**
+             * Analysis
+             * @default {}
+             */
+            analysis: {
+                [key: string]: string;
+            };
+            /**
+             * Analysis Structured
+             * @description 逐宫结构化解读（conclusion/explanation/suggestion/tooltip）
+             */
+            analysis_structured?: components["schemas"]["PalaceStructuredAnalysis"][];
+            /**
+             * Life Ruler Star
+             * @default
+             */
+            life_ruler_star: string;
+            /**
+             * Body Ruler Star
+             * @default
+             */
+            body_ruler_star: string;
+            /**
+             * Laiyin Palace
+             * @default
+             */
+            laiyin_palace: string;
+            /**
+             * True Solar Time
+             * @default
+             */
+            true_solar_time: string;
+            forecast?: components["schemas"]["ForecastResultResponse"] | null;
+            /**
+             * Template Version
+             * @default 1.0
+             */
+            template_version: string;
+            /**
+             * Algorithm Version
+             * @default 2.1.0
+             */
+            algorithm_version: string;
+            /**
+             * Engine Version
+             * @default 3.0
+             */
+            engine_version: string;
+            /**
+             * Patterns
+             * @default []
+             */
+            patterns: components["schemas"]["PatternResponse"][];
+            /**
+             * Remedies
+             * @default []
+             */
+            remedies: components["schemas"]["RemedyResponse"][];
+            /**
+             * Life Suggestions
+             * @default []
+             */
+            life_suggestions: components["schemas"]["LifeSuggestionResponse"][];
+            /** @description 各层可信度与典籍/启发式分层（9.5 目标计划） */
+            provenance?: components["schemas"]["ResponseProvenance"] | null;
+            /**
+             * Trust Level
+             * @description 命盘信任级别；degraded 时运限/API 仍 200（Q10）
+             * @default full
+             * @enum {string}
+             */
+            trust_level: "full" | "degraded" | "reference" | "advisory" | "verified";
+            /** @description 合规免责声明块（P0-08） */
+            disclaimer_block?: components["schemas"]["DisclaimerBlockModel"] | null;
+            /**
+             * Content Versions
+             * @description 内容资产版本指纹（P0-05 classics/glossary/star_profiles 等）
+             */
+            content_versions?: {
+                [key: string]: string;
+            };
+            /**
+             * Wenmo Advisory
+             * @description 文墨天机 advisory 对照说明（P1-13 / colophon）
+             */
+            wenmo_advisory?: string | null;
+            /**
+             * Classic Refs
+             * @description 古籍语料软提示（主星/格局/宫位，非硬覆盖引擎结论）
+             */
+            classic_refs?: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** ZiweiStructuralSummaryModel */
+        ZiweiStructuralSummaryModel: {
+            core_snapshot?: components["schemas"]["ZiweiCoreSnapshotModel"];
+            chart_relation_summary?: components["schemas"]["ChartRelationSummaryModel"] | null;
+            /** Sihua Summary */
+            sihua_summary?: components["schemas"]["SihuaTraceItemModel"][];
+            brightness_summary?: components["schemas"]["StarBrightnessSummaryModel"] | null;
+            /** Timeline Summary */
+            timeline_summary?: {
+                [key: string]: components["schemas"]["TimelinePointModel"][];
+            };
+            pattern_summary?: components["schemas"]["PatternSummaryBlockModel"];
+            confidence_summary?: components["schemas"]["app__schemas__ziwei__ConfidenceSummaryModel"] | null;
+            report_summary?: components["schemas"]["ReportSummaryBlockModel"];
+            /** Source */
+            source?: string | null;
+            /** Missing */
+            missing?: string[];
+        };
+        /** ZiweiStructuredTextResponse */
+        ZiweiStructuredTextResponse: {
+            /** Format */
+            format: string;
+            /** Markdown */
+            markdown: string;
+            /** Json */
+            json: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * ZoneAssessmentResponse
+         * @description 单个方位的房间布局评估结果。
+         */
+        ZoneAssessmentResponse: {
+            /**
+             * Direction
+             * @description 方向代码，如 'N'
+             */
+            direction: string;
+            /**
+             * Direction Zh
+             * @description 方向中文，如 '北'
+             */
+            direction_zh: string;
+            /**
+             * Label
+             * @description 风水标签，如 '生气'
+             */
+            label: string;
+            /**
+             * Level Css
+             * @description CSS 类名，如 'ji1'
+             */
+            level_css: string;
+            /**
+             * Room Type
+             * @description 房间类型英文
+             */
+            room_type: string;
+            /**
+             * Room Zh
+             * @description 房间类型中文
+             */
+            room_zh: string;
+            /**
+             * Assess Level
+             * @description 评估等级：excellent/good/ok/caution/warning/skip
+             */
+            assess_level: string;
+            /**
+             * Assess Score
+             * @description 评估分数 0~100
+             */
+            assess_score: number;
+            /**
+             * Assess Note
+             * @description 评估说明文字
+             */
+            assess_note: string;
+        };
+        /** ConfidenceSummaryModel */
+        app__schemas__bazi__ConfidenceSummaryModel: {
+            /**
+             * Level
+             * @default medium
+             * @enum {string}
+             */
+            level: "high" | "medium" | "low";
+            /** Score */
+            score?: number | null;
+            /** Score Components */
+            score_components?: {
+                [key: string]: number;
+            };
+            /** Score Reason */
+            score_reason?: string | null;
+            /** Evidence */
+            evidence?: components["schemas"]["EvidenceItemModel"][];
+            /** Risk Notes */
+            risk_notes?: string[];
+            /** Inference Notes */
+            inference_notes?: string[];
+            /** Blocked Fields */
+            blocked_fields?: string[];
+        };
+        /**
+         * CaseListResponse
+         * @description Case 分页列表响应
+         */
+        app__schemas__case__CaseListResponse: {
+            /** Items */
+            items: components["schemas"]["CaseOut"][];
+            /** Total */
+            total: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+        };
+        /** CompatibilityRequest */
+        app__schemas__ziwei__CompatibilityRequest: {
+            /**
+             * Caller
+             * @default
+             */
+            caller: string;
+            /**
+             * Timestamp
+             * @default
+             */
+            timestamp: string;
+            person_a: components["schemas"]["ZiweiRequest"];
+            person_b: components["schemas"]["ZiweiRequest"];
+        };
+        /** CompatibilityResponse */
+        app__schemas__ziwei__CompatibilityResponse: {
+            /**
+             * Total Score
+             * @default 0
+             */
+            total_score: number;
+            /**
+             * Max Score
+             * @default 0
+             */
+            max_score: number;
+            /**
+             * Level
+             * @default
+             */
+            level: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /**
+             * Dimensions
+             * @default []
+             */
+            dimensions: components["schemas"]["CompatibilityDimensionResponse"][];
+            /**
+             * Person A Info
+             * @default {}
+             */
+            person_a_info: {
+                [key: string]: unknown;
+            };
+            /**
+             * Person B Info
+             * @default {}
+             */
+            person_b_info: {
+                [key: string]: unknown;
+            };
+            /**
+             * Harmony Points
+             * @default []
+             */
+            harmony_points: string[];
+            /**
+             * Conflict Points
+             * @default []
+             */
+            conflict_points: string[];
+            /**
+             * Complement Points
+             * @default []
+             */
+            complement_points: string[];
+            /**
+             * Palace Compare
+             * @default []
+             */
+            palace_compare: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** ConfidenceSummaryModel */
+        app__schemas__ziwei__ConfidenceSummaryModel: {
+            /**
+             * Level
+             * @default medium
+             * @enum {string}
+             */
+            level: "high" | "medium" | "low";
+            /** Score */
+            score?: number | null;
+            /** Evidence */
+            evidence?: components["schemas"]["EvidenceItemModel"][];
+            /** Risk Notes */
+            risk_notes?: string[];
+            /** Inference Notes */
+            inference_notes?: string[];
+            /** Blocked Fields */
+            blocked_fields?: string[];
+        };
+        /** CompatibilityRequest */
+        routers__bazi__CompatibilityRequest: {
+            person_a: components["schemas"]["CompatibilitySubject"];
+            person_b: components["schemas"]["CompatibilitySubject"];
+        };
+        /** CompatibilityResponse */
+        routers__bazi__CompatibilityResponse: {
+            /**
+             * Score
+             * @description 合盘综合分 0-100
+             */
+            score: number;
+            /**
+             * Wuxing Match
+             * @description 五行互补情况
+             */
+            wuxing_match: {
+                [key: string]: string;
+            };
+            /**
+             * Branch Clash
+             * @description 地支六冲列表
+             */
+            branch_clash: string[];
+            /**
+             * Born Year He
+             * @description 年支六合/三合
+             */
+            born_year_he: string[];
+            /**
+             * Summary
+             * @description 100字以内总结
+             */
+            summary: string;
+        };
+        /** CaseListResponse */
+        routers__similarity__CaseListResponse: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["CaseResponse"][];
         };
         ErrorResponse: {
             error: {
@@ -3549,6 +11919,153 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    serve_new_new__path__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                path: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    serve_new_new_get: {
+        parameters: {
+            query?: {
+                path?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    serve_bazi_bazi_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    serve_ziwei_ziwei_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    serve_admin_admin_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     list_cases_api_v1_cases_get: {
         parameters: {
             query?: {
@@ -3573,7 +12090,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CaseOut"][];
+                    "application/json": components["schemas"]["app__schemas__case__CaseListResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -3666,6 +12183,40 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    delete_case_api_v1_cases__case_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     patch_case_api_v1_cases__case_id__patch: {
         parameters: {
             query?: never;
@@ -3688,6 +12239,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseOut"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    create_share_token_api_v1_cases__case_id__share_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_shared_case_api_v1_share__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -3766,6 +12389,656 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BaziFullResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_bazi_structured_text_api_v1_bazi_structured_text_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Request-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BaziFullRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StructuredTextResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_bazi_liuri_liushi_api_v1_bazi_liuri_liushi_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Request-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiuriLiushiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiuriLiushiEndpointResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_liunian_domain_api_v1_bazi_liunian_domain_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiunianDomainRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiunianDomainResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_dayun_report_api_v1_bazi_dayun_report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DayunReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayunReportResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_dayun_report_inline_api_v1_bazi_dayun_report_inline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BaziFullRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayunReportResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_compatibility_api_v1_bazi_compatibility_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["routers__bazi__CompatibilityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["routers__bazi__CompatibilityResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_monthly_api_v1_bazi_monthly_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MonthlyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthlyResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_analyze_api_v1_bazi_analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalyzeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_jieqi_api_v1_bazi_jieqi_get: {
+        parameters: {
+            query: {
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JieqiResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_geju_api_v1_bazi_geju_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GejuSubjectRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GejuLightResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_lunar_to_solar_api_v1_bazi_lunar_to_solar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LunarToSolarRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LunarToSolarResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_calendar_compare_api_v1_bazi_calendar_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarCompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarCompareResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_bazi_batch_compare_api_v1_bazi_batch_compare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchCompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchCompareResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_golden_cases_api_v1_bazi_golden_cases_get: {
+        parameters: {
+            query?: {
+                geju?: string | null;
+                tag?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    submit_liunian_report_api_v1_bazi_liunian_report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiunianReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_liunian_report_api_v1_bazi_liunian_report__task_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiunianReportResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_bazi_explain_batch_api_v1_bazi_explain_batch_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Request-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExplainBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplainBatchResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -3863,6 +13136,46 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    create_snapshot_api_v1_cases__case_id__snapshots_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnapshotCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     get_snapshot_api_v1_snapshots__snapshot_id__get: {
         parameters: {
             query?: never;
@@ -3881,6 +13194,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SnapshotOut"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    delete_snapshot_api_v1_snapshots__snapshot_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    snapshot_diff_api_v1_snapshots_diff_get: {
+        parameters: {
+            query: {
+                /** @description 快照 ID A */
+                a: string;
+                /** @description 快照 ID B */
+                b: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SnapshotDiffResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -4299,6 +13685,46 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    patch_member_api_v1_members__member_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                member_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     create_user_delegation_api_v1_delegations_post: {
         parameters: {
             query?: never;
@@ -4571,6 +13997,31 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    admin_expire_delegations_api_v1_admin_expire_delegations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     get_user_audit_logs_api_v1_audit_logs_get: {
         parameters: {
             query?: {
@@ -4580,6 +14031,8 @@ export interface operations {
                 resource_type?: string | null;
                 /** @description 返回数量限制 */
                 limit?: number;
+                /** @description keyset 分页游标：仅返回 id 小于此值的记录 */
+                before_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -4623,6 +14076,8 @@ export interface operations {
                 resource_type?: string | null;
                 /** @description 返回数量限制 */
                 limit?: number;
+                /** @description keyset 分页游标：仅返回 id 小于此值的记录 */
+                before_id?: number | null;
             };
             header?: never;
             path?: never;
@@ -4693,19 +14148,16 @@ export interface operations {
     };
     log_manual_action_api_v1_audit_logs_manual_post: {
         parameters: {
-            query: {
-                /** @description 操作类型 */
-                action: string;
-                /** @description 资源类型 */
-                resource_type: string;
-                /** @description 资源ID */
-                resource_id?: string | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualAuditLogRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -4729,6 +14181,31 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    admin_stats_api_v1_admin_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -4793,6 +14270,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_events_stats_api_v1_events_stats_get: {
+        parameters: {
+            query?: {
+                /** @description 起始日期 YYYY-MM-DD（含） */
+                date_from?: string | null;
+                /** @description 截止日期 YYYY-MM-DD（含） */
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -4921,9 +14437,54 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
-    list_member_events_api_v1_members__member_id__events_get: {
+    patch_event_api_v1_events__event_id__patch: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_member_events_api_v1_members__member_id__events_get: {
+        parameters: {
+            query?: {
+                /** @description 游标分页起始 ID */
+                last_id?: number;
+                /** @description 每页最多返回条数 */
+                limit?: number;
+            };
             header?: never;
             path: {
                 member_id: number;
@@ -4962,6 +14523,10 @@ export interface operations {
             query?: {
                 member_id?: number | null;
                 scenario_type?: string | null;
+                /** @description 每页数量 */
+                limit?: number;
+                /** @description 游标（上一页最后 ID） */
+                last_id?: number;
             };
             header?: never;
             path?: never;
@@ -4975,7 +14540,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ScenarioResponse"][];
+                    "application/json": components["schemas"]["ScenarioListResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -5144,7 +14709,12 @@ export interface operations {
     };
     list_member_scenarios_api_v1_members__member_id__scenarios_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 每页数量 */
+                limit?: number;
+                /** @description 游标（上一页最后 ID） */
+                last_id?: number;
+            };
             header?: never;
             path: {
                 member_id: number;
@@ -5159,7 +14729,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ScenarioResponse"][];
+                    "application/json": components["schemas"]["ScenarioListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    simulate_scenario_api_v1_scenarios__scenario_id__simulate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scenario_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimulateResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -5181,7 +14791,11 @@ export interface operations {
     get_glossary_api_v1_glossary_get: {
         parameters: {
             query?: {
+                /** @description 全文搜索关键词 */
+                q?: string | null;
+                /** @description 分类过滤：格局/神煞/五行/十神/大运/其他 */
                 category?: string | null;
+                limit?: number;
             };
             header?: never;
             path?: never;
@@ -5214,9 +14828,54 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
-    get_cities_api_v1_cities_get: {
+    update_glossary_term_api_v1_glossary__term__put: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                term: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GlossaryUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlossaryItemModel"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_cities_api_v1_cities_get: {
+        parameters: {
+            query?: {
+                /** @description 城市名或省份模糊搜索 */
+                q?: string | null;
+                /** @description 直辖市/省会/计划单列市/地级市 */
+                city_type?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5236,6 +14895,133 @@ export interface operations {
             401: components["responses"]["UnauthorizedError"];
             403: components["responses"]["ForbiddenError"];
             404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    search_classics_api_v1_classics_get: {
+        parameters: {
+            query?: {
+                /** @description 检索关键词（TF-IDF 排序） */
+                query?: string | null;
+                /** @description 按标签过滤，如"格局"、"用神" */
+                tag?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassicPassageModel"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_concepts_api_v1_docs_concepts_get: {
+        parameters: {
+            query?: {
+                /** @description 分类过滤：bazi 或 ziwei */
+                category?: string | null;
+                /** @description 关键词搜索（匹配 term/definition/aliases） */
+                q?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConceptModel"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    quickstart_api_v1_quickstart_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickstartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickstartResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -5279,7 +15065,7 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
-    api_batch_verify_api_v2_batch_verify_post: {
+    v2_batch_verify_api_v2_batch_verify_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5299,6 +15085,3084 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BatchVerifyResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    compute_ziwei_api_v1_ziwei_full_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZiweiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZiweiResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    ziwei_structured_text_api_v1_ziwei_structured_text_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZiweiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZiweiStructuredTextResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    demo_ziwei_api_v1_ziwei_demo_get: {
+        parameters: {
+            query?: {
+                crosscheck?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZiweiResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    compute_compatibility_api_v1_ziwei_compatibility_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__schemas__ziwei__CompatibilityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["app__schemas__ziwei__CompatibilityResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    multi_compat_api_v1_ziwei_multi_compat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MultiCompatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MultiCompatResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    batch_ziwei_api_v1_ziwei_batch_post: {
+        parameters: {
+            query?: {
+                template_version?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_batch_ziwei_api_v1_ziwei_batch_post"];
+            };
+        };
+        responses: {
+            /** @description 命盘 ZIP 包 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_ziwei_flying_api_v1_ziwei_flying_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZiweiRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlyingChartResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_ziwei_explain_batch_api_v1_ziwei_explain_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZiweiExplainBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExplainBatchResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_reviews_api_v1_reviews_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    submit_review_api_v1_reviews_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChartReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    review_stats_api_v1_reviews_stats_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewStats"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    review_queue_api_v1_reviews_queue_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    my_review_queue_api_v1_reviews_my_queue_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    bulk_review_action_api_v1_reviews_bulk_action_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkReviewAction"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkReviewResult"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    review_assignees_api_v1_reviews_assignees_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewAssigneeListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_review_api_v1_reviews__review_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    delete_review_api_v1_reviews__review_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    update_review_api_v1_reviews__review_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChartReviewUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_review_history_api_v1_reviews__review_id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewHistoryResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    assign_review_api_v1_reviews__review_id__assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChartReviewResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_experiments_api_v1_experiments_get: {
+        parameters: {
+            query?: {
+                /** @description 按状态筛选: draft/running/paused/completed */
+                status?: string | null;
+                skip?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    create_experiment_api_v1_experiments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_experiment_api_v1_experiments__exp_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    update_experiment_api_v1_experiments__exp_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExperimentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    delete_experiment_api_v1_experiments__exp_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    assign_variant_api_v1_experiments__exp_id__assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    record_event_api_v1_experiments__exp_id__event_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_results_api_v1_experiments__exp_id__results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                exp_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentResults"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_config_api_v1_llm_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmConfigResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    interpret_api_v1_llm_interpret_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmInterpretRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmDraftResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    stream_api_v1_llm_stream_get: {
+        parameters: {
+            query: {
+                chart_hash: string;
+                life_palace_gz?: string;
+                wuxing_ju_name?: string;
+                pattern_summary?: string;
+                birth_info_summary?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_drafts_api_v1_llm_drafts_get: {
+        parameters: {
+            query?: {
+                /** @description pending_review / approved / rejected */
+                status?: string | null;
+                chart_hash?: string | null;
+                skip?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmDraftListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_draft_api_v1_llm_drafts__draft_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmDraftResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    delete_draft_api_v1_llm_drafts__draft_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    review_draft_api_v1_llm_drafts__draft_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmDraftUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmDraftResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    interpret_module_api_v1_llm_interpret_module_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModuleInterpretRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModuleInterpretResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    interpret_bazi_api_v1_llm_interpret_bazi_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BaziInterpretRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmDraftResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    index_case_api_v1_similarity_index_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimilarityIndexRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    search_similar_api_v1_similarity_search_get: {
+        parameters: {
+            query: {
+                /** @description 当前命盘 hash */
+                chart_hash: string;
+                /** @description 命宫干支 */
+                life_palace_gz?: string;
+                /** @description 五行局 */
+                wuxing_ju_name?: string;
+                /** @description 性别 */
+                gender?: string;
+                /** @description 出生年 */
+                birth_year?: number;
+                /** @description 格局 JSON 数组（URL 编码） */
+                patterns?: string;
+                top_k?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_cases_api_v1_similarity_cases_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["routers__similarity__CaseListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    delete_case_api_v1_similarity_cases__case_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_api_keys_api_v1_api_keys_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyListResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    create_api_key_api_v1_api_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyCreateResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_api_key_api_v1_api_keys__key_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    revoke_api_key_api_v1_api_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_purposes_api_v1_zeri_purposes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    recommend_api_v1_zeri_recommend_get: {
+        parameters: {
+            query: {
+                /** @description 公历年份 */
+                year?: number;
+                /** @description 公历月份 */
+                month: number;
+                /** @description 命宫地支，如 '子' */
+                life_palace_branch: string;
+                /** @description 五行局名，如 '水二局' */
+                wuxing_ju_name: string;
+                /** @description 本命年支（可选） */
+                natal_year_branch?: string;
+                /** @description 用途 */
+                purpose?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZeriMonthResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_case_json_api_v1_cases__case_id__export_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_case_meta_api_v1_cases__case_id__export_meta_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_case_pdf_api_v1_cases__case_id__export_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_case_card_api_v1_cases__case_id__export_card_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_fusheng_report_pdf_api_v1_fusheng_report_pdf_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FushengReportPdfRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    archive_bundle_api_v1_fusheng_archive_bundle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveBundleRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchiveBundleResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_life_volumes_api_v1_life_volumes__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifeVolumeResponseModel"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    subscribe_notifications_api_v1_notifications_subscribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationSubscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationSubscriptionResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    notifications_health_api_v1_notifications_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    payment_webhook_api_v1_payment_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentWebhookPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentWebhookResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_options_api_v1_fengshui_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_bagua_api_v1_fengshui_bagua_get: {
+        parameters: {
+            query: {
+                /** @description 出生公历年份 */
+                birth_year: number;
+                /** @description 性别：男 / 女 */
+                gender: string;
+                /** @description 房屋朝向（可选）：N/NE/E/SE/S/SW/W/NW */
+                house_facing?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaguaResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    room_layout_assess_api_v1_fengshui_room_layout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomLayoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomLayoutResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_rules_api_v1_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    update_rules_api_v1_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                }[];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_remedies_rules_api_v1_rules_remedies_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    update_remedies_rules_api_v1_rules_remedies_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                }[];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_dashboard_api_v1_analytics_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    anonymize_user_api_v1_users_me_anonymize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnonymizeConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    analyze_name_endpoint_api_v1_name_analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NameAnalysisResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    suggest_name_endpoint_api_v1_name_suggest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NameSuggestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NameSuggestResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    analyze_strokes_endpoint_api_v1_name_strokes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StrokesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StrokesResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_western_chart_api_v1_western_chart_get: {
+        parameters: {
+            query: {
+                /** @description 出生时间（本地时间），格式 ISO 8601，如 2000-01-01T12:00:00 */
+                dt: string;
+                /** @description 地理纬度（北纬正） */
+                lat: number;
+                /** @description 地理经度（东经正） */
+                lon: number;
+                /** @description 时区名称，如 Asia/Shanghai */
+                tz?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WesternChartResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_solar_return_api_v1_western_solar_return_get: {
+        parameters: {
+            query: {
+                /** @description 出生时间（本地 ISO 8601） */
+                natal_dt: string;
+                /** @description 出生地纬度 */
+                natal_lat: number;
+                /** @description 出生地经度 */
+                natal_lon: number;
+                /** @description 出生时区 */
+                natal_tz?: string;
+                /** @description 回归年（公历年） */
+                sr_year: number;
+                /** @description 回归年所在地纬度 */
+                sr_lat: number;
+                /** @description 回归年所在地经度 */
+                sr_lon: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolarReturnResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_bazi_compat_api_v1_compat_bazi_get: {
+        parameters: {
+            query: {
+                /** @description 甲方出生时间（本地 ISO 8601） */
+                a_dt: string;
+                /** @description 甲方时区 */
+                a_tz?: string;
+                /** @description 甲方出生地经度 */
+                a_lon?: number;
+                /** @description 乙方出生时间（本地 ISO 8601） */
+                b_dt: string;
+                /** @description 乙方时区 */
+                b_tz?: string;
+                /** @description 乙方出生地经度 */
+                b_lon?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompatResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    post_compat_full_api_v1_compat_full_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompatFullRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompatFullResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_year_events_api_v1_bazi_year_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YearEventRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YearEventResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_multi_year_trend_api_v1_bazi_multi_year_trend_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MultiYearTrendRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MultiYearTrendResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_year_event_consult_api_v1_bazi_year_event_consult_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["YearEventConsultRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YearEventConsultResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    cast_with_coins_api_v1_liuyao_cast_coins_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiuyaoCastResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    cast_with_time_api_v1_liuyao_cast_time_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiuyaoTimeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiuyaoCastResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_gua_api_v1_liuyao_gua__gua_name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gua_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    draw_single_api_v1_tarot_draw_post: {
+        parameters: {
+            query?: {
+                context?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DrawResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    draw_spread_api_v1_tarot_spread_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpreadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpreadResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    list_cards_api_v1_tarot_cards_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TarotCard"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_card_api_v1_tarot_card__num__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                num: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TarotCard"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    api_verify_api_v1_verify_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Request-Id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             400: components["responses"]["ValidationError"];
@@ -5389,46 +18253,6 @@ export interface operations {
             401: components["responses"]["UnauthorizedError"];
             403: components["responses"]["ForbiddenError"];
             404: components["responses"]["NotFoundError"];
-            500: components["responses"]["InternalServerError"];
-        };
-    };
-    api_verify_api_v1_verify_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Request-Id"?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            400: components["responses"]["ValidationError"];
-            401: components["responses"]["UnauthorizedError"];
-            403: components["responses"]["ForbiddenError"];
-            404: components["responses"]["NotFoundError"];
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
             500: components["responses"]["InternalServerError"];
         };
     };
