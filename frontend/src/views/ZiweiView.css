@@ -340,7 +340,7 @@
   justify-content: space-between;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: var(--brand-gold-lt);
   border: 1px solid #fcd34d;
   border-radius: var(--radius-sm);
 }
@@ -784,11 +784,12 @@
 .cmp-status {
   margin-top: 12px;
   padding: 8px 10px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand-cinnabar);
   border-radius: var(--radius-sm);
   font-size: var(--fs-sm);
-  color: #c2410c;
+  color: var(--brand-ink);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -945,4 +946,28 @@
   border-color: #fca5a5;
   color: #991b1b;
   font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .palace-grid-wrap {
+    max-height: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grid-body {
+    min-width: 360px;
+  }
+
+  .palace-grid-pro {
+    min-width: 340px;
+  }
+
+  .pc-cell {
+    min-height: 92px;
+  }
+
+  .pc-sn {
+    font-size: 12px;
+  }
 }

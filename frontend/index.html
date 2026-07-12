@@ -2,11 +2,26 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/static/app/favicon.svg" />
+    <link rel="icon" type="image/png" href="/fusheng-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>命理系统</title>
-    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&f[]=cabinet-grotesk@500,600,700&display=swap" />
+    <title>浮生 · 知命知心</title>
+    <!-- 字体: 优先后备系统原生字体，避免外部 CDN 依赖 -->
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: swap;
+        src: local('Inter'), local('Inter-Regular');
+      }
+      @font-face {
+        font-family: 'Noto Sans SC';
+        font-style: normal;
+        font-weight: 400 700;
+        font-display: swap;
+        src: local('Noto Sans SC'), local('NotoSansSC-Regular');
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>

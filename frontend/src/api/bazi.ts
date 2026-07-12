@@ -8,6 +8,14 @@ export interface BaziRequest {
   mode?: 'dual' | 'single'
   solar_time_enabled?: boolean
   gender?: 'male' | 'female' | ''
+  city_tier?: '一线' | '新一线' | '其余' | null
+  industry?: '金融IT' | '教育公务' | '其余' | null
+  city_tier?: '一线' | '新一线' | '其余' | null
+  industry?: '金融IT' | '教育公务' | '其余' | null
+  target_date?: string  // ISO8601，流日/流时目标日期
+  target_hour?: number  // 0-23，流时小时
+  include_liuri?: boolean // 默认 true；未传 target_date 时使用当天
+  zi_day_rule?: 'sxtwl' | 'early_zi_prev_day' | 'early_zi_same_day'
 }
 
 // ── 响应子类型 ──────────────────────────────────────────
@@ -37,14 +45,25 @@ export interface Yongshen {
   favor: string[]
   avoid: string[]
   rationale?: string
+  recorded_favor?: string[]
+  engine_favor?: string[]
+  dual_track_note?: string | null
+  dual_track_id?: string | null
 }
 
 // 日元强弱
-export interface StrengthFactor { name: string; score: number; reason?: string }
+export interface StrengthFactor {
+  name: string
+  score: number
+  weight?: number | null
+  weighted_score?: number | null
+  reason?: string
+}
 export interface DayMasterStrength {
   score: number
   tier: string
   factors?: StrengthFactor[]
+  strength_factors?: StrengthFactor[]
 }
 
 // 格局
@@ -60,6 +79,17 @@ export interface GejuModel {
   inference_tags?: string[]
   disclaimer?: string
   fact_data?: Record<string, unknown>
+  derived_geju?: string | null
+  po_geju?: {
+    broken?: boolean
+    reason?: string
+    severity?: string
+    po_jiu?: { saved?: boolean; method?: string; note?: string }
+  } | null
+  recorded_geju?: string | null
+  engine_geju?: string | null
+  dual_track_note?: string | null
+  dual_track_id?: string | null
 }
 
 // 大运条目（stem + branch 组合成干支）
@@ -69,10 +99,20 @@ export interface DayunItem {
   stem?: string
   branch?: string
   ten_god?: string
+  hidden_stems?: Array<{ stem?: string; weight?: number; element?: string; ten_god?: string }>
+  xingyun?: string
+  self_seat?: string
+  kongwang?: string[]
+  nayin?: string
+  shensha?: Array<Record<string, unknown>>
+  wuxing?: string
+  yin_yang?: string
   narrative?: string
   wealth_hint?: string
   health_hint?: string
   love_hint?: string
+  geju_impact?: string
+  yongshen_shift?: 'forward' | 'backward' | 'neutral' | string
   start_age_months?: number
   flow_wuxing?: string
   wealth_range?: { low?: number; high?: number }
@@ -86,11 +126,16 @@ export interface Dayun {
   direction?: string
   start_age?: number
   items: DayunItem[]
+  cycles?: DayunItem[]
   boundary?: string
   direction_basis?: Record<string, unknown>
   start_age_months?: number
   anchor_jieqi_name?: string
   anchor_jieqi_dt?: string
+  days_to_next_transition?: number | null
+  next_transition_age?: number | null
+  next_transition_ganzhi?: string | null
+  next_transition_hint?: string | null
 }
 
 // 五行分数
@@ -254,6 +299,38 @@ export interface CurrentFortuneSummaryModel {
   top3_actions: string[]
 }
 
+export interface ShishenPillarSummary {
+  pillar: 'year' | 'month' | 'day' | 'hour'
+  stem?: string | null
+  ten_god?: string | null
+  note?: string | null
+}
+
+export interface ShishenContribution {
+  pillar: 'year' | 'month' | 'day' | 'hour'
+  source: 'stem' | 'hidden'
+  stem: string
+  hidden_stem?: string | null
+  ten_god?: string | null
+  weight: number
+  element?: string | null
+}
+
+export interface ShishenSummary {
+  day_stem: string
+  day_element?: string | null
+  day_yinyang?: string | null
+  pillars: Partial<Record<'year' | 'month' | 'day' | 'hour', ShishenPillarSummary>>
+  score_total: number
+  score_breakdown: Record<string, number>
+  score_share: Record<string, number>
+  dominant: string[]
+  hidden_contrib_by_ten_god: Record<string, number>
+  contributions: ShishenContribution[]
+  liuqin_summary: string[]
+  summary_text: string
+}
+
 // 流年四维详情
 export interface LiunianDetailModel {
   year: number
@@ -369,6 +446,94 @@ export interface RuleMatchModel {
   disclaimer?: string
 }
 
+// ── 可信度分层（根级 provenance）────────────────────────
+export type ProvenanceLayer = {
+  layer?: 'classical' | 'engine' | 'heuristic' | 'modern_convention' | string
+  confidence?: number
+  method_registry_id?: string | null
+  note?: string | null
+}
+
+export type ResponseProvenance = Partial<Record<
+  | 'pillars' | 'geju' | 'yongshen' | 'dayun' | 'narrative' | 'analysis'
+  | 'scoring' | 'forecast' | 'compatibility' | 'patterns' | 'stars',
+  ProvenanceLayer
+>>
+
+// 流日/流时（B-P2/P3）
+export interface LiuriLiushiModel {
+  date: string
+  day_ganzhi: string
+  day_stem: string
+  day_branch: string
+  hour_ganzhi: string
+  hour_stem: string
+  hour_branch: string
+  hour_branch_idx?: number
+  hour_label?: string
+  day_ten_god?: string | null
+  hour_ten_god?: string | null
+  method?: string
+  missing_fields?: string[]
+  flow_score?: number | null
+  flow_score_dayun?: number | null
+  flow_score_liunian?: number | null
+  flow_score_geju?: number | null
+  transition_hint?: string | null
+  warnings?: string[]
+  flow_tone?: string | null
+  dayun_link?: string | null
+  liunian_link?: string | null
+  current_dayun_ganzhi?: string | null
+  current_liunian_ganzhi?: string | null
+  flow_summary?: string | null
+}
+
+export interface DayunTransitionModel {
+  days_to_next_transition?: number | null
+  next_transition_age?: number | null
+  next_transition_ganzhi?: string | null
+  next_transition_hint?: string | null
+}
+
+// ── 校验与可信度 ─────────────────────────────────────────
+export interface RiskFlagsModel {
+  near_shichen_boundary?: boolean
+  near_jieqi_boundary?: boolean
+  jieqi_boundary_status?: 'ok' | 'unavailable'
+  minutes_to_shichen_boundary?: number | null
+  minutes_to_jieqi_boundary?: number | null
+}
+
+export interface ValidationModel {
+  level?: 'L0' | 'L1' | 'L2' | 'L3'
+  mode?: 'dual' | 'single'
+  recommended?: string
+  interpretation_enabled?: boolean
+  reasons?: string[]
+  diff_fields?: Array<'year' | 'month' | 'day' | 'hour'>
+  risk_flags?: RiskFlagsModel
+  boundary_risk_shichen?: boolean
+  boundary_risk_jieqi?: boolean
+  warnings?: WarningModel[]
+}
+
+// ── 卷二上浮摘要（BE-P3-05）────────────────────────────────
+export interface RelationsSummaryModel {
+  items?: Array<{ type?: string; pillars?: string; detail?: string }>
+  clash_summary?: string
+  combine_summary?: string
+  harm_summary?: string
+  interaction_summary?: string
+  missing?: string[]
+}
+
+export interface ShenshaSummaryModel {
+  items?: Shensha[]
+  highlights?: string[]
+  missing?: string[]
+}
+
 // ── 完整响应（对应后端 BaziFullResponse）── ────────────
 export interface BaziResponse {
   // 元数据
@@ -381,12 +546,28 @@ export interface BaziResponse {
   pillars_primary: PillarSet
   pillars_secondary?: PillarSet
   ten_gods?: TenGods
+  pillar_details?: Record<'year' | 'month' | 'day' | 'hour', {
+    label?: string
+    stem?: string | null
+    branch?: string | null
+    ganzhi?: string | null
+    ten_god?: string | null
+    hidden_stems?: Array<{ stem?: string; weight?: number; element?: string | null; ten_god?: string | null }>
+    xingyun?: string | null
+    self_seat?: string | null
+    kongwang?: string[]
+    nayin?: string | null
+    shensha?: Array<{ name?: string; priority?: string; polarity?: string; pillar?: string; topic?: string; note?: string; classic?: string | null }>
+    wuxing?: string | null
+    yin_yang?: string | null
+  }>
   // 核心分析
   yongshen?: Yongshen
   day_master_strength?: DayMasterStrength
   geju?: GejuModel
   palace?: PalaceModel
   start_dayun_age?: number
+  shishen_summary?: ShishenSummary
   // 大运/流年
   dayun?: Dayun
   liunian?: { items?: Array<{ year?: number; stem?: string; branch?: string; ten_god?: string; clash?: string }>; years_used?: number[] }
@@ -400,10 +581,11 @@ export interface BaziResponse {
   // 命局评 + 神煞
   bazi_summary?: string
   shensha?: Shensha[]
+  kongwang?: string[]
   // 生命弧线 + 性格
   life_arc?: LifeArcModel
   personality?: PersonalityModel
-  // 四维分析
+  // 生活域分析（报告卷五；八字页不展示长文）
   wealth_analysis?: WealthAnalysisModel
   career?: CareerAnalysisModel
   marriage_analysis?: MarriageAnalysisModel
@@ -421,6 +603,19 @@ export interface BaziResponse {
   milestones?: MilestoneModel[]
   // 规则命中 + 原始数据
   rule_matches?: RuleMatchModel[]
+  liuri_liushi?: LiuriLiushiModel | null
+  missing_fields?: string[]
+  provenance?: ResponseProvenance | null
+  validation?: ValidationModel | null
+  risk_flags?: RiskFlagsModel | null
+  confidence_level?: 'high' | 'medium' | 'low'
+  confidence_score?: number | null
+  evidence_chain?: Array<Record<string, unknown>>
+  bazi_structural_summary?: Record<string, unknown> | null
+  dizhi_relations?: Array<Record<string, unknown>>
+  relations_summary?: RelationsSummaryModel | null
+  shensha_summary?: ShenshaSummaryModel | null
+  tiangan_clashes?: Array<Record<string, unknown>>
   raw?: Record<string, unknown>
   methods?: Record<string, string>
   [key: string]: unknown
@@ -428,12 +623,37 @@ export interface BaziResponse {
 
 // ── 补充请求 / 响应类型 ────────────────────────────────────
 
+// POST /bazi/liuri-liushi — 独立流日/流时
+export interface LiuriLiushiRequest {
+  dt: string
+  lon: number
+  tz?: string
+  gender?: 'male' | 'female'
+  solar_time_enabled?: boolean
+  target_date?: string
+  target_hour?: number
+  include_dayun_transition?: boolean
+}
+export interface LiuriLiushiEndpointResponse {
+  request_id: string
+  liuri_liushi: LiuriLiushiModel
+  dayun_transition?: DayunTransitionModel | null
+}
+
 // POST /bazi/liunian-domain
 export interface LiunianDomainRequest { case_id: string; year: number }
 export interface LiunianDomainResponse { year: number; year_ganzhi: string; domains: Record<string, string> }
 
 // POST /bazi/dayun-report
 export interface DayunReportRequest { case_id: string }
+export interface DayunReportInlineRequest {
+  dt: string
+  lon: number
+  tz: string
+  gender?: 'male' | 'female'
+  solar_time_enabled?: boolean
+  mode?: 'dual' | 'single'
+}
 export interface DayunReportItem { ganzhi: string; start_age?: number; end_age?: number; ten_god?: string; narrative: string }
 export interface DayunReportResponse { items: DayunReportItem[]; narrative_total_chars: number }
 
@@ -460,6 +680,22 @@ export interface GejuLightResponse { geju_name: string; confidence: number; is_b
 
 // POST /bazi/calendar-compare
 export interface CalendarCompareRequest { birth_dt: string; lon?: number; tz?: string }
+export interface LunarToSolarRequest {
+  lunar_year: number
+  lunar_month: number
+  lunar_day: number
+  hour?: number
+  minute?: number
+  is_leap_month?: boolean
+}
+export interface LunarToSolarResponse {
+  solar_dt: string
+  solar_year: number
+  solar_month: number
+  solar_day: number
+  lunar_label: string
+  warnings: string[]
+}
 export interface PillarOut { year: string; month: string; day: string; hour: string }
 export interface CalendarCompareResponse { sxtwl?: PillarOut; cnlunar?: PillarOut; diff_fields: string[]; warnings: string[] }
 
@@ -481,6 +717,12 @@ export async function computeBazi(req: BaziRequest): Promise<BaziResponse> {
   return data
 }
 
+/** POST /api/v1/bazi/liuri-liushi — 独立流日/流时计算 */
+export async function computeLiuriLiushi(req: LiuriLiushiRequest): Promise<LiuriLiushiEndpointResponse> {
+  const { data } = await apiClient.post<LiuriLiushiEndpointResponse>('/api/v1/bazi/liuri-liushi', req)
+  return data
+}
+
 /** POST /api/v1/bazi/liunian-domain — 流年领域预测 */
 export async function liunianDomain(req: LiunianDomainRequest): Promise<LiunianDomainResponse> {
   const { data } = await apiClient.post<LiunianDomainResponse>('/api/v1/bazi/liunian-domain', req)
@@ -490,6 +732,12 @@ export async function liunianDomain(req: LiunianDomainRequest): Promise<LiunianD
 /** POST /api/v1/bazi/dayun-report — 大运叙事报告 */
 export async function dayunReport(req: DayunReportRequest): Promise<DayunReportResponse> {
   const { data } = await apiClient.post<DayunReportResponse>('/api/v1/bazi/dayun-report', req)
+  return data
+}
+
+/** POST /api/v1/bazi/dayun-report/inline — 档案驱动大运叙事（无需 case_id） */
+export async function dayunReportInline(req: DayunReportInlineRequest): Promise<DayunReportResponse> {
+  const { data } = await apiClient.post<DayunReportResponse>('/api/v1/bazi/dayun-report/inline', req)
   return data
 }
 
@@ -520,6 +768,12 @@ export async function getJieqi(year: number): Promise<JieqiResponse> {
 /** POST /api/v1/bazi/geju — 格局速查 */
 export async function computeGeju(req: GejuSubjectRequest): Promise<GejuLightResponse> {
   const { data } = await apiClient.post<GejuLightResponse>('/api/v1/bazi/geju', req)
+  return data
+}
+
+/** POST /api/v1/bazi/lunar-to-solar — 农历转公历 */
+export async function lunarToSolar(req: LunarToSolarRequest): Promise<LunarToSolarResponse> {
+  const { data } = await apiClient.post<LunarToSolarResponse>('/api/v1/bazi/lunar-to-solar', req)
   return data
 }
 

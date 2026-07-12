@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 
 function emitBackendUnavailable(status?: number, path?: string): void {
   if (typeof window === 'undefined') return
@@ -10,9 +10,12 @@ function emitBackendUnavailable(status?: number, path?: string): void {
   }))
 }
 
-// 从 localStorage 读 token（与旧版 window.getToken 行为一致）
 function getToken(): string | null {
   return localStorage.getItem('token')
+}
+
+function getRefreshToken(): string | null {
+  return localStorage.getItem('refresh_token')
 }
 
 function resolveApiBaseUrl(): string {
@@ -29,7 +32,8 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// 请求拦截：自动注入 Bearer Token
+type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean }
+
 apiClient.interceptors.request.use((config) => {
   const token = getToken()
   if (token) {
@@ -38,19 +42,38 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// 响应拦截：401 自动跳登录（派发自定义事件，避免 window.location.href 被 StaticFiles 404）
 apiClient.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     const status = err?.response?.status as number | undefined
     const path = (err?.config?.url as string | undefined) ?? ''
+    const original = err?.config as RetryConfig | undefined
 
     if (!err?.response || (typeof status === 'number' && status >= 500)) {
       emitBackendUnavailable(status, path)
     }
 
-    if (err.response?.status === 401) {
+    if (status === 401 && original && !original._retry) {
+      const refreshToken = getRefreshToken()
+      const isAuthPath = path.includes('/auth/login') || path.includes('/auth/refresh')
+      if (refreshToken && !isAuthPath) {
+        original._retry = true
+        try {
+          const { data } = await axios.post<{
+            access_token: string
+            refresh_token: string
+          }>(`${resolveApiBaseUrl()}api/v1/auth/refresh`, { refresh_token: refreshToken })
+          localStorage.setItem('token', data.access_token)
+          localStorage.setItem('refresh_token', data.refresh_token)
+          original.headers = original.headers || {}
+          original.headers.Authorization = `Bearer ${data.access_token}`
+          return apiClient(original)
+        } catch {
+          // fall through to logout flow
+        }
+      }
       localStorage.removeItem('token')
+      localStorage.removeItem('refresh_token')
       localStorage.removeItem('username')
       window.dispatchEvent(new CustomEvent('app:unauthorized'))
     }

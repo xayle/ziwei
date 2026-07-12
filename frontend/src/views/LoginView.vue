@@ -3,13 +3,15 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
+import { useProfileStore } from '@/stores/profile'
 
 const router = useRouter()
 const route  = useRoute()
 const auth   = useAuthStore()
+const profile = useProfileStore()
 
-const username = ref('admin')
-const password = ref('cad123qwe')
+const username = ref(import.meta.env.DEV ? 'admin' : '')
+const password = ref(import.meta.env.DEV ? 'cad123qwe' : '')
 const loading  = ref(false)
 const error    = ref('')
 
@@ -18,7 +20,8 @@ async function doLogin() {
   error.value   = ''
   try {
     const res = await login(username.value, password.value)
-    auth.setToken(res.access_token, username.value)
+    auth.setTokens(res.access_token, res.refresh_token, username.value)
+    void profile.pullRemoteCases()
     const redirect = (route.query.redirect as string) || '/'
     router.push(redirect)
   } catch (e: unknown) {
@@ -35,7 +38,7 @@ async function doLogin() {
       <!-- Logo / 标题 -->
       <div class="login-logo">
         <span class="logo-icon">☯</span>
-        <h1 class="logo-title">命理系统</h1>
+        <h1 class="logo-title">浮生</h1>
         <p class="logo-sub">登录以使用完整功能</p>
       </div>
 

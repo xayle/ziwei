@@ -1,0 +1,452 @@
+[
+  {
+    "id": "yuanhai.geju.life_death",
+    "title": "论格局生死引用",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GitHub: minionszyw/bazi-skills yuanhai.json"
+  },
+  {
+    "id": "yuanhai.jishan.geju",
+    "title": "继善篇",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GitHub: minionszyw/bazi-skills yuanhai.json"
+  },
+  {
+    "id": "chapter_agg.三命通会",
+    "title": "《三命通会》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "classic_refs 章节合并（25 条）"
+  },
+  {
+    "id": "chapter_agg.子平真诠-论用神",
+    "title": "《子平真诠·论用神》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "classic_refs 章节合并（5 条）"
+  },
+  {
+    "id": "chapter_agg.渊海子平",
+    "title": "《渊海子平》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "classic_refs 章节合并（11 条）"
+  },
+  {
+    "id": "daizhige.ditian.case.丁亥-壬子-庚子-辛巳",
+    "title": "《滴天髓》·从象命例 丁亥 壬子 庚子 辛巳",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（从象评注命例）"
+  },
+  {
+    "id": "daizhige.ditian.case.丁巳-壬子-辛巳-丁酉",
+    "title": "《滴天髓》·从象命例 丁巳 壬子 辛巳 丁酉",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（从象评注命例）"
+  },
+  {
+    "id": "daizhige.ditian.case.庚寅-己丑-丙子-乙未",
+    "title": "《滴天髓》·从象命例 庚寅 己丑 丙子 乙未",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（从象评注命例）"
+  },
+  {
+    "id": "daizhige.ditian.case.戊子-壬戌-庚寅-癸未",
+    "title": "《滴天髓》·化象论命例 戊子 壬戌 庚寅 癸未",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（化象论评注命例）"
+  },
+  {
+    "id": "daizhige.ditian.case.甲子-丙子-庚辰-庚辰",
+    "title": "《滴天髓》·从象命例 甲子 丙子 庚辰 庚辰",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（从象评注命例）"
+  },
+  {
+    "id": "daizhige.ditian.六亲论-五-何知章",
+    "title": "《滴天髓阐微》·六亲论·五、何知章",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（六亲论）"
+  },
+  {
+    "id": "daizhige.ditian.六亲论-六-女命章",
+    "title": "《滴天髓阐微》·六亲论·六、女命章",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（六亲论）"
+  },
+  {
+    "id": "daizhige.ditian.六亲论-十一-闲神",
+    "title": "《滴天髓阐微》·六亲论·十一、闲神",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（六亲论）"
+  },
+  {
+    "id": "daizhige.ditian.象论-二十七-地位",
+    "title": "《滴天髓阐微》·象论·二十七、地位",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（象论）"
+  },
+  {
+    "id": "daizhige.ditian.象论-二十八-岁运",
+    "title": "《滴天髓阐微》·象论·二十八、岁运",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（象论）"
+  },
+  {
+    "id": "daizhige.ditian.象论-二十六-出身",
+    "title": "《滴天髓阐微》·象论·二十六、出身",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（象论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-二十二-伤官",
+    "title": "《滴天髓阐微》·通神论·二十二、伤官",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-二十五-真神",
+    "title": "《滴天髓阐微》·通神论·二十五、真神",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-二十六-假神",
+    "title": "《滴天髓阐微》·通神论·二十六、假神",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-十三-体用",
+    "title": "《滴天髓阐微》·通神论·十三、体用",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-十二-八格",
+    "title": "《滴天髓阐微》·通神论·十二、八格",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-十五-月令",
+    "title": "《滴天髓阐微》·通神论·十五、月令",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ditian.通神论-四-知命",
+    "title": "《滴天髓阐微》·通神论·四、知命",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 ditian（通神论）"
+  },
+  {
+    "id": "daizhige.ziping.论四凶神能成格",
+    "title": "《子平真诠评注》·论四凶神能成格",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论四吉神能破格",
+    "title": "《子平真诠评注》·论四吉神能破格",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论外格用舍",
+    "title": "《子平真诠评注》·论外格用舍",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论建禄月劫",
+    "title": "《子平真诠评注》·论建禄月劫",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论时说拘泥格局",
+    "title": "《子平真诠评注》·论时说拘泥格局",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论星辰无关格局",
+    "title": "《子平真诠评注》·论星辰无关格局",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论生克先后分吉凶",
+    "title": "《子平真诠评注》·论生克先后分吉凶",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论用神",
+    "title": "《子平真诠评注》·论用神",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论用神因成得败因败得成",
+    "title": "《子平真诠评注》·论用神因成得败因败得成",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论用神成败救应",
+    "title": "《子平真诠评注》·论用神成败救应",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论用神格局高低",
+    "title": "《子平真诠评注》·论用神格局高低",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论绶印取运",
+    "title": "《子平真诠评注》·论绶印取运",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论行运",
+    "title": "《子平真诠评注》·论行运",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "daizhige.ziping.论行运成格变格",
+    "title": "《子平真诠评注》·论行运成格变格",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 ctext subsection 替代）"
+  },
+  {
+    "id": "engine_ref.geju_001",
+    "title": "《子平真诠·论用神》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.geju_009",
+    "title": "《三命通会》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.geju_e04",
+    "title": "《子平真诠·论用神》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.geju_e06",
+    "title": "《命理约言》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.geju_e07",
+    "title": "《穷通宝鉴》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.general_ext08",
+    "title": "《子平真诠·论用神》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.pattern_001",
+    "title": "《子平真诠·论身强身弱》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.pattern_002",
+    "title": "《滴天髓·论从格》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.pattern_003",
+    "title": "《三命通会·论病药》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "engine_ref.pattern_004",
+    "title": "《子平真诠·论用神》",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "services/bazi_engine/classic_refs.py"
+  },
+  {
+    "id": "qianli.case.千里命稿例18",
+    "title": "《千里命稿》 例18 — 千里命稿例18",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GitHub: bazi-skills supreme_audit.json (例18)"
+  },
+  {
+    "id": "qianli.case.千里命稿例75",
+    "title": "《千里命稿》 例75 — 千里命稿例75",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GitHub: bazi-skills supreme_audit.json (例75)"
+  },
+  {
+    "id": "qianli.case.孙传芳",
+    "title": "《千里命稿》 例101 — 孙传芳",
+    "source": "",
+    "source_page": "",
+    "verification_status": "verified",
+    "verified_by": "spotcheck-batch",
+    "note": "GitHub: bazi-skills supreme_audit.json (例101)"
+  }
+]

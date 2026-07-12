@@ -1,0 +1,76 @@
+/* 报告打印 — 六卷+跋（F4-7 / BZ075） */
+
+@media print {
+  .no-print,
+  .report-toolbar,
+  .report-chapter-nav {
+    display: none !important;
+  }
+
+  .report-layout {
+    display: block !important;
+  }
+
+  .report-body {
+    max-width: 100%;
+  }
+
+  .report-volume {
+    display: block !important;
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+    margin-bottom: 1.2rem;
+  }
+
+  .report-volume h2 {
+    font-family: var(--font-display);
+    color: var(--brand-ink);
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .volume-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .colophon-footnote {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-page {
+    overflow: visible !important;
+  }
+
+  .report-volume,
+  .report-cover,
+  .report-embed {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .volume-section__body,
+  .analysis-panel__body {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .fusheng-ziwei-plate__grid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .bazi-ref-table {
+    font-size: 11px;
+  }
+
+  .bazi-ref-table th,
+  .bazi-ref-table td {
+    padding: 6px 4px;
+  }
+}
+
+.report-body.report-body--export .report-volume {
+  display: block !important;
+}

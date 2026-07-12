@@ -13,6 +13,8 @@
     "lint:fix": "eslint src/ --fix",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "install:e2e": "pwsh ./scripts/install-playwright.ps1",
     "test:coverage": "vitest run --coverage",
     "ci": "npm run type-check && npm run lint && npm run test && npm run build",
     "gen:types": "openapi-typescript ../docs/openapi.json -o src/api/schema.d.ts"
@@ -21,12 +23,14 @@
     "@lucide/vue": "^1.16.0",
     "axios": "^1.7.9",
     "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
     "pinia": "^2.3.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.51.0",
     "@tsconfig/node22": "^22.0.5",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
@@ -43,6 +47,6 @@
     "vite": "^6.0.11",
     "vitest": "^4.1.1",
     "vue-eslint-parser": "^10.4.0",
-    "vue-tsc": "^2.2.0"
+    "vue-tsc": "^2.2.12"
   }
 }

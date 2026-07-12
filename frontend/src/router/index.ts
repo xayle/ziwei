@@ -1,166 +1,99 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type Router } from 'vue-router'
+import { useProfileStore } from '@/stores/profile'
+import { isArchiveReady } from '@/utils/profileReadiness'
 
 const router = createRouter({
   history: createWebHistory('/static/app/'),
+  scrollBehavior(to) {
+    if (to.hash) {
+      return { el: to.hash, top: 72, behavior: 'smooth' }
+    }
+    return { top: 0 }
+  },
   routes: [
     {
       path: '/',
-      redirect: '/home',
+      name: 'home',
+      component: () => import('@/views/new/NewHomeView.vue'),
+      meta: { title: '首页' },
     },
     {
       path: '/home',
-      name: 'home',
-      component: () => import('@/views/HomeView.vue'),
-      meta: { title: '命理工作台' },
+      name: 'home-legacy',
+      component: () => import('@/views/new/NewHomeView.vue'),
+      meta: { title: '首页' },
+    },
+    {
+      path: '/new',
+      name: 'new-home',
+      component: () => import('@/views/new/NewHomeView.vue'),
+      meta: { title: '首页' },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('@/views/ProfileView.vue'),
+      meta: { title: '档案' },
+    },
+    {
+      path: '/new/bazi',
+      name: 'new-bazi',
+      component: () => import('@/views/new/NewBaziView.vue'),
+      meta: { title: '八字', requiresArchive: true },
+    },
+    {
+      path: '/new/ziwei',
+      name: 'new-ziwei',
+      component: () => import('@/views/new/FushengZiweiView.vue'),
+      meta: { title: '紫微', requiresArchive: true },
+    },
+    {
+      path: '/new/ziwei/timeline',
+      name: 'new-ziwei-timeline',
+      component: () => import('@/views/new/FushengZiweiTimeline.vue'),
+      meta: { title: '紫微运限', requiresArchive: true },
+    },
+    {
+      path: '/report',
+      name: 'report',
+      component: () => import('@/views/ReportView.vue'),
+      meta: { title: '报告', requiresArchive: true },
+    },
+    {
+      path: '/extensions',
+      name: 'extensions',
+      component: () => import('@/views/extensions/ExtensionHubView.vue'),
+      meta: { title: '扩展工具', requiresArchive: true },
+    },
+    {
+      path: '/extensions/compat',
+      name: 'extensions-compat',
+      component: () => import('@/views/extensions/CompatView.vue'),
+      meta: { title: '八字合婚', requiresArchive: true },
+    },
+    {
+      path: '/extensions/ziwei-compat',
+      name: 'extensions-ziwei-compat',
+      component: () => import('@/views/extensions/ZiweiCompatView.vue'),
+      meta: { title: '紫微合盘', requiresArchive: true },
+    },
+    {
+      path: '/extensions/similarity',
+      name: 'extensions-similarity',
+      component: () => import('@/views/extensions/SimilarityView.vue'),
+      meta: { title: '相似命盘', requiresArchive: true },
+    },
+    {
+      path: '/extensions/zeri',
+      name: 'extensions-zeri',
+      component: () => import('@/views/extensions/ZeriView.vue'),
+      meta: { title: '择日推荐', requiresArchive: true },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
       meta: { title: '登录', public: true },
-    },
-    {
-      path: '/name',
-      name: 'name',
-      component: () => import('@/views/NameView.vue'),
-      meta: { title: '姓名学' },
-    },
-    {
-      path: '/bazi',
-      name: 'bazi',
-      component: () => import('@/views/BaziView.vue'),
-      meta: { title: '八字排盘' },
-    },
-    {
-      path: '/ziwei',
-      name: 'ziwei',
-      component: () => import('@/views/ZiweiView.vue'),
-      meta: { title: '紫微斗数' },
-    },
-    {
-      path: '/ziwei/batch',
-      name: 'ziwei-batch',
-      component: () => import('@/views/ZiweiBatchView.vue'),
-      meta: { title: '紫微批量排盘' },
-    },
-    {
-      path: '/ziwei/cases',
-      name: 'ziwei-cases',
-      component: () => import('@/views/ZiweiCaseWorkflowView.vue'),
-      meta: { title: '紫微案例工作区' },
-    },
-    {
-      path: '/llm/drafts',
-      name: 'llm-drafts',
-      component: () => import('@/views/LlmDraftsView.vue'),
-      meta: { title: 'AI 草稿工作区' },
-    },
-    {
-      path: '/fengshui',
-      name: 'fengshui',
-      component: () => import('@/views/FengshuiView.vue'),
-      meta: { title: '风水助手' },
-    },
-    {
-      path: '/admin',
-      name: 'admin',
-      component: () => import('@/views/AdminView.vue'),
-      meta: { title: '管理后台' },
-    },
-    {
-      path: '/cases',
-      name: 'case-center',
-      component: () => import('@/views/WorkbenchView.vue'),
-      meta: { title: '咨询流程' },
-    },
-    {
-      path: '/workbench',
-      name: 'workbench-legacy',
-      redirect: '/cases',
-    },
-    {
-      path: '/profile',
-      name: 'profile',
-      component: () => import('@/views/ProfileView.vue'),
-      meta: { title: '个人信息' },
-    },
-    {
-      path: '/zeri',
-      name: 'zeri',
-      component: () => import('@/views/ZeriView.vue'),
-      meta: { title: '择日推荐' },
-    },
-    {
-      path: '/western',
-      name: 'western',
-      component: () => import('@/views/WesternView.vue'),
-      meta: { title: '西方占星' },
-    },
-    {
-      path: '/numerology',
-      name: 'numerology',
-      component: () => import('@/views/NumerologyView.vue'),
-      meta: { title: '数字学' },
-    },
-    {
-      path: '/compat',
-      name: 'compat',
-      component: () => import('@/views/CompatibilityView.vue'),
-      meta: { title: '合婚诊断' },
-    },
-    {
-      path: '/compat/synastry',
-      name: 'compat-synastry',
-      component: () => import('@/views/CompatibilityView.vue'),
-      meta: { title: '合盘工作区' },
-    },
-    {
-      path: '/compat/team',
-      name: 'compat-team',
-      component: () => import('@/views/MultiCompatView.vue'),
-      meta: { title: '多人合盘' },
-    },
-    {
-      path: '/glossary',
-      name: 'glossary',
-      component: () => import('@/views/GlossaryView.vue'),
-      meta: { title: '术语词库' },
-    },
-    {
-      path: '/human-design',
-      name: 'human-design',
-      component: () => import('@/views/HumanDesignView.vue'),
-      meta: { title: '人类设计' },
-    },
-    {
-      path: '/tarot',
-      name: 'tarot',
-      component: () => import('@/views/TarotView.vue'),
-      meta: { title: '塔罗' },
-    },
-    {
-      path: '/report',
-      name: 'report',
-      component: () => import('@/views/ReportView.vue'),
-      meta: { title: '命理报告书' },
-    },
-    {
-      path: '/report/:caseId',
-      name: 'report-case',
-      component: () => import('@/views/ReportView.vue'),
-      meta: { title: '命理报告书' },
-    },
-    {
-      path: '/scenarios',
-      name: 'scenarios',
-      component: () => import('@/views/ScenarioView.vue'),
-      meta: { title: '情景推演' },
-    },
-    {
-      path: '/members',
-      name: 'members',
-      component: () => import('@/views/MemberView.vue'),
-      meta: { title: '成员管理' },
     },
     {
       path: '/:pathMatch(.*)*',
@@ -170,13 +103,25 @@ const router = createRouter({
   ],
 })
 
-// 导航守卫：已禁用登录验证，直接放行
-router.beforeEach(() => true)
+export function registerRouterGuards(target: Router) {
+  target.beforeEach((to) => {
+    if (to.meta.public) return true
+    if (to.meta.requiresArchive) {
+      const profile = useProfileStore()
+      if (!isArchiveReady(profile.asProfileData())) {
+        return {
+          path: '/profile',
+          query: { redirect: to.fullPath, reason: 'archive' },
+        }
+      }
+    }
+    return true
+  })
+}
 
-// 更新页面标题
 router.afterEach((to) => {
   const title = to.meta.title as string | undefined
-  document.title = title ? `${title} — 命理系统` : '命理系统'
+  document.title = title ? `${title} — 浮生` : '浮生 · 知命知心'
 })
 
 export default router

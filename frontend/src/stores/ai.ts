@@ -1,11 +1,21 @@
 /**
- * ai.ts — AI 助手面板状态
- * 管理聊天消息列表、流式输出态、当前命盘哈希
+ * ai.ts — LLM 解读面板（登录后接 /api/v1/llm）
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { streamInterpretation, interpretModule } from '@/api/llm'
-import type { StreamParams } from '@/api/llm'
+import type { BaziResponse } from '@/api/bazi'
+import type { ZiweiResponse } from '@/api/ziwei'
+import {
+  getLlmConfig,
+  interpretBaziByCase,
+  interpretChart,
+  interpretModule,
+  type LlmDraftResponse,
+  type LlmModuleId,
+} from '@/api/llm'
+import { useAuthStore } from '@/stores/auth'
+import { useProfileStore } from '@/stores/profile'
+import { buildChartHash } from '@/utils/chartHash'
 
 export interface AiMessage {
   role: 'user' | 'ai'
@@ -14,96 +24,140 @@ export interface AiMessage {
 }
 
 export const useAiStore = defineStore('ai', () => {
-  const messages = ref<AiMessage[]>([
-    { role: 'ai', text: '你好！我是命理 AI 助手，可以帮你生成解读草稿、分析八字格局。请选择一个案例或输入问题。' },
-  ])
+  const messages = ref<AiMessage[]>([])
   const streaming = ref(false)
+  const loading = ref(false)
+  const error = ref('')
+  const configAvailable = ref(false)
+  const configNote = ref('')
+  const currentDraft = ref<LlmDraftResponse | null>(null)
   const currentChartHash = ref<string | null>(null)
   const currentCaseId = ref<string | null>(null)
+  const moduleInterpretation = ref('')
+  const moduleLoading = ref(false)
+  const moduleError = ref('')
 
-  /** 流式发送消息 */
-  async function sendMessage(
-    text: string,
-    streamParams?: Omit<StreamParams, 'chart_hash'> & { chart_hash?: string }
-  ) {
-    if (streaming.value) return
+  async function loadConfig() {
+    try {
+      const cfg = await getLlmConfig()
+      configAvailable.value = cfg.available
+      configNote.value = cfg.note || `${cfg.provider} / ${cfg.model}`
+    } catch {
+      configAvailable.value = false
+      configNote.value = 'LLM 配置不可用'
+    }
+  }
 
+  async function generateInterpretation(params: {
+    bazi: BaziResponse | null
+    ziwei: ZiweiResponse | null
+    profileSignature: string
+  }): Promise<LlmDraftResponse | null> {
+    const auth = useAuthStore()
+    if (!auth.isLoggedIn) {
+      error.value = '请先登录后使用 AI 解读。'
+      return null
+    }
+
+    const profile = useProfileStore()
+    const remoteCaseId = profile.activeProfile?.remoteCaseId ?? null
+
+    loading.value = true
+    error.value = ''
+    streaming.value = true
+    messages.value = []
+
+    try {
+      if (remoteCaseId) {
+        currentCaseId.value = remoteCaseId
+        const draft = await interpretBaziByCase({ case_id: remoteCaseId })
+        currentDraft.value = draft
+        currentChartHash.value = draft.chart_hash
+        messages.value = [{ role: 'ai', text: draft.draft_text }]
+        return draft
+      }
+
+      const hash = await buildChartHash(params.profileSignature)
+      currentChartHash.value = hash
+      const bazi = params.bazi
+      const ziwei = params.ziwei
+      const draft = await interpretChart({
+        chart_hash: hash,
+        life_palace_gz: ziwei?.life_palace_gz || '',
+        wuxing_ju_name: ziwei?.wuxing_ju_name || '',
+        pattern_summary: bazi?.geju?.interpretation_text?.slice(0, 300) || bazi?.geju?.geju_name || '',
+        birth_info_summary: profile.activeProfile?.label || '',
+        geju_name: bazi?.geju?.geju_name || '',
+        yongshen_favor: bazi?.yongshen?.favor || [],
+      })
+      currentDraft.value = draft
+      messages.value = [{ role: 'ai', text: draft.draft_text }]
+      return draft
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      error.value = typeof detail === 'string' ? detail : 'AI 解读生成失败，请稍后重试。'
+      return null
+    } finally {
+      loading.value = false
+      streaming.value = false
+    }
+  }
+
+  async function sendMessage(text: string) {
     messages.value.push({ role: 'user', text })
+    messages.value.push({
+      role: 'ai',
+      text: '暂不支持多轮对话，请使用「生成 AI 解读」。',
+    })
+  }
 
-    const aiMsg: AiMessage = { role: 'ai', text: '', streaming: true }
-    messages.value.push(aiMsg)
-    streaming.value = true
+  async function generateModuleInterpretation(module: LlmModuleId): Promise<string | null> {
+    const auth = useAuthStore()
+    if (!auth.isLoggedIn) {
+      moduleError.value = '请先登录后使用分模块解读。'
+      return null
+    }
+
+    const profile = useProfileStore()
+    const remoteCaseId = profile.activeProfile?.remoteCaseId ?? null
+    if (!remoteCaseId) {
+      moduleError.value = '请先同步档案到云端后再使用分模块解读。'
+      return null
+    }
+
+    moduleLoading.value = true
+    moduleError.value = ''
+    moduleInterpretation.value = ''
 
     try {
-      await streamInterpretation(
-        {
-          chart_hash: streamParams?.chart_hash ?? currentChartHash.value ?? `chat_${Date.now()}`,
-          life_palace_gz: streamParams?.life_palace_gz ?? '',
-          wuxing_ju_name: streamParams?.wuxing_ju_name ?? '',
-          pattern_summary: streamParams?.pattern_summary ?? text,
-          birth_info_summary: streamParams?.birth_info_summary ?? '',
-        },
-        (chunk: string) => {
-          aiMsg.text += chunk
-        },
-        (_fullText: string) => {
-          aiMsg.streaming = false
-        },
-        (_savedId: number) => {
-          // 草稿已自动保存到后端
-        }
-      )
-    } catch (err) {
-      aiMsg.text = '⚠️ AI 请求失败，请检查网络或重试。'
+      const res = await interpretModule({ case_id: remoteCaseId, module })
+      moduleInterpretation.value = res.interpretation
+      return res.interpretation
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      moduleError.value = typeof detail === 'string' ? detail : '分模块解读生成失败，请稍后重试。'
+      return null
     } finally {
-      aiMsg.streaming = false
-      streaming.value = false
+      moduleLoading.value = false
     }
-  }
-
-  /** 快捷模板：调用 interpret-module */
-  async function sendModuleRequest(module: string, label: string) {
-    if (!currentCaseId.value) {
-      messages.value.push({ role: 'ai', text: '⚠️ 请先在案例中心选择一个案例，再使用快捷模板。' })
-      return
-    }
-    if (streaming.value) return
-
-    messages.value.push({ role: 'user', text: `请帮我分析：${label}` })
-    const aiMsg: AiMessage = { role: 'ai', text: '', streaming: true }
-    messages.value.push(aiMsg)
-    streaming.value = true
-
-    try {
-      const res = await interpretModule(currentCaseId.value, module)
-      aiMsg.text = res.interpretation
-    } catch (err) {
-      aiMsg.text = '⚠️ 模板分析失败，请重试。'
-    } finally {
-      aiMsg.streaming = false
-      streaming.value = false
-    }
-  }
-
-  function setCurrentCase(caseId: string, chartHash?: string) {
-    currentCaseId.value = caseId
-    if (chartHash) currentChartHash.value = chartHash
-  }
-
-  function clearMessages() {
-    messages.value = [
-      { role: 'ai', text: '已切换上下文，请继续提问。' }
-    ]
   }
 
   return {
     messages,
     streaming,
+    loading,
+    error,
+    configAvailable,
+    configNote,
+    currentDraft,
     currentChartHash,
     currentCaseId,
+    moduleInterpretation,
+    moduleLoading,
+    moduleError,
+    loadConfig,
+    generateInterpretation,
+    generateModuleInterpretation,
     sendMessage,
-    sendModuleRequest,
-    setCurrentCase,
-    clearMessages,
   }
 })
