@@ -547,10 +547,10 @@ onMounted(() => {
           :class="{ 'is-active': isChapterActive(volume.id) }"
           :data-testid="volume.id === 'preface' ? 'report-cover-chapter' : volume.id === 'vol5' ? 'report-vol5-chapter' : undefined"
         >
-          <h2>{{ LIFE_VOLUME_LABELS[volume.id] }}</h2>
+          <h2 v-if="volume.id !== 'preface'">{{ LIFE_VOLUME_LABELS[volume.id] }}</h2>
 
           <template v-if="volume.id === 'preface'">
-            <div class="report-cover">
+            <div class="report-cover" data-testid="report-cover-hero">
               <img :src="brandLogo" alt="浮生" class="report-cover__logo" width="96" height="96" />
               <h1>浮生 · 命理个人档案</h1>
               <p class="report-cover__slogan">浮生若寄，知命知心</p>
@@ -558,18 +558,21 @@ onMounted(() => {
               <p class="report-cover__meta">{{ profile.birthDt?.replace('T', ' ') || '出生时间未填写' }}</p>
               <p class="report-cover__version">浮生报告 v2.4 · {{ generatedAt ? generatedAt.slice(0, 10) : '—' }}</p>
             </div>
-            <SummaryStrip :items="metaSummary" />
-            <div class="report-text">
-              <p>{{ requestMeta?.timeRiskLabel }} — {{ requestMeta?.timeRiskHint }}</p>
-              <p>{{ requestMeta?.dstLabel }}</p>
-              <p>真太阳时：{{ profile.solarTime ? '已启用' : '未启用' }} · 时区 {{ profile.tz }}</p>
-            </div>
-            <SummaryStrip :items="archiveSummary" />
-            <div class="report-text">
-              <p>关注重点：{{ profile.focusTopic || '未填写' }}</p>
-              <p>现居地：{{ profile.currentCityName || '未填写' }}</p>
-              <p>经度 / 时区：{{ profile.lon ?? '缺失' }} / {{ profile.tz }}</p>
-            </div>
+            <details class="report-preface-meta" data-testid="report-preface-meta">
+              <summary>建档口径与摘要</summary>
+              <SummaryStrip :items="metaSummary" />
+              <div class="report-text">
+                <p>{{ requestMeta?.timeRiskLabel }} — {{ requestMeta?.timeRiskHint }}</p>
+                <p>{{ requestMeta?.dstLabel }}</p>
+                <p>真太阳时：{{ profile.solarTime ? '已启用' : '未启用' }} · 时区 {{ profile.tz }}</p>
+              </div>
+              <SummaryStrip :items="archiveSummary" />
+              <div class="report-text">
+                <p>关注重点：{{ profile.focusTopic || '未填写' }}</p>
+                <p>现居地：{{ profile.currentCityName || '未填写' }}</p>
+                <p>经度 / 时区：{{ profile.lon ?? '缺失' }} / {{ profile.tz }}</p>
+              </div>
+            </details>
           </template>
 
           <template v-else-if="volume.id === 'vol1'">
@@ -1093,6 +1096,23 @@ onMounted(() => {
   border-radius: var(--radius-codex);
   background: var(--surface);
   box-shadow: var(--shadow-seal);
+}
+
+.report-preface-meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--brand-mist);
+}
+
+.report-preface-meta summary {
+  cursor: pointer;
+  font-family: var(--font-ui);
+  color: var(--brand-gold-dark);
+  margin-bottom: 8px;
+}
+
+.report-preface-meta[open] summary {
+  margin-bottom: 12px;
 }
 
 .report-cover__logo {

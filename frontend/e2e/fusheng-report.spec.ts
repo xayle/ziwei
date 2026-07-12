@@ -16,6 +16,19 @@ test.describe('报告与新功能', () => {
     await setupChartApiMocks(page)
   })
 
+  test('报告卷首首屏仅封面、建档口径可展开', async ({ page }) => {
+    await fillMinimalProfile(page)
+    await gotoApp(page, 'report')
+    await expect(page.getByTestId('report-cover-hero')).toBeVisible({ timeout: 15_000 })
+    const meta = page.getByTestId('report-preface-meta')
+    await expect(meta).toBeVisible()
+    await expect(meta).not.toHaveAttribute('open', '')
+    await expect(meta.locator('.fs-kpi-strip').first()).not.toBeVisible()
+    await meta.locator('summary').click()
+    await expect(meta).toHaveAttribute('open', '')
+    await expect(meta.locator('.fs-kpi-strip').first()).toBeVisible()
+  })
+
   test('报告默认连续阅读且含六卷卷目', async ({ page }) => {
     await fillMinimalProfile(page)
     await page.getByTestId('profile-report').click()

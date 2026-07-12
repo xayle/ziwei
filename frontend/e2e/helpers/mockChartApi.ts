@@ -323,6 +323,25 @@ export const mockZiweiPayload = {
 export async function setupLoggedInApiMocks(page: Page) {
   await setupCitiesApiMock(page)
 
+  await page.route('**/api/v1/profile/*/summary', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        schema_version: '1.0',
+        case_id: 'case-e2e-001',
+        pillars_primary: { day: '甲子' },
+        geju_one_liner: 'E2E 正官格',
+        yongshen_favor: ['水'],
+        strength_tier: '中和',
+        ziwei_ming_one_liner: '紫微在命',
+        current_dayun: '乙丑',
+        liunian_2026_tag: '平',
+        disclaimer_block: { text: 'E2E mock', version: '1.0' },
+      }),
+    })
+  })
+
   await page.route(
     (url) => {
       const path = url.pathname

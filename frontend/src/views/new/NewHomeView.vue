@@ -5,7 +5,6 @@ import ProfileReadinessCard from '@/components/fusheng/ProfileReadinessCard.vue'
 import { useFushengFlow } from '@/composables/useFushengFlow'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import VolumeTocGrid from '@/components/fusheng/VolumeTocGrid.vue'
-import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
 import { LIFE_VOLUME_LABELS } from '@/types/life-volume'
@@ -63,6 +62,12 @@ function goProfile() {
         <p class="hero-copy__eyebrow">浮生 · 人生六卷</p>
         <h1 class="hero-copy__title">{{ profileLabel }}</h1>
         <p class="hero-copy__desc">{{ birthText }}</p>
+        <dl class="hero-copy__kpi" aria-label="档案摘要">
+          <div v-for="item in previewItems" :key="item.label">
+            <dt>{{ item.label }}</dt>
+            <dd>{{ item.value }}</dd>
+          </div>
+        </dl>
       </div>
 
       <div class="hero-actions" aria-label="主要操作">
@@ -99,20 +104,11 @@ function goProfile() {
       @action="goProfile"
     />
 
-    <section class="preview-card fs-card">
-      <h2>档案预览</h2>
-      <SummaryStrip :items="previewItems" />
-    </section>
-
     <section class="flow-card fs-card">
-      <h2>主路径说明</h2>
-      <p class="flow-card__desc">录入 → 排盘验证 → 正式报告。每步遵循「先摘要、再结构、后解释」。</p>
+      <h2>路径与扩展</h2>
+      <p class="flow-card__desc">主路径：录入 → 排盘验证 → 正式报告。每步遵循「先摘要、再结构、后解释」。</p>
       <p class="flow-card__tip">使用顶部或底部导航切换步骤；必填项未齐时，八字/紫微/报告会自动引导至档案页。</p>
-    </section>
-
-    <section class="flow-card fs-card">
-      <h2>扩展工具</h2>
-      <p class="flow-card__desc">合婚、相似盘与择日为独立模块，不影响主路径报告。</p>
+      <p class="flow-card__desc flow-card__desc--secondary">合婚、相似盘与择日为独立模块，不影响主路径报告。</p>
       <button class="fs-btn fs-btn--ghost" data-testid="home-extensions" @click="router.push('/extensions')">
         打开工具箱
       </button>
@@ -173,6 +169,25 @@ function goProfile() {
   font-size: var(--fs-sm);
 }
 
+.hero-copy__kpi {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.hero-copy__kpi dt {
+  margin: 0;
+  font-weight: 500;
+  color: var(--brand-gold-dark);
+}
+
+.hero-copy__kpi dd {
+  margin: 0;
+  color: var(--brand-ink);
+}
+
 .hero-actions {
   display: flex;
   gap: 10px;
@@ -181,6 +196,10 @@ function goProfile() {
 
 .preview-card h2 {
   margin: 0 0 12px;
+}
+
+.flow-card h2 {
+  margin: 0 0 8px;
 }
 
 .flow-card__desc,
@@ -194,6 +213,12 @@ function goProfile() {
 .flow-card__tip {
   font-size: 13px;
   color: var(--text-3);
+}
+
+.flow-card__desc--secondary {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
 }
 
 @media (max-width: 720px) {

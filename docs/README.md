@@ -60,6 +60,7 @@
 
 - [`design/FUSHENG-DESIGN-MASTERPLAN.md`](design/FUSHENG-DESIGN-MASTERPLAN.md) — v1 暖纸定案（对照）
 - [**`design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md`**](design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md) — **v2 数字书房 · 瓷色 · 提案**
+- [`design/FUSHENG-BRAND-COPY-v1.md`](design/FUSHENG-BRAND-COPY-v1.md) — 品牌首页六卷批语
 - [`design/mockups/05-home-song-target.html`](design/mockups/05-home-song-target.html) — 首页 v2 样张
 - [`design/skin-preview.html`](design/skin-preview.html)
 - [`design/targets/handbook-bazi-layout.md`](design/targets/handbook-bazi-layout.md)

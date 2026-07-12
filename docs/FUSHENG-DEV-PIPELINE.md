@@ -2,13 +2,13 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-1.2 |
+| **版本** | pipeline-1.3 |
 | **日期** | 2026-07-13 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
 | **当前阶段** | **W5 产品重建 · Week1 进行中** → [R102](reports/R102-product-rebuild-plan-2026-07-13.md) |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
-| **W102 进度** | **6/24**（00a · 00b · 06 · 07 · 02 · 03 ☑）→ 下一项 **W102-01** 或 **W102-04** |
+| **W102 进度** | **9/24**（00a · 00b · 06 · 07 · 02 · 03 · **01 · 04 · 05** ☑）→ 下一项 **W102-08** |
 
 > **一句话**：**按 W102 编号顺序做 → 改完跑 dev_cycle → 全绿再提交 → 每周五 audit-content。** 不聊天也能推进；聊天只发 §六 固定句。
 
@@ -130,8 +130,8 @@ pre-commit run --all-files   # 首次或大改后
 > **T001–T070 已 ☑**（见 EXECUTION-PRIORITY）。**现从 W102 表第一个 ☐ 顺序执行**。  
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
-**已完成（6）：** W102-00a · W102-00b · W102-06 · W102-07 · W102-02 · W102-03  
-**进行中：** Week1（W102-01 · 04～05 · 08 待做）
+**已完成（9）：** W102-00a · W102-00b · W102-06 · W102-07 · W102-02 · W102-03 · **W102-01 · W102-04 · W102-05**  
+**进行中：** Week1（**W102-08** 待做）
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -144,11 +144,11 @@ pre-commit run --all-files   # 首次或大改后
 
 | 状态 | ID | 角色 | 任务 | 验收命令 | 参考 |
 |------|-----|------|------|----------|------|
-| ☐ | **W102-01** | DS | skin-preview 与实机三页并排目检 + 截图 | `docs/design/audit-screenshots/` | R102 §一 |
+| ☑ | **W102-01** | DS | skin-preview 与实机三页并排目检 + 截图 | `docs/design/audit-screenshots/` | R102 §一 · target-*-2026-07-13 |
 | ☑ | **W102-02** | FE | 八字速览：Trust 降为 colophon，不抢首屏 | E2E anti-slop 绿 | R102 B2 · footnote `<details>` |
 | ☑ | **W102-03** | FE | 紫微：去掉 VolumeHead + section 重复 h2 | E2E risk-alert 绿 | R102 Z2 · `fs-section-kicker` |
-| ☐ | **W102-04** | FE | 报告卷首：封面-only，meta 下沉 | E2E report 绿 | R102 R1 |
-| ☐ | **W102-05** | FE | 三页 flat 卡 ≤4（含首页 KPI 降权） | 目检 + anti-slop | R102 B9/H2 |
+| ☑ | **W102-04** | FE | 报告卷首：封面-only，meta 下沉 | E2E report 绿 | R102 R1 · `report-preface-meta` |
+| ☑ | **W102-05** | FE | 三页 flat 卡 ≤4（含首页 KPI 降权） | 目检 + anti-slop | R102 B9/H2 · hero KPI dl |
 | ☑ | **W102-06** | FE+BE | 修 `formatRelationsSummaryText` fallback | audit vol2 fallback 0% | `eee738f` · TD-08 |
 | ☑ | **W102-07** | BE | audit 脚本 vol2 对齐 FE `relations_summary` | 脚本与 UI 一致 | `eee738f` · TD-27 |
 | ☐ | **W102-08** | PM | R060 15 分钟试读 + 记录 ≥7/10 或 TOP3 | 试读笔记 | R102 Week1 |
@@ -294,7 +294,8 @@ Phase E  W17+          ⏸ 平台演进
 | pipeline-1.0 | 2026-07-13 | 初版：四象限 · W102 顺序表 · dev_cycle · 提交规范 |
 | pipeline-1.1 | 2026-07-13 | W102-00a/06/07 ☑ · 进度 3/24 · vol2 fallback 0% |
 | pipeline-1.2 | 2026-07-13 | W102-00b/02/03 ☑ · 进度 6/24 · audit-1.4 |
+| pipeline-1.3 | 2026-07-13 | W102-01/04/05 ☑ · 进度 9/24 · 报告卷首 cover-only · 首页 flat · snapshot mock |
 
 ---
 
-**下一步：** **W102-01**（skin-preview 目检）或 **W102-04**（报告卷首）→ `python scripts/dev_cycle.py --quick`
+**下一步：** **W102-08**（R060 15 分钟试读）→ `python scripts/dev_cycle.py --quick`
