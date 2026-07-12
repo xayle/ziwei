@@ -75,6 +75,78 @@ def _verified_classic_for_query(query: str, tags: list[str] | None = None) -> tu
     return cid, best["passage"]
 
 
+def _round_age(age: object) -> int | None:
+    if age is None:
+        return None
+    try:
+        return round(float(age))
+    except (TypeError, ValueError):
+        return None
+
+
+def _dayun_end_age(items: list[object], index: int) -> int | None:
+    if index >= len(items):
+        return None
+    current = items[index]
+    start = _round_age(getattr(current, "start_age", None))
+    if start is None:
+        return None
+    if index + 1 < len(items):
+        nxt = _round_age(getattr(items[index + 1], "start_age", None))
+        if nxt is not None:
+            return nxt - 1
+    return start + 9
+
+
+def _format_dayun_age_range(start: object, end: object | None = None) -> str:
+    start_num = _round_age(start)
+    if start_num is None:
+        return ""
+    if end is not None:
+        end_num = _round_age(end)
+        if end_num is not None:
+            return f"{start_num}–{end_num}岁"
+    return f"{start_num}岁起"
+
+
+def _bazi_dayun_explain_text(item: object, index: int, items: list[object]) -> str:
+    gz = f"{getattr(item, 'stem', '')}{getattr(item, 'branch', '')}".strip() or "—"
+    end_age = _dayun_end_age(items, index)
+    start_age = getattr(item, "start_age", None)
+    age_range = (
+        _format_dayun_age_range(start_age, end_age)
+        if start_age is not None and end_age is not None
+        else _format_dayun_age_range(start_age)
+    )
+    start_year = getattr(item, "start_year", None)
+    year_range = f"{start_year}–{int(start_year) + 9}年" if start_year is not None else ""
+    ten_god = str(getattr(item, "ten_god", "") or "").strip()
+    narrative = str(getattr(item, "narrative", "") or "").strip()
+    hints = [
+        str(getattr(item, key, "") or "").strip() for key in ("geju_impact", "wealth_hint", "health_hint", "love_hint")
+    ]
+    hints = [hint for hint in hints if hint]
+
+    head = " · ".join(
+        part
+        for part in (
+            f"{index + 1}. {gz}",
+            age_range,
+            year_range,
+            f"十神 {ten_god}" if ten_god else "",
+            f"纳音 {getattr(item, 'nayin', '')}" if getattr(item, "nayin", None) else "",
+        )
+        if part
+    )
+    if narrative and len(narrative) >= 20:
+        return _clip(f"{head}。{narrative}")
+    if hints:
+        return _clip(f"{head}。{'；'.join(hints)}")
+    if narrative:
+        return _clip(f"{head}。{narrative}")
+    return _clip(head)
+
+
 def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainSectionResultModel:
     resp = snapshot.response
     blocks: list[ExplainBlockModel] = []
@@ -134,12 +206,8 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
 
     elif section_id == "dayun":
         items = (resp.dayun.items if resp.dayun else None) or (resp.dayun.cycles if resp.dayun else None) or []
-        for item in items[:6]:
-            gz = f"{getattr(item, 'stem', '')}{getattr(item, 'branch', '')}".strip() or "—"
-            age = ""
-            if getattr(item, "start_age", None) is not None:
-                age = f"{item.start_age}岁起"
-            blocks.append(_block(f"{gz} {age}".strip(), "fact"))
+        for index, item in enumerate(items[:6]):
+            blocks.append(_block(_bazi_dayun_explain_text(item, index, items), "fact"))
 
     elif section_id == "fortune":
         ln = resp.liunian

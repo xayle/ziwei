@@ -30,11 +30,11 @@
       "avg_chars": 573.2
     },
     "vol4": {
-      "blocks": 11,
+      "blocks": 17,
       "fallback_pct": 0.0,
-      "thin_pct": 36.4,
+      "thin_pct": 23.5,
       "trunc_pct": 0.0,
-      "avg_chars": 61.4
+      "avg_chars": 62.0
     },
     "vol5": {
       "blocks": 3,
@@ -206,7 +206,7 @@
     "bazi_sections": 4,
     "ziwei_sections": 2,
     "bazi_blocks": 8,
-    "ziwei_blocks": 12,
+    "ziwei_blocks": 19,
     "bazi_avg_chars": 83.9
   },
   "bazi_ui_sample_fallback_pct": 0.0,
