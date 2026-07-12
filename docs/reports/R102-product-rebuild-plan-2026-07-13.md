@@ -282,7 +282,7 @@ make audit-content
 | TD-02 | 报告 PDF 缺紫微 algo 参数（`late_zishi` 等） | `build_fusheng_report_payload()` / `FushengReportPdfRequest` | Week3 |
 | TD-03 | `archive-bundle` ziwei `gender` 用 `male`/`female` 非 `男`/`女` | `_case_to_ziwei_request` | Week3 |
 | TD-04 | 报告仍并行 `computeBazi` + `computeZiwei`，未走 `archive-bundle` | `ReportView` / report store | Week3 |
-| TD-05 | `explain.ts` 吞错 → `{ sections: [] }` 静默 | 八字/紫微页无失败 banner | Week2 |
+| TD-05 | `explain.ts` 吞错 → `{ sections: [] }` 静默 | 八字页已有 banner（W102-09）；紫微待 W102-10 | Week2 |
 | TD-06 | `api/bazi.ts` 重复声明 `city_tier` / `industry` | 工程卫生 | Week4 |
 | TD-07 | 手写 API types 与 `schema.d.ts` 双轨 | `make sync-frontend-types` 后仍手写 | Week4 |
 | TD-08 | `formatRelationsSummaryText` fallback | ✅ W102-06 · vol2 0% | — |
@@ -291,7 +291,7 @@ make audit-content
 | TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | Week3 |
 | TD-12 | `archive-bundle` 参数缺口 + FE 零调用 | `fusheng_archive.py` · 无 TS client | Week3 |
 | TD-13 | `lateZishi` 仅存 case tags，bundle 不读 | `profileCaseSync.ts` · `Case` 无列 | Week3 |
-| TD-14 | Q12 页面 explain 常量未接线 | `feBeContract.ts` · 无 view import | Week2 |
+| TD-14 | Q12 页面 explain 常量未接线 | ✅ 八字 `NewBaziView` · 紫微 W102-10 | Week2 |
 | TD-15 | `fetchLifeVolumes` 失败静默 fallback | `api/life.ts` · `ReportView` | Week2 |
 | TD-16 | CI 跑 `auto_verify_w14` ≠ 本地 autopilot 全量 | `.github/workflows/ci.yml` | W102-P3-02 |
 | TD-17 | `audit-content` 未进 CI | Makefile 有 · CI 无 | Week4 |

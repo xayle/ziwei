@@ -163,6 +163,10 @@ export const mockBaziExplainBatch = {
       blocks: [{ text: '年柱与月柱半合。', layer: 'fact' }],
     },
     {
+      section_id: 'reading',
+      blocks: [{ text: '先读盘面，再展开典籍与推断。', layer: 'fact' }],
+    },
+    {
       section_id: 'domains',
       blocks: [{ text: '事业宜深耕专业。', layer: 'inference' }],
     },

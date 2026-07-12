@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaziReferenceTable from '@/components/new/BaziReferenceTable.vue'
 import BaziStructuralRelations from '@/components/fusheng/BaziStructuralRelations.vue'
@@ -8,9 +8,11 @@ import ResultStateCard from '@/components/new/ResultStateCard.vue'
 import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import AnalysisPanel, { type AnalysisBlock } from '@/components/fusheng/AnalysisPanel.vue'
 import { useFushengReport } from '@/composables/useFushengReport'
+import { useBaziPageExplain } from '@/composables/useBaziPageExplain'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
+import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
 import VolumeHead from '@/components/fusheng/VolumeHead.vue'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import { useProfileStore } from '@/stores/profile'
@@ -32,6 +34,13 @@ const router = useRouter()
 const depth = ref<'overview' | 'structure' | 'deep'>('overview')
 const profile = useProfileStore()
 const { loadingBazi, loadingDayun, error, bazi: result, ziwei, dayunReport, dayunError, loadBazi, loadDayunNarratives, isCacheValid, requestMeta } = useFushengReport()
+const {
+  loadingExplain,
+  explainFailed,
+  explainAnalysisBlocks,
+  loadPageExplain,
+  resetPageExplain,
+} = useBaziPageExplain()
 const {
   missingFields,
   provenanceRows,
@@ -348,10 +357,19 @@ const dayunEngineBlocks = computed<AnalysisBlock[]>(() =>
 )
 
 const explainBlocks = computed(() => [
+  ...explainAnalysisBlocks.value,
   ...analysisBlocks.value,
   ...dayunEngineBlocks.value,
   ...dayunAnalysisBlocks.value,
 ])
+
+const defaultExplainOpenId = computed(() => (
+  explainAnalysisBlocks.value[0]?.id ?? 'bazi-0'
+))
+
+const explainPanelKey = computed(() => (
+  explainAnalysisBlocks.value.map((block) => block.id).join('|') || 'engine-only'
+))
 
 async function load() {
   await loadBazi()
@@ -375,8 +393,18 @@ const dayunEngineRows = computed(() => {
 })
 
 function retryLoad() {
+  resetPageExplain()
   void loadBazi(true)
 }
+
+watch(depth, (level) => {
+  if (level !== 'deep' || !result.value) return
+  void loadPageExplain(profile.asProfileData())
+})
+
+watch(() => result.value, () => {
+  resetPageExplain()
+})
 
 function goZiwei() {
   router.push('/new/ziwei')
@@ -527,7 +555,18 @@ onMounted(() => {
 
         <section v-if="depth === 'deep'" class="fs-card" data-testid="bazi-layer-explain">
           <h2>卷一·命之根（深读）</h2>
-          <AnalysisPanel :blocks="explainBlocks" default-open-id="bazi-0" />
+          <div v-if="explainFailed" data-testid="bazi-explain-banner">
+            <TrustDegradedBanner
+              message="典籍解读暂不可用，下方为引擎摘要。"
+              status="warn"
+            />
+          </div>
+          <p v-else-if="loadingExplain" class="fs-hint fs-hint--cache">正在加载典籍解读…</p>
+          <AnalysisPanel
+            :key="explainPanelKey"
+            :blocks="explainBlocks"
+            :default-open-id="defaultExplainOpenId"
+          />
 
           <div v-if="depth === 'deep'" class="fs-codex-line">
             <h2>大运叙事</h2>

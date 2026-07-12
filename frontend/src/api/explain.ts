@@ -37,19 +37,38 @@ export function mergeExplainResponses(
   return { chart_hash, disclaimer_block, content_versions, wenmo_advisory, sections }
 }
 
-export async function fetchBaziExplainBatch(
+export interface ExplainBatchResult {
+  ok: boolean
+  data: ExplainBatchResponse
+  error?: string
+}
+
+export async function fetchBaziExplainBatchWithMeta(
   sections: string[],
   profilePayload: Record<string, unknown>,
-): Promise<ExplainBatchResponse> {
+): Promise<ExplainBatchResult> {
   try {
     const { data } = await apiClient.post<ExplainBatchResponse>('/api/v1/bazi/explain/batch', {
       sections,
       ...profilePayload,
     })
-    return data
-  } catch {
-    return { sections: [] }
+    return { ok: true, data }
+  } catch (e: unknown) {
+    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+    return {
+      ok: false,
+      data: { sections: [] },
+      error: typeof detail === 'string' ? detail : 'explain batch failed',
+    }
   }
+}
+
+export async function fetchBaziExplainBatch(
+  sections: string[],
+  profilePayload: Record<string, unknown>,
+): Promise<ExplainBatchResponse> {
+  const result = await fetchBaziExplainBatchWithMeta(sections, profilePayload)
+  return result.data
 }
 
 export async function fetchZiweiExplainBatch(
