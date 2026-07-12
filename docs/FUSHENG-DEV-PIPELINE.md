@@ -2,13 +2,13 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-1.3 |
+| **版本** | pipeline-1.4 |
 | **日期** | 2026-07-13 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
 | **当前阶段** | **W5 产品重建 · Week1 进行中** → [R102](reports/R102-product-rebuild-plan-2026-07-13.md) |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
-| **W102 进度** | **9/24**（00a · 00b · 06 · 07 · 02 · 03 · **01 · 04 · 05** ☑）→ 下一项 **W102-08** |
+| **W102 进度** | **10/24**（Week1 **01～08 全 ☑**）→ 下一项 **W102-09**（Week2） |
 
 > **一句话**：**按 W102 编号顺序做 → 改完跑 dev_cycle → 全绿再提交 → 每周五 audit-content。** 不聊天也能推进；聊天只发 §六 固定句。
 
@@ -130,8 +130,8 @@ pre-commit run --all-files   # 首次或大改后
 > **T001–T070 已 ☑**（见 EXECUTION-PRIORITY）。**现从 W102 表第一个 ☐ 顺序执行**。  
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
-**已完成（9）：** W102-00a · W102-00b · W102-06 · W102-07 · W102-02 · W102-03 · **W102-01 · W102-04 · W102-05**  
-**进行中：** Week1（**W102-08** 待做）
+**已完成（10 · Week1 出口）：** W102-00a · 00b · 06 · 07 · 02 · 03 · 01 · 04 · 05 · **08**  
+**进行中：** Week2（W102-09 起）
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -151,9 +151,9 @@ pre-commit run --all-files   # 首次或大改后
 | ☑ | **W102-05** | FE | 三页 flat 卡 ≤4（含首页 KPI 降权） | 目检 + anti-slop | R102 B9/H2 · hero KPI dl |
 | ☑ | **W102-06** | FE+BE | 修 `formatRelationsSummaryText` fallback | audit vol2 fallback 0% | `eee738f` · TD-08 |
 | ☑ | **W102-07** | BE | audit 脚本 vol2 对齐 FE `relations_summary` | 脚本与 UI 一致 | `eee738f` · TD-27 |
-| ☐ | **W102-08** | PM | R060 15 分钟试读 + 记录 ≥7/10 或 TOP3 | 试读笔记 | R102 Week1 |
+| ☑ | **W102-08** | PM | R060 15 分钟试读 + 记录 ≥7/10 或 TOP3 | [试读笔记](reports/R060-trial-read-notes-2026-07-13.md) | **7.5/10** · Week2 TOP3 |
 
-**Week1 出口：** W102-01～08 全 ☑ + `dev_cycle` 绿。
+**Week1 出口：** W102-01～08 全 ☑ + `dev_cycle` 绿 — **✅ 2026-07-13**
 
 ### 块 2 · Week2 — 内容灌满
 
@@ -295,7 +295,8 @@ Phase E  W17+          ⏸ 平台演进
 | pipeline-1.1 | 2026-07-13 | W102-00a/06/07 ☑ · 进度 3/24 · vol2 fallback 0% |
 | pipeline-1.2 | 2026-07-13 | W102-00b/02/03 ☑ · 进度 6/24 · audit-1.4 |
 | pipeline-1.3 | 2026-07-13 | W102-01/04/05 ☑ · 进度 9/24 · 报告卷首 cover-only · 首页 flat · snapshot mock |
+| pipeline-1.4 | 2026-07-13 | **W102-08 ☑ · Week1 出口 10/24** · R060 step10 7.5/10 |
 
 ---
 
-**下一步：** **W102-08**（R060 15 分钟试读）→ `python scripts/dev_cycle.py --quick`
+**下一步：** **W102-09**（Week2 内容 spec）→ `python scripts/dev_cycle.py --quick`
