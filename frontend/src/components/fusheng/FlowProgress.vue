@@ -105,7 +105,7 @@ function onStep(step: FlowStepView) {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
-  background: var(--surface-2);
+  background: var(--inset-tint);
 }
 
 .flow-progress__step.is-active .flow-progress__index,

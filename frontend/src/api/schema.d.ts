@@ -397,10 +397,8 @@ export interface paths {
         put?: never;
         /**
          * Api Compatibility
-         * @description A3 无状态八字合盘：传入两人出生时间，即时返回合盘分析，不存入 DB。
-         *
-         *     算法：
-         *       五行互补 40分 + 地支无冲 40分 + 用神相助 20分
+         * @deprecated
+         * @description A3 无状态八字合盘 [已弃用 → POST /api/v1/relation/full]
          */
         post: operations["api_compatibility_api_v1_bazi_compatibility_post"];
         delete?: never;
@@ -1528,6 +1526,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/relation/full": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 双人关系合盘（6 类关系 · 八字+紫微）
+         * @description 权威合盘端点。按 `relation_type` 切换评分维度与宫位对。
+         *     `person_*.case_id` 需登录；否则传 `birth_datetime`。
+         */
+        post: operations["post_relation_full_api_v1_relation_full_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profile/{case_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 个人档案首屏摘要 */
+        get: operations["get_profile_summary_api_v1_profile__case_id__summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/quickstart": {
         parameters: {
             query?: never;
@@ -1675,11 +1711,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 合盘六合度分析
-         * @description 输入两人出生信息，返回紫微斗数合盘六合度分析。
-         *
-         *     维度包括：命宫相合、五行相生、年支缘分、夸妻宫缘、阴阳互补。
-         *     总分 100 分，输出各维度得分与详细说明。
+         * 合盘六合度分析 [已弃用 → POST /api/v1/relation/full]
+         * @deprecated
+         * @description 输入两人出生信息，返回紫微斗数合盘六合度分析 [已弃用]。
          */
         post: operations["compute_compatibility_api_v1_ziwei_compatibility_post"];
         delete?: never;
@@ -2852,15 +2886,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 四柱合婚评分（§5.1）[已弃用，请改用 POST /full]
+         * 四柱合婚评分（§5.1）[已弃用，请改用 POST /relation/full]
          * @deprecated
-         * @description 四柱合婚综合评分（0-100 分）。
-         *
-         *     评分维度：
-         *     - 日主五行生克（40分）：产生/被产生 > 同行 > 克/被克
-         *     - 年支合冲（30分）：六合 > 三合 > 无关系 > 六冲
-         *     - 五行互补（20分）：双方五行分布互补程度
-         *     - 天干合化（10分）：四柱天干间的五合/冲克数量
          */
         get: operations["get_bazi_compat_api_v1_compat_bazi_get"];
         put?: never;
@@ -2881,12 +2908,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 综合合婚——八字 + 紫微双引擎
-         * @description 综合合婚接口，同时调用八字与紫微双引擎，返回合并评分。
-         *
-         *     - 八字合婚：四柱生克冲合（最高100分）
-         *     - 紫微合盘：命宫、五行、年支等维度（最高100分）
-         *     - combined_score = 八字×0.5 + 紫微×0.5（若仅启用一项则权重100%）
+         * 综合合婚——八字 + 紫微双引擎 [已弃用 → POST /api/v1/relation/full]
+         * @deprecated
+         * @description Deprecated: delegates to unified relation engine (couple).
          */
         post: operations["post_compat_full_api_v1_compat_full_post"];
         delete?: never;
@@ -3200,6 +3224,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActionItemModel */
+        ActionItemModel: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Priority */
+            priority?: ("P0" | "P1" | "P2") | null;
+        };
         /** AdjustmentSummaryModel */
         AdjustmentSummaryModel: {
             /** Climate */
@@ -4820,13 +4853,13 @@ export interface components {
             person_b: components["schemas"]["PersonFullInput"];
             /**
              * Include Bazi
-             * @description 是否计算八字合婚
+             * @description 是否计算八字
              * @default true
              */
             include_bazi: boolean;
             /**
              * Include Ziwei
-             * @description 是否计算紫微合盘
+             * @description 是否计算紫微
              * @default true
              */
             include_ziwei: boolean;
@@ -4837,7 +4870,7 @@ export interface components {
             ziwei?: components["schemas"]["ZiweiCompatSection"] | null;
             /**
              * Combined Score
-             * @description 八字与紫微综合加权分（0-100）
+             * @description 综合加权分（0-100）
              * @default 0
              */
             combined_score: number;
@@ -5308,6 +5341,32 @@ export interface components {
             created_at: string;
             /** Expires At */
             expires_at: string | null;
+        };
+        /** DimensionScoreModel */
+        DimensionScoreModel: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Score */
+            score: number;
+            /** Max Score */
+            max_score: number;
+            /**
+             * Weight
+             * @default 0.1
+             */
+            weight: number;
+            /** Description */
+            description: string;
+            /**
+             * Layer
+             * @default fact
+             * @enum {string}
+             */
+            layer: "fact" | "cite" | "inference";
+            /** Engine */
+            engine?: ("bazi" | "ziwei" | "fusion") | null;
         };
         /** DirectionItemResponse */
         DirectionItemResponse: {
@@ -6185,7 +6244,7 @@ export interface components {
              * Category
              * @enum {string}
              */
-            category: "格局" | "神煞" | "五行" | "十神" | "大运" | "其他";
+            category: "格局" | "神煞" | "五行" | "十神" | "大运" | "紫微" | "其他";
             /** Classic Source */
             classic_source?: string | null;
         };
@@ -6440,6 +6499,18 @@ export interface components {
             overall: string;
             /** Events */
             events?: string[];
+        };
+        /** LayerBlockModel */
+        LayerBlockModel: {
+            /**
+             * Collapsed Default
+             * @default false
+             */
+            collapsed_default: boolean;
+            /** Sections */
+            sections?: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * LifeArcModel
@@ -7818,6 +7889,25 @@ export interface components {
             /** Created At */
             created_at: string;
         };
+        /** PalaceCrossModel */
+        PalaceCrossModel: {
+            /** Pair Id */
+            pair_id: string;
+            /** A Palace */
+            a_palace: string;
+            /** B Palace */
+            b_palace: string;
+            /** Relation Tag */
+            relation_tag: string;
+            /** Summary */
+            summary: string;
+            /**
+             * Layer
+             * @default fact
+             * @enum {string}
+             */
+            layer: "fact" | "inference";
+        };
         /**
          * PalaceItemModel
          * @description 单宫位
@@ -8203,25 +8293,22 @@ export interface components {
              */
             expires_days: number;
         };
-        /**
-         * PersonFullInput
-         * @description 同时满足八字和紫微双引擎所需的人员输入。
-         */
+        /** PersonFullInput */
         PersonFullInput: {
             /**
              * Birth Datetime
-             * @description 本地出生时间，ISO 8601 格式（如 1990-06-15T10:30:00）
+             * @description 本地出生时间，ISO 8601 格式
              */
             birth_datetime: string;
             /**
              * Tz
-             * @description 时区，如 Asia/Shanghai
+             * @description 时区
              * @default Asia/Shanghai
              */
             tz: string;
             /**
              * Longitude
-             * @description 出生地经度（东经正数）
+             * @description 出生地经度
              * @default 116.41
              */
             longitude: number;
@@ -8233,9 +8320,28 @@ export interface components {
             gender: string;
             /**
              * Liunian Year
-             * @description 流年年份（紫微用，不填默认当年）
+             * @description 流年年份（紫微用）
              */
             liunian_year?: number | null;
+        };
+        /** PersonRefModel */
+        PersonRefModel: {
+            /** Case Id */
+            case_id?: string | null;
+            /** Label */
+            label: string;
+            /** Gender */
+            gender: string;
+            /** Birth Solar */
+            birth_solar: string;
+            /** Pillars Primary */
+            pillars_primary: {
+                [key: string]: unknown;
+            };
+            /** Life Palace Gz */
+            life_palace_gz?: string | null;
+            /** Wuxing Ju Name */
+            wuxing_ju_name?: string | null;
         };
         /** PersonSummary */
         PersonSummary: {
@@ -8415,6 +8521,34 @@ export interface components {
             /** Degree Str */
             degree_str: string;
         };
+        /** ProfileSummaryResponse */
+        ProfileSummaryResponse: {
+            /**
+             * Schema Version
+             * @default profile-summary@1.0
+             * @constant
+             */
+            schema_version: "profile-summary@1.0";
+            /** Case Id */
+            case_id?: string | null;
+            /** Pillars Primary */
+            pillars_primary: {
+                [key: string]: unknown;
+            };
+            /** Geju One Liner */
+            geju_one_liner?: string | null;
+            /** Yongshen Favor */
+            yongshen_favor?: string[];
+            /** Strength Tier */
+            strength_tier?: string | null;
+            /** Ziwei Ming One Liner */
+            ziwei_ming_one_liner?: string | null;
+            /** Current Dayun */
+            current_dayun?: string | null;
+            /** Liunian 2026 Tag */
+            liunian_2026_tag?: string | null;
+            disclaimer_block: components["schemas"]["DisclaimerBlockModel"];
+        };
         /**
          * ProvenanceLayer
          * @description Credibility metadata for a response block or whole payload.
@@ -8583,7 +8717,7 @@ export interface components {
              * @default couple
              * @enum {string}
              */
-            relation_type: "couple" | "parent_child" | "colleague" | "friend" | "supervisor_subordinate";
+            relation_type: "couple" | "parent_child" | "colleague" | "friend" | "supervisor_subordinate" | "business_partner";
         };
         /** RelationComputeResponse */
         RelationComputeResponse: {
@@ -8592,6 +8726,101 @@ export interface components {
             result: components["schemas"]["RelationResult"];
             /** Snapshots Created */
             snapshots_created?: string[];
+            /**
+             * Relation Full
+             * @description relation-compat@1.0 完整响应；权威合盘见 POST /api/v1/relation/full
+             */
+            relation_full?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** RelationFullOptions */
+        RelationFullOptions: {
+            /**
+             * Include Bazi
+             * @default true
+             */
+            include_bazi: boolean;
+            /**
+             * Include Ziwei
+             * @default true
+             */
+            include_ziwei: boolean;
+            /** Timeline Years */
+            timeline_years?: number[];
+            /** Liunian Year */
+            liunian_year?: number | null;
+        };
+        /** RelationFullRequest */
+        RelationFullRequest: {
+            /**
+             * Relation Type
+             * @default couple
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            /** Supervisor Id */
+            supervisor_id?: ("a" | "b") | null;
+            person_a: components["schemas"]["RelationPersonInput"];
+            person_b: components["schemas"]["RelationPersonInput"];
+            options?: components["schemas"]["RelationFullOptions"];
+        };
+        /** RelationFullResponse */
+        RelationFullResponse: {
+            /**
+             * Schema Version
+             * @default relation-compat@1.0
+             * @constant
+             */
+            schema_version: "relation-compat@1.0";
+            /** Request Id */
+            request_id?: string | null;
+            /**
+             * Relation Type
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            /** Relation Type Label */
+            relation_type_label?: string | null;
+            person_a: components["schemas"]["PersonRefModel"];
+            person_b: components["schemas"]["PersonRefModel"];
+            /** Combined Score */
+            combined_score: number;
+            /** Grade */
+            grade?: ("上上" | "上" | "中" | "下" | "下下" | "N/A") | null;
+            /** Summary */
+            summary: string;
+            /** Summary Cards */
+            summary_cards?: components["schemas"]["SummaryCardModel"][];
+            disclaimer_block: components["schemas"]["DisclaimerBlockModel"];
+            /** Layers */
+            layers: {
+                [key: string]: components["schemas"]["LayerBlockModel"];
+            };
+            /** Dimensions */
+            dimensions: components["schemas"]["DimensionScoreModel"][];
+            /** Bazi */
+            bazi?: {
+                [key: string]: unknown;
+            } | null;
+            /** Ziwei */
+            ziwei?: {
+                [key: string]: unknown;
+            } | null;
+            /** Palace Cross */
+            palace_cross?: components["schemas"]["PalaceCrossModel"][];
+            /** Timeline */
+            timeline: components["schemas"]["TimelineNodeModel"][];
+            /** Action Items */
+            action_items?: components["schemas"]["ActionItemModel"][];
+            /** Tensions */
+            tensions?: components["schemas"]["TensionNoteModel"][];
+            /** Missing Fields */
+            missing_fields?: string[];
+            /** Meta */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** RelationItemModel */
         RelationItemModel: {
@@ -8608,6 +8837,42 @@ export interface components {
             summary: string;
             /** Strength */
             strength?: ("strong" | "medium" | "weak") | null;
+        };
+        /** RelationPersonInput */
+        RelationPersonInput: {
+            /**
+             * Case Id
+             * @description Optional case UUID; requires auth
+             */
+            case_id?: string | null;
+            /**
+             * Birth Datetime
+             * @description Local birth time ISO 8601
+             */
+            birth_datetime?: string | null;
+            /**
+             * Tz
+             * @default Asia/Shanghai
+             */
+            tz: string;
+            /**
+             * Longitude
+             * @default 116.41
+             */
+            longitude: number;
+            /** Latitude */
+            latitude?: number | null;
+            /**
+             * Gender
+             * @description male/female/男/女
+             * @default male
+             */
+            gender: string;
+            /**
+             * Label
+             * @description Display name
+             */
+            label?: string | null;
         };
         /** RelationPoint */
         RelationPoint: {
@@ -8644,7 +8909,7 @@ export interface components {
              * Relation Type
              * @enum {string}
              */
-            relation_type: "couple" | "parent_child" | "colleague" | "friend" | "supervisor_subordinate";
+            relation_type: "couple" | "parent_child" | "colleague" | "friend" | "supervisor_subordinate" | "business_partner";
             /** Compatibility Score */
             compatibility_score: number;
             /** Summary */
@@ -9741,6 +10006,18 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** SummaryCardModel */
+        SummaryCardModel: {
+            /** Id */
+            id: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "support" | "conflict" | "neutral" | "action";
+            /** Text */
+            text: string;
+        };
         /** TarotCard */
         TarotCard: {
             /** Num */
@@ -9772,6 +10049,26 @@ export interface components {
             day?: string | null;
             /** Hour */
             hour?: string | null;
+        };
+        /** TensionNoteModel */
+        TensionNoteModel: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /** TimelineNodeModel */
+        TimelineNodeModel: {
+            /** Year */
+            year: number;
+            /** Label */
+            label: string;
+            /** Summary */
+            summary: string;
+            /** Risk Level */
+            risk_level?: ("低" | "中" | "高") | null;
+            /** Month */
+            month?: number | null;
         };
         /** TimelinePointModel */
         TimelinePointModel: {
@@ -12369,7 +12666,10 @@ export interface operations {
     };
     api_bazi_full_api_v1_bazi_full_post: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description slim: 省略域分析长文与大运叙事 */
+                profile?: "full" | "slim";
+            };
             header?: {
                 "X-Request-Id"?: string | null;
             };
@@ -14793,7 +15093,7 @@ export interface operations {
             query?: {
                 /** @description 全文搜索关键词 */
                 q?: string | null;
-                /** @description 分类过滤：格局/神煞/五行/十神/大运/其他 */
+                /** @description 分类过滤：格局/神煞/五行/十神/大运/紫微/其他 */
                 category?: string | null;
                 limit?: number;
             };
@@ -14969,6 +15269,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConceptModel"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    post_relation_full_api_v1_relation_full_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationFullRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationFullResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_profile_summary_api_v1_profile__case_id__summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSummaryResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];

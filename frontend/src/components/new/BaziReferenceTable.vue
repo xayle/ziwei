@@ -340,7 +340,7 @@ function branchColor(branch?: string): string {
 .bazi-table__corner,
 .bazi-table__row-label {
   width: 84px;
-  background: var(--surface-2);
+  background: var(--inset-tint);
   color: var(--text-2);
   font-size: 13px;
   font-weight: 500;
@@ -372,7 +372,7 @@ function branchColor(branch?: string): string {
 .bazi-table__head {
   position: relative;
   padding: 14px 8px;
-  background: var(--surface-2);
+  background: var(--inset-tint);
   color: var(--text-2);
   font-size: 13px;
   font-weight: 500;
@@ -478,7 +478,7 @@ function branchColor(branch?: string): string {
   align-items: center;
   padding: 2px 10px;
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--inset-tint);
   color: var(--text-2);
   font-size: 13px;
   border: 1px solid var(--border);

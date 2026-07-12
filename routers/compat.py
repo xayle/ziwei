@@ -1,21 +1,21 @@
 """
 合婚 API 路由（§5.1 四柱合婚）
 
-GET  /api/v1/compat/bazi  — 无需登录（已弃用，请改用 POST /full）
-POST /api/v1/compat/full  — 综合合婚（八字 + 紫微双引擎）
+GET  /api/v1/compat/bazi  — 无需登录（已弃用，请改用 POST /relation/full）
+POST /api/v1/compat/full  — 已弃用，委托 POST /api/v1/relation/full?relation_type=couple
 """
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
 from services.compatibility import compute_compatibility
+from services.relation_engine.composer import compute_relation_full
 
 router = APIRouter(prefix="/api/v1/compat", tags=["合婚"])
 
@@ -47,7 +47,7 @@ class CompatResponse(BaseModel):
 @router.get(
     "/bazi",
     response_model=CompatResponse,
-    summary="四柱合婚评分（§5.1）[已弃用，请改用 POST /full]",
+    summary="四柱合婚评分（§5.1）[已弃用，请改用 POST /relation/full]",
     deprecated=True,
 )
 def get_bazi_compat(
@@ -58,15 +58,6 @@ def get_bazi_compat(
     b_tz: str = Query("Asia/Shanghai", description="乙方时区"),
     b_lon: float = Query(116.41, ge=-180, le=180, description="乙方出生地经度"),
 ) -> CompatResponse:
-    """
-    四柱合婚综合评分（0-100 分）。
-
-    评分维度：
-    - 日主五行生克（40分）：产生/被产生 > 同行 > 克/被克
-    - 年支合冲（30分）：六合 > 三合 > 无关系 > 六冲
-    - 五行互补（20分）：双方五行分布互补程度
-    - 天干合化（10分）：四柱天干间的五合/冲克数量
-    """
     for name, dt_str, tz_str in [("甲方", a_dt, a_tz), ("乙方", b_dt, b_tz)]:
         try:
             ZoneInfo(tz_str)
@@ -79,7 +70,7 @@ def get_bazi_compat(
 
     def _parse(dt_str: str) -> datetime:
         dt = datetime.fromisoformat(dt_str)
-        return dt.replace(tzinfo=None)  # verify_full 接受 naive datetime
+        return dt.replace(tzinfo=None)
 
     try:
         result = compute_compatibility(
@@ -96,19 +87,12 @@ def get_bazi_compat(
     return CompatResponse(**result)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# POST /api/v1/compat/full  — 双引擎综合合婚
-# ─────────────────────────────────────────────────────────────────────────────
-
-
 class PersonFullInput(BaseModel):
-    """同时满足八字和紫微双引擎所需的人员输入。"""
-
-    birth_datetime: str = Field(..., description="本地出生时间，ISO 8601 格式（如 1990-06-15T10:30:00）")
-    tz: str = Field("Asia/Shanghai", description="时区，如 Asia/Shanghai")
-    longitude: float = Field(116.41, ge=-180, le=180, description="出生地经度（东经正数）")
+    birth_datetime: str = Field(..., description="本地出生时间，ISO 8601 格式")
+    tz: str = Field("Asia/Shanghai", description="时区")
+    longitude: float = Field(116.41, ge=-180, le=180, description="出生地经度")
     gender: str = Field("male", description="性别：male / female / 男 / 女")
-    liunian_year: int | None = Field(None, description="流年年份（紫微用，不填默认当年）")
+    liunian_year: int | None = Field(None, description="流年年份（紫微用）")
 
 
 class ZiweiCompatDimension(BaseModel):
@@ -131,113 +115,129 @@ class ZiweiCompatSection(BaseModel):
 class CompatFullResponse(BaseModel):
     bazi: CompatResponse | None = None
     ziwei: ZiweiCompatSection | None = None
-    combined_score: float = Field(0.0, description="八字与紫微综合加权分（0-100）")
+    combined_score: float = Field(0.0, description="综合加权分（0-100）")
     summary: str = ""
 
 
 class CompatFullRequest(BaseModel):
     person_a: PersonFullInput
     person_b: PersonFullInput
-    include_bazi: bool = Field(True, description="是否计算八字合婚")
-    include_ziwei: bool = Field(True, description="是否计算紫微合盘")
+    include_bazi: bool = Field(True, description="是否计算八字")
+    include_ziwei: bool = Field(True, description="是否计算紫微")
+
+
+def _map_relation_to_compat_full(
+    relation: dict[str, Any], include_bazi: bool, include_ziwei: bool
+) -> CompatFullResponse:
+    bazi_result: CompatResponse | None = None
+    ziwei_result: ZiweiCompatSection | None = None
+
+    if include_bazi and relation.get("bazi"):
+        bz = relation["bazi"]
+        pa = relation["person_a"]["pillars_primary"]
+        pb = relation["person_b"]["pillars_primary"]
+        details = [
+            CompatDetail(
+                dimension=d["label"],
+                score=d["score"],
+                max=int(d["max_score"]),
+                description=d["description"],
+                level="佳" if d["score"] >= d["max_score"] * 0.7 else "中",
+            )
+            for d in bz.get("dimensions") or []
+        ]
+        bazi_result = CompatResponse(
+            score=int(bz.get("score") or relation["combined_score"]),
+            grade=relation.get("grade") or "中",
+            summary=relation.get("summary") or "",
+            details=details,
+            person_a=PersonSummary(
+                pillars={k: {"stem": v["stem"], "branch": v["branch"]} for k, v in pa.items()},
+                weights={},
+                day_stem=pa["day"]["stem"],
+                day_elem="",
+            ),
+            person_b=PersonSummary(
+                pillars={k: {"stem": v["stem"], "branch": v["branch"]} for k, v in pb.items()},
+                weights={},
+                day_stem=pb["day"]["stem"],
+                day_elem="",
+            ),
+        )
+
+    if include_ziwei and relation.get("ziwei"):
+        zw = relation["ziwei"]
+        ziwei_result = ZiweiCompatSection(
+            total_score=int(zw.get("score") or 0),
+            max_score=int(zw.get("max_score") or 100),
+            level=relation.get("grade") or "中签",
+            summary=relation.get("summary") or "",
+            dimensions=[
+                ZiweiCompatDimension(
+                    name=d["label"],
+                    score=int(d["score"]),
+                    max_score=int(d["max_score"]),
+                    description=d["description"],
+                )
+                for d in zw.get("dimensions") or []
+            ],
+            harmony_points=list(zw.get("harmony_points") or []),
+            conflict_points=list(zw.get("conflict_points") or []),
+        )
+
+    return CompatFullResponse(
+        bazi=bazi_result,
+        ziwei=ziwei_result,
+        combined_score=float(relation.get("combined_score") or 0),
+        summary=relation.get("summary") or "",
+    )
 
 
 @router.post(
     "/full",
     response_model=CompatFullResponse,
-    summary="综合合婚——八字 + 紫微双引擎",
+    summary="综合合婚——八字 + 紫微双引擎 [已弃用 → POST /api/v1/relation/full]",
+    deprecated=True,
 )
-async def post_compat_full(body: CompatFullRequest) -> CompatFullResponse:
-    """
-    综合合婚接口，同时调用八字与紫微双引擎，返回合并评分。
+async def post_compat_full(body: CompatFullRequest, response: Response) -> CompatFullResponse:
+    """Deprecated: delegates to unified relation engine (couple)."""
+    response.headers["Deprecation"] = "true"
+    response.headers["Link"] = '</api/v1/relation/full>; rel="successor-version"'
 
-    - 八字合婚：四柱生克冲合（最高100分）
-    - 紫微合盘：命宫、五行、年支等维度（最高100分）
-    - combined_score = 八字×0.5 + 紫微×0.5（若仅启用一项则权重100%）
-    """
-    req_a, req_b = body.person_a, body.person_b
-
-    def _validate_and_parse(person: PersonFullInput, label: str) -> datetime:
+    for person, label in ((body.person_a, "甲方"), (body.person_b, "乙方")):
         try:
             ZoneInfo(person.tz)
         except (ZoneInfoNotFoundError, KeyError):
             raise HTTPException(422, f"{label}时区无效: {person.tz!r}")
         try:
-            return datetime.fromisoformat(person.birth_datetime).replace(tzinfo=None)
+            datetime.fromisoformat(person.birth_datetime)
         except ValueError:
             raise HTTPException(422, f"{label}出生时间格式无效: {person.birth_datetime!r}")
 
-    dt_a = _validate_and_parse(req_a, "甲方")
-    dt_b = _validate_and_parse(req_b, "乙方")
+    try:
+        relation = compute_relation_full(
+            relation_type="couple",
+            person_a={
+                "birth_datetime": body.person_a.birth_datetime,
+                "tz": body.person_a.tz,
+                "longitude": body.person_a.longitude,
+                "gender": body.person_a.gender,
+                "label": "甲方",
+            },
+            person_b={
+                "birth_datetime": body.person_b.birth_datetime,
+                "tz": body.person_b.tz,
+                "longitude": body.person_b.longitude,
+                "gender": body.person_b.gender,
+                "label": "乙方",
+            },
+            options={
+                "include_bazi": body.include_bazi,
+                "include_ziwei": body.include_ziwei,
+                "liunian_year": body.person_a.liunian_year or body.person_b.liunian_year,
+            },
+        )
+    except Exception as exc:
+        raise HTTPException(500, f"合婚计算失败: {exc}") from exc
 
-    bazi_result: CompatResponse | None = None
-    ziwei_result: ZiweiCompatSection | None = None
-
-    # ── 八字引擎 ──────────────────────────────────────────────
-    if body.include_bazi:
-        try:
-            raw = compute_compatibility(dt_a, req_a.longitude, req_a.tz, dt_b, req_b.longitude, req_b.tz)
-            bazi_result = CompatResponse(**raw)
-        except Exception as exc:
-            raise HTTPException(500, f"八字合婚计算失败: {exc}") from exc
-
-    # ── 紫微引擎 ──────────────────────────────────────────────
-    if body.include_ziwei:
-        try:
-            from services.ziwei_engine.compatibility import calc_compatibility
-            from services.ziwei_engine.main import ziwei_full
-
-            def _gender_cn(g: str) -> str:
-                return g if g in ("男", "女") else ("男" if g == "male" else "女")
-
-            def _make_ziwei_args(person: PersonFullInput, dt: datetime):
-                return (
-                    dt.year,
-                    dt.month,
-                    dt.day,
-                    dt.hour,
-                    dt.minute,
-                    _gender_cn(person.gender),
-                    person.liunian_year,
-                    person.longitude,
-                )
-
-            chart_a = await asyncio.to_thread(ziwei_full, *_make_ziwei_args(req_a, dt_a))
-            chart_b = await asyncio.to_thread(ziwei_full, *_make_ziwei_args(req_b, dt_b))
-            zw_res = calc_compatibility(chart_a, chart_b)
-            ziwei_result = ZiweiCompatSection(
-                total_score=zw_res.total_score,
-                max_score=zw_res.max_score,
-                level=zw_res.level,
-                summary=zw_res.summary,
-                dimensions=[
-                    ZiweiCompatDimension(name=d.name, score=d.score, max_score=d.max_score, description=d.description)
-                    for d in zw_res.dimensions
-                ],
-                harmony_points=list(zw_res.harmony_points or []),
-                conflict_points=list(zw_res.conflict_points or []),
-            )
-        except Exception as exc:
-            raise HTTPException(500, f"紫微合盘计算失败: {exc}") from exc
-
-    # ── 综合评分 ──────────────────────────────────────────────
-    scores: list[float] = []
-    if bazi_result:
-        scores.append(float(bazi_result.score))
-    if ziwei_result:
-        scores.append(ziwei_result.total_score / max(ziwei_result.max_score, 1) * 100)
-    combined = round(sum(scores) / len(scores), 1) if scores else 0.0
-
-    parts: list[str] = []
-    if bazi_result:
-        parts.append(f"八字合婚 {bazi_result.score} 分（{bazi_result.grade}）")
-    if ziwei_result:
-        parts.append(f"紫微合盘 {ziwei_result.total_score}/{ziwei_result.max_score} 分（{ziwei_result.level}）")
-    summary = "；".join(parts) + f"，综合加权 {combined} 分。" if parts else "无可用结果。"
-
-    return CompatFullResponse(
-        bazi=bazi_result,
-        ziwei=ziwei_result,
-        combined_score=combined,
-        summary=summary,
-    )
+    return _map_relation_to_compat_full(relation, body.include_bazi, body.include_ziwei)

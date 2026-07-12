@@ -9,7 +9,6 @@ import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
 import { LIFE_VOLUME_LABELS } from '@/types/life-volume'
-import brandLogo from '@/assets/brand/fusheng-logo.png'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
@@ -61,13 +60,7 @@ function goProfile() {
 
     <section class="hero-card fs-card fs-card--seal">
       <div class="hero-copy">
-        <div class="hero-brand">
-          <img class="hero-brand__logo" :src="brandLogo" alt="浮生" width="56" height="56" />
-          <div>
-            <p class="hero-copy__eyebrow">浮生 · 人生六卷</p>
-            <p class="hero-copy__tagline">浮生若寄，知命知心 · 典籍册页辑录</p>
-          </div>
-        </div>
+        <p class="hero-copy__eyebrow">浮生 · 人生六卷</p>
         <h1 class="hero-copy__title">{{ profileLabel }}</h1>
         <p class="hero-copy__desc">{{ birthText }}</p>
       </div>
@@ -143,20 +136,6 @@ function goProfile() {
 .hero-copy {
   display: grid;
   gap: 14px;
-}
-
-.hero-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.hero-brand__logo {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--border-md);
 }
 
 .hero-copy__eyebrow {

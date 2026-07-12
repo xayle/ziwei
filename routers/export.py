@@ -12,14 +12,18 @@ from datetime import UTC, datetime
 import json
 import logging
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from sqlmodel import Session, desc, select
+from starlette.requests import Request
 
 from app.dependencies.auth import RequiredUser
 from app.models.case import Case, Snapshot
 from db import get_session
+from services.case_leap_month import infer_case_leap_month
+from services.quota_service import enforce_quota
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,13 @@ _EXPORT_FORMAT_VERSION = "1.0"
 
 def _build_export(case: Case, snapshot: Snapshot | None) -> dict:
     """将 Case + Snapshot 合并为标准导出包。"""
+    inferred_leap_month = infer_case_leap_month(case.birth_dt_local, case.calendar_mode)
+    if case.calendar_mode == "lunar":
+        is_leap_month = case.is_leap_month
+    elif inferred_leap_month is not None:
+        is_leap_month = inferred_leap_month
+    else:
+        is_leap_month = case.is_leap_month
     input_snapshot = {
         "id": case.id,
         "name": case.name,
@@ -50,6 +61,14 @@ def _build_export(case: Case, snapshot: Snapshot | None) -> dict:
         "birth_dt": case.birth_dt,
         "city": case.city,
         "lon": case.lon,
+        "current_city": case.current_city,
+        "current_province": case.current_province,
+        "current_lon": case.current_lon,
+        "current_tz": case.current_tz,
+        "calendar_mode": case.calendar_mode,
+        "is_leap_month": is_leap_month,
+        "birth_time_precision": case.birth_time_precision,
+        "unknown_time_fallback": case.unknown_time_fallback,
         "solar_time_enabled": case.solar_time_enabled,
         "notes": case.notes,
         "tags": case.tags,
@@ -87,6 +106,13 @@ def _safe_filename(name: str) -> str:
     return safe
 
 
+def _content_disposition(filename: str, ext: str) -> str:
+    """生成兼容中文文件名的 Content-Disposition。"""
+    ascii_fallback = "chart"
+    encoded = quote(f"{filename}.{ext}")
+    return f"attachment; filename=\"{ascii_fallback}.{ext}\"; filename*=UTF-8''{encoded}"
+
+
 # ─────────────────────────────────────────────────────────────
 # GET /api/v1/cases/{case_id}/export — 完整 JSON 下载
 # ─────────────────────────────────────────────────────────────
@@ -111,10 +137,12 @@ def _safe_filename(name: str) -> str:
     },
 )
 def export_case_json(
+    request: Request,
     case_id: str,
     current_user: RequiredUser,
     session: DbSession,
 ) -> Response:
+    enforce_quota(request, "export")
     case = session.get(Case, case_id)
     if case is None or case.deleted_at is not None or case.owner_id != current_user.id:
         raise HTTPException(
@@ -150,7 +178,7 @@ def export_case_json(
         content=json_bytes,
         media_type="application/json; charset=utf-8",
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}.json",
+            "Content-Disposition": _content_disposition(filename, "json"),
             "Content-Length": str(len(json_bytes)),
         },
     )
@@ -192,40 +220,73 @@ async def export_case_pdf(
     current_user: RequiredUser,
     session: DbSession,
 ) -> Response:
-    from datetime import datetime
-    import os
-
     case = session.get(Case, case_id)
     if case is None or case.deleted_at is not None or case.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"命盘 {case_id} 不存在")
 
-    try:
-        dt = datetime.fromisoformat(case.birth_dt_local)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="时间提取异常")
-
-    params = {
-        "y": dt.year,
-        "m": dt.month,
-        "d": dt.day,
-        "h": dt.hour,
-        "min": dt.minute,
-        "g": case.gender or "女",
-        "lo": case.lon or 116.4,
-    }
-
-    base_url = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
-
     from services.pdf_exporter import generate_pdf
 
+    snapshot = session.exec(
+        select(Snapshot)
+        .where(
+            Snapshot.case_id == case_id,
+            Snapshot.output_json.is_not(None),  # type: ignore[union-attr]
+            Snapshot.deleted_at.is_(None),  # type: ignore[union-attr]
+        )
+        .order_by(desc(Snapshot.created_at))
+        .limit(1)
+    ).first()
+
     try:
-        pdf_bytes = await generate_pdf(base_url, params)
+        pdf_bytes = await generate_pdf(case, snapshot)
         safe_name = _safe_filename(case.name or "命盘")
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{safe_name}.pdf"'},
+            headers={"Content-Disposition": _content_disposition(safe_name, "pdf")},
         )
     except Exception as e:
         logger.error(f"PDF 导出失败: {e}")
         raise HTTPException(status_code=500, detail="PDF服务暂不可用或发生渲染错误")
+
+
+@router.get(
+    "/{case_id}/export/card",
+    summary="导出命盘分享卡片 PNG",
+    response_class=Response,
+)
+async def export_case_card(
+    request: Request,
+    case_id: str,
+    current_user: RequiredUser,
+    session: DbSession,
+) -> Response:
+    enforce_quota(request, "export")
+    case = session.get(Case, case_id)
+    if case is None or case.deleted_at is not None or case.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"命盘 {case_id} 不存在")
+
+    from services.pdf_exporter import generate_share_card
+
+    snapshot = session.exec(
+        select(Snapshot)
+        .where(
+            Snapshot.case_id == case_id,
+            Snapshot.output_json.is_not(None),  # type: ignore[union-attr]
+            Snapshot.deleted_at.is_(None),  # type: ignore[union-attr]
+        )
+        .order_by(desc(Snapshot.created_at))
+        .limit(1)
+    ).first()
+
+    try:
+        png_bytes = await generate_share_card(case, snapshot)
+        safe_name = _safe_filename(case.name or "命盘")
+        return Response(
+            content=png_bytes,
+            media_type="image/png",
+            headers={"Content-Disposition": _content_disposition(safe_name, "png")},
+        )
+    except Exception as e:
+        logger.error(f"卡片导出失败: {e}")
+        raise HTTPException(status_code=500, detail="卡片导出暂不可用或发生渲染错误")

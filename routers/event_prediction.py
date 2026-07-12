@@ -33,6 +33,7 @@ from services.event_signal_engine import (
     compute_overall_year_score,
 )
 from services.followup_service import get_followup_questions
+from services.normalize_input import normalize_birth_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,14 @@ def _load_case_and_calculate(case_id: str, session: Session):
             birth_dt = birth_dt.replace(tzinfo=ZoneInfo(tz_name))
     except (ValueError, TypeError, KeyError):
         raise HTTPException(status_code=422, detail="case.birth_dt_local 格式无效")
+
+    birth_dt = normalize_birth_datetime(
+        birth_dt,
+        case.tz or "Asia/Shanghai",
+        auto_dst=True,
+        precision=case.birth_time_precision,
+        unknown_time_fallback=case.unknown_time_fallback,
+    ).local_dt
 
     from services.bazi_engine_service import calculate
 

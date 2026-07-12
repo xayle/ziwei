@@ -67,8 +67,8 @@ onMounted(async () => {
   try {
     cities.value = await loadCityOptions()
     applyCity(props.initialCity)
-  } catch {
-    citiesError.value = '城市列表加载失败，已使用本地兜底数据。'
+  } catch (err) {
+    citiesError.value = err instanceof Error ? err.message : '城市列表加载失败，请确认后端已启动。'
   } finally {
     citiesLoading.value = false
   }

@@ -501,7 +501,7 @@ def _signals_property(
 
     ten_god = liunian.get("ten_god", "")
     liunian_br = liunian.get("branch", "")
-    liunian_wx = liunian.get("flow_wuxing", "")
+    liunian.get("flow_wuxing", "")
 
     # ── dayun_trigger ──────────────────────────────────────────────────────
     dy_tg = getattr(dayun_item, "ten_god", "") if dayun_item else ""
@@ -610,7 +610,7 @@ def _signals_career(
     opp_sigs: list[EventSignal] = []
 
     ten_god = liunian.get("ten_god", "")
-    liunian_wx = liunian.get("flow_wuxing", "")
+    liunian.get("flow_wuxing", "")
 
     # ── natal_base ──────────────────────────────────────────────────────────
     if dm_tier in ("偏旺", "极旺"):
@@ -1134,7 +1134,7 @@ def analyze_multi_year_trend(
             elif best_opp and OPP_ORD.get(best_opp.opportunity_level, 0) >= 3:
                 representative = best_opp
             else:
-                representative = list(events.values())[0] if events else None
+                representative = next(iter(events.values())) if events else None
 
             top_events: list[str] = []
             for e in list(events.values())[:3]:

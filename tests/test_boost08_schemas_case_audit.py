@@ -162,6 +162,18 @@ class TestCaseSchemaValidators:
                 tags="valid,tag!@#invalid",
             )
 
+    def test_casebase_tags_timezone_style_value_passes(self):
+        """CaseBase: tags 允许前端现居时区/关注标签中的冒号和斜杠。"""
+        from app.schemas.case import CaseBase
+        obj = CaseBase(
+            name="Test",
+            birth_dt_local="2000-01-01T10:00:00",
+            tz="Asia/Shanghai",
+            lon=120.0,
+            tags=["现居:北京", "现居时区:Asia/Shanghai", "关注:感情"],
+        )
+        assert obj.tags == "现居:北京,现居时区:Asia/Shanghai,关注:感情"
+
     def test_casebase_lon_out_of_range_raises(self):
         """CaseBase: lon 超出范围 → ValueError（lines 120-121）"""
         from app.schemas.case import CaseBase

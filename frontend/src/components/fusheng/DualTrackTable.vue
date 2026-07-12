@@ -66,7 +66,7 @@ withDefaults(defineProps<{
 }
 
 .dual-track-table__grid th {
-  background: var(--surface-2);
+  background: var(--inset-tint);
   color: var(--brand-gold-dark);
 }
 

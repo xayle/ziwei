@@ -46,6 +46,14 @@ coverage*.json
 __scan*.json
 tmp_cov.json
 
+# 本地草稿与截图（DEV-AUDIT W3）
+.codex-*.png
+.playwright-cli/
+_tmp_wenmo/
+_fusheng_report_integration.pdf
+_cls_audit.txt
+cls_audit.txt
+
 # Local analysis/decompile tools
 /tools/
 scripts/_els_*.py
@@ -57,3 +65,6 @@ scripts/import_mlk_to_db.py
 scripts/check_day_gz.py
 scripts/_dpapi_try.py
 scripts/_mem_scan.py
+
+# iztro verification (local npm install)
+scripts/iztro/node_modules/

@@ -6,7 +6,7 @@
 | **日期** | 2026-07-12 |
 | **定位** | **前端相关开发文档的唯一权威** — 合并 UI 开发、方案、预警、上手、环境 |
 | **全栈入口** | [`DEVELOPMENT.md`](../DEVELOPMENT.md) |
-| **规矩·命令·插件** | [**`FUSHENG-DEV-HANDBOOK.md`**](../FUSHENG-DEV-HANDBOOK.md) ← 环境/门禁/验收以该文为准 |
+| **规矩·命令·插件** | [**`FUSHENG-DEV-AUTOPILOT.md`**](../FUSHENG-DEV-AUTOPILOT.md) ← **全自动权威** |
 | **执行打勾** | [`EXECUTION-REMAINING`](../plan/FUSHENG-EXECUTION-REMAINING.md) R061–R085 |
 
 > **一句话**：算法写命盘，典籍写讲解，**前端编成书** — 宋式六卷辑录；UI 只暴露 **排盘推算 / 典籍依据 / 经验推断** 三层语义。

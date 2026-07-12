@@ -49,24 +49,27 @@ def _place_ziwei(day: int, ju: int) -> int:
     """
     返回紫微星所在地支索引（子=0）。
 
-    日期能被局数整除：直接定位
-    不能整除：按"奇加偶减"规则跳步直到整除
+    算法对齐 docs/design/ziwei/03-紫微星定位.md 与 iztro getStartIndex()：
+    不能整除时加 (ju - remainder)，奇数后退、偶数前进。
     """
-    q, r = divmod(day, ju)
-    if r == 0:
-        return (2 + q - 1) % 12  # 寅(2) + q - 1
+    quotient, remainder = divmod(day, ju)
+    if remainder == 0:
+        position = quotient
+    else:
+        add_num = ju - remainder
+        new_quotient = (day + add_num) // ju
+        if add_num % 2 == 1:
+            position = new_quotient - add_num
+        else:
+            position = new_quotient + add_num
 
-    # 奇数步向前加，偶数步向后减（奇加偶减正统算法）
-    for step in range(1, 31):
-        if step % 2 == 1:  # 奇数步：day + step
-            candidate = day + step
-        else:  # 偶数步：day - step
-            candidate = day - step
-        if candidate > 0 and candidate % ju == 0:
-            return (2 + candidate // ju - 1) % 12
+    while position > 12:
+        position -= 12
+    while position < 1:
+        position += 12
 
-    # 安全兜底：不应到达此处
-    return (2 + (day // ju) - 1) % 12  # pragma: no cover
+    # 宫位序号 1=寅 … 12=丑 → 子=0 地支索引
+    return (position + 1) % 12
 
 
 def place_main_stars(

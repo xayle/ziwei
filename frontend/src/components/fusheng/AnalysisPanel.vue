@@ -154,7 +154,7 @@ function toggle(id: string) {
   padding: 0 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: var(--surface-2);
+  background: var(--inset-tint);
   color: var(--text-2);
   cursor: pointer;
   flex-shrink: 0;

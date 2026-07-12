@@ -277,15 +277,6 @@ def compute_wealth(
     # ─── interpretation_text ────────────────────────────────────────────
     _ys_cn = "、".join(_ELEMENT_CN.get(e, e) for e in yongshen_favor) or "未知"
     _ind_top3 = "、".join(industries[:3])
-    interp = (
-        f"此命财运综合评分为 {wealth_score} 分（{tier}等），"
-        f"财星力量指数 {cai_power:.0f}/100，"
-        f"用神五行属【{_ys_cn}】，命局对财运的支配程度属 {tier}级。"
-        f"综合财星强弱与用神匹配度，预计年收入区间为 {annual_range}，"
-        f"推荐最适宜进入的行业领域为：{_ind_top3}。"
-        f"{strategy}"
-        f"（仅供学术研究参考）"
-    )
 
     # ─── 新增：投资偏好 ──────────────────────────────────────────────────
     zheng_cai_pct = zheng_cai / total_shishen

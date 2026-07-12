@@ -253,12 +253,12 @@ class TestVirtueScore:
         assert bonus == 0
         assert labels == []
 
-    def test_branch_type_tiande_is_skipped(self):
+    def test_branch_type_tiande_matches(self):
         _virtue_score = _import()[3]
-        # 月支=3(卯月)，天德="stem_申" → 含"stem_"，此路跳过
-        # 月德：卯月=亥卯未组, 月德=甲(0)，日天干=0(甲) → +10
-        bonus, labels = _virtue_score(0, 0, 3)
-        assert bonus == 10  # 只有月德
+        # 月支=3(卯月)，天德落申(8)；日地支=8 → +15
+        bonus, labels = _virtue_score(0, 8, 3)
+        assert bonus == 25  # 天德15 + 月德10（卯月月德=甲，日天干=甲）
+        assert any("天德" in l for l in labels)
         assert any("月德" in l for l in labels)
 
 

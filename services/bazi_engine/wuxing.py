@@ -13,6 +13,7 @@ M1 任务 1.03: 修复 S6/P63 — compute_wuxing() hidden_contrib 全零 bug
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 from services.bazi_engine.tables import (
     BRANCH_HIDDEN_STEMS,
@@ -61,14 +62,16 @@ def compute_wuxing(
     day_branch: str,
     hour_stem: str,
     hour_branch: str,
+    weight_profile: Literal["ziping", "modern"] = "modern",
 ) -> WuxingResult:
     """
     计算八字四柱五行分布（含藏干权重贡献）。
 
-    权重分配方案（v4 规范）:
-      天干: ×1.0（透出天干力量最强）
-      地支藏干: ×0.3 × 该藏干在地支中的权重（主气0.6×0.3=0.18, 中气0.3×0.3=0.09, 余气0.1×0.3=0.03）
+    weight_profile (B-05):
+      modern — 天干×1.0 + 藏干×权重×0.3（默认，与 ZIP/CLS 基线一致）
+      ziping — 子平口径：天干×1.0 + 主气×0.6 + 中气/余气×权重×0.3
     """
+    hidden_scale = 0.3 if weight_profile == "modern" else None  # ziping uses per-tier weights below
     stem_contrib: dict[str, float] = {e: 0.0 for e in ELEMENTS}
     branch_hidden_contrib: dict[str, float] = {e: 0.0 for e in ELEMENTS}
 
@@ -81,13 +84,17 @@ def compute_wuxing(
         if elem:
             stem_contrib[elem] += 1.0
 
-    # 地支藏干贡献（含所有藏干，按权重×0.3折算）
+    # 地支藏干贡献
     for branch in branches:
         hidden = BRANCH_HIDDEN_STEMS.get(branch, [])
-        for hidden_stem, weight in hidden:
+        for hi, (hidden_stem, weight) in enumerate(hidden):
             elem = _elem_of_stem(hidden_stem)
             if elem:
-                branch_hidden_contrib[elem] += weight * 0.3
+                if weight_profile == "ziping":
+                    contrib = weight * (0.6 if hi == 0 else 0.3)
+                else:
+                    contrib = weight * (hidden_scale or 0.3)
+                branch_hidden_contrib[elem] += contrib
 
     # 合并得分（加权）
     scores_weighted_raw = {e: stem_contrib[e] + branch_hidden_contrib[e] for e in ELEMENTS}

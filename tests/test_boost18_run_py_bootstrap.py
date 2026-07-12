@@ -152,20 +152,24 @@ class TestLegacyPath:
         assert resp.status_code == 200
 
     def test_legacy_path_verify_full_http_exception_reraises(self):
-        """L565-566: except HTTPException: raise → 调用方收到 HTTPException"""
-        with patch("routers.verify.verify_full", side_effect=HTTPException(status_code=503, detail="svc unavailable")):
+        """calculate() HTTPException propagates to caller."""
+        with patch.object(
+            run_module._bazi_engine_service,
+            "calculate",
+            side_effect=HTTPException(status_code=503, detail="svc unavailable"),
+        ):
             resp = client.post("/api/v1/verify", json=PAYLOAD_V2)
         assert resp.status_code == 503
 
     def test_legacy_path_verify_full_value_error_returns_400(self):
-        """L568-570: except ValueError → 400"""
-        with patch("routers.verify.verify_full", side_effect=ValueError("invalid dt")):
+        """calculate() ValueError → 400"""
+        with patch.object(run_module._bazi_engine_service, "calculate", side_effect=ValueError("invalid dt")):
             resp = client.post("/api/v1/verify", json=PAYLOAD_V2)
         assert resp.status_code == 400
 
     def test_legacy_path_verify_full_exception_returns_500(self):
-        """L571-574: except Exception → 500"""
-        with patch("routers.verify.verify_full", side_effect=RuntimeError("engine crash")):
+        """calculate() unexpected Exception → 500"""
+        with patch.object(run_module._bazi_engine_service, "calculate", side_effect=RuntimeError("engine crash")):
             resp = client.post("/api/v1/verify", json=PAYLOAD_V2)
         assert resp.status_code == 500
 
@@ -289,6 +293,10 @@ class TestRunPyMiscBranches:
             "_engine_v2_enabled",
             return_value=False,
         ):
-            with patch("routers.verify.verify_full", side_effect=HTTPException(status_code=400, detail="input err")):
+            with patch.object(
+                run_module._bazi_engine_service,
+                "calculate",
+                side_effect=HTTPException(status_code=400, detail="input err"),
+            ):
                 resp = client.post("/api/v1/verify", json=PAYLOAD_V2)
         assert resp.status_code == 400

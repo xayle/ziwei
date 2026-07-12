@@ -1,21 +1,14 @@
 import { test, expect } from '@playwright/test'
-import { gotoApp } from './helpers/profile'
+import { fillMinimalProfile, gotoApp } from './helpers/profile'
+import { setupChartApiMocks } from './helpers/mockChartApi'
 
 test.describe('浮生主路径', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupChartApiMocks(page)
+  })
+
   test('档案补全后可进入八字页', async ({ page }) => {
-    await gotoApp(page, 'profile')
-
-    await expect(page.getByTestId('profile-kpi-strip')).toBeVisible()
-
-    await page.getByTestId('profile-birth-dt').fill('1990-01-15T08:30')
-    await page.getByTestId('profile-gender').selectOption('male')
-
-    const provinceSelect = page.locator('.city-picker-field').first().locator('select').first()
-    await provinceSelect.selectOption('北京市')
-    const citySelect = page.locator('.city-picker-field').first().locator('select').nth(1)
-    await citySelect.selectOption('北京')
-
-    await page.getByTestId('profile-save').click()
+    await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
 
     await expect(page).toHaveURL(/\/static\/app\/new\/bazi/)
@@ -23,14 +16,7 @@ test.describe('浮生主路径', () => {
   })
 
   test('八字结构档显示卷二块', async ({ page }) => {
-    await gotoApp(page, 'profile')
-    await page.getByTestId('profile-birth-dt').fill('1990-01-15T08:30')
-    await page.getByTestId('profile-gender').selectOption('male')
-    const provinceSelect = page.locator('.city-picker-field').first().locator('select').first()
-    await provinceSelect.selectOption('北京市')
-    const citySelect = page.locator('.city-picker-field').first().locator('select').nth(1)
-    await citySelect.selectOption('北京')
-    await page.getByTestId('profile-save').click()
+    await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
     await page.getByTestId('bazi-depth-toggle').getByRole('button', { name: '结构' }).click()
     await expect(page.getByTestId('bazi-vol2-block')).toBeVisible({ timeout: 15_000 })

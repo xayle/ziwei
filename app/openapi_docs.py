@@ -150,7 +150,7 @@ def get_openapi_with_error_schemas(app: FastAPI) -> dict[str, Any]:
     }
 
     # 为每个路由添加标准错误响应
-    for path, methods in openapi_schema.get("paths", {}).items():
+    for _path, methods in openapi_schema.get("paths", {}).items():
         for method, operation in methods.items():
             if method not in ["get", "post", "put", "delete", "patch"]:
                 continue

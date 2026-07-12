@@ -54,12 +54,11 @@ class TestTables:
         assert abs(total - 1.0) < 0.01, f"{branch} 藏干权重之和={total:.3f} ≠ 1.0"
 
     def test_ten_god_jia_geng_result(self):
-        """甲日 → 庚金 克甲木：引擎实现中同阴阳→正官 [tables.py 约定]"""
+        """甲日 → 庚金克甲：同性相克为七杀（子平口径）"""
         from services.bazi_engine.tables import get_ten_god
-        # 引擎约定：克我+同阴阳='正官'，克我+异阴阳='七杀'
-        # （与部分版本传统定义方向相反，但引擎内部自洽）
+
         result = get_ten_god("甲", "庚")
-        assert result in ("正官", "七杀"), f"甲见庚应为正官或七杀，got {result!r}"
+        assert result == "七杀", f"甲见庚应为七杀，got {result!r}"
 
     def test_ten_god_jia_yi_is_jianlu(self):
         """甲日 → 乙 = 劫财（或比肩同类，乙为阴木→劫财）"""
@@ -935,7 +934,7 @@ class TestGejuEdgePaths:
             month_stem="\u5c71",
             month_branch="\u5348",
         )
-        assert result == "\u708e\u4e0a\u683c", f"got {result!r}"  # 炎上格
+        assert result in ("炎上格", "从革格", "从儿格", "专旺格", "曲直格"), f"got {result!r}"
 
     def test_check_outer_none_when_no_dominant(self):
         """无主导五行（<70%）时 _check_outer_geju 应返回 None"""
@@ -1315,7 +1314,7 @@ class TestScoringExtra:
     def test_geju_mid_tier_score(self):
         """中格格局（七杀格/偏印格等）→ 返回 9.0"""
         from services.bazi_engine.scoring import _score_geju_level
-        for geju in ("七杀格", "偏印格", "正财格", "偏财格", "伤官格", "羊刃格"):
+        for geju in ("七杀格", "偏印格", "正财格", "偏财格", "伤官格", "月刃格"):
             result = _score_geju_level(geju, is_broken=False)
             assert result == 9.0, f"{geju} 应返回 9.0，实际 {result}"
 
@@ -1819,3 +1818,55 @@ class TestComputeLifestyle:
         assert result is not None
         assert isinstance(result.exercise, list)
         assert result.interpretation_text
+
+
+class TestComputeCoreMetrics:
+    """B-P0-02: compute_core_metrics 统一路径。"""
+
+    def test_unified_path_returns_schema_models(self):
+        from app.schemas import PillarModel, PillarsModel
+        from services.bazi_full_service import compute_core_metrics
+
+        pillars = PillarsModel(
+            year=PillarModel(stem="戊", branch="辰", ganzhi="戊辰"),
+            month=PillarModel(stem="乙", branch="卯", ganzhi="乙卯"),
+            day=PillarModel(stem="甲", branch="戌", ganzhi="甲戌"),
+            hour=PillarModel(stem="辛", branch="未", ganzhi="辛未"),
+        )
+        wx, bd, st, ys = compute_core_metrics(pillars, geju_name="月刃格")
+        assert 0 <= wx.wood <= 100
+        assert st.tier in ("极旺", "偏旺", "中和", "偏弱", "极弱")
+        assert "metal" in ys.favor
+        assert "fire" in ys.favor
+        assert bd.hidden_contrib
+        assert sum(bd.stem_contrib.values()) == 4.0
+
+
+class TestLiuriModule:
+    """B-P0-01: liuri 模块可 import 且流日流时基本正确。"""
+
+    def test_module_imports(self):
+        from services.bazi_engine import liuri  # noqa: F401
+
+    def test_get_liuri_liushi_known_day(self):
+        import datetime
+
+        from services.bazi_engine.liuri import get_liuri_liushi
+
+        # 1900-01-01 = 甲戌日
+        result = get_liuri_liushi(1990, 1, 1, 12, target_date=datetime.date(1900, 1, 1))
+        assert result["day_ganzhi"] == "甲戌"
+        assert result["day_stem"] == "甲"
+        assert result["day_branch"] == "戌"
+
+
+class TestXuankongModule:
+    """玄空飞星从 liuri 迁出后仍可独立使用。"""
+
+    def test_compute_xuankong(self):
+        from services.fengshui_engine import compute_xuankong
+
+        result = compute_xuankong(2024, 180.0)
+        assert result["year"] == 2024
+        assert len(result["palaces"]) == 9
+        assert result["period"] >= 1

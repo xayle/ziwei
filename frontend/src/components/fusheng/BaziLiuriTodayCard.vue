@@ -87,7 +87,7 @@ function scoreLabel(value?: number | null): string {
 .liuri-today__score-cell {
   padding: 10px;
   border-radius: 10px;
-  background: var(--surface-2);
+  background: var(--inset-tint);
   border: 1px solid var(--border);
   text-align: center;
 }

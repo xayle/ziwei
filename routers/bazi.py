@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 import re
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
@@ -15,7 +15,7 @@ from app.models import Case
 from app.schemas import BaziFullRequest, BaziFullResponse, LiuriLiushiEndpointResponse, LiuriLiushiRequest, WarningModel
 from app.schemas.explain import ExplainBatchRequest, ExplainBatchResponse
 from db import get_session
-from services.bazi_full_service import bazi_full, compute_liuri_liushi
+from services.bazi_full_service import apply_profile_slim, bazi_full, compute_liuri_liushi
 from services.normalize_input import normalize_birth_datetime
 from services.quota_service import enforce_quota
 from services.rate_limit import limiter
@@ -75,11 +75,16 @@ def _normalize_birth_dt_text(
 def api_bazi_full(
     request: Request,
     payload: BaziFullRequest,
+    profile: Literal["full", "slim"] = Query("full", description="slim: 省略域分析长文与大运叙事"),
     x_request_id: str | None = Header(None, alias="X-Request-Id"),
 ):
     warnings: list[WarningModel] = []
     request_id = _sanitize_request_id(x_request_id, warnings)
     result = bazi_full(payload, request_id=request_id)
+    if profile == "slim":
+        data = result.model_dump(mode="json")
+        apply_profile_slim(data)
+        result = BaziFullResponse.model_validate(data)
     if warnings:
         result.warnings.extend(warnings)
     return result
@@ -453,17 +458,17 @@ def _build_profile(subj: CompatibilitySubject):
     return rp, favor, wx_dict
 
 
-@router.post("/compatibility", response_model=CompatibilityResponse)
+@router.post("/compatibility", response_model=CompatibilityResponse, deprecated=True)
 def api_compatibility(
     payload: CompatibilityRequest,
+    response: Response,
     current_user: RequiredUser,
 ):
     """
-    A3 无状态八字合盘：传入两人出生时间，即时返回合盘分析，不存入 DB。
-
-    算法：
-      五行互补 40分 + 地支无冲 40分 + 用神相助 20分
+    A3 无状态八字合盘 [已弃用 → POST /api/v1/relation/full]
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Link"] = '</api/v1/relation/full>; rel="successor-version"'
     rp_a, favor_a, wx_a = _build_profile(payload.person_a)
     rp_b, favor_b, wx_b = _build_profile(payload.person_b)
 

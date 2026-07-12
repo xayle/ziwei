@@ -1,0 +1,50 @@
+# 本地安装：pip install -r requirements-dev.txt && pre-commit install
+# 全量手动跑：pre-commit run --all-files
+
+default_language_version:
+  python: python3.11
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(docs/|frontend/)
+      - id: end-of-file-fixer
+        exclude: ^(docs/|frontend/)
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.7
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        args:
+          - -ll
+          - -r
+          - app
+          - services
+          - routers
+          - run.py
+          - db.py
+          - constants.py
+          - boundary.py
+          - backends.py
+
+  - repo: local
+    hooks:
+      - id: pytest-smoke
+        name: pytest smoke (backend gate)
+        entry: python scripts/quality_gate.py --section backend
+        language: system
+        pass_filenames: false
+        always_run: true

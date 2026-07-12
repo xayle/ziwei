@@ -117,7 +117,7 @@ def tfidf_score(
             df[t] += 1
 
     scores: list[tuple[float, Any]] = []
-    for tokens, (_, obj) in zip(tokenized_docs, documents):
+    for tokens, (_, obj) in zip(tokenized_docs, documents, strict=False):
         tf_counter = Counter(tokens)
         doc_len = max(len(tokens), 1)
         score = 0.0

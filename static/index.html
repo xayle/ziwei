@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>命理系统入口</title>
+  <title>个人档案系统入口</title>
   <style>
     body { font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#f7f8fb; color:#0f172a; }
     .box { max-width: 520px; padding: 28px 32px; border: 1px solid #dbe3f0; border-radius: 16px; background: #fff; box-shadow: 0 12px 32px rgba(15, 23, 42, .08); }
@@ -18,11 +18,11 @@
 </head>
 <body>
   <div class="box">
-    <h1>正在进入命理系统…</h1>
-    <p id="status">默认优先进入新版案例中心；若新版资源未构建，将自动回退到 legacy 紫微页面。</p>
+    <h1>正在进入个人档案系统…</h1>
+    <p id="status">默认优先进入新版档案中心（当前主入口）；若新版资源未构建，将自动回退到 legacy 紫微页面。</p>
     <p class="muted">如跳转未生效，可手动选择入口。</p>
     <div class="links">
-      <a class="btn" href="/static/app/cases">进入案例中心</a>
+      <a class="btn" href="/static/app/cases">进入档案中心</a>
       <a class="btn secondary" href="/static/ziwei.html">进入 legacy 紫微页</a>
     </div>
   </div>
@@ -32,7 +32,7 @@
       try {
         const resp = await fetch('/static/app/', { method: 'GET', redirect: 'follow' })
         if (resp.ok) {
-          status.textContent = '已检测到新版资源，正在跳转到案例中心…'
+          status.textContent = '已检测到新版资源，正在跳转到档案中心…'
           window.location.replace('/static/app/cases')
           return
         }

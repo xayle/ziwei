@@ -347,7 +347,7 @@ class TestErrorState:
     """全局错误态验证 — /verify 返回 400 不含 alert/服务器 500"""
 
     def test_invalid_year_returns_400(self):
-        """红线25: 年份 < 1900 → 400"""
+        """红线25: 年份低于 BAZI_VERIFY_YEAR_MIN → 400"""
         import os
         _prev = os.environ.get("AUTH_BYPASS")
         os.environ["AUTH_BYPASS"] = "true"
@@ -355,13 +355,13 @@ class TestErrorState:
             from run import app
             client = TestClient(app)
             resp = client.post("/api/v1/verify", json={
-                "dt": "1800-01-01T00:00:00",
+                "dt": "1699-01-01T00:00:00+08:00",
                 "lon": 116.4,
                 "gender": "female",
                 "mode": "dual",
             })
             assert resp.status_code == 400, \
-                f"年份<1900 应返回 400，实际 {resp.status_code}"
+                f"年份低于历史下限应返回 400，实际 {resp.status_code}"
         finally:
             if _prev is None:
                 os.environ.pop("AUTH_BYPASS", None)

@@ -162,7 +162,7 @@ def _score_geju_level(geju_name: str, is_broken: bool) -> float:
     if is_broken:
         return 3.0
     _TOP = {"正官格", "正印格", "食神格", "建禄格", "一气专旺格", "羊刃驾杀格"}
-    _MID = {"七杀格", "偏印格", "正财格", "偏财格", "伤官格", "羊刃格"}
+    _MID = {"七杀格", "偏印格", "正财格", "偏财格", "伤官格", "月刃格"}
     if geju_name in _TOP:
         return 13.0
     elif geju_name in _MID:
@@ -264,4 +264,5 @@ def scoring_to_dict(detail: ScoringDetail) -> dict:
         "total_score": detail.total_score,
         "tier": detail.tier,
         "weight_note": detail.weight_note,
+        "layer": "modern_convention",
     }

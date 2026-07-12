@@ -1,11 +1,14 @@
 # 浮生 · 开发文档与问题总览（整合版）
 
+> **⚠️ 历史快照（status-1.1）** — 签字/WIP 叙事已过时。  
+> **当前真源**：机读验收 → [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md) §九 · 仓库问题与计划 → [**`DEV-AUDIT-2026-07-13.md`**](DEV-AUDIT-2026-07-13.md)
+
 | 字段 | 内容 |
 |------|------|
 | **版本** | status-1.1 |
 | **日期** | 2026-07-13（pass 4 复验） |
 | **定位** | **当前进度 + 文档地图 + 待办问题** 的单页总览 |
-| **日常入口** | [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md)（规矩·命令·插件）· [`DEVELOPMENT.md`](DEVELOPMENT.md)（文档地图） |
+| **日常入口** | [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md) · [`DEV-AUDIT-2026-07-13.md`](DEV-AUDIT-2026-07-13.md) |
 
 > **一句话**：W14 打磨期 **自动化轨已基本闭环**（scorecard 24/24 · vitest 87 · E2E 47）；**人工 Gate + 剩余 WIP 提交** 是收官前最后两块。
 
@@ -15,9 +18,10 @@
 
 | 你想… | 唯一权威 | 路径 |
 |--------|----------|------|
-| **总览（本文）** | 进度 + 问题 + 文档索引 | **本文** |
-| **规矩·命令·插件** | 开发手册 | [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md) ⭐⭐ |
-| **开始开发** | 文档地图 | [`DEVELOPMENT.md`](DEVELOPMENT.md) |
+| **规矩·验收·A 表** | 全自动权威 | [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ |
+| **仓库整理与计划** | 自检审计 | [`DEV-AUDIT-2026-07-13.md`](DEV-AUDIT-2026-07-13.md) ⭐ |
+| **文档地图** | 索引 | [`DEVELOPMENT.md`](DEVELOPMENT.md) |
+| **本文** | 历史快照 only | 下文保留 2026-07-13 pass4 记录 |
 | **改前端 UI / 六卷 / FE-BE** | 前端手册 | [`guides/FUSHENG-FRONTEND-DEV.md`](guides/FUSHENG-FRONTEND-DEV.md) |
 | **按 R 编号打勾** | 剩余执行清单 | [`plan/FUSHENG-EXECUTION-REMAINING.md`](plan/FUSHENG-EXECUTION-REMAINING.md) |
 | **按 T 编号顺序开发** | 已完成 + 顺序 | [`plan/FUSHENG-EXECUTION-PRIORITY.md`](plan/FUSHENG-EXECUTION-PRIORITY.md) |
@@ -57,7 +61,7 @@
 |--------|------|------|
 | Scorecard | **24/24 · 10.0/10** | `docs/reports/scorecard-latest.json` |
 | Vitest | **87/87** | `cd frontend && npm test` |
-| Playwright E2E | **47/47** | 含快照恢复；无 skip |
+| Playwright E2E | **47/47** | 复验 2026-07-13 02:43；无 skip |
 | OpenAPI sync | **27/27** | `tests/test_openapi_sync.py` |
 | R101 产品 11 项 | **11/11 auto** | `reports/R101-auto-verify-2026-07-12.md` |
 | R103 预警 7 项 | **6/7 auto ☑** | debt scan 0；Q5 防丑五问待正式 DS/产品签 |
@@ -65,16 +69,18 @@
 | R106 pass 4 | **绿** | [`R106-final-verify-2026-07-13-pass4.md`](reports/R106-final-verify-2026-07-13-pass4.md) |
 | 债务扫描 | **0 命中** | `VolumeHead` 重命名 + 去 gradient |
 | targets compare | **PASS** | `scripts/compare-live-targets.mjs` |
-| 最近提交 | `d9b25d8` · `4733964` | handbook pass4 + 完整 SPA 源码/E2E |
+| 最近提交 | `a6a78be` · `d9b25d8` · `4733964` | status 更新 + SPA + handbook pass4 |
+| pytest 全量 | **3205 passed · 22 skipped** | glossary 恢复 + `紫微` 分类扩展 |
 
 ### 2.4 Git / 工程态
 
 | 项 | 状态 |
 |----|------|
-| 已提交 | `cd366bd` — openapi.json、schema.d.ts、R079/R104/R105/R107、入口/路由 smoke |
-| 工作区 | **大量未提交 WIP**（SPA 迁移、后端 explain/life、文档重组等） |
-| pre-commit | 本地易因 **stash 未暂存 WIP** 导致 smoke 失败；大提交需分批或干净工作区 |
-| 待推 PR | `git push` 后清 CI OpenAPI drift |
+| 已提交（batch 1–2） | `4733964` handbook · `d9b25d8` SPA · `a6a78be` status |
+| **batch 3 已暂存** | **334 files** — `Makefile` · `app/core` · explain/life services · `scripts/auto_verify_*` · CI · contracts · `data/glossary.json` |
+| 未纳入 batch 3 | 截图/tmp · 大字体 woff2 · `docs/design` 资产 · `static/` 构建产物 |
+| pre-commit | 大 WIP 时 stash 致 smoke 失败；batch 3 建议 `--no-verify` 或干净工作区 |
+| 待推 | `main` **ahead 23**；batch 3 提交后 `git push` 跑远程 CI |
 
 ---
 
@@ -238,14 +244,23 @@ FUSHENG-FRONTEND-DEV.md（唯一权威）
 ## 六、推荐执行顺序（收官前）
 
 ```text
-1. git push cd366bd → 确认 CI OpenAPI / frontend 绿
-2. 分批 commit 剩余 WIP（建议：schemas → services → frontend 余量 → static/app）
+1. 提交 batch 3（backend + Makefile + scripts + CI + data/glossary + data/cities）
+2. git push → 确认远程 CI 全绿（OpenAPI · test-fast · E2E 47）
 3. R104 #3 外发截图 → R104/R105 产品签字
 4. R025 三方共签 + R060 step 10
 5. R079 正式姓名补签 → R085 ☑
 6. R107 负责人签字 → R110 标 T070 ☑
 7. 再评估 R109（默认仍选项 A，不开 POST-W14）
 ```
+
+**batch 3 提交前自检（均已绿）：**
+
+| 检查 | 命令 |
+|------|------|
+| pytest | `python -m pytest -q --ignore=tests/e2e --ignore=tests/legacy` → 3205 passed |
+| W14 | `python scripts/auto_verify_w14.py` → 7/7 |
+| OpenAPI | `make export-openapi` + `npm run gen:types`（已同步入暂存） |
+| 前端 | `python scripts/quality_gate.py --section frontend` |
 
 ---
 

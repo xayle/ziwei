@@ -191,7 +191,7 @@ class TestLifespanHappyPath:
                 pass  # yield 到达
 
         with patch("app.lifecycle.init_db"), \
-             patch("db.get_engine", side_effect=RuntimeError("db init test error")), \
+             patch("app.core.db.get_engine", side_effect=RuntimeError("db init test error")), \
              patch.dict(os.environ, {
                  "SECRET_KEY": _STRONG_KEY,
                  "ENVIRONMENT": "development",
@@ -212,7 +212,7 @@ class TestLifespanHappyPath:
                 pass  # yield 到达
 
         with patch("app.lifecycle.init_db"), \
-             patch("db.get_engine", return_value=MagicMock()), \
+             patch("app.core.db.get_engine", return_value=MagicMock()), \
              patch("sqlmodel.Session"), \
              patch("services.auth_service.load_revoked_jtis_from_db", return_value=5), \
              patch.dict(os.environ, {
@@ -274,28 +274,22 @@ class TestBuildLegacyDictWarning:
             warnings=[{"code": "TEST_DICT_WARN", "message": "dict warning for L587 coverage"}],
         )
 
-        mock_result = types.SimpleNamespace(
-            pillars_primary=pillars_primary,
-            pillars_secondary=None,
-            solar_time_offset_minutes=0.0,
-            validation=val,
-            risk_flags=rf,
-            mode_requested="single",
-            mode_effective="single",
-        )
-
         body = types.SimpleNamespace(
             solar_time_enabled=False,
             mode="single",
             gender=None,
+            tz="Asia/Shanghai",
         )
         dt = datetime(1990, 5, 15, 8, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
 
-        with patch("routers.verify.verify_full", return_value=mock_result):
-            try:
-                _build_legacy_verify_response(body, dt, 120.0, "test-req-l587", [])
-            except Exception:
-                pass  # L587 已在循环中执行；后续如有失败不影响覆盖率
+        mock_calc_result = MagicMock()
+        mock_calc_result.verify_response = MagicMock()
+        mock_calc_result.verify_response.validation = MagicMock(level="L0")
+
+        with patch("services.bazi_engine_service.calculate", return_value=mock_calc_result):
+            verify_response, boundary_level = _build_legacy_verify_response(body, dt, 120.0, "test-req-l587", [])
+            assert boundary_level == "L0"
+            assert verify_response is mock_calc_result.verify_response
 
 
 # ═══════════════════════════════════════════════════════════════════════════

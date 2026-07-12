@@ -197,8 +197,8 @@ class TestLifeBodyRuler:
 class TestXiaoXian:
     """
     黄金案例: 女命壬午年(午支=6, 三合火)
-    女命从申(8)起, 逆数:
-      申(8)=1岁, 未(7=命宫)=2岁, 午(6)=3岁 ...
+    standard 口径（Z-05）：寅午戌组起辰(4)，女命逆数:
+      辰(4)=1岁, 卯(3)=2岁, 寅(2)=3岁, …, 未(7=命宫)=10岁
     """
     def setup_method(self):
         self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
@@ -208,26 +208,35 @@ class TestXiaoXian:
         return next(p for p in self.chart.palaces if p.branch_idx == branch_idx)
 
     def test_start_palace_has_age1(self):
-        # 女命壬午: 小限1岁在申(8)宫
-        shen = self._palace_by_branch(8)
-        assert 1 in shen.xiaoxian_ages, f"申宫应含小限1岁，实得 {shen.xiaoxian_ages[:5]}"
+        # 女命壬午 standard: 小限1岁在辰(4)宫
+        chen = self._palace_by_branch(4)
+        assert 1 in chen.xiaoxian_ages, f"辰宫应含小限1岁，实得 {chen.xiaoxian_ages[:5]}"
 
     def test_start_palace_has_age13(self):
-        shen = self._palace_by_branch(8)
-        assert 13 in shen.xiaoxian_ages, f"申宫应含小限13岁"
+        chen = self._palace_by_branch(4)
+        assert 13 in chen.xiaoxian_ages, f"辰宫应含小限13岁"
 
-    def test_life_palace_has_age2(self):
-        # 命宫在未(7): 2岁
+    def test_life_palace_has_age10(self):
+        # 命宫在未(7): 10岁
         wei = self._palace_by_branch(7)
-        assert 2 in wei.xiaoxian_ages, f"命宫(未)应含小限2岁，实得 {wei.xiaoxian_ages[:5]}"
+        assert 10 in wei.xiaoxian_ages, f"命宫(未)应含小限10岁，实得 {wei.xiaoxian_ages[:5]}"
 
-    def test_life_palace_has_age14(self):
+    def test_life_palace_has_age22(self):
         wei = self._palace_by_branch(7)
-        assert 14 in wei.xiaoxian_ages, "命宫(未)应含小限14岁"
+        assert 22 in wei.xiaoxian_ages, "命宫(未)应含小限22岁"
 
-    def test_life_palace_has_age26(self):
+    def test_life_palace_has_age34(self):
         wei = self._palace_by_branch(7)
-        assert 26 in wei.xiaoxian_ages, "命宫(未)应含小限26岁"
+        assert 34 in wei.xiaoxian_ages, "命宫(未)应含小限34岁"
+
+    def test_legacy_gender_split_still_available(self):
+        legacy = ziwei_full(
+            GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+            GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER,
+            xiaoxian_start_method="gender_split",
+        )
+        shen = next(p for p in legacy.palaces if p.branch_idx == 8)
+        assert 1 in shen.xiaoxian_ages
 
     def test_all_palaces_have_xiaoxian(self):
         # 每宫都应分有小限年龄
@@ -299,76 +308,34 @@ class TestTrueSolarTime:
 # _place_ziwei 奇加偶减算法验证
 # ──────────────────────────────────────────────────────────────
 class TestPlaceZiwei:
-    """验证紫微定位奇加偶减算法的正确性。"""
+    """验证紫微定位（设计文档 03-紫微星定位.md）。"""
 
     def _ziwei_branch(self, day: int, ju: int) -> int:
         from services.ziwei_engine.stars_main import _place_ziwei
         return _place_ziwei(day, ju)
 
     def test_exact_divisible_water2_day30(self):
-        # 水二局 day=30 → 30/2=15 → 寅(2)+15-1=16%12=4 (辰)
-        assert self._ziwei_branch(30, 2) == 4, "水二局day=30应在辰(4)"
+        # 水二局 day=30 → 15 → 3(辰)
+        assert self._ziwei_branch(30, 2) == 4
 
     def test_exact_divisible_wood3_day3(self):
-        # 木三局 day=3 → 3/3=1 → 寅(2)+1-1=2 (寅)
-        assert self._ziwei_branch(3, 3) == 2, "木三局day=3应在寅(2)"
+        assert self._ziwei_branch(3, 3) == 2  # 寅
 
-    def test_odd_step_wood3_day1(self):
-        # 木三局 day=1 → 奇步1: 1+1=2(≠0), 偶步2: 1-2<0, 奇步3: 1+3=4(≠0),
-        # 偶步4:<0, 奇步5: 1+5=6, 6/3=2 → 寅+2-1=3 (卯)
-        assert self._ziwei_branch(1, 3) == 3, "木三局day=1奇加偶减应在卯(3)"
+    def test_design_earth5_day14(self):
+        # 土五局14日 → 卯(3)
+        assert self._ziwei_branch(14, 5) == 3
 
-    def test_odd_step_wood3_day2(self):
-        # day=2, step1(奇+): 3%3=0, q=1→寅(2)
-        assert self._ziwei_branch(2, 3) == 2, "木三局day=2应在寅(2)"
+    def test_design_wood3_day22(self):
+        # 木三局22日 → 亥(11)
+        assert self._ziwei_branch(22, 3) == 11
 
-    def test_wood3_day4(self):
-        # day=4, 奇1→5≠0; 偶2→2≠0; 奇3→7≠0; 偶4→0<0; 奇5→9=0, q=3→辰(4)
-        assert self._ziwei_branch(4, 3) == 4, "木三局day=4应在辰(4)"
+    def test_design_gold4_day27(self):
+        # 金四局27日 → 未(7)
+        assert self._ziwei_branch(27, 4) == 7
 
-    def test_wood3_day5(self):
-        # day=5, 奇1→6=0, q=2→卯(3)
-        assert self._ziwei_branch(5, 3) == 3, "木三局day=5应在卯(3)"
-
-    def test_gold4_day1(self):
-        # 金四局 day=1: 奇1→2≠0; 偶2→<0; 奇3→4=0, q=1→寅(2)
-        assert self._ziwei_branch(1, 4) == 2, "金四局day=1应在寅(2)"
-
-    def test_gold4_day2(self):
-        # day=2: 奇1→3≠0; 偶2→0<0; 奇3→5≠0; 偶4→-2<0; 奇5→7≠0; 偶6→-4<0;
-        # 奇7→9≠0; 偶8→-6<0; 奇9→11≠0; 偶10→-8<0; 奇11→13≠0; 偶12→-10<0
-        # 奇13→15≠0; 偶14→-12<0; 奇15→17≠0; 偶16→-14<0; 奇17→19≠0; 偶18→-16
-        # 奇19→21≠0; 偶20→-18<0; 奇21→23≠0; 偶22→-20<0; 奇23→25≠0; 偶24→-22<0
-        # 奇25→27≠0; 偶26→-24<0; 奇27→29≠0; 偶28→-26<0; 奇29→31≠0; 偶30→-28<0
-        # 补充：偶2→4-2=2 wait let me recalculate: day=2, oddstep1→3≠0, evenstep2→2-2=0<0
-        # evenstep2: 2-2=0, not >0 → skip; oddstep3: 2+3=5≠0; evenstep4: 2-4=-2<0
-        # oddstep5: 2+5=7≠0; ...oddstep7: 2+7=9≠0; oddstep9: 2+9=11≠0; oddstep11: 13≠0
-        # oddstep13: 15≠0; oddstep15: 17≠0; oddstep17: 19≠0; oddstep19: 21≠0
-        # oddstep21: 23≠0; oddstep23: 25≠0; oddstep25: 27≠0; oddstep27: 29≠0; 
-        # oddstep29: 31≠0; 30 steps: evenstep2: 0<0 skip... 
-        # Actually: oddstep1: 3≠0, evenstep2: 0 NOT>0; let's compute directly...
-        # The nearest multiple of 4 ≥ 2 is 4 (distance +2), nearest ≤ 2 (and >0) is none (0 is not >0)
-        # So we need +2 steps (even step). But even step goes backwards...
-        # With odd-only going up: step1:3, step3:5, step5:7, step7:9, step9:11, step11:13,
-        # step13:15, step15:17, step17:19, step19:21, step21:23, step23:25, step25:27
-        # step27:29, step29:31... none of these are divisible by 4 (3,5,7,9,11,13,15,17,19,21,23,25,27,29,31 - odd numbers!)
-        # Even steps go: step2→0(not>0), step4→-2(not>0)... all going negative
-        # So for day=2 with ju=4, the algorithm as specified would hit the fallback!
-        # But wait... 2+2=4 which is divisible by 4. But step=2 is even → backward → 2-2=0 → not >0
-        # Hmm, this is tricky. Let me think...
-        # Actually I need to check: does the odd-add-even-subtract rule even work for all cases?
-        # For day=2, ju=4: the only reachable multiple forward is 4 (step+2), but step 2 is even (goes backward)
-        # and step 4 (even) → 2-4=-2, no. So step 2 forward would require an even step going FORWARD not BACKWARD.
-        # Wait, I think I might be confusing the interpretation.
-        # Let me reconsider: maybe "奇数步向前，偶数步向后" is about the MAGNITUDE, not the step number.
-        # Alternative interpretation: odd remainder → go forward, even remainder → go backward.
-        # day=2, ju=4: remainder=2 (even) → go BACKWARD to 0? But 0 == 0 < 1...
-        # Hmm, this is getting complicated. Let me just test different cases.
-        # For now let's check what the implementation actually returns for gold4 day=2
-        # and make sure it's consistent.
-        result = self._ziwei_branch(2, 4)
-        # We just verify it returns a valid branch index
-        assert 0 <= result <= 11, f"金四局day=2应返回有效地支索引，实得{result}"
+    def test_zw02_fire6_day21(self):
+        # 火六局21日（ZW02 农历日）→ 寅(2)
+        assert self._ziwei_branch(21, 6) == 2
 
 
 # ──────────────────────────────────────────────────────────────
@@ -435,17 +402,17 @@ class TestLiuyueSihua:
     def test_liuyue_has_sihua(self):
         """每个流月应有 sihua 字段且为4条。"""
         for d in self.chart.liuyue_data:
-            assert 'sihua' in d, f"第{d['month']}月缺少sihua字段"
-            assert len(d['sihua']) == 4, \
-                f"第{d['month']}月四化应有4条，实得{len(d['sihua'])}"
+            assert d.sihua, f"第{d.month}月缺少sihua字段"
+            assert len(d.sihua) == 4, \
+                f"第{d.month}月四化应有4条，实得{len(d.sihua)}"
 
     def test_liuyue_sihua_keys(self):
         """四化值应包含化禄/化权/化科/化忌之一。"""
         valid_hua = {"化禄", "化权", "化科", "化忌"}
         for d in self.chart.liuyue_data:
-            for star, hua in d['sihua'].items():
+            for star, hua in d.sihua.items():
                 assert hua in valid_hua, \
-                    f"第{d['month']}月四化值'{hua}'不合法"
+                    f"第{d.month}月四化值'{hua}'不合法"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -594,3 +561,167 @@ class TestForecast:
         # 干支不同（2026=丙午, 2027=丁未）
         assert fc_2026.yearly.ganzhi != fc_2027.yearly.ganzhi, \
             f"2026与2027年干支应不同，均为{fc_2026.yearly.ganzhi}"
+
+
+# ──────────────────────────────────────────────────────────────
+# Phase 1B P0：口径修正回归
+# ──────────────────────────────────────────────────────────────
+class TestZiweiPhase1BP0:
+    """Z-P0-01 ~ Z-P0-04：日支、安星、流年、斗君流月。"""
+
+    def setup_method(self):
+        from services.ziwei_engine.lunar import solar_to_lunar
+        from services.ziwei_engine.palaces import calc_palaces
+        from services.ziwei_engine.stars_aux import place_aux_stars
+
+        self.lunar = solar_to_lunar(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY, GOLDEN_HOUR, GOLDEN_MIN)
+        self.layout = calc_palaces(self.lunar)
+        self.aux = place_aux_stars(self.lunar, lp_b=self.layout.life_branch_idx)
+
+    def test_day_branch_idx_populated(self):
+        from services.ziwei_engine.tables import BRANCHES
+
+        assert self.lunar.day_gz[1] == BRANCHES[self.lunar.day_branch_idx]
+        assert 0 <= self.lunar.day_branch_idx <= 11
+
+    def test_wenchang_wenqu_by_hour(self):
+        # 未时(7)：文昌卯(3)，文曲亥(11)
+        assert self.aux["文昌"] == 3
+        assert self.aux["文曲"] == 11
+
+    def test_youbi_by_month(self):
+        # 正月：右弼酉(9)
+        assert self.aux["右弼"] == 9
+
+    def test_santai_bazuo_use_day_branch(self):
+        zuofu = self.aux["左辅"]
+        youbi = self.aux["右弼"]
+        db = self.lunar.day_branch_idx
+        assert self.aux["三台"] == (zuofu + db) % 12
+        assert self.aux["八座"] == (youbi - db + 12) % 12
+
+    def test_liunian_taisui(self):
+        from services.ziwei_engine.liunian import calc_liunian
+
+        ln = calc_liunian(2026, GOLDEN_YEAR, self.layout.life_branch_idx)
+        assert ln.liunian_life_method == "taisui"
+        assert ln.year_branch_idx == 6  # 午
+        assert ln.life_palace_branch == 6
+
+    def test_doujun_liuyue(self):
+        from services.ziwei_engine.liunian import calc_doujun, calc_liunian, calc_liuyue_list
+
+        ln = calc_liunian(2026, GOLDEN_YEAR, self.layout.life_branch_idx)
+        doujun = calc_doujun(ln.year_branch_idx, self.lunar.calc_lunar_month, self.lunar.hour_branch_idx)
+        assert doujun == 1  # 丑
+
+        branch_map = {b: f"宫{b}" for b in range(12)}
+        items = calc_liuyue_list(
+            ln,
+            branch_map,
+            birth_month=self.lunar.calc_lunar_month,
+            birth_hour_branch=self.lunar.hour_branch_idx,
+            liuyue_method="doujun",
+        )
+        assert items[0].liuyue_method == "doujun"
+        assert items[0].doujun_branch == 1
+        assert items[0].life_palace_branch == 1
+
+    def test_legacy_methods_still_available(self):
+        from services.ziwei_engine.stars_aux import place_aux_stars
+
+        legacy = place_aux_stars(
+            self.lunar,
+            lp_b=self.layout.life_branch_idx,
+            wenchang_method="year_branch",
+            youbi_method="hour",
+        )
+        yb = self.lunar.year_branch_idx
+        hb = self.lunar.hour_branch_idx
+        assert legacy["文昌"] == (9 - yb) % 12
+        assert legacy["文曲"] == (4 + yb) % 12
+        assert legacy["右弼"] == (10 - hb) % 12
+
+
+# ──────────────────────────────────────────────────────────────
+# Phase 2 P1：结构补齐回归
+# ──────────────────────────────────────────────────────────────
+class TestZiweiPhase2P1:
+    """Z-P1-01 ~ Z-P1-06：LiuyueInfo、missing_fields、身宫、小限、真太阳时、月德。"""
+
+    def setup_method(self):
+        self.chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                                GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+
+    def test_liuyue_data_is_liuyue_info(self):
+        from services.ziwei_engine.liunian import LiuyueInfo
+
+        assert len(self.chart.liuyue_data) == 12
+        assert all(isinstance(d, LiuyueInfo) for d in self.chart.liuyue_data)
+
+    def test_body_palace_flag(self):
+        body_palaces = [p for p in self.chart.palaces if p.is_body_palace]
+        assert len(body_palaces) == 1
+        assert body_palaces[0].branch_idx == self.chart.body_palace_branch
+
+    def test_yuede_star_placed(self):
+        from services.ziwei_engine.lunar import solar_to_lunar
+        from services.ziwei_engine.palaces import calc_palaces
+        from services.ziwei_engine.stars_aux import place_aux_stars
+
+        lunar = solar_to_lunar(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY, GOLDEN_HOUR, GOLDEN_MIN)
+        layout = calc_palaces(lunar)
+        aux = place_aux_stars(lunar, lp_b=layout.life_branch_idx)
+        assert "月德" in aux
+        yb = lunar.year_branch_idx
+        assert aux["月德"] == yb % 12
+        assert aux.get("天德") == (9 + yb) % 12
+
+    def test_missing_fields_empty_on_success(self):
+        assert isinstance(self.chart.missing_fields, list)
+        assert "true_solar_time" not in self.chart.missing_fields
+
+    def test_xiaoxian_standard_default(self):
+        chen = next(p for p in self.chart.palaces if p.branch_idx == 4)
+        assert 1 in chen.xiaoxian_ages
+
+
+# ──────────────────────────────────────────────────────────────
+# Phase 3 P2：流日/流时、格局增强
+# ──────────────────────────────────────────────────────────────
+class TestZiweiPhase3P2:
+    def test_liuri_liushi_integration(self):
+        chart = ziwei_full(
+            GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+            GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER,
+            flow_lunar_day=3,
+            flow_liuyue_month=1,
+            flow_hour_branch=7,  # 未时
+        )
+        assert chart.liuri_liushi is not None
+        assert chart.liuri_liushi.liuri.lunar_day == 3
+        assert chart.liuri_liushi.liushi.hour_branch_idx == 7
+
+    def test_patterns_include_enhanced_checks(self):
+        chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                           GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+        names = {p.name for p in chart.patterns}
+        # 至少应检测到若干已知格局（吉或凶）
+        assert len(names) >= 1
+
+    def test_pattern_tiers_top20_are_canonical(self):
+        """Top-20 ZRULE_001–020 格局应标记为 canonical tier。"""
+        chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                           GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+        canonical_rules = {f"ZRULE_{i:03d}" for i in range(1, 21)}
+        for p in chart.patterns:
+            if p.rule_id in canonical_rules:
+                assert getattr(p, "tier", "") == "canonical", (
+                    f"{p.name} ({p.rule_id}) expected canonical, got {getattr(p, 'tier', None)}"
+                )
+
+    def test_pattern_tier_field_present(self):
+        chart = ziwei_full(GOLDEN_YEAR, GOLDEN_MONTH, GOLDEN_DAY,
+                           GOLDEN_HOUR, GOLDEN_MIN, GOLDEN_GENDER)
+        for p in chart.patterns:
+            assert getattr(p, "tier", None) in ("canonical", "extended", "heuristic")

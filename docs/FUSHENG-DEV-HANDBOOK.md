@@ -4,7 +4,8 @@
 |------|------|
 | **版本** | handbook-1.2 |
 | **日期** | 2026-07-13 |
-| **定位** | **日常开发只看本文** — 规矩、环境、插件、全部命令、PR 门禁 |
+| **定位** | **日常开发** — 规矩、环境、插件、PR 门禁（**§九人工 Gate 已废止**） |
+| **全自动权威** | [**FUSHENG-DEV-AUTOPILOT.md**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ **合并全文 + 双轨验收 + 无签字** |
 | **进度/问题** | [`FUSHENG-DEV-STATUS-2026-07-13.md`](FUSHENG-DEV-STATUS-2026-07-13.md) |
 | **前端组件细节** | [`guides/FUSHENG-FRONTEND-DEV.md`](guides/FUSHENG-FRONTEND-DEV.md)（§组件/母版；规矩以本文为准） |
 | **执行打勾** | [`plan/FUSHENG-EXECUTION-REMAINING.md`](plan/FUSHENG-EXECUTION-REMAINING.md) |
@@ -54,6 +55,7 @@ cd frontend && npm ci && npm run install:e2e
 | Python | **3.11+**（CI/pre-commit 对齐）；Windows 可用 `uv python install 3.11` |
 | Node | **18+**；`npm ci` 勿随意改 lock |
 | OpenAPI 变更 | 必须 `export-openapi` + `gen:types` 同 PR 提交 |
+| `data/` 静态 JSON | `data/` 在 `.gitignore`；CI 需要的 `glossary.json` / `cities.json` / `ground_truth_cases.json` 用 `git add -f` 跟踪 |
 | Git 提交 | 大 WIP 时分批提交；pre-commit 会 stash 未暂存文件导致 smoke 失败 |
 | Windows `npm ci` | 文件锁（esbuild EPERM）时勿强跑；用 `npm install --legacy-peer-deps` 修复，或逐条 `npm run type-check/test/build` |
 
@@ -386,6 +388,7 @@ npm run test:e2e -- fusheng-life-volumes      # remote 数据源
 
 ```text
 / 首页 → /profile 档案 → /new/bazi | /new/ziwei → /report（六卷+跋）
+         └→ /relation/new?type=couple|friend|… → /relation/:id（合盘·不进六卷）
 ```
 
 ### 6.2 前端文件
@@ -403,7 +406,8 @@ npm run test:e2e -- fusheng-life-volumes      # remote 数据源
 | 六卷拼装 | `frontend/src/utils/buildLifeVolumes.ts` |
 | FE-BE 适配 | `frontend/src/utils/feBeAdapter.ts` · `constants/feBeContract.ts` |
 | Token/样式 | `frontend/src/assets/variables.css` · `fusheng-page.css` |
-| API | `frontend/src/api/{bazi,ziwei,explain,life}.ts` |
+| API | `frontend/src/api/{bazi,ziwei,explain,life,relation}.ts` |
+| 关系合盘拼装 | `frontend/src/utils/buildRelationCompat.ts` · `views/RelationCompatView.vue`（待建） |
 | OpenAPI 类型 | `frontend/src/api/schema.d.ts`（`npm run gen:types` 生成） |
 
 ### 6.3 契约
@@ -413,7 +417,10 @@ npm run test:e2e -- fusheng-life-volumes      # remote 数据源
 | OpenAPI | `docs/openapi.json` |
 | 六卷 schema | `docs/contracts/life-volume.schema.json` |
 | explain 映射 | `docs/contracts/explain-section-map.json` |
-| FE-BE 15 题 | `docs/plan/FE-BE-DECISIONS.md` |
+| 关系合盘 schema | `docs/contracts/relation-compat.schema.json` |
+| 关系类型注册表 | `docs/contracts/relation-type-registry.json` |
+| FE-BE 决议 | `docs/plan/FE-BE-DECISIONS.md`（Q1–Q20） |
+| **关系合盘开发文档** | `docs/plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md` |
 
 ### 6.4 环境变量
 
@@ -434,6 +441,7 @@ npm run test:e2e -- fusheng-life-volumes      # remote 数据源
 | **改 UI/Token** | MASTERPLAN + skin-preview → `variables.css` → Vitest → rg 三门禁 → E2E anti-slop |
 | **改 API/类型** | 改 router/schema → `export_openapi` → `gen:types` → `test_openapi_sync` |
 | **改报告六卷** | `buildLifeVolumes.ts` + `ReportView.vue` → `test:e2e fusheng-report` |
+| **改关系合盘** | [`RELATION-COMPAT-MASTER-PLAN`](plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) → `services/relation_engine/` · `POST /relation/full` |
 | **合并 PR** | §5.6 全套 |
 | **W14 收官** | `auto_verify_w14` + `auto_verify_r103` + R107 签字 → [`EXECUTION-REMAINING`](plan/FUSHENG-EXECUTION-REMAINING.md) |
 | **Cursor 大改** | `@INTEGRATED` + 目标文件 + 「改完跑 frontend:test」 |
@@ -457,26 +465,12 @@ npm run test:e2e -- fusheng-life-volumes      # remote 数据源
 
 ---
 
-## 九、收官人工 Gate（自动化完成后）
+## 九、收官 Gate（已废止 → 见 AUTOPILOT）
 
-自动化轨已闭环（pass 4）。以下 **只能人工** 完成：
+> **2026-07-13 起**：R025/R060/R079/R104/R105/R107 人工签字 **全部废止**。  
+> 唯一发布依据：`python scripts/auto_verify_autopilot.py` → `docs/reports/autopilot-verify-latest.json` 中 `pass: true`。
 
-| ID | 动作 | 文档 |
-|----|------|------|
-| **R060** | 15 分钟试读：步骤 1–5、7、10 + 签字 | [`R060-trial-read-checklist`](reports/R060-trial-read-checklist-2026-07-12.md) |
-| **R079 Q5** | 防丑五问盲测 15 格正式签字 | [`R079-anti-slop`](reports/R079-anti-slop-five-questions-2026-07-12.md) |
-| **R025** | life-volume schema 三方共签 | [`R025-cosign`](reports/R025-life-volume-schema-cosign-draft-2026-07-12.md) |
-| **R104 #3** | 外发卷目截图给非开发者 | [`R104-m4-share`](reports/R104-m4-share-checklist-2026-07-12.md) |
-| **R105** | M5 能辩产品签字 | [`R105-m5-defend`](reports/R105-m5-defend-checklist-2026-07-12.md) |
-| **R107** | 负责人 W14 收官签字 | [`R107-signoff`](reports/R107-w14-signoff-draft-2026-07-12.md) |
-| **R108** | PR 附 `R108-release-notes-generated.md` + 截图 | `python scripts/generate_r108_release.py` |
-
-**试读快速路径（R060）：**
-
-```text
-/profile 建档 → /new/bazi 速览 → /new/ziwei 方盘 → /report 六卷
-卷五保持折叠 → 看跋 ≤3 行 → 主观评分 step 10
-```
+详见 [**FUSHENG-DEV-AUTOPILOT.md**](FUSHENG-DEV-AUTOPILOT.md) §三（A01–A59 双轨验收）。
 
 ---
 

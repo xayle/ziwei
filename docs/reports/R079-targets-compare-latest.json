@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-12T16:06:37.884Z",
+  "generated_at": "2026-07-12T18:44:38.497Z",
   "pass": true,
   "pairs": [
     {
@@ -12,7 +12,7 @@
       "liveMeta": {
         "width": 1120,
         "height": 800,
-        "bytes": 52094
+        "bytes": 52092
       },
       "frozenMeta": {
         "width": 1064,
@@ -31,7 +31,7 @@
       "liveMeta": {
         "width": 1120,
         "height": 800,
-        "bytes": 56377
+        "bytes": 56384
       },
       "frozenMeta": {
         "width": 1064,
@@ -50,14 +50,14 @@
       "liveMeta": {
         "width": 1120,
         "height": 800,
-        "bytes": 70182
+        "bytes": 69698
       },
       "frozenMeta": {
         "width": 1064,
         "height": 582,
         "bytes": 46696
       },
-      "sizeRatio": 1.503
+      "sizeRatio": 1.493
     }
   ]
 }

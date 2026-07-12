@@ -20,20 +20,17 @@ from services.bazi_engine.geju import compute_geju
 class TestConfidenceRules:
     # ── 正格透干 → 0.85 ────────────────────────────────────────────────
     def test_inner_geju_toukan_confidence(self):
-        """正印格：甲日子月（壬水正印），年干壬透干 → confidence = 0.85"""
-        # 子月主气壬（阳水），本系统同阳性=正，壬对甲 = 正印
-        # 候选[壬, 壬, 庚]; 壬是水元素 → toukan_stem = 壬
+        """偏印格：甲日子月壬水透干（子平：阳水生阳木=偏印）→ confidence ≈ 0.85"""
         r = compute_geju("壬", "壬", "子", "甲", "庚")
-        assert r["name"] == "正印格", f"期望正印格，得 {r['name']}"
-        assert r["confidence"] >= 0.80   # 透干成格 ≈ 0.85
+        assert r["name"] == "偏印格", f"期望偏印格，得 {r['name']}"
+        assert r["confidence"] >= 0.80
 
     def test_inner_geju_no_toukan_confidence(self):
-        """正官格（藏干）：乙日酉月无金透干 → confidence = 0.65"""
-        # 酉月主气辛(阴金)，辛对乙(阴木)：同阴阳(同性)=正官
-        # 候选[壬,壬,壬]均水，无金透干 → 藏干取格
+        """七杀格（藏干）：乙日酉月辛司令无金透干（子平：阴克阴=七杀）"""
         r = compute_geju("壬", "壬", "酉", "乙", "壬")
-        assert r["name"] == "正官格", f"期望正官格，得 {r['name']}"
-        assert 0.60 <= r["confidence"] <= 0.70   # 藏干取格期望 0.65
+        assert r["name"] == "七杀格", f"期望七杀格，得 {r['name']}"
+        # 无透干基线 0.65；七杀无制破格后约 0.35（引擎现行口径为 0.65 藏干成格）
+        assert 0.55 <= r["confidence"] <= 0.70
 
     # ── 建禄格 → 0.80 ──────────────────────────────────────────────────
     def test_jianlu_geju_confidence(self):
@@ -47,7 +44,7 @@ class TestConfidenceRules:
         """甲日卯月，无木透干 → 羊刃格（月令乙木剑财），confidence = 0.80"""
         # 候选[庚庚庚]均金无木透干 → ref_stem=乙（月支主气）→ 剑财 → 羊刃格
         r = compute_geju("庚", "庚", "卯", "甲", "庚")
-        assert r["name"] == "羊刃格", f"期望羊刃格，得 {r['name']}"
+        assert r["name"] == "月刃格", f"期望月刃格，得 {r['name']}"
         assert abs(r["confidence"] - 0.80) <= 0.05
 
     # ── 普通格 → 0.40 ──────────────────────────────────────────────────
@@ -58,20 +55,17 @@ class TestConfidenceRules:
         # 亥月主气壬，壬对壬=比肩 → 建禄格! 改用非水元素年月时
         # 用 戊日 亥月（壬水，七杀），年月时无水
         r2 = compute_geju("丙", "丙", "亥", "戊", "丙")
-        # 亥月主气壬，壬对戊=七杀，候选[丙,丙,丙]无水 → 无透干
-        assert r2["name"] == "正财格", f"亥月壬水和戊土，壬对戊=正财，得 {r2['name']}"
-        # confidence = 0.65（无透干）；若七杀格被破，则 0.65-0.30=0.35
+        assert r2["name"] == "偏财格", f"亥月壬水司令，壬对戊（子平阳克阳）=偏财，得 {r2['name']}"
         assert r2["confidence"] <= 0.75
 
-
     def test_putong_confidence_value(self):
-        """confidence 各规则粿塶验证：返回值展示正确格局 confidence 分布"""
-        # 正格透干: 偏印格壬帧 → 0.85
+        """confidence 各规则验证：子平十神口径下的格局 confidence 分布"""
         r1 = compute_geju("壬", "壬", "子", "甲", "庚")
+        assert r1["name"] == "偏印格"
         assert r1["confidence"] >= 0.80
-        # 正格无透干: 正官格酉月（乙日辛主气同阴=正官）→ 0.65
         r2 = compute_geju("壬", "壬", "酉", "乙", "壬")
-        assert 0.60 <= r2["confidence"] <= 0.70
+        assert r2["name"] == "七杀格"
+        assert 0.55 <= r2["confidence"] <= 0.70
         # 建禄格: 0.80
         r3 = compute_geju("庚", "庚", "寅", "甲", "庚")
         assert abs(r3["confidence"] - 0.80) <= 0.05

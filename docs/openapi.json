@@ -868,6 +868,22 @@
         "operationId": "api_bazi_full_api_v1_bazi_full_post",
         "parameters": [
           {
+            "name": "profile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "full",
+                "slim"
+              ],
+              "type": "string",
+              "description": "slim: 省略域分析长文与大运叙事",
+              "default": "full",
+              "title": "Profile"
+            },
+            "description": "slim: 省略域分析长文与大运叙事"
+          },
+          {
             "name": "X-Request-Id",
             "in": "header",
             "required": false,
@@ -1260,7 +1276,7 @@
           "bazi"
         ],
         "summary": "Api Compatibility",
-        "description": "A3 无状态八字合盘：传入两人出生时间，即时返回合盘分析，不存入 DB。\n\n算法：\n  五行互补 40分 + 地支无冲 40分 + 用神相助 20分",
+        "description": "A3 无状态八字合盘 [已弃用 → POST /api/v1/relation/full]",
         "operationId": "api_compatibility_api_v1_bazi_compatibility_post",
         "requestBody": {
           "content": {
@@ -1308,7 +1324,8 @@
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/v1/bazi/monthly": {
@@ -4986,10 +5003,10 @@
                   "type": "null"
                 }
               ],
-              "description": "分类过滤：格局/神煞/五行/十神/大运/其他",
+              "description": "分类过滤：格局/神煞/五行/十神/大运/紫微/其他",
               "title": "Category"
             },
-            "description": "分类过滤：格局/神煞/五行/十神/大运/其他"
+            "description": "分类过滤：格局/神煞/五行/十神/大运/紫微/其他"
           },
           {
             "name": "limit",
@@ -5406,6 +5423,120 @@
         }
       }
     },
+    "/api/v1/relation/full": {
+      "post": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "双人关系合盘（6 类关系 · 八字+紫微）",
+        "description": "权威合盘端点。按 `relation_type` 切换评分维度与宫位对。\n`person_*.case_id` 需登录；否则传 `birth_datetime`。",
+        "operationId": "post_relation_full_api_v1_relation_full_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationFullRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationFullResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/profile/{case_id}/summary": {
+      "get": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "个人档案首屏摘要",
+        "operationId": "get_profile_summary_api_v1_profile__case_id__summary_get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/api/v1/quickstart": {
       "post": {
         "tags": [
@@ -5772,8 +5903,8 @@
         "tags": [
           "紫微斗数"
         ],
-        "summary": "合盘六合度分析",
-        "description": "输入两人出生信息，返回紫微斗数合盘六合度分析。\n\n维度包括：命宫相合、五行相生、年支缘分、夸妻宫缘、阴阳互补。\n总分 100 分，输出各维度得分与详细说明。",
+        "summary": "合盘六合度分析 [已弃用 → POST /api/v1/relation/full]",
+        "description": "输入两人出生信息，返回紫微斗数合盘六合度分析 [已弃用]。",
         "operationId": "compute_compatibility_api_v1_ziwei_compatibility_post",
         "requestBody": {
           "content": {
@@ -5821,7 +5952,8 @@
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/v1/ziwei/multi_compat": {
@@ -9986,8 +10118,7 @@
         "tags": [
           "合婚"
         ],
-        "summary": "四柱合婚评分（§5.1）[已弃用，请改用 POST /full]",
-        "description": "四柱合婚综合评分（0-100 分）。\n\n评分维度：\n- 日主五行生克（40分）：产生/被产生 > 同行 > 克/被克\n- 年支合冲（30分）：六合 > 三合 > 无关系 > 六冲\n- 五行互补（20分）：双方五行分布互补程度\n- 天干合化（10分）：四柱天干间的五合/冲克数量",
+        "summary": "四柱合婚评分（§5.1）[已弃用，请改用 POST /relation/full]",
         "operationId": "get_bazi_compat_api_v1_compat_bazi_get",
         "deprecated": true,
         "parameters": [
@@ -10110,8 +10241,8 @@
         "tags": [
           "合婚"
         ],
-        "summary": "综合合婚——八字 + 紫微双引擎",
-        "description": "综合合婚接口，同时调用八字与紫微双引擎，返回合并评分。\n\n- 八字合婚：四柱生克冲合（最高100分）\n- 紫微合盘：命宫、五行、年支等维度（最高100分）\n- combined_score = 八字×0.5 + 紫微×0.5（若仅启用一项则权重100%）",
+        "summary": "综合合婚——八字 + 紫微双引擎 [已弃用 → POST /api/v1/relation/full]",
+        "description": "Deprecated: delegates to unified relation engine (couple).",
         "operationId": "post_compat_full_api_v1_compat_full_post",
         "requestBody": {
           "content": {
@@ -10159,7 +10290,8 @@
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
-        }
+        },
+        "deprecated": true
       }
     },
     "/api/v1/bazi/year-events": {
@@ -10901,6 +11033,40 @@
   },
   "components": {
     "schemas": {
+      "ActionItemModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "P0",
+                  "P1",
+                  "P2"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "ActionItemModel"
+      },
       "AdjustmentSummaryModel": {
         "properties": {
           "climate": {
@@ -14866,13 +15032,13 @@
           "include_bazi": {
             "type": "boolean",
             "title": "Include Bazi",
-            "description": "是否计算八字合婚",
+            "description": "是否计算八字",
             "default": true
           },
           "include_ziwei": {
             "type": "boolean",
             "title": "Include Ziwei",
-            "description": "是否计算紫微合盘",
+            "description": "是否计算紫微",
             "default": true
           }
         },
@@ -14908,7 +15074,7 @@
           "combined_score": {
             "type": "number",
             "title": "Combined Score",
-            "description": "八字与紫微综合加权分（0-100）",
+            "description": "综合加权分（0-100）",
             "default": 0.0
           },
           "summary": {
@@ -16129,6 +16295,70 @@
         ],
         "title": "DelegationResponse",
         "description": "权限委托响应"
+      },
+      "DimensionScoreModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "max_score": {
+            "type": "number",
+            "title": "Max Score"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight",
+            "default": 0.1
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "layer": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "cite",
+              "inference"
+            ],
+            "title": "Layer",
+            "default": "fact"
+          },
+          "engine": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bazi",
+                  "ziwei",
+                  "fusion"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "score",
+          "max_score",
+          "description"
+        ],
+        "title": "DimensionScoreModel"
       },
       "DirectionItemResponse": {
         "properties": {
@@ -18038,6 +18268,7 @@
               "五行",
               "十神",
               "大运",
+              "紫微",
               "其他"
             ],
             "title": "Category"
@@ -18656,6 +18887,25 @@
           "label"
         ],
         "title": "KeyYearPointModel"
+      },
+      "LayerBlockModel": {
+        "properties": {
+          "collapsed_default": {
+            "type": "boolean",
+            "title": "Collapsed Default",
+            "default": false
+          },
+          "sections": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Sections"
+          }
+        },
+        "type": "object",
+        "title": "LayerBlockModel"
       },
       "LifeArcModel": {
         "properties": {
@@ -21900,6 +22150,48 @@
         ],
         "title": "NotificationSubscriptionResponse"
       },
+      "PalaceCrossModel": {
+        "properties": {
+          "pair_id": {
+            "type": "string",
+            "title": "Pair Id"
+          },
+          "a_palace": {
+            "type": "string",
+            "title": "A Palace"
+          },
+          "b_palace": {
+            "type": "string",
+            "title": "B Palace"
+          },
+          "relation_tag": {
+            "type": "string",
+            "title": "Relation Tag"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "layer": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "inference"
+            ],
+            "title": "Layer",
+            "default": "fact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pair_id",
+          "a_palace",
+          "b_palace",
+          "relation_tag",
+          "summary"
+        ],
+        "title": "PalaceCrossModel"
+      },
       "PalaceItemModel": {
         "properties": {
           "palace_name": {
@@ -22588,12 +22880,12 @@
           "birth_datetime": {
             "type": "string",
             "title": "Birth Datetime",
-            "description": "本地出生时间，ISO 8601 格式（如 1990-06-15T10:30:00）"
+            "description": "本地出生时间，ISO 8601 格式"
           },
           "tz": {
             "type": "string",
             "title": "Tz",
-            "description": "时区，如 Asia/Shanghai",
+            "description": "时区",
             "default": "Asia/Shanghai"
           },
           "longitude": {
@@ -22601,7 +22893,7 @@
             "maximum": 180.0,
             "minimum": -180.0,
             "title": "Longitude",
-            "description": "出生地经度（东经正数）",
+            "description": "出生地经度",
             "default": 116.41
           },
           "gender": {
@@ -22620,15 +22912,76 @@
               }
             ],
             "title": "Liunian Year",
-            "description": "流年年份（紫微用，不填默认当年）"
+            "description": "流年年份（紫微用）"
           }
         },
         "type": "object",
         "required": [
           "birth_datetime"
         ],
-        "title": "PersonFullInput",
-        "description": "同时满足八字和紫微双引擎所需的人员输入。"
+        "title": "PersonFullInput"
+      },
+      "PersonRefModel": {
+        "properties": {
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "gender": {
+            "type": "string",
+            "title": "Gender"
+          },
+          "birth_solar": {
+            "type": "string",
+            "title": "Birth Solar"
+          },
+          "pillars_primary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Pillars Primary"
+          },
+          "life_palace_gz": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Life Palace Gz"
+          },
+          "wuxing_ju_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wuxing Ju Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "gender",
+          "birth_solar",
+          "pillars_primary"
+        ],
+        "title": "PersonRefModel"
       },
       "PersonSummary": {
         "properties": {
@@ -23157,6 +23510,103 @@
         ],
         "title": "PlanetDetail"
       },
+      "ProfileSummaryResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "profile-summary@1.0",
+            "title": "Schema Version",
+            "default": "profile-summary@1.0"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "pillars_primary": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Pillars Primary"
+          },
+          "geju_one_liner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geju One Liner"
+          },
+          "yongshen_favor": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Yongshen Favor"
+          },
+          "strength_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength Tier"
+          },
+          "ziwei_ming_one_liner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ziwei Ming One Liner"
+          },
+          "current_dayun": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Dayun"
+          },
+          "liunian_2026_tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liunian 2026 Tag"
+          },
+          "disclaimer_block": {
+            "$ref": "#/components/schemas/DisclaimerBlockModel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pillars_primary",
+          "disclaimer_block"
+        ],
+        "title": "ProfileSummaryResponse"
+      },
       "ProvenanceLayer": {
         "properties": {
           "layer": {
@@ -23518,7 +23968,8 @@
               "parent_child",
               "colleague",
               "friend",
-              "supervisor_subordinate"
+              "supervisor_subordinate",
+              "business_partner"
             ],
             "title": "Relation Type",
             "description": "Relationship template to apply for compatibility",
@@ -23549,6 +24000,19 @@
             },
             "type": "array",
             "title": "Snapshots Created"
+          },
+          "relation_full": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relation Full",
+            "description": "relation-compat@1.0 完整响应；权威合盘见 POST /api/v1/relation/full"
           }
         },
         "type": "object",
@@ -23558,6 +24022,272 @@
           "result"
         ],
         "title": "RelationComputeResponse"
+      },
+      "RelationFullOptions": {
+        "properties": {
+          "include_bazi": {
+            "type": "boolean",
+            "title": "Include Bazi",
+            "default": true
+          },
+          "include_ziwei": {
+            "type": "boolean",
+            "title": "Include Ziwei",
+            "default": true
+          },
+          "timeline_years": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Timeline Years"
+          },
+          "liunian_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liunian Year"
+          }
+        },
+        "type": "object",
+        "title": "RelationFullOptions"
+      },
+      "RelationFullRequest": {
+        "properties": {
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type",
+            "default": "couple"
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id"
+          },
+          "person_a": {
+            "$ref": "#/components/schemas/RelationPersonInput"
+          },
+          "person_b": {
+            "$ref": "#/components/schemas/RelationPersonInput"
+          },
+          "options": {
+            "$ref": "#/components/schemas/RelationFullOptions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person_a",
+          "person_b"
+        ],
+        "title": "RelationFullRequest"
+      },
+      "RelationFullResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "relation-compat@1.0",
+            "title": "Schema Version",
+            "default": "relation-compat@1.0"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Id"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type"
+          },
+          "relation_type_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relation Type Label"
+          },
+          "person_a": {
+            "$ref": "#/components/schemas/PersonRefModel"
+          },
+          "person_b": {
+            "$ref": "#/components/schemas/PersonRefModel"
+          },
+          "combined_score": {
+            "type": "number",
+            "title": "Combined Score"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "上上",
+                  "上",
+                  "中",
+                  "下",
+                  "下下",
+                  "N/A"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "summary_cards": {
+            "items": {
+              "$ref": "#/components/schemas/SummaryCardModel"
+            },
+            "type": "array",
+            "title": "Summary Cards"
+          },
+          "disclaimer_block": {
+            "$ref": "#/components/schemas/DisclaimerBlockModel"
+          },
+          "layers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LayerBlockModel"
+            },
+            "type": "object",
+            "title": "Layers"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/DimensionScoreModel"
+            },
+            "type": "array",
+            "title": "Dimensions"
+          },
+          "bazi": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bazi"
+          },
+          "ziwei": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ziwei"
+          },
+          "palace_cross": {
+            "items": {
+              "$ref": "#/components/schemas/PalaceCrossModel"
+            },
+            "type": "array",
+            "title": "Palace Cross"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineNodeModel"
+            },
+            "type": "array",
+            "title": "Timeline"
+          },
+          "action_items": {
+            "items": {
+              "$ref": "#/components/schemas/ActionItemModel"
+            },
+            "type": "array",
+            "title": "Action Items"
+          },
+          "tensions": {
+            "items": {
+              "$ref": "#/components/schemas/TensionNoteModel"
+            },
+            "type": "array",
+            "title": "Tensions"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "relation_type",
+          "person_a",
+          "person_b",
+          "combined_score",
+          "summary",
+          "disclaimer_block",
+          "layers",
+          "dimensions",
+          "timeline"
+        ],
+        "title": "RelationFullResponse"
       },
       "RelationItemModel": {
         "properties": {
@@ -23617,6 +24347,79 @@
           "summary"
         ],
         "title": "RelationItemModel"
+      },
+      "RelationPersonInput": {
+        "properties": {
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id",
+            "description": "Optional case UUID; requires auth"
+          },
+          "birth_datetime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birth Datetime",
+            "description": "Local birth time ISO 8601"
+          },
+          "tz": {
+            "type": "string",
+            "title": "Tz",
+            "default": "Asia/Shanghai"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "default": 116.41
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "gender": {
+            "type": "string",
+            "title": "Gender",
+            "description": "male/female/男/女",
+            "default": "male"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "Display name"
+          }
+        },
+        "type": "object",
+        "title": "RelationPersonInput"
       },
       "RelationPoint": {
         "properties": {
@@ -23708,7 +24511,8 @@
               "parent_child",
               "colleague",
               "friend",
-              "supervisor_subordinate"
+              "supervisor_subordinate",
+              "business_partner"
             ],
             "title": "Relation Type"
           },
@@ -26136,6 +26940,35 @@
         ],
         "title": "StructuredTextResponse"
       },
+      "SummaryCardModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "support",
+              "conflict",
+              "neutral",
+              "action"
+            ],
+            "title": "Tone"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tone",
+          "text"
+        ],
+        "title": "SummaryCardModel"
+      },
       "TarotCard": {
         "properties": {
           "num": {
@@ -26238,6 +27071,74 @@
         },
         "type": "object",
         "title": "TenGodsModel"
+      },
+      "TensionNoteModel": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "TensionNoteModel"
+      },
+      "TimelineNodeModel": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "risk_level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "低",
+                  "中",
+                  "高"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risk Level"
+          },
+          "month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "label",
+          "summary"
+        ],
+        "title": "TimelineNodeModel"
       },
       "TimelinePointModel": {
         "properties": {

@@ -42,7 +42,6 @@ def _verify_direct(dt_str: str, lon: float) -> dict:
     用于参数化批量测试避免 429。
     """
     from verify import verify_full
-    from services.bazi_full_service import compute_wuxing, compute_strength
     dt = datetime.fromisoformat(dt_str).replace(tzinfo=ZoneInfo("Asia/Shanghai"))
     result = verify_full(dt, lon=lon, use_solar=False, mode="single")
     rp = result.pillars_primary
@@ -80,8 +79,8 @@ class TestGolden01:
             assert p[pillar]["stem"] == stem, f"#{pillar} stem mismatch: {p[pillar]['stem']} != {stem}"
             assert p[pillar]["branch"] == branch, f"#{pillar} branch mismatch"
 
-    def test_wuxing_fire_earth_dominant(self, client):
-        """fire + earth 五行得分合计 > 60%"""
+    def test_wuxing_water_earth_lead(self, client):
+        """water + earth 加权得分合计 > 50%（B-P0-02 新引擎口径）"""
         data = _verify(client, self.DT, self.LON)
         wx = data.get("wuxing_score")
         if wx is None:
@@ -89,26 +88,19 @@ class TestGolden01:
         total = sum(wx.values())
         if total == 0:
             pytest.skip("wuxing_score 全零，跳过")
-        fire_earth = wx.get("fire", 0) + wx.get("earth", 0)
-        assert fire_earth / total > 0.60, (
-            f"fire+earth={fire_earth:.2f}/total={total:.2f}={fire_earth/total:.1%} 未超60%"
+        water_earth = wx.get("water", 0) + wx.get("earth", 0)
+        assert water_earth / total > 0.50, (
+            f"water+earth={water_earth:.2f}/total={total:.2f}={water_earth/total:.1%} 未超50%"
         )
 
     def test_day_master_tier_weak(self, client):
-        """日主强弱层级应含"弱"字（偏弱/弱/极弱）
-        
-        Note: ENGINE_V2=false 时旧引擎强弱阈值精度有限，可能返回'balanced'。
-        M2 集成新 strength.py 后此断言应全通过。
-        """
+        """日主强弱层级应为偏弱/极弱（新 strength.py 0-100 口径）"""
         data = _verify(client, self.DT, self.LON)
         strength = data.get("day_master_strength")
         if strength is None:
             pytest.skip("day_master_strength 未返回")
         tier = strength.get("tier", "")
-        # 接受"弱"/"偏弱"/"极弱"/"balanced"/"中和"（旧引擎阈值宽松，中和=balanced）
-        assert tier in ("偏弱", "弱", "极弱", "balanced", "中和"), (
-            f"tier={tier!r} 不在预期强弱层级中"
-        )
+        assert tier in ("偏弱", "极弱"), f"tier={tier!r} 不在预期偏弱层级中"
 
     def test_yongshen_favor_metal_water(self, client):
         """用神应含 metal 或 water"""

@@ -28,6 +28,23 @@ test.describe('八字紫微页面打磨', () => {
     expect(overflow).toBeLessThanOrEqual(2)
   })
 
+  test('桌面八字页无页级横滚', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await fillMinimalProfile(page)
+    await page.getByTestId('profile-bazi').click()
+    await expect(page.getByTestId('bazi-layer-structure')).toBeVisible({ timeout: 15_000 })
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(overflow).toBeLessThanOrEqual(2)
+  })
+
+  test('完整档案八字速览缺失展示少于6处', async ({ page }) => {
+    await fillMinimalProfile(page)
+    await page.getByTestId('profile-bazi').click()
+    await expect(page.getByTestId('bazi-layer-structure')).toBeVisible({ timeout: 15_000 })
+    const missingInTable = await page.getByTestId('bazi-layer-structure').locator('.bazi-table').getByText('缺失').count()
+    expect(missingInTable).toBeLessThan(6)
+  })
+
   test('紫微速览首屏有方盘 Hero', async ({ page }) => {
     await fillMinimalProfile(page)
     await gotoApp(page, 'new/ziwei')
@@ -97,7 +114,10 @@ test.describe('八字紫微页面打磨', () => {
   test('紫微速览首屏可见 missing_fields 与 provenance', async ({ page }) => {
     await fillMinimalProfile(page)
     await gotoApp(page, 'new/ziwei')
-    await expect(page.getByTestId('ziwei-trust-overview').getByTestId('missing-fields')).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByTestId('ziwei-trust-overview').getByTestId('provenance-section')).toBeVisible()
+    const trust = page.getByTestId('ziwei-trust-overview')
+    await expect(trust).toBeVisible({ timeout: 15_000 })
+    await trust.locator('summary').click()
+    await expect(trust.getByTestId('missing-fields')).toBeVisible()
+    await expect(trust.getByTestId('provenance-section')).toBeVisible()
   })
 })

@@ -177,7 +177,6 @@ def compute_marriage(
     if gender == "male":
         # 夫星=财星五行（正财/偏财）→通过日主推
         partner_shishen_cn = "财星（正财/偏财）"
-        cai_wuxing_candidates = ["earth", "metal", "water"]  # 简化
         partner_wuxing = _ELEMENT_CN.get(yongshen_favor[0] if yongshen_favor else "earth", "土")
     else:
         partner_shishen_cn = "夫星（正官/七杀）"
@@ -239,7 +238,7 @@ def compute_marriage(
     for dyun in dayun_list[:5]:  # 前5步大运
         gz = dyun.get("ganzhi") or ((dyun.get("stem") or "") + (dyun.get("branch") or ""))
         branch = dyun.get("branch", "")
-        stem = dyun.get("stem", "")
+        dyun.get("stem", "")
         # 大支五行与配偶星五行同气或相生 → 婚期窗口
         br_el = _BRANCH_ELEMENT.get(branch, "")
         partner_el_en = _PARTNER_WUXING_EN.get(partner_wuxing, "")
@@ -289,7 +288,7 @@ def compute_marriage(
     _win_str = (
         ("、".join(marriage_windows[:2]) + "为最佳婚恋时机，") if marriage_windows else "大运顺运期为婚恋高峰期，"
     )
-    interp = (
+    (
         f"婚姻综合评分 {marriage_score} 分，桃花指数【{peach_blossom}】，配偶五行属【{partner_wuxing}】。"
         f"{partner_profile}"
         f"建议在 {optimal_marriage_age} 之间考虑确定关系，{_win_str}"

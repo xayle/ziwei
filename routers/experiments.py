@@ -80,7 +80,7 @@ def _build_traffic_split(variants: list[VariantDef]) -> dict:
     total_weight = sum(v.weight for v in variants)
     split: dict = {}
     remainder = 100
-    for i, v in enumerate(variants[:-1]):
+    for _i, v in enumerate(variants[:-1]):
         pct = round(v.weight / total_weight * 100)
         split[v.name] = pct
         remainder -= pct
@@ -93,7 +93,7 @@ def _assign_variant(variants: list[VariantDef], traffic_split: dict, session_id:
     确定性地将 session_id 分配到变体（哈希取模 + 流量分割）。
     相同 session_id 始终获得相同变体。
     """
-    hash_val = int(hashlib.md5(session_id.encode()).hexdigest(), 16) % 100
+    hash_val = int(hashlib.md5(session_id.encode(), usedforsecurity=False).hexdigest(), 16) % 100
     cumulative = 0
     for variant in variants:
         cumulative += traffic_split.get(variant.name, 0)

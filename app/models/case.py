@@ -25,7 +25,25 @@ class Case(SQLModel, table=True):
     birth_dt: str | None = None
     city: str | None = None
     lon: float
+    current_city: str | None = None
+    current_province: str | None = None
+    current_lon: float | None = None
+    current_tz: str | None = None
+    calendar_mode: str = "gregorian"
+    is_leap_month: bool = False
+    birth_time_precision: str = "exact"
+    unknown_time_fallback: str = "midday"
     solar_time_enabled: bool = False
+    year_divide: str = Field(default="lichun", description="紫微年界：lichun | normal")
+    day_divide: str = Field(default="solar_next", description="晚子换日：solar_next | forward | current")
+    zi_day_rule: str = Field(default="sxtwl", description="八字子时换日：sxtwl | early_zi_prev_day | early_zi_same_day")
+    ziwei_brightness_method: str = Field(default="standard", description="紫微亮度：standard | zhongzhou | mod1 | mod2")
+    ziwei_youbi_method: str = Field(default="month", description="紫微右弼：month | hour")
+    ziwei_sihua_method: str = Field(default="quanshu", description="生年四化：quanshu | zhongzhou")
+    ziwei_liunian_sihua_method: str = Field(default="year_stem", description="流年四化：year_stem | life_palace_stem")
+    ziwei_kuiyue_method: str = Field(default="standard", description="魁钺安法")
+    ziwei_tianma_method: str = Field(default="year", description="天马安法：year | month")
+    ziwei_template_version: str = Field(default="standard", description="紫微模板：standard | pro | simple")
     notes: str | None = None
     tags: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -33,7 +51,7 @@ class Case(SQLModel, table=True):
     last_snapshot_at: datetime | None = None
     api_version_last: str | None = None
     rule_version_last: str | None = None
-    schema_version: str | None = "case@5.0"
+    schema_version: str | None = "case@5.2"
     deleted_at: datetime | None = None
     # B6: 隐私分享 token
     share_token: str | None = Field(default=None, index=True)  # UUID 一次性分享凭证

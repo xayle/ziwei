@@ -114,6 +114,8 @@ class CompatibilityResult:
     conflict_points: list[str] = field(default_factory=list)
     complement_points: list[str] = field(default_factory=list)
     palace_compare: list[dict] = field(default_factory=list)
+    disclaimer: str = "合盘分析基于规则化 heuristic 模型，仅供参考，不构成决策依据。"
+    layer: str = "heuristic"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -185,15 +187,15 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
     # ── 维度 3：年支缘分（20 分）────────────────────────────
     yb_a = chart_a.lunar.year_branch_idx
     yb_b = chart_b.lunar.year_branch_idx
-    if _is_liuhe(yb_a, yb_b):
+    if yb_a == yb_b:
+        s3 = 12
+        d3 = f"同生肖（{BRANCHES[yb_a]}年），背景相似有共鸣"
+    elif _is_liuhe(yb_a, yb_b):
         s3 = 20
         d3 = f"两人年支六合（{BRANCHES[yb_a]}年、{BRANCHES[yb_b]}年），生肖天作一对，情投意合，缘份深。"
     elif _is_sanhe(yb_a, yb_b):
         s3 = 16
         d3 = f"生肖三合（{BRANCHES[yb_a]}、{BRANCHES[yb_b]}），志趣相投，合作顺畅。"
-    elif yb_a == yb_b:
-        s3 = 12
-        d3 = f"同生肖（{BRANCHES[yb_a]}年），背景相似有共鸣，也易有暗中竞争。"
     elif _is_chong(yb_a, yb_b):
         s3 = 4
         d3 = f"年支相冲（{BRANCHES[yb_a]}与{BRANCHES[yb_b]}），生肖相克，易有明争暗斗，需耐心沟通。"
@@ -293,6 +295,8 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
         conflict_points=_collect_conflicts(chart_a, chart_b),
         complement_points=_collect_complements(chart_a, chart_b),
         palace_compare=_build_palace_compare(chart_a, chart_b),
+        disclaimer="合盘分析基于规则化 heuristic 模型，仅供参考，不构成决策依据。",
+        layer="heuristic",
     )
 
 
@@ -339,6 +343,37 @@ def _collect_harmony(ca, cb) -> list[str]:
     return pts
 
 
+def _collect_cross_flying_ji(chart_from, chart_to, side_label: str) -> list[str]:
+    """飞星化忌落至对方命宫地支所在宫位，或飞化冲克该宫。"""
+    flying = getattr(chart_from, "flying", None)
+    if not flying:
+        return []
+
+    pts: list[str] = []
+    target_branch = chart_to.life_palace_branch
+    target_palaces = [p.name for p in getattr(chart_from, "palaces", []) or [] if p.branch_idx == target_branch]
+    if not target_palaces:
+        return pts
+
+    for fp in getattr(flying, "palaces", []) or []:
+        palace_name = getattr(fp, "palace_name", "")
+        flying_out = getattr(fp, "flying_out", {}) or {}
+        ji_land = flying_out.get("化忌", "")
+        for tp in target_palaces:
+            if f"({tp})" in ji_land or tp in ji_land:
+                pts.append(
+                    f"{side_label}{palace_name}宫干化忌飞入同乙方命宫地支之{tp}：" "情款或承诺易有亏欠感，宜坦诚沟通"
+                )
+
+    chonged = getattr(flying, "chonged", None) or {}
+    for palace_name in target_palaces:
+        for desc in chonged.get(palace_name, []):
+            if "化忌" in desc:
+                pts.append(f"{side_label}飞星{desc}（对应乙方命宫地支）：冲克明显，需主动化解")
+
+    return pts
+
+
 def _collect_conflicts(ca, cb) -> list[str]:
     """冲克矛盾点列表。"""
     pts: list[str] = []
@@ -364,9 +399,8 @@ def _collect_conflicts(ca, cb) -> list[str]:
     if hw_a and _is_chong(hw_a.branch_idx, lb_b):
         pts.append("甲方夫妻宫与乙方命宫相冲：婚缘有阻滞，需主动化解")
 
-    # 化忌飞对方命宫
-    for fp in (getattr(ca, "flying", None) and []) or []:
-        pass  # 有 flying 属性时可扩展
+    pts.extend(_collect_cross_flying_ji(ca, cb, "甲方"))
+    pts.extend(_collect_cross_flying_ji(cb, ca, "乙方"))
 
     return pts
 

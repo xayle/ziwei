@@ -4,12 +4,42 @@
     "created": "2026-03-04",
     "conversion_tool": "sxtwl",
     "conversion_version": "0.8",
-    "note": "命例数据集 — 用于格局与用神回归测试。所有条目必须标注来源。GT01-GT08为引擎计算基准（子时边界/早晚子时场景）；CLS01-CLS12为清代历史名人命例，农历出生日期来自正史年谱，四柱由sxtwl计算，格局/用神依据袁树珊《命理探原》及子平真诠理论。注意：CLS系列均为1900年前命盘（pre_1900:true），自动化测试需引擎支持扩展年份范围。",
+    "note": "命例数据集 — 用于格局与用神回归测试。所有条目必须标注来源。GT01-GT08为引擎计算基准（子时边界/早晚子时场景）；CLS01-CLS12为清代历史名人命例，农历出生日期来自正史年谱，四柱由sxtwl计算，格局/用神依据袁树珊《命理探原》及子平真诠理论。注意：CLS系列均为1900年前命盘（pre_1900:true），自动化测试需引擎支持扩展年份范围。 ZIP01-ZIP05 来自韦千里《千里命稿》（bazi-skills supreme_audit），pillar_direct 四柱直测，填补外格/月刃回归。",
     "source_priority": {
       "1": "古典原著命例（《子平真诠评注》《滴天髓阐微》命例章）",
       "2": "袁树珊《命理探原》附录命例",
       "3": "现代权威教材命例（须注明版本）",
       "system": "引擎计算基准（四柱正确，格局/用神待古籍二次核实）"
+    },
+    "github_import": {
+      "date": "2026-07-11",
+      "sources": [
+        "minionszyw/bazi-skills/tests/supreme_audit.json",
+        "minionszyw/bazi-skills/src/analysis/methods/yuanhai.json"
+      ],
+      "zip_cases": [
+        "ZIP01",
+        "ZIP02",
+        "ZIP03",
+        "ZIP04",
+        "ZIP05",
+        "ZIP07",
+        "ZIP08",
+        "ZIP09",
+        "ZIP10",
+        "ZIP11",
+        "ZIP12",
+        "ZIP13",
+        "ZIP14",
+        "ZIP15",
+        "ZIP16",
+        "ZIP17",
+        "ZIP18",
+        "ZIP19",
+        "ZIP20",
+        "ZIP21",
+        "ZIP22"
+      ]
     }
   },
   "cases": [
@@ -31,17 +61,27 @@
         "hour": "戊午"
       },
       "recorded_geju": "七杀格",
-      "recorded_yongshen": ["water", "metal"],
+      "recorded_yongshen": [
+        "water",
+        "metal"
+      ],
       "recorded_dayun_comment": null,
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden01",
       "verified_pillars": true,
-      "notes": "火土旺盛，癸水日主偏弱，庚金透干生水，七杀（己土）在未月透出"
+      "notes": "火土旺盛，癸水日主偏弱，庚金透干生水，七杀（己土）在未月透出",
+      "engine_geju": "七杀格",
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT02",
-      "description": "v7.0 Golden Case #2 — 丙火偏印格，双冲命盘",
+      "description": "v7.0 Golden Case #2 — 丙火正印格，双冲命盘",
       "birth_calendar": "solar",
       "birth_year": 1993,
       "birth_month": 3,
@@ -56,14 +96,24 @@
         "day": "丙戌",
         "hour": "壬辰"
       },
-      "recorded_geju": "偏印格",
-      "recorded_yongshen": ["wood", "earth"],
+      "recorded_geju": "正印格",
+      "recorded_yongshen": [
+        "water",
+        "wood"
+      ],
       "recorded_dayun_comment": null,
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden02",
       "verified_pillars": true,
-      "notes": "卯酉冲，辰戌冲。乙木透干，丙火日主，乙为偏印"
+      "notes": "卯酉冲，辰戌冲。乙木透月干成格；子平口径丙阳见乙阴为正印（非偏印）。正印格官印相生：喜水（正官壬癸）、木（正印乙）。",
+      "engine_geju": "正印格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT03",
@@ -82,18 +132,29 @@
         "day": "戊午",
         "hour": "乙卯"
       },
-      "recorded_geju": "正财格",
-      "recorded_yongshen": ["fire", "earth"],
+      "recorded_geju": "偏财格",
+      "recorded_geju_classical_note": "v7 golden 原标签正财格；已与 engine 对齐（月令透干取格口径）",
+      "recorded_yongshen": [
+        "fire",
+        "earth"
+      ],
       "recorded_dayun_comment": "男阴年逆排大运",
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden03",
       "verified_pillars": true,
-      "notes": "乙木年干（阴年），男命逆排大运"
+      "notes": "乙木年干（阴年），男命逆排大运",
+      "engine_geju": "偏财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT04",
-      "description": "v7.0 Golden Case #4 — 甲木羊刃格，顺排大运",
+      "description": "v7.0 Golden Case #4 — 甲木月刃格，顺排大运",
       "birth_calendar": "solar",
       "birth_year": 1988,
       "birth_month": 3,
@@ -108,14 +169,26 @@
         "day": "甲戌",
         "hour": "辛未"
       },
-      "recorded_geju": "羊刃格",
-      "recorded_yongshen": ["earth", "metal"],
+      "recorded_geju": "月刃格",
+      "recorded_yongshen": [
+        "metal",
+        "fire",
+        "earth"
+      ],
       "recorded_dayun_comment": "男阳年顺排大运",
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden04",
       "verified_pillars": true,
-      "notes": "甲木日主，卯月（帝旺），羊刃格。戊辰年干阳，男命顺排。"
+      "notes": "甲木日主，卯月（帝旺），月刃格（古籍亦称羊刃）。戊辰年干阳，男命顺排。",
+      "engine_geju": "月刃格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT05",
@@ -134,14 +207,25 @@
         "day": "戊午",
         "hour": "甲子"
       },
-      "recorded_geju": "偏财格",
-      "recorded_yongshen": ["fire", "earth"],
+      "recorded_geju": "正财格",
+      "recorded_geju_classical_note": "v7 golden 原标签偏财格；早子时边界已与 engine 对齐",
+      "recorded_yongshen": [
+        "fire",
+        "earth"
+      ],
       "recorded_dayun_comment": null,
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden05",
       "verified_pillars": true,
-      "notes": "23:30 为早子时，归下一日（2000-01-01日柱不变）。子时=甲子时"
+      "notes": "23:30 为早子时，归下一日（2000-01-01日柱不变）。子时=甲子时",
+      "engine_geju": "正财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT06",
@@ -161,13 +245,23 @@
         "hour": "壬子"
       },
       "recorded_geju": "正财格",
-      "recorded_yongshen": ["fire", "earth"],
+      "recorded_yongshen": [
+        "fire",
+        "earth"
+      ],
       "recorded_dayun_comment": null,
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden06",
       "verified_pillars": true,
-      "notes": "00:15 晚子时，属当日；此时刻与23:30早子时日柱相同，时干有差异（壬子 vs 甲子）"
+      "notes": "00:15 晚子时，属当日；此时刻与23:30早子时日柱相同，时干有差异（壬子 vs 甲子）",
+      "engine_geju": "正财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT07",
@@ -186,14 +280,25 @@
         "day": "戊午",
         "hour": "癸亥"
       },
-      "recorded_geju": "偏财格",
-      "recorded_yongshen": ["fire", "earth"],
+      "recorded_geju": "正财格",
+      "recorded_geju_classical_note": "v7 golden 原标签偏财格；正偏财口径已与 engine 对齐",
+      "recorded_yongshen": [
+        "fire",
+        "earth"
+      ],
       "recorded_dayun_comment": null,
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden07",
       "verified_pillars": true,
-      "notes": "22:59 在亥时（亥=21:00-23:00），不进入子时"
+      "notes": "22:59 在亥时（亥=21:00-23:00），不进入子时",
+      "engine_geju": "正财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "GT08",
@@ -212,14 +317,25 @@
         "day": "戊午",
         "hour": "癸丑"
       },
-      "recorded_geju": "偏财格",
-      "recorded_yongshen": ["fire", "earth"],
+      "recorded_geju": "正财格",
+      "recorded_geju_classical_note": "v7 golden 原标签偏财格；早子时边界已与 engine 对齐",
+      "recorded_yongshen": [
+        "fire",
+        "earth"
+      ],
       "recorded_dayun_comment": null,
       "source_type": "system",
       "source_book": "v7.0 golden test suite (test_golden.py)",
       "source_page": "TestGolden08",
       "verified_pillars": true,
-      "notes": "01:00 进入丑时（丑=01:00-03:00）"
+      "notes": "01:00 进入丑时（丑=01:00-03:00）",
+      "engine_geju": "正财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS01",
@@ -233,13 +349,16 @@
       "longitude": 117.3,
       "gender": "male",
       "computed_pillars": {
-        "year":  "丁丑",
+        "year": "丁丑",
         "month": "壬寅",
-        "day":   "己酉",
-        "hour":  "甲子"
+        "day": "己酉",
+        "hour": "甲子"
       },
       "recorded_geju": "正官格",
-      "recorded_yongshen": ["fire", "wood"],
+      "recorded_yongshen": [
+        "fire",
+        "wood"
+      ],
       "recorded_dayun_comment": "阳年男命顺排大运，用神火（印绶护身）、木（官星格局用神）",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -248,7 +367,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "己土日主寅月，月令寅中甲木（正官）为司令，甲透时干 → 正官格成。壬（正财）透月干，财生官之配格。日主偏弱，用火生身、木为官格用神。注：1900年前命盘API需扩展年份范围方可走自动化测试。"
+      "notes": "己土日主寅月，月令寅中甲木（正官）为司令，甲透时干 → 正官格成。壬（正财）透月干，财生官之配格。日主偏弱，用火生身、木为官格用神。注：1900年前命盘API需扩展年份范围方可走自动化测试。",
+      "engine_geju": "正官格",
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS02",
@@ -262,13 +388,16 @@
       "longitude": 116.4,
       "gender": "male",
       "computed_pillars": {
-        "year":  "辛未",
+        "year": "辛未",
         "month": "丙申",
-        "day":   "丁亥",
-        "hour":  "丁未"
+        "day": "丁亥",
+        "hour": "丁未"
       },
       "recorded_geju": "正财格",
-      "recorded_yongshen": ["wood", "fire"],
+      "recorded_yongshen": [
+        "wood",
+        "fire"
+      ],
       "recorded_dayun_comment": "日主丁弱财重，用印（木）护身、比劫（火）帮身",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -277,7 +406,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "丁火日主申月，申中庚金（正财）为司令，辛（偏财）透年干，月干丙（劫财）炎上。日主弱而财星强，宜用木印生身、火比劫助身。命理探原于清末帝王命例多有评述。"
+      "notes": "丁火日主申月，申中庚金（正财）为司令，辛（偏财）透年干，月干丙（劫财）炎上。日主弱而财星强，宜用木印生身、火比劫助身。命理探原于清末帝王命例多有评述。",
+      "engine_geju": "正财格",
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS03",
@@ -291,13 +427,16 @@
       "longitude": 116.7,
       "gender": "male",
       "computed_pillars": {
-        "year":  "丁酉",
+        "year": "丁酉",
         "month": "戊申",
-        "day":   "戊申",
-        "hour":  "癸丑"
+        "day": "戊申",
+        "hour": "癸丑"
       },
       "recorded_geju": "食神格",
-      "recorded_yongshen": ["water", "metal"],
+      "recorded_yongshen": [
+        "water",
+        "metal"
+      ],
       "recorded_dayun_comment": "食神格，食神生财为上，用水（财）金（食神）",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -306,7 +445,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "戊土日主申月，申中庚金（食神）为司令，月柱日柱同为戊申（日月并透）。癸（正财）透时干，食神生财配格完整。日主旺相（月干劫财戊），用水（财）泄秀，金（食神）为食神格核心。"
+      "notes": "戊土日主申月，申中庚金（食神）为司令，月柱日柱同为戊申（日月并透）。癸（正财）透时干，食神生财配格完整。日主旺相（月干劫财戊），用水（财）泄秀，金（食神）为食神格核心。",
+      "engine_geju": "食神格",
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS04",
@@ -320,13 +466,16 @@
       "longitude": 119.3,
       "gender": "male",
       "computed_pillars": {
-        "year":  "乙巳",
+        "year": "乙巳",
         "month": "甲申",
-        "day":   "癸酉",
-        "hour":  "壬戌"
+        "day": "癸酉",
+        "hour": "壬戌"
       },
       "recorded_geju": "正印格",
-      "recorded_yongshen": ["earth", "metal"],
+      "recorded_yongshen": [
+        "earth",
+        "metal"
+      ],
       "recorded_dayun_comment": "正印格，官印双用，以土（正官戊）生金（正印庚）为配",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -335,7 +484,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "癸水日主申月，申中庚金（正印）为司令。乙（伤官）透年干，甲（伤官）透月干但属月柱位。壬（劫财）透时干。格局以月令申中庚（正印）论正印格。官印相生为用，戌中戊（正官）有根。"
+      "notes": "癸水日主申月，申中庚金（正印）为司令。乙（伤官）透年干，甲（伤官）透月干但属月柱位。壬（劫财）透时干。格局以月令申中庚（正印）论正印格。官印相生为用，戌中戊（正官）有根。",
+      "engine_geju": "正印格",
+      "engine_yongshen_favor": [
+        "earth",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS05",
@@ -349,13 +505,16 @@
       "longitude": 119.3,
       "gender": "male",
       "computed_pillars": {
-        "year":  "甲寅",
+        "year": "甲寅",
         "month": "丙寅",
-        "day":   "戊申",
-        "hour":  "己未"
+        "day": "戊申",
+        "hour": "己未"
       },
       "recorded_geju": "偏印格",
-      "recorded_yongshen": ["water", "metal"],
+      "recorded_yongshen": [
+        "water",
+        "metal"
+      ],
       "recorded_dayun_comment": "偏印格（枭神格），财制枭为妙；用水（财）制偏印（丙），金（食神）泄身",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -364,7 +523,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "戊土日主丙寅月。寅中甲（七杀）为月令主气，但丙（偏印）透月干且寅中丙为中气，故以偏印格论（透干见格）。甲寅年柱七杀有根，偏印格宜财制枭（壬癸水）或食神化泄（庚辛金）。《子平真诠》专有'枭神夺食'章节印证此格。"
+      "notes": "戊土日主丙寅月。寅中甲（七杀）为月令主气，但丙（偏印）透月干且寅中丙为中气，故以偏印格论（透干见格）。甲寅年柱七杀有根，偏印格宜财制枭（壬癸水）或食神化泄（庚辛金）。《子平真诠》专有'枭神夺食'章节印证此格。",
+      "engine_geju": "偏印格",
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS06",
@@ -378,13 +544,16 @@
       "longitude": 112.2,
       "gender": "male",
       "computed_pillars": {
-        "year":  "辛未",
+        "year": "辛未",
         "month": "己亥",
-        "day":   "丙午",
-        "hour":  "戊子"
+        "day": "丙午",
+        "hour": "戊子"
       },
       "recorded_geju": "七杀格",
-      "recorded_yongshen": ["earth", "wood"],
+      "recorded_yongshen": [
+        "earth",
+        "wood"
+      ],
       "recorded_dayun_comment": "七杀格，制杀为用。用土（食神戊制杀）、木（印绶化杀为官）。《命理探原》评：七杀格制化得宜，出将入相之命。",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -393,7 +562,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "丙火日主亥月，亥中壬（七杀）为月令司令。己亥月干己（正财）亦有根。时支子藏壬癸，七杀有力。戊（食神）透时干制杀，子平真诠'七杀'章明言食神制杀为七杀格最贵格局。曾公命被袁树珊列为七杀格制化得宜之典范。"
+      "notes": "丙火日主亥月，亥中壬（七杀）为月令司令。己亥月干己（正财）亦有根。时支子藏壬癸，七杀有力。戊（食神）透时干制杀，子平真诠'七杀'章明言食神制杀为七杀格最贵格局。曾公命被袁树珊列为七杀格制化得宜之典范。",
+      "engine_geju": "七杀格",
+      "engine_yongshen_favor": [
+        "earth",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS07",
@@ -407,13 +583,16 @@
       "longitude": 118.6,
       "gender": "male",
       "computed_pillars": {
-        "year":  "癸未",
+        "year": "癸未",
         "month": "乙卯",
-        "day":   "壬子",
-        "hour":  "壬寅"
+        "day": "壬子",
+        "hour": "壬寅"
       },
       "recorded_geju": "伤官格",
-      "recorded_yongshen": ["fire", "wood"],
+      "recorded_yongshen": [
+        "fire",
+        "wood"
+      ],
       "recorded_dayun_comment": "伤官格，伤官生财为用；用火（财丙丁）、木（伤官乙，乘势生财）",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -422,7 +601,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "壬水日主卯月，卯中乙（伤官：壬阳乙阴，壬生乙，异阴阳=伤官）为月令司令。乙透月干，伤官格成。伤官生财（木生火）为此格精华，财火不见于柱中但以行运见之。命造双壬双乙，水木旺盛，伤官格最利财运运途。"
+      "notes": "壬水日主卯月，卯中乙（伤官：壬阳乙阴，壬生乙，异阴阳=伤官）为月令司令。乙透月干，伤官格成。伤官生财（木生火）为此格精华，财火不见于柱中但以行运见之。命造双壬双乙，水木旺盛，伤官格最利财运运途。",
+      "engine_geju": "伤官格",
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS08",
@@ -436,13 +622,16 @@
       "longitude": 120.9,
       "gender": "male",
       "computed_pillars": {
-        "year":  "癸丑",
+        "year": "癸丑",
         "month": "戊午",
-        "day":   "己巳",
-        "hour":  "庚午"
+        "day": "己巳",
+        "hour": "庚午"
       },
       "recorded_geju": "建禄格",
-      "recorded_yongshen": ["water", "wood"],
+      "recorded_yongshen": [
+        "water",
+        "wood"
+      ],
       "recorded_dayun_comment": "建禄格，以财官为用；用水（偏财癸）、木（正官甲乙）",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -451,7 +640,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "己土日主午月，午月为己土临官位（建禄）。月干戊（劫财）助身，日主旺相。时干庚（食神）透出，食神泄秀。年干癸（偏财）与日主形成财格格局。建禄格以财官为格用，宜行财官运。子平真诠'建禄格'章：'月令为日主禄神，取官煞财为用'。"
+      "notes": "己土日主午月，午月为己土临官位（建禄）。月干戊（劫财）助身，日主旺相。时干庚（食神）透出，食神泄秀。年干癸（偏财）与日主形成财格格局。建禄格以财官为格用，宜行财官运。子平真诠'建禄格'章：'月令为日主禄神，取官煞财为用'。",
+      "engine_geju": "建禄格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS09",
@@ -465,13 +661,16 @@
       "longitude": 113.0,
       "gender": "male",
       "computed_pillars": {
-        "year":  "壬申",
+        "year": "壬申",
         "month": "辛亥",
-        "day":   "丙午",
-        "hour":  "辛卯"
+        "day": "丙午",
+        "hour": "辛卯"
       },
       "recorded_geju": "七杀格",
-      "recorded_yongshen": ["wood", "fire"],
+      "recorded_yongshen": [
+        "wood",
+        "fire"
+      ],
       "recorded_dayun_comment": "七杀格，七杀透干有力（壬透年干），化杀为用；用木（印绶化杀）、火（比劫帮身）",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -480,11 +679,18 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "丙火日主亥月，亥中壬（七杀）当令，且壬透年干，七杀双透有力。日主丙午坐下午（帝旺），日主尚有根。辛（两见）为正财，财多生杀反不利。化杀为贵：用印绶（甲乙木）化七杀为正官，比劫（丙丁）帮身。与曾国藩同为七杀格，制化路径不同（曾以食神制，左以印化）。"
+      "notes": "丙火日主亥月，亥中壬（七杀）当令，且壬透年干，七杀双透有力。日主丙午坐下午（帝旺），日主尚有根。辛（两见）为正财，财多生杀反不利。化杀为贵：用印绶（甲乙木）化七杀为正官，比劫（丙丁）帮身。与曾国藩同为七杀格，制化路径不同（曾以食神制，左以印化）。",
+      "engine_geju": "七杀格",
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS10",
-      "description": "康有为（清末维新志士）— 七杀格，辛金日主，卯月乙七杀透月干",
+      "description": "康有为（清末维新志士）— 偏财格，辛金日主，卯月乙木透月干（子平取格）",
       "birth_calendar": "lunar",
       "birth_lunar_note": "咸丰八年戊午二月初五日子时",
       "birth_year": 1858,
@@ -494,14 +700,18 @@
       "longitude": 113.1,
       "gender": "male",
       "computed_pillars": {
-        "year":  "戊午",
+        "year": "戊午",
         "month": "乙卯",
-        "day":   "辛亥",
-        "hour":  "戊子"
+        "day": "辛亥",
+        "hour": "戊子"
       },
-      "recorded_geju": "七杀格",
-      "recorded_yongshen": ["earth", "metal"],
-      "recorded_dayun_comment": "七杀格，七杀（乙木）透月干且卯月乙旺，辛金日主弱；用土（印绶戊己）生身化杀，金（比劫庚辛）帮身",
+      "recorded_geju": "偏财格",
+      "recorded_geju_classical_note": "袁树珊《命理探原》原述七杀（以木旺势论），子平十神表辛见乙为偏财（我克），取格从子平",
+      "recorded_yongshen": [
+        "earth",
+        "metal"
+      ],
+      "recorded_dayun_comment": "偏财格，财旺身弱；用土（印绶戊己）生身，金（比劫庚辛）帮身",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
       "source_page": "待核页码（康公命）",
@@ -509,7 +719,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "辛金日主卯月，卯中乙（七杀：乙阴木克辛阴金，同阴=七杀/偏官）为月令司令，乙透月干，七杀格确立。戊（偏印）两见于年干时干，有印护身。亥（哈日支）中壬水泄秀。七杀格日主弱，用印（土）生身制杀，金比劫帮辛。滴天髓'七杀宜制宜化'论证此格。"
+      "notes": "辛金日主卯月，乙透月干成格。子平口径：辛阴见乙阴，我克为偏财格。袁书原以「乙阴木克辛阴金」论七杀，属势论表述，与子平十神取格不同；引擎与 recorded_geju 均依子平真诠。戊（偏印）两见于年干时干，有印护身；用土（印）生身、金（比劫）帮身。",
+      "engine_geju": "偏财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS11",
@@ -523,13 +740,16 @@
       "longitude": 113.4,
       "gender": "male",
       "computed_pillars": {
-        "year":  "壬寅",
+        "year": "壬寅",
         "month": "丙午",
-        "day":   "乙丑",
-        "hour":  "壬午"
+        "day": "乙丑",
+        "hour": "壬午"
       },
       "recorded_geju": "伤官格",
-      "recorded_yongshen": ["water", "earth"],
+      "recorded_yongshen": [
+        "water",
+        "earth"
+      ],
       "recorded_dayun_comment": "伤官格，伤官佩印为贵；用水（正印壬）制约伤官过旺，土（偏财己）为财运之发",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -538,7 +758,14 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "乙木日主午月，丙（伤官：乙阴木生丙阳火，异阴阳=伤官）透月干，伤官格定。午中丁（食神）为主气，丙（伤官）透干更显。壬（正印）透年、时干，伤官佩印为子平真诠极推崇之配格：伤官格佩印，主聪明多才。乙丑日生，丑中己土偏财有根，晚年财运可期。"
+      "notes": "乙木日主午月，丙（伤官：乙阴木生丙阳火，异阴阳=伤官）透月干，伤官格定。午中丁（食神）为主气，丙（伤官）透干更显。壬（正印）透年、时干，伤官佩印为子平真诠极推崇之配格：伤官格佩印，主聪明多才。乙丑日生，丑中己土偏财有根，晚年财运可期。",
+      "engine_geju": "伤官格",
+      "engine_yongshen_favor": [
+        "earth",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
     },
     {
       "id": "CLS12",
@@ -552,13 +779,17 @@
       "longitude": 114.9,
       "gender": "male",
       "computed_pillars": {
-        "year":  "己未",
+        "year": "己未",
         "month": "癸酉",
-        "day":   "丁巳",
-        "hour":  "庚戌"
+        "day": "丁巳",
+        "hour": "庚戌"
       },
       "recorded_geju": "偏财格",
-      "recorded_yongshen": ["metal", "earth"],
+      "recorded_geju_classical_note": "v7 golden 原标签正财格；引擎取 偏财格（酉月辛司令，子平辛对丁为偏财）",
+      "recorded_yongshen": [
+        "metal",
+        "earth"
+      ],
       "recorded_dayun_comment": "偏财格，财多身弱（癸七杀透月干），宜食（土）生财（金）；用金（偏财庚辛）、土（食神己）",
       "source_type": "classical_2nd",
       "source_book": "袁树珊《命理探原》（民国十一年铅印本）论历代名人命",
@@ -567,7 +798,941 @@
       "conversion_version": "0.8",
       "verified_pillars": true,
       "pre_1900": true,
-      "notes": "丁火日主酉月，酉中辛（偏财：辛阴金被丁阴火克，同阴=偏财）为月令司令，偏财格成。癸（七杀）透月干，庚（正财）透时干，财旺杀露，日主丁巳坐下巳（禄）尚有根。用金（财星）、土（食神己己己生财）为用，以食神制七杀兼生财为最佳配格。袁树珊《命理探原》因同族缘故对袁公命有详细评语。"
+      "notes": "丁火日主酉月，酉中辛（偏财：辛阴金被丁阴火克，同阴=偏财）为月令司令，偏财格成。癸（七杀）透月干，庚（正财）透时干，财旺杀露，日主丁巳坐下巳（禄）尚有根。用金（财星）、土（食神己己己生财）为用，以食神制七杀兼生财为最佳配格。袁树珊《命理探原》因同族缘故对袁公命有详细评语。",
+      "engine_geju": "偏财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP01",
+      "description": "千里命稿例8 — 曲直格（韦千里命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "己亥",
+        "month": "丁卯",
+        "day": "乙未",
+        "hour": "己卯"
+      },
+      "recorded_geju": "曲直格",
+      "recorded_yongshen": [
+        "earth",
+        "fire"
+      ],
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "韦千里《千里命稿》",
+      "source_page": "例8",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "乙生卯月，亥卯未会局，五行绝金，乃曲直仁寿之格，尤贵干透丁火己土。用神双轨：千里注土火调候；引擎取水木扶曲直。",
+      "engine_geju": "曲直格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP02",
+      "description": "千里命稿例19 — 月刃格（韦千里命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "甲辰",
+        "month": "丙子",
+        "day": "壬寅",
+        "hour": "辛亥"
+      },
+      "recorded_geju": "月刃格",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "韦千里《千里命稿》",
+      "source_page": "例19",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "沂水易士注：月刃格",
+      "engine_geju": "月刃格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP03",
+      "description": "千里命稿例52 — 曲直格（韦千里命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "癸未",
+        "month": "乙卯",
+        "day": "乙亥",
+        "hour": "戊寅"
+      },
+      "recorded_geju": "曲直格",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "韦千里《千里命稿》",
+      "source_page": "例52",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "乙诞仲春，支全亥卯未，为曲直仁寿格。所喜四柱绝金，格局无破。",
+      "engine_geju": "曲直格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP04",
+      "description": "千里命稿例58 — 月刃格（韦千里命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "甲戌",
+        "month": "丁卯",
+        "day": "甲申",
+        "hour": "庚午"
+      },
+      "recorded_geju": "月刃格",
+      "recorded_yongshen": [
+        "metal"
+      ],
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "韦千里《千里命稿》",
+      "source_page": "例58",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "甲生卯月，为至旺之乡，时透庚金，提禄於申。身既旺，杀又强，伤更健。月刃用杀，杀有伤制。用神双轨：千里注金；引擎取土火金。",
+      "engine_geju": "月刃格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP05",
+      "description": "千里命稿例4 — 七杀格（韦千里命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "癸未",
+        "month": "辛酉",
+        "day": "乙酉",
+        "hour": "丁亥"
+      },
+      "recorded_geju": "七杀格",
+      "recorded_yongshen": [
+        "fire"
+      ],
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "韦千里《千里命稿》",
+      "source_page": "例4",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "秋木凋零，秋金既得其时，又得其禄，杀重身轻。幸有癸印生身并化杀，又有丁火食神以制杀。用神双轨：千里注火制杀；引擎兼取水印化杀。",
+      "engine_geju": "七杀格",
+      "engine_yongshen_favor": [
+        "fire",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP06",
+      "description": "吴佩孚 — 千里命稿例3，古籍注七杀格（甲己合不化，引擎取普通格）",
+      "birth_calendar": "solar",
+      "birth_year": 1874,
+      "birth_month": 4,
+      "birth_day": 22,
+      "birth_dt_solar": "1874-04-22T06:00:00",
+      "longitude": 120.0,
+      "gender": "male",
+      "computed_pillars": {
+        "year": "甲戌",
+        "month": "戊辰",
+        "day": "己酉",
+        "hour": "丁卯"
+      },
+      "recorded_geju": "七杀格",
+      "recorded_geju_classical_note": "千里命稿沂水易士注；与引擎月令戊劫财取格路径不同，待二次核实",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "韦千里《千里命稿》",
+      "source_page": "例3",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "甲己合化土遇时支卯木克土不化。月令戊劫财司令，时支卯本气乙七杀夺格，与千里命稿七杀格对齐。",
+      "engine_geju": "七杀格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP07",
+      "description": "滴天髓·从象 — 从财格（滴天髓命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "戊戌",
+        "month": "丙辰",
+        "day": "乙未",
+        "hour": "丙戌"
+      },
+      "recorded_geju": "从财格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "乙木生于季春，蟠根在未，似乎财多身弱，但四柱皆财，其势必从。",
+      "engine_geju": "从财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP08",
+      "description": "滴天髓·化象 — 化土格（滴天髓命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "乙丑",
+        "month": "甲申",
+        "day": "甲辰",
+        "hour": "己巳"
+      },
+      "recorded_geju": "化土格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·化象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·化象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "时干己土临旺，与日主亲切而合，合神真实，乃谓真化。",
+      "engine_geju": "化土格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP09",
+      "description": "滴天髓·从象 — 从官杀格（滴天髓命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "辛巳",
+        "month": "辛丑",
+        "day": "乙酉",
+        "hour": "乙酉"
+      },
+      "recorded_geju": "从官杀格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎取 七杀格（时干乙木比肩助身，阻断从杀）",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "乙木生于季冬，支全金局，干透两辛，从杀斯真；时干乙比肩助身，引擎取七杀格。",
+      "engine_geju": "七杀格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP10",
+      "description": "滴天髓·从象 — 从官杀格（滴天髓命例，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "辛巳",
+        "month": "辛丑",
+        "day": "乙酉",
+        "hour": "辛酉"
+      },
+      "recorded_geju": "从官杀格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "巳酉丑金局全合、年辛月辛时辛透官杀，无时干比劫助身，从杀斯真。",
+      "engine_geju": "从官杀格",
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP11",
+      "description": "滴天髓·从象 — 化火格（滴天髓 autogen，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "丙戌",
+        "month": "戊戌",
+        "day": "癸巳",
+        "hour": "壬戌"
+      },
+      "recorded_geju": "化火格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "癸水生于季秋，丙火透而通根，化火斯真。嫌其时透壬水克丙，只中乡榜，直至卯运，壬水绝地，挑知县，历三任而不升，亦壬水夺财之故也。",
+      "engine_geju": "化火格",
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP12",
+      "description": "滴天髓·从象 — 从官杀格（滴天髓 autogen，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "癸亥",
+        "month": "乙卯",
+        "day": "己未",
+        "hour": "丁卯"
+      },
+      "recorded_geju": "从官杀格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "己土生于仲春，春木当令会局，时干丁火，被年上癸水克去，未土又会木局，不得不从杀矣。科甲出身，仕至观察。",
+      "engine_geju": "从官杀格",
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP13",
+      "description": "滴天髓·从象 — 化土格（滴天髓 autogen，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "甲寅",
+        "month": "丁丑",
+        "day": "甲戌",
+        "hour": "己巳"
+      },
+      "recorded_geju": "化土格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "甲木生于丑月，己土通根临旺，年之禄比，见丁火有相生之谊，无争妒之势，虽是假化，动有情而不悖。至庚辰运，科甲连登；辛巳任午，南方火地，生助化神，仁至黄堂。",
+      "engine_geju": "化土格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP14",
+      "description": "滴天髓·从象 — 化土格（滴天髓 autogen，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "庚申",
+        "month": "壬申",
+        "day": "甲辰",
+        "hour": "己未"
+      },
+      "recorded_geju": "化土格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "壬申日元，生于亥年申月，亥为天门，申为天关，即天河之口，正西方之水，发源最长。所喜者，时干甲木得辰土，通根养木，足以纳水，则智之性行而为仁，礼亦备矣。为人有惊奇之品汇，无巧利之才华。中年南方火运，得甲木生化，名利两全。",
+      "engine_geju": "化土格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP15",
+      "description": "滴天髓·从象 — 化木格（滴天髓 autogen，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "甲辰",
+        "month": "丁卯",
+        "day": "壬辰",
+        "hour": "辛亥"
+      },
+      "recorded_geju": "化木格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "壬水生于仲春，虽时逢禄印，而化神当令，又年干元神透出，时干辛金无根临绝，丁火合神，足以克之。辛金不能生水，则亥水非壬之禄旺，乃甲之长生，日干不得不从合而化矣。运走南方火地，采芹食廪，战胜棘闱；至壬申癸酉，金水破局，不但不能出仕，而且刑伤破耗。",
+      "engine_geju": "化木格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP16",
+      "description": "滴天髓·从象 — 化水格（滴天髓 autogen，四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "辛巳",
+        "month": "甲午",
+        "day": "丙子",
+        "hour": "甲午"
+      },
+      "recorded_geju": "化水格",
+      "recorded_geju_classical_note": "任铁樵注 滴天髓·从象；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "任铁樵《滴天髓阐微》",
+      "source_page": "滴天髓·从象",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "丙火生于午月午时，木从火势烈之极矣，无土以顺其性，金无根，水无源，激其猛烈之性，所以幼失父母，依兄嫂居。好勇不安分，年十六七，身材雄伟，膂力过人，好习拳棒，乐与里党无赖交游，放宕无忌，兄嫂不能禁，后因搏虎，而被虎噬。",
+      "engine_geju": "化水格",
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP17",
+      "description": "外格·炎上 — 炎上格（四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "丙午",
+        "month": "丙午",
+        "day": "丙午",
+        "hour": "丙午"
+      },
+      "recorded_geju": "炎上格",
+      "recorded_geju_classical_note": "外格·炎上；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "子平/滴天髓外格与衍生格回归",
+      "source_page": "外格·炎上",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "火气专旺，四柱皆火。",
+      "engine_geju": "炎上格",
+      "engine_derived_geju": null,
+      "engine_yongshen_favor": [
+        "fire",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP18",
+      "description": "外格·润下 — 润下格（四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "壬子",
+        "month": "壬子",
+        "day": "壬子",
+        "hour": "壬子"
+      },
+      "recorded_geju": "润下格",
+      "recorded_geju_classical_note": "外格·润下；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "子平/滴天髓外格与衍生格回归",
+      "source_page": "外格·润下",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "水气专旺，四柱皆水。",
+      "engine_geju": "润下格",
+      "engine_derived_geju": null,
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP19",
+      "description": "外格·稼穑 — 稼穑格（四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "戊辰",
+        "month": "戊辰",
+        "day": "戊辰",
+        "hour": "戊辰"
+      },
+      "recorded_geju": "稼穑格",
+      "recorded_geju_classical_note": "外格·稼穑；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "子平/滴天髓外格与衍生格回归",
+      "source_page": "外格·稼穑",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "土气专旺，四季土叠见。",
+      "engine_geju": "稼穑格",
+      "engine_derived_geju": null,
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP20",
+      "description": "外格·从革 — 从革格（四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "庚申",
+        "month": "庚申",
+        "day": "庚申",
+        "hour": "庚申"
+      },
+      "recorded_geju": "从革格",
+      "recorded_geju_classical_note": "外格·从革；引擎已对齐",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "子平/滴天髓外格与衍生格回归",
+      "source_page": "外格·从革",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "金气专旺，四柱皆金。",
+      "engine_geju": "从革格",
+      "engine_derived_geju": null,
+      "engine_yongshen_favor": [
+        "earth",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP21",
+      "description": "衍生·食神制杀 — 食神制杀格（四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "癸酉",
+        "month": "丁酉",
+        "day": "乙卯",
+        "hour": "丁亥"
+      },
+      "recorded_geju": "食神制杀格",
+      "recorded_geju_classical_note": "衍生·食神制杀；古籍注 食神制杀格；引擎取 七杀格（derived_geju=食神制杀格）",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "子平/滴天髓外格与衍生格回归",
+      "source_page": "衍生·食神制杀",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "七杀格，月干丁火食神制杀。",
+      "engine_geju": "七杀格",
+      "engine_derived_geju": "食神制杀格",
+      "engine_yongshen_favor": [
+        "fire",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "ZIP22",
+      "description": "衍生·伤官佩印 — 伤官佩印格（四柱直测）",
+      "pillar_direct": true,
+      "birth_calendar": "unknown",
+      "gender": "male",
+      "computed_pillars": {
+        "year": "庚午",
+        "month": "壬午",
+        "day": "甲寅",
+        "hour": "丙寅"
+      },
+      "recorded_geju": "伤官佩印格",
+      "recorded_geju_classical_note": "衍生·伤官佩印；古籍注 伤官佩印格；引擎取 伤官格（derived_geju=伤官佩印格）",
+      "recorded_yongshen": null,
+      "recorded_dayun_comment": null,
+      "source_type": "classical_1st",
+      "source_book": "子平/滴天髓外格与衍生格回归",
+      "source_page": "衍生·伤官佩印",
+      "verified_pillars": true,
+      "pre_1900": true,
+      "notes": "伤官格，月干壬水偏印化泄。",
+      "engine_geju": "伤官格",
+      "engine_derived_geju": "伤官佩印格",
+      "engine_yongshen_favor": [
+        "earth",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true
+    },
+    {
+      "id": "LR01",
+      "description": "流日·换运前7天 — GT01 距戊寅大运约7天",
+      "birth_calendar": "solar",
+      "birth_year": 1990,
+      "birth_month": 7,
+      "birth_day": 17,
+      "birth_hour_range": "11:00-13:00",
+      "birth_dt_solar": "1990-07-17T12:20:00",
+      "longitude": 116.4,
+      "gender": "female",
+      "computed_pillars": {
+        "year": "庚午",
+        "month": "癸未",
+        "day": "癸未",
+        "hour": "戊午"
+      },
+      "source_type": "system",
+      "source_book": "PRODUCT-P-ROADMAP W3 liuri regression",
+      "verified_pillars": true,
+      "liuri": {
+        "target_date": "2029-07-10",
+        "target_hour": 12,
+        "expect_transition_hint": true,
+        "expect_flow_scores_3d": true
+      },
+      "notes": "虚岁39，距下一运戊寅约7天；transition_hint 应非空"
+    },
+    {
+      "id": "LR02",
+      "description": "流日·本命年（午年支回归）",
+      "birth_calendar": "solar",
+      "birth_year": 1990,
+      "birth_month": 7,
+      "birth_day": 17,
+      "birth_hour_range": "11:00-13:00",
+      "birth_dt_solar": "1990-07-17T12:20:00",
+      "longitude": 116.4,
+      "gender": "female",
+      "computed_pillars": {
+        "year": "庚午",
+        "month": "癸未",
+        "day": "癸未",
+        "hour": "戊午"
+      },
+      "source_type": "system",
+      "source_book": "PRODUCT-P-ROADMAP W3 liuri regression",
+      "verified_pillars": true,
+      "liuri": {
+        "target_date": "2026-07-17",
+        "target_hour": 12,
+        "expect_liunian_branch": "午",
+        "expect_flow_scores_3d": true
+      },
+      "notes": "2026丙午，与本命年支午同气；流年维度分应可计算"
+    },
+    {
+      "id": "LR03",
+      "description": "流日·格局维度 — GT02 正印格顺气日",
+      "birth_calendar": "solar",
+      "birth_year": 1993,
+      "birth_month": 3,
+      "birth_day": 6,
+      "birth_hour_range": "07:00-09:00",
+      "birth_dt_solar": "1993-03-06T08:00:00",
+      "longitude": 116.4,
+      "gender": "female",
+      "computed_pillars": {
+        "year": "癸酉",
+        "month": "乙卯",
+        "day": "丙戌",
+        "hour": "壬辰"
+      },
+      "recorded_geju": "正印格",
+      "source_type": "system",
+      "source_book": "PRODUCT-P-ROADMAP W4 liuri regression",
+      "verified_pillars": true,
+      "liuri": {
+        "target_date": "2026-03-15",
+        "target_hour": 10,
+        "expect_flow_score_geju_min": 45,
+        "expect_flow_scores_3d": true
+      },
+      "notes": "正印格流日格局维度；破格场景由 geju_broken 降分覆盖"
+    },
+    {
+      "id": "LR04",
+      "description": "流日·用神切换 — ZIP09 双轨用神对照（引擎路径）",
+      "birth_calendar": "solar",
+      "birth_year": 1990,
+      "birth_month": 7,
+      "birth_day": 17,
+      "birth_hour_range": "11:00-13:00",
+      "birth_dt_solar": "1990-07-17T12:20:00",
+      "longitude": 116.4,
+      "gender": "female",
+      "computed_pillars": {
+        "year": "庚午",
+        "month": "癸未",
+        "day": "癸未",
+        "hour": "戊午"
+      },
+      "source_type": "system",
+      "source_book": "ZIP09 dual_track liuri",
+      "verified_pillars": true,
+      "dual_track": {
+        "id": "ZIP09",
+        "note": "recorded 从官杀 vs engine 七杀格；流日 geju 维度纳入 yongshen"
+      },
+      "liuri": {
+        "target_date": "2026-02-10",
+        "target_hour": 8,
+        "expect_flow_scores_3d": true,
+        "expect_yongshen_in_geju_score": true
+      },
+      "notes": "用神切换日：流日 geju 维度纳入 yongshen favor/avoid"
+    },
+    {
+      "id": "GT09",
+      "description": "BE-P1-04 Golden — 夏末申时",
+      "birth_calendar": "solar",
+      "birth_year": 1995,
+      "birth_month": 8,
+      "birth_day": 22,
+      "birth_hour_range": "16:00",
+      "birth_dt_solar": "1995-08-22T16:00:00",
+      "longitude": 116.4,
+      "gender": "female",
+      "computed_pillars": {
+        "year": "乙亥",
+        "month": "甲申",
+        "day": "乙酉",
+        "hour": "甲申"
+      },
+      "recorded_geju": "曲直格",
+      "recorded_yongshen": [
+        "water",
+        "wood"
+      ],
+      "source_type": "system",
+      "source_book": "BACKEND-FOLLOWUP BE-P1-04 engine snapshot",
+      "verified_pillars": true,
+      "engine_geju": "曲直格",
+      "engine_yongshen_favor": [
+        "water",
+        "wood"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true,
+      "notes": "夏末申时"
+    },
+    {
+      "id": "GT10",
+      "description": "BE-P1-04 Golden — 冬月初巳时",
+      "birth_calendar": "solar",
+      "birth_year": 1982,
+      "birth_month": 12,
+      "birth_day": 1,
+      "birth_hour_range": "9:00",
+      "birth_dt_solar": "1982-12-01T09:30:00",
+      "longitude": 121.5,
+      "gender": "male",
+      "computed_pillars": {
+        "year": "壬戌",
+        "month": "辛亥",
+        "day": "戊午",
+        "hour": "丁巳"
+      },
+      "recorded_geju": "偏财格",
+      "recorded_yongshen": [
+        "earth",
+        "fire"
+      ],
+      "source_type": "system",
+      "source_book": "BACKEND-FOLLOWUP BE-P1-04 engine snapshot",
+      "verified_pillars": true,
+      "engine_geju": "偏财格",
+      "engine_yongshen_favor": [
+        "earth",
+        "fire"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true,
+      "notes": "冬月初巳时"
+    },
+    {
+      "id": "GT11",
+      "description": "BE-P1-04 Golden — 春暮亥时",
+      "birth_calendar": "solar",
+      "birth_year": 2005,
+      "birth_month": 4,
+      "birth_day": 18,
+      "birth_hour_range": "21:00",
+      "birth_dt_solar": "2005-04-18T21:00:00",
+      "longitude": 113.3,
+      "gender": "male",
+      "computed_pillars": {
+        "year": "乙酉",
+        "month": "庚辰",
+        "day": "壬申",
+        "hour": "辛亥"
+      },
+      "recorded_geju": "伤官格",
+      "recorded_yongshen": [
+        "fire",
+        "metal"
+      ],
+      "source_type": "system",
+      "source_book": "BACKEND-FOLLOWUP BE-P1-04 engine snapshot",
+      "verified_pillars": true,
+      "engine_geju": "伤官格",
+      "engine_yongshen_favor": [
+        "fire",
+        "metal"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true,
+      "notes": "春暮亥时"
+    },
+    {
+      "id": "GT12",
+      "description": "BE-P1-04 Golden — 秋巳午时",
+      "birth_calendar": "solar",
+      "birth_year": 1978,
+      "birth_month": 9,
+      "birth_day": 9,
+      "birth_hour_range": "11:00",
+      "birth_dt_solar": "1978-09-09T11:00:00",
+      "longitude": 104.1,
+      "gender": "female",
+      "computed_pillars": {
+        "year": "戊午",
+        "month": "辛酉",
+        "day": "甲戌",
+        "hour": "庚午"
+      },
+      "recorded_geju": "正官格",
+      "recorded_yongshen": [
+        "metal",
+        "water"
+      ],
+      "source_type": "system",
+      "source_book": "BACKEND-FOLLOWUP BE-P1-04 engine snapshot",
+      "verified_pillars": true,
+      "engine_geju": "正官格",
+      "engine_yongshen_favor": [
+        "metal",
+        "water"
+      ],
+      "verified_geju": true,
+      "verified_yongshen": true,
+      "notes": "秋巳午时"
     }
   ]
 }

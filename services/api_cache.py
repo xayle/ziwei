@@ -29,7 +29,7 @@ def get_cache_key(prefix: str, *args, **kwargs) -> str:
             serializable.append(f"{k}:{v!s}")
 
     canonical_str = json.dumps(serializable, sort_keys=True)
-    digest = hashlib.md5(canonical_str.encode("utf-8")).hexdigest()
+    digest = hashlib.md5(canonical_str.encode("utf-8"), usedforsecurity=False).hexdigest()
     return f"{prefix}:{digest}"
 
 

@@ -38,6 +38,90 @@ _ELEM_TO_CN: dict[str, str] = {"wood": "木", "fire": "火", "earth": "土", "me
 _CN_TO_ELEM: dict[str, str] = {v: k for k, v in _ELEM_TO_CN.items()}
 
 
+_CN_TO_ELEM: dict[str, str] = {v: k for k, v in _ELEM_TO_CN.items()}
+
+# 天干五合 → 化气五行
+_STEM_WUHE: dict[frozenset[str], str] = {
+    frozenset({"甲", "己"}): "earth",
+    frozenset({"乙", "庚"}): "metal",
+    frozenset({"丙", "辛"}): "water",
+    frozenset({"丁", "壬"}): "wood",
+    frozenset({"戊", "癸"}): "fire",
+}
+
+# 三会方局（方气）
+_SANHUI: list[tuple[tuple[str, str, str], str]] = [
+    (("寅", "卯", "辰"), "wood"),
+    (("巳", "午", "未"), "fire"),
+    (("申", "酉", "戌"), "metal"),
+    (("亥", "子", "丑"), "water"),
+]
+
+
+def get_stem_combinations(
+    year_stem: str,
+    month_stem: str,
+    day_stem: str,
+    hour_stem: str,
+    *,
+    month_branch: str = "",
+) -> list[dict]:
+    """
+    四柱天干五合检测（合化成功/失败简化判定）。
+
+    合化成功：月支主气五行与化神一致，或化神在命局透干/得地。
+    """
+    from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS, STEM_ELEMENT
+
+    pillar_map = {
+        "year": year_stem,
+        "month": month_stem,
+        "day": day_stem,
+        "hour": hour_stem,
+    }
+    pairs = [
+        ("year", "month"),
+        ("year", "day"),
+        ("year", "hour"),
+        ("month", "day"),
+        ("month", "hour"),
+        ("day", "hour"),
+    ]
+    present_stems = {s for s in pillar_map.values() if s}
+    month_elem = ""
+    if month_branch:
+        hidden = BRANCH_HIDDEN_STEMS.get(month_branch, [])
+        if hidden:
+            main_stem = max(hidden, key=lambda x: x[1])[0]
+            month_elem = STEM_ELEMENT.get(main_stem, (None, None))[0] or ""
+
+    results: list[dict] = []
+    seen: set[frozenset[str]] = set()
+    for pa, pb in pairs:
+        sa, sb = pillar_map[pa], pillar_map[pb]
+        key = frozenset({sa, sb})
+        if key not in _STEM_WUHE or key in seen:
+            continue
+        seen.add(key)
+        hua_elem = _STEM_WUHE[key]
+        hua_cn = _ELEM_TO_CN.get(hua_elem, hua_elem)
+        success = month_elem == hua_elem or any(STEM_ELEMENT.get(s, (None, None))[0] == hua_elem for s in present_stems)
+        results.append(
+            {
+                "stem_a": sa,
+                "stem_b": sb,
+                "pillar_a": pa,
+                "pillar_b": pb,
+                "hua_element": hua_elem,
+                "hua_element_cn": hua_cn,
+                "success": success,
+                "status": "合化成功" if success else "合而不化",
+                "type": "天干五合",
+            }
+        )
+    return results
+
+
 def _elem_cn(stem: str) -> str:
     elem, _ = STEM_ELEMENT.get(stem, ("?", "?"))
     return _ELEM_TO_CN.get(elem, "?")
@@ -203,7 +287,7 @@ def get_branch_relations(
                         "type": "六合",
                         "status": "合",
                         "branches": [ba, bb],
-                        "positions": [pos_a] + pos_b,
+                        "positions": [pos_a, *pos_b],
                         "element": None,
                     }
                 )
@@ -222,9 +306,33 @@ def get_branch_relations(
                         "type": "六冲",
                         "status": "冲",
                         "branches": [ba, bc],
-                        "positions": [pos_a] + pos_c,
+                        "positions": [pos_a, *pos_c],
                         "element": None,
                     }
                 )
+
+    # 三会方局（sanhui）
+    for (b1, b2, b3), elem in _SANHUI:
+        trio = {b1, b2, b3}
+        hit = trio & present
+        if len(hit) == 3:
+            status = "三会全见"
+            rtype = "三会"
+        elif len(hit) == 2:
+            status = "三会半见"
+            rtype = "三会半合"
+        else:
+            continue
+        involved = sorted(hit, key=lambda x: [b1, b2, b3].index(x))
+        positions = [pos for b in involved for pos in _positions_of(b, pm)]
+        results.append(
+            {
+                "type": rtype,
+                "status": status,
+                "branches": involved,
+                "positions": positions,
+                "element": elem,
+            }
+        )
 
     return results

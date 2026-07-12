@@ -38,6 +38,18 @@ class DayunResult:
     items: list[DayunItem] = field(default_factory=list)
 
 
+def resolve_current_dayun_item(dayun: DayunResult | None, virtual_age: int) -> DayunItem | None:
+    """按虚岁返回当前大运项；起运前返回 None，超过末限则取最后一柱。"""
+    if dayun is None or not dayun.items:
+        return None
+    for item in dayun.items:
+        if item.start_age <= virtual_age < item.start_age + 10:
+            return item
+    if virtual_age >= dayun.items[-1].start_age:
+        return dayun.items[-1]
+    return None
+
+
 def _is_yang_year(year_stem_idx: int) -> bool:
     return year_stem_idx % 2 == 0
 

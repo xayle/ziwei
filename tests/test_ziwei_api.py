@@ -14,6 +14,8 @@ import os
 import pytest
 from zoneinfo import ZoneInfo
 
+from app.schemas.ziwei import ZiweiRequest
+
 # 使用 conftest 中的 client fixture（已含 DB 依赖注入覆盖，但 ziwei 端点不使用 DB）
 # GOLDEN = 黄金测试案例 2002-03-13 14:55 女
 GOLDEN = dict(year=2002, month=3, day=13, hour=14, minute=55, gender="女")
@@ -44,6 +46,30 @@ class TestZiweiFullEndpoint:
         assert data["wuxing_ju_name"] == "水二局"
         assert data["life_palace_gz"] == "丁未"
         assert len(data["palaces"]) == 12
+
+    def test_default_youbi_month_trust_advisory(self, client):
+        """R038: default month youbi → advisory trust + explicit missing_fields."""
+        r = client.post("/api/v1/ziwei/full", json=GOLDEN)
+        assert r.status_code == 200
+        data = r.json()
+        assert data.get("trust_level") == "advisory"
+        assert "youbi_month_vs_iztro_hour" in (data.get("missing_fields") or [])
+        assert any("右弼" in w for w in (data.get("engine_warnings") or []))
+
+    def test_youbi_hour_request_accepted(self, client):
+        """R044: API accepts youbi_method=hour."""
+        r = client.post("/api/v1/ziwei/full", json={**GOLDEN, "youbi_method": "hour"})
+        assert r.status_code == 200
+        assert "youbi_month_vs_iztro_hour" not in (r.json().get("missing_fields") or [])
+
+    def test_palace_analysis_trimmed_to_80(self, client):
+        """R045: standard /full trims long palace narrative fields."""
+        r = client.post("/api/v1/ziwei/full", json={**GOLDEN, "template_version": "standard"})
+        assert r.status_code == 200
+        for palace in r.json()["palaces"]:
+            for field in ("analysis", "conclusion", "explanation", "suggestion", "tooltip"):
+                text = palace.get(field) or ""
+                assert len(text) <= 81, f"{palace['name']}.{field} too long: {len(text)}"
 
     def test_illegal_feb31_422(self, client):
         """2月31日应被 field_validator 拒绝，返回 422。"""
@@ -141,6 +167,23 @@ class TestZiweiFullEndpoint:
         assert fc is not None
         assert "current_month" in fc   # 字段存在，值可为 null
 
+    def test_forecast_tier_layer_and_evidence_chain(self, client):
+        """BE-P1-03：forecast 含 tier/layer；响应含 evidence_chain。"""
+        r = client.post("/api/v1/ziwei/full", json=GOLDEN)
+        assert r.status_code == 200
+        data = r.json()
+        fc = data.get("forecast")
+        assert fc is not None
+        assert fc.get("layer") == "heuristic"
+        yearly = fc["yearly"]
+        assert yearly.get("tier") in ("favorable", "neutral", "caution")
+        assert yearly.get("layer") == "heuristic"
+        for mo in fc.get("monthly") or []:
+            assert mo.get("tier") in ("favorable", "neutral", "caution")
+        chain = data.get("evidence_chain") or []
+        assert len(chain) >= 3
+        assert any(item.get("source") == "life_palace" for item in chain)
+
     def test_all_12_palaces_present(self, client):
         """应有恰好 12 个宫位。"""
         r = client.post("/api/v1/ziwei/full", json=GOLDEN)
@@ -151,6 +194,10 @@ class TestZiweiFullEndpoint:
         expected = {"命宫","兄弟宫","夫妻宫","子女宫","财帛宫","疾厄宫",
                     "迁移宫","交友宫","官禄宫","田宅宫","福德宫","父母宫"}
         assert names == expected, f"宫位名不匹配: 缺少 {expected-names}"
+        empty = [p for p in palaces if p.get("is_empty_palace")]
+        assert empty, "应至少存在一个空宫用于借星结构测试"
+        assert empty[0]["borrowed_main_stars"], "空宫应带 borrowed_main_stars"
+        assert empty[0]["borrowed_from_palace"], "空宫应标注 borrowed_from_palace"
 
     def test_flying_chart_present(self, client):
         """飞星盘应包含 12 个宫位。"""
@@ -190,6 +237,9 @@ class TestZiweiDemoEndpoint:
         r = client.get("/api/v1/ziwei/demo")
         assert r.status_code == 200
         assert len(r.json().get("liuyue", [])) == 12
+        summary = r.json().get("ziwei_structural_summary", {})
+        assert summary.get("source") == "routers.ziwei.build_response"
+        assert summary.get("chart_relation_summary", {}).get("source") == "routers.ziwei.build_response"
 
 
 # ─────────────────────────────────────────────────────────────
@@ -582,3 +632,52 @@ class TestTemplateVersion:
         r = client.post("/api/v1/ziwei/full",
                         json={**GOLDEN, "template_version": "invalid_tpl"})
         assert r.status_code == 422
+
+
+class TestZiweiExtendedParams:
+    """ZiweiRequest 扩展参数 wenchang_method / flow_* 等。"""
+
+    def test_liunian_sihua_default_year_stem(self):
+        req = ZiweiRequest(year=2002, month=3, day=13, hour=14, gender="女")
+        assert req.liunian_sihua_method == "year_stem"
+
+    def test_flow_params_accepted(self, client):
+        payload = {
+            **GOLDEN,
+            "flow_liuyue_month": 3,
+            "flow_lunar_day": 15,
+            "flow_hour_branch": 6,
+        }
+        r = client.post("/api/v1/ziwei/full", json=payload)
+        assert r.status_code == 200
+        liuri = r.json().get("liuri_liushi")
+        assert liuri is not None
+
+    def test_wenchang_method_legacy_accepted(self, client):
+        r = client.post(
+            "/api/v1/ziwei/full",
+            json={**GOLDEN, "wenchang_method": "year_branch", "youbi_method": "hour"},
+        )
+        assert r.status_code == 200
+
+    def test_flow_lunar_day_without_month_rejected(self, client):
+        r = client.post(
+            "/api/v1/ziwei/full",
+            json={**GOLDEN, "flow_lunar_day": 10},
+        )
+        assert r.status_code == 422
+
+    def test_invalid_wenchang_method_rejected(self, client):
+        r = client.post(
+            "/api/v1/ziwei/full",
+            json={**GOLDEN, "wenchang_method": "invalid"},
+        )
+        assert r.status_code == 422
+
+    def test_flying_accepts_method_params(self, client):
+        r = client.post(
+            "/api/v1/ziwei/flying",
+            json={**GOLDEN, "liunian_sihua_method": "life_palace_stem", "wenchang_method": "year_branch"},
+        )
+        assert r.status_code == 200
+        assert "palaces" in r.json()

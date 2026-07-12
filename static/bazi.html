@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>八字排盘 · 命理推演</title>
+  <title>八字排盘 · 兼容入口</title>
   <script>
     (function () {
       const params = new URLSearchParams(window.location.search)
@@ -33,7 +33,7 @@
 <body>
   <div style="max-width:1200px;margin:12px auto 0;padding:0 16px;">
     <div style="border:1px solid rgba(59,130,246,.25);background:#eff6ff;color:#1e3a8a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;">
-      当前页为兼容入口。若新版 SPA 可用，将优先自动跳转到
+      当前页为 legacy 兼容入口。若新版 SPA 可用，将优先自动跳转到
       <a href="/static/app/bazi" style="color:#1d4ed8;font-weight:600;">/static/app/bazi</a>；
       如需继续停留旧版，请使用
       <a href="/static/bazi.html?legacy=1" style="color:#1d4ed8;font-weight:600;">legacy 模式</a>。
@@ -48,9 +48,9 @@
         <span class="hdr-sub">BaZi Calculator</span>
       </div>
       <nav class="hdr-nav">
-        <a href="/static/ziwei.html">紫微斗数</a>
-        <a href="/static/bazi.html" class="active">八字排盘</a>
-        <a href="/static/admin.html">管理后台</a>
+        <a href="/static/ziwei.html">legacy 紫微</a>
+        <a href="/static/bazi.html" class="active">legacy 八字</a>
+        <a href="/static/admin.html">新版后台</a>
       </nav>
     </div>
   </header>

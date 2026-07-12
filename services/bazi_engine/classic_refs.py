@@ -1575,6 +1575,59 @@ def get_refs_by_tag(tag: str) -> list[dict]:
     return [r for r in CLASSIC_REFS if tag in r.get("tags", [])]
 
 
+def geju_candidates(geju_name: str, *, limit: int = 3) -> list[dict]:
+    """
+    格局名 → 古籍语料软提示（非硬覆盖引擎结论）。
+
+    优先匹配 tags 含格局名或 category=格局 的条目。
+    """
+    if not geju_name:
+        return []
+    hits = [
+        r for r in CLASSIC_REFS if geju_name.replace("格", "") in r.get("text", "") or geju_name in r.get("tags", [])
+    ]
+    if not hits:
+        hits = get_refs_by_category("格局")
+    seen: set[str] = set()
+    out: list[dict] = []
+    for ref in hits:
+        rid = ref.get("id", "")
+        if rid in seen:
+            continue
+        seen.add(rid)
+        out.append({**ref, "hint_type": "soft"})
+        if len(out) >= limit:
+            break
+    return out
+
+
+def shensha_candidates(shensha_name: str, *, limit: int = 2) -> list[dict]:
+    """神煞名 → 古籍语料软提示。"""
+    if not shensha_name:
+        return []
+    hits = [
+        r
+        for r in CLASSIC_REFS
+        if shensha_name in r.get("tags", [])
+        or shensha_name in r.get("text", "")
+        or r.get("category") == "神煞"
+        and shensha_name.replace("贵人", "") in r.get("text", "")
+    ]
+    if not hits:
+        hits = get_refs_by_category("神煞")
+    seen: set[str] = set()
+    out: list[dict] = []
+    for ref in hits:
+        rid = ref.get("id", "")
+        if rid in seen:
+            continue
+        seen.add(rid)
+        out.append({**ref, "hint_type": "soft"})
+        if len(out) >= limit:
+            break
+    return out
+
+
 # 模块常量，供测试断言使用，避免手动数条数
 CLASSIC_REFS_COUNT: int = len(CLASSIC_REFS)
 

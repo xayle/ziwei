@@ -573,9 +573,10 @@ onMounted(() => {
           </template>
 
           <template v-else-if="volume.id === 'vol1'">
+            <p class="report-vol1-lead">卷一·命之根 — 四柱格局摘要；盘面可核对，深读见下方解读。</p>
             <SummaryStrip :items="baziSummary" />
-            <div class="report-embed">
-              <BaziReferenceTable :columns="baziColumns" active-key="day" />
+            <div class="report-embed report-embed--compact" data-testid="report-vol1-compact-chart">
+              <BaziReferenceTable :columns="baziColumns" active-key="day" :show-detail-rows="false" />
             </div>
             <AnalysisPanel :blocks="baziBlocks" default-open-id="bazi-engine" />
           </template>
@@ -1153,7 +1154,7 @@ onMounted(() => {
 }
 
 .report-table th {
-  background: var(--surface-2);
+  background: var(--inset-tint);
   font-family: var(--font-cn);
 }
 
@@ -1185,6 +1186,20 @@ onMounted(() => {
 
 .report-embed {
   margin-top: 16px;
+  overflow-x: auto;
+}
+
+.report-vol1-lead {
+  margin: 0 0 12px;
+  color: var(--brand-mist);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.report-embed--compact {
+  max-width: 720px;
+  overflow-x: visible;
 }
 
 .disclaimer {
@@ -1279,7 +1294,7 @@ onMounted(() => {
 }
 
 .ai-msg--ai {
-  background: var(--surface-2);
+  background: var(--inset-tint);
   border: 1px solid var(--border);
   color: var(--text);
 }

@@ -3,7 +3,7 @@ tests/test_static_data_endpoints.py — §4.13 静态数据端点测试
 
 覆盖:
   GET /api/v1/glossary  — ≥50条命理术语, R13/3.05
-  GET /api/v1/cities    — 恰好36城, GAP-06
+  GET /api/v1/cities    — 337 城（地级市全覆盖）, GAP-06
 """
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ class TestGlossaryEndpoint:
 
     def test_valid_categories(self, anon_client: TestClient):
         """category 值只在允许范围内"""
-        VALID = {"格局", "神煞", "五行", "十神", "大运", "其他"}
+        VALID = {"格局", "神煞", "五行", "十神", "大运", "紫微", "其他"}
         data = anon_client.get("/api/v1/glossary").json()
         for item in data:
             assert item["category"] in VALID, f"非法 category: {item['category']}"
@@ -90,9 +90,9 @@ class TestCitiesEndpoint:
         assert resp.status_code == 200, resp.text
 
     def test_exactly_36_cities(self, anon_client: TestClient):
-        """红线34: 城市选择器 ≥ 36 城"""
+        """红线34: 城市选择器 ≥ 300 城（含省会 + 地级市）"""
         data = anon_client.get("/api/v1/cities").json()
-        assert len(data) >= 36, f"应 ≥36 城，实际 {len(data)}"
+        assert len(data) >= 300, f"应 ≥300 城，实际 {len(data)}"
 
     def test_each_city_has_lng_lat(self, anon_client: TestClient):
         data = anon_client.get("/api/v1/cities").json()
@@ -109,7 +109,7 @@ class TestCitiesEndpoint:
 
     def test_valid_city_type(self, anon_client: TestClient):
         """city_type 值只在允许范围内"""
-        VALID = {"直辖市", "省会", "计划单列市"}
+        VALID = {"直辖市", "省会", "计划单列市", "地级市"}
         data = anon_client.get("/api/v1/cities").json()
         for city in data:
             assert city.get("city_type") in VALID, f"非法 city_type: {city}"

@@ -10,9 +10,6 @@ from __future__ import annotations
 from .stars_main import StarPosition
 from .tables import BRANCHES, PALACE_NAMES
 
-# ──────────────────────────────────────────────────────────────
-# 单星性质简介（精简版）
-# ──────────────────────────────────────────────────────────────
 STAR_DESC: dict[str, str] = {
     "紫微": "紫微为帝星，主贵气、领导力、孤独，性格自尊要求高",
     "天机": "天机为智慧星，聪明善变，适合谋划，感情多波折",
@@ -29,6 +26,33 @@ STAR_DESC: dict[str, str] = {
     "七杀": "七杀为将星，英勇果断，冲劲十足，开创力强",
     "破军": "破军为耗星/先锋，变动不休，破坏中求生机，改革力强",
 }
+
+# 宫位+主星组合断语（COMBO_TABLE，Z-07）
+COMBO_TABLE: dict[str, str] = {
+    "命宫+紫微": "帝星坐命，领导统御，贵气自显",
+    "命宫+天机": "机星坐命，智谋多变，宜策划幕僚",
+    "命宫+太阳": "太阳坐命，光明外向，男命尤佳",
+    "命宫+武曲": "武曲坐命，务实理财，刚毅果断",
+    "命宫+天同": "天同坐命，温和享福，人缘佳",
+    "命宫+廉贞": "廉贞坐命，才艺丰富，防口舌是非",
+    "命宫+天府": "天府坐命，稳重守成，财库渐丰",
+    "命宫+太阴": "太阴坐命，细腻内敛，女命尤吉",
+    "命宫+贪狼": "贪狼坐命，多才多欲，桃花丰沛",
+    "夫妻宫+天同": "天同守夫妻，感情温和，宜慢热经营",
+    "夫妻宫+廉贞": "廉贞守夫妻，感情浓烈，防纠葛",
+    "财帛宫+武曲": "武曲守财，正财稳健，理财见长",
+    "财帛宫+天府": "天府守财，积蓄能力强，守成为上",
+    "官禄宫+紫微": "紫微守官，事业有统御机会",
+    "官禄宫+七杀": "七杀守官，竞争开创，宜武职技艺",
+    "迁移宫+天马": "天马守迁，动中求发展，宜出行",
+}
+
+
+def combo_narrative(palace_name: str, star_name: str) -> str:
+    """查 COMBO_TABLE 得组合断语；无则回退单星描述。"""
+    key = f"{palace_name}+{star_name}"
+    return COMBO_TABLE.get(key) or STAR_DESC.get(star_name, "")
+
 
 # ──────────────────────────────────────────────────────────────
 # 亮度对宫位影响的简要说明
@@ -407,12 +431,24 @@ def generate_full_analysis(
     result: dict[str, str] = {}
 
     # 命盘信息头
-    result["命盘概述"] = (
-        f"命宫：{BRANCHES[life_palace_branch]}宫（{life_palace_stem}{BRANCHES[life_palace_branch]}）\n"
-        f"身宫：{BRANCHES[body_palace_branch]}宫\n"
-        f"五行局：{wuxing_ju_name}（{wuxing_ju}局）\n"
-        f"性别：{gender}"
+    life_mains = [pos for pos in main_stars.values() if pos.branch_idx == life_palace_branch]
+    main_names = "、".join(dict.fromkeys(pos.name for pos in life_mains)) if life_mains else "空宫"
+    main_traits = (
+        "、".join(dict.fromkeys(STAR_TRAIT.get(pos.name, pos.name) for pos in life_mains))
+        if life_mains
+        else "需借对宫观察"
     )
+    summary_parts = [
+        f"命宫为{BRANCHES[life_palace_branch]}宫（{life_palace_stem}{BRANCHES[life_palace_branch]}）",
+        f"身宫为{BRANCHES[body_palace_branch]}宫",
+        f"五行局为{wuxing_ju_name}（{wuxing_ju}局）",
+    ]
+    if life_mains:
+        summary_parts.append(f"命宫主星以{main_names}为主，气质偏向{main_traits}")
+    else:
+        summary_parts.append("命宫为空宫，宜结合对宫星曜观察")
+    summary_parts.append(f"性别为{gender}")
+    result["命盘概述"] = "；".join(summary_parts) + "。"
 
     # 逐宫解读
     for i in range(12):
@@ -432,17 +468,14 @@ def generate_summary(
     # 命宫主星
     life_mains = [pos for pos in main_stars.values() if pos.branch_idx == life_palace_branch]
 
-    lines = ["═" * 40, "紫微斗数命盘核心要点", "═" * 40]
+    parts: list[str] = []
 
     if life_mains:
         star_names = "、".join(p.name for p in life_mains)
-        lines.append(f"命宫主星：{star_names}")
-        for p in life_mains:
-            desc = STAR_DESC.get(p.name, "")
-            if desc:
-                lines.append(f"  {desc}")
+        traits = "、".join(dict.fromkeys(STAR_TRAIT.get(p.name, p.name) for p in life_mains))
+        parts.append(f"命宫主星以{star_names}为主，气质偏向{traits}")
     else:
-        lines.append("命宫：空宫，借对宫论断")
+        parts.append("命宫为空宫，需借对宫星曜观察")
 
     # 检查吉凶杂星
     sha_stars = [
@@ -451,7 +484,8 @@ def generate_summary(
         if s in aux_stars and aux_stars[s] == life_palace_branch
     ]
     if sha_stars:
-        lines.append(f"命宫煞星：{'、'.join(sha_stars)} — 性格强烈，人生多波折，需磨砺成长")
+        concern = "、".join(SHA_SHORT.get(s, s) for s in sha_stars[:2])
+        parts.append(f"同宫见{'、'.join(sha_stars)}，需留意{concern}")
 
     ji_stars = [
         s
@@ -459,7 +493,12 @@ def generate_summary(
         if s in aux_stars and aux_stars[s] == life_palace_branch
     ]
     if ji_stars:
-        lines.append(f"命宫吉星：{'、'.join(ji_stars)} — 贵人助力，学业事业顺遂")
+        parts.append(f"同宫见{'、'.join(ji_stars)}，贵人助力与学习表达更容易显现")
 
-    lines.append("═" * 40)
-    return "\n".join(lines)
+    if life_mains:
+        first_star = life_mains[0].name
+        concern = STAR_CONCERN_SHORT.get(first_star)
+        if concern:
+            parts.append(f"核心提示：{concern}")
+
+    return "；".join(parts) + "。"

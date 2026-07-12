@@ -9,7 +9,7 @@ test.describe('扩展工具路由', () => {
     await page.getByTestId('home-extensions').click()
     await expect(page).toHaveURL(/\/static\/app\/extensions$/)
     await expect(page.getByText('合婚、相似盘与择日为独立路由')).toBeVisible()
-    await expect(page.getByRole('heading', { name: '八字合婚' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '关系合盘（统一）' })).toBeVisible()
   })
 
   test('档案未齐时扩展路由被拦截', async ({ page }) => {
@@ -22,21 +22,26 @@ test.describe('扩展工具路由', () => {
   test('工具箱可进入合婚/相似盘/择日', async ({ page }) => {
     await fillMinimalProfile(page)
     await gotoApp(page, 'extensions')
-    await page.getByRole('button', { name: '进入' }).nth(0).click()
+    await page.getByRole('button', { name: '进入' }).first().click()
+    await expect(page).toHaveURL(/\/static\/app\/relation\/new/)
+    await expect(page.getByTestId('relation-type-grid')).toBeVisible()
+
+    await gotoApp(page, 'extensions')
+    await page.getByRole('button', { name: '进入' }).nth(1).click()
     await expect(page).toHaveURL(/\/static\/app\/extensions\/compat/)
     await expect(page.getByRole('heading', { name: '对方信息' })).toBeVisible()
 
     await gotoApp(page, 'extensions')
-    await page.getByRole('button', { name: '进入' }).nth(1).click()
+    await page.getByRole('button', { name: '进入' }).nth(2).click()
     await expect(page).toHaveURL(/\/static\/app\/extensions\/ziwei-compat/)
     await expect(page.getByRole('heading', { name: '对方信息' })).toBeVisible()
 
     await gotoApp(page, 'extensions')
-    await page.getByRole('button', { name: '进入' }).nth(2).click()
+    await page.getByRole('button', { name: '进入' }).nth(3).click()
     await expect(page).toHaveURL(/\/static\/app\/extensions\/similarity/)
 
     await gotoApp(page, 'extensions')
-    await page.getByRole('button', { name: '进入' }).nth(3).click()
+    await page.getByRole('button', { name: '进入' }).nth(4).click()
     await expect(page).toHaveURL(/\/static\/app\/extensions\/zeri/)
     await expect(page.getByTestId('zeri-purpose')).toBeVisible()
   })

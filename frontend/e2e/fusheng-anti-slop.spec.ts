@@ -30,6 +30,34 @@ test.describe('防丑五问结构代理', () => {
     await expect(page.locator('.page-head, [data-testid="page-head"]')).toHaveCount(0)
   })
 
+  test('紫微速览：方盘面积大于校勘脚注', async ({ page }) => {
+    await fillMinimalProfile(page)
+    await gotoApp(page, 'new/ziwei')
+    const plate = page.getByTestId('ziwei-layer-plate')
+    await expect(plate).toBeVisible({ timeout: 15_000 })
+    const plateBox = await plate.boundingBox()
+    expect(plateBox).not.toBeNull()
+    const trust = page.getByTestId('ziwei-trust-overview')
+    if (await trust.count()) {
+      const trustBox = await trust.boundingBox()
+      if (trustBox) {
+        expect(plateBox!.width * plateBox!.height).toBeGreaterThan(trustBox.width * trustBox.height)
+      }
+    }
+    await expect(page.locator('.fz-cell').first()).toBeVisible()
+  })
+
+  test('Q5 代理：遮标题仍可识别品牌与方盘', async ({ page }) => {
+    await fillMinimalProfile(page)
+    await gotoApp(page, 'new/ziwei')
+    await expect(page.getByTestId('ziwei-layer-plate')).toBeVisible({ timeout: 15_000 })
+    await page.addStyleTag({
+      content: '.fs-page h1, .fs-page h2, .ziwei-hero h2, .brand-copy { visibility: hidden !important; }',
+    })
+    await expect(page.locator('img.brand-logo[alt="浮生"]')).toBeVisible()
+    expect(await page.locator('.fz-cell').count()).toBeGreaterThanOrEqual(8)
+  })
+
   test('报告卷目：六卷名与 skin 一致、无旧章', async ({ page }) => {
     await fillMinimalProfile(page)
     await gotoApp(page, 'report')

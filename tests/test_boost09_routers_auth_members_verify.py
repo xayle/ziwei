@@ -6,6 +6,7 @@ Coverage Boost #9 — routers/auth.py, routers/scenarios.py, routers/members.py,
 目标：从 95.0% 推向 96%+
 """
 import os
+import types
 import pytest
 from datetime import datetime, timezone, date
 from uuid import uuid4
@@ -478,116 +479,125 @@ class TestMembersExtra:
 
 
 # ===========================================================================
-# TestVerifyModule  —  verify.py (missing: 17, 23, 29, 74-77, 82-83, 93)
+# TestVerifyModule  —  services/bazi_engine/pillars.py（经 verify shim 委托）
 # ===========================================================================
+
+def _mock_pillars():
+    def _p(stem, branch):
+        return types.SimpleNamespace(stem=stem, branch=branch, ganzhi=f"{stem}{branch}")
+
+    return types.SimpleNamespace(
+        year=_p("甲", "子"),
+        month=_p("丙", "寅"),
+        day=_p("戊", "午"),
+        hour=_p("庚", "申"),
+    )
+
+
 class TestVerifyModule:
-    """verify.py 辅助函数错误路径"""
+    """pillars 辅助函数与后端降级路径"""
 
     def test_ensure_tz_naive_datetime_raises(self):
-        """_ensure_tz: naive datetime → ValueError（L17）"""
-        from verify import _ensure_tz
-        from datetime import datetime
-        naive_dt = datetime(2000, 1, 1, 12, 0, 0)  # no tzinfo
+        """_ensure_tz: naive datetime → ValueError"""
+        from services.bazi_engine.pillars import _ensure_tz
+
+        naive_dt = datetime(2000, 1, 1, 12, 0, 0)
         with pytest.raises(ValueError, match="timezone-aware"):
             _ensure_tz(naive_dt)
 
     def test_validate_lon_out_of_range_raises(self):
-        """_validate_lon: lon 超出范围 → ValueError（L23）"""
-        from verify import _validate_lon
+        """_validate_lon: lon 超出范围 → ValueError"""
+        from services.bazi_engine.pillars import _validate_lon
+
         with pytest.raises(ValueError, match="outside supported range"):
             _validate_lon(200.0)
 
     def test_validate_lon_negative_out_of_range_raises(self):
         """_validate_lon: 负 lon 超出范围 → ValueError"""
-        from verify import _validate_lon
+        from services.bazi_engine.pillars import _validate_lon
+
         with pytest.raises(ValueError):
             _validate_lon(-200.0)
 
     def test_pick_backends_invalid_mode_raises(self):
-        """_pick_backends: 非法 mode → ValueError（L29）"""
-        from verify import _pick_backends
+        """_pick_backends: 非法 mode → ValueError"""
+        from services.bazi_engine.pillars import _pick_backends
+
         with pytest.raises(ValueError, match="mode must be"):
             _pick_backends("invalid_mode")  # type: ignore[arg-type]
 
     def test_pick_backends_dual_returns_tuple(self):
         """_pick_backends: dual → ('sxtwl', 'cnlunar')"""
-        from verify import _pick_backends
+        from services.bazi_engine.pillars import _pick_backends
+
         primary, secondary = _pick_backends("dual")
         assert primary == "sxtwl"
         assert secondary == "cnlunar"
 
     def test_pick_backends_single_returns_tuple(self):
         """_pick_backends: single → ('sxtwl', None)"""
-        from verify import _pick_backends
+        from services.bazi_engine.pillars import _pick_backends
+
         primary, secondary = _pick_backends("single")
         assert primary == "sxtwl"
         assert secondary is None
 
     def test_verify_full_sxtwl_unavailable_uses_cnlunar(self):
-        """verify_full: SxtwlBackend 不可用 → fallback to CnlunarBackend（L74-77）"""
+        """single 模式：sxtwl 不可用 → fallback CnlunarBackend"""
         from verify import verify_full
         from backends import BackendUnavailable
         from zoneinfo import ZoneInfo
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        mock_backend = MagicMock(spec=["get_pillars"])
+        mock_backend.get_pillars.return_value = _mock_pillars()
 
-        with patch("verify.SxtwlBackend", side_effect=BackendUnavailable("no sxtwl")):
-            with patch("verify.CnlunarBackend") as mock_cnlunar:
-                mock_instance = MagicMock()
-                mock_instance.get_pillars.return_value = MagicMock(
-                    year=MagicMock(stem="甲", branch="子", ganzhi="甲子"),
-                    month=MagicMock(stem="丙", branch="寅", ganzhi="丙寅"),
-                    day=MagicMock(stem="戊", branch="午", ganzhi="戊午"),
-                    hour=MagicMock(stem="庚", branch="申", ganzhi="庚申"),
-                )
-                mock_cnlunar.return_value = mock_instance
-                try:
-                    result = verify_full(dt, 120.0, False, mode="single")
-                    assert result is not None
-                except Exception:
-                    pass  # Other errors acceptable if backend returns mock data
+        with patch(
+            "services.bazi_engine.pillars.get_sxtwl_backend",
+            side_effect=BackendUnavailable("no sxtwl"),
+        ):
+            with patch("services.bazi_engine.pillars.CnlunarBackend", return_value=mock_backend):
+                result = verify_full(dt, 120.0, False, mode="single")
+        assert result is not None
+        assert result.pillars_primary is not None
 
     def test_verify_full_secondary_backend_unavailable(self):
-        """verify_full: secondary CnlunarBackend 不可用时降级（L82-83）"""
+        """dual 模式：secondary cnlunar 不可用 → 降级 single"""
         from verify import verify_full
         from backends import BackendUnavailable
         from zoneinfo import ZoneInfo
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        mock_primary = MagicMock(spec=["get_pillars"])
+        mock_primary.get_pillars.return_value = _mock_pillars()
+        cnlunar_calls: list[int] = []
 
-        original_cnlunar = None
-        try:
-            from backends import CnlunarBackend as CB
-            original_cnlunar = CB
-        except Exception:
-            pass
-
-        # CnlunarBackend raises when instantiated → secondary is None
-        cnlunar_call_count = [0]
-        def cnlunar_side_effect():
-            cnlunar_call_count[0] += 1
+        def _cnlunar_side_effect():
+            cnlunar_calls.append(1)
             raise BackendUnavailable("no cnlunar")
 
-        with patch("verify.CnlunarBackend", side_effect=cnlunar_side_effect):
-            try:
+        with patch("services.bazi_engine.pillars.get_sxtwl_backend", return_value=mock_primary):
+            with patch("services.bazi_engine.pillars.CnlunarBackend", side_effect=_cnlunar_side_effect):
                 result = verify_full(dt, 120.0, False, mode="dual")
-                # If sxtwl is available, it should succeed in single mode
-            except Exception:
-                pass  # Acceptable
-        # The key is that CnlunarBackend was attempted (L82 executed)
-        assert cnlunar_call_count[0] >= 0  # just ensure lines were reachable
+        assert cnlunar_calls
+        assert result.mode_effective == "single"
 
     def test_verify_full_both_backends_unavailable_raises(self):
-        """verify_full: 所有后端不可用 → BackendUnavailable（L93）"""
+        """所有后端不可用 → BackendUnavailable"""
         from verify import verify_full
         from backends import BackendUnavailable
         from zoneinfo import ZoneInfo
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
 
-        # verify_full 调用 get_sxtwl_backend() 而非直接实例化 SxtwlBackend
-        with patch("verify.get_sxtwl_backend", side_effect=BackendUnavailable("no sxtwl")):
-            with patch("verify.CnlunarBackend", side_effect=BackendUnavailable("no cnlunar")):
+        with patch(
+            "services.bazi_engine.pillars.get_sxtwl_backend",
+            side_effect=BackendUnavailable("no sxtwl"),
+        ):
+            with patch(
+                "services.bazi_engine.pillars.CnlunarBackend",
+                side_effect=BackendUnavailable("no cnlunar"),
+            ):
                 with pytest.raises(BackendUnavailable, match="No available backend"):
                     verify_full(dt, 120.0, False, mode="single")
 
@@ -659,9 +669,9 @@ class TestBackendsModule:
     """backends.py — 辅助函数和 get_pillars/get_jieqi"""
 
     def test_ensure_tz_naive_datetime_raises(self):
-        """backends._ensure_tz: naive datetime → ValueError（L32）"""
-        from backends import _ensure_tz
-        from datetime import datetime
+        """app.core.backends._ensure_tz: naive datetime → ValueError"""
+        from app.core.backends import _ensure_tz
+
         naive_dt = datetime(2000, 6, 15, 10, 0, 0)
         with pytest.raises(ValueError, match="timezone-aware"):
             _ensure_tz(naive_dt)
@@ -709,7 +719,7 @@ class TestBackendsModule:
         from datetime import datetime
 
         dt = datetime(2000, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
-        with patch("backends.SxtwlBackend", side_effect=BackendUnavailable("no sxtwl")):
+        with patch("app.core.backends.SxtwlBackend", side_effect=BackendUnavailable("no sxtwl")):
             result = get_jieqi_context(dt)
         assert result is None
 

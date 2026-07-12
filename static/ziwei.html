@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>紫微斗数 · 命盘推算</title>
+  <title>紫微斗数 · 兼容入口</title>
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/base.css?v=20260324">
@@ -32,8 +32,8 @@
 </head>
 <body>
 <div style="max-width:1200px;margin:12px auto 0;padding:0 16px;">
-  <div style="border:1px solid rgba(59,130,246,.25);background:#eff6ff;color:#1e3a8a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;">
-    当前页为兼容入口。若新版 SPA 可用，将优先自动跳转到
+    <div style="border:1px solid rgba(59,130,246,.25);background:#eff6ff;color:#1e3a8a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6;">
+    当前页为 legacy 兼容入口。若新版 SPA 可用，将优先自动跳转到
     <a href="/static/app/ziwei" style="color:#1d4ed8;font-weight:600;">/static/app/ziwei</a>；
     如需继续停留旧版，请使用
     <a href="/static/ziwei.html?legacy=1" style="color:#1d4ed8;font-weight:600;">legacy 模式</a>。
@@ -46,10 +46,10 @@
     <div class="hdr-logo">紫微斗数 · 命盘推算</div>
     <div class="hdr-tagline">传统命理 · 十四主星 · 大运流年 · 运势预测</div>
     <div class="hdr-ver">V1.0</div>
-    <nav class="hdr-nav">
-      <a href="/static/ziwei.html" class="active">紫微斗数</a>
-      <a href="/static/app/bazi">八字排盘</a>
-      <a href="/static/app/admin">管理后台</a>
+      <nav class="hdr-nav">
+      <a href="/static/ziwei.html" class="active">legacy 紫微</a>
+      <a href="/static/app/bazi">新版八字</a>
+      <a href="/static/app/admin">新版后台</a>
     </nav>
 
     <button class="btn-hist" id="hbtn" onclick="toggleHist()" title="最近5次排盘记录">历史</button>
@@ -776,7 +776,7 @@
     <button class="gloss-close" onclick="closeGloss()">✕</button>
   </div>
   <div id="gloss-cats" class="gloss-cats"></div>
-  <input id="gloss-search" type="text" placeholder="搜索词条或释义…（TF-IDF 全文检索）" oninput="filterGlossDebounced()">  
+  <input id="gloss-search" type="text" placeholder="搜索词条或释义…（TF-IDF 全文检索）" oninput="filterGlossDebounced()">
   <div id="gloss-cnt" class="gloss-cnt"></div>
   <div id="gloss-list" class="gloss-list"><div style="padding:30px;text-align:center;color:var(--muted)">点击右下角 📖 按钮加载词汇</div></div>
 </div>

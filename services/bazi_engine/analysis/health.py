@@ -87,7 +87,7 @@ def compute_health(
     total = sum(wuxing_scores.values()) or 1.0
 
     # ─── 1. 五行偏旺/偏弱判断 ───────────────────────────────────────────
-    avg = total / 5
+    total / 5
     strong_wuxing: list[str] = []
     weak_wuxing: list[str] = []
 
@@ -166,14 +166,6 @@ def compute_health(
     _risk_str = ("风险脏腑：" + "、".join(risk_organs[:3]) + "。") if risk_organs else "脏腑整体平衡。"
     _ex_top = exercise[0]
     _diet_top = diet[0]
-    interp = (
-        f"健康评分为 {health_score} 分，整体风险等级【{risk_level}】。"
-        f"{_risk_str}"
-        f"运动建议：以「{_ex_top}」为主，配合每天快走与舒展，延缓升火气。"
-        f"饮食建议：{_diet_top}，配合充足水分摄入与规律三餐。"
-        f"旺盛期参考：{peak_period}。"
-        f"（仅供学术研究参考）"
-    )
 
     # ─── 新增：季节健康预警模板 ──────────────────────────────────────────
     _SEASONAL_HEALTH: dict[str, str] = {

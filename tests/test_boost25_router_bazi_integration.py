@@ -635,3 +635,15 @@ class TestBaziFullXRequestId:
         warnings = resp.json().get("warnings", [])
         codes = [w.get("code") for w in warnings]
         assert "request_id_truncated" in codes
+
+
+class TestBaziFullDizhiRelationsCompatibility:
+    """POST /api/v1/bazi/full 地支关系兼容性回归测试"""
+
+    def test_landing_relation_type_aliases_are_accepted(self):
+        from services.bazi_full_service import _normalize_relation_type
+
+        assert _normalize_relation_type("六合") == "合"
+        assert _normalize_relation_type("六冲") == "冲"
+        assert _normalize_relation_type("相害") == "害"
+        assert _normalize_relation_type("未知类型") == "干支互动"

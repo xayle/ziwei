@@ -6,9 +6,15 @@ const router = useRouter()
 
 const modules = [
   {
+    id: 'relation',
+    title: '关系合盘（统一）',
+    desc: '情侣/友人/亲子/同事/合伙/上下级 — 六类关系，八字+紫微统一评分。',
+    path: '/relation/new?type=couple',
+  },
+  {
     id: 'compat',
-    title: '八字合婚',
-    desc: '输入对方出生信息，与当前档案进行八字合婚分析。',
+    title: '八字合婚（旧）',
+    desc: '已迁移至关系合盘；此入口保留兼容。',
     path: '/extensions/compat',
   },
   {

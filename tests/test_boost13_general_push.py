@@ -553,30 +553,28 @@ class TestInitDb13:
 
     def test_init_db_returns_tables(self):
         """init_db() 正常调用 → 返回 table 列表"""
-        from init_db import init_db
+        from scripts.init_db import init_db
+
         tables = init_db()
-        # Should return a list (possibly empty if already initialized or no tables)
         assert isinstance(tables, (list, set, tuple)) or tables is not None
 
     def test_init_db_main_block(self):
         """模拟 __main__ 调用路径 (L37-41)"""
-        with patch("init_db.init_db", return_value=["users", "members"]) as mock_init:
-            # 直接调用 __main__ 逻辑
-            import init_db as _idb
+        with patch("scripts.init_db.init_db", return_value=["users", "members"]) as mock_init:
+            import scripts.init_db as _idb
             tables = _idb.init_db()
             if tables:
-                pass  # print success path L38-39
+                pass
             else:
-                pass  # print failure path L40-41
-        assert True  # 只需执行不报错
+                pass
+        assert mock_init.called
 
     def test_init_db_empty_tables(self):
         """init_db() 返回空列表 → L41 '✗ No tables were created!' 路径"""
-        with patch("init_db.init_db", return_value=[]):
-            import init_db as _idb
+        with patch("scripts.init_db.init_db", return_value=[]):
+            import scripts.init_db as _idb
             tables = _idb.init_db()
-            # In tests, init_db can return empty list
-            assert isinstance(tables, (list, type(None)))
+            assert tables == []
 
 
 # ============================================================================

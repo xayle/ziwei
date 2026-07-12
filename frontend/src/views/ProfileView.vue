@@ -11,6 +11,7 @@ import { normalizeBirthDateTime } from '@/utils/timeNormalization'
 import { resolveLunarBirthDt } from '@/utils/resolveLunarBirthDt'
 import { trackFlowEvent } from '@/utils/flowAnalytics'
 import { getSnapshot } from '@/api/snapshots'
+import { profileSummary, type ProfileSummaryResponse } from '@/api/relation'
 import { parseFushengSnapshotOutput } from '@/utils/parseFushengSnapshot'
 import { useFushengReportStore } from '@/stores/fushengReport'
 import {
@@ -32,6 +33,8 @@ const syncNote = ref('')
 const importingCaseId = ref<string | null>(null)
 const restoringSnapshotId = ref<string | null>(null)
 const snapshotRestoreNote = ref('')
+const engineSummary = ref<ProfileSummaryResponse | null>(null)
+const engineSummaryLoading = ref(false)
 const editorTab = ref<ProfileTabId>('basic')
 
 const profileTabs = [
@@ -75,9 +78,31 @@ onMounted(() => {
     void profile.pullRemoteCases()
     if (profile.activeProfile?.remoteCaseId) {
       void profile.pullRemoteSnapshots()
+      void loadEngineSummary()
     }
   }
 })
+
+async function loadEngineSummary() {
+  const caseId = profile.activeProfile?.remoteCaseId
+  if (!auth.isLoggedIn || !caseId) {
+    engineSummary.value = null
+    return
+  }
+  engineSummaryLoading.value = true
+  try {
+    engineSummary.value = await profileSummary(caseId)
+  } catch {
+    engineSummary.value = null
+  } finally {
+    engineSummaryLoading.value = false
+  }
+}
+
+watch(
+  () => profile.activeProfile?.remoteCaseId,
+  () => { void loadEngineSummary() },
+)
 
 function birthDtForDisplay(calendarMode: string, lunarBirthDt?: string, birthDt?: string) {
   if (calendarMode === 'lunar') return lunarBirthDt || birthDt || ''
@@ -288,6 +313,20 @@ const profileKpiItems = computed(() => [
   },
 ])
 
+const engineSummaryItems = computed(() => {
+  const s = engineSummary.value
+  if (!s) return [] as Array<{ label: string; value: string }>
+  const items: Array<{ label: string; value: string }> = []
+  const pillars = s.pillars_primary
+  if (pillars?.day) items.push({ label: '日柱', value: pillars.day })
+  if (s.geju_one_liner) items.push({ label: '格局', value: s.geju_one_liner })
+  if (s.strength_tier) items.push({ label: '强弱', value: s.strength_tier })
+  if (s.ziwei_ming_one_liner) items.push({ label: '紫微命宫', value: s.ziwei_ming_one_liner })
+  if (s.current_dayun) items.push({ label: '当前大运', value: s.current_dayun })
+  if (s.liunian_2026_tag) items.push({ label: '2026', value: s.liunian_2026_tag })
+  return items
+})
+
 const birthTimeMeta = computed(() => normalizeBirthDateTime({
   birthDt: form.birthDt || '1990-01-15T08:30',
   precision: form.birthTimePrecision,
@@ -399,6 +438,7 @@ function applyZiweiAlgoPreset(presetId: string) {
     <p v-if="lunarNote" class="profile-note profile-note--lunar">{{ lunarNote }}</p>
     <p v-if="syncNote" class="profile-note">{{ syncNote }}</p>
 
+    <SummaryStrip v-if="engineSummaryItems.length" :items="engineSummaryItems" data-testid="profile-engine-summary" />
     <SummaryStrip :items="profileKpiItems" data-testid="profile-kpi-strip" />
 
     <p class="fs-page-lead">档案是八字、紫微与报告的唯一真相源。补全字段后，完整度与可信度会实时更新。</p>
@@ -407,6 +447,7 @@ function applyZiweiAlgoPreset(presetId: string) {
         {{ saving ? '保存中…' : '保存档案' }}
       </button>
       <button class="fs-btn fs-btn--ghost" data-testid="profile-bazi" :disabled="!form.birthDt || !form.gender || !form.cityName || form.lon === undefined" @click="goBazi">查看八字</button>
+      <button class="fs-btn fs-btn--ghost" data-testid="profile-relation" :disabled="!isArchiveReady(profileSnapshot)" @click="router.push('/relation/new?type=couple')">关系合盘</button>
       <button class="fs-btn fs-btn--primary" data-testid="profile-report" :disabled="!form.birthDt || !form.gender || !form.cityName || form.lon === undefined" @click="goReport">生成报告</button>
     </div>
 
@@ -756,24 +797,33 @@ function applyZiweiAlgoPreset(presetId: string) {
 
         <article class="fs-card summary-card">
           <h2>档案摘要</h2>
-          <p class="hint">{{ timeConfidence.label }} · {{ timeConfidence.hint }}</p>
-          <dl class="meta-list">
-            <div><dt>保存状态</dt><dd>{{ profile.saved ? '已保存' : '未保存' }}</dd></div>
-            <div><dt>云端案例</dt><dd>{{ profile.activeProfile?.remoteCaseId || (auth.isLoggedIn ? '未同步' : '需登录') }}</dd></div>
-            <div v-if="form.calendarMode === 'lunar' && profile.birthDt"><dt>排盘公历</dt><dd>{{ profile.birthDt.replace('T', ' ').slice(0, 16) }}</dd></div>
-            <div v-if="form.cityTier"><dt>城市层级</dt><dd>{{ form.cityTier }}</dd></div>
-            <div v-if="form.industry"><dt>行业</dt><dd>{{ form.industry }}</dd></div>
-            <div><dt>夏令时</dt><dd>{{ birthTimeMeta.dstLabel }}</dd></div>
-            <div><dt>年界</dt><dd>{{ form.yearDivide === 'normal' ? '正月初一' : '立春' }}</dd></div>
-            <div><dt>换日</dt><dd>{{ form.dayDivide === 'forward' ? '子时换日' : form.dayDivide === 'current' ? '当日子时' : '公历次日' }}</dd></div>
-            <div><dt>子时规则</dt><dd>{{ form.ziDayRule === 'early_zi_prev_day' ? '早子算前一日' : form.ziDayRule === 'early_zi_same_day' ? '早子仍算当日' : '库默认' }}</dd></div>
-            <div><dt>亮度口径</dt><dd>{{ form.ziweiBrightnessMethod }}</dd></div>
-            <div><dt>右弼口径</dt><dd>{{ form.ziweiYoubiMethod === 'hour' ? 'hour（iztro）' : 'month（默认）' }}</dd></div>
-            <div><dt>四化口径</dt><dd>{{ form.sihuaMethod }}</dd></div>
-            <div><dt>流年四化</dt><dd>{{ form.liunianSihuaMethod }}</dd></div>
-            <div><dt>模板</dt><dd>{{ form.templateVersion }}</dd></div>
-            <div><dt>关注</dt><dd>{{ form.focusTopic || '未填写' }}</dd></div>
+          <p class="hint">{{ timeConfidence.label }} · {{ profile.cityName || '出生地未填' }}</p>
+          <dl class="meta-list meta-list--brief">
+            <div><dt>姓名</dt><dd>{{ form.familyName }}{{ form.givenName }}</dd></div>
+            <div><dt>出生</dt><dd>{{ form.birthDt ? form.birthDt.replace('T', ' ').slice(0, 16) : '未填写' }}</dd></div>
+            <div><dt>性别</dt><dd>{{ form.gender === 'M' ? '男' : form.gender === 'F' ? '女' : '未填' }}</dd></div>
+            <div><dt>出生地</dt><dd>{{ form.cityName || '未填写' }}{{ form.lon !== undefined ? ` · ${form.lon.toFixed(2)}°E` : '' }}</dd></div>
+            <div v-if="form.focusTopic"><dt>关注</dt><dd>{{ form.focusTopic }}</dd></div>
           </dl>
+          <details class="profile-advanced-meta">
+            <summary>高级口径（可选）</summary>
+            <dl class="meta-list">
+              <div><dt>保存状态</dt><dd>{{ profile.saved ? '已保存' : '未保存' }}</dd></div>
+              <div><dt>云端案例</dt><dd>{{ profile.activeProfile?.remoteCaseId || (auth.isLoggedIn ? '未同步' : '需登录') }}</dd></div>
+              <div v-if="form.calendarMode === 'lunar' && profile.birthDt"><dt>排盘公历</dt><dd>{{ profile.birthDt.replace('T', ' ').slice(0, 16) }}</dd></div>
+              <div v-if="form.cityTier"><dt>城市层级</dt><dd>{{ form.cityTier }}</dd></div>
+              <div v-if="form.industry"><dt>行业</dt><dd>{{ form.industry }}</dd></div>
+              <div><dt>夏令时</dt><dd>{{ birthTimeMeta.dstLabel }}</dd></div>
+              <div><dt>年界</dt><dd>{{ form.yearDivide === 'normal' ? '正月初一' : '立春' }}</dd></div>
+              <div><dt>换日</dt><dd>{{ form.dayDivide === 'forward' ? '子时换日' : form.dayDivide === 'current' ? '当日子时' : '公历次日' }}</dd></div>
+              <div><dt>子时规则</dt><dd>{{ form.ziDayRule === 'early_zi_prev_day' ? '早子算前一日' : form.ziDayRule === 'early_zi_same_day' ? '早子仍算当日' : '库默认' }}</dd></div>
+              <div><dt>亮度</dt><dd>{{ form.ziweiBrightnessMethod }}</dd></div>
+              <div><dt>右弼</dt><dd>{{ form.ziweiYoubiMethod === 'hour' ? 'hour（iztro）' : 'month（默认）' }}</dd></div>
+              <div><dt>四化</dt><dd>{{ form.sihuaMethod }}</dd></div>
+              <div><dt>流年四化</dt><dd>{{ form.liunianSihuaMethod }}</dd></div>
+              <div><dt>模板</dt><dd>{{ form.templateVersion }}</dd></div>
+            </dl>
+          </details>
           <div v-if="missingFields.length" class="missing-box">
             <p class="missing-box__title">待补全字段</p>
             <ul>

@@ -24,6 +24,7 @@ from starlette.requests import Request
 
 from app.schemas.bazi import BatchVerifyRequest, BatchVerifyResponse
 import services.bazi_engine_service as _bazi_engine_service
+from services.quota_service import enforce_quota
 from services.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,7 @@ def v2_batch_verify(
     request: Request,
     body: BatchVerifyRequest,
 ) -> BatchVerifyResponse:
+    enforce_quota(request, "batch")
     # ── R40: ENGINE_V2 检查 ─────────────────────────────────────────────────
     if not _bazi_engine_service._engine_v2_enabled():
         raise HTTPException(
@@ -118,7 +120,7 @@ def v2_batch_verify(
         except FuturesTimeoutError:
             # 整体 60s 到达：将未完成的条目计入 failed
             failed_indices = {f["index"] for f in failed}
-            for f, i in futures.items():
+            for _f, i in futures.items():
                 if i not in results and i not in failed_indices:
                     failed.append({"index": i, "error": "overall timeout (60s)"})
 

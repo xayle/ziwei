@@ -21,6 +21,7 @@ from services.bazi_engine.tables import (
     BRANCH_HIDDEN_STEMS,
     STEM_ELEMENT,
     WANGXIANG,
+    get_ten_god,
 )
 from services.bazi_engine.wuxing import WuxingResult, _elem_of_stem
 
@@ -61,6 +62,27 @@ class StrengthResult:
     is_strong: bool = False  # 偏旺/极旺
     is_weak: bool = False  # 偏弱/极弱
     is_balanced: bool = False  # 中和
+
+
+def _month_commander(month_branch: str, solar_day_in_month: int) -> tuple[str, str]:
+    """
+    人元司令：按公历日序取月支藏干初/中/末司令。
+
+    Returns:
+        (commander_stem, period) — period 为 early / mid / late
+    """
+    hidden = BRANCH_HIDDEN_STEMS.get(month_branch, [])
+    if not hidden:
+        return ("", "early")
+    day = max(1, min(int(solar_day_in_month), 30))
+    if day <= 10:
+        period = "early"
+    elif day <= 20:
+        period = "mid"
+    else:
+        period = "late"
+    idx = min({"early": 0, "mid": 1, "late": 2}[period], len(hidden) - 1)
+    return hidden[idx][0], period
 
 
 def _get_month_ling_score(day_elem: str, month_branch: str) -> float:
@@ -170,6 +192,7 @@ def compute_strength(
     day_branch: str,
     hour_branch: str,
     wuxing: WuxingResult | None = None,
+    solar_day_in_month: int | None = None,
 ) -> StrengthResult:
     """
     计算日主强弱综合得分。
@@ -191,6 +214,16 @@ def compute_strength(
 
     # 各因子得分（0-100）+ 权重
     f_yueling = _get_month_ling_score(day_elem, month_branch)
+    if solar_day_in_month is not None:
+        cmd_stem, cmd_period = _month_commander(month_branch, solar_day_in_month)
+        if cmd_stem:
+            cmd_elem = _elem_of_stem(cmd_stem)
+            cmd_tg = get_ten_god(day_stem, cmd_stem)
+            if cmd_elem == day_elem or cmd_tg in ("正印", "偏印", "比肩", "劫财"):
+                f_yueling = min(f_yueling + 5.0, 100.0)
+            elif cmd_tg in ("正官", "七杀", "食神", "伤官"):
+                f_yueling = max(f_yueling - 3.0, 0.0)
+            _ = cmd_period  # early/mid/late available for callers via _month_commander
     f_toukan = _get_toukan_score(day_elem, support_stems)
     f_genqi = _get_gen_qi_score(day_elem, all_branches)
     f_hehua = _get_hehua_score(day_stem, day_elem, all_stems, all_branches)

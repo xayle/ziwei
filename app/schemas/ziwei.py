@@ -5,8 +5,192 @@ app/schemas/ziwei.py — 紫微斗数 API 请求/响应模型
 from __future__ import annotations
 
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+from .disclaimer import DisclaimerBlockModel
+from .provenance import ResponseProvenance
+
+
+class EvidenceItemModel(BaseModel):
+    title: str
+    value: str
+    source: str | None = None
+    confidence: Literal["high", "medium", "low"] | None = None
+
+
+class TimelinePointModel(BaseModel):
+    year: int
+    label: str
+    summary: str
+    tone: Literal["danger", "warn", "neutral", "info", "current"] = "neutral"
+
+
+class PalaceWeightModel(BaseModel):
+    palace_name: str
+    weight: float
+    reason: str | None = None
+
+
+class BorrowedStarSourceModel(BaseModel):
+    palace_name: str
+    palace_index: int | None = None
+    branch: str | None = None
+    stem: str | None = None
+    full_gz: str | None = None
+    main_stars: list[dict[str, object]] = Field(default_factory=list)
+    analysis_tags: list[str] = Field(default_factory=list)
+    conclusion: str | None = None
+    explanation: str | None = None
+    suggestion: str | None = None
+
+
+class SihuaTraceItemModel(BaseModel):
+    phase: Literal["生年", "大限", "流年", "流月"]
+    target: str
+    transform: str
+    palace_name: str | None = None
+    summary: str | None = None
+    source: str | None = None
+    missing: bool = False
+
+
+class StarBrightnessSummaryModel(BaseModel):
+    strong: list[str] = Field(default_factory=list)
+    weak: list[str] = Field(default_factory=list)
+    details: dict[str, str] = Field(default_factory=dict)
+
+
+class ChartRelationSummaryModel(BaseModel):
+    minggong: str | None = None
+    shengong: str | None = None
+    wuxing_ju: str | None = None
+    triad_tetrad: list[str] = Field(default_factory=list)
+    opposition: list[str] = Field(default_factory=list)
+    palace_weights: list[PalaceWeightModel] = Field(default_factory=list)
+    key_palaces: list[str] = Field(default_factory=list)
+    palace_influence_notes: list[str] = Field(default_factory=list)
+    source: str | None = None
+    missing: list[str] = Field(default_factory=list)
+    borrowed_palaces: list[dict[str, object]] = Field(default_factory=list)
+    borrowed_sources: list[BorrowedStarSourceModel] = Field(default_factory=list)
+
+
+class ConfidenceSummaryModel(BaseModel):
+    level: Literal["high", "medium", "low"] = "medium"
+    score: int | None = None
+    evidence: list[EvidenceItemModel] = Field(default_factory=list)
+    risk_notes: list[str] = Field(default_factory=list)
+    inference_notes: list[str] = Field(default_factory=list)
+    blocked_fields: list[str] = Field(default_factory=list)
+
+
+class PalaceRefModel(BaseModel):
+    """宫位结构化引用（命/身/三方四正）。"""
+
+    index: int
+    name: str
+    branch: str
+    branch_idx: int
+    stem: str = ""
+    ganzhi: str = ""
+    is_empty_palace: bool = False
+    is_body_palace: bool = False
+
+
+class SanfangStructureModel(BaseModel):
+    """三方四正结构化关系。"""
+
+    life_palace: PalaceRefModel
+    opposite_palace: PalaceRefModel | None = None
+    triad_palaces: list[PalaceRefModel] = Field(default_factory=list)
+
+
+class ZiweiChartStructuralSummaryModel(BaseModel):
+    """命盘宫位结构摘要（纯结构化，替代 loose dict）。"""
+
+    life_palace: PalaceRefModel
+    body_palace: PalaceRefModel
+    opposite_palace: PalaceRefModel | None = None
+    sanfang: SanfangStructureModel
+    life_branch_idx: int = 0
+    body_branch_idx: int = 0
+    source: str | None = None
+    missing: list[str] = Field(default_factory=list)
+
+
+class ZiweiCoreSnapshotModel(BaseModel):
+    """核心命盘快照。"""
+
+    life_palace_gz: str = ""
+    body_palace_gz: str = ""
+    life_palace_branch_idx: int = 0
+    body_palace_branch_idx: int = 0
+    wuxing_ju: int = 0
+    wuxing_ju_name: str = ""
+    life_ruler_star: str = ""
+    body_ruler_star: str = ""
+    laiyin_palace: str = ""
+
+
+class PatternSummaryBlockModel(BaseModel):
+    patterns: list[dict[str, object]] = Field(default_factory=list)
+    special_pattern_names: list[str] = Field(default_factory=list)
+    summary_text: str = ""
+    confidence: Literal["high", "medium", "low"] = "medium"
+
+
+class ReportSummaryBlockModel(BaseModel):
+    title: str = ""
+    summary: str = ""
+    highlights: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    annotation_prompt: str = ""
+    source: str | None = None
+    missing: list[str] = Field(default_factory=list)
+
+
+class SihuaTraceEntryModel(BaseModel):
+    """生年四化链条目（宫位级）。"""
+
+    palace: str
+    stem: str = ""
+    flying_out: dict[str, str] = Field(default_factory=dict)
+    conclusion: str = ""
+    opposition: str = ""
+    source: str = ""
+    missing: bool = False
+
+
+class KeyYearPointModel(BaseModel):
+    label: str
+    ganzhi: str = ""
+    palace: str = ""
+    score: int | None = None
+    overall: str = ""
+    events: list[str] = Field(default_factory=list)
+
+
+class KeyMonthPointModel(BaseModel):
+    month: int
+    month_name: str = ""
+    month_gz: str = ""
+    palace_name: str = ""
+    sihua: dict[str, str] = Field(default_factory=dict)
+
+
+class ZiweiStructuralSummaryModel(BaseModel):
+    core_snapshot: ZiweiCoreSnapshotModel = Field(default_factory=ZiweiCoreSnapshotModel)
+    chart_relation_summary: ChartRelationSummaryModel | None = None
+    sihua_summary: list[SihuaTraceItemModel] = Field(default_factory=list)
+    brightness_summary: StarBrightnessSummaryModel | None = None
+    timeline_summary: dict[str, list[TimelinePointModel]] = Field(default_factory=dict)
+    pattern_summary: PatternSummaryBlockModel = Field(default_factory=PatternSummaryBlockModel)
+    confidence_summary: ConfidenceSummaryModel | None = None
+    report_summary: ReportSummaryBlockModel = Field(default_factory=ReportSummaryBlockModel)
+    source: str | None = None
+    missing: list[str] = Field(default_factory=list)
 
 
 class ZiweiRequest(BaseModel):
@@ -24,6 +208,18 @@ class ZiweiRequest(BaseModel):
 
     # ── 算法设置 ─────────────────────────────────────────────────────────────
     late_zishi: bool = Field(True, description="晚子时(23:00~00:00)视为次日（默认True）")
+    year_divide: str = Field(
+        "lichun",
+        description="年干支界：'lichun'=立春换年（默认，对齐八字节气年）| 'normal'=正月初一换年（对齐 iztro yearDivide=normal）",
+    )
+    day_divide: str = Field(
+        "solar_next",
+        description=(
+            "晚子时换日：'solar_next'=公历进次日再排盘（默认）| "
+            "'forward'=公历不换日、安星农历日+1（对齐 iztro dayDivide=forward）| "
+            "'current'=不换日"
+        ),
+    )
     sihua_stem_indices: dict[str, int] | None = Field(
         None,
         description=(
@@ -66,12 +262,54 @@ class ZiweiRequest(BaseModel):
         description="命主安法：'quanshu'=依据斗数全书（默认）| 'zhongzhou'=依据中州派理论",
     )
     liunian_sihua_method: str = Field(
-        "life_palace_stem",
-        description="流年四化来源：'life_palace_stem'=依据流年命宫天干（默认，陆斌兆体系）| 'year_stem'=依据流年天干",
+        "year_stem",
+        description="流年四化来源：'year_stem'=依据流年天干（默认，《全书》口径）| 'life_palace_stem'=依据流年命宫天干（陆斌兆体系）",
     )
     changsheng_method: str = Field(
         "standard",
         description="长生十二神安法：'standard'=区分阴阳顺逆（默认）| 'water_earth'=水土共长生 | 'fire_earth'=火土共长生",
+    )
+    wenchang_method: str = Field(
+        "hour",
+        description="文昌文曲安法：'hour'=依生时（默认）| 'year_branch'=依年支（legacy）",
+    )
+    youbi_method: str = Field(
+        "month",
+        description="右弼安法：'month'=依生月（默认）| 'hour'=依生时（legacy）",
+    )
+    liunian_life_method: str = Field(
+        "taisui",
+        description="流年命宫：'taisui'=太岁起宫（默认）| 'yin_start'=寅宫起（legacy）",
+    )
+    liuyue_method: str = Field(
+        "doujun",
+        description="流月排法：'doujun'=斗君法（默认）| 'simplified'=简化法（legacy）",
+    )
+    xiaoxian_start_method: str = Field(
+        "standard",
+        description="小限起点：'standard'=标准（默认）| 'gender_split'=男女分宫（legacy）",
+    )
+    flow_lunar_day: int | None = Field(
+        None,
+        ge=1,
+        le=30,
+        description="流日农历日（1-30），需配合 flow_liuyue_month",
+    )
+    flow_liuyue_month: int | None = Field(
+        None,
+        ge=1,
+        le=12,
+        description="流月序号（1-12），配合 flow_lunar_day 计算流日/流时",
+    )
+    flow_hour_branch: int | None = Field(
+        None,
+        ge=0,
+        le=11,
+        description="流时时辰地支索引（子=0…亥=11），缺省取生时",
+    )
+    include_flow_liuri: bool | None = Field(
+        None,
+        description="standard/pro 默认 True：未传 flow_* 时按流年参考日自动计算流日/流时",
     )
 
     @field_validator("gender", mode="before")
@@ -79,18 +317,7 @@ class ZiweiRequest(BaseModel):
     def normalize_gender(cls, v: object) -> object:
         if v is None:
             return v
-        s = str(v).strip()
-        mapping = {
-            "男": "男",
-            "女": "女",
-            "male": "男",
-            "female": "女",
-            "m": "男",
-            "f": "女",
-            "M": "男",
-            "F": "女",
-        }
-        return mapping.get(s, s)
+        return str(v).strip()
 
     @model_validator(mode="after")
     def validate_fields(self):
@@ -104,6 +331,10 @@ class ZiweiRequest(BaseModel):
             raise ValueError("Invalid template_version")
         if self.leap_month_method not in ["mid", "next", "same"]:
             raise ValueError("Invalid leap_month_method, must be mid/next/same")
+        if self.year_divide not in ["lichun", "normal"]:
+            raise ValueError("Invalid year_divide, must be lichun/normal")
+        if self.day_divide not in ["solar_next", "forward", "current"]:
+            raise ValueError("Invalid day_divide, must be solar_next/forward/current")
         valid_kuiyue = {"standard", "gengxin_mahu", "gengxin_huima", "liuxin_mahu"}
         if self.kuiyue_method not in valid_kuiyue:
             raise ValueError(f"Invalid kuiyue_method, must be one of {valid_kuiyue}")
@@ -123,6 +354,18 @@ class ZiweiRequest(BaseModel):
             raise ValueError("Invalid liunian_sihua_method")
         if self.changsheng_method not in {"standard", "water_earth", "fire_earth"}:
             raise ValueError("Invalid changsheng_method")
+        if self.wenchang_method not in {"hour", "year_branch"}:
+            raise ValueError("Invalid wenchang_method, must be hour/year_branch")
+        if self.youbi_method not in {"month", "hour"}:
+            raise ValueError("Invalid youbi_method, must be month/hour")
+        if self.liunian_life_method not in {"taisui", "yin_start"}:
+            raise ValueError("Invalid liunian_life_method, must be taisui/yin_start")
+        if self.liuyue_method not in {"doujun", "simplified"}:
+            raise ValueError("Invalid liuyue_method, must be doujun/simplified")
+        if self.xiaoxian_start_method not in {"standard", "gender_split"}:
+            raise ValueError("Invalid xiaoxian_start_method, must be standard/gender_split")
+        if self.flow_lunar_day is not None and self.flow_liuyue_month is None:
+            raise ValueError("flow_liuyue_month is required when flow_lunar_day is set")
         return self
 
     model_config = {
@@ -147,6 +390,19 @@ class StarInfo(BaseModel):
     transforms: list[str] = []
 
 
+class PalaceStructuredAnalysis(BaseModel):
+    """宫位三段式结构化解读（与 prose analysis 字典互补）。"""
+
+    palace_index: int
+    palace_name: str
+    conclusion: str = ""
+    explanation: str = ""
+    suggestion: str = ""
+    tooltip: str = ""
+    analysis_tags: list[str] = Field(default_factory=list)
+    is_empty_palace: bool = False
+
+
 class PalaceResponse(BaseModel):
     index: int
     name: str
@@ -155,6 +411,10 @@ class PalaceResponse(BaseModel):
     main_stars: list[StarInfo]
     aux_stars: list[StarInfo]
     flying_out: dict[str, str] = {}
+    borrowed_main_stars: list[dict[str, object]] = Field(default_factory=list)
+    borrowed_from_palace: str | None = None
+    borrowed_reason: str | None = None
+    is_empty_palace: bool = False
     analysis: str = ""
     analysis_tags: list[str] = []
     xiaoxian_ages: list[int] = []  # 该宫小限对应年龄
@@ -182,11 +442,14 @@ class LunarResponse(BaseModel):
     jieqi_month_gz: str = ""  # 节气月柱（八字法）
     day_gz: str = ""  # 日柱干支
     hour_gz: str = ""  # 时柱干支
+    year_divide: str = "lichun"  # 年界口径
+    day_divide: str = "solar_next"  # 晚子换日口径
 
 
 class DayunItemResponse(BaseModel):
     index: int
     ganzhi: str
+    branch_idx: int = Field(0, description="大限宫位地支索引（子=0）")
     start_age: int
     end_age: int
     start_year: int
@@ -216,6 +479,53 @@ class LiuyueItem(BaseModel):
     life_palace_branch: int
     palace_name: str
     sihua: dict[str, str] = {}  # 流月四化（月干四化）
+
+
+class IztroDualTrackResponse(BaseModel):
+    """iztro 对照轨（典型：ZW03 立春前晚子时边界）。"""
+
+    label: str = "iztro 对照轨"
+    year_divide: str = "normal"
+    day_divide: str = "forward"
+    life_palace_gz: str | None = None
+    main_match: int = 0
+    main_total: int = 14
+    note: str | None = None
+
+
+class IztroCrosscheckResponse(BaseModel):
+    """与 iztro 库的 advisory 交叉核验（可选，不阻断排盘）。"""
+
+    status: str
+    main_match: int = 0
+    main_total: int = 14
+    life_palace_match: bool = True
+    iztro_life_palace_gz: str | None = None
+    engine_life_palace_gz: str | None = None
+    advisory: str | None = None
+    dual_track: IztroDualTrackResponse | None = None
+
+
+class LiuriItem(BaseModel):
+    lunar_day: int
+    life_palace_branch: int
+    branch: str
+    palace_name: str = ""
+    liuyue_month: int = 1
+
+
+class LiushiItem(BaseModel):
+    hour_branch_idx: int
+    life_palace_branch: int
+    branch: str
+    palace_name: str = ""
+    hour_label: str = ""
+
+
+class LiuriLiushiResponse(BaseModel):
+    liuri: LiuriItem
+    liushi: LiushiItem
+    missing_fields: list[str] = Field(default_factory=list)
 
 
 class FlyingPalaceResponse(BaseModel):
@@ -266,9 +576,30 @@ class ZiweiResponse(BaseModel):
     # 流月
     liuyue: list[LiuyueItem] = []
 
+    # 流日/流时（Z-P2-01，可选）
+    liuri_liushi: LiuriLiushiResponse | None = None
+
+    # 引擎缺失字段
+    missing_fields: list[str] = Field(default_factory=list)
+    engine_warnings: list[str] = Field(default_factory=list)
+    iztro_crosscheck: IztroCrosscheckResponse | None = None
+
     # 文字
     summary: str = ""
+    chart_summary: str = ""
+    structural_summary: ZiweiChartStructuralSummaryModel | None = None
+    sihua_trace: list[SihuaTraceEntryModel] = Field(default_factory=list)
+    key_years: list[KeyYearPointModel] = Field(default_factory=list)
+    key_months: list[KeyMonthPointModel] = Field(default_factory=list)
+    confidence_level: Literal["high", "medium", "low"] = "medium"
+    confidence_score: int | None = None
+    evidence_chain: list[EvidenceItemModel] = Field(default_factory=list)
+    ziwei_structural_summary: ZiweiStructuralSummaryModel | None = None
     analysis: dict[str, str] = {}
+    analysis_structured: list[PalaceStructuredAnalysis] = Field(
+        default_factory=list,
+        description="逐宫结构化解读（conclusion/explanation/suggestion/tooltip）",
+    )
 
     # 命主/身主
     life_ruler_star: str = ""  # 命主
@@ -289,6 +620,24 @@ class ZiweiResponse(BaseModel):
     patterns: list[PatternResponse] = []
     remedies: list[RemedyResponse] = []
     life_suggestions: list[LifeSuggestionResponse] = []
+    provenance: ResponseProvenance | None = Field(None, description="各层可信度与典籍/启发式分层（9.5 目标计划）")
+    trust_level: Literal["full", "degraded", "reference", "advisory", "verified"] = Field(
+        "full",
+        description="命盘信任级别；degraded 时运限/API 仍 200（Q10）",
+    )
+    disclaimer_block: DisclaimerBlockModel | None = Field(None, description="合规免责声明块（P0-08）")
+    content_versions: dict[str, str] = Field(
+        default_factory=dict,
+        description="内容资产版本指纹（P0-05 classics/glossary/star_profiles 等）",
+    )
+    wenmo_advisory: str | None = Field(
+        None,
+        description="文墨天机 advisory 对照说明（P1-13 / colophon）",
+    )
+    classic_refs: list[dict] = Field(
+        default_factory=list,
+        description="古籍语料软提示（主星/格局/宫位，非硬覆盖引擎结论）",
+    )
 
 
 # ── 运势预测 Schema ────────────────────────────────────────────────────────
@@ -314,6 +663,8 @@ class PeriodForecastResponse(BaseModel):
     events: list[EventTagResponse]
     advice: str
     score: int  # 综合运势 1-100
+    tier: str = "neutral"
+    layer: str = Field("heuristic", description="provenance layer: classical | engine | heuristic")
 
 
 class ForecastResultResponse(BaseModel):
@@ -323,6 +674,7 @@ class ForecastResultResponse(BaseModel):
     yearly: PeriodForecastResponse  # 年运
     monthly: list[PeriodForecastResponse]  # 12个流月
     current_month: PeriodForecastResponse  # 当前月
+    layer: str = Field("heuristic", description="forecast 整体可信度分层")
 
 
 class PatternResponse(BaseModel):
@@ -332,6 +684,13 @@ class PatternResponse(BaseModel):
     palaces: list[str] = []
     stars: list[str] = []
     source: str = ""
+    rule_id: str = Field("", description="格局规则 ID，如 ZRULE_001（B-P2 证据链）")
+    tier: Literal["canonical", "extended", "heuristic"] = Field(
+        "heuristic",
+        description="格局可信度层级：canonical 典籍核心 / extended 双条件 / heuristic 启发式",
+    )
+    classic_ref: str = Field("", description="格局典籍句式（soft narrative）")
+    classic_refs: list[dict] = Field(default_factory=list, description="格局相关古籍语料软提示")
 
 
 class RemedyResponse(BaseModel):

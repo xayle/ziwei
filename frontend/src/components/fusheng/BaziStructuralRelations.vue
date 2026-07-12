@@ -112,7 +112,7 @@ const hasPillarDetails = () => (props.pillarDetails?.length ?? 0) > 0
 }
 
 .bazi-structural__table th {
-  background: var(--surface-2);
+  background: var(--inset-tint);
   color: var(--brand-gold-dark);
 }
 

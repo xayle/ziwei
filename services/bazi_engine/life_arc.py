@@ -37,7 +37,7 @@ _GEJU_SCORE: dict[str, float] = {
     "正财格": 75.0,
     "偏财格": 70.0,
     "伤官格": 65.0,
-    "羊刃格": 62.0,
+    "月刃格": 62.0,
 }
 _GEJU_DEFAULT = 60.0
 _GEJU_BROKEN = 40.0
@@ -86,7 +86,7 @@ def _compute_dayun_factor(dayun_list: list[dict]) -> float:
     trend_val = {"上升": 85.0, "平稳": 65.0, "下降": 40.0}
     total = 0.0
     steps = dayun_list[:6]
-    for i, dy in enumerate(steps):
+    for _i, dy in enumerate(steps):
         base = 85.0 if dy.get("is_favorable", True) else 45.0
         trend_score = trend_val.get(dy.get("trend", "平稳"), 65.0)
         combined = (base + trend_score) / 2

@@ -16,17 +16,19 @@ from routers import events as events_router
 from routers import experiments as experiments_router
 from routers import export as export_router
 from routers import fengshui as fengshui_router
+from routers import fusheng_archive as fusheng_archive_router
 from routers import fusheng_report as fusheng_report_router
 from routers import life as life_router
 from routers import liuyao as liuyao_router
 from routers import llm as llm_router
 from routers import members as members_router
-from routers import fusheng_archive as fusheng_archive_router
+from routers import name as name_router
 from routers import notifications as notifications_router
 from routers import payment as payment_router
-from routers import name as name_router
 from routers import privacy as privacy_router
+from routers import profile_summary as profile_summary_router
 from routers import quickstart as quickstart_router
+from routers import relation_compat as relation_compat_router
 from routers import relations as relations_router
 from routers import reviews as reviews_router
 from routers import rules_admin as rules_admin_router
@@ -56,6 +58,8 @@ def _include_core_routers(app: FastAPI) -> None:
     app.include_router(events_router.router)
     app.include_router(scenarios_router.router)
     app.include_router(static_data_router.router)
+    app.include_router(relation_compat_router.router)
+    app.include_router(profile_summary_router.router)
     app.include_router(quickstart_router.router)
     app.include_router(v2_router_module.router, prefix="/api/v2")
     app.include_router(ziwei_router_module.router)

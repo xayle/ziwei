@@ -64,6 +64,7 @@ class LlmDraftResponse(BaseModel):
     created_at: datetime
     reviewed_at: datetime | None
     deleted_at: datetime | None
+    evidence_refs: list[dict] = Field(default_factory=list, description="provenance 证据链")
 
     model_config = {"from_attributes": True}
 

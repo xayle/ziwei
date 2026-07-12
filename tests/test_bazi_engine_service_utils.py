@@ -366,10 +366,14 @@ class TestCalculateFunction:
         return CalculateResult(verify_response=vr, engine_version=engine_version)
 
     def test_calls_v1_by_default(self):
-        """ENGINE_V2=false 时调用 _calculate_v1"""
+        """ENGINE_V2=false 时经 compute_pillars 调用 _calculate_v1"""
         fake_result = self._make_fake_result("v1")
+        fake_pillars = MagicMock()
+        fake_pillars.pillars_layer = "bazi_engine.pillars.v2"
+        fake_pillars.zi_day_rule = "sxtwl"
 
         with patch("services.bazi_engine_service._engine_v2_enabled", return_value=False), \
+             patch("services.bazi_engine.pillars.compute_pillars", return_value=fake_pillars), \
              patch("services.bazi_engine_service._calculate_v1", return_value=fake_result) as mock_v1, \
              patch("services.bazi_engine_service._CACHETOOLS_AVAILABLE", False):
 
@@ -420,8 +424,12 @@ class TestCalculateFunction:
     def test_extra_warnings_forwarded(self):
         """extra_warnings 被正确透传到 _calculate_v1"""
         fake_result = self._make_fake_result("v1")
+        fake_pillars = MagicMock()
+        fake_pillars.pillars_layer = "bazi_engine.pillars.v2"
+        fake_pillars.zi_day_rule = "sxtwl"
 
         with patch("services.bazi_engine_service._engine_v2_enabled", return_value=False), \
+             patch("services.bazi_engine.pillars.compute_pillars", return_value=fake_pillars), \
              patch("services.bazi_engine_service._calculate_v1", return_value=fake_result) as mock_v1, \
              patch("services.bazi_engine_service._CACHETOOLS_AVAILABLE", False):
 

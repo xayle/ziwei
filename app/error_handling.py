@@ -189,7 +189,7 @@ def handle_exceptions(
                 )
 
         # 根据函数是否异步选择包装器
-        if hasattr(func, "__call__"):
+        if callable(func):
             import inspect
 
             if inspect.iscoroutinefunction(func):

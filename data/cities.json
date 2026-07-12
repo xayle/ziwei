@@ -1,0 +1,2361 @@
+[
+  {
+    "name": "上海",
+    "province": "上海市",
+    "lng": 121.47,
+    "lat": 31.23,
+    "city_type": "直辖市"
+  },
+  {
+    "name": "北京",
+    "province": "北京市",
+    "lng": 116.4,
+    "lat": 39.9,
+    "city_type": "直辖市"
+  },
+  {
+    "name": "天津",
+    "province": "天津市",
+    "lng": 117.2,
+    "lat": 39.12,
+    "city_type": "直辖市"
+  },
+  {
+    "name": "重庆",
+    "province": "重庆市",
+    "lng": 106.55,
+    "lat": 29.57,
+    "city_type": "直辖市"
+  },
+  {
+    "name": "昆明",
+    "province": "云南省",
+    "lng": 102.72,
+    "lat": 25.05,
+    "city_type": "省会"
+  },
+  {
+    "name": "呼和浩特",
+    "province": "内蒙古自治区",
+    "lng": 111.73,
+    "lat": 40.83,
+    "city_type": "省会"
+  },
+  {
+    "name": "长春",
+    "province": "吉林省",
+    "lng": 125.32,
+    "lat": 43.9,
+    "city_type": "省会"
+  },
+  {
+    "name": "成都",
+    "province": "四川省",
+    "lng": 104.07,
+    "lat": 30.67,
+    "city_type": "省会"
+  },
+  {
+    "name": "银川",
+    "province": "宁夏回族自治区",
+    "lng": 106.28,
+    "lat": 38.47,
+    "city_type": "省会"
+  },
+  {
+    "name": "合肥",
+    "province": "安徽省",
+    "lng": 117.25,
+    "lat": 31.83,
+    "city_type": "省会"
+  },
+  {
+    "name": "济南",
+    "province": "山东省",
+    "lng": 116.98,
+    "lat": 36.67,
+    "city_type": "省会"
+  },
+  {
+    "name": "太原",
+    "province": "山西省",
+    "lng": 112.55,
+    "lat": 37.87,
+    "city_type": "省会"
+  },
+  {
+    "name": "广州",
+    "province": "广东省",
+    "lng": 113.27,
+    "lat": 23.13,
+    "city_type": "省会"
+  },
+  {
+    "name": "南宁",
+    "province": "广西壮族自治区",
+    "lng": 108.37,
+    "lat": 22.82,
+    "city_type": "省会"
+  },
+  {
+    "name": "乌鲁木齐",
+    "province": "新疆维吾尔自治区",
+    "lng": 87.6,
+    "lat": 43.8,
+    "city_type": "省会"
+  },
+  {
+    "name": "南京",
+    "province": "江苏省",
+    "lng": 118.78,
+    "lat": 32.07,
+    "city_type": "省会"
+  },
+  {
+    "name": "南昌",
+    "province": "江西省",
+    "lng": 115.85,
+    "lat": 28.68,
+    "city_type": "省会"
+  },
+  {
+    "name": "石家庄",
+    "province": "河北省",
+    "lng": 114.52,
+    "lat": 38.05,
+    "city_type": "省会"
+  },
+  {
+    "name": "郑州",
+    "province": "河南省",
+    "lng": 113.62,
+    "lat": 34.75,
+    "city_type": "省会"
+  },
+  {
+    "name": "杭州",
+    "province": "浙江省",
+    "lng": 120.15,
+    "lat": 30.28,
+    "city_type": "省会"
+  },
+  {
+    "name": "海口",
+    "province": "海南省",
+    "lng": 110.32,
+    "lat": 20.03,
+    "city_type": "省会"
+  },
+  {
+    "name": "武汉",
+    "province": "湖北省",
+    "lng": 114.3,
+    "lat": 30.6,
+    "city_type": "省会"
+  },
+  {
+    "name": "长沙",
+    "province": "湖南省",
+    "lng": 112.93,
+    "lat": 28.23,
+    "city_type": "省会"
+  },
+  {
+    "name": "兰州",
+    "province": "甘肃省",
+    "lng": 103.82,
+    "lat": 36.07,
+    "city_type": "省会"
+  },
+  {
+    "name": "福州",
+    "province": "福建省",
+    "lng": 119.3,
+    "lat": 26.08,
+    "city_type": "省会"
+  },
+  {
+    "name": "拉萨",
+    "province": "西藏自治区",
+    "lng": 91.13,
+    "lat": 29.65,
+    "city_type": "省会"
+  },
+  {
+    "name": "贵阳",
+    "province": "贵州省",
+    "lng": 106.63,
+    "lat": 26.65,
+    "city_type": "省会"
+  },
+  {
+    "name": "沈阳",
+    "province": "辽宁省",
+    "lng": 123.43,
+    "lat": 41.8,
+    "city_type": "省会"
+  },
+  {
+    "name": "西安",
+    "province": "陕西省",
+    "lng": 108.93,
+    "lat": 34.27,
+    "city_type": "省会"
+  },
+  {
+    "name": "西宁",
+    "province": "青海省",
+    "lng": 101.78,
+    "lat": 36.62,
+    "city_type": "省会"
+  },
+  {
+    "name": "哈尔滨",
+    "province": "黑龙江省",
+    "lng": 126.53,
+    "lat": 45.8,
+    "city_type": "省会"
+  },
+  {
+    "name": "青岛",
+    "province": "山东省",
+    "lng": 120.38,
+    "lat": 36.07,
+    "city_type": "计划单列市"
+  },
+  {
+    "name": "深圳",
+    "province": "广东省",
+    "lng": 114.05,
+    "lat": 22.55,
+    "city_type": "计划单列市"
+  },
+  {
+    "name": "宁波",
+    "province": "浙江省",
+    "lng": 121.56,
+    "lat": 29.15,
+    "city_type": "计划单列市"
+  },
+  {
+    "name": "厦门",
+    "province": "福建省",
+    "lng": 118.08,
+    "lat": 24.48,
+    "city_type": "计划单列市"
+  },
+  {
+    "name": "大连",
+    "province": "辽宁省",
+    "lng": 121.62,
+    "lat": 38.92,
+    "city_type": "计划单列市"
+  },
+  {
+    "name": "临沧",
+    "province": "云南省",
+    "lng": 100.08,
+    "lat": 23.88,
+    "city_type": "地级市"
+  },
+  {
+    "name": "丽江",
+    "province": "云南省",
+    "lng": 100.23,
+    "lat": 26.88,
+    "city_type": "地级市"
+  },
+  {
+    "name": "保山",
+    "province": "云南省",
+    "lng": 99.17,
+    "lat": 25.12,
+    "city_type": "地级市"
+  },
+  {
+    "name": "大理",
+    "province": "云南省",
+    "lng": 100.23,
+    "lat": 25.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "德宏",
+    "province": "云南省",
+    "lng": 98.58,
+    "lat": 24.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "怒江",
+    "province": "云南省",
+    "lng": 98.85,
+    "lat": 25.85,
+    "city_type": "地级市"
+  },
+  {
+    "name": "文山",
+    "province": "云南省",
+    "lng": 104.25,
+    "lat": 23.37,
+    "city_type": "地级市"
+  },
+  {
+    "name": "昭通",
+    "province": "云南省",
+    "lng": 103.72,
+    "lat": 27.33,
+    "city_type": "地级市"
+  },
+  {
+    "name": "普洱",
+    "province": "云南省",
+    "lng": 100.73,
+    "lat": 23.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "曲靖",
+    "province": "云南省",
+    "lng": 103.8,
+    "lat": 25.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "楚雄",
+    "province": "云南省",
+    "lng": 101.55,
+    "lat": 25.03,
+    "city_type": "地级市"
+  },
+  {
+    "name": "玉溪",
+    "province": "云南省",
+    "lng": 102.55,
+    "lat": 24.35,
+    "city_type": "地级市"
+  },
+  {
+    "name": "红河",
+    "province": "云南省",
+    "lng": 103.4,
+    "lat": 23.37,
+    "city_type": "地级市"
+  },
+  {
+    "name": "西双版纳",
+    "province": "云南省",
+    "lng": 100.8,
+    "lat": 22.02,
+    "city_type": "地级市"
+  },
+  {
+    "name": "迪庆",
+    "province": "云南省",
+    "lng": 99.7,
+    "lat": 27.83,
+    "city_type": "地级市"
+  },
+  {
+    "name": "乌兰察布",
+    "province": "内蒙古自治区",
+    "lng": 113.12,
+    "lat": 40.98,
+    "city_type": "地级市"
+  },
+  {
+    "name": "乌海",
+    "province": "内蒙古自治区",
+    "lng": 106.82,
+    "lat": 39.67,
+    "city_type": "地级市"
+  },
+  {
+    "name": "兴安盟",
+    "province": "内蒙古自治区",
+    "lng": 122.05,
+    "lat": 45.35,
+    "city_type": "地级市"
+  },
+  {
+    "name": "包头",
+    "province": "内蒙古自治区",
+    "lng": 109.83,
+    "lat": 40.65,
+    "city_type": "地级市"
+  },
+  {
+    "name": "呼伦贝尔",
+    "province": "内蒙古自治区",
+    "lng": 119.77,
+    "lat": 49.22,
+    "city_type": "地级市"
+  },
+  {
+    "name": "巴彦淖尔",
+    "province": "内蒙古自治区",
+    "lng": 107.42,
+    "lat": 40.75,
+    "city_type": "地级市"
+  },
+  {
+    "name": "赤峰",
+    "province": "内蒙古自治区",
+    "lng": 118.92,
+    "lat": 42.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "通辽",
+    "province": "内蒙古自治区",
+    "lng": 122.27,
+    "lat": 43.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鄂尔多斯",
+    "province": "内蒙古自治区",
+    "lng": 109.8,
+    "lat": 39.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "锡林郭勒",
+    "province": "内蒙古自治区",
+    "lng": 116.07,
+    "lat": 43.95,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阿拉善",
+    "province": "内蒙古自治区",
+    "lng": 105.73,
+    "lat": 45.35,
+    "city_type": "地级市"
+  },
+  {
+    "name": "吉林",
+    "province": "吉林省",
+    "lng": 126.55,
+    "lat": 43.83,
+    "city_type": "地级市"
+  },
+  {
+    "name": "四平",
+    "province": "吉林省",
+    "lng": 124.35,
+    "lat": 43.17,
+    "city_type": "地级市"
+  },
+  {
+    "name": "延边",
+    "province": "吉林省",
+    "lng": 129.5,
+    "lat": 42.88,
+    "city_type": "地级市"
+  },
+  {
+    "name": "松原",
+    "province": "吉林省",
+    "lng": 124.82,
+    "lat": 45.13,
+    "city_type": "地级市"
+  },
+  {
+    "name": "白城",
+    "province": "吉林省",
+    "lng": 122.83,
+    "lat": 45.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "白山",
+    "province": "吉林省",
+    "lng": 126.42,
+    "lat": 41.93,
+    "city_type": "地级市"
+  },
+  {
+    "name": "辽源",
+    "province": "吉林省",
+    "lng": 125.13,
+    "lat": 42.88,
+    "city_type": "地级市"
+  },
+  {
+    "name": "通化",
+    "province": "吉林省",
+    "lng": 125.93,
+    "lat": 41.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "乐山",
+    "province": "四川省",
+    "lng": 103.77,
+    "lat": 29.57,
+    "city_type": "地级市"
+  },
+  {
+    "name": "内江",
+    "province": "四川省",
+    "lng": 105.05,
+    "lat": 29.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "凉山",
+    "province": "四川省",
+    "lng": 102.27,
+    "lat": 27.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "南充",
+    "province": "四川省",
+    "lng": 106.08,
+    "lat": 30.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宜宾",
+    "province": "四川省",
+    "lng": 104.55,
+    "lat": 28.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "巴中",
+    "province": "四川省",
+    "lng": 106.77,
+    "lat": 31.85,
+    "city_type": "地级市"
+  },
+  {
+    "name": "广元",
+    "province": "四川省",
+    "lng": 105.83,
+    "lat": 32.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "广安",
+    "province": "四川省",
+    "lng": 106.63,
+    "lat": 30.47,
+    "city_type": "地级市"
+  },
+  {
+    "name": "德阳",
+    "province": "四川省",
+    "lng": 104.38,
+    "lat": 31.13,
+    "city_type": "地级市"
+  },
+  {
+    "name": "攀枝花",
+    "province": "四川省",
+    "lng": 101.72,
+    "lat": 26.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "泸州",
+    "province": "四川省",
+    "lng": 105.43,
+    "lat": 28.87,
+    "city_type": "地级市"
+  },
+  {
+    "name": "甘孜",
+    "province": "四川省",
+    "lng": 101.97,
+    "lat": 30.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "眉山",
+    "province": "四川省",
+    "lng": 103.83,
+    "lat": 30.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "绵阳",
+    "province": "四川省",
+    "lng": 104.73,
+    "lat": 31.47,
+    "city_type": "地级市"
+  },
+  {
+    "name": "自贡",
+    "province": "四川省",
+    "lng": 104.78,
+    "lat": 29.35,
+    "city_type": "地级市"
+  },
+  {
+    "name": "资阳",
+    "province": "四川省",
+    "lng": 104.63,
+    "lat": 28.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "达州",
+    "province": "四川省",
+    "lng": 107.5,
+    "lat": 31.22,
+    "city_type": "地级市"
+  },
+  {
+    "name": "遂宁",
+    "province": "四川省",
+    "lng": 105.57,
+    "lat": 30.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阿坝",
+    "province": "四川省",
+    "lng": 101.7,
+    "lat": 32.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "雅安",
+    "province": "四川省",
+    "lng": 103.0,
+    "lat": 29.98,
+    "city_type": "地级市"
+  },
+  {
+    "name": "中卫",
+    "province": "宁夏回族自治区",
+    "lng": 105.18,
+    "lat": 37.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "吴忠",
+    "province": "宁夏回族自治区",
+    "lng": 106.2,
+    "lat": 37.98,
+    "city_type": "地级市"
+  },
+  {
+    "name": "固原",
+    "province": "宁夏回族自治区",
+    "lng": 106.28,
+    "lat": 36.0,
+    "city_type": "地级市"
+  },
+  {
+    "name": "石嘴山",
+    "province": "宁夏回族自治区",
+    "lng": 106.38,
+    "lat": 39.02,
+    "city_type": "地级市"
+  },
+  {
+    "name": "亳州",
+    "province": "安徽省",
+    "lng": 115.78,
+    "lat": 33.85,
+    "city_type": "地级市"
+  },
+  {
+    "name": "六安",
+    "province": "安徽省",
+    "lng": 116.5,
+    "lat": 31.77,
+    "city_type": "地级市"
+  },
+  {
+    "name": "安庆",
+    "province": "安徽省",
+    "lng": 117.05,
+    "lat": 30.53,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宣城",
+    "province": "安徽省",
+    "lng": 118.75,
+    "lat": 30.95,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宿州",
+    "province": "安徽省",
+    "lng": 116.98,
+    "lat": 33.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "池州",
+    "province": "安徽省",
+    "lng": 117.48,
+    "lat": 30.67,
+    "city_type": "地级市"
+  },
+  {
+    "name": "淮北",
+    "province": "安徽省",
+    "lng": 116.8,
+    "lat": 33.95,
+    "city_type": "地级市"
+  },
+  {
+    "name": "淮南",
+    "province": "安徽省",
+    "lng": 117.0,
+    "lat": 32.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "滁州",
+    "province": "安徽省",
+    "lng": 118.32,
+    "lat": 32.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "芜湖",
+    "province": "安徽省",
+    "lng": 118.57,
+    "lat": 31.15,
+    "city_type": "地级市"
+  },
+  {
+    "name": "蚌埠",
+    "province": "安徽省",
+    "lng": 117.38,
+    "lat": 32.92,
+    "city_type": "地级市"
+  },
+  {
+    "name": "铜陵",
+    "province": "安徽省",
+    "lng": 117.78,
+    "lat": 30.95,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阜阳",
+    "province": "安徽省",
+    "lng": 115.82,
+    "lat": 32.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "马鞍山",
+    "province": "安徽省",
+    "lng": 118.5,
+    "lat": 31.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黄山",
+    "province": "安徽省",
+    "lng": 118.33,
+    "lat": 29.72,
+    "city_type": "地级市"
+  },
+  {
+    "name": "东营",
+    "province": "山东省",
+    "lng": 118.67,
+    "lat": 37.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "临沂",
+    "province": "山东省",
+    "lng": 118.35,
+    "lat": 35.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "威海",
+    "province": "山东省",
+    "lng": 122.12,
+    "lat": 37.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "德州",
+    "province": "山东省",
+    "lng": 116.3,
+    "lat": 37.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "日照",
+    "province": "山东省",
+    "lng": 119.52,
+    "lat": 35.42,
+    "city_type": "地级市"
+  },
+  {
+    "name": "枣庄",
+    "province": "山东省",
+    "lng": 117.32,
+    "lat": 34.82,
+    "city_type": "地级市"
+  },
+  {
+    "name": "泰安",
+    "province": "山东省",
+    "lng": 117.08,
+    "lat": 36.2,
+    "city_type": "地级市"
+  },
+  {
+    "name": "济宁",
+    "province": "山东省",
+    "lng": 116.58,
+    "lat": 35.42,
+    "city_type": "地级市"
+  },
+  {
+    "name": "淄博",
+    "province": "山东省",
+    "lng": 118.05,
+    "lat": 36.82,
+    "city_type": "地级市"
+  },
+  {
+    "name": "滨州",
+    "province": "山东省",
+    "lng": 117.97,
+    "lat": 37.38,
+    "city_type": "地级市"
+  },
+  {
+    "name": "潍坊",
+    "province": "山东省",
+    "lng": 119.15,
+    "lat": 36.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "烟台",
+    "province": "山东省",
+    "lng": 121.43,
+    "lat": 37.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "聊城",
+    "province": "山东省",
+    "lng": 115.98,
+    "lat": 36.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "菏泽",
+    "province": "山东省",
+    "lng": 115.58,
+    "lat": 35.26,
+    "city_type": "地级市"
+  },
+  {
+    "name": "临汾",
+    "province": "山西省",
+    "lng": 111.52,
+    "lat": 36.08,
+    "city_type": "地级市"
+  },
+  {
+    "name": "吕梁",
+    "province": "山西省",
+    "lng": 111.13,
+    "lat": 37.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "大同",
+    "province": "山西省",
+    "lng": 113.3,
+    "lat": 40.08,
+    "city_type": "地级市"
+  },
+  {
+    "name": "忻州",
+    "province": "山西省",
+    "lng": 112.73,
+    "lat": 38.42,
+    "city_type": "地级市"
+  },
+  {
+    "name": "晋中",
+    "province": "山西省",
+    "lng": 112.75,
+    "lat": 37.68,
+    "city_type": "地级市"
+  },
+  {
+    "name": "晋城",
+    "province": "山西省",
+    "lng": 112.83,
+    "lat": 35.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "朔州",
+    "province": "山西省",
+    "lng": 112.43,
+    "lat": 39.33,
+    "city_type": "地级市"
+  },
+  {
+    "name": "运城",
+    "province": "山西省",
+    "lng": 110.98,
+    "lat": 35.02,
+    "city_type": "地级市"
+  },
+  {
+    "name": "长治",
+    "province": "山西省",
+    "lng": 113.03,
+    "lat": 36.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阳泉",
+    "province": "山西省",
+    "lng": 113.57,
+    "lat": 37.85,
+    "city_type": "地级市"
+  },
+  {
+    "name": "东莞",
+    "province": "广东省",
+    "lng": 113.75,
+    "lat": 23.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "中山",
+    "province": "广东省",
+    "lng": 113.38,
+    "lat": 22.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "云浮",
+    "province": "广东省",
+    "lng": 112.03,
+    "lat": 22.92,
+    "city_type": "地级市"
+  },
+  {
+    "name": "佛山",
+    "province": "广东省",
+    "lng": 113.12,
+    "lat": 23.02,
+    "city_type": "地级市"
+  },
+  {
+    "name": "惠州",
+    "province": "广东省",
+    "lng": 114.42,
+    "lat": 23.12,
+    "city_type": "地级市"
+  },
+  {
+    "name": "揭阳",
+    "province": "广东省",
+    "lng": 116.37,
+    "lat": 23.55,
+    "city_type": "地级市"
+  },
+  {
+    "name": "梅州",
+    "province": "广东省",
+    "lng": 116.12,
+    "lat": 24.28,
+    "city_type": "地级市"
+  },
+  {
+    "name": "汕头",
+    "province": "广东省",
+    "lng": 116.68,
+    "lat": 23.35,
+    "city_type": "地级市"
+  },
+  {
+    "name": "汕尾",
+    "province": "广东省",
+    "lng": 115.37,
+    "lat": 22.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "江门",
+    "province": "广东省",
+    "lng": 113.08,
+    "lat": 22.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "河源",
+    "province": "广东省",
+    "lng": 114.7,
+    "lat": 23.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "清远",
+    "province": "广东省",
+    "lng": 113.03,
+    "lat": 23.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "湛江",
+    "province": "广东省",
+    "lng": 110.35,
+    "lat": 21.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "潮州",
+    "province": "广东省",
+    "lng": 116.62,
+    "lat": 23.67,
+    "city_type": "地级市"
+  },
+  {
+    "name": "珠海",
+    "province": "广东省",
+    "lng": 113.57,
+    "lat": 22.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "肇庆",
+    "province": "广东省",
+    "lng": 112.47,
+    "lat": 23.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "茂名",
+    "province": "广东省",
+    "lng": 110.92,
+    "lat": 21.67,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阳江",
+    "province": "广东省",
+    "lng": 111.98,
+    "lat": 21.87,
+    "city_type": "地级市"
+  },
+  {
+    "name": "韶关",
+    "province": "广东省",
+    "lng": 113.6,
+    "lat": 24.82,
+    "city_type": "地级市"
+  },
+  {
+    "name": "北海",
+    "province": "广西壮族自治区",
+    "lng": 109.12,
+    "lat": 21.48,
+    "city_type": "地级市"
+  },
+  {
+    "name": "崇左",
+    "province": "广西壮族自治区",
+    "lng": 107.37,
+    "lat": 22.4,
+    "city_type": "地级市"
+  },
+  {
+    "name": "来宾",
+    "province": "广西壮族自治区",
+    "lng": 109.23,
+    "lat": 23.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "柳州",
+    "province": "广西壮族自治区",
+    "lng": 109.42,
+    "lat": 24.33,
+    "city_type": "地级市"
+  },
+  {
+    "name": "桂林",
+    "province": "广西壮族自治区",
+    "lng": 110.28,
+    "lat": 25.28,
+    "city_type": "地级市"
+  },
+  {
+    "name": "梧州",
+    "province": "广西壮族自治区",
+    "lng": 111.27,
+    "lat": 23.48,
+    "city_type": "地级市"
+  },
+  {
+    "name": "河池",
+    "province": "广西壮族自治区",
+    "lng": 108.07,
+    "lat": 24.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "玉林",
+    "province": "广西壮族自治区",
+    "lng": 110.17,
+    "lat": 22.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "百色",
+    "province": "广西壮族自治区",
+    "lng": 106.62,
+    "lat": 23.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "贵港",
+    "province": "广西壮族自治区",
+    "lng": 109.6,
+    "lat": 23.1,
+    "city_type": "地级市"
+  },
+  {
+    "name": "贺州",
+    "province": "广西壮族自治区",
+    "lng": 111.55,
+    "lat": 24.42,
+    "city_type": "地级市"
+  },
+  {
+    "name": "钦州",
+    "province": "广西壮族自治区",
+    "lng": 108.62,
+    "lat": 21.95,
+    "city_type": "地级市"
+  },
+  {
+    "name": "防城港",
+    "province": "广西壮族自治区",
+    "lng": 108.35,
+    "lat": 21.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "伊犁",
+    "province": "新疆维吾尔自治区",
+    "lng": 81.32,
+    "lat": 43.92,
+    "city_type": "地级市"
+  },
+  {
+    "name": "克孜勒苏",
+    "province": "新疆维吾尔自治区",
+    "lng": 76.17,
+    "lat": 41.75,
+    "city_type": "地级市"
+  },
+  {
+    "name": "克拉玛依",
+    "province": "新疆维吾尔自治区",
+    "lng": 84.87,
+    "lat": 45.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "博尔塔拉",
+    "province": "新疆维吾尔自治区",
+    "lng": 82.07,
+    "lat": 44.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "吐鲁番",
+    "province": "新疆维吾尔自治区",
+    "lng": 89.17,
+    "lat": 42.95,
+    "city_type": "地级市"
+  },
+  {
+    "name": "和田",
+    "province": "新疆维吾尔自治区",
+    "lng": 79.92,
+    "lat": 37.12,
+    "city_type": "地级市"
+  },
+  {
+    "name": "哈密",
+    "province": "新疆维吾尔自治区",
+    "lng": 93.52,
+    "lat": 42.83,
+    "city_type": "地级市"
+  },
+  {
+    "name": "喀什",
+    "province": "新疆维吾尔自治区",
+    "lng": 75.98,
+    "lat": 39.47,
+    "city_type": "地级市"
+  },
+  {
+    "name": "塔城",
+    "province": "新疆维吾尔自治区",
+    "lng": 82.98,
+    "lat": 46.75,
+    "city_type": "地级市"
+  },
+  {
+    "name": "巴音郭楞",
+    "province": "新疆维吾尔自治区",
+    "lng": 86.15,
+    "lat": 41.77,
+    "city_type": "地级市"
+  },
+  {
+    "name": "昌吉",
+    "province": "新疆维吾尔自治区",
+    "lng": 87.3,
+    "lat": 44.02,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阿克苏",
+    "province": "新疆维吾尔自治区",
+    "lng": 80.27,
+    "lat": 41.17,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阿勒泰",
+    "province": "新疆维吾尔自治区",
+    "lng": 88.13,
+    "lat": 47.85,
+    "city_type": "地级市"
+  },
+  {
+    "name": "南通",
+    "province": "江苏省",
+    "lng": 120.88,
+    "lat": 31.98,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宿迁",
+    "province": "江苏省",
+    "lng": 118.28,
+    "lat": 33.97,
+    "city_type": "地级市"
+  },
+  {
+    "name": "常州",
+    "province": "江苏省",
+    "lng": 119.95,
+    "lat": 31.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "徐州",
+    "province": "江苏省",
+    "lng": 117.18,
+    "lat": 34.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "扬州",
+    "province": "江苏省",
+    "lng": 119.4,
+    "lat": 32.4,
+    "city_type": "地级市"
+  },
+  {
+    "name": "无锡",
+    "province": "江苏省",
+    "lng": 120.3,
+    "lat": 31.57,
+    "city_type": "地级市"
+  },
+  {
+    "name": "泰州",
+    "province": "江苏省",
+    "lng": 119.92,
+    "lat": 32.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "淮安",
+    "province": "江苏省",
+    "lng": 119.02,
+    "lat": 33.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "盐城",
+    "province": "江苏省",
+    "lng": 120.15,
+    "lat": 33.35,
+    "city_type": "地级市"
+  },
+  {
+    "name": "苏州",
+    "province": "江苏省",
+    "lng": 120.58,
+    "lat": 31.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "连云港",
+    "province": "江苏省",
+    "lng": 119.22,
+    "lat": 34.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "镇江",
+    "province": "江苏省",
+    "lng": 119.45,
+    "lat": 32.2,
+    "city_type": "地级市"
+  },
+  {
+    "name": "上饶",
+    "province": "江西省",
+    "lng": 117.92,
+    "lat": 28.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "九江",
+    "province": "江西省",
+    "lng": 115.88,
+    "lat": 29.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "吉安",
+    "province": "江西省",
+    "lng": 114.9,
+    "lat": 27.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宜春",
+    "province": "江西省",
+    "lng": 114.38,
+    "lat": 27.8,
+    "city_type": "地级市"
+  },
+  {
+    "name": "抚州",
+    "province": "江西省",
+    "lng": 116.35,
+    "lat": 28.0,
+    "city_type": "地级市"
+  },
+  {
+    "name": "新余",
+    "province": "江西省",
+    "lng": 114.92,
+    "lat": 27.82,
+    "city_type": "地级市"
+  },
+  {
+    "name": "景德镇",
+    "province": "江西省",
+    "lng": 117.17,
+    "lat": 29.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "萍乡",
+    "province": "江西省",
+    "lng": 113.85,
+    "lat": 27.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "赣州",
+    "province": "江西省",
+    "lng": 114.93,
+    "lat": 25.83,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鹰潭",
+    "province": "江西省",
+    "lng": 117.07,
+    "lat": 28.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "保定",
+    "province": "河北省",
+    "lng": 115.47,
+    "lat": 38.87,
+    "city_type": "地级市"
+  },
+  {
+    "name": "唐山",
+    "province": "河北省",
+    "lng": 118.2,
+    "lat": 39.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "廊坊",
+    "province": "河北省",
+    "lng": 116.7,
+    "lat": 39.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "张家口",
+    "province": "河北省",
+    "lng": 114.88,
+    "lat": 40.82,
+    "city_type": "地级市"
+  },
+  {
+    "name": "承德",
+    "province": "河北省",
+    "lng": 117.93,
+    "lat": 40.97,
+    "city_type": "地级市"
+  },
+  {
+    "name": "沧州",
+    "province": "河北省",
+    "lng": 116.83,
+    "lat": 38.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "秦皇岛",
+    "province": "河北省",
+    "lng": 119.6,
+    "lat": 39.93,
+    "city_type": "地级市"
+  },
+  {
+    "name": "衡水",
+    "province": "河北省",
+    "lng": 115.68,
+    "lat": 37.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "邢台",
+    "province": "河北省",
+    "lng": 114.48,
+    "lat": 37.07,
+    "city_type": "地级市"
+  },
+  {
+    "name": "邯郸",
+    "province": "河北省",
+    "lng": 114.48,
+    "lat": 36.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "三门峡",
+    "province": "河南省",
+    "lng": 111.2,
+    "lat": 34.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "信阳",
+    "province": "河南省",
+    "lng": 114.07,
+    "lat": 32.13,
+    "city_type": "地级市"
+  },
+  {
+    "name": "南阳",
+    "province": "河南省",
+    "lng": 112.53,
+    "lat": 33.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "周口",
+    "province": "河南省",
+    "lng": 114.65,
+    "lat": 33.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "商丘",
+    "province": "河南省",
+    "lng": 115.65,
+    "lat": 34.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "安阳",
+    "province": "河南省",
+    "lng": 114.38,
+    "lat": 36.1,
+    "city_type": "地级市"
+  },
+  {
+    "name": "平顶山",
+    "province": "河南省",
+    "lng": 113.18,
+    "lat": 33.77,
+    "city_type": "地级市"
+  },
+  {
+    "name": "开封",
+    "province": "河南省",
+    "lng": 114.3,
+    "lat": 34.8,
+    "city_type": "地级市"
+  },
+  {
+    "name": "新乡",
+    "province": "河南省",
+    "lng": 113.8,
+    "lat": 35.2,
+    "city_type": "地级市"
+  },
+  {
+    "name": "洛阳",
+    "province": "河南省",
+    "lng": 112.45,
+    "lat": 34.62,
+    "city_type": "地级市"
+  },
+  {
+    "name": "漯河",
+    "province": "河南省",
+    "lng": 114.02,
+    "lat": 33.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "濮阳",
+    "province": "河南省",
+    "lng": 115.03,
+    "lat": 35.77,
+    "city_type": "地级市"
+  },
+  {
+    "name": "焦作",
+    "province": "河南省",
+    "lng": 113.25,
+    "lat": 35.22,
+    "city_type": "地级市"
+  },
+  {
+    "name": "许昌",
+    "province": "河南省",
+    "lng": 113.83,
+    "lat": 34.0,
+    "city_type": "地级市"
+  },
+  {
+    "name": "驻马店",
+    "province": "河南省",
+    "lng": 114.02,
+    "lat": 32.98,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鹤壁",
+    "province": "河南省",
+    "lng": 114.28,
+    "lat": 35.75,
+    "city_type": "地级市"
+  },
+  {
+    "name": "丽水",
+    "province": "浙江省",
+    "lng": 119.92,
+    "lat": 28.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "台州",
+    "province": "浙江省",
+    "lng": 121.43,
+    "lat": 28.68,
+    "city_type": "地级市"
+  },
+  {
+    "name": "嘉兴",
+    "province": "浙江省",
+    "lng": 120.75,
+    "lat": 30.75,
+    "city_type": "地级市"
+  },
+  {
+    "name": "温州",
+    "province": "浙江省",
+    "lng": 120.7,
+    "lat": 28.0,
+    "city_type": "地级市"
+  },
+  {
+    "name": "湖州",
+    "province": "浙江省",
+    "lng": 120.08,
+    "lat": 30.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "绍兴",
+    "province": "浙江省",
+    "lng": 120.47,
+    "lat": 30.08,
+    "city_type": "地级市"
+  },
+  {
+    "name": "舟山",
+    "province": "浙江省",
+    "lng": 122.2,
+    "lat": 30.0,
+    "city_type": "地级市"
+  },
+  {
+    "name": "衢州",
+    "province": "浙江省",
+    "lng": 118.87,
+    "lat": 28.93,
+    "city_type": "地级市"
+  },
+  {
+    "name": "金华",
+    "province": "浙江省",
+    "lng": 119.65,
+    "lat": 29.08,
+    "city_type": "地级市"
+  },
+  {
+    "name": "三亚",
+    "province": "海南省",
+    "lng": 109.5,
+    "lat": 18.25,
+    "city_type": "地级市"
+  },
+  {
+    "name": "三沙",
+    "province": "海南省",
+    "lng": 112.34,
+    "lat": 19.15,
+    "city_type": "地级市"
+  },
+  {
+    "name": "儋州",
+    "province": "海南省",
+    "lng": 109.58,
+    "lat": 19.15,
+    "city_type": "地级市"
+  },
+  {
+    "name": "十堰",
+    "province": "湖北省",
+    "lng": 110.78,
+    "lat": 32.65,
+    "city_type": "地级市"
+  },
+  {
+    "name": "咸宁",
+    "province": "湖北省",
+    "lng": 114.32,
+    "lat": 29.85,
+    "city_type": "地级市"
+  },
+  {
+    "name": "孝感",
+    "province": "湖北省",
+    "lng": 113.92,
+    "lat": 30.93,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宜昌",
+    "province": "湖北省",
+    "lng": 111.28,
+    "lat": 30.7,
+    "city_type": "地级市"
+  },
+  {
+    "name": "恩施",
+    "province": "湖北省",
+    "lng": 109.47,
+    "lat": 30.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "荆州",
+    "province": "湖北省",
+    "lng": 112.23,
+    "lat": 30.33,
+    "city_type": "地级市"
+  },
+  {
+    "name": "荆门",
+    "province": "湖北省",
+    "lng": 112.2,
+    "lat": 31.03,
+    "city_type": "地级市"
+  },
+  {
+    "name": "襄阳",
+    "province": "湖北省",
+    "lng": 112.14,
+    "lat": 31.15,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鄂州",
+    "province": "湖北省",
+    "lng": 114.88,
+    "lat": 30.4,
+    "city_type": "地级市"
+  },
+  {
+    "name": "随州",
+    "province": "湖北省",
+    "lng": 113.37,
+    "lat": 31.72,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黄冈",
+    "province": "湖北省",
+    "lng": 114.87,
+    "lat": 30.45,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黄石",
+    "province": "湖北省",
+    "lng": 115.03,
+    "lat": 30.2,
+    "city_type": "地级市"
+  },
+  {
+    "name": "娄底",
+    "province": "湖南省",
+    "lng": 112.0,
+    "lat": 27.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "岳阳",
+    "province": "湖南省",
+    "lng": 113.12,
+    "lat": 29.15,
+    "city_type": "地级市"
+  },
+  {
+    "name": "常德",
+    "province": "湖南省",
+    "lng": 111.68,
+    "lat": 29.05,
+    "city_type": "地级市"
+  },
+  {
+    "name": "张家界",
+    "province": "湖南省",
+    "lng": 110.47,
+    "lat": 29.13,
+    "city_type": "地级市"
+  },
+  {
+    "name": "怀化",
+    "province": "湖南省",
+    "lng": 110.0,
+    "lat": 27.57,
+    "city_type": "地级市"
+  },
+  {
+    "name": "株洲",
+    "province": "湖南省",
+    "lng": 113.13,
+    "lat": 27.72,
+    "city_type": "地级市"
+  },
+  {
+    "name": "永州",
+    "province": "湖南省",
+    "lng": 111.62,
+    "lat": 26.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "湘潭",
+    "province": "湖南省",
+    "lng": 112.95,
+    "lat": 27.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "湘西",
+    "province": "湖南省",
+    "lng": 109.73,
+    "lat": 28.32,
+    "city_type": "地级市"
+  },
+  {
+    "name": "益阳",
+    "province": "湖南省",
+    "lng": 112.32,
+    "lat": 28.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "衡阳",
+    "province": "湖南省",
+    "lng": 112.57,
+    "lat": 26.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "邵阳",
+    "province": "湖南省",
+    "lng": 111.47,
+    "lat": 27.25,
+    "city_type": "地级市"
+  },
+  {
+    "name": "郴州",
+    "province": "湖南省",
+    "lng": 113.02,
+    "lat": 25.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "临夏",
+    "province": "甘肃省",
+    "lng": 103.0,
+    "lat": 35.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "嘉峪关",
+    "province": "甘肃省",
+    "lng": 98.27,
+    "lat": 39.8,
+    "city_type": "地级市"
+  },
+  {
+    "name": "天水",
+    "province": "甘肃省",
+    "lng": 105.72,
+    "lat": 34.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "定西",
+    "province": "甘肃省",
+    "lng": 104.62,
+    "lat": 35.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "平凉",
+    "province": "甘肃省",
+    "lng": 106.67,
+    "lat": 35.55,
+    "city_type": "地级市"
+  },
+  {
+    "name": "庆阳",
+    "province": "甘肃省",
+    "lng": 107.63,
+    "lat": 35.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "张掖",
+    "province": "甘肃省",
+    "lng": 100.45,
+    "lat": 38.93,
+    "city_type": "地级市"
+  },
+  {
+    "name": "武威",
+    "province": "甘肃省",
+    "lng": 102.63,
+    "lat": 37.93,
+    "city_type": "地级市"
+  },
+  {
+    "name": "甘南",
+    "province": "甘肃省",
+    "lng": 102.91,
+    "lat": 34.99,
+    "city_type": "地级市"
+  },
+  {
+    "name": "白银",
+    "province": "甘肃省",
+    "lng": 104.18,
+    "lat": 36.55,
+    "city_type": "地级市"
+  },
+  {
+    "name": "酒泉",
+    "province": "甘肃省",
+    "lng": 98.52,
+    "lat": 39.75,
+    "city_type": "地级市"
+  },
+  {
+    "name": "金昌",
+    "province": "甘肃省",
+    "lng": 102.18,
+    "lat": 38.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "陇南",
+    "province": "甘肃省",
+    "lng": 104.92,
+    "lat": 33.4,
+    "city_type": "地级市"
+  },
+  {
+    "name": "三明",
+    "province": "福建省",
+    "lng": 117.62,
+    "lat": 26.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "南平",
+    "province": "福建省",
+    "lng": 118.17,
+    "lat": 26.65,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宁德",
+    "province": "福建省",
+    "lng": 119.52,
+    "lat": 26.67,
+    "city_type": "地级市"
+  },
+  {
+    "name": "泉州",
+    "province": "福建省",
+    "lng": 118.67,
+    "lat": 24.88,
+    "city_type": "地级市"
+  },
+  {
+    "name": "漳州",
+    "province": "福建省",
+    "lng": 117.65,
+    "lat": 24.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "莆田",
+    "province": "福建省",
+    "lng": 119.0,
+    "lat": 25.43,
+    "city_type": "地级市"
+  },
+  {
+    "name": "龙岩",
+    "province": "福建省",
+    "lng": 117.03,
+    "lat": 25.1,
+    "city_type": "地级市"
+  },
+  {
+    "name": "山南",
+    "province": "西藏自治区",
+    "lng": 91.77,
+    "lat": 29.23,
+    "city_type": "地级市"
+  },
+  {
+    "name": "日喀则",
+    "province": "西藏自治区",
+    "lng": 88.88,
+    "lat": 29.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "昌都",
+    "province": "西藏自治区",
+    "lng": 97.18,
+    "lat": 31.13,
+    "city_type": "地级市"
+  },
+  {
+    "name": "林芝",
+    "province": "西藏自治区",
+    "lng": 94.37,
+    "lat": 29.68,
+    "city_type": "地级市"
+  },
+  {
+    "name": "那曲",
+    "province": "西藏自治区",
+    "lng": 92.07,
+    "lat": 31.48,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阿里",
+    "province": "西藏自治区",
+    "lng": 80.1,
+    "lat": 32.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "六盘水",
+    "province": "贵州省",
+    "lng": 104.83,
+    "lat": 26.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "安顺",
+    "province": "贵州省",
+    "lng": 105.95,
+    "lat": 26.25,
+    "city_type": "地级市"
+  },
+  {
+    "name": "毕节",
+    "province": "贵州省",
+    "lng": 105.28,
+    "lat": 27.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "遵义",
+    "province": "贵州省",
+    "lng": 106.92,
+    "lat": 27.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "铜仁",
+    "province": "贵州省",
+    "lng": 109.19,
+    "lat": 26.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黔东南",
+    "province": "贵州省",
+    "lng": 107.97,
+    "lat": 26.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黔南",
+    "province": "贵州省",
+    "lng": 107.52,
+    "lat": 26.27,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黔西南",
+    "province": "贵州省",
+    "lng": 105.56,
+    "lat": 25.41,
+    "city_type": "地级市"
+  },
+  {
+    "name": "丹东",
+    "province": "辽宁省",
+    "lng": 124.38,
+    "lat": 40.13,
+    "city_type": "地级市"
+  },
+  {
+    "name": "抚顺",
+    "province": "辽宁省",
+    "lng": 123.9,
+    "lat": 41.88,
+    "city_type": "地级市"
+  },
+  {
+    "name": "朝阳",
+    "province": "辽宁省",
+    "lng": 120.47,
+    "lat": 41.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "本溪",
+    "province": "辽宁省",
+    "lng": 123.77,
+    "lat": 41.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "盘锦",
+    "province": "辽宁省",
+    "lng": 122.07,
+    "lat": 41.12,
+    "city_type": "地级市"
+  },
+  {
+    "name": "营口",
+    "province": "辽宁省",
+    "lng": 122.23,
+    "lat": 40.67,
+    "city_type": "地级市"
+  },
+  {
+    "name": "葫芦岛",
+    "province": "辽宁省",
+    "lng": 120.83,
+    "lat": 40.72,
+    "city_type": "地级市"
+  },
+  {
+    "name": "辽阳",
+    "province": "辽宁省",
+    "lng": 123.07,
+    "lat": 41.22,
+    "city_type": "地级市"
+  },
+  {
+    "name": "铁岭",
+    "province": "辽宁省",
+    "lng": 123.83,
+    "lat": 42.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "锦州",
+    "province": "辽宁省",
+    "lng": 121.13,
+    "lat": 41.1,
+    "city_type": "地级市"
+  },
+  {
+    "name": "阜新",
+    "province": "辽宁省",
+    "lng": 121.75,
+    "lat": 42.07,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鞍山",
+    "province": "辽宁省",
+    "lng": 122.98,
+    "lat": 41.1,
+    "city_type": "地级市"
+  },
+  {
+    "name": "咸阳",
+    "province": "陕西省",
+    "lng": 108.7,
+    "lat": 34.33,
+    "city_type": "地级市"
+  },
+  {
+    "name": "商洛",
+    "province": "陕西省",
+    "lng": 109.93,
+    "lat": 33.87,
+    "city_type": "地级市"
+  },
+  {
+    "name": "安康",
+    "province": "陕西省",
+    "lng": 109.02,
+    "lat": 32.68,
+    "city_type": "地级市"
+  },
+  {
+    "name": "宝鸡",
+    "province": "陕西省",
+    "lng": 107.13,
+    "lat": 34.37,
+    "city_type": "地级市"
+  },
+  {
+    "name": "延安",
+    "province": "陕西省",
+    "lng": 109.48,
+    "lat": 36.6,
+    "city_type": "地级市"
+  },
+  {
+    "name": "榆林",
+    "province": "陕西省",
+    "lng": 109.73,
+    "lat": 38.28,
+    "city_type": "地级市"
+  },
+  {
+    "name": "汉中",
+    "province": "陕西省",
+    "lng": 107.02,
+    "lat": 33.07,
+    "city_type": "地级市"
+  },
+  {
+    "name": "渭南",
+    "province": "陕西省",
+    "lng": 109.5,
+    "lat": 34.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "铜川",
+    "province": "陕西省",
+    "lng": 108.93,
+    "lat": 34.9,
+    "city_type": "地级市"
+  },
+  {
+    "name": "果洛",
+    "province": "青海省",
+    "lng": 100.23,
+    "lat": 34.48,
+    "city_type": "地级市"
+  },
+  {
+    "name": "海东",
+    "province": "青海省",
+    "lng": 102.12,
+    "lat": 36.5,
+    "city_type": "地级市"
+  },
+  {
+    "name": "海北",
+    "province": "青海省",
+    "lng": 100.9,
+    "lat": 36.97,
+    "city_type": "地级市"
+  },
+  {
+    "name": "海南",
+    "province": "青海省",
+    "lng": 100.62,
+    "lat": 35.4,
+    "city_type": "地级市"
+  },
+  {
+    "name": "海西",
+    "province": "青海省",
+    "lng": 97.37,
+    "lat": 37.37,
+    "city_type": "地级市"
+  },
+  {
+    "name": "玉树",
+    "province": "青海省",
+    "lng": 97.02,
+    "lat": 33.0,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黄南",
+    "province": "青海省",
+    "lng": 102.02,
+    "lat": 35.52,
+    "city_type": "地级市"
+  },
+  {
+    "name": "七台河",
+    "province": "黑龙江省",
+    "lng": 130.95,
+    "lat": 45.78,
+    "city_type": "地级市"
+  },
+  {
+    "name": "伊春",
+    "province": "黑龙江省",
+    "lng": 128.9,
+    "lat": 47.73,
+    "city_type": "地级市"
+  },
+  {
+    "name": "佳木斯",
+    "province": "黑龙江省",
+    "lng": 130.37,
+    "lat": 46.82,
+    "city_type": "地级市"
+  },
+  {
+    "name": "双鸭山",
+    "province": "黑龙江省",
+    "lng": 131.15,
+    "lat": 46.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "大兴安岭",
+    "province": "黑龙江省",
+    "lng": 124.12,
+    "lat": 50.42,
+    "city_type": "地级市"
+  },
+  {
+    "name": "大庆",
+    "province": "黑龙江省",
+    "lng": 125.03,
+    "lat": 46.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "牡丹江",
+    "province": "黑龙江省",
+    "lng": 129.6,
+    "lat": 44.58,
+    "city_type": "地级市"
+  },
+  {
+    "name": "绥化",
+    "province": "黑龙江省",
+    "lng": 126.98,
+    "lat": 46.63,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鸡西",
+    "province": "黑龙江省",
+    "lng": 130.97,
+    "lat": 45.3,
+    "city_type": "地级市"
+  },
+  {
+    "name": "鹤岗",
+    "province": "黑龙江省",
+    "lng": 130.27,
+    "lat": 47.33,
+    "city_type": "地级市"
+  },
+  {
+    "name": "黑河",
+    "province": "黑龙江省",
+    "lng": 127.48,
+    "lat": 50.25,
+    "city_type": "地级市"
+  },
+  {
+    "name": "齐齐哈尔",
+    "province": "黑龙江省",
+    "lng": 123.95,
+    "lat": 47.33,
+    "city_type": "地级市"
+  }
+]

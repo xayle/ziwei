@@ -99,6 +99,8 @@ class PeriodForecast:
     events: list[EventTag]  # 事件标签列表
     advice: str  # 行动建议
     score: int  # 综合运势 1-100
+    tier: str = "neutral"  # favorable / neutral / caution
+    layer: str = "heuristic"
 
 
 @dataclass
@@ -109,6 +111,7 @@ class ForecastResult:
     yearly: PeriodForecast  # 年运
     monthly: list[PeriodForecast]  # 12个流月
     current_month: PeriodForecast  # 当前月（或正月）
+    layer: str = "heuristic"
 
 
 # ──────────────────────────────────────────────────────────────
@@ -122,6 +125,15 @@ def _get_current_dayun(chart: ZiweiChart, year: int) -> DayunItem | None:
         if d.start_year <= year < d.start_year + 10:
             return d
     return chart.dayun.items[-1] if chart.dayun.items else None
+
+
+def _score_tier(score: int) -> str:
+    """运势 tier：favorable / neutral / caution。"""
+    if score >= 70:
+        return "favorable"
+    if score >= 45:
+        return "neutral"
+    return "caution"
 
 
 def _branch_to_natal_palace(life_palace_branch: int, target_branch: int) -> str:
@@ -657,6 +669,9 @@ def generate_forecast(
     liunian.sihua = {star: f"化{hua}" for hua, star in raw.items()}
 
     ln_life_palace = _branch_to_natal_palace(chart.life_palace_branch, liunian.life_palace_branch)
+    from .liunian import overlay_palace_map
+
+    _overlay = overlay_palace_map(chart.life_palace_branch, liunian.life_palace_branch)
     ln_events, ln_score_delta = _detect_events(chart, ln_life_palace, liunian.sihua, dy_sihua, "流年")
     ln_hua_pal = _sihua_to_palace_map(liunian.sihua, chart)
     dy_hua_pal = _sihua_to_palace_map(dy_sihua, chart)
@@ -665,6 +680,8 @@ def generate_forecast(
     ln_advice = _build_advice(ln_events, ln_life_palace)
     ln_theme = _PALACE_THEME.get(ln_life_palace, "")
     ln_overall = f"{liunian.year_gz}年，流年命宫走入本命{ln_life_palace}（{dy_label}）。{ln_theme}"
+    if _overlay.get("命宫"):
+        ln_overall += f" 叠宫：流年叠入本命{_overlay.get('命宫', ln_life_palace)}。"
     ln_score = max(1, min(100, 60 + ln_score_delta))
 
     yearly = PeriodForecast(
@@ -676,40 +693,53 @@ def generate_forecast(
         events=ln_events,
         advice=ln_advice,
         score=ln_score,
+        tier=_score_tier(ln_score),
+        layer="heuristic",
     )
 
     # ── 流月（12个月，始终按 liunian 重算）─────────────────────
     from .liunian import calc_liuyue_list
 
     branch_to_name = {p.branch_idx: p.name for p in chart.palaces}
-    liuyue_data = calc_liuyue_list(liunian, branch_to_name)
+    _liuyue_method = "doujun"
+    if chart.liuyue_data:
+        _liuyue_method = chart.liuyue_data[0].liuyue_method
+    liuyue_data = calc_liuyue_list(
+        liunian,
+        branch_to_name,
+        birth_month=chart.lunar.calc_lunar_month,
+        birth_hour_branch=chart.lunar.hour_branch_idx,
+        liuyue_method=_liuyue_method,
+    )
 
     monthly_forecasts: list[PeriodForecast] = []
     cur_month_forecast: PeriodForecast | None = None
 
     for d in liuyue_data:
-        mo_num = d["month"]
-        mo_life_palace = _branch_to_natal_palace(chart.life_palace_branch, d["life_palace_branch"])
-        mo_sihua = d.get("sihua", {})
-        mo_events, mo_score_delta = _detect_events(chart, mo_life_palace, mo_sihua, dy_sihua, d["month_name"])
+        mo_num = d.month
+        mo_life_palace = _branch_to_natal_palace(chart.life_palace_branch, d.life_palace_branch)
+        mo_sihua = d.sihua
+        mo_events, mo_score_delta = _detect_events(chart, mo_life_palace, mo_sihua, dy_sihua, d.month_name)
         mo_hua_pal = _sihua_to_palace_map(mo_sihua, chart)
-        mo_details = _build_details(mo_hua_pal, dy_hua_pal, mo_life_palace, d["month_name"])
+        mo_details = _build_details(mo_hua_pal, dy_hua_pal, mo_life_palace, d.month_name)
         mo_advice = _build_advice(mo_events, mo_life_palace)
 
         mo_theme_short = _PALACE_THEME_SHORT.get(mo_life_palace, "")
-        mo_overall = f"{d['month_name']}（{d['month_gz']}），流月命宫走入{mo_life_palace}。{mo_theme_short}"
+        mo_overall = f"{d.month_name}（{d.month_gz}），流月命宫走入{mo_life_palace}。{mo_theme_short}"
         # 月评分：年运基准(一半) + 月运增量
         mo_score = max(1, min(100, 60 + ln_score_delta // 2 + mo_score_delta))
 
         mf = PeriodForecast(
-            period=f"{liunian_year}年{d['month_name']}",
-            ganzhi=d["month_gz"],
+            period=f"{liunian_year}年{d.month_name}",
+            ganzhi=d.month_gz,
             palace_name=mo_life_palace,
             overall=mo_overall,
             details=mo_details,
             events=mo_events,
             advice=mo_advice,
             score=mo_score,
+            tier=_score_tier(mo_score),
+            layer="heuristic",
         )
         monthly_forecasts.append(mf)
         if mo_num == current_month:
@@ -723,4 +753,5 @@ def generate_forecast(
         yearly=yearly,
         monthly=monthly_forecasts,
         current_month=cur_month_forecast,
+        layer="heuristic",
     )

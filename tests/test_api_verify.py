@@ -140,8 +140,8 @@ def test_request_id_truncated_with_warning():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def test_verify_400_year_out_of_range():
-    """年份超出 [1900-2100] 应返回 400 [P0-06]"""
-    resp = client.post("/api/v1/verify", json=_base_payload(dt="1899-06-01T12:00:00+08:00"))
+    """年份低于 BAZI_VERIFY_YEAR_MIN 应返回 400 [P0-06]"""
+    resp = client.post("/api/v1/verify", json=_base_payload(dt="1699-06-01T12:00:00+08:00"))
     assert resp.status_code == 400
     assert "超出支持范围" in resp.json().get("detail", "")
 

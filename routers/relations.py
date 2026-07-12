@@ -6,7 +6,7 @@ from typing import Any
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlmodel import Session, select
 
 from app.dependencies import RequiredUser
@@ -29,7 +29,9 @@ from app.schemas import (
 from constants import API_VERSION, RULE_VERSION
 from db import get_session
 from services.bazi_full_service import bazi_full
-from services.normalize_input import validate_lon_strict, warn_lon_cn_range
+from services.normalize_input import normalize_birth_datetime, validate_lon_strict, warn_lon_cn_range
+from services.relation_engine.case_resolver import case_to_person_dict
+from services.relation_engine.composer import compute_relation_full
 
 router = APIRouter(prefix="/api/v1/relations", tags=["relations"])
 
@@ -106,7 +108,8 @@ def _parse_dt_local(dt_local: str, tz: str) -> datetime:
             message="tz must be valid IANA name",
             details={"error": str(exc)},
         )
-    return dt.replace(tzinfo=zone)
+    normalized = normalize_birth_datetime(dt.replace(tzinfo=zone), tz, auto_dst=True)
+    return normalized.local_dt
 
 
 def _store_snapshot(
@@ -161,7 +164,7 @@ def _build_profile(case: Case, payload: dict) -> RelationProfile:
         dominant_element=dominant,
         yongshen_favor=favor,
         yongshen_avoid=avoid,
-        wuxing_score={k: float(v) for k, v in wuxing.items() if isinstance(v, (int, float))},
+        wuxing_score={k: float(v) for k, v in wuxing.items() if isinstance(v, int | float)},
     )
 
 
@@ -290,9 +293,12 @@ def _compute_relation(
 @handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
 def compute_relation(
     payload: RelationComputeRequest,
+    response: Response,
     current_user: RequiredUser,
     session: Session = Depends(get_session),
 ):
+    response.headers["Deprecation"] = "true"
+    response.headers["Link"] = '</api/v1/relation/full>; rel="successor-version"'
     if payload.case_a_id == payload.case_b_id:
         raise ValidationException(
             code=ErrorCode.VALIDATION_INVALID_INPUT,
@@ -381,6 +387,19 @@ def compute_relation(
 
     result = _compute_relation(profile_a, profile_b, branches_a, branches_b, payload.relation_type)
 
+    relation_full: dict | None = None
+    try:
+        case_a = case_map[payload.case_a_id]
+        case_b = case_map[payload.case_b_id]
+        relation_full = compute_relation_full(
+            relation_type=payload.relation_type,
+            person_a=case_to_person_dict(case_a, label=case_a.name or "甲"),
+            person_b=case_to_person_dict(case_b, label=case_b.name or "乙"),
+            options={"include_bazi": True, "include_ziwei": True},
+        )
+    except Exception:
+        relation_full = None
+
     # Persist relation snapshot to both cases for追溯
     relation_flags = {
         "relation_request_id": relation_request_id,
@@ -396,7 +415,10 @@ def compute_relation(
             kind="relation",
             compute_flags=relation_flags,
             input_json={"case_a": payload.case_a_id, "case_b": payload.case_b_id},
-            output_json=result.model_dump(),
+            output_json={
+                **result.model_dump(),
+                "relation_full_v1": relation_full,
+            },
         )
         relation_snapshot_ids.append(snap_rel.id)
         case.last_snapshot_at = _now_utc()
@@ -409,4 +431,5 @@ def compute_relation(
         case_b=profile_b,
         result=result,
         snapshots_created=[snap_a.id, snap_b.id, *relation_snapshot_ids],
+        relation_full=relation_full,
     )

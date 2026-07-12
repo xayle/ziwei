@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 
 /** 在 SPA base（/static/app/）内导航 */
 export async function gotoApp(page: Page, path = '') {
@@ -16,6 +16,7 @@ export async function fillMinimalProfile(page: Page) {
   const provinceSelect = page.locator('.city-picker-field').first().locator('select').first()
   await provinceSelect.selectOption('北京市')
   const citySelect = page.locator('.city-picker-field').first().locator('select').nth(1)
+  await expect(citySelect.locator('option', { hasText: '北京' })).toHaveCount(1, { timeout: 10_000 })
   await citySelect.selectOption('北京')
 
   await page.getByTestId('profile-save').click()

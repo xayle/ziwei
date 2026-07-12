@@ -20,6 +20,8 @@ from app.schemas import CaseOut, ComputeRequest, ComputeResponse
 from constants import MAX_LON, MIN_LON
 from db import get_session
 from routers.compute import _do_compute_for_case
+from services.case_leap_month import infer_case_leap_month
+from services.normalize_input import normalize_birth_datetime
 
 router = APIRouter(prefix="/api/v1", tags=["quickstart"])
 
@@ -125,6 +127,18 @@ def quickstart(
         created_at=now,
         updated_at=now,
     )
+    try:
+        normalized_birth = normalize_birth_datetime(
+            datetime.fromisoformat(body.birth_dt_local),
+            body.tz,
+            auto_dst=body.solar_time_enabled,
+        )
+        case.birth_dt = normalized_birth.normalized_birth_dt_utc
+    except Exception:
+        case.birth_dt = None
+    inferred_leap_month = infer_case_leap_month(case.birth_dt_local, "gregorian")
+    if inferred_leap_month is not None:
+        case.is_leap_month = inferred_leap_month
     session.add(case)
     session.commit()
     session.refresh(case)

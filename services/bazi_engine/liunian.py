@@ -18,14 +18,61 @@ services/bazi_engine/liunian.py — 流年排盘（M1 任务 1.08）
 
 from __future__ import annotations
 
+from services.bazi_engine.shensha import compute_flow_shensha_items
 from services.bazi_engine.tables import (
     BRANCH_CHONG,
+    BRANCH_HIDDEN_STEMS,
     BRANCHES,
     LIU_HE,
+    NAYIN,
     STEM_ELEMENT,
     STEMS,
+    get_kongwang,
     get_ten_god,
 )
+
+_ELEM_CN: dict[str, str] = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+_PILLAR_NAMES = ("year", "month", "day", "hour")
+
+
+def overlay_palace_map(
+    year_branch: str,
+    month_branch: str,
+    day_branch: str,
+    hour_branch: str,
+    flow_branch: str,
+) -> dict[str, str]:
+    """
+    叠宫映射：流年/流月地支 → 对应本命柱位（B-05 / 叠宫引擎）。
+
+    Returns:
+        {flow_branch: pillar_name} 及反向 {pillar_name: flow_branch}
+    """
+    pm = {
+        "year": year_branch,
+        "month": month_branch,
+        "day": day_branch,
+        "hour": hour_branch,
+    }
+    result: dict[str, str] = {}
+    for pname, br in pm.items():
+        result[pname] = flow_branch if br == flow_branch else ""
+        if br == flow_branch:
+            result[flow_branch] = pname
+    if flow_branch not in result:
+        result[flow_branch] = "none"
+    return result
+
+
+def _liunian_yongshen_shift(stem_elem: str, yongshen_favor: list[str], yongshen_avoid: list[str]) -> str:
+    if not yongshen_favor:
+        return "neutral"
+    if stem_elem in yongshen_favor:
+        return "forward"
+    if stem_elem in yongshen_avoid:
+        return "backward"
+    return "neutral"
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 刑、害、破 — 补充关系表
@@ -79,6 +126,20 @@ SAN_XING: dict[str, set[str]] = {
     "亥": {"亥"},
 }
 
+_STAGE_NAMES = ["长生", "沐浴", "冠带", "临官", "帝旺", "衰", "病", "死", "墓", "绝", "胎", "养"]
+_STAGE_START: dict[str, str] = {
+    "甲": "亥",
+    "乙": "午",
+    "丙": "寅",
+    "丁": "酉",
+    "戊": "寅",
+    "己": "酉",
+    "庚": "巳",
+    "辛": "子",
+    "壬": "申",
+    "癸": "卯",
+}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 干支工具
@@ -115,6 +176,39 @@ def _liunian_day_relation(liunian_branch: str, day_branch: str) -> str | None:
     return None
 
 
+def _pillar_xingyun(day_stem: str, branch: str | None) -> str | None:
+    if not day_stem or not branch:
+        return None
+    start_branch = _STAGE_START.get(day_stem)
+    if not start_branch:
+        return None
+    try:
+        start_idx = BRANCHES.index(start_branch)
+        branch_idx = BRANCHES.index(branch)
+    except ValueError:
+        return None
+    is_yang = day_stem in {"甲", "丙", "戊", "庚", "壬"}
+    offset = (branch_idx - start_idx + 12) % 12 if is_yang else (start_idx - branch_idx + 12) % 12
+    return _STAGE_NAMES[offset] if 0 <= offset < len(_STAGE_NAMES) else None
+
+
+def _build_hidden_stems(branch: str, day_stem: str) -> list[dict]:
+    items: list[dict] = []
+    for hidden_stem, weight in BRANCH_HIDDEN_STEMS.get(branch, []):
+        elem, _ = STEM_ELEMENT.get(hidden_stem, (None, None))
+        items.append(
+            {
+                "stem": hidden_stem,
+                "weight": weight,
+                "element": {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(
+                    elem or "", None
+                ),
+                "ten_god": get_ten_god(day_stem, hidden_stem) if day_stem else None,
+            }
+        )
+    return items
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 主函数
 # ──────────────────────────────────────────────────────────────────────────────
@@ -125,6 +219,16 @@ def compute_liunian(
     day_branch: str,
     start_year: int,
     end_year: int,
+    month_stem: str | None = None,
+    month_branch: str | None = None,
+    hour_stem: str | None = None,
+    hour_branch: str | None = None,
+    year_branch: str | None = None,
+    flow_label: str = "liunian",
+    yongshen_favor: list[str] | None = None,
+    yongshen_avoid: list[str] | None = None,
+    geju_name: str = "",
+    geju_po: dict | None = None,
 ) -> list[dict]:
     """
     计算流年列表.
@@ -151,12 +255,49 @@ def compute_liunian(
         ten_god = get_ten_god(day_stem, stem)
         stem_elem, _ = STEM_ELEMENT.get(stem, ("?", "?"))
         clash = _liunian_day_relation(branch, day_branch)
+        kongwang = list(get_kongwang(stem, branch))
+        po_jiu = (geju_po or {}).get("po_jiu") if geju_po else None
         results.append(
             {
                 "year": year,
                 "stem": stem,
                 "branch": branch,
                 "ten_god": ten_god,
+                "yongshen_shift": _liunian_yongshen_shift(
+                    stem_elem if stem_elem != "?" else "",
+                    yongshen_favor or [],
+                    yongshen_avoid or [],
+                ),
+                "geju_po_jiu": po_jiu,
+                "overlay_palace_map": overlay_palace_map(
+                    year_branch or "",
+                    month_branch or "",
+                    day_branch,
+                    hour_branch or "",
+                    branch,
+                ),
+                "hidden_stems": _build_hidden_stems(branch, day_stem),
+                "xingyun": _pillar_xingyun(day_stem, branch),
+                "self_seat": _pillar_xingyun(stem, branch),
+                "self_seat_source": f"{stem}坐{branch}十二长生" if stem and branch else None,
+                "kongwang": kongwang,
+                "kongwang_hit": branch in kongwang,
+                "nayin": NAYIN.get(f"{stem}{branch}"),
+                "shensha": compute_flow_shensha_items(
+                    flow_label=flow_label,
+                    flow_stem=stem,
+                    flow_branch=branch,
+                    day_stem=day_stem,
+                    day_branch=day_branch,
+                    month_stem=month_stem,
+                    month_branch=month_branch,
+                    hour_stem=hour_stem,
+                    hour_branch=hour_branch,
+                ),
+                "wuxing": {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(
+                    stem_elem, None
+                ),
+                "yin_yang": STEM_ELEMENT.get(stem, (None, None))[1] == "yang" and "阳" or "阴",
                 "flow_wuxing": stem_elem,
                 "clash": clash,
             }

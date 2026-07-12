@@ -116,3 +116,31 @@ def test_snapshot_no_missing_paths(live_schema: dict):
     snap_paths = set(snapshot.get("paths", {}).keys())
     missing = snap_paths - live_paths
     assert not missing, f"快照中存在但当前已消失的路径：{sorted(missing)}"
+
+
+ZIWEI_REQUEST_FIELDS = [
+    "wenchang_method",
+    "youbi_method",
+    "liunian_life_method",
+    "liuyue_method",
+    "xiaoxian_start_method",
+    "flow_lunar_day",
+    "flow_liuyue_month",
+    "flow_hour_branch",
+]
+
+
+@pytest.mark.parametrize("field_name", ZIWEI_REQUEST_FIELDS)
+def test_ziwei_request_schema_fields(live_schema: dict, field_name: str):
+    """ZiweiRequest 扩展字段必须出现在 OpenAPI components 中"""
+    props = live_schema.get("components", {}).get("schemas", {}).get("ZiweiRequest", {}).get("properties", {})
+    assert field_name in props, f"ZiweiRequest 缺少字段 {field_name!r}"
+
+
+def test_period_forecast_schema_has_tier_and_layer(live_schema: dict):
+    """BE-P1-05：PeriodForecastResponse 暴露 tier + layer（Timeline/forecast 契约）。"""
+    props = live_schema.get("components", {}).get("schemas", {}).get("PeriodForecastResponse", {}).get("properties", {})
+    assert "tier" in props
+    assert "layer" in props
+    fc_props = live_schema.get("components", {}).get("schemas", {}).get("ForecastResultResponse", {}).get("properties", {})
+    assert "layer" in fc_props

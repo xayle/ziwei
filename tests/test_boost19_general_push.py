@@ -66,18 +66,19 @@ class TestStaticFileMissing404:
         """L351 — dashboard.html 不存在 → raise 404（SPA 构建产物不存在时）"""
         _nonexistent = Path("/nonexistent_dir_does_not_exist_xyz")
         _nonexistent_index = Path("/nonexistent_dir_does_not_exist_xyz/index.html")
-        with patch("app.static_routes_setup._static_dir", new=_nonexistent), \
-             patch("app.static_routes_setup._spa_index", new=_nonexistent_index):
-            resp = run_client.get("/dashboard")
+        with patch("app.static_entrypoints._static_dir", new=_nonexistent), \
+             patch("app.static_entrypoints._spa_index", new=_nonexistent_index):
+            resp = run_client.get("/dashboard", follow_redirects=False)
             assert resp.status_code in (302, 404)  # redirect 或 404
 
     def test_l359_verify_html_not_found(self, run_client: TestClient):
         """L359 — verify.html 不存在 → raise 404"""
         _nonexistent = Path("/nonexistent_dir_does_not_exist_xyz")
-        with patch("app.static_routes_setup._static_dir", new=_nonexistent), \
-             patch("app.static_routes_setup._spa_index", new=_nonexistent):
-            resp = run_client.get("/verify")
-            assert resp.status_code in (301, 404)  # redirect 或 404
+        _nonexistent_index = Path("/nonexistent_dir_does_not_exist_xyz/index.html")
+        with patch("app.static_entrypoints._static_dir", new=_nonexistent), \
+             patch("app.static_entrypoints._spa_index", new=_nonexistent_index):
+            resp = run_client.get("/verify", follow_redirects=False)
+            assert resp.status_code in (301, 302, 404)  # redirect 或 404
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -98,27 +99,29 @@ _VERIFY_BODY = {
 class TestLegacyPathExceptions:
 
     def test_l707_dizhi_relations_exception(self, run_client: TestClient):
-        """L707-708 — get_branch_relations raises → debug log, request 仍成功"""
-        with patch("run._bazi_engine_service._engine_v2_enabled", return_value=False), \
-             patch("routers.verify.get_branch_relations",
-                   side_effect=RuntimeError("dizhi mock error")):
+        """get_branch_relations raises → enrich 容错，verify 仍成功"""
+        with patch(
+            "services.bazi_engine.relations.get_branch_relations",
+            side_effect=RuntimeError("dizhi mock error"),
+        ):
             resp = run_client.post("/api/v1/verify", json=_VERIFY_BODY)
-            # dizhi_relations 异常被 catch，请求正常返回 200
             assert resp.status_code == 200
 
     def test_l713_tiangan_clashes_exception(self, run_client: TestClient):
-        """L713-714 — get_stem_clashes raises → debug log, request 仍成功"""
-        with patch("run._bazi_engine_service._engine_v2_enabled", return_value=False), \
-             patch("routers.verify.get_stem_clashes",
-                   side_effect=RuntimeError("tiangan mock error")):
+        """get_stem_clashes raises → enrich 容错，verify 仍成功"""
+        with patch(
+            "services.bazi_engine.relations.get_stem_clashes",
+            side_effect=RuntimeError("tiangan mock error"),
+        ):
             resp = run_client.post("/api/v1/verify", json=_VERIFY_BODY)
             assert resp.status_code == 200
 
     def test_l723_enrich_exception(self, run_client: TestClient):
-        """L723-724 — _enrich_v2_analysis raises → warning log, request 仍成功"""
-        with patch("run._bazi_engine_service._engine_v2_enabled", return_value=False), \
-             patch("routers.verify._enrich_v2_analysis",
-                   side_effect=RuntimeError("enrich mock error")):
+        """_enrich_v2_analysis raises → calculate 容错，verify 仍成功"""
+        with patch(
+            "services.bazi_engine_service._enrich_v2_analysis",
+            side_effect=RuntimeError("enrich mock error"),
+        ):
             resp = run_client.post("/api/v1/verify", json=_VERIFY_BODY)
             assert resp.status_code == 200
 
@@ -222,7 +225,7 @@ class TestDelegationApproveConflict:
 
     def test_l386_rowcount_zero_raises_conflict(self):
         """L386 — 审批委托时 rowcount==0 → ResourceConflictException → 409
-        
+
         正确 URL: PUT /api/v1/permissions/request/{id}/approve
         使用 app.dependency_overrides[get_session] 注入有状态 mock session:
           exec #1 (get_current_user select User)      → 返回 admin User
@@ -310,7 +313,7 @@ class TestDelegationRejectConflict:
 
     def test_l461_status_not_pending_not_approved(self):
         """L461 — delegation.status 为 'revoked' → ResourceConflictException → 409
-        
+
         正确 URL: PUT /api/v1/permissions/request/{id}/reject
         exec #1 (get_current_user select User)      → 返回 admin User
         exec #2 (reject select Delegation by id)   → 返回 revoked delegation

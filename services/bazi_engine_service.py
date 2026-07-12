@@ -2,11 +2,8 @@
 services/bazi_engine_service.py — 统一计算入口（M1 任务 1.14 + 1.23）
 
 功能:
-  - 将 run.py /api/v1/verify 的 ~150 行业务逻辑聚合为 calculate() 函数
-  - ENGINE_V2 feature flag 控制新旧引擎路由
-    os.getenv("ENGINE_V2", "false") == "true"
-        → True:  走 services/bazi_engine/ 新路径（M1 完成后切）
-        → False: fallback 到旧 bazi_full_service.py 路径
+  - calculate() 四柱一律经 services.bazi_engine.pillars.compute_pillars
+  - ENGINE_V2 控制 engine_version 标记与 API v2 端点门闸（settings.engine_v2）
 
 Public API:
     calculate(dt, lon, tz, use_solar, mode, gender, request_id) -> CalculateResult
@@ -33,23 +30,23 @@ from app.config import settings
 from app.schemas import (
     BackendInfo,
     BaziMethodsModel,
-    DayMasterStrengthModel,
     DaYunModel,
     MarriageFlagsModel,
     MarriageModel,
     PillarsModel,
     RiskFlagsModel,
+    ShishenContributionModel,
+    ShishenPillarSummaryModel,
+    ShishenSummaryModel,
     SocialModel,
     TenGodsModel,
     ValidationModel,
     VerifyResponse,
     WarningModel,
     WealthModel,
-    WuXingBreakdownModel,
-    WuXingScoreModel,
-    YongShenModel,
 )
 from constants import API_VERSION, RULE_VERSION
+from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS, STEM_ELEMENT
 
 # ──────────────────────────────────────────────────────────────────────────────
 # B2: 规则版本标记 — 规则热重载后此值更新，使旧缓存 key 自然失效
@@ -85,9 +82,12 @@ def _make_cache_key(
     lon: float,
     mode: str,
     gender: str | None,
+    *,
+    use_solar: bool = False,
+    zi_day_rule: str = "sxtwl",
 ) -> str:
     """key = SHA-256 of dt+lon+mode+gender+rule_version（B2: 混入规则版本避免脏读）"""
-    raw = f"{dt.isoformat()}|{lon:.4f}|{mode}|{gender or ''}|{_CURRENT_RULE_VERSION}"
+    raw = f"{dt.isoformat()}|{lon:.4f}|{mode}|{gender or ''}|{int(use_solar)}|{zi_day_rule}" f"|{_CURRENT_RULE_VERSION}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -111,9 +111,10 @@ class CalculateResult:
     """calculate() 的统一返回值"""
 
     verify_response: VerifyResponse
-    # v1: 四柱用 sxtwl/cnlunar（高精度）+ 全部 bazi_engine/ 分析模块
-    # v2: 同 v1（ENGINE_V2 flag 保留用于未来四柱层彻底替换时的切换）
+    # 四柱一律经 services.bazi_engine.pillars；engine_version 标记 API 代际
     engine_version: str = "v1"
+    pillars_layer: str = ""
+    zi_day_rule: str = "sxtwl"
     warnings: list[str] = field(default_factory=list)
 
 
@@ -133,21 +134,33 @@ def _calculate_v1(
     extra_warnings: list[str],
     city_tier: str | None = None,
     industry: str | None = None,
+    *,
+    _pillars_result=None,
+    engine_version: str = "v1",
+    zi_day_rule: str = "sxtwl",
 ) -> CalculateResult:
-    """旧 bazi_full_service 路径（从 run.py 提取）"""
+    """分析层入口；四柱须由 compute_pillars 预计算后传入 _pillars_result。"""
     from typing import Literal, cast
 
     from services.bazi_full_service import (
         build_dayun,
         build_ten_gods,
-        compute_strength,
-        compute_wuxing,
-        compute_yongshen,
+        compute_core_metrics,
         ten_god,
     )
-    from verify import verify_full
 
-    result = verify_full(dt, lon=lon, use_solar=use_solar, mode=cast("Literal['dual', 'single']", mode))
+    if _pillars_result is None:
+        from services.bazi_engine.pillars import ZiDayRule, compute_pillars
+
+        result = compute_pillars(
+            dt,
+            lon=lon,
+            use_solar=use_solar,
+            mode=cast("Literal['dual', 'single']", mode),
+            zi_day_rule=cast("ZiDayRule", zi_day_rule),
+        )
+    else:
+        result = _pillars_result
     offset_minutes_int = int(round(result.solar_time_offset_minutes))
     dt_effective = dt + timedelta(minutes=offset_minutes_int)
 
@@ -182,39 +195,13 @@ def _calculate_v1(
         cnlunar_available=cnlunar_ok,
     )
 
-    wuxing_score_raw, wuxing_breakdown_raw = compute_wuxing(rp)  # RL#1: 保留 breakdown
-    strength_raw = compute_strength(rp.day.stem, wuxing_score_raw)
-    yongshen_raw = compute_yongshen(wuxing_score_raw, strength_raw, rp)  # RL#2: 5分支
+    wuxing_score, wuxing_breakdown, strength, yongshen = compute_core_metrics(rp)
     ten_gods_map = build_ten_gods(rp.day.stem, rp)
     ten_gods = TenGodsModel(**ten_gods_map)
-
-    wuxing_score = WuXingScoreModel.model_validate(
-        wuxing_score_raw.model_dump()
-        if hasattr(wuxing_score_raw, "model_dump")
-        else getattr(wuxing_score_raw, "__dict__", wuxing_score_raw)
-    )
-    wuxing_breakdown = WuXingBreakdownModel.model_validate(
-        wuxing_breakdown_raw.model_dump()
-        if hasattr(wuxing_breakdown_raw, "model_dump")
-        else getattr(wuxing_breakdown_raw, "__dict__", wuxing_breakdown_raw)
-    )
-    strength = DayMasterStrengthModel.model_validate(
-        strength_raw.model_dump()
-        if hasattr(strength_raw, "model_dump")
-        else getattr(strength_raw, "__dict__", strength_raw)
-    )
-    yongshen = YongShenModel.model_validate(
-        yongshen_raw.model_dump()
-        if hasattr(yongshen_raw, "model_dump")
-        else getattr(yongshen_raw, "__dict__", yongshen_raw)
-    )
     # P0-14: wealth_score ≠ strength.score
     # 财运分 = 用神匹配度(0-100)×70% + 日主强弱×30%，与 strength.score 独立
-    # 从 weights 或三个 contrib 字典聚合五行得分
-    _wx_map: dict[str, float] = {}
-    if wuxing_breakdown.weights:
-        _wx_map = {k: float(v) for k, v in wuxing_breakdown.weights.items()}
-    else:
+    _wx_map = _to_wuxing_scores(wuxing_score)
+    if not _wx_map:
         for _c in (wuxing_breakdown.stem_contrib, wuxing_breakdown.branch_contrib, wuxing_breakdown.hidden_contrib):
             for _el, _v in (_c or {}).items():
                 _wx_map[_el] = _wx_map.get(_el, 0.0) + float(_v)
@@ -258,7 +245,12 @@ def _calculate_v1(
             else None
         ),
     )
-    methods = BaziMethodsModel()
+    _zdr = getattr(result, "zi_day_rule", zi_day_rule) or zi_day_rule
+    methods = BaziMethodsModel(
+        day_boundary_rule=_zdr,
+        zi_day_rule=_zdr,
+        pillars_layer=getattr(result, "pillars_layer", "") or "",
+    )
     dayun_model_raw, raw_dayun = build_dayun(dt_effective, rp, methods, gender=gender)
     dayun_model = DaYunModel.model_validate(
         dayun_model_raw.model_dump()
@@ -277,17 +269,11 @@ def _calculate_v1(
         dayun_model.start_age_months = _sam
         dayun_model.start_age = _sam // 12
     from app.schemas.common import RangeModel
+    from services.bazi_engine.analysis.wealth_estimate import estimate_wealth
     from services.bazi_engine.classic_refs import get_refs_by_tag as _get_refs_by_tag
     from services.bazi_engine.dayun import _build_hints as _dayun_build_hints
+    from services.bazi_engine.dayun import _pillar_xingyun as _dy_pillar_xingyun
 
-    # 按五行粗估财富区间（万元/年）
-    _WX_WEALTH_RANGE = {
-        "wood": (8, 30),
-        "fire": (10, 40),
-        "earth": (6, 25),
-        "metal": (12, 50),
-        "water": (10, 35),
-    }
     _WX_CN_MAP = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
     _ST_EL = {
         "甲": "wood",
@@ -317,6 +303,7 @@ def _calculate_v1(
     }
     _ORGAN_CN = {"wood": "肝胆", "fire": "心脑", "earth": "脾胃", "metal": "肺肠", "water": "肾膀胱"}
     _dayun_refs_common = _get_refs_by_tag("大运")[:2]
+    _wealth_tier = "高格" if _wealth_score_v1 >= 70 else ("中格" if _wealth_score_v1 >= 40 else "低格")
     for item in dayun_model.items:
         if item.stem:
             _tg_raw = ten_god(rp.day.stem, item.stem)
@@ -338,16 +325,27 @@ def _calculate_v1(
         _s_cn = _WX_CN_MAP.get(_s_el, item.stem or "")
         _fav = yongshen.favor or []
         _avd = yongshen.avoid or []
+        if not getattr(item, "self_seat", None) and item.stem and item.branch:
+            item.self_seat = _dy_pillar_xingyun(item.stem, item.branch)
+            item.self_seat_source = f"{item.stem}坐{item.branch}十二长生"
 
-        # ── 先计算 wealth_range，便于 wealth_hint 引用数值 (M3.03) ──────
+        # ── 财富区间：estimate_wealth（M3.03 / B-P1-02）────────────────
         if item.flow_wuxing and item.wealth_range is None:
-            lo, hi = _WX_WEALTH_RANGE.get(item.flow_wuxing, (6, 30))
-            _ct_coeff = {"一线": 1.8, "新一线": 1.2}.get(city_tier or "", 1.0)
-            _ind_coeff = 1.5 if (industry or "") == "金融IT" else (0.8 if (industry or "") == "教育公务" else 1.0)
-            _m3_coeff = round(_ct_coeff * _ind_coeff, 2)
+            if item.flow_wuxing in _fav:
+                _dy_trend = "上升"
+            elif item.flow_wuxing in _avd:
+                _dy_trend = "下降"
+            else:
+                _dy_trend = "平稳"
+            _est = estimate_wealth(
+                wealth_tier=_wealth_tier,
+                dayun_trend=_dy_trend,
+                city_tier=city_tier,
+                industry=industry,
+            )
             item.wealth_range = RangeModel(
-                min=round(lo * _m3_coeff, 1),
-                max=round(hi * _m3_coeff, 1),
+                min=_est.low_bound,
+                max=_est.high_bound,
                 currency="万元/年",
             )
         _wr_str = (
@@ -506,10 +504,18 @@ def _calculate_v1(
         )
     except Exception as _exc:
         logger.warning("[M2 analysis] enrichment failed: %s", _exc, exc_info=True)
+        existing = list(getattr(verify_response, "missing_fields", None) or [])
+        verify_response.missing_fields = sorted(set(existing + list(_M2_ENRICH_FIELD_NAMES)))
+        if verify_response.validation:
+            verify_response.validation.warnings.append(
+                WarningModel(code="M2_ENRICH_FAIL", message="分析引擎整体失败，相关字段未计算")
+            )
 
     return CalculateResult(
         verify_response=verify_response,
-        engine_version="v1",
+        engine_version=engine_version,
+        pillars_layer=getattr(result, "pillars_layer", "") or "",
+        zi_day_rule=_zdr,
         warnings=extra_warnings,
     )
 
@@ -546,13 +552,126 @@ def _to_pillars_model(p) -> PillarsModel:
     return PillarsModel.model_validate({k: _pillar_to_dict(v) for k, v in raw.items()})
 
 
+def _ten_god_local(day_stem: str, target_stem: str) -> str | None:
+    try:
+        day_element, day_yinyang = STEM_ELEMENT[day_stem]
+        target_element, target_yinyang = STEM_ELEMENT[target_stem]
+    except Exception:
+        return None
+
+    same_polarity = day_yinyang == target_yinyang
+    produces = {"wood": "fire", "fire": "earth", "earth": "metal", "metal": "water", "water": "wood"}
+    controls = {"wood": "earth", "fire": "metal", "earth": "water", "metal": "wood", "water": "fire"}
+    produces_rev = {v: k for k, v in produces.items()}
+    controls_rev = {v: k for k, v in controls.items()}
+
+    if day_element == target_element:
+        return "比肩" if same_polarity else "劫财"
+    if produces[day_element] == target_element:
+        return "食神" if same_polarity else "伤官"
+    if controls[day_element] == target_element:
+        return "正财" if same_polarity else "偏财"
+    if produces_rev[day_element] == target_element:
+        return "偏印" if same_polarity else "正印"
+    if controls_rev[day_element] == target_element:
+        return "七杀" if same_polarity else "正官"
+    return None
+
+
+def _build_shishen_summary(
+    *,
+    ds_st: str,
+    ys_st: str,
+    ms_st: str,
+    hs_st: str,
+    ys_br: str,
+    ms_br: str,
+    ds_br: str,
+    hs_br: str,
+    ten_gods: TenGodsModel,
+    shishen_scores: dict[str, float],
+) -> ShishenSummaryModel:
+    day_element, day_yinyang = STEM_ELEMENT.get(ds_st, ("", ""))
+    pillars = {
+        "year": ShishenPillarSummaryModel(pillar="year", stem=ys_st, ten_god=ten_gods.year),
+        "month": ShishenPillarSummaryModel(pillar="month", stem=ms_st, ten_god=ten_gods.month),
+        "day": ShishenPillarSummaryModel(pillar="day", stem=ds_st, ten_god=ten_gods.day, note="日主"),
+        "hour": ShishenPillarSummaryModel(pillar="hour", stem=hs_st, ten_god=ten_gods.hour),
+    }
+    contributions: list[ShishenContributionModel] = []
+    hidden_totals: dict[str, float] = {}
+
+    for pillar_name, stem in (("year", ys_st), ("month", ms_st), ("hour", hs_st)):
+        tg = _ten_god_local(ds_st, stem)
+        if tg:
+            contributions.append(
+                ShishenContributionModel(
+                    pillar=pillar_name,
+                    source="stem",
+                    stem=stem,
+                    ten_god=tg,
+                    weight=1.0,
+                    element=STEM_ELEMENT.get(stem, ("", ""))[0] or None,
+                )
+            )
+
+    for pillar_name, branch in (("year", ys_br), ("month", ms_br), ("day", ds_br), ("hour", hs_br)):
+        for hidden_stem, weight in BRANCH_HIDDEN_STEMS.get(branch, []):
+            tg = _ten_god_local(ds_st, hidden_stem)
+            if not tg:
+                continue
+            contrib_weight = round(weight * 0.3, 3)
+            contributions.append(
+                ShishenContributionModel(
+                    pillar=pillar_name,
+                    source="hidden",
+                    stem=hidden_stem,
+                    hidden_stem=hidden_stem,
+                    ten_god=tg,
+                    weight=contrib_weight,
+                    element=STEM_ELEMENT.get(hidden_stem, ("", ""))[0] or None,
+                )
+            )
+            hidden_totals[tg] = hidden_totals.get(tg, 0.0) + contrib_weight
+
+    total = sum(shishen_scores.values()) or 1.0
+    score_breakdown = {k: round(v, 3) for k, v in shishen_scores.items()}
+    score_share = {k: round(v / total * 100.0, 2) for k, v in shishen_scores.items() if v > 0}
+    dominant = [k for k, _ in sorted(score_share.items(), key=lambda item: item[1], reverse=True)[:3]]
+    liuqin_summary: list[str] = []
+    if shishen_scores.get("正官", 0) or shishen_scores.get("七杀", 0):
+        liuqin_summary.append("官杀主规则、职位与压力")
+    if shishen_scores.get("正财", 0) or shishen_scores.get("偏财", 0):
+        liuqin_summary.append("财星主资源、经营与现实落地")
+    if shishen_scores.get("正印", 0) or shishen_scores.get("偏印", 0):
+        liuqin_summary.append("印星主支持、吸收与保护")
+    if shishen_scores.get("比肩", 0) or shishen_scores.get("劫财", 0):
+        liuqin_summary.append("比劫主自我、协作与边界")
+    if shishen_scores.get("食神", 0) or shishen_scores.get("伤官", 0):
+        liuqin_summary.append("食伤主表达、输出与创造")
+    summary_text = (
+        f"日主{ds_st}（{day_element or '未知'}{('阳' if day_yinyang == 'yang' else '阴' if day_yinyang == 'yin' else '')}）"
+        f"的十神结构以{('、'.join(dominant[:2]) if dominant else '均衡')}为核心，"
+        f"盘面主轴偏向{('、'.join(liuqin_summary[:2]) if liuqin_summary else '平衡分布')}。"
+    )
+    return ShishenSummaryModel(
+        day_stem=ds_st,
+        day_element=day_element or None,
+        day_yinyang="阳" if day_yinyang == "yang" else "阴" if day_yinyang == "yin" else None,
+        pillars=pillars,
+        score_total=round(total, 3),
+        score_breakdown=score_breakdown,
+        score_share=score_share,
+        dominant=dominant,
+        hidden_contrib_by_ten_god={k: round(v, 3) for k, v in hidden_totals.items()},
+        contributions=contributions,
+        liuqin_summary=liuqin_summary,
+        summary_text=summary_text,
+    )
+
+
 # ──────────────────────────────────────────────────────────────────────────────
-# ENGINE_V2=true 路径
-# ──────────────────────────────────────────────────────────────────────────────
-# 架构说明：_calculate_v1 已集成全部 services/bazi_engine/ 新模块
-#   （wuxing/strength/yongshen/dayun/shensha/geju/palace + M2 7维分析引擎 + M2.5 生活模块）。
-# 四柱计算继续使用 sxtwl/cnlunar（精度最高来源），属于有意设计，非临时措施。
-# ENGINE_V2 flag 保留用于未来完全替换四柱计算后的平滑切换。
+# 四柱 + 分析统一路径（ENGINE_V2 控制 engine_version 与 API v2 门闸）
 # ──────────────────────────────────────────────────────────────────────────────
 
 
@@ -567,16 +686,22 @@ def _calculate_v2(
     extra_warnings: list[str],
     city_tier: str | None = None,
     industry: str | None = None,
+    zi_day_rule: str = "sxtwl",
 ) -> CalculateResult:
-    """
-    ENGINE_V2=true 入口.
+    """ENGINE_V2=true 时 calculate() 的薄包装，标记 engine_version=v2。"""
+    from typing import Literal, cast
 
-    当前实现：委托 _calculate_v1，后者已集成全部 services/bazi_engine/ 新引擎模块。
-    四柱仍使用 sxtwl/cnlunar（精度优先，有意设计）。
-    如需彻底替换四柱层，在此函数添加新实现并切换路由。
-    """
-    logger.debug("[BaziEngineService] ENGINE_V2=true")
-    result = _calculate_v1(
+    from services.bazi_engine.pillars import PILLARS_LAYER, ZiDayRule, compute_pillars
+
+    pillars_result = compute_pillars(
+        dt,
+        lon=lon,
+        use_solar=use_solar,
+        mode=cast("Literal['dual', 'single']", mode),
+        zi_day_rule=cast("ZiDayRule", zi_day_rule),
+    )
+    logger.debug("[BaziEngineService] pillars_layer=%s", PILLARS_LAYER)
+    return _calculate_v1(
         dt=dt,
         lon=lon,
         tz=tz,
@@ -587,9 +712,10 @@ def _calculate_v2(
         extra_warnings=extra_warnings,
         city_tier=city_tier,
         industry=industry,
+        _pillars_result=pillars_result,
+        engine_version="v2",
+        zi_day_rule=zi_day_rule,
     )
-    result.engine_version = "v2"
-    return result
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -608,29 +734,22 @@ def calculate(
     extra_warnings: list[str] | None = None,
     city_tier: str | None = None,
     industry: str | None = None,
+    zi_day_rule: str = "sxtwl",
 ) -> CalculateResult:
     """
     统一八字计算入口.
 
-    Parameters:
-        dt:              出生时间（带时区或naive均可）
-        lon:             出生经度（-180~180）
-        tz:              IANA 时区名称
-        use_solar:       是否启用太阳时矫正
-        mode:            "single" | "dual"
-        gender:          "male" | "female" | None
-        request_id:      请求追踪 ID
-        extra_warnings:  额外警告信息
-        city_tier:       城市层级 (M3.03) 一线/新一线/其余
-        industry:        行业 (M3.03) 金融IT/教育公务/其余
+    Routing:
+        四柱一律经 services.bazi_engine.pillars.compute_pillars（权威层）。
+        ENGINE_V2=true  → engine_version="v2"（API v2 端点可用）
+        ENGINE_V2=false → engine_version="v1"
 
-    Returns:
-        CalculateResult with verify_response and metadata
+    See docs/design/bazi/ENGINE-METHOD-REGISTRY.md § B-04.
     """
     _extra = extra_warnings or []
 
     # ── M3 排盘结果缓存 (TTL=1h, LRU=500) ────────────────────────────────────
-    cache_key = _make_cache_key(dt, lon, mode, gender)
+    cache_key = _make_cache_key(dt, lon, mode, gender, use_solar=use_solar, zi_day_rule=zi_day_rule)
     if _CACHETOOLS_AVAILABLE and cache_key in _RESULT_CACHE:
         cached: CalculateResult = _RESULT_CACHE[cache_key]
         logger.debug("[Cache] HIT key=%s...", cache_key[:8])
@@ -656,8 +775,20 @@ def calculate(
             extra_warnings=_extra,
             city_tier=city_tier,
             industry=industry,
+            zi_day_rule=zi_day_rule,
         )
     else:
+        from typing import Literal, cast
+
+        from services.bazi_engine.pillars import ZiDayRule, compute_pillars
+
+        pillars_result = compute_pillars(
+            dt,
+            lon=lon,
+            use_solar=use_solar,
+            mode=cast("Literal['dual', 'single']", mode),
+            zi_day_rule=cast("ZiDayRule", zi_day_rule),
+        )
         result = _calculate_v1(
             dt=dt,
             lon=lon,
@@ -669,6 +800,9 @@ def calculate(
             extra_warnings=_extra,
             city_tier=city_tier,
             industry=industry,
+            _pillars_result=pillars_result,
+            engine_version="v1",
+            zi_day_rule=zi_day_rule,
         )
     _duration = time.perf_counter() - _start_ts
     try:
@@ -746,6 +880,48 @@ def _get_current_dayun_stem(
 # M2: 分析引擎集成辅助
 # ──────────────────────────────────────────────────────────────────────────────
 
+_M2_ENRICH_FIELD_NAMES: tuple[str, ...] = (
+    "geju",
+    "yongshen",
+    "shensha",
+    "palace",
+    "wealth_analysis",
+    "career",
+    "marriage_analysis",
+    "health",
+    "relationship",
+    "personality",
+    "monthly_fortune",
+    "jewelry",
+    "fengshui",
+    "lucky",
+    "lifestyle",
+    "milestones",
+    "liunian",
+    "life_arc",
+    "liunian_detail",
+    "current_fortune_summary",
+    "bazi_summary",
+    "shishen_summary",
+    "yearly_fortune",
+)
+
+
+def _mark_analysis_gap(
+    verify_response: VerifyResponse,
+    field: str,
+    *,
+    code: str,
+    message: str,
+) -> None:
+    """Record a missing analysis field and surface a validation warning."""
+    missing = list(getattr(verify_response, "missing_fields", None) or [])
+    if field not in missing:
+        missing.append(field)
+    verify_response.missing_fields = missing
+    if hasattr(verify_response, "validation") and verify_response.validation:
+        verify_response.validation.warnings.append(WarningModel(code=code, message=message))
+
 
 def _enrich_v2_analysis(
     verify_response: VerifyResponse,
@@ -765,7 +941,6 @@ def _enrich_v2_analysis(
     全部在 try/except 中保护，不影响核心八字计算。
     """
     from app.schemas.analysis import (
-        GejuModel,
         PalaceItemModel,
         PalaceModel,
         ShenshaModel,
@@ -777,6 +952,7 @@ def _enrich_v2_analysis(
     from services.bazi_engine.analysis.personality import compute_personality
     from services.bazi_engine.analysis.relationship import compute_relationship
     from services.bazi_engine.analysis.wealth import compute_wealth
+    from services.bazi_engine.classic_refs import shensha_candidates as _shensha_candidates
     from services.bazi_engine.geju import compute_geju
     from services.bazi_engine.lifestyle.fengshui import compute_fengshui
     from services.bazi_engine.lifestyle.jewelry import compute_jewelry
@@ -871,57 +1047,60 @@ def _enrich_v2_analysis(
             hour_branch=hs_br,  # N1.03 三合局
         )
         geju_name = geju_raw.get("name", "普通格")
-        is_broken = not geju_raw.get("confident", True)
+        po_geju = geju_raw.get("po_geju") or {}
+        is_broken = bool(po_geju.get("broken"))
 
         from services.bazi_engine.classic_refs import get_refs_by_tag as _geju_get_refs
+        from services.bazi_engine.geju_payload import build_geju_model
 
         _geju_refs_text = "\n".join(
             f"【{r.get('source', '')}】{r.get('text', '')}" for r in _geju_get_refs("格局")[:2] if r.get("text")
         )
-        verify_response.geju = GejuModel(
-            geju_name=geju_name,
-            geju_level=_geju_level(geju_name),  # type: ignore[arg-type]
-            month_stem_shishen=geju_raw.get("ten_god", ""),
-            is_broken=is_broken,
-            inference_tags=[geju_name],
-            interpretation_text="",  # 留空，由 interpret_bazi 深度解读模板填入
+        verify_response.geju = build_geju_model(
+            geju_raw,
+            year=f"{ys_st}{ys_br}",
+            month=f"{ms_st}{ms_br}",
+            day=f"{ds_st}{ds_br}",
+            hour=f"{hs_st}{hs_br}",
             classic_ref=_geju_refs_text,
-            confidence=geju_raw.get("confidence", 0.0),
-            geju_detail=geju_raw.get("note", ""),
         )
     except Exception as exc:
         logger.debug("[M2 geju] %s", exc)
         geju_name = "普通格"
-        if hasattr(verify_response, "validation") and verify_response.validation:
-            verify_response.validation.warnings.append(
-                WarningModel(code="M2_GEJU_FAIL", message="格局计算失败，已降级为普通格")
-            )
+        _mark_analysis_gap(
+            verify_response,
+            "geju",
+            code="M2_GEJU_FAIL",
+            message="格局计算失败，已降级为普通格",
+        )
 
-    # ── 建禄格/羊刃格：重算用神（geju_name 确定后）────────────────────────
-    if geju_name in ("建禄格", "羊刃格"):
-        try:
-            from services.bazi_engine.strength import compute_strength as _eng_str2
-            from services.bazi_engine.wuxing import compute_wuxing as _eng_wx2
-            from services.bazi_engine.yongshen import compute_yongshen as _eng_ys2
+    # ── 格局确定后重算用神（建禄/羊刃等专用分支需 geju_name）────────────────
+    try:
+        from services.bazi_full_service import compute_core_metrics
 
-            _w2 = _eng_wx2(ys_st, ys_br, ms_st, ms_br, ds_st, ds_br, hs_st, hs_br)
-            _s2 = _eng_str2(ds_st, ms_br, ys_st, ms_st, hs_st, ys_br, ds_br, hs_br, _w2)
-            _ys2 = _eng_ys2(
-                day_stem=ds_st,
-                month_branch=ms_br,
-                strength=_s2,
-                wuxing=_w2,
-                geju_name=geju_name,
-            )
-            verify_response.yongshen = YongShenModel(
-                favor=_ys2.favor,
-                avoid=_ys2.avoid,
-                rationale=_ys2.rationale,
-            )
-            favor = list(_ys2.favor)
-            avoid = list(_ys2.avoid)
-        except Exception as _exc2:
-            logger.debug("[M2 geju-yongshen] %s", _exc2)
+        _, _, _, ys_model = compute_core_metrics(rp, geju_name=geju_name)
+        from services.bazi_engine.yongshen_payload import build_yongshen_model
+
+        verify_response.yongshen = build_yongshen_model(
+            list(ys_model.favor or []),
+            list(ys_model.avoid or []),
+            ys_model.rationale,
+            year=f"{ys_st}{ys_br}",
+            month=f"{ms_st}{ms_br}",
+            day=f"{ds_st}{ds_br}",
+            hour=f"{hs_st}{hs_br}",
+        )
+        yongshen = verify_response.yongshen
+        favor = list(verify_response.yongshen.favor or [])
+        avoid = list(verify_response.yongshen.avoid or [])
+    except Exception as _exc2:
+        logger.debug("[M2 geju-yongshen] %s", _exc2)
+        _mark_analysis_gap(
+            verify_response,
+            "yongshen",
+            code="M2_YONGSHEN_FAIL",
+            message="格局后用神重算失败，保留初始用神",
+        )
 
     # ── 神煞 ─────────────────────────────────────────────────────────
     shensha_items_raw: list[dict] = []
@@ -949,6 +1128,7 @@ def _enrich_v2_analysis(
                 priority=s.get("priority", "B"),  # M1.09: A/B/C 三级优先度传递到前端
                 meaning=s.get("note", ""),
                 classic_source=s.get("classic", ""),
+                classic_refs=_shensha_candidates(s.get("name", ""), limit=1),
             )
             for s in shensha_items_raw
         ]
@@ -958,6 +1138,12 @@ def _enrich_v2_analysis(
             verify_response.social.taohua_hit = has_taohua
     except Exception as exc:
         logger.debug("[M2 shensha] %s", exc)
+        _mark_analysis_gap(
+            verify_response,
+            "shensha",
+            code="M2_SHENSHA_FAIL",
+            message="神煞计算失败",
+        )
 
     # ── 宫位 ─────────────────────────────────────────────────────────
     try:
@@ -1024,13 +1210,22 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2 palace] %s", exc)
+        _mark_analysis_gap(
+            verify_response,
+            "palace",
+            code="M2_PALACE_FAIL",
+            message="宫位计算失败",
+        )
 
     # ── 7 分析引擎（ThreadPoolExecutor 并行执行）─────────────────────
-    # P1-A: M2 各引擎失败时统一写入 warnings（§4.5）
+    # P1-A: M2 各引擎失败时统一写入 warnings + missing_fields（§4.5）
     # PR-09: 7 个纯 Python 分析引擎均为 CPU-bound 但互相独立，
     #        使用 ThreadPoolExecutor(max_workers=4) 并发化；
     #        sxtwl 已在本函数上层完成调用，此处引擎不再调用 sxtwl，线程安全。
-    def _m2_warn(code: str, msg: str) -> None:
+    def _m2_warn(code: str, msg: str, field: str | None = None) -> None:
+        if field:
+            _mark_analysis_gap(verify_response, field, code=code, message=msg)
+            return
         if hasattr(verify_response, "validation") and verify_response.validation:
             verify_response.validation.warnings.append(WarningModel(code=code, message=msg))
 
@@ -1135,6 +1330,15 @@ def _enrich_v2_analysis(
         ("personality", _run_personality),
         ("monthly", _run_monthly),
     ]
+    _engine_field_map: dict[str, str] = {
+        "wealth": "wealth_analysis",
+        "career": "career",
+        "marriage": "marriage_analysis",
+        "health": "health",
+        "relationship": "relationship",
+        "personality": "personality",
+        "monthly": "monthly_fortune",
+    }
     _engine_warn_map: dict[str, str] = {
         "wealth": "M2_WEALTH_FAIL",
         "career": "M2_CAREER_FAIL",
@@ -1166,7 +1370,7 @@ def _enrich_v2_analysis(
             _engine_results[_name] = _fut.result()
         except Exception as _exc:
             logger.debug("[M2 %s parallel] %s", _name, _exc)
-            _m2_warn(_engine_warn_map[_name], _engine_msg_map[_name])
+            _m2_warn(_engine_warn_map[_name], _engine_msg_map[_name], field=_engine_field_map[_name])
             _engine_results[_name] = None
 
     # 回写结果到 verify_response（主线程操作，无并发竞争）
@@ -1193,6 +1397,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2.5 jewelry] %s", exc)
+        _mark_analysis_gap(verify_response, "jewelry", code="M2_JEWELRY_FAIL", message="首饰推荐计算失败")
 
     try:
         verify_response.fengshui = compute_fengshui(
@@ -1201,6 +1406,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2.5 fengshui] %s", exc)
+        _mark_analysis_gap(verify_response, "fengshui", code="M2_FENGSHUI_FAIL", message="风水建议计算失败")
 
     try:
         verify_response.lucky = compute_lucky(
@@ -1209,6 +1415,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2.5 lucky] %s", exc)
+        _mark_analysis_gap(verify_response, "lucky", code="M2_LUCKY_FAIL", message="开运元素计算失败")
 
     try:
         verify_response.lifestyle = compute_lifestyle(
@@ -1217,6 +1424,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2.5 lifestyle] %s", exc)
+        _mark_analysis_gap(verify_response, "lifestyle", code="M2_LIFESTYLE_FAIL", message="生活方式建议计算失败")
 
     try:
         birth_year = dt.year
@@ -1226,7 +1434,7 @@ def _enrich_v2_analysis(
                 dy_dict = dy.model_dump() if hasattr(dy, "model_dump") else dict(dy.__dict__)
                 # 流年从大运年份中提取（简化：取大运起始年+0~9）
                 start_age = dy_dict.get("start_age", 0)
-                dy_branch = dy_dict.get("branch", "")
+                dy_dict.get("branch", "")
                 _gz_stems_m = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
                 _gz_branches_m = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
                 for i in range(10):
@@ -1252,6 +1460,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M2.5 milestones] %s", exc)
+        _mark_analysis_gap(verify_response, "milestones", code="M2_MILESTONES_FAIL", message="人生里程碑计算失败")
 
     # ── RL#10: 流年 items 填充（当前年份前后2年）────────────────────
     try:
@@ -1260,6 +1469,7 @@ def _enrich_v2_analysis(
         from app.schemas.bazi import LiuNianItemModel as _LiuNianItemModel
         from app.schemas.bazi import LiuNianResultModel as _LiuNianResultModel
         from services.bazi_engine.liunian import compute_liunian as _compute_liunian
+        from services.bazi_engine.shensha import compute_flow_shensha_items as _compute_flow_shensha_items
 
         _cur_yr = _dt_mod.date.today().year
         _ln_rows = _compute_liunian(
@@ -1267,6 +1477,11 @@ def _enrich_v2_analysis(
             day_branch=ds_br,
             start_year=_cur_yr - 2,
             end_year=_cur_yr + 2,
+            month_stem=ms_st,
+            month_branch=ms_br,
+            hour_stem=hs_st,
+            hour_branch=hs_br,
+            flow_label="liunian",
         )
         _ln_items = [
             _LiuNianItemModel(
@@ -1274,6 +1489,27 @@ def _enrich_v2_analysis(
                 stem=r["stem"],
                 branch=r["branch"],
                 ten_god=r.get("ten_god"),
+                hidden_stems=r.get("hidden_stems", []),
+                xingyun=r.get("xingyun"),
+                self_seat=r.get("self_seat"),
+                self_seat_source=r.get("self_seat_source"),
+                kongwang=r.get("kongwang", []),
+                kongwang_hit=r.get("kongwang_hit", False),
+                nayin=r.get("nayin"),
+                shensha=r.get("shensha")
+                or _compute_flow_shensha_items(
+                    flow_label="liunian",
+                    flow_stem=r["stem"],
+                    flow_branch=r["branch"],
+                    day_stem=ds_st,
+                    day_branch=ds_br,
+                    month_stem=ms_st,
+                    month_branch=ms_br,
+                    hour_stem=hs_st,
+                    hour_branch=hs_br,
+                ),
+                wuxing=r.get("wuxing"),
+                yin_yang=r.get("yin_yang"),
                 clash=r.get("clash"),
             )
             for r in _ln_rows
@@ -1284,6 +1520,7 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[RL#10 liunian] %s", exc)
+        _mark_analysis_gap(verify_response, "liunian", code="M2_LIUNIAN_FAIL", message="流年排盘计算失败")
 
     # ── 任务 2.10: rule_version_detail dict ──────────────────────────
     verify_response.rule_version_detail = {
@@ -1747,6 +1984,22 @@ def _enrich_v2_analysis(
         )
     except Exception as exc:
         logger.debug("[M4 current_fortune_summary] %s", exc)
+
+    try:
+        verify_response.shishen_summary = _build_shishen_summary(
+            ds_st=ds_st,
+            ys_st=ys_st,
+            ms_st=ms_st,
+            hs_st=hs_st,
+            ys_br=ys_br,
+            ms_br=ms_br,
+            ds_br=ds_br,
+            hs_br=hs_br,
+            ten_gods=verify_response.ten_gods or TenGodsModel(),
+            shishen_scores=shishen_scores,
+        )
+    except Exception as exc:
+        logger.debug("[M4 shishen_summary] %s", exc)
 
     # ── N2.05 五行均衡评分 ────────────────────────────────────────────────────
     try:

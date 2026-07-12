@@ -219,7 +219,7 @@ class TestOpenApiDocsBranches:
         # 用 mock 替换 fastapi 的 get_openapi 调用
         with patch("app.openapi_docs.get_openapi", return_value=mock_schema):
             result = get_openapi_with_error_schemas(app)
-        
+
         # 验证返回结果包含 components
         assert "components" in result
         assert "responses" in result["components"]
@@ -395,8 +395,8 @@ class TestGejuConfidenceBranches:
 
         result = compute_geju(
             year_stem="甲", month_stem="丙", month_branch="辰",
-            day_stem="X",  # 无效天干 → get_ten_god 找不到 → 普通格
-            hour_stem="乙",
+            day_stem="X",
+            hour_stem="庚",  # 不透干，避免 toukan 分支抬高 confidence
             wuxing_scores=None,
         )
         assert result is not None
@@ -557,4 +557,3 @@ class TestBaziEngineServiceNonDictWarning:
                     assert len(warnings_list) >= 0  # 此测试仅为覆盖 L143
         except Exception:
             pass  # 允许失败
-

@@ -68,11 +68,12 @@ def test_early_zi_boundary_flag(time_str: str, expect_boundary: bool, expect_hou
 
 @pytest.mark.parametrize("time_str", ["23:00:00", "23:30:00", "23:59:00", "00:00:00", "00:30:00", "00:59:00"])
 def test_early_zi_methods_field(time_str: str):
-    """早子时窗口内 methods.day_boundary_rule 应为 zi_initial。"""
+    """早子时窗口内 methods 回显 zi_day_rule（默认 sxtwl）。"""
     payload = dict(BASE, dt=f"{DATE}T{time_str}")
     resp = client.post("/api/v1/bazi/full", json=payload)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["methods"]["day_boundary_rule"] == "zi_initial", (
-        f"[{time_str}] methods.day_boundary_rule should be zi_initial"
+    assert data["methods"]["day_boundary_rule"] == "sxtwl", (
+        f"[{time_str}] methods.day_boundary_rule should be sxtwl"
     )
+    assert data["methods"]["zi_day_rule"] == "sxtwl"

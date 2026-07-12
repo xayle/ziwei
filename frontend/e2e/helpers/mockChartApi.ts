@@ -1,5 +1,45 @@
 import type { Page } from '@playwright/test'
 
+/** ≥300 城 mock，满足 citiesCache MIN_CITIES 与 E2E 建档选城 */
+export const mockCitiesPayload = (() => {
+  const municipalities = [
+    { name: '北京', province: '北京市', lng: 116.4074, lat: 39.9042, city_type: '直辖市' },
+    { name: '上海', province: '上海市', lng: 121.4737, lat: 31.2304, city_type: '直辖市' },
+    { name: '天津', province: '天津市', lng: 117.2, lat: 39.12, city_type: '直辖市' },
+    { name: '重庆', province: '重庆市', lng: 106.55, lat: 29.56, city_type: '直辖市' },
+  ]
+  const provinces = [
+    '广东省', '四川省', '浙江省', '江苏省', '山东省', '河南省', '湖北省', '湖南省',
+    '福建省', '安徽省', '江西省', '辽宁省', '吉林省', '黑龙江省', '陕西省', '甘肃省',
+    '云南省', '贵州省', '海南省', '山西省', '河北省', '广西壮族自治区', '内蒙古自治区',
+    '宁夏回族自治区', '新疆维吾尔自治区', '西藏自治区', '青海省',
+  ]
+  const rows = [...municipalities]
+  let i = 0
+  while (rows.length < 337) {
+    const province = provinces[i % provinces.length]
+    rows.push({
+      name: `示例市${i + 1}`,
+      province,
+      lng: 100 + (i % 35),
+      lat: 22 + (i % 18),
+      city_type: '地级市',
+    })
+    i += 1
+  }
+  return rows
+})()
+
+export async function setupCitiesApiMock(page: Page) {
+  await page.route('**/api/v1/cities**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockCitiesPayload),
+    })
+  })
+}
+
 export const mockBaziPayload = {
   pillars_primary: {
     year: { stem: '己', branch: '巳' },
@@ -7,6 +47,18 @@ export const mockBaziPayload = {
     day: { stem: '甲', branch: '子' },
     hour: { stem: '戊', branch: '辰' },
   },
+  ten_gods: { year: '正财', month: '伤官', hour: '偏财' },
+  kongwang: ['戌', '亥'],
+  pillar_details: {
+    year: { hidden_stems: [{ stem: '丙', tenGod: '食神' }], xingyun: '帝旺', self_seat: '衰', nayin: '大林木', shensha: [{ name: '天乙' }] },
+    month: { hidden_stems: [{ stem: '癸', tenGod: '正印' }], xingyun: '墓', self_seat: '养', nayin: '涧下水', shensha: [{ name: '华盖' }] },
+    day: { hidden_stems: [{ stem: '癸', tenGod: '正印' }], xingyun: '沐浴', self_seat: '长生', nayin: '海中金', shensha: [{ name: '将星' }] },
+    hour: { hidden_stems: [{ stem: '乙', tenGod: '劫财' }], xingyun: '衰', self_seat: '冠带', nayin: '大林木', shensha: [{ name: '驿马' }] },
+  },
+  liunian: {
+    items: [{ year: 2026, stem: '丙', branch: '午', ten_god: '食神', nayin: '天河水', self_seat: '胎', xingyun: '临官', shensha: [{ name: '红鸾' }] }],
+  },
+  current_fortune_summary: { current_liunian: '食神' },
   geju: {
     geju_name: '正官格',
     interpretation_text: 'E2E 测试格局说明。',
@@ -56,7 +108,23 @@ export const mockBaziPayload = {
     { month: 1, luck_level: '平' },
     { month: 2, luck_level: '吉' },
   ],
-  dayun: { items: [] },
+  dayun: {
+    items: [{
+      start_year: 2020,
+      stem: '辛',
+      branch: '未',
+      ten_god: '正官',
+      nayin: '路旁土',
+      self_seat: '养',
+      xingyun: '冠带',
+      shensha: [{ name: '天德' }],
+      hidden_stems: [{ stem: '己', tenGod: '正财' }],
+    }],
+  },
+  shishen_summary: {
+    dominant: ['正官', '正印'],
+    score_share: { 正官: 0.32, 正印: 0.28, 偏财: 0.15 },
+  },
   bazi_summary: 'E2E 八字摘要。',
   validation: {
     level: 'standard',
@@ -253,18 +321,7 @@ export const mockZiweiPayload = {
 }
 
 export async function setupLoggedInApiMocks(page: Page) {
-  await page.route(
-    (url) => url.pathname.endsWith('/api/v1/cities'),
-    async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([
-          { name: '北京', province: '北京市', lng: 116.4074, lat: 39.9042, city_type: '直辖市' },
-        ]),
-      })
-    },
-  )
+  await setupCitiesApiMock(page)
 
   await page.route(
     (url) => {
@@ -287,6 +344,8 @@ export async function setupLoggedInApiMocks(page: Page) {
 
 /** 拦截排盘相关 API，使 E2E 不依赖真实后端 */
 export async function setupChartApiMocks(page: Page) {
+  await setupCitiesApiMock(page)
+
   await page.route('**/api/v1/bazi/full', async (route) => {
     await route.fulfill({
       status: 200,

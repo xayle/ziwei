@@ -60,6 +60,12 @@ const router = createRouter({
       meta: { title: '报告', requiresArchive: true },
     },
     {
+      path: '/relation/new',
+      name: 'relation-new',
+      component: () => import('@/views/RelationCompatView.vue'),
+      meta: { title: '关系合盘', requiresArchive: true },
+    },
+    {
       path: '/extensions',
       name: 'extensions',
       component: () => import('@/views/extensions/ExtensionHubView.vue'),

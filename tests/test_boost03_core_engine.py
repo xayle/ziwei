@@ -22,124 +22,128 @@ from unittest.mock import MagicMock, patch
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestInitDb:
-    """init_db.py — init_db() 函数全路径"""
+    """scripts/init_db.py — init_db() 函数全路径"""
 
     def test_init_db_returns_table_names(self):
         """使用内存 sqlite 调用 init_db()，应返回非空表名列表"""
         with patch.dict(os.environ, {"DATABASE_URL": "sqlite:///:memory:"}):
-            # 临时覆盖 settings，让 init_db 使用内存 DB
-            with patch("init_db.settings") as mock_settings:
+            with patch("scripts.init_db.settings") as mock_settings:
                 mock_settings.database_url = "sqlite:///:memory:"
                 mock_settings.db_path = ":memory:"
-                from init_db import init_db
+                from scripts.init_db import init_db
                 tables = init_db()
         assert isinstance(tables, list)
         assert len(tables) > 0
 
     def test_init_db_includes_users_table(self):
         """创建的表中应包含 users 表"""
-        with patch("init_db.settings") as mock_settings:
+        with patch("scripts.init_db.settings") as mock_settings:
             mock_settings.database_url = "sqlite:///:memory:"
             mock_settings.db_path = ":memory:"
-            from init_db import init_db
+            from scripts.init_db import init_db
             tables = init_db()
         assert "users" in tables
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 2. db.py — PostgreSQL 路径 + SQLite pragma 路径
+# 2. app.core.db — PostgreSQL 路径 + SQLite pragma 路径
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class TestDbGetEngine:
-    """db.get_engine() — 覆盖 PostgreSQL 路径和 init_db (lines 35,36,66,72-89)"""
+    """app.core.db.get_engine() — 覆盖 PostgreSQL 路径和 init_db"""
 
     def setup_method(self):
         """每个测试前重置单例"""
-        import db
-        db._engine = None
+        import app.core.db as db_mod
+        db_mod._engine = None
 
     def test_sqlite_path_returns_engine(self):
-        """SQLite 路径：get_engine() 返回真实 Engine (default path, lines 42-65)"""
-        import db, pathlib
-        db._engine = None
-        with patch("db.settings") as mock_settings:
+        """SQLite 路径：get_engine() 返回真实 Engine"""
+        import app.core.db as db_mod
+        import pathlib
+        db_mod._engine = None
+        with patch("app.core.db.settings") as mock_settings:
             mock_settings.use_postgres = False
             mock_settings.db_path = pathlib.Path(":memory:")
             mock_settings.debug = False
-            with patch("db._ensure_data_dir"):
-                result = db.get_engine()
+            with patch("app.core.db._ensure_data_dir"):
+                result = db_mod.get_engine()
         assert result is not None
+
     def test_postgres_path_returns_engine(self):
-        """PostgreSQL 路径：use_postgres=True 走 pg 分支 (lines 35-36)"""
-        import db
-        db._engine = None
-        with patch("db.settings") as mock_settings:
+        """PostgreSQL 路径：use_postgres=True 走 pg 分支"""
+        import app.core.db as db_mod
+        db_mod._engine = None
+        with patch("app.core.db.settings") as mock_settings:
             mock_settings.use_postgres = True
             mock_settings.database_url = "postgresql://user:pw@localhost/testdb"
             mock_settings.db_pool_size = 5
             mock_settings.db_max_overflow = 10
             mock_settings.db_pool_recycle = 3600
             mock_settings.debug = False
-            with patch("db.create_engine") as mock_ce:
+            with patch("app.core.db.create_engine") as mock_ce:
                 mock_engine = MagicMock()
                 mock_ce.return_value = mock_engine
-                result = db.get_engine()
+                result = db_mod.get_engine()
         assert result is mock_engine
 
     def test_cached_engine_reused(self):
         """第二次调用复用缓存 engine，不再创建新 engine"""
-        import db, pathlib
-        db._engine = None
-        with patch("db.settings") as mock_settings:
+        import app.core.db as db_mod
+        import pathlib
+        db_mod._engine = None
+        with patch("app.core.db.settings") as mock_settings:
             mock_settings.use_postgres = False
             mock_settings.debug = False
             mock_settings.db_path = pathlib.Path(":memory:")
-            with patch("db._ensure_data_dir"):
-                e1 = db.get_engine()
-                e2 = db.get_engine()
+            with patch("app.core.db._ensure_data_dir"):
+                e1 = db_mod.get_engine()
+                e2 = db_mod.get_engine()
         assert e1 is e2
 
 
 class TestDbInitDb:
-    """db.init_db() — lines 66-89"""
+    """app.core.db.init_db() — create_all + SQLite 列迁移"""
 
     def setup_method(self):
-        import db
-        db._engine = None
+        import app.core.db as db_mod
+        db_mod._engine = None
 
     def test_init_db_calls_create_all(self):
-        """init_db() 调用 SQLModel.metadata.create_all  (line 72)"""
-        import db
+        """init_db() 调用 SQLModel.metadata.create_all"""
+        import app.core.db as db_mod
         mock_engine = MagicMock()
-        with patch("db.get_engine", return_value=mock_engine):
-            with patch("db.settings") as ms:
+        with patch("app.core.db.get_engine", return_value=mock_engine):
+            with patch("app.core.db.settings") as ms:
                 ms.use_postgres = True  # 跳过 SQLite ADD COLUMN 逻辑
-                with patch("db.SQLModel") as mock_sql:
+                with patch("app.core.db.SQLModel") as mock_sql:
                     mock_sql.metadata.create_all = MagicMock()
-                    db.init_db()
+                    db_mod.init_db()
                     mock_sql.metadata.create_all.assert_called_once_with(mock_engine)
 
     def test_init_db_sqlite_adds_column_if_missing(self):
-        """SQLite 模式：补 deleted_at 列（lines 79-89）"""
-        import db
+        """SQLite 模式：补 deleted_at / cases 扩展列"""
+        import app.core.db as db_mod
         mock_engine = MagicMock()
         mock_conn = MagicMock()
         mock_conn.__enter__ = MagicMock(return_value=mock_conn)
         mock_conn.__exit__ = MagicMock(return_value=False)
-        # PRAGMA 返回列列表但不含 deleted_at
-        mock_conn.exec_driver_sql.side_effect = [
-            [["0", "id", "INTEGER", 0, None, 1]],  # PRAGMA table_info: no deleted_at
-            None,  # ALTER TABLE
-        ]
+
+        def _pragma_side_effect(sql, *args):
+            sql_str = str(sql)
+            if "PRAGMA table_info" in sql_str:
+                return [["0", "id", "INTEGER", 0, None, 1]]
+            return None
+
+        mock_conn.exec_driver_sql.side_effect = _pragma_side_effect
         mock_engine.connect.return_value = mock_conn
-        with patch("db.get_engine", return_value=mock_engine):
-            with patch("db.settings") as ms:
+        with patch("app.core.db.get_engine", return_value=mock_engine):
+            with patch("app.core.db.settings") as ms:
                 ms.use_postgres = False
-                with patch("db.SQLModel"):
-                    db.init_db()
-        # ALTER TABLE 应被调用
+                with patch("app.core.db.SQLModel"):
+                    db_mod.init_db()
         calls = [str(c) for c in mock_conn.exec_driver_sql.call_args_list]
-        assert any("ALTER" in c or "PRAGMA" in c for c in calls)
+        assert any("ALTER" in c for c in calls)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

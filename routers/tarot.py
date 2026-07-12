@@ -355,7 +355,7 @@ def draw_spread(req: SpreadRequest) -> SpreadResponse:
 
     return SpreadResponse(
         count=req.count,
-        positions=[SpreadPosition(position=pos, card=card) for pos, card in zip(positions, cards)],
+        positions=[SpreadPosition(position=pos, card=card) for pos, card in zip(positions, cards, strict=False)],
         context=req.context,
     )
 

@@ -13,6 +13,7 @@ import time as _time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from starlette.requests import Request
+from starlette.responses import Response
 
 from app.schemas.explain import ExplainBatchResponse, ZiweiExplainBatchRequest
 from app.schemas.provenance import ResponseProvenance
@@ -798,16 +799,24 @@ async def demo_ziwei(request: Request, crosscheck: bool = False) -> ZiweiRespons
     return _chart_to_response(chart, req=_DEMO_REQUEST, birth=birth)
 
 
-@router.post("/compatibility", response_model=CompatibilityResponse, summary="合盘六合度分析")
+@router.post(
+    "/compatibility",
+    response_model=CompatibilityResponse,
+    summary="合盘六合度分析 [已弃用 → POST /api/v1/relation/full]",
+    deprecated=True,
+)
 @limiter.limit("20/minute")
 @api_response_cache(prefix="ziwei:compat")
-async def compute_compatibility(request: Request, req: CompatibilityRequest) -> CompatibilityResponse:
+async def compute_compatibility(
+    request: Request,
+    req: CompatibilityRequest,
+    response: Response,
+) -> CompatibilityResponse:
     """
-    输入两人出生信息，返回紫微斗数合盘六合度分析。
-
-    维度包括：命宫相合、五行相生、年支缘分、夸妻宫缘、阴阳互补。
-    总分 100 分，输出各维度得分与详细说明。
+    输入两人出生信息，返回紫微斗数合盘六合度分析 [已弃用]。
     """
+    response.headers["Deprecation"] = "true"
+    response.headers["Link"] = '</api/v1/relation/full>; rel="successor-version"'
     try:
         async with _CALC_SEM:
             chart_a = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(req.person_a))
@@ -925,7 +934,6 @@ import json  # noqa: E402
 import zipfile  # noqa: E402
 
 from fastapi import File, UploadFile  # noqa: E402
-from fastapi.responses import Response  # noqa: E402
 
 _BATCH_MAX_ROWS = 200  # 单次最多 200 行
 

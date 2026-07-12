@@ -40,7 +40,7 @@ const emit = defineEmits<{
   margin-top: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: var(--surface-2);
+  background: var(--inset-tint);
   border: 1px dashed var(--border-md);
 }
 

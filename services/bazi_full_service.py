@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import logging
 from math import ceil
-from types import SimpleNamespace
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -12,22 +12,29 @@ from app.exceptions import (
     ServiceException,
     ValidationException,
 )
-from app.schemas import (
+from app.schemas.bazi import (
+    AdjustmentSummaryModel,
     BaziFullRequest,
     BaziFullResponse,
     BaziMethodsModel,
     BaziRawDayunModel,
     BaziRawModel,
+    BaziStructuralSummaryModel,
+    ConfidenceSummaryModel,
     DayMasterStrengthModel,
     DaYunItemModel,
     DaYunModel,
-    GejuModel,
+    EvidenceItemModel,
+    HiddenStemDetailModel,
     LiuNianItemModel,
     LiuNianResultModel,
+    PillarDetailModel,
     PillarModel,
+    PillarShenshaDetailModel,
     PillarsModel,
+    RelationItemModel,
     StrengthFactorModel,
-    TenGodsModel,
+    TimelinePointModel,
     WarningModel,
     WuXingBreakdownModel,
     WuXingScoreModel,
@@ -35,11 +42,19 @@ from app.schemas import (
 )
 from backends import get_jieqi_context
 from constants import API_VERSION, RULE_VERSION
-from services.bazi_engine.geju import compute_geju
+from services.bazi_provenance import build_bazi_provenance, day_boundary_crossed
+
+logger = logging.getLogger(__name__)
+from services.bazi_engine.liunian import _liunian_day_relation
+from services.bazi_engine.shensha import SHENSHA_META as _SHENSHA_META
+from services.bazi_engine.shensha import compute_flow_shensha_items
 from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS as _BRANCH_HIDDEN_STEMS  # RL#1 藏干
+from services.bazi_engine.tables import MONTH_CLIMATE_RULES as _MONTH_CLIMATE_RULES
+from services.bazi_engine.tables import NAYIN as _NAYIN_TABLE
+from services.bazi_engine.tables import get_kongwang
 from services.bazi_rule_engine import match_rules
-from services.normalize_input import validate_lon_strict, warn_lon_cn_range
-from verify import verify_full
+from services.normalize_input import normalize_birth_datetime, validate_lon_strict, warn_lon_cn_range
+from verify import verify_full as verify_full
 
 STEM_META = {
     "甲": ("wood", "yang"),
@@ -64,8 +79,59 @@ STEM_META = {
     "gui": ("water", "yin"),
 }
 
+
+def _shensha_meta_value(name: str, field: str) -> str:
+    return str(_SHENSHA_META.get(name, {}).get(field) or "")
+
+
+def _text_or_empty(value: object) -> str:
+    return str(value).strip() if value else ""
+
+
 STEMS_60 = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
 BRANCHES_12 = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+STAGE_NAMES = ["长生", "沐浴", "冠带", "临官", "帝旺", "衰", "病", "死", "墓", "绝", "胎", "养"]
+DAYUN_STAGE_START = {
+    "甲": "亥",
+    "乙": "午",
+    "丙": "寅",
+    "丁": "酉",
+    "戊": "寅",
+    "己": "酉",
+    "庚": "巳",
+    "辛": "子",
+    "壬": "申",
+    "癸": "卯",
+}
+DAYUN_STAGE_START_YIN = {
+    "甲": "亥",
+    "乙": "午",
+    "丙": "寅",
+    "丁": "酉",
+    "戊": "寅",
+    "己": "酉",
+    "庚": "巳",
+    "辛": "子",
+    "壬": "申",
+    "癸": "卯",
+}
+
+
+def _normalize_relation_type(raw_type: str) -> str:
+    aliases = {
+        "六合": "合",
+        "六冲": "冲",
+        "相冲": "冲",
+        "相合": "合",
+        "相害": "害",
+        "相破": "破",
+        "相刑": "刑",
+        "空亡": "空亡",
+        "干支互动": "干支互动",
+    }
+    normalized = aliases.get(raw_type, raw_type)
+    return normalized if normalized in {"刑", "冲", "合", "害", "破", "空亡", "干支互动"} else "干支互动"
+
 
 BRANCH_ELEMENT = {
     "子": "water",
@@ -107,65 +173,89 @@ def _wuxing_init_dict() -> dict[str, float]:
     return {"wood": 0.0, "fire": 0.0, "earth": 0.0, "metal": 0.0, "water": 0.0}
 
 
-def compute_wuxing(pillars: PillarsModel) -> tuple[WuXingScoreModel, WuXingBreakdownModel]:
-    stem_contrib = _wuxing_init_dict()
-    branch_contrib = _wuxing_init_dict()
-    hidden_contrib: dict[str, float] = _wuxing_init_dict()
+def _branch_main_contrib(pillars: PillarsModel) -> dict[str, float]:
+    """地支本气五行计数（用于 WuXingBreakdownModel.branch_contrib）。"""
+    from services.bazi_engine.tables import BRANCH_HIDDEN_STEMS, STEM_ELEMENT
 
-    for stem in [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem]:
-        elem, _ = _stem_meta(stem)
-        stem_contrib[elem] += 1.0
-
-    for branch in [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch]:
-        elem = BRANCH_ELEMENT.get(branch)
+    contrib = _wuxing_init_dict()
+    for branch in (pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch):
+        hidden = BRANCH_HIDDEN_STEMS.get(branch, [])
+        if not hidden:
+            continue
+        main_stem, _ = hidden[0]
+        elem = STEM_ELEMENT.get(main_stem, (None, None))[0]
         if elem:
-            branch_contrib[elem] += 1.0
-        # RL#1: 藏干贡献（按中文支查表）
-        for hidden_stem, weight in _BRANCH_HIDDEN_STEMS.get(branch, []):
-            h_elem, _ = _stem_meta(hidden_stem) if hidden_stem in STEM_META else (None, None)
-            if h_elem:
-                hidden_contrib[h_elem] += weight * 0.3
+            contrib[elem] += 1.0
+    return contrib
 
-    total = {k: stem_contrib[k] + branch_contrib[k] + hidden_contrib[k] for k in stem_contrib.keys()}
-    score = WuXingScoreModel(**total)
-    breakdown = WuXingBreakdownModel(
-        stem_contrib=stem_contrib,
-        branch_contrib=branch_contrib,
-        hidden_contrib=hidden_contrib,
-        weights={"stem": 1.0, "branch": 1.0, "hidden": 1.0},
+
+def compute_core_metrics(
+    pillars: PillarsModel,
+    geju_name: str = "",
+) -> tuple[WuXingScoreModel, WuXingBreakdownModel, DayMasterStrengthModel, YongShenModel]:
+    """统一五行 / 强弱 / 用神计算（权威路径：services/bazi_engine/*）。"""
+    from services.bazi_engine.strength import compute_strength as eng_strength
+    from services.bazi_engine.wuxing import compute_wuxing as eng_wuxing
+    from services.bazi_engine.yongshen import compute_yongshen as eng_yongshen
+
+    wx = eng_wuxing(
+        pillars.year.stem,
+        pillars.year.branch,
+        pillars.month.stem,
+        pillars.month.branch,
+        pillars.day.stem,
+        pillars.day.branch,
+        pillars.hour.stem,
+        pillars.hour.branch,
     )
-    return score, breakdown
+    st = eng_strength(
+        pillars.day.stem,
+        pillars.month.branch,
+        pillars.year.stem,
+        pillars.month.stem,
+        pillars.hour.stem,
+        pillars.year.branch,
+        pillars.day.branch,
+        pillars.hour.branch,
+        wx,
+    )
+    ys = eng_yongshen(
+        day_stem=pillars.day.stem,
+        month_branch=pillars.month.branch,
+        strength=st,
+        wuxing=wx,
+        geju_name=geju_name,
+    )
 
-
-def compute_strength(day_stem: str, score: WuXingScoreModel) -> DayMasterStrengthModel:
-    day_elem, _ = _stem_meta(day_stem)
-    parent_elem = PARENT_OF[day_elem]
-    same = getattr(score, day_elem)
-    parent = getattr(score, parent_elem)
-    strength_score = same + 0.8 * parent
-    if strength_score >= 4.0:
-        tier = "极旺"
-    elif strength_score >= 3.0:
-        tier = "偏旺"
-    elif strength_score >= 2.0:
-        tier = "中和"
-    elif strength_score >= 1.0:
-        tier = "偏弱"
-    else:
-        tier = "极弱"
-
-    _elem_cn = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
-    factors = [
+    wuxing_score = WuXingScoreModel(**wx.scores_weighted)
+    wuxing_breakdown = WuXingBreakdownModel(
+        stem_contrib=wx.stem_contrib,
+        branch_contrib=_branch_main_contrib(pillars),
+        hidden_contrib=wx.branch_hidden_contrib,
+        weights={"stem": 1.0, "branch": 1.0, "hidden": 0.3},
+    )
+    _factor_models = [
         StrengthFactorModel(
-            name="same_element_support", score=same, reason=f"{_elem_cn.get(day_elem, day_elem)} 同类总量"
-        ),
-        StrengthFactorModel(
-            name="parent_element_support",
-            score=0.8 * parent,
-            reason=f"{_elem_cn.get(parent_elem, parent_elem)} 生 {_elem_cn.get(day_elem, day_elem)}",
-        ),
+            name=f.name,
+            score=f.score,
+            weight=f.weight,
+            weighted_score=f.weighted_score,
+            reason=f.reason,
+        )
+        for f in st.factors
     ]
-    return DayMasterStrengthModel(score=strength_score, tier=tier, factors=factors)
+    strength = DayMasterStrengthModel(
+        score=st.score,
+        tier=st.tier,
+        factors=_factor_models,
+        strength_factors=_factor_models,
+    )
+    _WX2CN = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+    rationale = ys.rationale
+    for en, cn in _WX2CN.items():
+        rationale = rationale.replace(en, cn)
+    yongshen = YongShenModel(favor=ys.favor, avoid=ys.avoid, rationale=rationale)
+    return wuxing_score, wuxing_breakdown, strength, yongshen
 
 
 def compute_yongshen(
@@ -176,51 +266,12 @@ def compute_yongshen(
 ) -> YongShenModel:
     """
     RL#2: 用神必须走5分支决策树 — 禁止 min/max.
-    When pillars is provided, delegates to the new engine's 5-branch version.
+    When pillars is provided, delegates to compute_core_metrics.
     Falls back to approximate扶抑 when pillars absent (legacy/test path).
     """
     if pillars is not None:
-        from services.bazi_engine.strength import compute_strength as _eng_str
-        from services.bazi_engine.wuxing import compute_wuxing as _eng_wx
-        from services.bazi_engine.yongshen import compute_yongshen as _eng_yong
-
-        _w = _eng_wx(
-            pillars.year.stem,
-            pillars.year.branch,
-            pillars.month.stem,
-            pillars.month.branch,
-            pillars.day.stem,
-            pillars.day.branch,
-            pillars.hour.stem,
-            pillars.hour.branch,
-        )
-        _s = _eng_str(
-            pillars.day.stem,
-            pillars.month.branch,
-            pillars.year.stem,
-            pillars.month.stem,
-            pillars.hour.stem,
-            pillars.year.branch,
-            pillars.day.branch,
-            pillars.hour.branch,
-            _w,
-        )
-        result = _eng_yong(
-            day_stem=pillars.day.stem,
-            month_branch=pillars.month.branch,
-            strength=_s,
-            wuxing=_w,
-            geju_name=geju_name,
-        )
-        _WX2CN = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
-        _rat = result.rationale
-        for _en, _cn in _WX2CN.items():
-            _rat = _rat.replace(_en, _cn)
-        return YongShenModel(
-            favor=result.favor,
-            avoid=result.avoid,
-            rationale=_rat,
-        )
+        _, _, _, yongshen = compute_core_metrics(pillars, geju_name=geju_name)
+        return yongshen
 
     # ── 扶抑法 fallback（无四柱时使用，兼顾旧路径） ──────────────────────
     totals = {
@@ -233,7 +284,6 @@ def compute_yongshen(
     SHENG = {"wood": "fire", "fire": "earth", "earth": "metal", "metal": "water", "water": "wood"}
     SHENG_REV = {v: k for k, v in SHENG.items()}
     KE = {"wood": "earth", "fire": "metal", "earth": "water", "metal": "wood", "water": "fire"}
-    elem_map = {"strong": ("same", "parent"), "weak": ("ke", "consume"), "balanced": ("ke",)}
     # 取日主五行（从 strength.factors 的 same_element_support）
     day_elem = next(
         ((f.reason or "").split()[0] for f in (strength.factors or []) if "same" in f.name),
@@ -343,6 +393,8 @@ def build_dayun(
     for i in range(10):
         stem, branch = _ganzhi_from_index(current_idx)
         stem_elem, _ = _stem_meta(stem) if stem in STEM_META else (None, None)
+        kongwang = list(get_kongwang(stem, branch))
+        dy_self_seat, dy_self_seat_source = _pillar_self_seat(stem, branch)
         items.append(
             DaYunItemModel(
                 start_age=base_age + i * 10,
@@ -350,10 +402,44 @@ def build_dayun(
                 start_age_months=start_age_months + i * 120,
                 stem=stem,
                 branch=branch,
+                ten_god=ten_god(pillars.day.stem, stem),
+                hidden_stems=_build_hidden_detail(branch, pillars.day.stem),
+                xingyun=_pillar_xingyun(pillars.day.stem, branch),
+                self_seat=dy_self_seat,
+                self_seat_source=dy_self_seat_source,
+                kongwang=kongwang,
+                kongwang_source="services.bazi_engine.tables.get_kongwang",
+                kongwang_hit=branch in kongwang,
+                nayin=_NAYIN_TABLE.get(f"{stem}{branch}"),
+                shensha=_build_flow_shensha_detail_items(
+                    flow_label="dayun",
+                    flow_stem=stem,
+                    flow_branch=branch,
+                    day_stem=pillars.day.stem,
+                    day_branch=pillars.day.branch,
+                    month_stem=pillars.month.stem,
+                    month_branch=pillars.month.branch,
+                    hour_stem=pillars.hour.stem,
+                    hour_branch=pillars.hour.branch,
+                ),
+                wuxing=_element_cn(stem_elem),
                 flow_wuxing=stem_elem,
+                yin_yang=_stem_meta(stem)[1] if stem in STEM_META else None,
             )
         )
         current_idx = (current_idx + step) % 60
+
+    start_age_days = int(round(max(delta_days, 0.0)))
+    transition_hint = (
+        f"出生距{raw_dayun.anchor_jieqi_name}约{start_age_days}天，"
+        f"折合{start_age_months}个月起运；换运前后运势多有起伏，宜稳守过渡、忌重大决断。"
+    )
+
+    from datetime import date as _date
+
+    from services.bazi_engine.dayun import compute_next_dayun_transition
+
+    _next_trans = compute_next_dayun_transition(dt_effective.date(), items, _date.today())
 
     return DaYunModel(
         method=methods.dayun_method,
@@ -362,6 +448,12 @@ def build_dayun(
         direction_basis=raw_dayun.direction_basis,
         start_age=base_age,
         start_age_months=start_age_months,
+        start_age_days=start_age_days,
+        transition_hint=transition_hint,
+        days_to_next_transition=_next_trans.get("days_to_next_transition"),
+        next_transition_age=_next_trans.get("next_transition_age"),
+        next_transition_ganzhi=_next_trans.get("next_transition_ganzhi"),
+        next_transition_hint=_next_trans.get("next_transition_hint"),
         anchor_jieqi_name=raw_dayun.anchor_jieqi_name,
         anchor_jieqi_dt=raw_dayun.anchor_jieqi_dt,
         items=items,
@@ -376,6 +468,164 @@ def _stem_meta(stem: str) -> tuple[str, str]:
             details={"stem": stem, "supported_stems": list(STEM_META.keys())},
         )
     return STEM_META[stem]
+
+
+def _element_cn(element: str | None) -> str | None:
+    return {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(element or "", None)
+
+
+def _stem_element(stem: str | None) -> tuple[str | None, str | None]:
+    if not stem:
+        return None, None
+    try:
+        elem, yin_yang = _stem_meta(stem)
+    except Exception:
+        return None, None
+    return _element_cn(elem), ("阳" if yin_yang == "yang" else "阴")
+
+
+def _pillar_xingyun(day_stem: str, branch: str | None) -> str | None:
+    if not day_stem or not branch:
+        return None
+    start_branch = DAYUN_STAGE_START.get(day_stem)
+    if not start_branch:
+        return None
+    try:
+        start_idx = BRANCHES_12.index(start_branch)
+        branch_idx = BRANCHES_12.index(branch)
+    except ValueError:
+        return None
+    is_yang = day_stem in {"甲", "丙", "戊", "庚", "壬"}
+    offset = (branch_idx - start_idx + 12) % 12 if is_yang else (start_idx - branch_idx + 12) % 12
+    return STAGE_NAMES[offset] if 0 <= offset < len(STAGE_NAMES) else None
+
+
+def _pillar_self_seat(stem: str | None, branch: str | None) -> tuple[str | None, str | None]:
+    """自坐：本柱天干 × 本柱地支 → 十二长生名（B-02）。"""
+    if not stem or not branch:
+        return None, None
+    seat = _pillar_xingyun(stem, branch)
+    if seat:
+        return seat, f"{stem}坐{branch}十二长生"
+    return None, None
+
+
+def _build_hidden_detail(branch: str | None, day_stem: str | None) -> list[HiddenStemDetailModel]:
+    if not branch:
+        return []
+    details: list[HiddenStemDetailModel] = []
+    for hidden_stem, weight in _BRANCH_HIDDEN_STEMS.get(branch, []):
+        elem_cn, _ = _stem_element(hidden_stem)
+        ten_god_value = ten_god(day_stem, hidden_stem) if day_stem else None
+        details.append(
+            HiddenStemDetailModel(
+                stem=hidden_stem,
+                weight=weight,
+                element=elem_cn,
+                ten_god=ten_god_value,
+                source="《三命通会》支藏干",
+            )
+        )
+    return details
+
+
+def _build_pillar_detail(
+    label: str,
+    stem: str | None,
+    branch: str | None,
+    day_stem: str,
+    kongwang: list[str],
+    shensha_items: list[dict],
+) -> PillarDetailModel:
+    element_cn, yin_yang = _stem_element(stem)
+    hidden_stems = _build_hidden_detail(branch, day_stem)
+    ten_god_value = ten_god(day_stem, stem) if stem else None
+    if label == "日柱":
+        ten_god_value = "日主"
+    shensha = [
+        PillarShenshaDetailModel(
+            name=str(item.get("name") or ""),
+            priority=str(item.get("priority") or _shensha_meta_value(str(item.get("name") or ""), "priority")),
+            polarity=str(
+                item.get("polarity") or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("polarity", "unknown")
+            ),
+            pillar=str(item.get("pillar") or ""),
+            topic=str(item.get("topic") or _shensha_meta_value(str(item.get("name") or ""), "topic")),
+            note=str(item.get("note") or _shensha_meta_value(str(item.get("name") or ""), "note")),
+            classic=str(item.get("classic") or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("classic", ""))
+            or None,
+            source=str(
+                item.get("classic")
+                or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("classic", "services.bazi_engine.shensha")
+            ),
+        )
+        for item in shensha_items
+        if str(item.get("pillar") or "") in {label, label.replace("柱", ""), "year", "month", "day", "hour"}
+    ]
+    kongwang_hit = bool(branch and branch in kongwang)
+    kongwang_source = "services.bazi_engine.tables.get_kongwang" if stem and branch else ""
+    self_seat, self_seat_source = _pillar_self_seat(stem, branch)
+    return PillarDetailModel(
+        label=label,
+        stem=stem,
+        branch=branch,
+        ganzhi=f"{stem or ''}{branch or ''}" if stem or branch else None,
+        ten_god=ten_god_value,
+        hidden_stems=hidden_stems,
+        xingyun=_pillar_xingyun(day_stem, branch),
+        self_seat=self_seat,
+        self_seat_source=self_seat_source,
+        kongwang=list(kongwang),
+        kongwang_source=kongwang_source,
+        kongwang_hit=kongwang_hit,
+        nayin=_NAYIN_TABLE.get(f"{stem or ''}{branch or ''}") if stem and branch else None,
+        shensha=shensha,
+        wuxing=element_cn,
+        yin_yang=yin_yang,
+    )
+
+
+def _build_flow_shensha_detail_items(
+    flow_label: str,
+    flow_stem: str,
+    flow_branch: str,
+    day_stem: str,
+    day_branch: str,
+    month_stem: str | None = None,
+    month_branch: str | None = None,
+    hour_stem: str | None = None,
+    hour_branch: str | None = None,
+) -> list[PillarShenshaDetailModel]:
+    raw_items = compute_flow_shensha_items(
+        flow_label=flow_label,
+        flow_stem=flow_stem,
+        flow_branch=flow_branch,
+        day_stem=day_stem,
+        day_branch=day_branch,
+        month_stem=month_stem,
+        month_branch=month_branch,
+        hour_stem=hour_stem,
+        hour_branch=hour_branch,
+    )
+    return [
+        PillarShenshaDetailModel(
+            name=str(item.get("name") or ""),
+            priority=str(item.get("priority") or _shensha_meta_value(str(item.get("name") or ""), "priority")),
+            polarity=str(
+                item.get("polarity") or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("polarity", "unknown")
+            ),
+            pillar=str(item.get("pillar") or flow_label),
+            topic=str(item.get("topic") or _shensha_meta_value(str(item.get("name") or ""), "topic")),
+            note=str(item.get("note") or _shensha_meta_value(str(item.get("name") or ""), "note")),
+            classic=str(item.get("classic") or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("classic", ""))
+            or None,
+            source=str(
+                item.get("classic")
+                or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("classic", "services.bazi_engine.shensha")
+            ),
+        )
+        for item in raw_items
+    ]
 
 
 def _element_relation(day_element: str, target_element: str) -> str:
@@ -447,13 +697,49 @@ def ganzhi_for_year(year: int) -> tuple[str, str]:
     return stem, branch
 
 
-def build_liunian(day_stem: str, dt_effective: datetime, years_used: list[int]) -> LiuNianResultModel:
+def build_liunian(
+    pillars: PillarsModel,
+    dt_effective: datetime,
+    years_used: list[int],
+) -> LiuNianResultModel:
     items: list[LiuNianItemModel] = []
+    day_stem = pillars.day.stem
     for delta in years_used:
         year = dt_effective.year + delta
         stem, branch = ganzhi_for_year(year)
         tg = ten_god(day_stem, stem)
-        items.append(LiuNianItemModel(year=year, stem=stem, branch=branch, ten_god=tg, clash=None))
+        kongwang = list(get_kongwang(stem, branch))
+        ln_self_seat, ln_self_seat_source = _pillar_self_seat(stem, branch)
+        items.append(
+            LiuNianItemModel(
+                year=year,
+                stem=stem,
+                branch=branch,
+                ten_god=tg,
+                hidden_stems=_build_hidden_detail(branch, day_stem),
+                xingyun=_pillar_xingyun(day_stem, branch),
+                self_seat=ln_self_seat,
+                self_seat_source=ln_self_seat_source,
+                kongwang=kongwang,
+                kongwang_source="services.bazi_engine.tables.get_kongwang",
+                kongwang_hit=branch in kongwang,
+                nayin=_NAYIN_TABLE.get(f"{stem}{branch}"),
+                shensha=_build_flow_shensha_detail_items(
+                    flow_label="liunian",
+                    flow_stem=stem,
+                    flow_branch=branch,
+                    day_stem=pillars.day.stem,
+                    day_branch=pillars.day.branch,
+                    month_stem=pillars.month.stem,
+                    month_branch=pillars.month.branch,
+                    hour_stem=pillars.hour.stem,
+                    hour_branch=pillars.hour.branch,
+                ),
+                wuxing=_element_cn(_stem_meta(stem)[0]),
+                yin_yang=_stem_meta(stem)[1] == "yang" and "阳" or "阴",
+                clash=_text_or_empty(_liunian_day_relation(branch, pillars.day.branch)),
+            )
+        )
     return LiuNianResultModel(years_used=years_used, items=items)
 
 
@@ -480,6 +766,234 @@ def _to_pillars_model(pillars) -> PillarsModel:
     )
 
 
+def build_liuri_liushi_enrichment(
+    *,
+    verify_response,
+    birth_dt: datetime,
+    target_date: datetime.date,
+    target_hour: int,
+) -> tuple[dict, dict | None]:
+    """
+    Build liuri_liushi payload and optional dayun transition patch.
+
+    Returns (liuri_liushi model_dump, dayun transition dict or None).
+    """
+    from app.schemas.bazi import LiuriLiushiModel
+    from services.bazi_engine.dayun import compute_next_dayun_transition, virtual_age
+    from services.bazi_engine.liuri import get_liuri_liushi
+
+    _birth_date = birth_dt.date()
+
+    _dayun_tg: str | None = None
+    _dayun_gz: str | None = None
+    if verify_response.dayun and verify_response.dayun.items:
+        _v_age = virtual_age(_birth_date, target_date)
+        for _dy in verify_response.dayun.items:
+            if _dy.start_age is not None and _dy.start_age <= _v_age < _dy.start_age + 10:
+                _dayun_tg = _dy.ten_god
+                _dayun_gz = f"{_dy.stem or ''}{_dy.branch or ''}"
+                break
+
+    _ln_tg: str | None = None
+    _ln_gz: str | None = None
+    if verify_response.liunian and verify_response.liunian.items:
+        for _ln in verify_response.liunian.items:
+            if _ln.year == target_date.year:
+                _ln_tg = _ln.ten_god
+                _ln_gz = f"{_ln.stem or ''}{_ln.branch or ''}"
+                break
+
+    if _ln_tg is None and verify_response.pillars_primary and verify_response.pillars_primary.day:
+        from services.bazi_engine.liunian import compute_liunian as _compute_liunian_for_target
+
+        _day = verify_response.pillars_primary.day
+        _target_yr = target_date.year
+        _ln_rows = _compute_liunian_for_target(
+            day_stem=_day.stem,
+            day_branch=_day.branch,
+            start_year=_target_yr,
+            end_year=_target_yr,
+        )
+        if _ln_rows:
+            _ln_tg = _ln_rows[0].get("ten_god")
+            _ln_gz = f"{_ln_rows[0]['stem']}{_ln_rows[0]['branch']}"
+
+    _favor = list(verify_response.yongshen.favor or []) if verify_response.yongshen else None
+    _avoid = list(verify_response.yongshen.avoid or []) if verify_response.yongshen else None
+    _geju_broken = bool(getattr(getattr(verify_response, "geju", None), "is_broken", False))
+
+    dayun_patch: dict | None = None
+    _trans: dict = {}
+    if verify_response.dayun and verify_response.dayun.items:
+        _trans = compute_next_dayun_transition(_birth_date, verify_response.dayun.items, target_date)
+        dayun_patch = {
+            "days_to_next_transition": _trans.get("days_to_next_transition"),
+            "next_transition_age": _trans.get("next_transition_age"),
+            "next_transition_ganzhi": _trans.get("next_transition_ganzhi"),
+            "next_transition_hint": _trans.get("next_transition_hint"),
+        }
+
+    _zi_day_rule = getattr(verify_response, "zi_day_rule", None) or "sxtwl"
+
+    _raw_liuri = get_liuri_liushi(
+        birth_dt.year,
+        birth_dt.month,
+        birth_dt.day,
+        birth_dt.hour,
+        day_stem=verify_response.pillars_primary.day.stem if verify_response.pillars_primary else None,
+        target_date=target_date,
+        target_hour=target_hour,
+        dayun_ten_god=_dayun_tg,
+        dayun_ganzhi=_dayun_gz,
+        liunian_ten_god=_ln_tg,
+        liunian_ganzhi=_ln_gz,
+        yongshen_favor=_favor,
+        yongshen_avoid=_avoid,
+        geju_broken=_geju_broken,
+        days_to_next_transition=_trans.get("days_to_next_transition"),
+        next_transition_ganzhi=_trans.get("next_transition_ganzhi"),
+        next_transition_age=_trans.get("next_transition_age"),
+        next_transition_hint=_trans.get("next_transition_hint"),
+        zi_day_rule=_zi_day_rule,
+    )
+    liuri_payload = LiuriLiushiModel(
+        date=_raw_liuri["date"],
+        day_ganzhi=_raw_liuri["day_ganzhi"],
+        day_stem=_raw_liuri["day_stem"],
+        day_branch=_raw_liuri["day_branch"],
+        hour_ganzhi=_raw_liuri["hour_ganzhi"],
+        hour_stem=_raw_liuri["hour_stem"],
+        hour_branch=_raw_liuri["hour_branch"],
+        hour_branch_idx=_raw_liuri.get("hour_branch_idx", 0),
+        hour_label=_raw_liuri.get("hour_label", ""),
+        day_ten_god=_raw_liuri.get("day_ten_god"),
+        hour_ten_god=_raw_liuri.get("hour_ten_god"),
+        method=_raw_liuri.get("method", "ganzhi_day_pillar"),
+        missing_fields=_raw_liuri.get("missing_fields", []),
+        flow_score=_raw_liuri.get("flow_score"),
+        flow_score_dayun=_raw_liuri.get("flow_score_dayun"),
+        flow_score_liunian=_raw_liuri.get("flow_score_liunian"),
+        flow_score_geju=_raw_liuri.get("flow_score_geju"),
+        flow_tone=_raw_liuri.get("flow_tone"),
+        transition_hint=_raw_liuri.get("transition_hint"),
+        dayun_link=_raw_liuri.get("dayun_link"),
+        liunian_link=_raw_liuri.get("liunian_link"),
+        current_dayun_ganzhi=_raw_liuri.get("current_dayun_ganzhi"),
+        current_liunian_ganzhi=_raw_liuri.get("current_liunian_ganzhi"),
+        flow_summary=_raw_liuri.get("flow_summary"),
+        warnings=_raw_liuri.get("warnings") or [],
+    ).model_dump()
+
+    if dayun_patch and _raw_liuri.get("transition_hint"):
+        dayun_patch["next_transition_hint"] = _raw_liuri["transition_hint"]
+
+    return liuri_payload, dayun_patch
+
+
+def compute_liuri_liushi(
+    body,
+    request_id: str | None = None,
+):
+    """Standalone liuri/liushi computation for POST /bazi/liuri-liushi."""
+    from datetime import date as _date
+    from uuid import uuid4
+
+    from app.schemas.bazi import DayunTransitionModel, LiuriLiushiEndpointResponse, LiuriLiushiModel
+    from services.bazi_engine_service import calculate
+
+    dt = _attach_tz(body.dt, body.tz)
+    lon = validate_lon_strict(body.lon)
+    normalized_birth = normalize_birth_datetime(dt, body.tz, auto_dst=True)
+    solar_offset_minutes = 0
+
+    try:
+        calc_result = calculate(
+            dt=dt,
+            lon=lon,
+            tz=body.tz,
+            use_solar=body.solar_time_enabled,
+            mode="single",
+            gender=body.gender,
+            request_id=request_id or str(uuid4()),
+        )
+    except ValidationException:
+        raise
+    except BusinessException:
+        raise
+    except Exception as exc:
+        raise ServiceException(
+            code=ErrorCode.SERVICE_EXTERNAL_ERROR,
+            message="Failed to perform BaZi calculation for liuri/liushi",
+            details={"error": str(exc)},
+        )
+
+    verify_response = calc_result.verify_response
+    solar_offset_minutes = int(round(float(verify_response.solar_time_offset_minutes or 0.0)))
+    dt_effective = normalized_birth.local_dt + timedelta(minutes=solar_offset_minutes)
+
+    _td = body.target_date.date() if body.target_date else _date.today()
+    _th = body.target_hour if body.target_hour is not None else dt_effective.hour
+
+    liuri_payload, dayun_patch = build_liuri_liushi_enrichment(
+        verify_response=verify_response,
+        birth_dt=dt_effective,
+        target_date=_td,
+        target_hour=_th,
+    )
+
+    transition = None
+    if body.include_dayun_transition and dayun_patch:
+        transition = DayunTransitionModel.model_validate(dayun_patch)
+
+    return LiuriLiushiEndpointResponse(
+        request_id=request_id or str(uuid4()),
+        liuri_liushi=LiuriLiushiModel.model_validate(liuri_payload),
+        dayun_transition=transition,
+    )
+
+
+def patch_verify_liuri(
+    response_data: dict,
+    verify_response,
+    body,
+    dt: datetime,
+    tz: str,
+) -> dict:
+    """Optionally attach liuri_liushi + missing_fields to verify response dict."""
+    include = getattr(body, "include_liuri", None)
+    if include is None:
+        include = False
+    if not include:
+        return response_data
+
+    from datetime import date as _date
+
+    normalized_birth = normalize_birth_datetime(dt, tz, auto_dst=True)
+    solar_offset_minutes = int(round(float(getattr(verify_response, "solar_time_offset_minutes", 0.0) or 0.0)))
+    dt_effective = normalized_birth.local_dt + timedelta(minutes=solar_offset_minutes)
+
+    _td = body.target_date.date() if getattr(body, "target_date", None) else _date.today()
+    _th = body.target_hour if getattr(body, "target_hour", None) is not None else dt_effective.hour
+
+    liuri_payload, dayun_patch = build_liuri_liushi_enrichment(
+        verify_response=verify_response,
+        birth_dt=dt_effective,
+        target_date=_td,
+        target_hour=_th,
+    )
+    response_data["liuri_liushi"] = liuri_payload
+
+    if dayun_patch and response_data.get("dayun"):
+        for key, val in dayun_patch.items():
+            if val is not None:
+                response_data["dayun"][key] = val
+
+    _missing = set(response_data.get("missing_fields") or [])
+    _missing.update(liuri_payload.get("missing_fields") or [])
+    response_data["missing_fields"] = sorted(_missing)
+    return response_data
+
+
 def bazi_full(
     body: BaziFullRequest,
     request_id: str | None = None,
@@ -487,13 +1001,14 @@ def bazi_full(
     dt = _attach_tz(body.dt, body.tz)
     lon = validate_lon_strict(body.lon)
     liunian_years = body.liunian_years or [-2, 2]
-
-    # Soft warnings only (e.g., lon outside CN range)
+    normalized_birth = normalize_birth_datetime(dt, body.tz, auto_dst=True)
     warnings_raw = warn_lon_cn_range(body.tz, lon)
     warnings = [WarningModel.model_validate(w) for w in warnings_raw]
 
+    # 先走一次 verify_full 兼容旧测试/旧链路的输入校验与 patch 点。
+    # 后续完整分析仍由 calculate() 负责，确保响应继续补齐新字段。
     try:
-        result = verify_full(dt, lon=lon, use_solar=body.solar_time_enabled, mode=body.mode)
+        verify_full(dt, lon=lon, use_solar=body.solar_time_enabled, mode=body.mode)
     except ValidationException:
         raise
     except BusinessException:
@@ -505,125 +1020,625 @@ def bazi_full(
             details={"error": str(exc)},
         )
 
-    # Compute effective datetime for traceability
-    offset_minutes_int = int(round(result.solar_time_offset_minutes))
-    dt_effective = dt + timedelta(minutes=offset_minutes_int)
+    from services.bazi_engine_service import calculate
+
+    try:
+        calc_result = calculate(
+            dt=dt,
+            lon=lon,
+            tz=body.tz,
+            use_solar=body.solar_time_enabled,
+            mode=body.mode,
+            gender=body.gender,
+            request_id=request_id or str(uuid4()),
+            extra_warnings=[w.message for w in warnings],
+            city_tier=body.city_tier,
+            industry=body.industry,
+            zi_day_rule=body.zi_day_rule,
+        )
+    except ValidationException:
+        raise
+    except BusinessException:
+        raise
+    except Exception as exc:
+        raise ServiceException(
+            code=ErrorCode.SERVICE_EXTERNAL_ERROR,
+            message="Failed to perform BaZi calculation",
+            details={"error": str(exc)},
+        )
+
+    verify_response = calc_result.verify_response.model_copy(deep=True)
+    methods = BaziMethodsModel(
+        day_boundary_rule=body.zi_day_rule,
+        zi_day_rule=body.zi_day_rule,
+        pillars_layer=calc_result.pillars_layer or "",
+    )
+    solar_offset_minutes = int(round(float(verify_response.solar_time_offset_minutes or 0.0)))
+    dt_effective = normalized_birth.local_dt + timedelta(minutes=solar_offset_minutes)
     dt_effective_utc = dt_effective.astimezone(UTC)
-
-    methods = BaziMethodsModel()
-
-    offset_minutes = 0
-    dt_offset = dt_effective.utcoffset()
-    if dt_offset is not None:
-        offset_minutes = int(dt_offset.total_seconds() // 60)
 
     raw = BaziRawModel(
         tz_used=body.tz,
         dt_effective_local=dt_effective.isoformat(),
         dt_effective_utc=dt_effective_utc.isoformat(),
-        dt_effective_local_offset_minutes=offset_minutes,
-        solar_time_offset_minutes=offset_minutes_int,
-        day_boundary_rule_used=methods.day_boundary_rule,
-        day_boundary_crossed=False,
-        jieqi_context={},
-        dayun=BaziRawDayunModel(),
+        dt_effective_local_offset_minutes=int(dt_effective.utcoffset().total_seconds() // 60)
+        if dt_effective.utcoffset()
+        else 0,
+        solar_time_offset_minutes=solar_offset_minutes,
+        day_boundary_rule_used=body.zi_day_rule,
+        day_boundary_crossed=day_boundary_crossed(body.zi_day_rule, dt_effective.hour),
+        jieqi_context={
+            "birth_dt_local_normalized": normalized_birth.normalized_birth_dt_local,
+            "birth_dt_utc_normalized": normalized_birth.normalized_birth_dt_utc,
+            "is_potential_china_dst": normalized_birth.is_potential_china_dst,
+            "dst_adjustment_minutes": normalized_birth.dst_adjustment_minutes,
+            "dst_label": normalized_birth.dst_label,
+            "time_risk_label": normalized_birth.time_risk_label,
+            "time_risk_hint": normalized_birth.time_risk_hint,
+        },
+        dayun=BaziRawDayunModel(
+            birth_to_jieqi_days=getattr(verify_response.dayun, "start_age_months", None),
+            computed_months_before_rounding=None,
+            rounding_applied=methods.dayun_rounding,
+            anchor_jieqi_name=getattr(verify_response.dayun, "anchor_jieqi_name", None),
+            anchor_jieqi_dt=getattr(verify_response.dayun, "anchor_jieqi_dt", None),
+            direction=getattr(verify_response.dayun, "direction", None),
+            direction_basis=getattr(verify_response.dayun, "direction_basis", None)
+            or {"gender": None, "year_stem": None, "year_stem_yinyang": None},
+            status="computed" if verify_response.dayun else "placeholder",
+            sequence_start="from_month_pillar",
+        ),
     )
 
-    pillars_model = _to_pillars_model(result.pillars_primary)
-    ten_gods = TenGodsModel(**build_ten_gods(pillars_model.day.stem, pillars_model))
-    liunian = build_liunian(pillars_model.day.stem, dt_effective, years_used=liunian_years)
+    if liunian_years:
+        try:
+            verify_response.liunian = build_liunian(verify_response.pillars_primary, dt_effective, liunian_years)
+        except Exception as exc:
+            logger.warning("[bazi_full] build_liunian failed: %s", exc, exc_info=True)
+            _mf = list(getattr(verify_response, "missing_fields", None) or [])
+            if "liunian" not in _mf:
+                _mf.append("liunian")
+            verify_response.missing_fields = sorted(_mf)
+            if verify_response.validation:
+                verify_response.validation.warnings.append(
+                    WarningModel(code="LIUNIAN_BUILD_FAIL", message="流年排盘计算失败")
+                )
 
-    day_boundary_crossed = False
-    if methods.day_boundary_rule == "zi_initial" and (dt_effective.hour >= 23 or dt_effective.hour == 0):
-        day_boundary_crossed = True
+    kongwang = list(get_kongwang(verify_response.pillars_primary.day.stem, verify_response.pillars_primary.day.branch))
+    shensha_items = [item.model_dump() for item in (verify_response.shensha or [])]
 
-    # Derived calculations
-    wuxing_score, wuxing_breakdown = compute_wuxing(pillars_model)
-    strength = compute_strength(pillars_model.day.stem, wuxing_score)
-    # RL#2: 传入 pillars_model 以启用完整5分支决策树（不传则退化为扶抑法 fallback）
-    yongshen = compute_yongshen(wuxing_score, strength, pillars_model)
-
-    dayun_model, raw_dayun = build_dayun(dt_effective, pillars_model, methods)
-    raw.day_boundary_crossed = day_boundary_crossed
-    raw.dayun = raw_dayun
-
-    # B4: 规则引擎匹配（返回 dict 列表，直接用于 BaziFullResponse.rule_matches）
-    # 先调 compute_geju 取格局结果，避免 geju=None 导致格局类规则永远无法命中
-    _geju_for_rules: SimpleNamespace | None = None
-    _geju_model: GejuModel | None = None
-    try:
-        _geju_raw = compute_geju(
-            year_stem=pillars_model.year.stem,
-            month_stem=pillars_model.month.stem,
-            month_branch=pillars_model.month.branch,
-            day_stem=pillars_model.day.stem,
-            hour_stem=pillars_model.hour.stem,
-            wuxing_scores={
-                "wood": wuxing_score.wood,
-                "fire": wuxing_score.fire,
-                "earth": wuxing_score.earth,
-                "metal": wuxing_score.metal,
-                "water": wuxing_score.water,
-            },
-            year_branch=pillars_model.year.branch,
-            day_branch=pillars_model.day.branch,
-            hour_branch=pillars_model.hour.branch,
-        )
-        _conf = _geju_raw.get("confidence", 0.0)
-        _geju_name = _geju_raw.get("name", "普通格")
-        _is_broken = bool(_geju_raw.get("po_geju", {}).get("broken", False))
-        if _geju_name in ("无格", "普通格"):
-            _level = "无格"
-        elif _conf >= 0.85:
-            _level = "上格"
-        elif _conf >= 0.65:
-            _level = "中格"
-        else:
-            _level = "下格"
-        _geju_for_rules = SimpleNamespace(
-            geju_name=_geju_name,
-            is_broken=_is_broken,
-            geju_level=_level,
-        )
-        _geju_model = GejuModel(
-            geju_name=_geju_name,
-            geju_level=_level,
-            month_stem_shishen=_geju_raw.get("ten_god", ""),
-            is_broken=_is_broken,
-            inference_tags=[_geju_raw.get("type", "inner")],
-            interpretation_text=_geju_raw.get("note", ""),
-            classic_ref="",
-            confidence=_conf,
-            geju_detail=_geju_raw.get("po_geju", {}).get("reason", None) if _is_broken else None,
-        )
-    except Exception:  # noqa: BLE001
-        pass  # 格局计算失败时降级为 geju=None，不阻断主流程
     try:
         matched_rules = match_rules(
-            geju=_geju_for_rules,
-            yongshen=yongshen,
-            shensha=None,
+            geju=verify_response.geju,
+            yongshen=verify_response.yongshen,
+            shensha=verify_response.shensha,
         )
-    except Exception:  # noqa: BLE001
+    except Exception:
         matched_rules = []
 
-    return BaziFullResponse(
-        api_version=API_VERSION,
-        rule_version=RULE_VERSION,
-        request_id=request_id or str(uuid4()),
-        warnings=warnings,
-        methods=methods,
-        pillars_primary=pillars_model,
-        pillars_secondary=_to_pillars_model(result.pillars_secondary) if result.pillars_secondary else None,
-        dayun=dayun_model,
-        ten_gods=ten_gods,
-        liunian=liunian,
-        wuxing_score=wuxing_score,
-        wuxing_breakdown=wuxing_breakdown,
-        day_master_strength=strength,
-        yongshen=yongshen,
-        geju=_geju_model,
-        start_dayun_age=dayun_model.start_age,
-        raw=raw,
-        rule_matches=matched_rules,
+    payload = verify_response.model_dump()
+    payload["pillar_details"] = {
+        "year": _build_pillar_detail(
+            "年柱",
+            verify_response.pillars_primary.year.stem,
+            verify_response.pillars_primary.year.branch,
+            verify_response.pillars_primary.day.stem,
+            kongwang,
+            shensha_items,
+        ),
+        "month": _build_pillar_detail(
+            "月柱",
+            verify_response.pillars_primary.month.stem,
+            verify_response.pillars_primary.month.branch,
+            verify_response.pillars_primary.day.stem,
+            kongwang,
+            shensha_items,
+        ),
+        "day": _build_pillar_detail(
+            "日柱",
+            verify_response.pillars_primary.day.stem,
+            verify_response.pillars_primary.day.branch,
+            verify_response.pillars_primary.day.stem,
+            kongwang,
+            shensha_items,
+        ),
+        "hour": _build_pillar_detail(
+            "时柱",
+            verify_response.pillars_primary.hour.stem,
+            verify_response.pillars_primary.hour.branch,
+            verify_response.pillars_primary.day.stem,
+            kongwang,
+            shensha_items,
+        ),
+    }
+    payload["kongwang"] = kongwang
+    payload.update(
+        {
+            "api_version": API_VERSION,
+            "rule_version": RULE_VERSION,
+            "schema_version": "bazi_full@5.1",
+            "request_id": request_id or str(uuid4()),
+            "warnings": [*payload.get("warnings", []), *[w.model_dump() for w in warnings]],
+            "methods": methods.model_dump(),
+            "raw": raw.model_dump(),
+            "rule_matches": matched_rules,
+            "start_dayun_age": verify_response.start_dayun_age,
+        }
     )
+
+    if not payload.get("bazi_summary"):
+        parts: list[str] = []
+        if verify_response.geju:
+            parts.append(f"格局：{verify_response.geju.geju_name}（{verify_response.geju.geju_level}）")
+        if verify_response.day_master_strength:
+            parts.append(
+                f"日主：{verify_response.day_master_strength.tier}，评分{verify_response.day_master_strength.score:.1f}"
+            )
+        if verify_response.yongshen:
+            favor = "、".join(verify_response.yongshen.favor[:3]) or "无"
+            avoid = "、".join(verify_response.yongshen.avoid[:3]) or "无"
+            parts.append(f"用神：喜{favor}，忌{avoid}")
+        if verify_response.balance_advice:
+            parts.append(f"五行建议：{verify_response.balance_advice}")
+        if verify_response.current_fortune_summary:
+            parts.append(
+                f"当前运势：{verify_response.current_fortune_summary.current_dayun} / {verify_response.current_fortune_summary.current_liunian}"
+            )
+        if verify_response.liunian_detail:
+            top_years = [f"{item.year}({item.annual_score})" for item in verify_response.liunian_detail[:3]]
+            parts.append(f"关键年份：{'、'.join(top_years)}")
+        payload["bazi_summary"] = "；".join(parts) + "。"
+
+    relation_items: list[RelationItemModel] = []
+    for raw_item in payload.get("dizhi_relations", []) or []:
+        relation_items.append(
+            RelationItemModel(
+                type=_normalize_relation_type(str(raw_item.get("type") or raw_item.get("relation") or "干支互动")),
+                subject=_text_or_empty(
+                    raw_item.get("subject")
+                    or raw_item.get("from")
+                    or raw_item.get("a")
+                    or "/".join(raw_item.get("branches", []) or [])
+                    or "/".join(raw_item.get("positions", []) or [])
+                    or raw_item.get("type")
+                ),
+                target=str(raw_item.get("target") or raw_item.get("to") or raw_item.get("b") or "") or None,
+                summary=_text_or_empty(
+                    raw_item.get("summary") or raw_item.get("desc") or raw_item.get("note") or raw_item.get("status")
+                ),
+                strength=raw_item.get("strength") if raw_item.get("strength") in {"strong", "medium", "weak"} else None,
+            )
+        )
+
+    evidence_chain: list[EvidenceItemModel] = []
+    if verify_response.geju:
+        evidence_chain.append(
+            EvidenceItemModel(
+                title="格局",
+                value=f"{verify_response.geju.geju_name}（{verify_response.geju.geju_level}）",
+                source="geju",
+                confidence="high",
+            )
+        )
+    if verify_response.day_master_strength:
+        evidence_chain.append(
+            EvidenceItemModel(
+                title="日主强弱",
+                value=f"{verify_response.day_master_strength.tier} / {verify_response.day_master_strength.score:.1f}",
+                source="day_master_strength",
+                confidence="high",
+            )
+        )
+    if verify_response.yongshen:
+        evidence_chain.append(
+            EvidenceItemModel(
+                title="用神",
+                value=f"喜{'、'.join(verify_response.yongshen.favor[:3]) or '无'}，忌{'、'.join(verify_response.yongshen.avoid[:3]) or '无'}",
+                source="yongshen",
+                confidence="medium",
+            )
+        )
+
+    key_years = [
+        TimelinePointModel(
+            year=int(item.year),
+            label="关键年",
+            summary=str(item.interpretation_text or item.clash or ""),
+            tone="current" if item.year == datetime.now().year else ("danger" if item.clash else "warn"),
+        )
+        for item in (verify_response.liunian_detail or [])[:4]
+        if item.year is not None
+    ]
+
+    key_months = [
+        TimelinePointModel(
+            year=int(datetime.now().year),
+            label=f"{idx + 1}月",
+            summary=str(getattr(item, "interpretation_text", "") or getattr(item, "summary", "") or ""),
+            tone="warn" if getattr(item, "clash", None) else "neutral",
+        )
+        for idx, item in enumerate((verify_response.monthly_fortune or [])[:4])
+    ]
+
+    month_branch = verify_response.pillars_primary.month.branch if verify_response.pillars_primary else None
+    month_climate_rule = _MONTH_CLIMATE_RULES.get(month_branch or "", {})
+    climate_value = month_climate_rule.get("climate") if isinstance(month_climate_rule, dict) else None
+    climate_reason = month_climate_rule.get("reason") if isinstance(month_climate_rule, dict) else None
+    climate_season = month_climate_rule.get("season") if isinstance(month_climate_rule, dict) else None
+
+    adjustment_summary = AdjustmentSummaryModel(
+        climate=climate_value if climate_value in {"寒", "暖", "燥", "湿", "平"} else "平",
+        climate_source="services.bazi_engine.tables.MONTH_CLIMATE_RULES",
+        climate_reason=(
+            f"{climate_reason}（月令{month_branch or '—'}，{climate_season or '未知季节'}）" if climate_reason else ""
+        ),
+        tiaohou=(
+            f"喜{'、'.join(verify_response.yongshen.favor[:2]) or '中和'}，忌{'、'.join(verify_response.yongshen.avoid[:2]) or '过旺'}"
+            if verify_response.yongshen
+            else None
+        ),
+        balance_direction="扶抑兼调候" if verify_response.yongshen else None,
+        season_summary=verify_response.balance_advice,
+        rationale=[
+            f"月令：{month_branch}" if month_branch else "",
+            f"调候：{climate_value}" if climate_value else "",
+            f"日主强弱：{verify_response.day_master_strength.tier}" if verify_response.day_master_strength else "",
+            f"格局：{verify_response.geju.geju_name}" if verify_response.geju else "",
+        ],
+    )
+
+    payload["confidence_level"] = payload.get("confidence_level", "medium")
+    payload["confidence_score"] = payload.get("confidence_score")
+    payload["evidence_chain"] = [item.model_dump() for item in evidence_chain]
+    payload["key_years"] = [item.model_dump() for item in key_years]
+    payload["key_months"] = [item.model_dump() for item in key_months]
+    payload["kongwang"] = payload.get("kongwang", [])
+    payload["kongwang_source"] = "services.bazi_engine.tables.get_kongwang"
+    tiangan_clash_notes = [
+        _text_or_empty(item.get("note") or item.get("summary"))
+        for item in (payload.get("tiangan_clashes", []) or [])
+        if isinstance(item, dict)
+    ]
+    relation_summary_missing: list[str] = []
+    if not relation_items:
+        relation_summary_missing.append("relation_items")
+    if not payload.get("kongwang"):
+        relation_summary_missing.append("kongwang")
+    if not verify_response.geju:
+        relation_summary_missing.append("geju")
+
+    _clash_summary = next((item.summary for item in relation_items if item.type == "冲" and item.summary), "")
+    if not _clash_summary and tiangan_clash_notes:
+        _clash_summary = tiangan_clash_notes[0]
+    if not _clash_summary:
+        relation_summary_missing.append("clash_summary")
+
+    _combine_summary = next((item.summary for item in relation_items if item.type == "合" and item.summary), "")
+    if not _combine_summary:
+        relation_summary_missing.append("combine_summary")
+
+    _harm_summary = next((item.summary for item in relation_items if item.type == "害" and item.summary), "")
+    if not _harm_summary:
+        relation_summary_missing.append("harm_summary")
+
+    _interaction_parts = [
+        text for text in [*(item.summary for item in relation_items[:3]), *(tiangan_clash_notes[:1])] if text
+    ]
+    _interaction_summary = "；".join(_interaction_parts)
+    if not _interaction_summary:
+        relation_summary_missing.append("interaction_summary")
+
+    if not climate_reason:
+        relation_summary_missing.append("climate_reason")
+
+    _score_reason = (
+        "格局、日主强弱、用神、神煞、时间轴与关系摘要共同构成当前置信度"
+        if verify_response.geju or verify_response.day_master_strength or verify_response.yongshen
+        else ""
+    )
+    if not _score_reason:
+        relation_summary_missing.append("confidence_score_reason")
+
+    payload["bazi_structural_summary"] = BaziStructuralSummaryModel(
+        core_snapshot={
+            "pillars": payload.get("pillars_primary"),
+            "ten_gods": payload.get("ten_gods"),
+            "wuxing_score": payload.get("wuxing_score"),
+            "wuxing_breakdown": payload.get("wuxing_breakdown"),
+            "day_master_strength": payload.get("day_master_strength"),
+            "geju_name": verify_response.geju.geju_name if verify_response.geju else None,
+            "yongshen": payload.get("yongshen"),
+        },
+        relation_summary={
+            "kongwang": payload.get("kongwang", []),
+            "kongwang_source": "services.bazi_engine.tables.get_kongwang",
+            "relation_items": [item.model_dump() for item in relation_items],
+            "dizhi_relations": payload.get("dizhi_relations", []),
+            "tiangan_clashes": payload.get("tiangan_clashes", []),
+            "clash_summary": _clash_summary,
+            "combine_summary": _combine_summary,
+            "harm_summary": _harm_summary,
+            "interaction_summary": _interaction_summary,
+            "missing": relation_summary_missing,
+        },
+        adjustment_summary=adjustment_summary,
+        timeline_summary={
+            "key_years": [item.model_dump() for item in key_years],
+            "key_months": [item.model_dump() for item in key_months],
+        },
+        confidence_summary=ConfidenceSummaryModel(
+            level=payload["confidence_level"],
+            score=payload.get("confidence_score") or 72,
+            score_components={
+                "geju": 30.0 if verify_response.geju else 0.0,
+                "day_master_strength": 25.0 if verify_response.day_master_strength else 0.0,
+                "yongshen": 20.0 if verify_response.yongshen else 0.0,
+                "shensha": 10.0 if verify_response.shensha else 0.0,
+                "timeline": 7.0 if verify_response.liunian_detail else 0.0,
+                "relations": 8.0 if relation_items else 0.0,
+            },
+            score_reason=_score_reason,
+            evidence=[item.model_dump() for item in evidence_chain],
+            risk_notes=[w.message for w in verify_response.validation.warnings] if verify_response.validation else [],
+            inference_notes=[payload["bazi_summary"]] if payload.get("bazi_summary") else [],
+            blocked_fields=[],
+        ).model_dump(),
+        report_summary={
+            "title": "八字结构摘要",
+            "summary": payload.get("bazi_summary", ""),
+            "highlights": [
+                f"格局：{verify_response.geju.geju_name}" if verify_response.geju else "",
+                f"日主：{verify_response.day_master_strength.tier}" if verify_response.day_master_strength else "",
+                f"用神：{('、'.join(verify_response.yongshen.favor[:2]) if verify_response.yongshen else '')}",
+            ],
+            "warnings": [w.message for w in verify_response.validation.warnings] if verify_response.validation else [],
+            "annotation_prompt": "可在报告页补充人工注释，说明格局、调候和关键年份。",
+            "source": "services.bazi_full_service",
+            "missing": [
+                field_name
+                for field_name, value in {
+                    "geju_name": verify_response.geju.geju_name if verify_response.geju else None,
+                    "day_master_strength": verify_response.day_master_strength.tier
+                    if verify_response.day_master_strength
+                    else None,
+                    "yongshen": verify_response.yongshen.model_dump() if verify_response.yongshen else None,
+                    "kongwang_source": payload.get("kongwang_source", None),
+                }.items()
+                if not value
+            ],
+        },
+    ).model_dump()
+
+    # B-P2-01: 流日/流时（默认开启；未传 target_date 时使用当天）
+    _include_liuri = body.include_liuri if body.include_liuri is not None else True
+    if _include_liuri:
+        from datetime import date as _date
+
+        _td = body.target_date.date() if body.target_date else _date.today()
+        _th = body.target_hour if body.target_hour is not None else dt_effective.hour
+
+        liuri_payload, dayun_patch = build_liuri_liushi_enrichment(
+            verify_response=verify_response,
+            birth_dt=dt_effective,
+            target_date=_td,
+            target_hour=_th,
+        )
+        payload["liuri_liushi"] = liuri_payload
+
+        if dayun_patch and payload.get("dayun"):
+            payload["dayun"]["days_to_next_transition"] = dayun_patch.get("days_to_next_transition")
+            payload["dayun"]["next_transition_age"] = dayun_patch.get("next_transition_age")
+            payload["dayun"]["next_transition_ganzhi"] = dayun_patch.get("next_transition_ganzhi")
+            payload["dayun"]["next_transition_hint"] = dayun_patch.get("next_transition_hint")
+
+    _liuri_missing = (
+        payload.get("liuri_liushi", {}).get("missing_fields", [])
+        if isinstance(payload.get("liuri_liushi"), dict)
+        else []
+    )
+    _context_missing = _collect_context_missing_fields(body, verify_response, payload)
+    payload["missing_fields"] = sorted(
+        set(
+            payload.get("missing_fields", [])
+            + relation_summary_missing
+            + _liuri_missing
+            + _context_missing
+            + list(getattr(verify_response, "missing_fields", None) or [])
+        )
+    )
+    payload["provenance"] = build_bazi_provenance(
+        verify_response,
+        body,
+        missing_fields=payload.get("missing_fields"),
+    ).model_dump()
+    try:
+        from services.bazi_engine.classical_narrative import geju_classic_sentence, shun_ni
+
+        geju_name = (payload.get("geju") or {}).get("geju_name") or ""
+        if geju_name:
+            derived = (payload.get("geju") or {}).get("derived_geju")
+            payload.setdefault("geju", {})["classic_ref"] = payload.get("geju", {}).get(
+                "classic_ref"
+            ) or geju_classic_sentence(geju_name, derived)
+        bss = payload.get("bazi_structural_summary") or {}
+        if isinstance(bss, dict):
+            dm = (payload.get("day_master_strength") or {}).get("tier") or ""
+            dayun_data = payload.get("dayun") or {}
+            direction = dayun_data.get("direction") or "forward"
+            if direction not in ("forward", "backward"):
+                direction = "forward" if str(direction).startswith("顺") else "backward"
+            ys_shift = "neutral"
+            liunian_items = (payload.get("liunian") or {}).get("items") or []
+            if liunian_items:
+                ys_shift = liunian_items[0].get("yongshen_shift", "neutral") or "neutral"
+            bss["shun_ni"] = shun_ni(direction, ys_shift, tier=dm)
+            payload["bazi_structural_summary"] = bss
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).debug("[classical_narrative] %s", exc)
+
+    _classic_refs: list[dict] = []
+    _seen_classic: set[str] = set()
+    for item in verify_response.shensha or []:
+        for ref in getattr(item, "classic_refs", None) or []:
+            rid = ref.get("id", "") if isinstance(ref, dict) else ""
+            if rid and rid not in _seen_classic:
+                _seen_classic.add(rid)
+                _classic_refs.append(ref)
+    geju_block = payload.get("geju") or {}
+    for ref in geju_block.get("geju_candidates") or []:
+        if isinstance(ref, dict):
+            rid = ref.get("id", "")
+            if rid and rid not in _seen_classic:
+                _seen_classic.add(rid)
+                _classic_refs.append(ref)
+    if geju_block.get("derived_geju"):
+        from services.bazi_engine.classical_narrative import geju_classic_sentence
+
+        derived_line = geju_classic_sentence(geju_block.get("geju_name", ""), geju_block.get("derived_geju"))
+        if derived_line:
+            _classic_refs.append(
+                {
+                    "id": f"derived_{geju_block.get('derived_geju')}",
+                    "source": "衍生格局句式",
+                    "text": derived_line,
+                    "category": "格局",
+                    "hint_type": "derived",
+                }
+            )
+    if geju_block.get("classic_ref"):
+        _classic_refs.append(
+            {
+                "id": "geju_narrative",
+                "source": "典籍句式",
+                "text": geju_block.get("classic_ref"),
+                "category": "格局",
+                "hint_type": "narrative",
+            }
+        )
+    payload["classic_refs"] = _classic_refs[:12]
+    payload["evidence_ids"] = _build_evidence_ids(
+        payload.get("rule_matches") or [],
+        payload.get("classic_refs") or [],
+        payload.get("evidence_chain") or [],
+    )
+
+    payload["relations_summary"] = {
+        "items": [item.model_dump() for item in relation_items],
+        "clash_summary": _clash_summary,
+        "combine_summary": _combine_summary,
+        "harm_summary": _harm_summary,
+        "interaction_summary": _interaction_summary,
+        "missing": relation_summary_missing,
+    }
+    _shensha_raw = payload.get("shensha") or []
+    payload["shensha_summary"] = {
+        "items": _shensha_raw,
+        "highlights": [
+            str(item.get("name") or "") for item in _shensha_raw if isinstance(item, dict) and item.get("name")
+        ][:8],
+        "missing": [] if _shensha_raw else ["shensha"],
+    }
+
+    from services.content_policy import content_versions_meta, default_disclaimer_block
+
+    payload["disclaimer_block"] = default_disclaimer_block()
+    payload["content_versions"] = content_versions_meta()
+
+    _slim_full_interpretation(payload)
+
+    return BaziFullResponse.model_validate(payload)
+
+
+_FULL_SLIM_BLOCKS = (
+    "geju",
+    "yongshen",
+    "career",
+    "wealth_analysis",
+    "health",
+    "marriage_analysis",
+    "relationship",
+    "personality",
+    "lifestyle",
+)
+
+
+def _collect_context_missing_fields(body, verify_response, payload: dict) -> list[str]:
+    """R029: surface hour/jieqi/dual-track gaps for FE trust panels."""
+    tokens: list[str] = []
+    precision = getattr(body, "birth_time_precision", "exact") or "exact"
+    if precision in ("unknown", "approximate"):
+        tokens.append("hour_pillar")
+    rf = getattr(verify_response, "risk_flags", None)
+    if rf and getattr(rf, "near_jieqi_boundary", False):
+        tokens.append("jieqi_boundary")
+    if body.mode == "dual":
+        secondary = payload.get("pillars_secondary")
+        validation = getattr(verify_response, "validation", None)
+        diff_fields = list(getattr(validation, "diff_fields", None) or [])
+        if not secondary or diff_fields:
+            tokens.append("pillars_secondary")
+    return tokens
+
+
+def _build_evidence_ids(
+    rule_matches: list,
+    classic_refs: list[dict],
+    evidence_chain: list,
+) -> list[str]:
+    """R034: stable ids from rules, classics, and evidence chain sources."""
+    ids: list[str] = []
+    for rm in rule_matches:
+        rid = rm.get("rule_id") if isinstance(rm, dict) else getattr(rm, "rule_id", "")
+        if rid:
+            ids.append(str(rid))
+    for ref in classic_refs:
+        if isinstance(ref, dict) and ref.get("id"):
+            ids.append(str(ref["id"]))
+    for item in evidence_chain:
+        if isinstance(item, dict):
+            src = item.get("source")
+        else:
+            src = getattr(item, "source", None)
+        if src:
+            ids.append(f"chain:{src}")
+    return sorted(set(ids))
+
+
+def _slim_full_interpretation(payload: dict) -> None:
+    """R031: default /full omits long interpretation_text; use explain/batch instead."""
+    for key in _FULL_SLIM_BLOCKS:
+        block = payload.get(key)
+        if isinstance(block, dict) and block.get("interpretation_text"):
+            block["interpretation_text"] = ""
+
+
+def apply_profile_slim(payload: dict) -> None:
+    """IND-03: profile=slim strips domain narratives and dayun hint text."""
+    _slim_full_interpretation(payload)
+    for key in ("milestones", "love_windows"):
+        if key in payload:
+            payload[key] = []
+    dayun = payload.get("dayun")
+    if isinstance(dayun, dict):
+        for hint_key in (
+            "transition_hint",
+            "next_transition_hint",
+            "next_transition_ganzhi",
+        ):
+            dayun.pop(hint_key, None)
+    for domain_key in (
+        "career",
+        "wealth_analysis",
+        "health",
+        "marriage_analysis",
+        "relationship",
+        "personality",
+        "lifestyle",
+    ):
+        block = payload.get(domain_key)
+        if isinstance(block, dict):
+            if "interpretation_text" in block:
+                block["interpretation_text"] = ""
+            block.pop("narrative", None)

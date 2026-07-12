@@ -103,7 +103,10 @@ class LunarInfo:
     day_gz: str = ""  # 日柱干支，如 "癸未"
     hour_gz: str = ""  # 时柱干支，如 "丁巳"
     day_stem_idx: int = 0  # 日天干索引（0=甲…9=癸）
+    day_branch_idx: int = 0  # 日地支索引（0=子…11=亥）
     leap_month_method: str = "next"  # "next"=视为下月(传统) | "same"=视为本月 | "mid"=月中分界
+    year_divide: str = "lichun"  # lichun=立春换年 | normal=正月初一换年
+    day_divide: str = "solar_next"  # solar_next=公历换日 | forward=农历日+1安星 | current=不换日
 
     @property
     def calc_lunar_month(self) -> int:
@@ -124,6 +127,21 @@ class LunarInfo:
             return self.lunar_month + 1
 
 
+def forward_lunar_day_for_stars(year: int, month: int, day: int) -> int:
+    """iztro dayDivide=forward：晚子安星用农历日+1（取公历次日的农历日，含月末进位）。"""
+    import datetime as _dt
+
+    nxt = _dt.date(year, month, day) + _dt.timedelta(days=1)
+    return int(sxtwl.fromSolar(nxt.year, nxt.month, nxt.day).getLunarDay())
+
+
+def _year_gz_from_lunar_year(lunar_year: int) -> tuple[int, int, str]:
+    """农历年数 → 干支（正月初一界，与 iztro yearDivide=normal 对齐）。"""
+    ys_idx = (lunar_year - 4) % 10
+    yb_idx = (lunar_year - 4) % 12
+    return ys_idx, yb_idx, STEMS[ys_idx] + BRANCHES[yb_idx]
+
+
 def solar_to_lunar(
     year: int,
     month: int,
@@ -131,6 +149,8 @@ def solar_to_lunar(
     hour: int = 0,
     minute: int = 0,
     leap_month_method: str = "next",
+    year_divide: str = "lichun",
+    day_divide: str = "solar_next",
 ) -> LunarInfo:
     """
     公历转农历，返回 LunarInfo。
@@ -144,10 +164,15 @@ def solar_to_lunar(
     """
     day_obj = sxtwl.fromSolar(year, month, day)
 
-    # 年干支 (注意 sxtwl 的 getYearGZ() 返回当前节气年的干支)
-    year_gz_obj = day_obj.getYearGZ()
-    ys_idx = year_gz_obj.tg  # 天干索引 甲=0
-    yb_idx = year_gz_obj.dz  # 地支索引 子=0
+    # 年干支：lichun=节气年（sxtwl getYearGZ）；normal=农历正月初一（getLunarYear）
+    lunar_year_num = int(day_obj.getLunarYear())
+    if year_divide == "normal":
+        ys_idx, yb_idx, year_gz_str = _year_gz_from_lunar_year(lunar_year_num)
+    else:
+        year_gz_obj = day_obj.getYearGZ()
+        ys_idx = year_gz_obj.tg
+        yb_idx = year_gz_obj.dz
+        year_gz_str = STEMS[ys_idx] + BRANCHES[yb_idx]
 
     # 农历月日
     l_month = day_obj.getLunarMonth()  # 原始农历月（闰五月=5）
@@ -173,10 +198,8 @@ def solar_to_lunar(
     # 时辰
     hb_idx = hour_to_branch(hour, minute)
 
-    year_gz_str = STEMS[ys_idx] + BRANCHES[yb_idx]
     month_gz_str = STEMS[month_stem_idx] + BRANCHES[month_branch_idx]
     hour_b_str = BRANCHES[hb_idx]
-    # 节气月柱（八字法，按节界定月份）
     jieqi_month_gz_str = _calc_jieqi_month_gz(year, month, day, ys_idx)
     # 日柱干支（sxtwl 直接查表）
     day_gz_obj = day_obj.getDayGZ()
@@ -188,7 +211,7 @@ def solar_to_lunar(
     hour_gz_str = STEMS[hs_idx] + BRANCHES[hb_idx]
 
     return LunarInfo(
-        lunar_year=year,
+        lunar_year=lunar_year_num,
         lunar_month=l_month,  # 保留原始月份（展示用），闰五月=5
         lunar_day=l_day,
         is_leap_month=bool(is_leap),
@@ -204,5 +227,8 @@ def solar_to_lunar(
         day_gz=day_gz_str,
         hour_gz=hour_gz_str,
         day_stem_idx=ds_idx,
+        day_branch_idx=db_idx,
         leap_month_method=leap_month_method,
+        year_divide=year_divide,
+        day_divide=day_divide,
     )

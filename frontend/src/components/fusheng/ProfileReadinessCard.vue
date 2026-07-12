@@ -68,7 +68,7 @@ const emit = defineEmits<{
 .readiness-card__bar {
   height: 8px;
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--inset-tint);
   overflow: hidden;
 }
 

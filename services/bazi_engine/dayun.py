@@ -21,15 +21,20 @@ services/bazi_engine/dayun.py — 大运排盘（M1 任务 1.07）
 
 from __future__ import annotations
 
-from datetime import datetime
+import calendar
+import datetime
 from math import ceil
 
 from backends import get_jieqi_context
 from services.bazi_engine.classic_refs import get_refs_by_tag
+from services.bazi_engine.shensha import compute_flow_shensha_items
 from services.bazi_engine.tables import (
+    BRANCH_HIDDEN_STEMS,
     BRANCHES,
+    NAYIN,
     STEM_ELEMENT,
     STEMS,
+    get_kongwang,
     get_ten_god,
 )
 
@@ -85,6 +90,35 @@ def _get_direction(
 
     direction = "forward" if fwd else "backward"
     return direction, basis
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 大运格局/用神联动 (B-05)
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _dayun_geju_impact(ten_god: str, geju_name: str = "") -> str:
+    if not geju_name or geju_name == "普通格":
+        return ""
+    if ten_god in ("正官", "七杀") and "官" in geju_name:
+        return f"大运{ten_god}助{geju_name}，格局气势加强"
+    if ten_god in ("正印", "偏印") and "印" in geju_name:
+        return f"大运{ten_god}护{geju_name}，印星得运"
+    if ten_god in ("食神", "伤官") and "杀" in geju_name:
+        return f"大运{ten_god}制杀，七杀格有救应"
+    if ten_god in ("比肩", "劫财"):
+        return f"大运{ten_god}助身，可能改变格局平衡"
+    return f"大运{ten_god}行运，与{geju_name}互动待观"
+
+
+def _dayun_yongshen_shift(stem_elem: str, yongshen_favor: list[str], yongshen_avoid: list[str]) -> str:
+    if not yongshen_favor:
+        return "neutral"
+    if stem_elem in yongshen_favor:
+        return "forward"
+    if stem_elem in yongshen_avoid:
+        return "backward"
+    return "neutral"
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -173,6 +207,20 @@ _TEN_GOD_CHILD_HINT: dict[str, str] = {
     "偏印": "此运子女思维独特，直觉灵敏，兴趣偏冷门；尊重其个性，防止世俗化教育压制天赋，艺术或研究方向可重点培养。",
 }
 
+_STAGE_NAMES = ["长生", "沐浴", "冠带", "临官", "帝旺", "衰", "病", "死", "墓", "绝", "胎", "养"]
+_STAGE_START: dict[str, str] = {
+    "甲": "亥",
+    "乙": "午",
+    "丙": "寅",
+    "丁": "酉",
+    "戊": "寅",
+    "己": "酉",
+    "庚": "巳",
+    "辛": "子",
+    "壬": "申",
+    "癸": "卯",
+}
+
 # ── 地支维度健康 hint（主键：地支）────────────────────────────────────────────
 _BRANCH_HEALTH_HINT: dict[str, str] = {
     "子": "子水当令，肾脏与膀胱为重点关注部位，冬季尤需保暖防寒，睡眠深度关系肾气恢复效率。",
@@ -213,6 +261,45 @@ def _build_hints(
     }
 
 
+def _stem_element_cn(stem: str) -> tuple[str | None, str | None]:
+    elem, yin_yang = STEM_ELEMENT.get(stem, (None, None))
+    wx_cn = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+    return wx_cn.get(elem or ""), ("阳" if yin_yang == "yang" else "阴") if yin_yang else None
+
+
+def _pillar_xingyun(day_stem: str, branch: str | None) -> str | None:
+    if not day_stem or not branch:
+        return None
+    start_branch = _STAGE_START.get(day_stem)
+    if not start_branch:
+        return None
+    try:
+        start_idx = BRANCHES.index(start_branch)
+        branch_idx = BRANCHES.index(branch)
+    except ValueError:
+        return None
+    is_yang = day_stem in {"甲", "丙", "戊", "庚", "壬"}
+    offset = (branch_idx - start_idx + 12) % 12 if is_yang else (start_idx - branch_idx + 12) % 12
+    return _STAGE_NAMES[offset] if 0 <= offset < len(_STAGE_NAMES) else None
+
+
+def _build_hidden_stems(branch: str, day_stem: str) -> list[dict]:
+    items: list[dict] = []
+    for hidden_stem, weight in BRANCH_HIDDEN_STEMS.get(branch, []):
+        elem, _ = STEM_ELEMENT.get(hidden_stem, (None, None))
+        items.append(
+            {
+                "stem": hidden_stem,
+                "weight": weight,
+                "element": {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(
+                    elem or "", None
+                ),
+                "ten_god": get_ten_god(day_stem, hidden_stem) if day_stem else None,
+            }
+        )
+    return items
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 主函数
 # ──────────────────────────────────────────────────────────────────────────────
@@ -227,6 +314,10 @@ def compute_dayun(
     gender: str | None = None,  # "male"/"female"/None
     count: int = 10,
     days_per_month: int = 3,
+    day_branch: str | None = None,
+    geju_name: str = "",
+    yongshen_favor: list[str] | None = None,
+    yongshen_avoid: list[str] | None = None,
 ) -> dict:
     """
     计算大运列表.
@@ -295,6 +386,18 @@ def compute_dayun(
         stem_elem, _ = STEM_ELEMENT.get(stem, ("?", "?"))
         ten_god = get_ten_god(day_stem, stem)
         hints = _build_hints(stem, branch, day_stem)
+        kongwang = list(get_kongwang(stem, branch))
+        shensha_items = compute_flow_shensha_items(
+            flow_label="dayun",
+            flow_stem=stem,
+            flow_branch=branch,
+            day_stem=day_stem,
+            day_branch=day_branch or branch,
+            month_stem=month_stem,
+            month_branch=month_branch,
+            hour_stem=stem,
+            hour_branch=branch,
+        )
 
         # 本柱相关引用
         refs_hint = get_refs_by_tag(ten_god) if ten_god else []
@@ -308,6 +411,24 @@ def compute_dayun(
                 "stem": stem,
                 "branch": branch,
                 "ten_god": ten_god,
+                "geju_impact": _dayun_geju_impact(ten_god, geju_name),
+                "yongshen_shift": _dayun_yongshen_shift(
+                    stem_elem if stem_elem != "?" else "",
+                    yongshen_favor or [],
+                    yongshen_avoid or [],
+                ),
+                "hidden_stems": _build_hidden_stems(branch, day_stem),
+                "xingyun": _pillar_xingyun(day_stem, branch),
+                "self_seat": _pillar_xingyun(stem, branch),
+                "self_seat_source": f"{stem}坐{branch}十二长生" if stem and branch else None,
+                "kongwang": kongwang,
+                "kongwang_hit": branch in kongwang,
+                "nayin": NAYIN.get(f"{stem}{branch}"),
+                "shensha": shensha_items,
+                "wuxing": {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(
+                    stem_elem, None
+                ),
+                "yin_yang": STEM_ELEMENT.get(stem, (None, None))[1] == "yang" and "阳" or "阴",
                 "flow_wuxing": stem_elem,
                 **hints,
                 "refs": refs,
@@ -320,7 +441,106 @@ def compute_dayun(
         "direction_basis": direction_basis,
         "start_age": start_age,
         "start_age_months": start_age_months,
+        "start_age_days": int(round(delta_days)),
+        "transition_hint": (
+            f"出生距{anchor_name}约{int(round(delta_days))}天，"
+            f"折合{start_age_months}个月起运；换运前后运势多有起伏，宜稳守过渡、忌重大决断。"
+        ),
         "anchor_jieqi_name": anchor_name,
         "anchor_jieqi_dt": anchor_dt.isoformat(),
         "items": items,
+    }
+
+
+def virtual_age(birth_date: datetime.date, ref_date: datetime.date) -> int:
+    """虚岁：出生为 1，每过一次生日 +1。"""
+    age = ref_date.year - birth_date.year
+    if (ref_date.month, ref_date.day) < (birth_date.month, birth_date.day):
+        age -= 1
+    return max(1, age + 1)
+
+
+def _item_start_age(item: object) -> int:
+    if isinstance(item, dict):
+        return int(item["start_age"])
+    return int(getattr(item, "start_age", 0))
+
+
+def _item_ganzhi(item: object) -> str:
+    if isinstance(item, dict):
+        return f"{item.get('stem', '')}{item.get('branch', '')}"
+    stem = getattr(item, "stem", "") or ""
+    branch = getattr(item, "branch", "") or ""
+    ganzhi = getattr(item, "ganzhi", None)
+    return ganzhi if ganzhi else f"{stem}{branch}"
+
+
+def _safe_birthday_anniversary(birth_date: datetime.date, year: int) -> datetime.date:
+    """Birthday on target year; clamp day for non-leap years (e.g. Feb 29 → Feb 28)."""
+    last_day = calendar.monthrange(year, birth_date.month)[1]
+    return datetime.date(year, birth_date.month, min(birth_date.day, last_day))
+
+
+def compute_next_dayun_transition(
+    birth_date: datetime.date,
+    items: list,
+    ref_date: datetime.date | None = None,
+) -> dict:
+    """
+    计算距下一大运起运的剩余天数（B-P2 动态换运提醒）。
+
+    以虚岁跨限、生日为切换锚点；末限之后返回空字段。
+    """
+    ref = ref_date or datetime.date.today()
+    if not items:
+        return {
+            "days_to_next_transition": None,
+            "next_transition_age": None,
+            "next_transition_ganzhi": None,
+            "next_transition_hint": None,
+        }
+
+    v_age = virtual_age(birth_date, ref)
+    current_idx: int | None = None
+    for i, item in enumerate(items):
+        sa = _item_start_age(item)
+        if sa <= v_age < sa + 10:
+            current_idx = i
+            break
+
+    if v_age < _item_start_age(items[0]):
+        next_item = items[0]
+        target_age = _item_start_age(items[0])
+    elif current_idx is not None:
+        if current_idx >= len(items) - 1:
+            return {
+                "days_to_next_transition": None,
+                "next_transition_age": None,
+                "next_transition_ganzhi": None,
+                "next_transition_hint": None,
+            }
+        next_item = items[current_idx + 1]
+        target_age = _item_start_age(next_item)
+    else:
+        return {
+            "days_to_next_transition": None,
+            "next_transition_age": None,
+            "next_transition_ganzhi": None,
+            "next_transition_hint": None,
+        }
+
+    transition_date = _safe_birthday_anniversary(birth_date, birth_date.year + target_age - 1)
+    if transition_date <= ref:
+        transition_date = _safe_birthday_anniversary(birth_date, transition_date.year + 1)
+    days = (transition_date - ref).days
+    gz = _item_ganzhi(next_item)
+    hint = (
+        f"距下一运（{gz}，虚岁{target_age}岁）约 {days} 天（预计 {transition_date.isoformat()}），"
+        "换运前后宜稳守过渡、忌重大决断。"
+    )
+    return {
+        "days_to_next_transition": max(days, 0),
+        "next_transition_age": target_age,
+        "next_transition_ganzhi": gz,
+        "next_transition_hint": hint,
     }

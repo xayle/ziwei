@@ -418,7 +418,7 @@ class TestGeju12:
             wuxing_scores={"wood": 60.0, "fire": 10.0, "earth": 10.0, "metal": 10.0, "water": 10.0},
         )
         # 建禄格 or 外格, either way L238 may be triggered
-        assert result["name"] in ("建禄格", "羊刃格") or result["confidence"] > 0
+        assert result["name"] in ("建禄格", "月刃格") or result["confidence"] > 0
 
     def test_normal_geju_with_toukan_stem(self):
         """正格透干：inner type + toukan_stem present → L254"""
@@ -930,7 +930,7 @@ class TestBackends12:
         try:
             from backends import SxtwlBackend
             backend = SxtwlBackend()
-            # Use a date far in 1900 (before sxtwl's first jieqi)  
+            # Use a date far in 1900 (before sxtwl's first jieqi)
             far_past = datetime(1900, 1, 1, tzinfo=timezone.utc)
             result = backend.get_jieqi_context(far_past)
             assert result is not None
@@ -943,7 +943,7 @@ class TestBackends12:
         try:
             from backends import SxtwlBackend
             backend = SxtwlBackend()
-            # Use a date far in the future 
+            # Use a date far in the future
             far_future = datetime(2099, 12, 31, tzinfo=timezone.utc)
             result = backend.get_jieqi_context(far_future)
             assert result is not None

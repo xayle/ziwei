@@ -38,6 +38,11 @@ class LlmDraft(SQLModel, table=True):
 
     # 生成内容
     draft_text: str = Field(sa_column=Column(Text))
+    evidence_refs_json: str | None = Field(
+        default=None,
+        sa_column=Column(Text),
+        description="JSON: provenance evidence refs (layer/rule_id/classic_ref)",
+    )
 
     # 人工审核字段
     status: str = Field(default="pending_review", max_length=20)

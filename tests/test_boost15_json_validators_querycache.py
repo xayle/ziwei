@@ -19,6 +19,7 @@ Coverage Boost 15 — 覆盖率提升测试
 14. routers/events.py L201-203 — ValidationException on invalid five_elements
 15. routers/v2/verify.py L129, L157-158 — v2 verify 500 / metrics exception
 """
+import os
 import pytest
 from unittest.mock import MagicMock, patch
 from starlette.testclient import TestClient
@@ -101,10 +102,12 @@ class TestQueryCacheLen:
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TestInitDbMain:
+    _INIT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "init_db.py")
 
     def test_init_db_main_runpy(self):
-        """L37-41 — runpy 执行 init_db.py as __main__ 触发 if 分支"""
+        """L37-41 — runpy 执行 scripts/init_db.py as __main__ 触发 if 分支"""
         import runpy
+
         mock_inspector = MagicMock()
         mock_inspector.get_table_names.return_value = ["user", "member"]
 
@@ -112,19 +115,20 @@ class TestInitDbMain:
              patch("sqlmodel.SQLModel.metadata.create_all"), \
              patch("sqlalchemy.inspect", return_value=mock_inspector), \
              patch("builtins.print"):
-            runpy.run_module("init_db", run_name="__main__")
+            runpy.run_path(self._INIT_DB_PATH, run_name="__main__")
 
     def test_init_db_main_empty_tables(self):
         """L41 — tables=[] → else 分支"""
         import runpy
+
         mock_inspector = MagicMock()
-        mock_inspector.get_table_names.return_value = []  # 空列表 → else
+        mock_inspector.get_table_names.return_value = []
 
         with patch("sqlalchemy.create_engine", return_value=MagicMock()), \
              patch("sqlmodel.SQLModel.metadata.create_all"), \
              patch("sqlalchemy.inspect", return_value=mock_inspector), \
              patch("builtins.print"):
-            runpy.run_module("init_db", run_name="__main__")
+            runpy.run_path(self._INIT_DB_PATH, run_name="__main__")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -371,7 +375,7 @@ class TestScenariosValidationException:
                 "base_member_id": test_member.id,
                 "name": "Test",
                 "scenario_type": "custom",
-                "variations": '{"wrong_key": "no_name_field"}',
+                "variations": '{"time_adjustment": "not_an_object"}',
             },
             headers=auth_headers,
         )

@@ -25,6 +25,7 @@
   --bg:          var(--brand-paper);
   --surface:     #fffaf5;
   --surface-2:   #f7f1e8;
+  --inset-tint:  #f7f1e8; /* 卡片内嵌底色（表头/徽标），非第二级纸面 */
 
   /* 边框 */
   --border:      #e5dcc8;

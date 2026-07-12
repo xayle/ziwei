@@ -47,7 +47,7 @@ def get_endpoint_p95(path: str) -> float | None:
 def get_all_slo_stats() -> dict[str, float]:
     """返回所有端点的当前 p95 延迟（ms），供 /health/detail 调用。"""
     result: dict[str, float] = {}
-    for path, bucket in _latency_buckets.items():
+    for path, _bucket in _latency_buckets.items():
         p95 = get_endpoint_p95(path)
         if p95 is not None:
             result[path] = round(p95, 1)

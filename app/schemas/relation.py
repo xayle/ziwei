@@ -12,6 +12,7 @@ RelationType = Literal[
     "colleague",
     "friend",
     "supervisor_subordinate",
+    "business_partner",
 ]
 
 
@@ -54,3 +55,7 @@ class RelationComputeResponse(BaseModel):
     case_b: RelationProfile
     result: RelationResult
     snapshots_created: list[str] = Field(default_factory=list)
+    relation_full: dict[str, Any] | None = Field(
+        None,
+        description="relation-compat@1.0 完整响应；权威合盘见 POST /api/v1/relation/full",
+    )

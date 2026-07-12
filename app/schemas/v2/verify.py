@@ -112,3 +112,7 @@ class VerifyResponseV2(BaseModel):
         Union[VerifyResponseFull, VerifyResponseMinimal],
         Field(discriminator="response_type"),
     ] = Field(..., description="排盘响应体，类型由 output_format 决定")
+
+
+VerifyResponseFull.model_rebuild()
+VerifyResponseV2.model_rebuild()

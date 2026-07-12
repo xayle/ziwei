@@ -16,13 +16,63 @@
 		{
 			"label": "backend:dev",
 			"type": "shell",
-			"command": "./start-local.ps1",
+			"command": "./scripts/ops/start-local.ps1",
 			"args": [
 				"-Port",
-				"8001"
+				"8000",
+				"-Reload"
 			],
 			"isBackground": true,
 			"group": "build"
+		},
+		{
+			"label": "backend:lint",
+			"type": "shell",
+			"command": "make",
+			"args": ["lint"],
+			"group": "test"
+		},
+		{
+			"label": "backend:format",
+			"type": "shell",
+			"command": "make",
+			"args": ["format"],
+			"group": "none"
+		},
+		{
+			"label": "backend:test-fast",
+			"type": "shell",
+			"command": "make",
+			"args": ["test-fast"],
+			"group": "test"
+		},
+		{
+			"label": "frontend:test",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "test", "--prefix", "frontend"],
+			"group": "test"
+		},
+		{
+			"label": "frontend:lint",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "lint", "--prefix", "frontend"],
+			"group": "test"
+		},
+		{
+			"label": "frontend:type-check",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "type-check", "--prefix", "frontend"],
+			"group": "test"
+		},
+		{
+			"label": "frontend:e2e",
+			"type": "shell",
+			"command": "npm",
+			"args": ["run", "test:e2e", "--prefix", "frontend"],
+			"group": "test"
 		}
 	]
 }

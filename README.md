@@ -34,6 +34,23 @@
 | 核心引擎覆盖率 | **99%** |
 | `/api/v1/verify` P95 | **< 200ms** (concurrency=1) |
 
+### 引擎核心（2026-07-11）
+
+| 文档 | 说明 |
+|------|------|
+| [底层修复计划](docs/plan/ENGINE-CORE-FIX-PLAN-2026-07-11.md) | Phase 0–4 路线图 |
+| [基线报告](docs/reports/ENGINE-CORE-BASELINE-2026-07-11.md) | 回归与修复记录 |
+| [八字 Gap Audit](docs/design/bazi/bazi-gap-audit.md) | 八字缺口清单 |
+| [紫微 Gap Audit](docs/design/ziwei/ziwei-gap-audit.md) | 紫微缺口清单 |
+
+#### ENGINE_V2 说明
+
+环境变量 `ENGINE_V2=true` 时，`calculate()` 走 `_calculate_v2`，四柱经 **`services/bazi_engine/pillars.py`** 权威层（sxtwl/cnlunar + `solar_time_v2`）。
+
+- **已实现**：v2 四柱层 + 分析层统一使用 `services/bazi_engine/`。
+- **v1 兼容**：`app/core/verify.verify_full` shim 委托同一 pillars 实现，四柱输出应与 v2 一致。
+- OpenAPI 快照更新：`make export-openapi` 或 `python scripts/export_openapi.py`。详见 [八字方法注册表 B-04](docs/design/bazi/ENGINE-METHOD-REGISTRY.md#b-04-engine_v2)。
+
 ---
 
 ## ✅ Week 3 开发完成汇总 (2026年2月25日)
@@ -97,23 +114,25 @@
 - [✅] CHANGELOG文档 — 变更历史
 - [✅] Week 3最终总结 — 成果回顾
 
-### 📖 文档导航 (Week 3更新)
+### 📖 文档导航
+
+> 开发统一入口：**[`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)**
 
 #### 用户快速开始
 1. [README](README.md) ← **你在这里**
-2. [docs/COMPLETE-API-DOCUMENTATION.md](docs/COMPLETE-API-DOCUMENTATION.md) — API完整参考
-3. [docs/DEPLOYMENT-GUIDE.md](docs/DEPLOYMENT-GUIDE.md) — 生产部署步骤
-4. [docs/WEEK3-FINAL-SUMMARY.md](docs/WEEK3-FINAL-SUMMARY.md) — Week 3成果回顾
+2. [**docs/DEVELOPMENT.md**](docs/DEVELOPMENT.md) — 开发统一入口 ⭐
+3. [docs/README.md](docs/README.md) — 文档索引
+4. [docs/plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md](docs/plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) — W1–W16 执行
 
 #### 开发人员指南
-1. [docs/PERMISSION-MANAGEMENT-GUIDE.md](docs/PERMISSION-MANAGEMENT-GUIDE.md) — 权限最佳实践 ⭐ 新增
+1. [docs/guides/PERMISSION-MANAGEMENT-GUIDE.md](docs/guides/PERMISSION-MANAGEMENT-GUIDE.md) — 权限最佳实践 ⭐ 新增
 2. [services/permission_cascade_service.py](services/permission_cascade_service.py) — 实现源码
 3. [tests/test_cascade_validation.py](tests/test_cascade_validation.py) — 使用示例
 
 #### 架构文档 (Week 1-2原有)
-- [docs/01-schemas.md](docs/01-schemas.md)
-- [docs/02-architecture.md](docs/02-architecture.md)
-- [docs/03-rbac-audit.md](docs/03-rbac-audit.md)
+- [docs/design/01-schemas.md](docs/design/01-schemas.md)
+- [docs/design/02-architecture.md](docs/design/02-architecture.md)
+- [docs/design/03-rbac-audit.md](docs/design/03-rbac-audit.md)
 
 ### 🔐 RBAC权限矩阵 (Week 3增强)
 
@@ -159,6 +178,11 @@ BASE_URL=http://127.0.0.1:8000
 # 运行全部测试
 pytest tests/ -v
 # 结果: ✅ 854/854 tests passed (6 skipped)
+
+# 统一质量门禁
+make quality-gate
+make quality-gate-backend
+make quality-gate-frontend
 
 # 访问API文档
 # Swagger: ${BASE_URL}/docs
@@ -214,21 +238,22 @@ curl -X POST ${BASE_URL}/api/v1/scenarios \
 
 ## 🚀 Phase 2 设计文档 (P0 已完成)
 
-**新功能**: 家族管理 + 工具箱统一架构 + RBAC权限 + 审计日志  
+**新功能**: 家族管理 + 工具箱统一架构 + RBAC权限 + 审计日志
 **状态**: 📋 架构设计已冻结，等待开发启动
 
 ### 📘 核心设计文档 (按执行顺序)
-1. [README-DELIVERY.md](docs/README-DELIVERY.md) — 文档导航与使用指南 ⭐ **从这里开始**
-2. [01-schemas.md](docs/01-schemas.md) — Member/Event/Scenario数据模型
-3. [02-architecture.md](docs/02-architecture.md) — 工具箱统一架构 (ToolBase + Registry)
-4. [03-rbac-audit.md](docs/03-rbac-audit.md) — 权限矩阵 (5角色 ×12操作) + 审计日志链
-5. [04-implementation-checklist.md](docs/04-implementation-checklist.md) — 开发前60+项检查清单
+1. [**docs/DEVELOPMENT.md**](docs/DEVELOPMENT.md) — 开发统一入口 ⭐ **从这里开始**
+2. [docs/README.md](docs/README.md) — 文档索引
+2. [docs/design/01-schemas.md](docs/design/01-schemas.md) — Member/Event/Scenario 数据模型
+3. [docs/design/02-architecture.md](docs/design/02-architecture.md) — 工具箱统一架构 (ToolBase + Registry)
+4. [docs/design/03-rbac-audit.md](docs/design/03-rbac-audit.md) — 权限矩阵 + 审计日志链
+5. [docs/design/SCHEMA-SPLIT-PLAN.md](docs/design/SCHEMA-SPLIT-PLAN.md) — schema 拆分计划
 
 ### 🎯 优化方案 (可选纳入开发)
-- **[OPTIMIZATION-SUMMARY.md](docs/OPTIMIZATION-SUMMARY.md)** — 3个优化方向对比 & 决策建议 ⭐ **优先阅读**
-- [OPTIMIZATION-1-permission-performance.md](docs/OPTIMIZATION-1-permission-performance.md) — 权限检查性能 (缓存+SQL优化)
-- [OPTIMIZATION-2-event-recommendation.md](docs/OPTIMIZATION-2-event-recommendation.md) — 推荐理由生成 (规则引擎vs模板vs LLM)
-- [OPTIMIZATION-3-data-model.md](docs/OPTIMIZATION-3-data-model.md) — 数据模型调整 (字段精简+表拆分)
+- **[docs/reports/OPTIMIZATION-SUMMARY.md](docs/reports/OPTIMIZATION-SUMMARY.md)** — 3个优化方向对比 & 决策建议 ⭐ **优先阅读**
+- [docs/reports/OPTIMIZATION-1-permission-performance.md](docs/reports/OPTIMIZATION-1-permission-performance.md) — 权限检查性能 (缓存+SQL优化)
+- [docs/reports/OPTIMIZATION-2-event-recommendation.md](docs/reports/OPTIMIZATION-2-event-recommendation.md) — 推荐理由生成 (规则引擎vs模板vs LLM)
+- [docs/reports/OPTIMIZATION-3-data-model.md](docs/reports/OPTIMIZATION-3-data-model.md) — 数据模型调整 (字段精简+表拆分)
 
 **关键决策** (已冻结):
 - ✅ Event状态流: 拟办 → 已发生/已取消/搁置
@@ -246,8 +271,8 @@ curl -X POST ${BASE_URL}/api/v1/scenarios \
 ---
 
 ## API
-- Verify: [docs/api.md](docs/api.md#post-apiv1verify)
-- BaZi Full: [docs/api.md](docs/api.md#post-apiv1bazifull)
+- Verify: [docs/design/api.md](docs/design/api.md#post-apiv1verify)
+- BaZi Full: [docs/design/api.md](docs/design/api.md#post-apiv1bazifull)
 - OpenAPI: [docs/openapi.json](docs/openapi.json)
 
 ## Release Notes
@@ -256,7 +281,7 @@ curl -X POST ${BASE_URL}/api/v1/scenarios \
 
 ## BaZi Full quickstart (v5.0.0)
 - Warnings: top-level `warnings` (object list); verify keeps `validation.warnings`.
-- Methods: fixed defaults for traceability (day_boundary_rule=zi_initial, solar_time_rule=longitude_only, dayun_method=sxtwl_next_jieqi_div3, ...). See [docs/api.md](docs/api.md#post-apiv1bazifull) for the full set.
+- Methods: fixed defaults for traceability (day_boundary_rule=zi_initial, solar_time_rule=longitude_only, dayun_method=sxtwl_next_jieqi_div3, ...). See [docs/design/api.md](docs/design/api.md#post-apiv1bazifull) for the full set.
 - Raw: debug/trace only; may add fields in patch releases (no silent deletions/renames). `day_boundary_crossed` means input is in the zi_initial window (23:00+), not a guarantee that day pillar changes.
 - Samples: see [docs/samples](docs/samples) for verify and bazi_full (including dayun anchor trace).
 
@@ -282,15 +307,18 @@ curl -X POST ${BASE_URL}/api/v1/scenarios \
 
 ## Local UI
 - Primary UI (SPA): run app normally and open `${BASE_URL}/static/app/cases` (default `http://127.0.0.1:8000/static/app/cases`; requires built frontend assets under `static/app`)
-- Root entry: `${BASE_URL}/` and `${BASE_URL}/dashboard` will redirect to `/static/app/cases` when SPA assets exist; otherwise they fall back to the legacy `ziwei.html`
+- Current main entry: `/static/app/cases`
+- SPA base: `/static/app/` continues to host the active routes for login, cases, profile, bazi, ziwei, admin, report, and related pages
+- Legacy compatibility entries: `/static/ziwei.html`, `/static/bazi.html`, `/static/admin.html`, `/static/batch.html`
+- Root entry: `${BASE_URL}/` and `${BASE_URL}/dashboard` redirect to `/static/app/cases` when SPA assets exist; otherwise they fall back to the legacy `ziwei.html`
 - Frontend dev server: `npm run dev --prefix frontend` (Vite will auto-switch from `5173` to another free port, e.g. `5174`)
 - Local dev main site: `http://localhost:5173/static/app/cases`（若 `5173` 被占用，请以 Vite 实际端口为准）
 - Frontend API target (optional): copy `frontend/.env.example` to `frontend/.env.local`; set `VITE_DEV_API_TARGET` to actual backend URL (e.g. auto-fallback `http://127.0.0.1:8003`) and/or set `VITE_API_BASE_URL` for direct runtime calls
 - One-command sync (recommended): `npm --prefix frontend run sync:api` (or `pwsh scripts/sync_frontend_env.ps1`), auto probes `/health` on 8000-8010 and writes `frontend/.env.local`
 - After changing `frontend/.env.local`, restart Vite dev server to apply env updates
 - Pages
-  - /static/app/cases: 当前唯一主站入口，承载新版案例中心首页
-  - /static/app/: SPA 路由基座，会继续承载 login / cases / profile / bazi / ziwei / admin / report 等新版页面
+  - /static/app/cases: 当前主站入口，承载新版案例中心首页
+  - /static/app/: 当前 SPA 路由基座，承载 login / cases / profile / bazi / ziwei / admin / report 等新版页面
   - /static/app/workbench: 兼容旧入口；当前统一重定向到 `/static/app/cases`
   - /verify: 兼容别名入口；优先跳转到 `/static/app/cases`，若 SPA 未构建则回退到 legacy `ziwei.html`
   - /bazi: 兼容别名入口；优先跳转到 `/static/app/bazi`，若 SPA 未构建则回退到 legacy `bazi.html`

@@ -191,20 +191,39 @@ for _b in (5, 9, 1):  # 巳酉丑
     _YUEDE_STEM[_b] = STEMS.index("庚")
 
 
+# 天德：月支 → 天干索引 或 地支索引（Z-P2-04）
+_TIANDE_STEM: dict[int, int] = {
+    2: 3,  # 寅月→丁
+    4: 8,  # 辰月→壬
+    5: 7,  # 巳月→辛
+    7: 0,  # 未月→甲
+    8: 9,  # 申月→癸
+    10: 2,  # 戌月→丙
+    11: 1,  # 亥月→乙
+    1: 6,  # 丑月→庚
+}
+_TIANDE_BRANCH: dict[int, int] = {
+    3: 8,  # 卯月→申
+    6: 11,  # 午月→亥
+    9: 2,  # 酉月→寅
+    0: 5,  # 子月→巳
+}
+
+
 def _virtue_score(day_stem_idx: int, day_branch_idx: int, month_branch_idx: int) -> tuple[int, list[str]]:
     """检查当天是否为天德/月德日，返回加分和描述列表。"""
     bonus = 0
     labels: list[str] = []
 
-    td = _TIANDE.get(month_branch_idx, "")
-    if td.isdigit():
-        if day_stem_idx == int(td):
-            bonus += 15
-            labels.append(f"天德日（{STEMS[day_stem_idx]}）")
-    elif td.startswith("stem_"):
-        pass  # 地支型天德：暂不处理
-    elif td.startswith("branch_"):
-        pass
+    td_stem = _TIANDE_STEM.get(month_branch_idx)
+    if td_stem is not None and day_stem_idx == td_stem:
+        bonus += 15
+        labels.append(f"天德日（{STEMS[day_stem_idx]}）")
+
+    td_branch = _TIANDE_BRANCH.get(month_branch_idx)
+    if td_branch is not None and day_branch_idx == td_branch:
+        bonus += 15
+        labels.append(f"天德日（{BRANCHES[day_branch_idx]}）")
 
     yd_stem = _YUEDE_STEM.get(month_branch_idx)
     if yd_stem is not None and day_stem_idx == yd_stem:

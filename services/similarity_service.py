@@ -75,7 +75,7 @@ def build_vector(
 
 
 def _dot(a: list[float], b: list[float]) -> float:
-    return sum(x * y for x, y in zip(a, b))
+    return sum(x * y for x, y in zip(a, b, strict=False))
 
 
 def _norm(v: list[float]) -> float:

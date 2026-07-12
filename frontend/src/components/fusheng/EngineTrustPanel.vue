@@ -278,7 +278,7 @@ defineProps<{
 }
 
 .engine-trust--compact .engine-trust__table th {
-  background: var(--surface-2);
+  background: var(--inset-tint);
   font-weight: 500;
 }
 </style>

@@ -701,6 +701,19 @@ class TestCompatibility:
         pts = _collect_conflicts(a, b)
         assert any("冲" in p for p in pts)
 
+    def test_collect_flying_ji_cross_chart(self):
+        from services.ziwei_engine.compatibility import _collect_cross_flying_ji, calc_compatibility
+        from services.ziwei_engine import ziwei_full
+
+        chart_a = ziwei_full(1990, 7, 17, 12, 0, "男")
+        chart_b = ziwei_full(1992, 3, 8, 6, 0, "女")
+        assert chart_a.flying is not None
+        pts = _collect_cross_flying_ji(chart_a, chart_b, "甲方")
+        # 真实盘未必命中化忌飞支，但函数应安全返回列表
+        assert isinstance(pts, list)
+        result = calc_compatibility(chart_a, chart_b)
+        assert isinstance(result.conflict_points, list)
+
     def test_collect_complements_yinyang(self):
         from services.ziwei_engine.compatibility import _collect_complements
         a = _FakeChart(life_branch=0, life_stem_idx=0, year_branch=0, wuxing_ju=3, body_gz="甲子")

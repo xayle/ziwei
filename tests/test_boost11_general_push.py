@@ -397,7 +397,7 @@ class TestZiweiAnalysisExtra:
             aux_stars=aux_stars_with_sha,
             life_palace_branch=0,
         )
-        assert "命宫煞星" in result
+        assert "擎羊" in result
 
     def test_sha_short_in_aux_direct(self):
         """SHA_SHORT key 在辅星列表中触发 L345"""
@@ -676,4 +676,3 @@ class TestOpenApiDocsExtra11:
 # ============================================================================
 # TestZiweiDayunExtra11 — (已清理: dayun.py 中八字死代码已移除)
 # ============================================================================
-

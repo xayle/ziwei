@@ -212,6 +212,7 @@ def _make_bazi_full_service_mocks(
         "wx_break_ns": wx_break_ns,
         "str_ns": str_ns,
         "ys_ns": ys_ns,
+        "core_metrics_return": (wx_ns, wx_break_ns, str_ns, ys_ns),
         "dayun_mock": _dm,
         "build_dayun_return": (_dm, _raw_dayun),  # build_dayun 需要返回 2-tuple
     }
@@ -303,12 +304,8 @@ class TestDictWarning:
         dt = datetime(1990, 5, 15, 8, 0)
 
         with patch("verify.verify_full", return_value=mock_result), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(_wx_ns, _wx_break_ns)), \
-             patch("services.bazi_full_service.compute_strength",
-                   return_value=_strength_ns), \
-             patch("services.bazi_full_service.compute_yongshen",
-                   return_value=_ys_ns), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=(_wx_ns, _wx_break_ns, _strength_ns, _ys_ns)), \
              patch("services.bazi_full_service.build_ten_gods",
                    return_value={}), \
              patch("services.bazi_full_service.build_dayun",
@@ -345,10 +342,8 @@ class TestFindSpecException:
         mocks = _make_bazi_full_service_mocks()
 
         with patch("verify.verify_full", return_value=vfr), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(mocks["wx_ns"], mocks["wx_break_ns"])), \
-             patch("services.bazi_full_service.compute_strength", return_value=mocks["str_ns"]), \
-             patch("services.bazi_full_service.compute_yongshen", return_value=mocks["ys_ns"]), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=mocks["core_metrics_return"]), \
              patch("services.bazi_full_service.build_ten_gods", return_value={}), \
              patch("services.bazi_full_service.build_dayun", return_value=mocks["build_dayun_return"]), \
              patch("importlib.util.find_spec", side_effect=patched_find_spec):
@@ -391,10 +386,8 @@ class TestWuxingBreakdownElse:
         mocks = _make_bazi_full_service_mocks()
 
         with patch("verify.verify_full", return_value=vfr), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(wx_ns, breakdown_no_weights)), \
-             patch("services.bazi_full_service.compute_strength", return_value=mocks["str_ns"]), \
-             patch("services.bazi_full_service.compute_yongshen", return_value=mocks["ys_ns"]), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=(wx_ns, breakdown_no_weights, mocks["str_ns"], mocks["ys_ns"])), \
              patch("services.bazi_full_service.build_ten_gods", return_value={}), \
              patch("services.bazi_full_service.build_dayun", return_value=mocks["build_dayun_return"]):
             dt = datetime(1990, 5, 15, 8, 0)
@@ -447,10 +440,8 @@ class TestWealthScoreEqualStrengthScore:
         dm.model_dump.return_value = {"items": [], "start_age": 3}
 
         with patch("verify.verify_full", return_value=vfr), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(wx_ns, breakdown_eq)), \
-             patch("services.bazi_full_service.compute_strength", return_value=str_ns), \
-             patch("services.bazi_full_service.compute_yongshen", return_value=ys_ns), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=(wx_ns, breakdown_eq, str_ns, ys_ns)), \
              patch("services.bazi_full_service.build_ten_gods", return_value={}), \
              patch("services.bazi_full_service.build_dayun", return_value=(dm, types.SimpleNamespace(
                  direction="forward", direction_basis="male_yanggan",
@@ -500,10 +491,8 @@ class TestDayunHintElif:
         mocks = _make_bazi_full_service_mocks(dayun_model=dayun_model_unknown)
 
         with patch("verify.verify_full", return_value=vfr), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(mocks["wx_ns"], mocks["wx_break_ns"])), \
-             patch("services.bazi_full_service.compute_strength", return_value=mocks["str_ns"]), \
-             patch("services.bazi_full_service.compute_yongshen", return_value=mocks["ys_ns"]), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=mocks["core_metrics_return"]), \
              patch("services.bazi_full_service.build_ten_gods", return_value={}), \
              patch("services.bazi_full_service.build_dayun", return_value=(dayun_model_unknown, types.SimpleNamespace(
                  direction="forward", direction_basis="male_yanggan",
@@ -542,10 +531,8 @@ class TestDayunHintElif:
         mocks = _make_bazi_full_service_mocks()
 
         with patch("verify.verify_full", return_value=vfr), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(mocks["wx_ns"], mocks["wx_break_ns"])), \
-             patch("services.bazi_full_service.compute_strength", return_value=mocks["str_ns"]), \
-             patch("services.bazi_full_service.compute_yongshen", return_value=mocks["ys_ns"]), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=mocks["core_metrics_return"]), \
              patch("services.bazi_full_service.build_ten_gods", return_value={}), \
              patch("services.bazi_full_service.build_dayun", return_value=(dayun_model_child, types.SimpleNamespace(
                  direction="forward", direction_basis="male_yanggan",
@@ -578,10 +565,8 @@ class TestEnrichException:
         mocks = _make_bazi_full_service_mocks()
 
         with patch("verify.verify_full", return_value=vfr), \
-             patch("services.bazi_full_service.compute_wuxing",
-                   return_value=(mocks["wx_ns"], mocks["wx_break_ns"])), \
-             patch("services.bazi_full_service.compute_strength", return_value=mocks["str_ns"]), \
-             patch("services.bazi_full_service.compute_yongshen", return_value=mocks["ys_ns"]), \
+             patch("services.bazi_full_service.compute_core_metrics",
+                   return_value=mocks["core_metrics_return"]), \
              patch("services.bazi_full_service.build_ten_gods", return_value={}), \
              patch("services.bazi_full_service.build_dayun", return_value=mocks["build_dayun_return"]), \
              patch("services.bazi_engine_service._enrich_v2_analysis",
@@ -939,39 +924,27 @@ class TestRunL587DictWarning:
         import run as run_module
         from fastapi.testclient import TestClient
 
-        # 需要: ENGINE_V2=false + 返回含 dict warning 的 result
         _VERIFY_BODY = {
-            "birth_datetime": "1990-05-15T08:00:00",
-            "longitude": 120.0,
-            "timezone_str": "Asia/Shanghai",
-            "use_solar_time": False,
+            "dt": "1990-05-15T08:00:00+08:00",
+            "lon": 120.0,
+            "tz": "Asia/Shanghai",
+            "solar_time_enabled": False,
             "mode": "single",
         }
 
         mock_warning_dict = {"code": "DICT_WARN", "message": "dict warn msg"}
 
-        with patch.object(run_module._bazi_engine_service, "_engine_v2_enabled", return_value=False):
-            # patch verify_full_impl (bazi_full_service underlying function)
-            # OR patch the entire run._bazi_engine_service.calculate to return mock
-            mock_calc_result = MagicMock()
-            mock_vr = MagicMock()
-            mock_vr.model_dump.return_value = {
-                "validation": {"is_valid": True, "warnings": [mock_warning_dict]},
-            }
-            mock_vr.validation.warnings = [mock_warning_dict]   # dict in list
-            mock_calc_result.verify_response = mock_vr
-            mock_calc_result.warnings = []
+        mock_calc_result = MagicMock()
+        mock_vr = MagicMock()
+        mock_vr.model_dump.return_value = {
+            "validation": {"level": "L0", "warnings": [mock_warning_dict]},
+            "request_id": "test",
+        }
+        mock_vr.validation = MagicMock(level="L0", warnings=[mock_warning_dict])
+        mock_calc_result.verify_response = mock_vr
+        mock_calc_result.warnings = []
 
-            # _build_legacy_verify_response 使用 verify_full (direct import)
-            # 需要 patch run.verify_full
-            mock_legacy = MagicMock()
-            mock_legacy.validation.warnings = [mock_warning_dict]  # dict
-            mock_legacy.pillars_primary = MagicMock()
-            mock_legacy.pillars_secondary = None
-            mock_legacy.solar_time_offset_minutes = 0.0
-
-            with patch("routers.verify.verify_full", return_value=mock_legacy):
-                test_client = TestClient(run_module.app, raise_server_exceptions=False)
-                resp = test_client.post("/api/v1/verify", json=_VERIFY_BODY)
-                # 不管状态码，只要执行过 L587
-                assert resp.status_code in (200, 422, 500)
+        with patch.object(run_module._bazi_engine_service, "calculate", return_value=mock_calc_result):
+            test_client = TestClient(run_module.app, raise_server_exceptions=False)
+            resp = test_client.post("/api/v1/verify", json=_VERIFY_BODY)
+            assert resp.status_code == 200

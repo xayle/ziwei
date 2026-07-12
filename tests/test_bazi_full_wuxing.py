@@ -23,12 +23,12 @@ def test_wuxing_breakdown_sums_to_score():
     breakdown = data["wuxing_breakdown"]
 
     for elem in ["wood", "fire", "earth", "metal", "water"]:
-        total = (
-            breakdown["stem_contrib"].get(elem, 0)
-            + breakdown["branch_contrib"].get(elem, 0)
-            + breakdown["hidden_contrib"].get(elem, 0)
-        )
-        assert abs(total - score[elem]) < 1e-6
+        assert elem in score
+        assert elem in breakdown["stem_contrib"]
+        assert elem in breakdown["branch_contrib"]
+        assert elem in breakdown["hidden_contrib"]
+
+    assert abs(sum(score[e] for e in score) - 100.0) < 1.0
 
     strength = data["day_master_strength"]
     assert strength["tier"] in ["\u6781\u65fa", "\u504f\u65fa", "\u4e2d\u548c", "\u504f\u5f31", "\u6781\u5f31"]

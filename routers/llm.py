@@ -35,6 +35,7 @@ from app.schemas.llm import (
 )
 from db import get_session
 from services.evidence_retriever import fetch_evidence
+from services.llm_provenance import build_draft_evidence_refs
 from services.llm_service import (
     LlmProviderType,
     generate_bazi_interpretation,
@@ -42,6 +43,7 @@ from services.llm_service import (
     get_llm_config,
     stream_interpretation,
 )
+from services.normalize_input import normalize_birth_datetime
 from services.prometheus_monitoring import record_llm_call, record_llm_draft_action
 from services.rate_limit import limiter
 
@@ -58,6 +60,12 @@ _rendered_facts_lock = threading.Lock()
 
 def _to_resp(d: LlmDraft) -> LlmDraftResponse:
     assert d.id is not None
+    evidence_refs: list[dict] = []
+    if d.evidence_refs_json:
+        try:
+            evidence_refs = json.loads(d.evidence_refs_json)
+        except json.JSONDecodeError:
+            evidence_refs = []
     return LlmDraftResponse(
         id=d.id,
         chart_hash=d.chart_hash,
@@ -74,6 +82,7 @@ def _to_resp(d: LlmDraft) -> LlmDraftResponse:
         created_at=d.created_at,
         reviewed_at=d.reviewed_at,
         deleted_at=d.deleted_at,
+        evidence_refs=evidence_refs,
     )
 
 
@@ -139,6 +148,7 @@ async def interpret(
         keywords.extend(payload.pattern_summary.split()[:2])
 
     evidence: list[str] = []
+    raw_evidence: list[dict] = []
     if keywords:
         raw_evidence = fetch_evidence(keywords, top_k=3)
         evidence = [f"《{e['title']}》：{e['passage']}" for e in raw_evidence]
@@ -184,6 +194,14 @@ async def interpret(
         logger.error("LLM interpret failed: %s", exc)
         raise HTTPException(status_code=503, detail=f"LLM 调用失败: {exc}") from exc
 
+    evidence_refs = build_draft_evidence_refs(
+        use_bazi_path=use_bazi_path,
+        geju_name=payload.geju_name,
+        yongshen_favor=payload.yongshen_favor,
+        evidence_snippets=evidence,
+        raw_evidence=raw_evidence,
+    )
+
     draft = LlmDraft(
         chart_hash=payload.chart_hash,
         provider=result.provider,
@@ -194,6 +212,7 @@ async def interpret(
         input_tokens=result.usage.input_tokens,
         output_tokens=result.usage.output_tokens,
         cost_usd_estimate=result.usage.cost_usd,
+        evidence_refs_json=json.dumps(evidence_refs, ensure_ascii=False),
     )
     session.add(draft)
     session.commit()
@@ -230,7 +249,7 @@ async def stream(
             # extract full_text from done event for DB save
             if sse_msg.startswith("event: done"):
                 try:
-                    data_line = [ln for ln in sse_msg.splitlines() if ln.startswith("data:")][0]
+                    data_line = next(ln for ln in sse_msg.splitlines() if ln.startswith("data:"))
                     payload_obj = json.loads(data_line[5:].strip())
                     full_text_buf.append(payload_obj.get("full_text", ""))
                     usage_buf.update(payload_obj.get("usage", {}))
@@ -446,7 +465,7 @@ async def interpret_module(
     ).first()
     snap_data: dict = (latest_snap.output_json or {}) if latest_snap else {}
 
-    module_label = _MODULE_LABELS.get(payload.module.value, payload.module.value)
+    _MODULE_LABELS.get(payload.module.value, payload.module.value)
     extra_ctx = ""
     if payload.context:
         extra_ctx = f"\n补充上下文：{_json.dumps(payload.context, ensure_ascii=False)}"
@@ -666,6 +685,14 @@ async def interpret_bazi(
             status_code=422,
             detail=f"案例 birth_dt_local 格式无效：{case.birth_dt_local!r}",
         ) from exc
+
+    dt_obj = normalize_birth_datetime(
+        dt_obj,
+        case.tz or "Asia/Shanghai",
+        auto_dst=True,
+        precision=case.birth_time_precision,
+        unknown_time_fallback=case.unknown_time_fallback,
+    ).local_dt
 
     bazi_req = _BaziFullRequest(
         dt=dt_obj,

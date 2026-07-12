@@ -463,7 +463,7 @@ class TestBackendsJieqiBoundary:
         dt_local = datetime(2024, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai"))
 
         with patch.object(backend, "_build_jieqi_list", return_value=future_dates):
-            with patch("backends._ensure_tz", return_value=dt_local):
+            with patch("app.core.backends._ensure_tz", return_value=dt_local):
                 try:
                     ctx = backend.get_jieqi_context(dt_local)
                     assert ctx is not None
@@ -487,7 +487,7 @@ class TestBackendsJieqiBoundary:
         dt_local = datetime(2025, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai"))
 
         with patch.object(backend, "_build_jieqi_list", return_value=past_dates):
-            with patch("backends._ensure_tz", return_value=dt_local):
+            with patch("app.core.backends._ensure_tz", return_value=dt_local):
                 try:
                     ctx = backend.get_jieqi_context(dt_local)
                     assert ctx is not None
@@ -979,7 +979,8 @@ class TestScenariosIntegrityError:
         orig = dict(app.dependency_overrides)
         app.dependency_overrides[get_session] = failing_session
         try:
-            resp = client.post(
+            with patch("routers.scenarios.check_member_ownership", return_value=None):
+                resp = client.post(
                 "/api/v1/scenarios",
                 json={
                     "name": "Test Scenario",

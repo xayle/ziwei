@@ -44,7 +44,7 @@ class GlossaryItemModel(BaseModel):
     term: str  # 术语，如"七杀"
     pinyin: str  # 拼音，如"qī shā"
     definition: str  # 简明定义（≤80字）
-    category: Literal["格局", "神煞", "五行", "十神", "大运", "其他"]
+    category: Literal["格局", "神煞", "五行", "十神", "大运", "紫微", "其他"]
     classic_source: str | None = None  # 来源典籍（如有）
 
 
@@ -59,7 +59,7 @@ class CityModel(BaseModel):
     province: str  # 省份，如"北京市"
     lng: float  # 经度，精确到小数点后2位，范围[73.0, 135.5]
     lat: float  # 纬度
-    city_type: Literal["直辖市", "省会", "计划单列市"]
+    city_type: Literal["直辖市", "省会", "计划单列市", "地级市"]
 
 
 class ConceptModel(BaseModel):
@@ -102,7 +102,7 @@ def _load_cities() -> list[CityModel]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
         cities = [CityModel(**c) for c in raw]
-        order = {"直辖市": 0, "省会": 1, "计划单列市": 2}
+        order = {"直辖市": 0, "省会": 1, "计划单列市": 2, "地级市": 3}
         cities.sort(key=lambda c: (order.get(c.city_type, 9), c.name))
         logger.info("Loaded %d cities from %s", len(cities), path)
         return cities
@@ -153,7 +153,7 @@ def _load_concepts() -> list[ConceptModel]:
 )
 def get_glossary(
     q: str | None = Query(None, description="全文搜索关键词"),
-    category: str | None = Query(None, description="分类过滤：格局/神煞/五行/十神/大运/其他"),
+    category: str | None = Query(None, description="分类过滤：格局/神煞/五行/十神/大运/紫微/其他"),
     limit: int = Query(100, ge=1, le=500),
 ) -> list[GlossaryItemModel]:
     """GET /api/v1/glossary — 返回命理术语，支持 ?q= 全文搜索"""
@@ -224,7 +224,7 @@ def update_glossary_term(
 )
 def get_cities(
     q: str | None = Query(None, description="城市名或省份模糊搜索"),
-    city_type: str | None = Query(None, description="直辖市/省会/计划单列市"),
+    city_type: str | None = Query(None, description="直辖市/省会/计划单列市/地级市"),
 ) -> list[CityModel]:
     """GET /api/v1/cities — 支持 ?q= 模糊搜索城市名/省份"""
     cities = _load_cities()

@@ -674,3 +674,63 @@ def compute_shensha(
         "star": star,
         "summary": summary,
     }
+
+
+def compute_shensha_items(
+    year_stem: str,
+    year_branch: str,
+    month_stem: str,
+    month_branch: str,
+    day_stem: str,
+    day_branch: str,
+    hour_stem: str,
+    hour_branch: str,
+) -> list[dict]:
+    """返回四柱神煞明细列表，便于上层直接做 schema 映射。"""
+    return list(
+        compute_shensha(
+            year_stem=year_stem,
+            year_branch=year_branch,
+            month_stem=month_stem,
+            month_branch=month_branch,
+            day_stem=day_stem,
+            day_branch=day_branch,
+            hour_stem=hour_stem,
+            hour_branch=hour_branch,
+        ).get("items", [])
+    )
+
+
+def compute_flow_shensha_items(
+    flow_label: str,
+    flow_stem: str,
+    flow_branch: str,
+    day_stem: str,
+    day_branch: str,
+    month_stem: str | None = None,
+    month_branch: str | None = None,
+    hour_stem: str | None = None,
+    hour_branch: str | None = None,
+) -> list[dict]:
+    """为大运/流年生成神煞明细，并把归属柱统一标记为 flow_label。"""
+    raw_items = compute_shensha_items(
+        year_stem=flow_stem,
+        year_branch=flow_branch,
+        month_stem=month_stem or flow_stem,
+        month_branch=month_branch or flow_branch,
+        day_stem=day_stem,
+        day_branch=day_branch,
+        hour_stem=hour_stem or flow_stem,
+        hour_branch=hour_branch or flow_branch,
+    )
+    mapped: list[dict] = []
+    seen: set[str] = set()
+    for item in raw_items:
+        name = str(item.get("name") or "")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        new_item = dict(item)
+        new_item["pillar"] = flow_label
+        mapped.append(new_item)
+    return mapped

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusheng.local/contracts/life-volume@1.0",
+  "title": "LifeVolumeResponse",
+  "description": "人生六卷 + 卷首 + 跋 · 前后端唯一形状。FE buildLifeVolumes 为 Adapter；BE GET /life/volumes 为权威（P3+）。",
+  "type": "object",
+  "required": ["schema_version", "case_id", "chart_hash", "content_versions", "disclaimer_block", "volumes", "colophon"],
+  "properties": {
+    "schema_version": { "const": "life-volume@1.0" },
+    "case_id": { "type": "string" },
+    "chart_hash": { "type": "string", "description": "与 BACKEND-MASTER §1.2 一致" },
+    "rule_version": { "type": "string" },
+    "content_versions": {
+      "type": "object",
+      "properties": {
+        "classics": { "type": "string" },
+        "glossary": { "type": "string" },
+        "concepts": { "type": "string" },
+        "star_profiles": { "type": "string" },
+        "wenmo_reference_cases": { "type": "string" }
+      }
+    },
+    "disclaimer_block": { "$ref": "#/$defs/DisclaimerBlock" },
+    "trust_level": { "enum": ["full", "degraded"], "description": "紫微 ZW18 等" },
+    "volumes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/LifeVolume" },
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "colophon": { "$ref": "#/$defs/Colophon" }
+  },
+  "$defs": {
+    "DisclaimerBlock": {
+      "type": "object",
+      "required": ["text", "version"],
+      "properties": {
+        "text": { "type": "string" },
+        "version": { "type": "string" },
+        "jurisdiction": { "type": "string", "default": "CN" }
+      }
+    },
+    "LifeVolumeId": {
+      "enum": ["preface", "vol1", "vol2", "vol3", "vol4", "vol5", "vol6", "colophon"]
+    },
+    "ContentLayer": {
+      "enum": ["fact", "cite", "inference"],
+      "description": "用户语义层。映射 provenance: fact→engine, cite→classical, inference→heuristic"
+    },
+    "LifeVolume": {
+      "type": "object",
+      "required": ["id", "title", "sections"],
+      "properties": {
+        "id": { "$ref": "#/$defs/LifeVolumeId" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "locked": { "type": "boolean", "default": false, "description": "打磨期恒 false；GTM 后由 entitlement" },
+        "sections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/VolumeSection" }
+        }
+      }
+    },
+    "VolumeSection": {
+      "type": "object",
+      "required": ["id", "heading", "layer", "blocks"],
+      "properties": {
+        "id": { "type": "string" },
+        "heading": { "type": "string" },
+        "layer": { "$ref": "#/$defs/ContentLayer" },
+        "collapsed_default": { "type": "boolean", "default": false },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AnalysisBlock" }
+        }
+      }
+    },
+    "AnalysisBlock": {
+      "type": "object",
+      "required": ["text", "layer"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 500 },
+        "layer": { "$ref": "#/$defs/ContentLayer" },
+        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "classic_id": { "type": "string", "description": "cite 层必填且须 verified" },
+        "glossary_refs": { "type": "array", "items": { "type": "string" } },
+        "score": { "type": "number", "description": "卷五域评分可选" },
+        "tier": { "type": "string" }
+      }
+    },
+    "Colophon": {
+      "type": "object",
+      "required": ["summary_lines", "expandable"],
+      "properties": {
+        "summary_lines": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 3
+        },
+        "missing_fields": { "type": "array", "items": { "type": "string" } },
+        "iztro_advisory": { "type": "string" },
+        "wenmo_advisory": { "type": "string", "description": "文墨对照轨说明（advisory only）" },
+        "dual_track_note": { "type": "string" },
+        "expandable": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

@@ -34,7 +34,7 @@ from constants import API_VERSION, RULE_VERSION
 from db import get_session
 from services.bazi_full_service import bazi_full
 from services.delegation_service import log_action
-from services.normalize_input import validate_lon_strict, warn_lon_cn_range
+from services.normalize_input import normalize_birth_datetime, validate_lon_strict, warn_lon_cn_range
 from verify import verify_full
 
 router = APIRouter(prefix="/api/v1/cases", tags=["compute"])
@@ -131,12 +131,21 @@ def _do_compute_for_case(
     liunian_years = payload.liunian_years or [-2, 2]
 
     dt_aware = _parse_dt_local(dt_local, tz)
+    normalized_birth = normalize_birth_datetime(
+        dt_aware,
+        tz,
+        auto_dst=True,
+        precision=case.birth_time_precision,
+        unknown_time_fallback=case.unknown_time_fallback,
+    )
+    case.birth_dt = normalized_birth.normalized_birth_dt_utc
 
     compute_flags = {
         "compute_batch_id": compute_batch_id,
         "requested": payload.model_dump(),
         "effective": {
             "dt_local": dt_local,
+            "dt_local_normalized": normalized_birth.normalized_birth_dt_local,
             "tz": tz,
             "lon": lon,
             "mode": mode,
@@ -269,7 +278,9 @@ def _do_compute_for_case(
             "validation": v.model_dump(),
             "solar_time_offset_minutes": result.solar_time_offset_minutes,
             "dt_input": dt_aware.isoformat(),
-            "dt_effective_utc8": dt_aware.isoformat(),
+            "dt_effective_utc8": normalized_birth.local_dt.isoformat(),
+            "dt_local_normalized": normalized_birth.normalized_birth_dt_local,
+            "dt_utc_normalized": normalized_birth.normalized_birth_dt_utc,
             "tz": tz,
         }
 

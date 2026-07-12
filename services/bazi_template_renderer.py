@@ -137,7 +137,7 @@ def render_summary(bazi_result: Any, evidence_snippets: list[dict]) -> str:
     strength = getattr(bazi_result, "day_master_strength", None)
     pillars = getattr(bazi_result, "pillars_primary", None)
     rule_matches = list(getattr(bazi_result, "rule_matches", []) or [])
-    shensha = getattr(bazi_result, "shensha", None)
+    getattr(bazi_result, "shensha", None)
 
     geju_name: str = getattr(geju, "geju_name", "") if geju else ""
     geju_level: str = getattr(geju, "geju_level", "") if geju else ""
@@ -200,6 +200,7 @@ def render_summary(bazi_result: Any, evidence_snippets: list[dict]) -> str:
         "strength_tier": strength_tier,
         "strength_score": strength_score,
         "rule_matches": rule_matches_dicts,
+        "evidence_ids": [rm.get("rule_id") for rm in rule_matches_dicts if rm.get("rule_id")],
         "evidence_snippets": evidence_snippets or [],
         "sample": sample,
         "pillars": pillars_dict,

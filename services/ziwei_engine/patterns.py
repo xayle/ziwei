@@ -35,6 +35,115 @@ class PatternResult:
     palaces: list[str] = field(default_factory=list)  # 涉及宫位名
     stars: list[str] = field(default_factory=list)  # 涉及星曜名
     source: str = ""  # 古典出处（专业版展示用）
+    rule_id: str = ""  # 规则 ID（B-P2 证据链）
+    tier: str = "heuristic"  # canonical | extended | heuristic
+
+
+_PATTERN_RULE_IDS: dict[str, str] = {
+    "禄存守命": "ZRULE_001",
+    "化禄守命": "ZRULE_002",
+    "化权守命": "ZRULE_003",
+    "三方逢科权禄": "ZRULE_004",
+    "紫府同宫": "ZRULE_005",
+    "君臣庆会": "ZRULE_006",
+    "府相朝垣": "ZRULE_007",
+    "日月同宫": "ZRULE_008",
+    "日月拱命": "ZRULE_009",
+    "武贪格": "ZRULE_010",
+    "化忌守命": "ZRULE_011",
+    "化忌入财": "ZRULE_012",
+    "化忌入官": "ZRULE_013",
+    "羊陀夹命": "ZRULE_014",
+    "火铃夹命": "ZRULE_015",
+    "大限化忌冲本命": "ZRULE_039",
+    "紫微庙旺守命": "ZRULE_041",
+    "煞星守命无吉星": "ZRULE_042",
+    "三方无吉曜": "ZRULE_040",
+    "火贪格": "ZRULE_043",
+    "铃贪格": "ZRULE_044",
+    "杀破狼": "ZRULE_045",
+    "火贪同宫": "ZRULE_046",
+    "铃贪同宫": "ZRULE_047",
+    "杀破狼会命": "ZRULE_048",
+    "火贪庙旺": "ZRULE_049",
+    "铃贪庙旺": "ZRULE_050",
+}
+
+_TIER_CANONICAL_RULE_IDS = {f"ZRULE_{i:03d}" for i in range(1, 21)}
+
+_TIER_EXTENDED_NAMES = {
+    "机月同梁",
+    "杀破狼",
+    "杀破狼会命",
+    "火贪格",
+    "火贪同宫",
+    "火贪庙旺",
+    "铃贪格",
+    "铃贪同宫",
+    "铃贪庙旺",
+    "日月并明",
+    "天梁守命",
+    "天同守命",
+    "武禄入财",
+    "禄权科三奇会命",
+    "科权夹命",
+    "大限化忌冲本命",
+    "紫微庙旺守命",
+    "煞星守命无吉星",
+    "三方无吉曜",
+    "刑囚夹印",
+    "铃昌陀武",
+    "马头带箭",
+}
+
+_TIER_HEURISTIC_NAMES = {
+    "天才天寿加会",
+    "文桂文华",
+    "三台八座朝命",
+    "龙凤拱命",
+    "擎羊守官禄",
+    "白虎守身",
+}
+
+
+def _star_brightness_val(p, star_name: str) -> int:
+    """取主星 brightness_val（0陷–5庙）。"""
+    for s in p.main_stars:
+        if s.get("name") == star_name:
+            return int(s.get("brightness_val") or 0)
+    return 0
+
+
+def _assign_pattern_rule_ids(results: list[PatternResult]) -> None:
+    for idx, item in enumerate(results):
+        if not item.rule_id:
+            item.rule_id = _PATTERN_RULE_IDS.get(item.name, f"ZRULE_{idx + 1:03d}")
+
+
+def _resolve_pattern_tier(item: PatternResult) -> str:
+    rule_id = item.rule_id or ""
+    if rule_id in _TIER_CANONICAL_RULE_IDS:
+        return "canonical"
+    if item.name in _TIER_HEURISTIC_NAMES or item.source == "常见论法":
+        return "heuristic"
+    if item.name in _TIER_EXTENDED_NAMES:
+        return "extended"
+    if rule_id.startswith("ZRULE_"):
+        try:
+            num = int(rule_id.split("_", 1)[1])
+        except ValueError:
+            num = 0
+        if num > 20:
+            return "extended"
+    if item.source in ("《紫微斗数全书》", "《全书》") and item.name not in _TIER_EXTENDED_NAMES:
+        return "canonical"
+    return "heuristic"
+
+
+def _finalize_patterns(results: list[PatternResult]) -> None:
+    _assign_pattern_rule_ids(results)
+    for item in results:
+        item.tier = _resolve_pattern_tier(item)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -67,7 +176,14 @@ def _hua_types_in_palace(p) -> set[str]:
 # ──────────────────────────────────────────────────────────────
 
 
-def detect_patterns(palaces: list) -> list[PatternResult]:
+def detect_patterns(
+    palaces: list,
+    *,
+    dayun=None,
+    life_palace_branch: int = 0,
+    star_branches: dict[str, int] | None = None,
+    current_dayun_item=None,
+) -> list[PatternResult]:
     """
     检测命盘格局（吉格与凶局）。
 
@@ -121,7 +237,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
     # ── 吉格 ────────────────────────────────────────
     # ════════════════════════════════════════════════
 
-    # 1. 禄存守命
+    # 1. 禄存守命 — palace_constraint: 必守命宫
     if "禄存" in life.aux_names:
         results.append(
             PatternResult(
@@ -176,21 +292,24 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             )
         )
 
-    # 5. 紫府同宫
+    # 5. 紫府同宫（限命/身/财官，且紫微庙旺）
+    _ZIFU_PALACES = {"命宫", "身宫", "财帛宫", "官禄宫", "迁移宫"}
     for p in palaces:
         stars = _main_star_names(p)
-        if "紫微" in stars and "天府" in stars:
-            results.append(
-                PatternResult(
-                    name="紫府同宫",
-                    level="大吉",
-                    description=f"帝星紫微与天府同坐{p.name}，高贵多福，气度不凡，富贵双全。",
-                    palaces=[p.name],
-                    stars=["紫微", "天府"],
-                    source="《紫微斗数全书》",
+        if "紫微" in stars and "天府" in stars and p.name in _ZIFU_PALACES:
+            if _star_brightness_val(p, "紫微") >= 4:
+                results.append(
+                    PatternResult(
+                        name="紫府同宫",
+                        level="大吉",
+                        description=f"帝星紫微与天府同坐{p.name}，高贵多福，气度不凡，富贵双全。",
+                        palaces=[p.name],
+                        stars=["紫微", "天府"],
+                        source="《紫微斗数全书》",
+                        rule_id="ZRULE_005",
+                    )
                 )
-            )
-            break
+                break
 
     # 6. 君臣庆会：紫微与左辅/右弼同宫
     for p in palaces:
@@ -204,7 +323,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
                     level="大吉",
                     description=(f"紫微与{'/'.join(helpers)}同坐{p.name}，君臣得辅，领袖气质，贵人扶持。"),
                     palaces=[p.name],
-                    stars=["紫微"] + helpers,
+                    stars=["紫微", *helpers],
                     source="《紫微斗数全书》",
                 )
             )
@@ -412,7 +531,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
 
     # 19. 天梁守命（清白/清高格）
     liang_stars = _main_star_names(life)
-    if "天梁" in liang_stars:
+    if "天梁" in liang_stars and _star_brightness_val(life, "天梁") >= 3:
         results.append(
             PatternResult(
                 name="天梁守命",
@@ -421,6 +540,7 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
                 palaces=["命宫"],
                 stars=["天梁"],
                 source="《紫微斗数全书》",
+                rule_id="ZRULE_020",
             )
         )
 
@@ -439,18 +559,20 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             )
         )
 
-    # 21. 天同守命（桃花安命）
-    if "天同" in liang_stars:
-        results.append(
-            PatternResult(
-                name="天同守命",
-                level="吉",
-                description="天同坐命，心性温和，桃花旺盛，个性乐天，福泽绵延，颇得人缘。",
-                palaces=["命宫"],
-                stars=["天同"],
-                source="《紫微斗数全书》",
+    # 21. 天同守命（需庙旺且无羊陀同宫）
+    if "天同" in liang_stars and _star_brightness_val(life, "天同") >= 3:
+        if not ({"擎羊", "陀罗"} & life.aux_names):
+            results.append(
+                PatternResult(
+                    name="天同守命",
+                    level="吉",
+                    description="天同庙旺坐命，心性温和，福泽绵延，颇得人缘。",
+                    palaces=["命宫"],
+                    stars=["天同"],
+                    source="《紫微斗数全书》",
+                    rule_id="ZRULE_021",
+                )
             )
-        )
 
     # 22. 武曲化禄守财（武禄入财）
     cai2 = get("财帛宫")
@@ -658,23 +780,23 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             )
         )
 
-    # 34. 铃昌陀武（铃星+文昌+陀罗+武曲齐聚）
-    ilat_stars: set[str] = set()
-    ilat_aux: set[str] = set()
-    for p in palaces:
-        ilat_stars.update(_main_star_names(p))
-        ilat_aux.update(p.aux_names)
-    if "铃星" in ilat_aux and "陀罗" in ilat_aux and "武曲" in ilat_stars:
-        results.append(
-            PatternResult(
-                name="铃昌陀武",
-                level="凶",
-                description="铃星、陀罗、武曲在命盘中形成煞局，武曲之财受双煞侵扰，破财损耗难免，需严控风险投资。",
-                palaces=[],
-                stars=["铃星", "陀罗", "武曲"],
-                source="《紫微斗数全书》",
+    # 34. 铃昌陀武（铃星+陀罗+武曲须同宫或同在命宫三方）
+    for p in sizheng:
+        stars = _main_star_names(p)
+        aux = p.aux_names
+        if "武曲" in stars and "铃星" in aux and "陀罗" in aux:
+            results.append(
+                PatternResult(
+                    name="铃昌陀武",
+                    level="凶",
+                    description=f"铃星、陀罗与武曲同宫于{p.name}，武曲之财受双煞侵扰，破财损耗难免。",
+                    palaces=[p.name],
+                    stars=["铃星", "陀罗", "武曲"],
+                    source="《紫微斗数全书》",
+                    rule_id="ZRULE_034",
+                )
             )
-        )
+            break
 
     # 35. 马头带箭（命宫地支午+擎羊坐命）
     if life.branch == "午":
@@ -691,22 +813,21 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
                 )
             )
 
-    # 36. 刑囚夹印（廉贞+天相在三方，三方逢大凶煞）
+    # 36. 刑囚夹印（廉贞化忌在三方四正，且天相同见）
     if "廉贞" in sizheng_stars and "天相" in sizheng_stars:
-        lian_ts_hua = set()
-        for p in sizheng:
-            if "廉贞" in _main_star_names(p) or "天相" in _main_star_names(p):
-                lian_ts_hua.update(_hua_types_in_palace(p))
-        if "化忌" in lian_ts_hua:
-            inv2 = [p.name for p in sizheng if "廉贞" in _main_star_names(p) or "天相" in _main_star_names(p)]
+        lian_ji_palaces = [
+            p.name for p in sizheng if "廉贞" in _main_star_names(p) and "化忌" in _hua_types_in_palace(p)
+        ]
+        if lian_ji_palaces:
             results.append(
                 PatternResult(
                     name="刑囚夹印",
                     level="大凶",
-                    description="廉贞、天相逢化忌在三方，刑囚夹印，主官非牢狱之灾，凡事宜守法循规，慎防诉讼。",
-                    palaces=inv2,
-                    stars=["廉贞", "天相"],
+                    description="廉贞化忌与刑囚相关，主官非牢狱之灾，凡事宜守法循规，慎防诉讼。",
+                    palaces=lian_ji_palaces,
+                    stars=["廉贞"],
                     source="《紫微斗数全书》",
+                    rule_id="ZRULE_036",
                 )
             )
 
@@ -750,28 +871,79 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             )
         )
 
-    # 39. 大限化忌冲本命宫（需大限信息，此处标记触发条件，实际由 analysis.py 深化）
-    # 此格局在排盘时已由 analysis.py analysis_tags 标注"大限化忌"，此处跳过
+    # 39. 大限化忌冲本命宫（Z-P2-03）— 仅当前大运
+    if current_dayun_item is not None and star_branches:
+        life_opp = (life_palace_branch + 6) % 12
+        for star, hua in getattr(current_dayun_item, "sihua", {}).items():
+            if hua != "化忌":
+                continue
+            star_b = star_branches.get(star)
+            if star_b is not None and star_b == life_opp:
+                results.append(
+                    PatternResult(
+                        name="大限化忌冲本命",
+                        level="大凶",
+                        description=(
+                            f"大运{getattr(current_dayun_item, 'ganzhi', '')}化忌（{star}）落对宫，"
+                            "冲射本命宫，该限内宜守不宜攻，防意外变故与情绪起伏。"
+                        ),
+                        palaces=["命宫"],
+                        stars=[star],
+                        source="《紫微斗数全书》",
+                    )
+                )
+                break
 
-    # 40. 三方无吉曜（三方四正无主吉星且有化忌）
-    _GOOD_STARS = {
+    # 41. 紫微庙旺守命（Z-P2-02：庙旺亮度成格）
+    for ms in life.main_stars:
+        if ms.get("name") == "紫微" and int(ms.get("brightness_val") or 0) >= 5:
+            results.append(
+                PatternResult(
+                    name="紫微庙旺守命",
+                    level="大吉",
+                    description=f"紫微在命宫{ms.get('brightness', '庙旺')}，格局清贵，有统御领导之才。",
+                    palaces=["命宫"],
+                    stars=["紫微"],
+                    source="《紫微斗数全书》",
+                )
+            )
+            break
+
+    # 42. 煞星守命无吉星（Z-P2-02）
+    _MALEFIC = {"擎羊", "陀罗", "火星", "铃星", "地空", "地劫"}
+    life_malefic = life.aux_names & _MALEFIC
+    life_good_main = _main_star_names(life) & {
         "紫微",
-        "天机",
-        "太阳",
-        "武曲",
-        "天同",
-        "廉贞",
         "天府",
+        "太阳",
         "太阴",
-        "贪狼",
-        "巨门",
-        "天相",
+        "天同",
         "天梁",
-        "七杀",
-        "破军",
+        "天相",
+        "武曲",
+        "廉贞",
     }
-    sizheng_good = sizheng_stars & _GOOD_STARS
-    if len(sizheng_good) <= 1 and has_sizheng_ji:
+    if len(life_malefic) >= 2 and not life_good_main:
+        results.append(
+            PatternResult(
+                name="煞星守命无吉星",
+                level="凶",
+                description="命宫煞曜云集而无主吉星化解，性情多急躁，人生多波折，宜修身养性。",
+                palaces=["命宫"],
+                stars=sorted(life_malefic),
+                source="常见论法",
+            )
+        )
+
+    # 40. 三方无吉曜（六吉+化禄权科不足，且有化忌）
+    _REAL_GOOD = {"左辅", "右弼", "天魁", "天钺", "文昌", "文曲", "禄存", "天马"}
+    sizheng_good_aux = set()
+    for p in sizheng:
+        sizheng_good_aux.update(p.aux_names & _REAL_GOOD)
+        for s in p.main_stars:
+            if any(t in s.get("transforms", []) for t in ("化禄", "化权", "化科")):
+                sizheng_good_aux.add(s["name"])
+    if len(sizheng_good_aux) <= 1 and has_sizheng_ji:
         results.append(
             PatternResult(
                 name="三方无吉曜",
@@ -783,6 +955,57 @@ def detect_patterns(palaces: list) -> list[PatternResult]:
             )
         )
 
+    # ── ZRULE_043–050：火贪/铃贪/杀破狼（brightness_val + 宫位约束）────────
+    for p in palaces:
+        stars = _main_star_names(p)
+        aux = p.aux_names
+        # 火贪：贪狼+火星，贪狼庙旺
+        if "贪狼" in stars and "火星" in aux and _star_brightness_val(p, "贪狼") >= 3:
+            results.append(
+                PatternResult(
+                    name="火贪格" if p.name == "命宫" else "火贪同宫",
+                    level="大吉" if _star_brightness_val(p, "贪狼") >= 5 else "吉",
+                    description=f"火星与贪狼同坐{p.name}，火贪爆发，横发之机在动中求财（庙旺则力足）。",
+                    palaces=[p.name],
+                    stars=["贪狼", "火星"],
+                    source="《紫微斗数全书》",
+                    rule_id="ZRULE_043" if p.name == "命宫" else "ZRULE_046",
+                )
+            )
+        # 铃贪
+        if "贪狼" in stars and "铃星" in aux and _star_brightness_val(p, "贪狼") >= 3:
+            results.append(
+                PatternResult(
+                    name="铃贪格" if p.name == "命宫" else "铃贪同宫",
+                    level="吉",
+                    description=f"铃星与贪狼同坐{p.name}，铃贪格，暗中进财，宜技艺偏门。",
+                    palaces=[p.name],
+                    stars=["贪狼", "铃星"],
+                    source="《紫微斗数全书》",
+                    rule_id="ZRULE_044" if p.name == "命宫" else "ZRULE_047",
+                )
+            )
+
+    # 杀破狼：七杀+破军+贪狼齐会命宫三方
+    _SPL = {"七杀", "破军", "贪狼"}
+    if _SPL <= sizheng_stars:
+        bright_ok = any(_star_brightness_val(p, s) >= 3 for p in sizheng for s in _main_star_names(p) & _SPL)
+        if bright_ok:
+            results.append(
+                PatternResult(
+                    name="杀破狼"
+                    if "命宫" in [p.name for p in sizheng if _main_star_names(p) & _SPL]
+                    else "杀破狼会命",
+                    level="吉",
+                    description="七杀、破军、贪狼会于三方，杀破狼格局，开创变动，宜武职技艺。",
+                    palaces=[p.name for p in sizheng if _main_star_names(p) & _SPL],
+                    stars=sorted(_SPL),
+                    source="《紫微斗数全书》",
+                    rule_id="ZRULE_045",
+                )
+            )
+
+    _finalize_patterns(results)
     return results
 
 

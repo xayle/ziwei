@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusheng.local/contracts/explain-section-map@1.0",
+  "title": "ExplainSectionToVolumeMap",
+  "description": "POST /bazi|ziwei/explain 的 sections 与六卷 IA 映射",
+  "version": "1.0",
+  "bazi": {
+    "geju": { "volume_id": "vol1", "section_ids": ["geju", "yongshen"] },
+    "yongshen": { "volume_id": "vol1", "section_ids": ["yongshen"] },
+    "relations": { "volume_id": "vol2", "section_ids": ["relations", "shensha"] },
+    "dayun": { "volume_id": "vol3", "subsection": "dayun" },
+    "fortune": { "volume_id": "vol3", "subsection": "liunian_liuri_monthly" },
+    "domains": { "volume_id": "vol5", "section_ids": ["wealth", "career", "marriage", "health", "personality", "relationship"] },
+    "summary": { "volume_id": "vol1", "section_ids": ["bazi_summary"] },
+    "reading": { "volume_id": "preface", "section_ids": ["bazi_reading_guide"] }
+  },
+  "ziwei": {
+    "palaces": { "volume_id": "vol4", "section_ids": ["palaces"] },
+    "patterns": { "volume_id": "vol4", "section_ids": ["patterns"] },
+    "fortune": { "volume_id": "vol3", "subsection": "ziwei_dayun_liunian_liuyue", "note": "与八字 vol3 同卷不同节" },
+    "reading": { "volume_id": "preface", "section_ids": ["ziwei_reading_guide"] }
+  },
+  "report_load_strategy": {
+    "phase_w8": {
+      "requests": [
+        "POST /api/v1/fusheng/archive-bundle",
+        "POST /api/v1/bazi/explain/batch sections=geju,relations,domains,summary",
+        "POST /api/v1/ziwei/explain/batch sections=palaces,fortune"
+      ],
+      "adapter": "frontend buildLifeVolumes from bundle + explain responses"
+    },
+    "phase_w16": {
+      "requests": ["GET /api/v1/life/volumes/{case_id}"],
+      "adapter": "deprecated buildLifeVolumes"
+    }
+  },
+  "batch_recommended": {
+    "bazi_page": ["geju", "relations", "reading"],
+    "ziwei_page": ["palaces", "reading"],
+    "report_page": ["geju", "relations", "domains", "summary"],
+    "report_page_ziwei": ["palaces", "fortune"]
+  }
+}

@@ -471,7 +471,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <section class="bazi-hero" data-testid="bazi-layer-structure">
+        <section class="bazi-hero" id="bazi-layer-structure" data-testid="bazi-layer-structure">
           <div class="bazi-hero__chart fs-card--hero">
             <BaziReferenceTable
               :columns="columns"

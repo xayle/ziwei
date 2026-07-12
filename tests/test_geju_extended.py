@@ -14,32 +14,25 @@ class TestComputeGejuBasic:
     """正格成格路径覆盖"""
 
     def test_zheng_guan_toukan(self):
-        """正官格：月令主气透干"""
-        # 甲木日主，月支子(水，主气壬)，年干有壬（正印透），时干庚（正官透）
-        # 用月支酉（主气辛，辛对甲=正官）让正官格成立
-        r = compute_geju("壬", "庚", "酉", "甲", "壬")
+        """正官格：甲日，月支酉（辛），辛对甲为异性相克→正官"""
+        r = compute_geju("壬", "辛", "酉", "甲", "壬")
         assert r["name"] == "正官格"
         assert r["type"] == "inner"
         assert r["po_geju"]["broken"] is False
 
     def test_qi_sha_ge(self):
-        """七杀格：甲木日主，月支酉（主气辛），辛对甲=七杀"""
-        # 实际映射：get_ten_god(甲,辛)=七杀，get_ten_god(甲,庚)=正官
-        r = compute_geju("壬", "辛", "酉", "甲", "壬")
+        """七杀格：甲日，月支酉，庚对甲为同性相克→七杀"""
+        r = compute_geju("壬", "庚", "酉", "甲", "壬")
         assert r["name"] == "七杀格"
 
     def test_zheng_yin_ge(self):
-        """正印格：月令主气为正印"""
-        # 甲木日主，月支子（主气壬，壬对甲=正印）
-        r = compute_geju("甲", "壬", "子", "甲", "甲")
+        """正印格：月令主气为正印（子平口径：癸对甲=正印）"""
+        r = compute_geju("甲", "癸", "亥", "甲", "甲")
         assert r["name"] == "正印格"
 
     def test_pian_yin_ge(self):
-        """偏印格：癸水月令对甲木=偏印"""
-        # 甲木日主，月支亥（主气壬…不对），用月支丑（主气己=正财）换一个偏印
-        # 偏印格：丙火日主，月支亥（主气壬，壬对丙=偏印七杀？）
-        # 实际：甲日主，偏印=癸。月支亥主气癸
-        r = compute_geju("甲", "癸", "亥", "甲", "甲")
+        """偏印格：子平口径壬对甲=偏印"""
+        r = compute_geju("甲", "壬", "子", "甲", "甲")
         assert r["name"] == "偏印格"
 
     def test_shi_shen_ge(self):
@@ -71,7 +64,7 @@ class TestComputeGejuBasic:
         """羊刃格：月令为日主劫财"""
         # 月支卯，主气乙（劫财），年干壬（水非木）确保透干取乙不取甲
         r = compute_geju("壬", "乙", "卯", "甲", "壬")
-        assert r["name"] == "羊刃格"
+        assert r["name"] == "月刃格"
         assert r["type"] == "special"
 
     def test_no_hidden_stems_returns_putong(self):
@@ -88,8 +81,8 @@ class TestComputeGejuBasic:
 
     def test_toukan_confidence_high(self):
         """透干成格时 confidence >= 0.85"""
-        r = compute_geju("壬", "庚", "酉", "甲", "壬")
-        # 正官格，透干庚，正官格无破格 → confidence = 0.85
+        # 子平口径：辛对甲=正官；酉月透辛 → 正官格无破格
+        r = compute_geju("壬", "辛", "酉", "甲", "壬")
         assert r["confidence"] >= 0.75
 
     def test_returns_po_geju_key(self):
@@ -191,6 +184,67 @@ class TestCheckOuterGeju:
         assert r["name"] == "曲直格"
         assert r["type"] == "outer"
 
+    def test_quzhi_sanhe_pattern_case8(self):
+        """千里命稿例8：亥卯未三合 + 绝金 → 曲直格（木气分未达70%）"""
+        r = compute_geju("己", "丁", "卯", "乙", "己", year_branch="亥", day_branch="未", hour_branch="卯")
+        assert r["name"] == "曲直格"
+
+    def test_quzhi_sanhe_pattern_case52(self):
+        """千里命稿例52：亥卯未三合 → 曲直格"""
+        r = compute_geju("癸", "乙", "卯", "乙", "戊", year_branch="未", day_branch="亥", hour_branch="寅")
+        assert r["name"] == "曲直格"
+
+    def test_huaqi_blocked_by_ke(self):
+        """甲己合化土遇时支卯木克土（吴佩孚）→ 不取化气格"""
+        from services.bazi_engine.geju import _check_huaqi
+
+        hq = _check_huaqi(["甲", "戊", "己", "丁"], "辰", day_stem="己", day_branch="酉", hour_branch="卯")
+        assert hq["is_huaqi"] is False
+
+    def test_zip06_hour_branch_qisha_override(self):
+        """吴佩孚：月透戊劫财司令，时支卯本气乙七杀夺格"""
+        r = compute_geju("甲", "戊", "辰", "己", "丁", year_branch="戌", day_branch="酉", hour_branch="卯")
+        assert r["name"] == "七杀格"
+
+    def test_zip09_hour_bijie_blocks_sanhe_cong(self):
+        """ZIP09 乙酉时：时干乙比肩助身，巳酉丑金局+双辛仍不从杀"""
+        r = compute_geju(
+            "辛", "辛", "丑", "乙", "乙",
+            year_branch="巳", day_branch="酉", hour_branch="酉",
+        )
+        assert r["name"] == "七杀格"
+
+    def test_sanhe_metal_double_xin_cong_guansha(self):
+        """巳酉丑金局全合 + 年辛月辛时辛透官杀 → 从官杀格"""
+        r = compute_geju(
+            "辛", "辛", "丑", "乙", "辛",
+            year_branch="巳", day_branch="酉", hour_branch="酉",
+        )
+        assert r["name"] == "从官杀格"
+        assert r["type"] == "cong"
+
+    def test_sanhe_wood_hai_maowei_cong_guansha(self):
+        """亥卯未木局 + 乙木正官月干 → 己土从官杀（滴天髓命例口径）"""
+        r = compute_geju(
+            "癸", "乙", "卯", "己", "丁",
+            year_branch="亥", day_branch="未", hour_branch="卯",
+        )
+        assert r["name"] == "从官杀格"
+
+    def test_sanhe_fire_yin_wu_xu_cong_guansha(self):
+        """寅午戌火局全合 + 丙火七杀月干 → 庚金从官杀"""
+        r = compute_geju(
+            "甲", "丙", "寅", "庚", "丙",
+            year_branch="戌", day_branch="午", hour_branch="戌",
+        )
+        assert r["name"] == "从官杀格"
+
+    def test_hour_bijie_blocks_outer_cong(self):
+        """时干比劫时 _check_outer_geju 不返回从格"""
+        scores = {"wood": 5.0, "fire": 0.0, "earth": 10.0, "metal": 65.0, "water": 20.0}
+        assert _check_outer_geju(scores, "甲", "庚", "申", hour_stem="甲") is None
+        assert _check_outer_geju(scores, "甲", "庚", "申") == "从官杀格"
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 破格 check_po_geju 各格局逐一覆盖
@@ -217,7 +271,8 @@ class TestCheckPoGeju:
 
     def test_zheng_guan_no_po(self):
         """正官格无破格"""
-        r = check_po_geju("正官格", ["壬", "庚", "甲", "壬"], "甲")
+        # 子平口径：辛=正官，无七杀混杂
+        r = check_po_geju("正官格", ["壬", "辛", "甲", "壬"], "甲")
         assert r["broken"] is False
 
     # 七杀格破格
@@ -322,8 +377,8 @@ class TestCheckPoGeju:
     # 食神格破格
     def test_shi_shen_po_by_pian_yin(self):
         """食神格偏印透干（枭印夺食）→ 破格"""
-        # 甲木，食神=丙，偏印=癸
-        r = check_po_geju("食神格", ["丙", "丙", "甲", "癸"], "甲")
+        # 子平口径：壬对甲=偏印
+        r = check_po_geju("食神格", ["丙", "丙", "甲", "壬"], "甲")
         assert r["broken"] is True
         assert "枭" in r["reason"] or "偏印" in r["reason"]
 
@@ -335,15 +390,15 @@ class TestCheckPoGeju:
     # 伤官格破格
     def test_shang_guan_po_by_zheng_guan(self):
         """伤官格正官透干 → 大破"""
-        # 甲木：庚=正官（实际映射），辛=七杀；用庚触发正官分支
-        r = check_po_geju("伤官格", ["丁", "丁", "甲", "庚"], "甲")
+        # 子平口径：辛=正官
+        r = check_po_geju("伤官格", ["丁", "丁", "甲", "辛"], "甲")
         assert r["broken"] is True
         assert r["severity"] == "major"
 
     def test_shang_guan_po_by_qisha(self):
         """伤官格七杀透干 → minor"""
-        # 甲木：辛=七杀（实际映射），用辛触发七杀 minor 分支
-        r = check_po_geju("伤官格", ["丁", "丁", "甲", "辛"], "甲")
+        # 子平口径：庚=七杀
+        r = check_po_geju("伤官格", ["丁", "丁", "甲", "庚"], "甲")
         assert r["broken"] is True
         assert r["severity"] == "minor"
 
@@ -378,3 +433,137 @@ class TestCheckPoGeju:
         # 伤官格 + 辛(正官)透干 → 破格，confidence 降
         if r["name"] == "伤官格" and r["po_geju"]["broken"]:
             assert r["confidence"] < 0.75
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 八正格配用神（子平真诠）
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestZhenggeYongshen:
+    """格局专用用神分支 — CLS 古籍对齐"""
+
+    def _ys(self, day_stem, month_branch, geju, stems_branches):
+        from services.bazi_engine.wuxing import compute_wuxing
+        from services.bazi_engine.strength import compute_strength
+        from services.bazi_engine.yongshen import compute_yongshen
+
+        ys, yb, ms, mb, ds, db, hs, hb = stems_branches
+        wx = compute_wuxing(ys, yb, ms, mb, ds, db, hs, hb)
+        st = compute_strength(ds, mb, ys, ms, hs, yb, db, hb, wuxing=wx)
+        return compute_yongshen(ds, mb, st, wx, geju_name=geju)
+
+    def test_zheng_guan_weak_yin_guan(self):
+        r = self._ys("己", "寅", "正官格", ("丁", "丑", "壬", "寅", "己", "酉", "甲", "子"))
+        assert sorted(r.favor) == ["fire", "wood"]
+
+    def test_shi_shen_sheng_cai(self):
+        r = self._ys("戊", "申", "食神格", ("丁", "酉", "戊", "申", "戊", "申", "癸", "丑"))
+        assert sorted(r.favor) == ["metal", "water"]
+
+    def test_qisha_zhi_sha(self):
+        r = self._ys("丙", "亥", "七杀格", ("辛", "未", "己", "亥", "丙", "午", "戊", "子"))
+        assert sorted(r.favor) == ["earth", "wood"]
+
+    def test_jianlu_cai_guan(self):
+        r = self._ys("己", "午", "建禄格", ("癸", "丑", "戊", "午", "己", "巳", "庚", "午"))
+        assert sorted(r.favor) == ["water", "wood"]
+
+
+class TestExtendedGejuYongshen:
+    """化气 / 外格 / 从格专用用神"""
+
+    def _ys(self, day_stem, month_branch, geju, stems_branches, wx_scores=None):
+        from services.bazi_engine.wuxing import compute_wuxing, WuxingResult
+        from services.bazi_engine.strength import compute_strength
+        from services.bazi_engine.yongshen import compute_yongshen
+
+        ys, yb, ms, mb, ds, db, hs, hb = stems_branches
+        wx = compute_wuxing(ys, yb, ms, mb, ds, db, hs, hb)
+        if wx_scores:
+            wx = WuxingResult(
+                scores_weighted=wx_scores,
+                stem_contrib=wx.stem_contrib,
+                branch_hidden_contrib=wx.branch_hidden_contrib,
+            )
+        st = compute_strength(ds, mb, ys, ms, hs, yb, db, hb, wuxing=wx)
+        return compute_yongshen(ds, mb, st, wx, geju_name=geju)
+
+    def test_quzhi_outer_wood(self):
+        r = self._ys("甲", "寅", "曲直格", ("甲", "寅", "甲", "寅", "甲", "寅", "甲", "寅"))
+        assert r.favor == ["wood", "water"]
+        assert r.branch == "外格用神"
+
+    def test_huaqi_earth(self):
+        r = self._ys("甲", "辰", "化土格", ("己", "辰", "甲", "辰", "己", "辰", "甲", "辰"))
+        assert r.favor == ["earth", "fire"]
+
+    def test_cong_cai(self):
+        # 日柱须为甲（木），四柱土旺从财
+        r = self._ys("甲", "辰", "从财格", ("戊", "辰", "戊", "辰", "甲", "辰", "戊", "辰"))
+        assert r.favor == ["earth", "fire"]
+
+    def test_zip10_cong_guansha_yongshen(self):
+        """ZIP10 从官杀格：喜官杀与印"""
+        r = self._ys("乙", "酉", "从官杀格", ("辛", "巳", "辛", "丑", "乙", "酉", "辛", "酉"))
+        assert "metal" in r.favor
+        assert "wood" not in r.favor
+
+    def test_zip07_cong_cai_yongshen(self):
+        """ZIP07 从财格：喜财食"""
+        r = self._ys("乙", "未", "从财格", ("戊", "戌", "丙", "辰", "乙", "未", "丙", "戌"))
+        assert "earth" in r.favor or "fire" in r.favor
+
+    def test_zip08_huaqi_yongshen(self):
+        """ZIP08 化土格：喜土印"""
+        r = self._ys("甲", "辰", "化土格", ("乙", "丑", "甲", "申", "甲", "辰", "己", "巳"))
+        assert "earth" in r.favor
+
+    def test_cong_shi(self):
+        wx = {"wood": 5, "fire": 5, "earth": 10, "metal": 40, "water": 40}
+        r = self._ys(
+            "甲", "子", "从势格",
+            ("壬", "子", "甲", "子", "壬", "子", "甲", "子"),
+            wx_scores=wx,
+        )
+        assert sorted(r.favor) == ["metal", "water"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 子平取格：CLS 古籍案例 ref_stem 规则
+# ═══════════════════════════════════════════════════════════════════════════
+
+class TestClassicalGejuRef:
+    """《子平真诠》透干见格 + 司令本位 — CLS02/05/10/12 等古籍案例"""
+
+    def test_cls02_zheng_cai_by_commander(self):
+        """光绪帝：申月庚正财司令，辛透年仍以司令定正财格"""
+        r = compute_geju("辛", "丙", "申", "丁", "丁")
+        assert r["name"] == "正财格"
+        assert r["month_qi"] == "庚"
+
+    def test_cls05_pian_yin_by_month_stem(self):
+        """严复：寅月丙偏印透月干，优于甲七杀司令"""
+        r = compute_geju("甲", "丙", "寅", "戊", "己")
+        assert r["name"] == "偏印格"
+        assert r["toukan_stem"] == "丙"
+
+    def test_cls12_pian_cai_by_commander(self):
+        """袁世凯：酉月辛偏财司令，庚透时仍以司令定偏财格"""
+        r = compute_geju("己", "癸", "酉", "丁", "庚")
+        assert r["name"] == "偏财格"
+        assert r["month_qi"] == "辛"
+
+    def test_cls10_pian_cai_ziping(self):
+        """康有为：子平口径辛见乙为偏财（袁书势论七杀已修正 recorded）"""
+        r = compute_geju("戊", "乙", "卯", "辛", "戊")
+        assert r["name"] == "偏财格"
+
+    def test_cls03_shi_shen_commander_over_bijie_month(self):
+        """张之洞：申月庚食神司令，月干戊比劫不夺格"""
+        r = compute_geju("丁", "戊", "申", "戊", "癸")
+        assert r["name"] == "食神格"
+
+    def test_cls04_zheng_yin_skip_hour_bijie(self):
+        """林则徐：时干壬劫财透出藏干，不夺庚正印司令"""
+        r = compute_geju("乙", "甲", "申", "癸", "壬")
+        assert r["name"] == "正印格"

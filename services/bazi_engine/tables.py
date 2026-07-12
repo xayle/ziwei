@@ -123,14 +123,14 @@ def _build_ten_god_table() -> None:
                         # 我生
                         ten_god = "食神" if same_polarity else "伤官"
                     elif ke.get(rel) == obj_elem:
-                        # 我克
-                        ten_god = "正财" if same_polarity else "偏财"
+                        # 我克：同性为偏财，异性为正财（子平真诠口径）
+                        ten_god = "偏财" if same_polarity else "正财"
                     elif sheng_rev.get(rel) == obj_elem:
-                        # 生我
-                        ten_god = "正印" if same_polarity else "偏印"
+                        # 生我：同性为偏印，异性为正印
+                        ten_god = "偏印" if same_polarity else "正印"
                     elif ke_rev.get(rel) == obj_elem:
-                        # 克我
-                        ten_god = "正官" if same_polarity else "七杀"
+                        # 克我：同性为七杀，异性为正官
+                        ten_god = "七杀" if same_polarity else "正官"
                     else:
                         continue  # pragma: no cover
                     TEN_GOD_TABLE[(day_elem, day_yin_yang, obj_elem, obj_yin_yang)] = ten_god
@@ -176,6 +176,28 @@ WANGXIANG: dict[str, dict[str, int]] = {
 
 # 旺衰值→名称
 WANGXIANG_LABEL: dict[int, str] = {4: "旺", 3: "相", 2: "休", 1: "囚", 0: "死"}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 表7b 月令调候规则表
+# 来源：基于《三命通会·论调候》《穷通宝鉴》寒热燥湿口径整理
+# 说明：
+#   - 用于八字结构摘要的 climate 字段，不直接替代用神决策
+#   - 规则优先按月支定性，再返回对应的调候口径
+# ─────────────────────────────────────────────────────────────────────────────
+MONTH_CLIMATE_RULES: dict[str, dict[str, object]] = {
+    "寅": {"climate": "暖", "season": "春初", "reason": "寅月阳气渐升，木旺带火，整体偏暖"},
+    "卯": {"climate": "暖", "season": "春中", "reason": "卯月木气纯而向阳，气机舒展，偏暖"},
+    "辰": {"climate": "湿", "season": "春末", "reason": "辰为湿土，承春木余气，湿气偏重"},
+    "巳": {"climate": "燥", "season": "初夏", "reason": "巳月火气渐炽，气候转燥，宜水润局"},
+    "午": {"climate": "燥", "season": "盛夏", "reason": "午月火旺极热，燥热明显，宜水济火"},
+    "未": {"climate": "燥", "season": "夏末", "reason": "未土杂火，余热未退，燥中带湿"},
+    "申": {"climate": "燥", "season": "初秋", "reason": "申月金气初肃，暑气渐收，凉燥开始显现"},
+    "酉": {"climate": "燥", "season": "仲秋", "reason": "酉月金旺，肃降之气成形，燥气明显"},
+    "戌": {"climate": "燥", "season": "秋末", "reason": "戌为燥土，秋燥明显，宜润不宜再燥"},
+    "亥": {"climate": "寒", "season": "初冬", "reason": "亥月水旺，寒气渐重，调候首重温暖"},
+    "子": {"climate": "寒", "season": "隆冬", "reason": "子月水当令，寒气最盛，最需火暖局"},
+    "丑": {"climate": "寒", "season": "冬末", "reason": "丑为寒湿之土，寒意未尽，宜温燥化湿"},
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 表8  地支六冲 {支: 冲支}
@@ -317,7 +339,7 @@ def get_kongwang(stem: str, branch: str) -> tuple[str, str]:
     stem_idx = STEMS.index(stem)
     branch_idx = BRANCHES.index(branch)
     # 旬首: 同组的甲干对应地支
-    xun_branch_idx = branch_idx % 12
+    branch_idx % 12
     # 找旬首: stem_idx%10 与 branch_idx%12 关系
     # 旬首天干必定是甲，地支从子到亥每10步一旬
     # 找旬首地支: xun_start = branch_idx - (branch_idx - stem_idx*1) % 10

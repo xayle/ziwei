@@ -5,11 +5,12 @@
 | **版本** | dev-hub-1.3 |
 | **日期** | 2026-07-13 |
 | **一句话** | **算法写命盘，典籍写讲解，前端编成书；AI 只当卷六问书助手。** |
-| **日常实操（规矩·命令·插件）** | [**FUSHENG-DEV-HANDBOOK.md**](FUSHENG-DEV-HANDBOOK.md) ⭐⭐ **只看这一份** |
+| **日常实操（规矩·命令·插件）** | [**FUSHENG-DEV-AUTOPILOT.md**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ **全自动唯一权威** |
+| **规矩·命令·插件（旧）** | [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md)（§九人工 Gate 已废止 → AUTOPILOT） |
 | **开工自检** | HANDBOOK §一–§三 · [DEV-READINESS](DEV-READINESS.md)（已并入 HANDBOOK） |
-| **收官自检+方案** | [**DEV-AUDIT-2026-07-12.md**](DEV-AUDIT-2026-07-12.md) ← 打磨中期/终验前读 |
+| **收官自检+方案** | [**DEV-AUDIT-2026-07-13.md**](DEV-AUDIT-2026-07-13.md) ← 仓库整理与下一步 |
 
-> **规矩 · 命令 · 插件 → 只看 [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md)。** 本文负责文档地图与周计划索引；执行打勾见 EXECUTION-REMAINING。历史方案 → [`archive/superseded/dev-consolidation-2026-07-12/`](archive/superseded/dev-consolidation-2026-07-12/)。
+> **规矩 · 命令 · 插件 · 全自动验收 → 只看 [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md)。** 本文负责文档地图与周计划索引。人工签字 Gate 已废止，以 `python scripts/auto_verify_autopilot.py` 为准。
 
 ---
 
@@ -17,9 +18,10 @@
 
 | 你是谁 | 读什么 | 路径 |
 |--------|--------|------|
-| **所有人** | **规矩·命令·插件** | [**FUSHENG-DEV-HANDBOOK**](FUSHENG-DEV-HANDBOOK.md) ⭐⭐ |
+| **所有人** | **全自动开发权威** | [**FUSHENG-DEV-AUTOPILOT**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ |
+| **规矩·命令（旧手册）** | 已合并至 AUTOPILOT | [FUSHENG-DEV-HANDBOOK](FUSHENG-DEV-HANDBOOK.md) |
 | **文档地图** | 本文 | 你正在读 |
-| **进度 / 问题 / 文档地图** | **整合总览** | [**FUSHENG-DEV-STATUS-2026-07-13**](FUSHENG-DEV-STATUS-2026-07-13.md) ⭐ |
+| **进度 / 问题 / 整理计划** | [**DEV-AUDIT-2026-07-13**](DEV-AUDIT-2026-07-13.md) ⭐ · [STATUS 历史](FUSHENG-DEV-STATUS-2026-07-13.md) |
 | **研发执行（主）** | 前后端 W1–W16 周计划、任务 ID、验收 | [**INTEGRATED-DEV-PLAN**](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) |
 | **按编号依次开发（免对话）** | T001→T070 顺序打勾 | [**EXECUTION-PRIORITY**](plan/FUSHENG-EXECUTION-PRIORITY.md) ⭐ |
 | **剩余工作（免对话）** | **R001→R116 全部未完成项** | [**EXECUTION-REMAINING**](plan/FUSHENG-EXECUTION-REMAINING.md) ⭐⭐ |

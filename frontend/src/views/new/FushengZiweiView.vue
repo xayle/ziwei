@@ -221,27 +221,31 @@ onMounted(() => {
 
         <section
           v-if="depth === 'overview' && (missingFields.length || provenanceRows.length)"
-          class="fs-card fs-card--flat"
+          class="fs-trust-footnote"
           data-testid="ziwei-trust-overview"
         >
-          <h2>引擎可信度</h2>
-          <EngineTrustPanel
-            compact
-            :missing-fields="missingFields"
-            :provenance-rows="provenanceRows.slice(0, 4)"
-          />
+          <details>
+            <summary>校勘提示（{{ missingFields.length }} 项）</summary>
+            <EngineTrustPanel
+              compact
+              :missing-fields="missingFields"
+              :provenance-rows="provenanceRows.slice(0, 4)"
+            />
+          </details>
         </section>
 
-        <section v-if="depth !== 'overview'" class="fs-card" data-testid="ziwei-layer-trust">
-          <h2>引擎可信度与结构</h2>
-          <EngineTrustPanel
-            :missing-fields="missingFields"
-            :provenance-rows="provenanceRows"
-            :ziwei-structural="ziweiStructural"
-            :palace-structured="palaceStructured"
-            :iztro="iztro"
-            :cross-validation-items="showCrossValidationHint ? crossValidation.items : undefined"
-          />
+        <section v-if="depth !== 'overview'" class="fs-trust-footnote" data-testid="ziwei-layer-trust">
+          <details :open="depth !== 'deep'">
+            <summary>引擎可信度与结构（默认折叠）</summary>
+            <EngineTrustPanel
+              :missing-fields="missingFields"
+              :provenance-rows="provenanceRows"
+              :ziwei-structural="ziweiStructural"
+              :palace-structured="palaceStructured"
+              :iztro="iztro"
+              :cross-validation-items="showCrossValidationHint ? crossValidation.items : undefined"
+            />
+          </details>
         </section>
 
         <section v-if="depth === 'structure'" class="fs-card">

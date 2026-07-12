@@ -43,6 +43,8 @@ def place_aux_stars(
     tiankong_method: str = "standard",
     jiukong_method: str = "dual",
     tianshang_method: str = "standard",
+    wenchang_method: str = "hour",
+    youbi_method: str = "month",
 ) -> dict[str, int]:
     """
     布局辅星/杂曜，返回 {星名: branch_idx}。
@@ -70,14 +72,10 @@ def place_aux_stars(
             "zhongzhou" 中州派：天伤=交友宫支，天使=父母宫支
 
     ── 六吉星 ──
-    文昌：年支安法 (酉起，逆数)  →  文昌 = (9  - year_branch) % 12
-    文曲：年支安法 (辰起，顺数)  →  文曲 = (4  + year_branch) % 12
-          通行版：辰(4)起子年顺布
-    天魁：年干安法 (查表)
-    天钺：年干安法 (查表)
-    左辅：月支安法  左辅 = (2 + lunar_month) % 12   (辰=4起正月)
-          正月辰、二月巳、… 正月(1)→辰(4): (3+lunar_month) mod 12
-    右弼：时支安法  右弼 = (10 - hour_branch) % 12  (戌起子时)
+    文昌/文曲：默认按时辰（戌起子时逆/辰起子时顺）
+    天魁/天钺：年干查表
+    左辅：农历月（辰起正月顺）
+    右弼：默认按月（戌起正月逆）；legacy 按时辰
 
     ── 六煞星 ──
     擎羊：年干 → 查表（禄前一位）
@@ -113,12 +111,14 @@ def place_aux_stars(
     result: dict[str, int] = {}
 
     # ──── 六吉星 ────────────────────────────────────────
-    # 文昌：酉(9)起子年逆 → 文昌 = (9 - yb) % 12
-    result["文昌"] = (9 - yb) % 12
-
-    # 文曲：辰(4)起子年顺 → 文曲 = (4 + yb) % 12
-    # 通行版（《紫微斗数全书》）：辰宫起子年，顺数十二支
-    result["文曲"] = (4 + yb) % 12
+    if wenchang_method == "hour":
+        # 子时戌上起文昌逆，辰上起文曲顺
+        result["文昌"] = (10 - hb) % 12
+        result["文曲"] = (4 + hb) % 12
+    else:
+        # legacy: 年支安法
+        result["文昌"] = (9 - yb) % 12
+        result["文曲"] = (4 + yb) % 12
 
     # 天魁天钺：年干查表（依安法）
     _kui_tbl, _yue_tbl = _KUIYUE_TABLES.get(kuiyue_method, _KUIYUE_TABLES["standard"])
@@ -128,8 +128,12 @@ def place_aux_stars(
     # 左辅：辰(4)起正月，顺数 → 左辅 = (3 + m) % 12
     result["左辅"] = (3 + m) % 12
 
-    # 右弼：戌(10)起子时，逆数 → 右弼 = (10 - hb) % 12
-    result["右弼"] = (10 - hb) % 12
+    if youbi_method == "month":
+        # 戌(10)起正月逆数
+        result["右弼"] = (10 - m + 12) % 12
+    else:
+        # legacy: 戌起子时逆数
+        result["右弼"] = (10 - hb) % 12
 
     # ──── 六煞星 ────────────────────────────────────────
     # 禄存/擎羊/陀罗查表（年干）
@@ -288,20 +292,16 @@ def place_aux_stars(
             break
     result["寡宿"] = gs_b
 
-    # 博士流曜 (取代表性几个)：大运天干确定，此处暂不实现，占位
-    # 月德：月支 → 固定表 (暂从略，影响较小)
+    # 博士十二流曜：由 dayun + ziwei_full 按大运天干计算（见 __init__.py），
+    # 不在本命杂曜层重复安星。
+    # 天德/月德（紫微斗数全书·安天德月德解神诀）
+    # 天德：酉宫起子顺数至生年太岁；月德：子宫起子顺数至生年太岁
+    result["天德"] = (9 + yb) % 12
+    result["月德"] = yb % 12
 
     # ──── 缺失杂曜星补充 ─────────────────────────────
     # 天刑：酉(9)起正月顺数 → (9 + m) % 12
     result["天刑"] = (9 + m) % 12
-    # 调试输出：天刑星落宫与命宫地支对比
-    try:
-        import sys
-
-        if hasattr(info, "debug") and info.debug:
-            print(f"[调试] 天刑星落地支: {result['天刑']} (命宫地支: {lp_b})", file=sys.stderr)
-    except Exception:
-        pass
 
     # 天姚：丑(1)起正月顺数 → (m) % 12
     result["天姚"] = m % 12
@@ -317,11 +317,7 @@ def place_aux_stars(
     result["封诰"] = (7 - m + 12) % 12
 
     # 三台：左辅 + 日数（日支）
-    # 需外部传入日支索引，暂用0占位，建议后续完善
-    try:
-        day_branch = info.day_branch_idx
-    except AttributeError:
-        day_branch = 0
+    day_branch = info.day_branch_idx
     result["三台"] = (result["左辅"] + day_branch) % 12
 
     # 八座：右弼 - 日数（日支）

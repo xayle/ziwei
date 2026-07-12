@@ -221,15 +221,18 @@ def compute_compatibility(
     pair = frozenset({ay, by_})
     branch_score = 0
     branch_note = ""
-    if pair in _SIX_HE:
+    if ay == by_:
+        branch_score = 18
+        branch_note = f"年支同支（{ay}年），背景相似"
+    elif pair in _SIX_HE:
         branch_score = 30
         branch_note = f"年支六合（{ay}{by_}合）"
-    elif any(pair <= s for s in _THREE_HE):
-        branch_score = 22
-        branch_note = f"年支三合（{ay}{by_}）"
     elif pair in _SIX_CHONG:
         branch_score = 0
         branch_note = f"年支六冲（{ay}{by_}冲）⚠ 需调和"
+    elif any(pair <= s for s in _THREE_HE):
+        branch_score = 22
+        branch_note = f"年支三合（{ay}{by_}）"
     else:
         branch_score = 15
         branch_note = f"年支无特殊关系（{ay} / {by_}）"
@@ -282,8 +285,8 @@ def compute_compatibility(
     # ── 4. 天干合（10分） ───────────────────────────────────────
     stems_a = {ap[col]["stem"] for col in ("year", "month", "day", "hour")}
     stems_b = {bp[col]["stem"] for col in ("year", "month", "day", "hour")}
-    he_pairs = [f"{list(p)[0]}{list(p)[1]}合" for p in _STEM_HE if p & stems_a and p & stems_b]
-    chong_pairs = [f"{list(p)[0]}{list(p)[1]}冲" for p in _STEM_CHONG if p & stems_a and p & stems_b]
+    he_pairs = [f"{next(iter(p))}{list(p)[1]}合" for p in _STEM_HE if p & stems_a and p & stems_b]
+    chong_pairs = [f"{next(iter(p))}{list(p)[1]}冲" for p in _STEM_CHONG if p & stems_a and p & stems_b]
     stem_score = min(10, len(he_pairs) * 5) - len(chong_pairs) * 3
     stem_score = max(0, stem_score)
     total += stem_score

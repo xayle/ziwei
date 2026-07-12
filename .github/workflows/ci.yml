@@ -10,8 +10,36 @@ env:
   SECRET_KEY: "ci-test-secret-key-at-least-32bytes-long"
 
 jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Quality gate frontend checks
+        run: make quality-gate-frontend
+
+      - name: Install Playwright browsers
+        run: cd frontend && npx playwright install chromium --with-deps
+
+      - name: E2E smoke tests
+        run: cd frontend && npm run test:e2e
+
+      - name: Compare live design targets (R079)
+        run: node scripts/compare-live-targets.mjs
+
   lint:
     runs-on: ubuntu-latest
+    needs: frontend
     steps:
       - uses: actions/checkout@v4
 
@@ -23,15 +51,23 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install pyright
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
 
       - name: Type check (pyright)
         run: pyright --project pyrightconfig.json
 
+      - name: Security scan (bandit)
+        run: make security
+
   test:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [frontend, lint]
     steps:
       - uses: actions/checkout@v4
 
@@ -43,16 +79,35 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Quality gate backend checks
+        run: make quality-gate-backend
+
+      - name: W14 auto verify bundle
+        run: python scripts/auto_verify_w14.py
+
+      - name: Volume names aligned
+        run: make verify-volume-names
+
+      - name: OpenAPI export drift check
+        run: |
+          python scripts/export_openapi.py
+          git diff --exit-code docs/openapi.json || (
+            echo "::error::docs/openapi.json out of sync — run: make export-openapi && make sync-frontend-types"
+            exit 1
+          )
+
+      - name: Frontend OpenAPI types drift check
+        run: |
+          cd frontend && npm run gen:types
+          git diff --exit-code src/api/schema.d.ts || (
+            echo "::error::schema.d.ts out of sync — run: make sync-frontend-types"
+            exit 1
+          )
 
       - name: Run tests (excluding legacy)
-        run: |
-          # N4.07: tests/legacy/ 存在时才追加 --ignore，避免目录不存在时静默失败
-          IGNORE_LEGACY=""
-          if [ -d "tests/legacy" ]; then
-            IGNORE_LEGACY="--ignore=tests/legacy"
-          fi
-          python -m pytest -q $IGNORE_LEGACY
+        run: make test-fast
 
       - name: sxtwl tests (best-effort)
         run: |
@@ -69,9 +124,29 @@ jobs:
         run: python run_cases.py
         continue-on-error: true
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: iztro cross-check (advisory)
+        run: make verify-iztro
+        continue-on-error: true
+
+      - name: iztro youbi hour cross-check (advisory)
+        run: make verify-iztro-hour
+        continue-on-error: true
+
+      - name: Wenmo horoscope diff (advisory, R111)
+        run: make verify-wenmo-horoscope
+        continue-on-error: true
+
+      - name: Wenmo bazi diff (advisory, R111)
+        run: make verify-wenmo-bazi
+        continue-on-error: true
+
   test-postgres:
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [frontend, lint]
     services:
       postgres:
         image: postgres:16-alpine
@@ -99,19 +174,16 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install psycopg2-binary
+          python -m pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Alembic upgrade head (PostgreSQL)
         run: alembic upgrade head
 
+      - name: Quality gate backend checks
+        run: make quality-gate-backend
+
       - name: Run tests against PostgreSQL
-        run: |
-          IGNORE_LEGACY=""
-          if [ -d "tests/legacy" ]; then
-            IGNORE_LEGACY="--ignore=tests/legacy"
-          fi
-          python -m pytest -q $IGNORE_LEGACY
+        run: make test-fast
 
   docker-build:
     runs-on: ubuntu-latest
@@ -121,4 +193,3 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t bazi-api:ci .
-

@@ -2,6 +2,7 @@
 
 # Core models
 from .api_key import ApiKey
+from .async_task import LiunianReportTask
 from .base import RefreshToken, RevokedJti, User
 from .case import Case, Snapshot
 from .chart_case import ChartCase
@@ -37,6 +38,8 @@ __all__ = [
     "ExperimentEvent",
     # LLM
     "LlmDraft",
+    # Async tasks
+    "LiunianReportTask",
     # Similarity
     "ChartCase",
     # API Keys
