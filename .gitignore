@@ -50,9 +50,22 @@ tmp_cov.json
 .codex-*.png
 .playwright-cli/
 _tmp_wenmo/
+_tmp_*.json
 _fusheng_report_integration.pdf
 _cls_audit.txt
 cls_audit.txt
+tmp-*.png
+tmp/
+tmp_pdf_text.txt
+output/
+web/
+frontend/test-results/
+
+# IDE / editor (local only)
+.cursor/
+.vscode/css-custom-data.json
+.vscode/extensions.json
+.vscode/launch.json
 
 # Local analysis/decompile tools
 /tools/

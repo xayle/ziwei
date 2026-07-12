@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusheng.local/contracts/relation-type-registry@1.0",
+  "title": "RelationTypeRegistry",
+  "description": "关系类型 → 八字/紫微合盘维度与宫位互涉 · 前后端唯一注册表",
+  "version": "1.0",
+  "types": {
+    "couple": {
+      "label": "情侣合盘",
+      "label_en": "couple",
+      "summary_template_key": "relation.summary.couple",
+      "bazi_dimensions": [
+        { "id": "day_master", "weight": 0.2, "max": 40 },
+        { "id": "day_branch", "weight": 0.2, "max": 30, "required": true },
+        { "id": "year_branch", "weight": 0.12, "max": 30 },
+        { "id": "yongshen_cross", "weight": 0.12, "max": 20 },
+        { "id": "wuxing_complement", "weight": 0.08, "max": 20 },
+        { "id": "stem_interaction", "weight": 0.08, "max": 10 },
+        { "id": "spouse_palace_hint", "weight": 0.2, "max": 20, "engine": "ziwei" }
+      ],
+      "ziwei_palace_pairs": [
+        { "pair_id": "A_spouse_B_life", "a": "夫妻宫", "b": "命宫" },
+        { "pair_id": "B_spouse_A_life", "a": "夫妻宫", "b": "命宫", "swap_roles": true },
+        { "pair_id": "A_wealth_B_wealth", "a": "财帛宫", "b": "财帛宫" },
+        { "pair_id": "A_ford_B_ford", "a": "福德宫", "b": "福德宫" }
+      ],
+      "forbidden_copy": ["子女宫", "父母宫"],
+      "default_timeline_months": 24
+    },
+    "friend": {
+      "label": "友人合盘",
+      "label_en": "friend",
+      "summary_template_key": "relation.summary.friend",
+      "bazi_dimensions": [
+        { "id": "day_master", "weight": 0.18, "max": 40 },
+        { "id": "day_branch", "weight": 0.15, "max": 30, "required": true },
+        { "id": "year_branch", "weight": 0.1, "max": 30 },
+        { "id": "yongshen_cross", "weight": 0.15, "max": 20 },
+        { "id": "wuxing_complement", "weight": 0.12, "max": 20 },
+        { "id": "stem_interaction", "weight": 0.1, "max": 10 },
+        { "id": "peer_palace", "weight": 0.2, "max": 25, "engine": "ziwei" }
+      ],
+      "ziwei_palace_pairs": [
+        { "pair_id": "A_friends_B_life", "a": "交友宫", "b": "命宫" },
+        { "pair_id": "B_friends_A_life", "a": "交友宫", "b": "命宫", "swap_roles": true },
+        { "pair_id": "A_siblings_B_life", "a": "兄弟宫", "b": "命宫" },
+        { "pair_id": "A_migration_B_migration", "a": "迁移宫", "b": "迁移宫" }
+      ],
+      "forbidden_copy": ["夫妻宫缘", "婚后"],
+      "default_timeline_months": 12
+    },
+    "parent_child": {
+      "label": "亲子合盘",
+      "label_en": "parent_child",
+      "summary_template_key": "relation.summary.parent_child",
+      "bazi_dimensions": [
+        { "id": "day_master", "weight": 0.12, "max": 40 },
+        { "id": "day_branch", "weight": 0.22, "max": 30, "required": true },
+        { "id": "year_branch", "weight": 0.1, "max": 30 },
+        { "id": "yongshen_cross", "weight": 0.18, "max": 20 },
+        { "id": "ten_god_cross", "weight": 0.18, "max": 20 },
+        { "id": "stem_interaction", "weight": 0.1, "max": 10 },
+        { "id": "family_palace", "weight": 0.1, "max": 25, "engine": "ziwei" }
+      ],
+      "ziwei_palace_pairs": [
+        { "pair_id": "A_children_B_life", "a": "子女宫", "b": "命宫", "role_hint": "A=parent" },
+        { "pair_id": "B_parents_A_life", "a": "父母宫", "b": "命宫", "role_hint": "A=parent" },
+        { "pair_id": "A_ford_B_health", "a": "福德宫", "b": "疾厄宫" }
+      ],
+      "forbidden_copy": ["夫妻", "桃花", "婚嫁"],
+      "default_timeline_months": 24
+    },
+    "colleague": {
+      "label": "同事合盘",
+      "label_en": "colleague",
+      "summary_template_key": "relation.summary.colleague",
+      "bazi_dimensions": [
+        { "id": "day_master", "weight": 0.15, "max": 40 },
+        { "id": "day_branch", "weight": 0.12, "max": 30 },
+        { "id": "yongshen_cross", "weight": 0.2, "max": 20 },
+        { "id": "wuxing_complement", "weight": 0.15, "max": 20 },
+        { "id": "stem_interaction", "weight": 0.13, "max": 10 },
+        { "id": "career_palace", "weight": 0.25, "max": 30, "engine": "ziwei" }
+      ],
+      "ziwei_palace_pairs": [
+        { "pair_id": "A_career_B_career", "a": "官禄宫", "b": "官禄宫" },
+        { "pair_id": "A_friends_B_career", "a": "交友宫", "b": "官禄宫" },
+        { "pair_id": "B_friends_A_career", "a": "交友宫", "b": "官禄宫", "swap_roles": true }
+      ],
+      "forbidden_copy": ["夫妻", "婚嫁", "桃花"],
+      "default_timeline_months": 12
+    },
+    "business_partner": {
+      "label": "合作伙伴合盘",
+      "label_en": "business_partner",
+      "summary_template_key": "relation.summary.business_partner",
+      "bazi_dimensions": [
+        { "id": "day_master", "weight": 0.12, "max": 40 },
+        { "id": "day_branch", "weight": 0.15, "max": 30, "required": true },
+        { "id": "yongshen_cross", "weight": 0.2, "max": 20 },
+        { "id": "wealth_cross", "weight": 0.23, "max": 25 },
+        { "id": "stem_interaction", "weight": 0.1, "max": 10 },
+        { "id": "risk_palace", "weight": 0.2, "max": 30, "engine": "ziwei" }
+      ],
+      "ziwei_palace_pairs": [
+        { "pair_id": "A_wealth_B_wealth", "a": "财帛宫", "b": "财帛宫" },
+        { "pair_id": "A_career_B_career", "a": "官禄宫", "b": "官禄宫" },
+        { "pair_id": "A_property_B_property", "a": "田宅宫", "b": "田宅宫" },
+        { "pair_id": "A_friends_B_wealth", "a": "交友宫", "b": "财帛宫" }
+      ],
+      "forbidden_copy": ["夫妻", "感情保鲜"],
+      "default_timeline_months": 18
+    },
+    "supervisor_subordinate": {
+      "label": "上下级合盘",
+      "label_en": "supervisor_subordinate",
+      "summary_template_key": "relation.summary.supervisor_subordinate",
+      "requires_role": "supervisor_id",
+      "bazi_dimensions": [
+        { "id": "day_master", "weight": 0.15, "max": 40 },
+        { "id": "yongshen_cross", "weight": 0.2, "max": 20 },
+        { "id": "official_kill_cross", "weight": 0.25, "max": 25 },
+        { "id": "stem_interaction", "weight": 0.15, "max": 10 },
+        { "id": "hierarchy_palace", "weight": 0.25, "max": 30, "engine": "ziwei" }
+      ],
+      "ziwei_palace_pairs": [
+        { "pair_id": "sup_career_sub_life", "a": "官禄宫", "b": "命宫", "role_hint": "A=supervisor" },
+        { "pair_id": "sup_life_sub_career", "a": "命宫", "b": "官禄宫", "role_hint": "A=supervisor" },
+        { "pair_id": "A_parents_B_career", "a": "父母宫", "b": "官禄宫", "role_hint": "A=supervisor" }
+      ],
+      "forbidden_copy": ["夫妻", "桃花"],
+      "default_timeline_months": 12
+    }
+  },
+  "day_branch_rules": {
+    "liuhe": { "score": 30, "tag": "六合" },
+    "sanhe": { "score": 22, "tag": "三合" },
+    "same": { "score": 18, "tag": "同支" },
+    "chong": { "score": 0, "tag": "六冲", "flag_conflict": true },
+    "hai": { "score": 8, "tag": "六害", "flag_conflict": true },
+    "xing": { "score": 10, "tag": "刑", "flag_conflict": true },
+    "none": { "score": 15, "tag": "无特殊" }
+  },
+  "year_branch_same_correction": {
+    "note": "同生肖年支应走 same 分支，不得标三合",
+    "score": 18
+  }
+}
