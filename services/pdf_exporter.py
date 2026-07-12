@@ -112,6 +112,8 @@ def _case_to_fusheng_request(case) -> "FushengReportPdfRequest":
         year_divide=case.year_divide,
         day_divide=case.day_divide,
         zi_day_rule=case.zi_day_rule,
+        birth_time_precision=getattr(case, "birth_time_precision", "exact") or "exact",
+        late_zishi=getattr(case, "late_zishi", True),
     )
 
 

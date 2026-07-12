@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from app.schemas.fusheng_report import FushengReportPdfRequest
@@ -79,6 +81,9 @@ def test_render_fusheng_report_html_contains_algo_meta_labels():
             "year_divide": "normal",
             "day_divide": "forward",
             "zi_day_rule": "early_zi_prev_day",
+            "late_zishi": False,
+            "birth_time_precision": "unknown",
+            "unknown_time_fallback": "midday",
             "generated_at": "2026-07-11T12:00:00",
         },
         "bazi": {"geju": {}, "yongshen": {}, "pillars_primary": {}},
@@ -88,6 +93,9 @@ def test_render_fusheng_report_html_contains_algo_meta_labels():
     assert "正月初一换年" in html
     assert "农历日+1安星" in html
     assert "early_zi_prev_day" in html
+    assert "晚子不换日" in html
+    assert "时辰未详" in html
+    assert "默认午时" in html
     assert "引擎提示" in html
     assert "右弼安星" in html
 
@@ -146,3 +154,34 @@ def test_fusheng_report_pdf_request_validates_algo_fields():
             gender="male",
             zi_day_rule="bad",
         )
+    with pytest.raises(ValueError, match="unknown_time_fallback"):
+        FushengReportPdfRequest(
+            birth_dt="1990-01-15T08:30:00",
+            lon=116.4,
+            gender="male",
+            unknown_time_fallback="bad",  # type: ignore[arg-type]
+        )
+
+
+def test_build_fusheng_report_payload_wires_algo_fields():
+    from services.fusheng_report_service import build_fusheng_report_payload
+
+    req = FushengReportPdfRequest(
+        birth_dt="1990-01-15T08:30:00",
+        lon=116.41,
+        gender="male",
+        late_zishi=False,
+        birth_time_precision="hour",
+        unknown_time_fallback="midday",
+        year_divide="normal",
+        day_divide="forward",
+    )
+    payload = asyncio.run(build_fusheng_report_payload(req))
+    meta = payload["meta"]
+    assert meta["late_zishi"] is False
+    assert meta["birth_time_precision"] == "hour"
+    assert meta["unknown_time_fallback"] == "midday"
+    assert meta["year_divide"] == "normal"
+    assert meta["day_divide"] == "forward"
+    assert payload["bazi"]
+    assert payload["ziwei"]

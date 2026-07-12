@@ -279,7 +279,7 @@ make audit-content
 | ID | 问题 | 位置 / 说明 | 计划周 |
 |----|------|-------------|--------|
 | TD-01 | `buildBaziRequest()` 未传 `birth_time_precision` | `frontend/src/api/bazi.ts` → `/bazi/full` | Week3 |
-| TD-02 | 报告 PDF 缺紫微 algo 参数（`late_zishi` 等） | `build_fusheng_report_payload()` / `FushengReportPdfRequest` | Week3 |
+| TD-02 | 报告 PDF 缺紫微 algo 参数（`late_zishi` 等） | `build_fusheng_report_payload()` / `FushengReportPdfRequest` | ✅ W102-15 |
 | TD-03 | `archive-bundle` ziwei `gender` 用 `male`/`female` 非 `男`/`女` | `_case_to_ziwei_request` | Week3 |
 | TD-04 | 报告仍并行 `computeBazi` + `computeZiwei`，未走 `archive-bundle` | `ReportView` / report store | Week3 |
 | TD-05 | `explain.ts` 吞错 → `{ sections: [] }` 静默 | ✅ 八字/紫微页均有 WithMeta + banner | Week2 |
@@ -288,7 +288,7 @@ make audit-content
 | TD-08 | `formatRelationsSummaryText` fallback | ✅ W102-06 · vol2 0% | — |
 | TD-09 | 卷三大运展示 `0.0岁起`（float 未格式化） | `buildLifeVolumes` 卷三 adapter | ✅ W102-12 |
 | TD-10 | 六卷 PDF 与合盘 PDF 共用 `render_html_to_pdf` | 合盘 P3 见 [R086 §五](R086-relation-compat-sample-pdf-review-2026-07-13.md#五差距与优先级) | R102 之后 |
-| TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | Week3 |
+| TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | ✅ W102-15 |
 | TD-12 | `archive-bundle` 参数缺口 + FE 零调用 | `fusheng_archive.py` · 无 TS client | Week3 |
 | TD-13 | `lateZishi` 仅存 case tags，bundle 不读 | `profileCaseSync.ts` · `Case` 无列 | Week3 |
 | TD-14 | Q12 页面 explain 常量未接线 | ✅ 八字 + 紫微页 | Week2 |

@@ -40,6 +40,18 @@ class FushengReportPdfRequest(BaseModel):
         "sxtwl",
         description="子时换日：sxtwl | early_zi_prev_day | early_zi_same_day",
     )
+    late_zishi: bool = Field(
+        True,
+        description="晚子时(23:00~00:00)视为次日（与 /ziwei/full 一致）",
+    )
+    birth_time_precision: Literal["exact", "hour", "approximate", "unknown"] = Field(
+        "exact",
+        description="出生时辰精度（与 /bazi/full 一致）",
+    )
+    unknown_time_fallback: Literal["midday", "noon", "start_of_hour"] | None = Field(
+        None,
+        description="时辰未知时的默认锚点（FE 档案口径，写入 PDF meta）",
+    )
 
     @model_validator(mode="after")
     def _validate_algo_fields(self):
@@ -49,4 +61,10 @@ class FushengReportPdfRequest(BaseModel):
             raise ValueError("day_divide must be solar_next, forward, or current")
         if self.zi_day_rule not in ("sxtwl", "early_zi_prev_day", "early_zi_same_day"):
             raise ValueError("invalid zi_day_rule")
+        if self.unknown_time_fallback is not None and self.unknown_time_fallback not in (
+            "midday",
+            "noon",
+            "start_of_hour",
+        ):
+            raise ValueError("invalid unknown_time_fallback")
         return self

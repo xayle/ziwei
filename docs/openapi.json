@@ -17990,6 +17990,41 @@
             "title": "Zi Day Rule",
             "description": "子时换日：sxtwl | early_zi_prev_day | early_zi_same_day",
             "default": "sxtwl"
+          },
+          "late_zishi": {
+            "type": "boolean",
+            "title": "Late Zishi",
+            "description": "晚子时(23:00~00:00)视为次日（与 /ziwei/full 一致）",
+            "default": true
+          },
+          "birth_time_precision": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "hour",
+              "approximate",
+              "unknown"
+            ],
+            "title": "Birth Time Precision",
+            "description": "出生时辰精度（与 /bazi/full 一致）",
+            "default": "exact"
+          },
+          "unknown_time_fallback": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "midday",
+                  "noon",
+                  "start_of_hour"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unknown Time Fallback",
+            "description": "时辰未知时的默认锚点（FE 档案口径，写入 PDF meta）"
           }
         },
         "type": "object",

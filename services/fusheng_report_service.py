@@ -80,6 +80,7 @@ async def build_fusheng_report_payload(req: FushengReportPdfRequest) -> dict[str
         gender=gender,
         include_liuri=req.include_liuri,
         zi_day_rule=req.zi_day_rule,
+        birth_time_precision=req.birth_time_precision,
     )
     bazi_resp = bazi_full(bazi_req)
     bazi = bazi_resp.model_dump(mode="json")
@@ -95,6 +96,7 @@ async def build_fusheng_report_payload(req: FushengReportPdfRequest) -> dict[str
         leap_month_method="same" if req.is_leap_month else "mid",
         year_divide=req.year_divide,
         day_divide=req.day_divide,
+        late_zishi=req.late_zishi,
     )
     chart = await asyncio.to_thread(ziwei_full, *_ziwei_full_args(ziwei_req))
     ziwei = _chart_to_response(
@@ -151,6 +153,9 @@ async def build_fusheng_report_payload(req: FushengReportPdfRequest) -> dict[str
             "year_divide": req.year_divide,
             "day_divide": req.day_divide,
             "zi_day_rule": req.zi_day_rule,
+            "late_zishi": req.late_zishi,
+            "birth_time_precision": req.birth_time_precision,
+            "unknown_time_fallback": req.unknown_time_fallback,
             "generated_at": datetime.now().isoformat(timespec="seconds"),
         },
         "bazi": bazi,
@@ -341,6 +346,21 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
         "forward": "农历日+1安星",
         "current": "不换日",
     }.get(meta.get("day_divide") or "solar_next", "公历换日")
+    late_zishi_label = "晚子时换日" if meta.get("late_zishi", True) else "晚子不换日"
+    precision_labels = {
+        "exact": "精确到分",
+        "hour": "整点/时辰",
+        "approximate": "约略时辰",
+        "unknown": "时辰未详",
+    }
+    precision_label = precision_labels.get(meta.get("birth_time_precision") or "exact", "精确到分")
+    fallback_labels = {
+        "midday": "默认午时",
+        "noon": "正午",
+        "start_of_hour": "时辰起点",
+    }
+    fallback = meta.get("unknown_time_fallback")
+    fallback_label = fallback_labels.get(fallback) if fallback else None
 
     dayun_rows = "".join(
         f"<tr><td>{_esc(item.get('start_year', '—'))}</td>"
@@ -419,7 +439,8 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
   <section class="page">
     <h2>基础档案</h2>
     <p>历法：{_esc(meta.get('calendar_mode'))} · 关注：{_esc(meta.get('focus_topic') or '未填写')}</p>
-    <p>紫微年界：{_esc(year_divide_label)} · 晚子换日：{_esc(day_divide_label)} · 子时规则：{_esc(meta.get('zi_day_rule') or 'sxtwl')}</p>
+    <p>紫微年界：{_esc(year_divide_label)} · 晚子换日：{_esc(day_divide_label)} · 晚子时：{_esc(late_zishi_label)}</p>
+    <p>子时规则：{_esc(meta.get('zi_day_rule') or 'sxtwl')} · 时辰精度：{_esc(precision_label)}{f' · 未知默认：{_esc(fallback_label)}' if fallback_label else ''}</p>
     <p>用神：{favor_cn} · 忌神：{avoid_cn}</p>
     <p>{_esc(bazi.get('bazi_summary') or (bazi.get('geju') or {}).get('interpretation_text') or '')}</p>
   </section>

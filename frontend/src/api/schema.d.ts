@@ -6111,6 +6111,24 @@ export interface components {
              * @default sxtwl
              */
             zi_day_rule: string;
+            /**
+             * Late Zishi
+             * @description 晚子时(23:00~00:00)视为次日（与 /ziwei/full 一致）
+             * @default true
+             */
+            late_zishi: boolean;
+            /**
+             * Birth Time Precision
+             * @description 出生时辰精度（与 /bazi/full 一致）
+             * @default exact
+             * @enum {string}
+             */
+            birth_time_precision: "exact" | "hour" | "approximate" | "unknown";
+            /**
+             * Unknown Time Fallback
+             * @description 时辰未知时的默认锚点（FE 档案口径，写入 PDF meta）
+             */
+            unknown_time_fallback?: ("midday" | "noon" | "start_of_hour") | null;
         };
         /** GejuLightResponse */
         GejuLightResponse: {
