@@ -36,6 +36,7 @@ import ColophonFootnote from '@/components/fusheng/ColophonFootnote.vue'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
+import { useReportReadingGuide } from '@/composables/useReportReadingGuide'
 import { LIFE_VOLUME_LABELS, type LifeVolumeId } from '@/types/life-volume'
 import { useYoubiHourAlign } from '@/composables/useYoubiHourAlign'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
@@ -109,6 +110,11 @@ const selectedLlmModule = ref<LlmModuleId>('career_detail')
 const chartHashRef = ref('pending')
 const explainBatch = ref<ExplainBatchResponse | null>(null)
 const lifeVolumeRemote = ref<LifeVolumeResponse | null>(null)
+const {
+  readingParagraphs: reportReadingParagraphs,
+  usingDynamicReading: reportUsingDynamicReading,
+  readingFailed: reportReadingFailed,
+} = useReportReadingGuide(explainBatch)
 
 const reportPageClass = computed(() => ({
   'report-page--continuous': continuousRead.value,
@@ -530,6 +536,10 @@ onMounted(() => {
           :disclaimer="lifeVolumeDoc.disclaimer_block"
           :resume-volume-id="lastVolumeId"
           :resume-label="resumeLabel"
+          :reading-paragraphs="reportReadingParagraphs"
+          :reading-loading="loading && !explainBatch"
+          :reading-failed="reportReadingFailed"
+          :using-dynamic-reading="reportUsingDynamicReading"
           @resume="resumeReading"
         />
 

@@ -22,11 +22,13 @@ export const REPORT_BAZI_EXPLAIN_SECTIONS = [
   'relations',
   'domains',
   'summary',
+  'reading',
 ] as const
 
 export const REPORT_ZIWEI_EXPLAIN_SECTIONS = [
   'palaces',
   'fortune',
+  'reading',
 ] as const
 
 /** 八字工作台 explain（可选预载） */

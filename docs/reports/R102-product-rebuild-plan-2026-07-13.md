@@ -49,7 +49,7 @@
 | H1 | 卷封 Hero：篆印 + 档案名 + 立义 | 有 hero-card，缺 skin-preview 级封面构图 | 🟡 |
 | H2 | 首屏主角是「续读/进报告」 | KPI + 主路径说明 + 扩展工具三卡并列，像 onboarding | 🔴 |
 | H3 | 六卷卷目 IA 为主视觉 | `VolumeTocGrid` 在 ReadingGuide 之后，权重不足 | 🟡 |
-| H4 | 读法导览来自 explain `reading` | `ReadingGuide` 为静态固定文案 | 🔴 |
+| H4 | 读法导览来自 explain `reading` | `ReadingGuide` 为静态固定文案 | ✅ W102-11 |
 
 ### 3. 八字页 `/new/bazi`（target: `bazi.png` · [handbook-bazi](../design/targets/handbook-bazi-layout.md) §7）
 
@@ -91,7 +91,7 @@
 | R5 | 请求 ≤4 | computeBazi + computeZiwei + explain×2，无 archive-bundle | 🟡 |
 | R6 | 像辑录非 SaaS | 校勘 UI（Trust/iztro 双轨表）占比过大 | 🔴 |
 | R7 | 卷三运限有叙事 | 多为「1. 丙子 0.0岁起」列表 | 🔴 |
-| R8 | reading explain 进卷首 | explain batch 未请求 `reading` | 🔴 |
+| R8 | reading explain 进卷首 | explain batch 未请求 `reading` | ✅ W102-11 |
 
 ### 6. 档案页 `/profile`
 

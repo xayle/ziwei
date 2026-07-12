@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ProfileReadinessCard from '@/components/fusheng/ProfileReadinessCard.vue'
 import { useFushengFlow } from '@/composables/useFushengFlow'
+import { useReadingGuideExplain } from '@/composables/useReadingGuideExplain'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import VolumeTocGrid from '@/components/fusheng/VolumeTocGrid.vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
@@ -22,6 +23,13 @@ const {
   getArchiveEnhancerLabel,
   navigateToStep,
 } = useFushengFlow()
+const {
+  loadingReading,
+  readingFailed,
+  readingParagraphs,
+  usingDynamicReading,
+  loadReadingGuide,
+} = useReadingGuideExplain()
 
 const { lastVolumeId, save: saveReadingProgress } = useReadingProgress(() => profile.activeProfileId || 'local')
 const disclaimer = defaultDisclaimerBlock()
@@ -52,6 +60,15 @@ const previewItems = computed(() => [
 function goProfile() {
   router.push('/profile')
 }
+
+watch(
+  () => [isArchiveComplete.value, profile.birthDt] as const,
+  ([ready, birthDt]) => {
+    if (!ready || !birthDt) return
+    void loadReadingGuide(profile.asProfileData())
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -86,6 +103,10 @@ function goProfile() {
       :disclaimer="disclaimer"
       :resume-volume-id="lastVolumeId"
       :resume-label="resumeVolumeLabel"
+      :reading-paragraphs="readingParagraphs"
+      :reading-loading="loadingReading"
+      :reading-failed="readingFailed"
+      :using-dynamic-reading="usingDynamicReading"
       @resume="resumeReport"
     />
 

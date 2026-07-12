@@ -1,25 +1,54 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { DisclaimerBlock } from '@/types/life-volume'
 import ContentLayerLegend from '@/components/fusheng/ContentLayerLegend.vue'
+import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
+import { DEFAULT_READING_GUIDE_PARAGRAPHS } from '@/utils/extractReadingGuideParagraphs'
 
-defineProps<{
+const props = defineProps<{
   disclaimer: DisclaimerBlock
   resumeVolumeId?: string | null
   resumeLabel?: string | null
   showLayerLegend?: boolean
+  readingParagraphs?: string[]
+  readingLoading?: boolean
+  readingFailed?: boolean
+  usingDynamicReading?: boolean
 }>()
 
 const emit = defineEmits<{
   resume: []
 }>()
+
+const displayParagraphs = computed(() => (
+  props.readingParagraphs?.length ? props.readingParagraphs : [...DEFAULT_READING_GUIDE_PARAGRAPHS]
+))
 </script>
 
 <template>
-  <aside class="reading-guide fs-card">
+  <aside class="reading-guide fs-card" role="complementary" aria-label="读法导览">
     <h2 class="reading-guide__title">读法导览</h2>
-    <p class="reading-guide__text">
-      六卷辑录按分层阅读；卷五推断默认折叠，卷六问书需主动展开。
+
+    <p v-if="readingLoading" class="reading-guide__text" data-testid="reading-guide-loading">
+      正在加载读法导览…
     </p>
+    <template v-else>
+      <div v-if="readingFailed" data-testid="reading-guide-fallback">
+        <TrustDegradedBanner
+          message="读法导览暂不可用，以下为默认说明。"
+          status="warn"
+        />
+      </div>
+      <p
+        v-for="(paragraph, index) in displayParagraphs"
+        :key="index"
+        class="reading-guide__text"
+        :data-testid="usingDynamicReading ? 'reading-guide-dynamic' : undefined"
+      >
+        {{ paragraph }}
+      </p>
+    </template>
+
     <ContentLayerLegend v-if="showLayerLegend !== false" />
     <p class="reading-guide__disclaimer">{{ disclaimer.text }}</p>
     <p v-if="resumeVolumeId && resumeLabel" class="reading-guide__resume">
