@@ -23,18 +23,18 @@
       "avg_chars": 25.7
     },
     "vol3": {
-      "blocks": 9,
-      "fallback_pct": 11.1,
-      "thin_pct": 88.9,
-      "trunc_pct": 0.0,
-      "avg_chars": 12.2
+      "blocks": 16,
+      "fallback_pct": 50.0,
+      "thin_pct": 0.0,
+      "trunc_pct": 50.0,
+      "avg_chars": 573.2
     },
     "vol4": {
-      "blocks": 12,
+      "blocks": 11,
       "fallback_pct": 0.0,
-      "thin_pct": 100.0,
+      "thin_pct": 36.4,
       "trunc_pct": 0.0,
-      "avg_chars": 9.7
+      "avg_chars": 61.4
     },
     "vol5": {
       "blocks": 3,
@@ -116,48 +116,48 @@
     ],
     "vol3": [
       {
-        "chars": 11,
-        "fallback": false,
-        "truncated": false,
-        "thin": true,
-        "preview": "1. 丙子 0.0岁起"
+        "chars": 1030,
+        "fallback": true,
+        "truncated": true,
+        "thin": false,
+        "preview": "1. 丙子 · 0–9岁 · 1990–1999年 · 十神 七杀 · 纳音 涧下水。【0岁—9岁·丙子大运】天干丙：炎炎烈日，光芒万丈；地支子：冬水藏龙，智慧"
       },
       {
-        "chars": 12,
-        "fallback": false,
-        "truncated": false,
-        "thin": true,
-        "preview": "2. 乙亥 10.0岁起"
+        "chars": 1077,
+        "fallback": true,
+        "truncated": true,
+        "thin": false,
+        "preview": "2. 乙亥 · 10–19岁 · 2000–2009年 · 十神 正财 · 纳音 山头火。【10岁—19岁·乙亥大运】天干乙：柔弱芳草，柔中带韧；地支亥：深冬玄"
       },
       {
-        "chars": 12,
-        "fallback": false,
-        "truncated": false,
-        "thin": true,
-        "preview": "3. 甲戌 20.0岁起"
+        "chars": 1115,
+        "fallback": true,
+        "truncated": true,
+        "thin": false,
+        "preview": "3. 甲戌 · 20–29岁 · 2010–2019年 · 十神 偏财 · 纳音 山头火。【20岁—29岁·甲戌大运】天干甲：参天大树，昂扬进取；地支戌：戌土燥"
       }
     ],
     "vol4": [
       {
-        "chars": 10,
+        "chars": 19,
         "fallback": false,
         "truncated": false,
         "thin": true,
-        "preview": "命宫 酉：廉贞、破军"
+        "preview": "五行局 金四局；命宫 癸酉；身宫 己巳"
       },
       {
-        "chars": 11,
+        "chars": 32,
         "fallback": false,
         "truncated": false,
         "thin": true,
-        "preview": "古称\"杀星\"与\"囚星\""
+        "preview": "武贪格：武曲贪狼同坐官禄宫，偏财武职皆有机缘，中年以后财运渐旺。"
       },
       {
-        "chars": 5,
+        "chars": 42,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "杀破狼之一"
+        "thin": false,
+        "preview": "天才天寿加会：天才、天寿齐聚三方，聪明伶俐而且长寿有福，学术研究或技艺方面尤为突出。"
       }
     ],
     "vol5": [

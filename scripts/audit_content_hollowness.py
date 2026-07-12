@@ -155,6 +155,163 @@ def format_shensha_summary_text(bazi: dict) -> str:
     return "、".join(fallback[:8]) if fallback else "暂无神煞摘要"
 
 
+def format_dayun_start_age(age: object) -> str:
+    if age is None:
+        return ""
+    try:
+        return f"{round(float(age))}岁起"
+    except (TypeError, ValueError):
+        return ""
+
+
+def compute_dayun_end_age(items: list[dict], index: int) -> int | None:
+    if index >= len(items):
+        return None
+    current = items[index]
+    start = current.get("start_age")
+    if start is None:
+        return None
+    try:
+        start_num = round(float(start))
+    except (TypeError, ValueError):
+        return None
+    if index + 1 < len(items):
+        nxt = items[index + 1].get("start_age")
+        if nxt is not None:
+            return round(float(nxt)) - 1
+    return start_num + 9
+
+
+def format_dayun_age_range(start: object, end: object | None = None) -> str:
+    if start is None:
+        return ""
+    try:
+        start_num = round(float(start))
+    except (TypeError, ValueError):
+        return ""
+    if end is not None:
+        try:
+            return f"{start_num}–{round(float(end))}岁"
+        except (TypeError, ValueError):
+            pass
+    return f"{start_num}岁起"
+
+
+def build_dayun_volume_text(item: dict, index: int, items: list[dict]) -> str:
+    gz = f"{item.get('stem', '')}{item.get('branch', '')}".strip() or "—"
+    end_age = compute_dayun_end_age(items, index)
+    start_age = item.get("start_age")
+    age_range = (
+        format_dayun_age_range(start_age, end_age)
+        if start_age is not None and end_age is not None
+        else format_dayun_start_age(start_age)
+    )
+    year_range = ""
+    start_year = item.get("start_year")
+    if start_year is not None:
+        year_range = f"{start_year}–{int(start_year) + 9}年"
+    ten_god = str(item.get("ten_god") or "").strip()
+    narrative = str(item.get("narrative") or "").strip()
+    hints = [
+        str(item.get(key) or "").strip()
+        for key in ("geju_impact", "wealth_hint", "health_hint", "love_hint")
+    ]
+    hints = [h for h in hints if h]
+    head = " · ".join(
+        x
+        for x in (
+            f"{index + 1}. {gz}",
+            age_range,
+            year_range,
+            f"十神 {ten_god}" if ten_god else "",
+            f"纳音 {item.get('nayin')}" if item.get("nayin") else "",
+        )
+        if x
+    )
+    if narrative and len(narrative) >= 20:
+        return f"{head}。{narrative}"
+    if hints:
+        return f"{head}。{'；'.join(hints)}"
+    if narrative:
+        return f"{head}。{narrative}"
+    return head
+
+
+def build_palace_supplement(palace: dict) -> str:
+    parts: list[str] = []
+    aux = "、".join(
+        str(s.get("name") or "")
+        for s in (palace.get("aux_stars") or [])[:4]
+        if isinstance(s, dict) and s.get("name")
+    )
+    if aux:
+        parts.append(f"辅煞 {aux}")
+    tags = "、".join(str(t) for t in (palace.get("analysis_tags") or [])[:3] if t)
+    if tags:
+        parts.append(f"要点 {tags}")
+    if palace.get("is_body_palace"):
+        parts.append("身宫所在")
+    if palace.get("is_empty_palace"):
+        parts.append("空宫借星")
+    borrowed = "、".join(
+        str(s.get("name") or "")
+        for s in (palace.get("borrowed_main_stars") or [])
+        if isinstance(s, dict) and s.get("name")
+    )
+    if borrowed:
+        parts.append(f"借星 {borrowed}")
+    return "；".join(parts)
+
+
+def build_palace_volume_text(palace: dict) -> str:
+    stars = "、".join(
+        str(s.get("name") or "")
+        for s in (palace.get("main_stars") or [])
+        if isinstance(s, dict) and s.get("name")
+    ) or "无主星"
+    head = f"{palace.get('name')} {palace.get('stem', '')}{palace.get('branch', '')}：主星 {stars}"
+    narrative = str(
+        palace.get("conclusion")
+        or palace.get("analysis")
+        or palace.get("explanation")
+        or palace.get("suggestion")
+        or ""
+    ).strip()
+    supplement = build_palace_supplement(palace)
+    if len(narrative) >= 40:
+        return f"{head}。{narrative[:220]}"
+    parts = [head]
+    if supplement:
+        parts.append(supplement)
+    if narrative:
+        parts.append(narrative)
+    return "；".join(parts)
+
+
+def enrich_palace_explain_text(explain_text: str, palace: dict | None) -> str:
+    base = str(explain_text or "").strip()
+    if not palace:
+        return base or "宫位待补"
+    if len(base) >= 40:
+        return base
+    enriched = build_palace_volume_text(palace)
+    if not base:
+        return enriched
+    if len(base) >= 20:
+        supplement = build_palace_supplement(palace)
+        return f"{base}。{supplement}" if supplement else base
+    return enriched
+
+
+def find_palace_by_explain_text(text: str, palaces: list[dict]) -> dict | None:
+    trimmed = str(text or "").strip()
+    for palace in palaces:
+        name = str(palace.get("name") or "")
+        if name and name in trimmed:
+            return palace
+    return None
+
+
 def main() -> None:
     breq = BaziFullRequest(
         dt=datetime.fromisoformat("1990-01-15T08:30:00"),
@@ -218,24 +375,50 @@ def main() -> None:
     vol3: list[str] = []
     items = (bazi.get("dayun") or {}).get("items") or (bazi.get("dayun") or {}).get("cycles") or []
     for i, item in enumerate(items[:8]):
-        gz = f"{item.get('stem', '')}{item.get('branch', '')}".strip() or "—"
-        age = item.get("start_age")
-        vol3.append(f"{i + 1}. {gz} {f'{age}岁起' if age is not None else ''}".strip())
+        if isinstance(item, dict):
+            vol3.append(build_dayun_volume_text(item, i, items))
     zitems = (ziwei.get("dayun") or {}).get("items") or []
-    if zitems:
-        vol3.append(f"共 {len(zitems)} 步大运（列表数据）。")
-
-    vol4: list[str] = []
-    for sec in zex.get("sections", []):
-        for bl in sec.get("blocks", []):
-            vol4.append(str(bl.get("text", "")))
-    if not vol4:
-        vol4.append(
-            f"五行局 {ziwei.get('wuxing_ju_name', '—')}；命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}"
+    for i, item in enumerate(zitems[:8]):
+        if not isinstance(item, dict):
+            continue
+        palace = str(item.get("palace_name") or "").strip()
+        sihua = "、".join(f"{star}{trans}" for star, trans in (item.get("sihua") or {}).items())
+        line = " · ".join(
+            x
+            for x in (
+                f"{i + 1}. {item.get('ganzhi', '—')}",
+                format_dayun_age_range(item.get("start_age"), item.get("end_age")),
+                (
+                    f"{item.get('start_year')}–{int(item.get('start_year')) + max(0, int(item.get('end_age', 0)) - int(item.get('start_age', 0)))}年"
+                    if item.get("start_year") is not None
+                    else ""
+                ),
+                f"应 {palace}" if palace else "",
+                f"四化 {sihua}" if sihua else "",
+            )
+            if x
         )
-        for p in (ziwei.get("palaces") or [])[:6]:
-            stars = "、".join(s.get("name", "") for s in p.get("main_stars") or []) or "无主星"
-            vol4.append(f"{p.get('name')} {p.get('stem', '')}{p.get('branch', '')}：{stars}")
+        vol3.append(line)
+
+    vol4: list[str] = [
+        f"五行局 {ziwei.get('wuxing_ju_name', '—')}；命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}",
+    ]
+    for pattern in (ziwei.get("patterns") or [])[:4]:
+        if isinstance(pattern, dict):
+            vol4.append(f"{pattern.get('name', '格局')}：{pattern.get('description', '')}")
+    palaces = [p for p in (ziwei.get("palaces") or []) if isinstance(p, dict)]
+    explain_blocks: list[str] = []
+    for sec in zex.get("sections", []):
+        if sec.get("section_id") == "palaces":
+            for bl in sec.get("blocks", []):
+                explain_blocks.append(str(bl.get("text", "")))
+    if explain_blocks:
+        for idx, text in enumerate(explain_blocks):
+            matched = find_palace_by_explain_text(text, palaces) or (palaces[idx] if idx < len(palaces) else None)
+            vol4.append(enrich_palace_explain_text(text, matched))
+    elif palaces:
+        for p in palaces[:6]:
+            vol4.append(build_palace_volume_text(p))
 
     vol5: list[str] = []
     for sec in bex.get("sections", []):

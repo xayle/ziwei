@@ -7,7 +7,7 @@ import BaziReferenceTable from '@/components/new/BaziReferenceTable.vue'
 import BaziStructuralRelations from '@/components/fusheng/BaziStructuralRelations.vue'
 import BaziLiuriTodayCard from '@/components/fusheng/BaziLiuriTodayCard.vue'
 import FushengZiweiPlate from '@/components/fusheng/FushengZiweiPlate.vue'
-import brandLogo from '@/assets/brand/fusheng-logo.png'
+import brandMark from '@/assets/brand/fusheng-mark.svg'
 import { useFushengReport } from '@/composables/useFushengReport'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
@@ -561,7 +561,7 @@ onMounted(() => {
 
           <template v-if="volume.id === 'preface'">
             <div class="report-cover" data-testid="report-cover-hero">
-              <img :src="brandLogo" alt="浮生" class="report-cover__logo" width="96" height="96" />
+              <img :src="brandMark" alt="浮生" class="report-cover__logo" width="96" height="96" />
               <h1>浮生 · 命理个人档案</h1>
               <p class="report-cover__slogan">浮生若寄，知命知心</p>
               <p class="report-cover__name">{{ profile.activeProfile?.label || '默认档案' }}</p>
@@ -1128,10 +1128,8 @@ onMounted(() => {
 .report-cover__logo {
   width: 88px;
   height: 88px;
-  border-radius: 50%;
-  object-fit: cover;
+  display: block;
   margin-bottom: 18px;
-  border: 1px solid var(--border-md);
 }
 
 .report-cover h1 {

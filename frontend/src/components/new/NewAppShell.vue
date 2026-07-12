@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import brandLogo from '@/assets/brand/fusheng-logo.png'
+import brandMark from '@/assets/brand/fusheng-mark.svg'
 import { useFushengFlow } from '@/composables/useFushengFlow'
 import { useVolumeRouteMeta } from '@/composables/useVolumeRouteMeta'
 import { useAuthStore } from '@/stores/auth'
@@ -62,7 +62,7 @@ onUnmounted(() => {
     </p>
     <header class="bar">
       <div class="brand-block">
-        <img class="brand-logo" :src="brandLogo" alt="浮生" width="44" height="44" />
+        <img class="brand-logo" :src="brandMark" alt="浮生" width="44" height="44" />
         <div class="title-block">
           <p v-if="isHomePath(route.path)" class="eyebrow">浮生 · 知命知心</p>
           <p v-else-if="volumeEyebrow" class="eyebrow">{{ volumeEyebrow }}</p>
@@ -152,10 +152,8 @@ onUnmounted(() => {
 .brand-logo {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid var(--border-md);
+  display: block;
 }
 
 .title-block {

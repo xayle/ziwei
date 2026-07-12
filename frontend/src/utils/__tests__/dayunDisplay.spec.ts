@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { buildDayunDisplayRow, formatYongshenShift } from '@/utils/dayunDisplay'
+import {
+  buildDayunDisplayRow,
+  buildDayunVolumeText,
+  formatDayunAgeRange,
+  formatDayunStartAge,
+  formatYongshenShift,
+} from '@/utils/dayunDisplay'
 
 describe('dayunDisplay', () => {
   it('formats yongshen shift labels', () => {
@@ -7,6 +13,29 @@ describe('dayunDisplay', () => {
     expect(formatYongshenShift('backward')).toBe('忌神当令（退）')
     expect(formatYongshenShift('neutral')).toBe('用神进退中性')
     expect(formatYongshenShift()).toBe('')
+  })
+
+  it('formats dayun ages as integers without decimal noise', () => {
+    expect(formatDayunStartAge(10.0)).toBe('10岁起')
+    expect(formatDayunStartAge(0.0)).toBe('0岁起')
+    expect(formatDayunAgeRange(10.0, 19.0)).toBe('10–19岁')
+  })
+
+  it('builds thickened dayun volume text with narrative', () => {
+    const text = buildDayunVolumeText({
+      stem: '丙',
+      branch: '子',
+      start_age: 10,
+      start_year: 2000,
+      ten_god: '正官',
+      yongshen_shift: 'forward',
+      narrative: '此运官星当令，宜守正出奇，在稳定岗位中积累资历与口碑。',
+    }, 0, [{ start_age: 10 }, { start_age: 20 }])
+    expect(text).toContain('1. 丙子')
+    expect(text).toContain('10–19岁')
+    expect(text).toContain('十神 正官')
+    expect(text).not.toContain('0.0')
+    expect(text.length).toBeGreaterThan(40)
   })
 
   it('builds dayun display row with engine hints', () => {

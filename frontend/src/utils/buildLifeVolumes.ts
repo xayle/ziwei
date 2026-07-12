@@ -1,5 +1,5 @@
 import type { BaziResponse } from '@/api/bazi'
-import type { ZiweiResponse } from '@/api/ziwei'
+import type { PalaceResponse, ZiweiResponse } from '@/api/ziwei'
 import type { ExplainBatchResponse } from '@/api/explain'
 import {
   LIFE_VOLUME_LABELS,
@@ -15,6 +15,10 @@ import { buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { buildColophonSummary, defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
 import { truncateText } from '@/utils/truncateText'
 import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
+import {
+  buildDayunVolumeText,
+  formatDayunAgeRange,
+} from '@/utils/dayunDisplay'
 
 export interface BuildLifeVolumesInput {
   caseId: string
@@ -185,18 +189,32 @@ function buildVol3Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const sections: VolumeSection[] = []
   const dayunItems = b?.dayun?.items ?? b?.dayun?.cycles ?? []
   if (dayunItems.length) {
-    const lines = dayunItems.slice(0, 8).map((item, idx) => {
-      const gz = `${item.stem ?? ''}${item.branch ?? ''}`.trim() || '—'
-      const age = item.start_age != null ? `${item.start_age}岁起` : ''
-      return `${idx + 1}. ${gz} ${age}`.trim()
-    })
-    sections.push(section('dayun', '大运序列', 'fact', lines.map((line) => block(line, 'fact'))))
+    sections.push(section(
+      'dayun',
+      '大运序列',
+      'fact',
+      dayunItems.slice(0, 8).map((item, idx) => block(
+        buildDayunVolumeText(item, idx, dayunItems),
+        item.narrative?.trim() ? 'inference' : 'fact',
+      )),
+    ))
   }
   const ziweiDayun = z?.dayun?.items ?? []
   if (ziweiDayun.length) {
-    sections.push(section('ziwei-dayun', '紫微大运', 'fact', [
-      block(`共 ${ziweiDayun.length} 步大运（列表数据）。`, 'fact'),
-    ]))
+    sections.push(section('ziwei-dayun', '紫微大运', 'fact', ziweiDayun.slice(0, 8).map((item, idx) => {
+      const palace = 'palace_name' in item ? String((item as { palace_name?: string }).palace_name ?? '').trim() : ''
+      const sihua = Object.entries(item.sihua ?? {})
+        .map(([star, trans]) => `${star}${trans}`)
+        .join('、')
+      const line = [
+        `${idx + 1}. ${item.ganzhi}`,
+        formatDayunAgeRange(item.start_age, item.end_age),
+        item.start_year ? `${item.start_year}–${item.start_year + Math.max(0, item.end_age - item.start_age)}年` : '',
+        palace ? `应 ${palace}` : '',
+        sihua ? `四化 ${sihua}` : '',
+      ].filter(Boolean).join(' · ')
+      return block(line, 'fact')
+    })))
   }
   if (!sections.length) {
     sections.push(section('vol3-empty', '运波', 'fact', [block('运限数据待载入。', 'fact')]))
@@ -204,20 +222,53 @@ function buildVol3Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   return sections
 }
 
+function findPalaceByExplainText(text: string, palaces: PalaceResponse[]): PalaceResponse | undefined {
+  const trimmed = text.trim()
+  return palaces.find((p) => trimmed.includes(p.name))
+}
+
+function buildPalaceSupplement(p: PalaceResponse): string {
+  const parts: string[] = []
+  const aux = p.aux_stars?.slice(0, 4).map((s) => s.name).join('、')
+  if (aux) parts.push(`辅煞 ${aux}`)
+  const tags = p.analysis_tags?.slice(0, 3).join('、')
+  if (tags) parts.push(`要点 ${tags}`)
+  if (p.is_body_palace) parts.push('身宫所在')
+  if (p.is_empty_palace) parts.push('空宫借星')
+  if (p.borrowed_main_stars?.length) {
+    parts.push(`借星 ${p.borrowed_main_stars.map((s) => s.name).join('、')}`)
+  }
+  return parts.join('；')
+}
+
+function buildPalaceVolumeText(p: PalaceResponse): string {
+  const stars = p.main_stars?.map((s) => s.name).join('、') || '无主星'
+  const head = `${p.name} ${p.stem ?? ''}${p.branch ?? ''}：主星 ${stars}`
+  const narrative = (p.conclusion || p.analysis || p.explanation || p.suggestion || '').trim()
+  const supplement = buildPalaceSupplement(p)
+  if (narrative.length >= 40) {
+    return `${head}。${truncateText(narrative, 220)}`
+  }
+  const parts = [head]
+  if (supplement) parts.push(supplement)
+  if (narrative) parts.push(narrative)
+  return parts.join('；')
+}
+
+function enrichPalaceExplainText(explainText: string, palace?: PalaceResponse): string {
+  const base = explainText.trim()
+  if (!palace) return base || '宫位待补'
+  if (base.length >= 40) return base
+  const enriched = buildPalaceVolumeText(palace)
+  if (!base) return enriched
+  if (base.length >= 20) return `${base}。${buildPalaceSupplement(palace)}`
+  return enriched
+}
+
 function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const z = input.ziwei
   if (!z) {
     return [section('vol4-empty', '宫图', 'fact', [block('紫微数据待载入。', 'fact')])]
-  }
-  const explainPalaces = input.explain?.sections.find((s) => s.section_id === 'palaces')
-  if (explainPalaces?.blocks.length) {
-    return [
-      section('palaces-explain', '宫图与星曜要点', 'fact', explainPalaces.blocks.map((b) => ({
-        text: truncateText(b.text),
-        layer: b.layer === 'cite' ? 'inference' : b.layer,
-        classic_id: undefined,
-      }))),
-    ]
   }
   const sections: VolumeSection[] = [
     section('ziwei-meta', '命盘概要', 'fact', [
@@ -228,12 +279,18 @@ function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   if (patterns.length) {
     sections.push(section('patterns', '格局', 'fact', patterns.map((p) => block(`${p.title}：${p.body}`, 'fact'))))
   }
-  const palaces = (z.palaces ?? []).slice(0, 6)
-  if (palaces.length) {
-    sections.push(section('palaces', '十二宫（节选）', 'fact', palaces.map((p) => {
-      const stars = p.main_stars?.map((s) => s.name).join('、') || '无主星'
-      return block(`${p.name} ${p.stem ?? ''}${p.branch ?? ''}：${stars}`, 'fact')
+  const explainPalaces = input.explain?.sections.find((s) => s.section_id === 'palaces')
+  const palaces = z.palaces ?? []
+  if (explainPalaces?.blocks.length) {
+    sections.push(section('palaces-explain', '宫图与星曜要点', 'fact', explainPalaces.blocks.map((b, idx) => {
+      const matched = findPalaceByExplainText(b.text, palaces) ?? palaces[idx]
+      return {
+        text: truncateText(enrichPalaceExplainText(b.text, matched), 500),
+        layer: (b.layer === 'cite' ? 'inference' : b.layer) as ContentLayer,
+      }
     })))
+  } else if (palaces.length) {
+    sections.push(section('palaces', '十二宫（节选）', 'fact', palaces.slice(0, 6).map((p) => block(buildPalaceVolumeText(p), 'fact'))))
   }
   return sections
 }

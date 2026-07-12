@@ -11,7 +11,7 @@
 | `03-report-cross.drawio` | `/report` | 六卷卷目 + 跋 advisory |
 | `04-ziwei-timeline.drawio` | `/new/ziwei/timeline` | 卷三运限叙事（F5-4） |
 | `05-ziwei-plate.drawio` | `/new/ziwei` | 方盘 Hero、纯色底（F5-3） |
-| [`05-home-song-target.html`](05-home-song-target.html) | `/` | **首页 v2 数字书房**（[`SONG-DESIGN-SYSTEM-v2`](../FUSHENG-SONG-DESIGN-SYSTEM-v2.md)） |
+| [`05-home-song-target.html`](05-home-song-target.html) | `/` | **首页 · 简约国风**（[`FUSHENG-MINIMAL-GUOFENG-DESIGN`](../FUSHENG-MINIMAL-GUOFENG-DESIGN.md)） |
 | [`fusheng-home-song-aesthetic-mockup.png`](fusheng-home-song-aesthetic-mockup.png) | `/` | AI 概念稿（已废弃路线，仅作反例对照） |
 
 ## 如何打开

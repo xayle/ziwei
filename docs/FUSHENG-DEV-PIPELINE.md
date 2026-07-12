@@ -2,13 +2,13 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-1.7 |
+| **版本** | pipeline-1.8 |
 | **日期** | 2026-07-13 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
 | **当前阶段** | **W5 产品重建 · Week1 进行中** → [R102](reports/R102-product-rebuild-plan-2026-07-13.md) |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
-| **W102 进度** | **13/24**（**W102-11 ☑**）→ 下一项 **W102-12** |
+| **W102 进度** | **14/24**（**W102-12 ☑**）→ 下一项 **W102-13** |
 
 > **一句话**：**按 W102 编号顺序做 → 改完跑 dev_cycle → 全绿再提交 → 每周五 audit-content。** 不聊天也能推进；聊天只发 §六 固定句。
 
@@ -130,8 +130,8 @@ pre-commit run --all-files   # 首次或大改后
 > **T001–T070 已 ☑**（见 EXECUTION-PRIORITY）。**现从 W102 表第一个 ☐ 顺序执行**。  
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
-**已完成（13）：** Week1 全 ☑ · W102-09～**11**  
-**进行中：** Week2（**W102-12** 起）
+**已完成（14）：** Week1 全 ☑ · W102-09～**12**  
+**进行中：** Week2（**W102-13** 起）
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -162,7 +162,7 @@ pre-commit run --all-files   # 首次或大改后
 | ☑ | **W102-09** | FE | 八字页接 `BAZI_PAGE_EXPLAIN_SECTIONS` batch | E2E `fusheng-bazi-explain` | TD-14 ✅ · `useBaziPageExplain` |
 | ☑ | **W102-10** | FE | 紫微页接 `ZIWEI_PAGE_EXPLAIN_SECTIONS` batch | E2E `fusheng-ziwei-explain` | R102 Z7 · `useZiweiPageExplain` |
 | ☑ | **W102-11** | FE | `ReadingGuide` 改读 explain `reading` | E2E `fusheng-reading-guide` | R102 H4 ✅ |
-| ☐ | **W102-12** | FE | 卷三/四 buildLifeVolumes 加厚；大运年龄格式化 | 无 `0.0岁起` | TD-09 |
+| ☑ | **W102-12** | FE | 卷三/四 buildLifeVolumes 加厚；大运年龄格式化 | 无 `0.0岁起` | TD-09 ✅ |
 | ☐ | **W102-13** | BE | ziwei explain ≥40 字/宫；卷三 dayun explain | audit 均字 | R102 Week2 |
 | ☐ | **W102-14** | ALL | audit thin ≤50% | content JSON | R102 Week2 出口 |
 
@@ -298,8 +298,8 @@ Phase E  W17+          ⏸ 平台演进
 | pipeline-1.4 | 2026-07-13 | **W102-08 ☑ · Week1 出口 10/24** · R060 step10 7.5/10 |
 | pipeline-1.5 | 2026-07-13 | **W102-09 ☑ · 11/24** · 八字深读 explain batch + 失败 banner |
 | pipeline-1.6 | 2026-07-13 | **W102-10 ☑ · 12/24** · 紫微深读 explain batch |
-| pipeline-1.7 | 2026-07-13 | **W102-11 ☑ · 13/24** · ReadingGuide explain reading |
+| pipeline-1.8 | 2026-07-13 | **W102-12 ☑ · 14/24** · buildLifeVolumes vol3/4 加厚 |
 
 ---
 
-**下一步：** **W102-12**（buildLifeVolumes 加厚 + 大运年龄）→ `python scripts/dev_cycle.py --quick`
+**下一步：** **W102-13**（BE ziwei explain ≥40 字/宫）→ `python scripts/dev_cycle.py --quick`

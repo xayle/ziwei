@@ -59,7 +59,11 @@
 ### 设计层
 
 - [`design/FUSHENG-DESIGN-MASTERPLAN.md`](design/FUSHENG-DESIGN-MASTERPLAN.md) — v1 暖纸定案（对照）
-- [**`design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md`**](design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md) — **v2 数字书房 · 瓷色 · 提案**
+- [**`design/FUSHENG-ART-FOUNDATION.md`**](design/FUSHENG-ART-FOUNDATION.md) — **核心美术数据 + 章法（冻结）**
+- [`design/FUSHENG-MINIMAL-GUOFENG-DESIGN.md`](design/FUSHENG-MINIMAL-GUOFENG-DESIGN.md) — 简约国风定案摘要
+- [**`design/FUSHENG-BRAND-LOGO-v2.md`**](design/FUSHENG-BRAND-LOGO-v2.md) — 品牌标识 v2
+- [`plan/FUSHENG-ART-EXECUTION-PLAN-2026-07-13.md`](plan/FUSHENG-ART-EXECUTION-PLAN-2026-07-13.md) — 美术落地阶段规划
+- [`design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md`](design/FUSHENG-SONG-DESIGN-SYSTEM-v2.md) — v2 文献（视觉路线已废止）
 - [`design/FUSHENG-BRAND-COPY-v1.md`](design/FUSHENG-BRAND-COPY-v1.md) — 品牌首页六卷批语
 - [`design/mockups/05-home-song-target.html`](design/mockups/05-home-song-target.html) — 首页 v2 样张
 - [`design/skin-preview.html`](design/skin-preview.html)

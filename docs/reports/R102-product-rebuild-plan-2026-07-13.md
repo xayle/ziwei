@@ -90,7 +90,7 @@
 | R4 | 跋 ≤3 行，校勘 expandable | vol2/vol4 内嵌整页 `EngineTrustPanel`（两次） | 🔴 |
 | R5 | 请求 ≤4 | computeBazi + computeZiwei + explain×2，无 archive-bundle | 🟡 |
 | R6 | 像辑录非 SaaS | 校勘 UI（Trust/iztro 双轨表）占比过大 | 🔴 |
-| R7 | 卷三运限有叙事 | 多为「1. 丙子 0.0岁起」列表 | 🔴 |
+| R7 | 卷三运限有叙事 | 多为「1. 丙子 0.0岁起」列表 | ✅ W102-12 |
 | R8 | reading explain 进卷首 | explain batch 未请求 `reading` | ✅ W102-11 |
 
 ### 6. 档案页 `/profile`
@@ -286,7 +286,7 @@ make audit-content
 | TD-06 | `api/bazi.ts` 重复声明 `city_tier` / `industry` | 工程卫生 | Week4 |
 | TD-07 | 手写 API types 与 `schema.d.ts` 双轨 | `make sync-frontend-types` 后仍手写 | Week4 |
 | TD-08 | `formatRelationsSummaryText` fallback | ✅ W102-06 · vol2 0% | — |
-| TD-09 | 卷三大运展示 `0.0岁起`（float 未格式化） | `buildLifeVolumes` 卷三 adapter | Week2 |
+| TD-09 | 卷三大运展示 `0.0岁起`（float 未格式化） | `buildLifeVolumes` 卷三 adapter | ✅ W102-12 |
 | TD-10 | 六卷 PDF 与合盘 PDF 共用 `render_html_to_pdf` | 合盘 P3 见 [R086 §五](R086-relation-compat-sample-pdf-review-2026-07-13.md#五差距与优先级) | R102 之后 |
 | TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | Week3 |
 | TD-12 | `archive-bundle` 参数缺口 + FE 零调用 | `fusheng_archive.py` · 无 TS client | Week3 |

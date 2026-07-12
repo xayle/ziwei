@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
 import type { BaziResponse } from '@/api/bazi'
+import type { ZiweiResponse } from '@/api/ziwei'
 
 const minimalBazi = {
   pillars_primary: {
@@ -129,5 +130,72 @@ describe('buildLifeVolumes', () => {
     expect(vol5?.sections.some((s) => s.id === 'domains-explain')).toBe(true)
     expect(vol5?.sections.every((s) => s.collapsed_default)).toBe(true)
     expect(doc.disclaimer_block.text).toBe('仅供文化研究')
+  })
+
+  it('formats vol3 dayun ages without decimal noise and thickens palace vol4 blocks', () => {
+    const bazi = {
+      ...minimalBazi,
+      dayun: {
+        items: [{
+          stem: '丙',
+          branch: '子',
+          start_age: 10.0,
+          start_year: 2000,
+          ten_god: '正官',
+          narrative: '官星当令，宜在稳定结构中积累资历，避免冒进扩张。',
+        }],
+      },
+    } as BaziResponse
+    const ziwei = {
+      wuxing_ju_name: '水二局',
+      life_palace_gz: '甲子',
+      body_palace_gz: '丙寅',
+      patterns: [{ name: '紫府同宫', level: '上格', description: '主贵气与统御力并存，宜在组织内承担协调职责。' }],
+      palaces: [{
+        index: 0,
+        name: '命宫',
+        stem: '甲',
+        branch: '子',
+        main_stars: [{ name: '廉贞' }],
+        aux_stars: [{ name: '文昌' }],
+        analysis_tags: ['杀破狼'],
+        analysis: '古称杀星与囚星同宫，主开创与变革。',
+        conclusion: '',
+        explanation: '',
+        suggestion: '',
+        tooltip: '',
+        flying_out: {},
+        xiaoxian_ages: [],
+        opposition_name: '',
+        dayun_boshi: [],
+        changsheng: '',
+        jiangqian_star: '',
+        suiqian_star: '',
+      }],
+    } as unknown as ZiweiResponse
+
+    const doc = buildLifeVolumes({
+      caseId: 'case-1',
+      chartHash: 'hash-1',
+      bazi,
+      ziwei,
+      explain: {
+        chart_hash: 'hash-1',
+        sections: [{
+          section_id: 'palaces',
+          blocks: [{ text: '命宫 子：廉贞、破军', layer: 'fact' }],
+        }],
+      },
+    })
+
+    const vol3 = doc.volumes.find((v) => v.id === 'vol3')
+    const dayunText = vol3?.sections.find((s) => s.id === 'dayun')?.blocks[0]?.text ?? ''
+    expect(dayunText).toContain('10–19岁')
+    expect(dayunText).not.toMatch(/\d\.\d岁/)
+
+    const vol4 = doc.volumes.find((v) => v.id === 'vol4')
+    const palaceText = vol4?.sections.find((s) => s.id === 'palaces-explain')?.blocks[0]?.text ?? ''
+    expect(palaceText.length).toBeGreaterThan(40)
+    expect(vol4?.sections.some((s) => s.id === 'patterns')).toBe(true)
   })
 })

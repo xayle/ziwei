@@ -5,7 +5,7 @@
 | **版本** | refs-1.1 |
 | **关联** | [`SONG-AESTHETICS-MOOD-AND-POETRY.md`](./SONG-AESTHETICS-MOOD-AND-POETRY.md) ← 意境语汇与文献长句 |
 | **日期** | 2026-07-12 |
-| **用途** | 决定如何修改视觉方案前，先读此清单；执行见 [`DEVELOPMENT.md`](../DEVELOPMENT.md) |
+| **用途** | 决定如何修改视觉方案前，先读 [`FUSHENG-ART-FOUNDATION.md`](./FUSHENG-ART-FOUNDATION.md) |
 | **原则** | **学秩序与留白，不学装饰与动效堆砌** |
 
 ---
