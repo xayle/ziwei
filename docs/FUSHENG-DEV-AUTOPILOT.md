@@ -2,12 +2,14 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | autopilot-1.0 |
+| **版本** | autopilot-1.1 |
 | **日期** | 2026-07-13 |
 | **定位** | **唯一实操权威** — 合并 HANDBOOK + DESIGN-MASTERPLAN + FRONTEND-DEV + 布局目标 + 后端契约；**全部 Gate 机器判定，无需人工签字** |
 | **取代** | `FUSHENG-DEV-HANDBOOK` §九人工 Gate · `EXECUTION-REMAINING` 人工签字行 · R079/R104/R105/R107 签字表 |
 | **进度机读** | `docs/reports/autopilot-verify-latest.json`（`python scripts/auto_verify_autopilot.py`） |
 | **视觉真源** | [`design/skin-preview.html`](design/skin-preview.html) · [`design/FUSHENG-DESIGN-MASTERPLAN.md`](design/FUSHENG-DESIGN-MASTERPLAN.md) |
+| **产品重建** | [**R102**](reports/R102-product-rebuild-plan-2026-07-13.md)（W5 UI·内容·4 周）· [**R086**](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md)（合盘 P3，R102 之后） |
+| **执行流水线** | [**FUSHENG-DEV-PIPELINE**](FUSHENG-DEV-PIPELINE.md)（W102 顺序 · dev_cycle · 提交） |
 
 > **一句话**：算法写命盘，典籍写讲解，前端编成书；**工程轨与美学轨双轨验收，一条命令全绿才可合并。**
 
@@ -155,6 +157,8 @@ python scripts/auto_verify_autopilot.py
 - **热修 / 契约 PR**：仅要求 **A01–A29** 全绿。  
 - **UI / 宋式 PR**：要求 **A01–A59** 全绿。  
 - **发布 tag**：A01–A59 全绿 + `git push` 后 CI 绿。
+
+> **机读绿 ≠ 产品可交付。** A09/A10/A50 等美学 proxy **不替代** [R102](reports/R102-product-rebuild-plan-2026-07-13.md) Week4 真人试读（R060 步骤 10、R079 Q5）与内容厚度门禁（`make audit-content`）。合盘 P3 见 [R086](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md)，排在 R102 closeout 之后。
 
 ---
 

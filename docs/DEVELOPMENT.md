@@ -2,15 +2,16 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | dev-hub-1.3 |
+| **版本** | dev-hub-1.5 |
 | **日期** | 2026-07-13 |
 | **一句话** | **算法写命盘，典籍写讲解，前端编成书；AI 只当卷六问书助手。** |
-| **日常实操（规矩·命令·插件）** | [**FUSHENG-DEV-AUTOPILOT.md**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ **全自动唯一权威** |
+| **日常实操（顺序·自检·提交）** | [**FUSHENG-DEV-PIPELINE.md**](FUSHENG-DEV-PIPELINE.md) ⭐⭐⭐ **流水线唯一入口** |
+| **日常实操（规矩·A 表）** | [**FUSHENG-DEV-AUTOPILOT.md**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐ |
 | **规矩·命令·插件（旧）** | [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md)（§九人工 Gate 已废止 → AUTOPILOT） |
 | **开工自检** | HANDBOOK §一–§三 · [DEV-READINESS](DEV-READINESS.md)（已并入 HANDBOOK） |
 | **收官自检+方案** | [**DEV-AUDIT-2026-07-13.md**](DEV-AUDIT-2026-07-13.md) ← 仓库整理与下一步 |
 
-> **规矩 · 命令 · 插件 · 全自动验收 → 只看 [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md)。** 本文负责文档地图与周计划索引。人工签字 Gate 已废止，以 `python scripts/auto_verify_autopilot.py` 为准。
+> **顺序开发 · 自检 · 提交 → 只看 [`FUSHENG-DEV-PIPELINE.md`](FUSHENG-DEV-PIPELINE.md)。** 规矩与 A 表 → [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md)。本文负责文档地图与周计划索引。
 
 ---
 
@@ -18,10 +19,15 @@
 
 | 你是谁 | 读什么 | 路径 |
 |--------|--------|------|
-| **所有人** | **全自动开发权威** | [**FUSHENG-DEV-AUTOPILOT**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ |
+| **所有人** | **全自动流水线** | [**FUSHENG-DEV-PIPELINE**](FUSHENG-DEV-PIPELINE.md) ⭐⭐⭐ |
+| **规矩·A 表** | 验收项与页面定案 | [**FUSHENG-DEV-AUTOPILOT**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐ |
 | **规矩·命令（旧手册）** | 已合并至 AUTOPILOT | [FUSHENG-DEV-HANDBOOK](FUSHENG-DEV-HANDBOOK.md) |
 | **文档地图** | 本文 | 你正在读 |
 | **进度 / 问题 / 整理计划** | [**DEV-AUDIT-2026-07-13**](DEV-AUDIT-2026-07-13.md) ⭐ · [STATUS 历史](FUSHENG-DEV-STATUS-2026-07-13.md) |
+| **产品体验重建（W5）** | UI 差距 · 内容审计 · 4 周路线图 | [**R102**](reports/R102-product-rebuild-plan-2026-07-13.md) ⭐ |
+| **全自动流水线（顺序·自检·提交）** | W102 任务表 · dev_cycle | [**FUSHENG-DEV-PIPELINE**](FUSHENG-DEV-PIPELINE.md) ⭐⭐⭐ |
+| **合盘 / 关系兼容（P3）** | 样张 PDF 审查 · R102 之后 | [R086](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) · [RELATION-COMPAT-MASTER-PLAN](plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) |
+| **内容厚度机读** | 六卷 thin 比例 · relations fallback | `make audit-content` → [content-hollowness-audit-latest.json](reports/content-hollowness-audit-latest.json) |
 | **研发执行（主）** | 前后端 W1–W16 周计划、任务 ID、验收 | [**INTEGRATED-DEV-PLAN**](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) |
 | **按编号依次开发（免对话）** | T001→T070 顺序打勾 | [**EXECUTION-PRIORITY**](plan/FUSHENG-EXECUTION-PRIORITY.md) ⭐ |
 | **剩余工作（免对话）** | **R001→R116 全部未完成项** | [**EXECUTION-REMAINING**](plan/FUSHENG-EXECUTION-REMAINING.md) ⭐⭐ |
@@ -74,9 +80,10 @@
 
 ```text
 建档 → 八字(卷一) → 紫微(卷四) → 运限(卷三) → 报告(六卷+跋)
+扩展：合盘 → /relation/new（P3，见 R086 · R102 closeout 后）
 ```
 
-路由：`/` → `/profile` → `/new/bazi` | `/new/ziwei` → `/report`
+路由：`/` → `/profile` → `/new/bazi` | `/new/ziwei` → `/report` · `/relation/new`（合盘，P3）
 
 ---
 
@@ -153,7 +160,17 @@
 | [CONTENT-SOURCES](reports/CONTENT-SOURCES-INTEGRATION.md) | 资料整合 |
 | [ZW03 / iztro 报告](reports/) | 交叉核验 |
 
-### 7.4 运维（非产品计划）
+### 7.4 产品体验与审计
+
+| 文档 | 用途 |
+|------|------|
+| [**FUSHENG-DEV-PIPELINE**](FUSHENG-DEV-PIPELINE.md) | ⭐⭐⭐ **顺序 · 自检 · 提交** 唯一流水线 |
+| [**R102**](reports/R102-product-rebuild-plan-2026-07-13.md) | W5 产品重建：UI 差距 · 内容审计 · 4 周路线图 |
+| [R086](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) | 合盘样张 PDF · P3 backlog |
+| [RELATION-COMPAT-MASTER-PLAN](plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) | 合盘主计划（R102 之后） |
+| [content-hollowness-audit-latest.json](reports/content-hollowness-audit-latest.json) | 内容厚度机读（`make audit-content`） |
+
+### 7.5 运维（非产品计划）
 
 | 文档 | 用途 |
 |------|------|
@@ -207,5 +224,8 @@ npm run type-check && npm run lint && npm run test && npm run test:e2e
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | dev-hub-1.2 | 2026-07-13 | 增加 FUSHENG-DEV-STATUS 整合总览 |
+| dev-hub-1.3 | 2026-07-13 | （略） |
+| dev-hub-1.4 | 2026-07-13 | R102/R086 导航 · `make audit-content` · `/relation/new` 扩展路径 |
+| dev-hub-1.5 | 2026-07-13 | **FUSHENG-DEV-PIPELINE** 升为日常唯一入口 |
 | dev-hub-1.1 | 2026-07-12 | 增加 DEV-READINESS；handbook 三页；T009–T014 文档收口 |
 | dev-hub-1.0 | 2026-07-12 | 统一入口；归档 16 份冗余开发文档 |

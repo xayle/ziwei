@@ -8,7 +8,8 @@
 | **定位** | 文墨天机样例（黄振 × 路琳清 × 华倩）合盘 PDF 的**内容说明**、**多角色评审**、**与浮生现有功能/UI 对照**、**后续产品化建议** |
 | **上位** | [`plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md`](../plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) · [`guides/FUSHENG-FRONTEND-DEV.md`](../guides/FUSHENG-FRONTEND-DEV.md) |
 | **契约** | [`contracts/relation-compat.schema.json`](../contracts/relation-compat.schema.json) |
-| **样例 PDF** | `Desktop/文墨天机/合盘分析报告-正式版-2026-07-12.pdf` |
+| **样例 PDF（仓库内权威）** | [`output/pdf/合盘分析报告-黄振-路琳清-华倩-2026-07-12.pdf`](../../output/pdf/合盘分析报告-黄振-路琳清-华倩-2026-07-12.pdf) |
+| **样例 PDF（用户桌面副本）** | `Desktop/文墨天机/合盘分析报告-正式版-2026-07-12.pdf`（clone 后可能不存在） |
 | **生成脚本** | `scripts/generate_wenmo_compat_pdf.py`（Agent 一次性，**非生产管线**） |
 
 > **一句话**：样例 PDF 证明了「双人深读 + 多人矩阵 + 破局时间轴」的用户价值，但当前交付**未走** `relation-compat@1.0` 与 App 导出链路；正式产品化需补 Trust 分层、多人 FE 与 export API。
@@ -40,8 +41,8 @@
 
 | 路径 | 说明 |
 |------|------|
-| `output/pdf/合盘分析报告-黄振-路琳清-华倩-2026-07-12.pdf` | 项目内副本（8 页 A4） |
-| `Desktop/文墨天机/合盘分析报告-正式版-2026-07-12.pdf` | 用户桌面副本 |
+| **`output/pdf/合盘分析报告-黄振-路琳清-华倩-2026-07-12.pdf`** | **仓库内权威副本**（8 页 A4；评审与复现以此为准） |
+| `Desktop/文墨天机/合盘分析报告-正式版-2026-07-12.pdf` | 用户桌面副本（非 git 跟踪，clone 后或无） |
 | `_tmp_wenmo/compat_results.json` | 双引擎实算 JSON |
 | `_tmp_wenmo/enriched_data.json` | 十二宫 enriched 数据 |
 
@@ -94,7 +95,7 @@
 | 角色 | 结论 |
 |------|------|
 | **终端用户** | 能读、有用；三角关系与破局清单是 PDF 独有价值 |
-| **UX/视觉** | 色系统一，缺 MASTERPLAN 卷目/Turst 色条/宋体嵌入 |
+| **UX/视觉** | 色系统一，缺 MASTERPLAN 卷目/Trust 色条/宋体嵌入 |
 | **后端/引擎** | 分数可信，交付路径为 Agent 脚本，非生产 API |
 | **合规** | 有 disclaimer，但推断与引擎混排，未过 `content_policy` |
 | **产品/GTM** | 具备单次付费或 Pro 附录潜力，缺 App 内一键导出 |
@@ -294,11 +295,18 @@ E2E：`frontend/e2e/fusheng-relation.spec.ts`
 | 文档 | 用途 |
 |------|------|
 | [`plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md`](../plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) | 合盘统一开发总纲 |
+| [`reports/R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) | 六卷主路径体验重建（**优先于**合盘 PDF P0） |
 | [`contracts/relation-compat.schema.json`](../contracts/relation-compat.schema.json) | API 响应契约 |
 | [`design/pdf-template-preview.html`](../design/pdf-template-preview.html) | PDF 视觉参照 |
 | [`plan/FUSHENG-EXECUTION-PRIORITY-POST-W14.md`](../plan/FUSHENG-EXECUTION-PRIORITY-POST-W14.md) | T106–T115 Extension 任务 |
 | `scripts/generate_wenmo_compat_pdf.py` | 样例 PDF 生成脚本（待废弃为 prod 管线） |
 
+### 10.1 排期约定
+
+- **R102**（六卷 UI/内容/Trust）为当前最高优先级；**不占用** R102 Week1–4 的 FE 主带宽。  
+- **R086 P0**（合盘正式 export + Trust 分层 + 消双真源）在 **R102 closeout 后**启动，或并行 **≤0.2 BE** 预研（export API 草图）。  
+- 合盘 PDF 的宋体/Trust/推断折叠与 R102 Week3「报告辑录化 + PDF 一致」共用模板能力，避免两套 PDF 管线。
+
 ---
 
-*R086 · 2026-07-13 · 样例评审闭环；正式 PDF 产品化待 P0 任务排期。*
+*R086 · 2026-07-13 · 样例评审闭环；正式 PDF 产品化排期见 §10.1（R102 之后）。*

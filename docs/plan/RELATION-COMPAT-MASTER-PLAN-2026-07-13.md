@@ -544,5 +544,5 @@ def test_couple_liubo_chen_day_branch_chong():
 | BE-R15 | explain section `relation_reading` + cite 层 |
 | FE 路由 | `/relation/:relationId` 持久化结果页（当前仅 `/relation/new`） |
 | FE-R04 | `npm run gen:types` 同步 OpenAPI 类型（需本地跑一遍） |
-| P3 | 分享 PNG / 合盘报告卷 · 样例评审见 [`R086`](../reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
+| P3 | 分享 PNG / 合盘报告卷 · 样例评审见 [`R086`](../reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) · **排期：R102 closeout 后启动**（见 R086 §十） |
 | CI | `quality_gate.py --section backend` 纳入 relation 测试（可选） |

@@ -1,4 +1,4 @@
-.PHONY: dev-install lint format security test test-fast quality-gate quality-gate-backend quality-gate-frontend export-openapi sync-frontend-types import-classics verify-ctext verify-classics-ctext scorecard verify-iztro-install verify-iztro verify-iztro-hour verify-iztro-calibrate verify-horoscope-iztro verify-wenmo-horoscope verify-wenmo-bazi capture-live-targets verify-volume-names
+.PHONY: dev-install lint format security test test-fast quality-gate quality-gate-backend quality-gate-frontend export-openapi sync-frontend-types import-classics verify-ctext verify-classics-ctext scorecard verify-iztro-install verify-iztro verify-iztro-hour verify-iztro-calibrate verify-horoscope-iztro verify-wenmo-horoscope verify-wenmo-bazi capture-live-targets verify-volume-names audit-content dev-cycle dev-cycle-quick dev-cycle-commit
 
 dev-install:
 	python -m pip install --upgrade pip
@@ -25,6 +25,19 @@ test-fast:
 
 scorecard:
 	python scripts/audit_scorecard.py
+
+audit-content:
+	python scripts/audit_content_hollowness.py
+
+dev-cycle:
+	python scripts/dev_cycle.py
+
+dev-cycle-quick:
+	python scripts/dev_cycle.py --quick
+
+dev-cycle-commit:
+	@test -n "$(MSG)" || (echo "Usage: make dev-cycle-commit MSG='W102-03: …'" && exit 1)
+	python scripts/dev_cycle.py --commit --allow-advisory-commit -m "$(MSG)"
 
 verify-iztro-install:
 	cd scripts/iztro && npm install

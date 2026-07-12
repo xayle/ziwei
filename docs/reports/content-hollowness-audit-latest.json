@@ -1,0 +1,215 @@
+{
+  "profile": "1990-01-15 08:30 male Beijing",
+  "volumes": {
+    "preface": {
+      "blocks": 1,
+      "fallback_pct": 0.0,
+      "thin_pct": 100.0,
+      "trunc_pct": 0.0,
+      "avg_chars": 32.0
+    },
+    "vol1": {
+      "blocks": 13,
+      "fallback_pct": 0.0,
+      "thin_pct": 53.8,
+      "trunc_pct": 0.0,
+      "avg_chars": 89.8
+    },
+    "vol2": {
+      "blocks": 3,
+      "fallback_pct": 33.3,
+      "thin_pct": 33.3,
+      "trunc_pct": 0.0,
+      "avg_chars": 29.0
+    },
+    "vol3": {
+      "blocks": 9,
+      "fallback_pct": 11.1,
+      "thin_pct": 88.9,
+      "trunc_pct": 0.0,
+      "avg_chars": 12.2
+    },
+    "vol4": {
+      "blocks": 12,
+      "fallback_pct": 0.0,
+      "thin_pct": 100.0,
+      "trunc_pct": 0.0,
+      "avg_chars": 9.7
+    },
+    "vol5": {
+      "blocks": 3,
+      "fallback_pct": 0.0,
+      "thin_pct": 0.0,
+      "trunc_pct": 0.0,
+      "avg_chars": 95.7
+    },
+    "vol6": {
+      "blocks": 1,
+      "fallback_pct": 0.0,
+      "thin_pct": 100.0,
+      "trunc_pct": 0.0,
+      "avg_chars": 24.0
+    },
+    "colophon": {
+      "blocks": 1,
+      "fallback_pct": 0.0,
+      "thin_pct": 100.0,
+      "trunc_pct": 0.0,
+      "avg_chars": 25.0
+    }
+  },
+  "volume_samples": {
+    "preface": [
+      {
+        "chars": 32,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "卷一至卷五按 fact·cite·inference 分层阅读。"
+      }
+    ],
+    "vol1": [
+      {
+        "chars": 13,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "日主 庚辰；格局 正印格。"
+      },
+      {
+        "chars": 10,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "印旺生身，利学业才德"
+      },
+      {
+        "chars": 99,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "【《子平真诠·论用神》】用神专取月令，月令所藏，透出天干方可采用，不透则以明显之干支论格。\n【《子平真诠·论十神互用》】十神相互间生克，则命运变化万千。食神制杀"
+      }
+    ],
+    "vol2": [
+      {
+        "chars": 8,
+        "fallback": true,
+        "truncated": false,
+        "thin": false,
+        "preview": "暂无干支关系摘要"
+      },
+      {
+        "chars": 57,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "劫煞、天乙贵人、天德贵人、天德贵人、月德贵人、月德贵人、魁罡、天喜、天喜、灾煞、金舆、华盖、华盖、地网、寡宿、寡宿"
+      },
+      {
+        "chars": 22,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "丁[火]克庚[金] 拱合；丁[火]克庚[金]"
+      }
+    ],
+    "vol3": [
+      {
+        "chars": 11,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "1. 丙子 0.0岁起"
+      },
+      {
+        "chars": 12,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "2. 乙亥 10.0岁起"
+      },
+      {
+        "chars": 12,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "3. 甲戌 20.0岁起"
+      }
+    ],
+    "vol4": [
+      {
+        "chars": 10,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "命宫 酉：廉贞、破军"
+      },
+      {
+        "chars": 11,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "古称\"杀星\"与\"囚星\""
+      },
+      {
+        "chars": 5,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "杀破狼之一"
+      }
+    ],
+    "vol5": [
+      {
+        "chars": 91,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "财运：财运属弱势层，守成减负是首要任务，修复财务漏洞和高息负债。在此阶段重点积累专业技能和行业资源，为下一个财运高峰提前积蓄力量。尽量避免借贷或为他人担保，勿在"
+      },
+      {
+        "chars": 123,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "事业：官杀有力且日主中和，具备较高的领导潜质，建议主动争取管理职位或项目负责人。利用正印格格局特点，在公司或行业内拓展多方人脉，建立跳跃式资源网络。规划未来 3"
+      },
+      {
+        "chars": 73,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "性格：在表达强烈立场前先主动倾听对方1-2分钟，寻找共识后再提建议；将果断转化为「攻心」而非「攻势」，以认同感代替对抗感，建立更强大的人际影响力。"
+      }
+    ],
+    "vol6": [
+      {
+        "chars": 24,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "卷六需主动展开后提问；打磨期不自动调用 LLM。"
+      }
+    ],
+    "colophon": [
+      {
+        "chars": 25,
+        "fallback": false,
+        "truncated": false,
+        "thin": true,
+        "preview": "校勘摘要（missing/iztro/wenmo）"
+      }
+    ]
+  },
+  "explain": {
+    "bazi_sections": 4,
+    "ziwei_sections": 2,
+    "bazi_blocks": 8,
+    "ziwei_blocks": 12,
+    "bazi_avg_chars": 83.9
+  },
+  "bazi_ui_sample_fallback_pct": 0.0,
+  "geju_has_classic_ref": true,
+  "geju_has_detail": true
+}

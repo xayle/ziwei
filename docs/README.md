@@ -1,6 +1,6 @@
 # 文档索引
 
-**日常开发（全自动规矩·验收）→ [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md)** · 文档地图 → [`DEVELOPMENT.md`](DEVELOPMENT.md)
+**日常开发（全自动规矩·验收）→ [`FUSHENG-DEV-PIPELINE.md`](FUSHENG-DEV-PIPELINE.md)** ⭐ · 规矩详情 → [`FUSHENG-DEV-AUTOPILOT.md`](FUSHENG-DEV-AUTOPILOT.md) · 文档地图 → [`DEVELOPMENT.md`](DEVELOPMENT.md)
 
 `c2` 文档入口。过时材料见 [`DOCS-AUDIT.md`](DOCS-AUDIT.md) 与 [`archive/`](archive/)。
 
@@ -10,7 +10,8 @@
 
 | 我想… | 去看 |
 |--------|------|
-| **全自动开发权威（无签字）** | [**`FUSHENG-DEV-AUTOPILOT.md`**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐⭐ |
+| **全自动流水线（顺序·自检·提交）** | [**`FUSHENG-DEV-PIPELINE.md`**](FUSHENG-DEV-PIPELINE.md) ⭐⭐⭐ |
+| **全自动开发权威（A 表·规矩）** | [**`FUSHENG-DEV-AUTOPILOT.md`**](FUSHENG-DEV-AUTOPILOT.md) ⭐⭐ |
 | **规矩·命令（旧手册）** | [`FUSHENG-DEV-HANDBOOK.md`](FUSHENG-DEV-HANDBOOK.md) |
 | **文档地图 / 周计划索引** | [**`DEVELOPMENT.md`**](DEVELOPMENT.md) |
 | **当前进度与问题总览** | [**`DEV-AUDIT-2026-07-13.md`**](DEV-AUDIT-2026-07-13.md) ⭐ · [STATUS 历史快照](FUSHENG-DEV-STATUS-2026-07-13.md) |
@@ -25,6 +26,7 @@
 | **开工前：节点注意 + 插件** | HANDBOOK §二–§四 · [`guides/FUSHENG-NODE-CHECKLIST.md`](guides/FUSHENG-NODE-CHECKLIST.md) |
 | 后端专章 | [`plan/BACKEND-MASTER-PLAN-2026-07-12.md`](plan/BACKEND-MASTER-PLAN-2026-07-12.md) |
 | **个人档案 + 关系合盘（6 类）** | [**`plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md`**](plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) ⭐ |
+| **合盘样例 PDF 评审（R086）** | [`reports/R086-relation-compat-sample-pdf-review-2026-07-13.md`](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
 | API 契约 JSON | [`contracts/`](contracts/) · [`openapi.json`](openapi.json) |
 | 部署 | [`guides/DEPLOYMENT-GUIDE.md`](guides/DEPLOYMENT-GUIDE.md) |
 | 引擎进度 | [`reports/ENGINE-CORE-PROGRESS-2026-07-11.md`](reports/ENGINE-CORE-PROGRESS-2026-07-11.md) |
@@ -50,6 +52,7 @@
 - [`plan/FUSHENG-EXECUTION-PRIORITY`](plan/FUSHENG-EXECUTION-PRIORITY.md) — **顺序开发 T001–T070**
 - [`plan/FUSHENG-INTEGRATED-DEV-PLAN`](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) — 主蓝图
 - [`plan/RELATION-COMPAT-MASTER-PLAN`](plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) — 个人摘要 + 情侣/友人/合伙等合盘
+- [`reports/R086-relation-compat-sample-pdf-review`](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) — 合盘样例 PDF 评审与 P3 差距（R086）
 - [`plan/FUSHENG-MARKET-ENTRY-STRATEGY`](plan/FUSHENG-MARKET-ENTRY-STRATEGY.md) — 战略
 
 ### 设计层
