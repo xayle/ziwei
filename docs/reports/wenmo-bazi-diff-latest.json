@@ -1,0 +1,29 @@
+{
+  "available": true,
+  "trust_level": "advisory",
+  "note": "Bazi pillar diffs are advisory; engine canonical for product.",
+  "count": 3,
+  "cases": [
+    {
+      "id": "WM01",
+      "wenmo_pillars": "癸酉 戊午 辛巳 丙申",
+      "engine_pillars": "癸酉 戊午 辛巳 丙申",
+      "pillars_match": true,
+      "trust_level": "advisory"
+    },
+    {
+      "id": "WM02",
+      "wenmo_pillars": "戊辰 戊午 辛亥 辛卯",
+      "engine_pillars": "戊辰 戊午 辛亥 辛卯",
+      "pillars_match": true,
+      "trust_level": "advisory"
+    },
+    {
+      "id": "WM03",
+      "wenmo_pillars": "癸酉 乙卯 丙戌 壬辰",
+      "engine_pillars": "癸酉 乙卯 丙戌 壬辰",
+      "pillars_match": true,
+      "trust_level": "advisory"
+    }
+  ]
+}

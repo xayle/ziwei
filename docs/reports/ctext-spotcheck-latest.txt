@@ -1,0 +1,46 @@
+# ctext / CLS 页码人工抽检清单
+# classics ctext-tagged: 47 / 500
+# CLS pre_1900 with source_page: 34
+
+## Classics sample (first 20 ctext-tagged)
+id	source	source_page	notes_preview
+daizhige.ziping.论十干十二支	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论阴阳生克	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论阴阳生死-附支藏人元司令图表	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论十干配合性情	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论十干合而不合	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论十干得时不旺失时不弱	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论刑冲会合解法	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神成败救应	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神变化	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神纯杂	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神格局高低	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神因成得败因败得成	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论用神配气候得失	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论相神紧要	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论杂气如何取用	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论墓库刑冲之说	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论四吉神能破格	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论四凶神能成格	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+daizhige.ziping.论生克先后分吉凶	—	—	GaryChowCMU/daizhigev20 目录均分正文（评注体无内文章锚；有 CTEXT_API_KEY 时由 c
+
+## CLS sample (pre_1900)
+id	source_book	source_page	recorded_geju
+CLS01	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（李文忠公命）	正官格
+CLS02	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（德宗命）	正财格
+CLS03	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（张文襄公命）	食神格
+CLS04	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（林公命）	正印格
+CLS05	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（严公命）	偏印格
+CLS06	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（曾文正公命）	七杀格
+CLS07	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（胡公命）	伤官格
+CLS08	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（张季直命）	建禄格
+CLS09	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（左文襄公命）	七杀格
+CLS10	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（康公命）	偏财格
+CLS11	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（郑公命）	伤官格
+CLS12	袁树珊《命理探原》（民国十一年铅印本）论历代名人命	待核页码（袁公命）—— 袁树珊与袁世凯同族，书中有专评	偏财格
+
+## Checklist
+[ ] 随机抽 5 条 classics source_page 与 ctext.org 章节一致
+[ ] 随机抽 3 条 CLS source_page 与原书页码/例号一致
+[ ] ZIP01/04/05 用神双轨 notes 与千里命稿一致

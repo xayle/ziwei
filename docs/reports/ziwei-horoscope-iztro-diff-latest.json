@@ -1,0 +1,149 @@
+{
+  "generated_at": "2026-07-12T21:56:20.539Z",
+  "trust_level": "advisory",
+  "note": "Decadal diffs are expected across schools; non-blocking advisory only.",
+  "report": [
+    {
+      "id": "WM01",
+      "trust_level": "advisory",
+      "time_index": 8,
+      "query_dates": [
+        "2007-6-15",
+        "2018-6-29",
+        "2026-7-12"
+      ],
+      "decadal_matches": 3,
+      "decadal_total": 3,
+      "engine_dayun_items": [
+        {
+          "index": 1,
+          "ganzhi": "壬戌",
+          "start_age": 2,
+          "end_age": 11,
+          "branch_idx": 10,
+          "palace_name": "命宫"
+        },
+        {
+          "index": 2,
+          "ganzhi": "癸亥",
+          "start_age": 12,
+          "end_age": 21,
+          "branch_idx": 11,
+          "palace_name": "父母宫"
+        },
+        {
+          "index": 3,
+          "ganzhi": "甲子",
+          "start_age": 22,
+          "end_age": 31,
+          "branch_idx": 0,
+          "palace_name": "福德宫"
+        },
+        {
+          "index": 4,
+          "ganzhi": "乙丑",
+          "start_age": 32,
+          "end_age": 41,
+          "branch_idx": 1,
+          "palace_name": "田宅宫"
+        },
+        {
+          "index": 5,
+          "ganzhi": "甲寅",
+          "start_age": 42,
+          "end_age": 51,
+          "branch_idx": 2,
+          "palace_name": "官禄宫"
+        },
+        {
+          "index": 6,
+          "ganzhi": "乙卯",
+          "start_age": 52,
+          "end_age": 61,
+          "branch_idx": 3,
+          "palace_name": "交友宫"
+        },
+        {
+          "index": 7,
+          "ganzhi": "丙辰",
+          "start_age": 62,
+          "end_age": 71,
+          "branch_idx": 4,
+          "palace_name": "迁移宫"
+        },
+        {
+          "index": 8,
+          "ganzhi": "丁巳",
+          "start_age": 72,
+          "end_age": 81,
+          "branch_idx": 5,
+          "palace_name": "疾厄宫"
+        },
+        {
+          "index": 9,
+          "ganzhi": "戊午",
+          "start_age": 82,
+          "end_age": 91,
+          "branch_idx": 6,
+          "palace_name": "财帛宫"
+        },
+        {
+          "index": 10,
+          "ganzhi": "己未",
+          "start_age": 92,
+          "end_age": 101,
+          "branch_idx": 7,
+          "palace_name": "子女宫"
+        },
+        {
+          "index": 11,
+          "ganzhi": "庚申",
+          "start_age": 102,
+          "end_age": 111,
+          "branch_idx": 8,
+          "palace_name": "夫妻宫"
+        },
+        {
+          "index": 12,
+          "ganzhi": "辛酉",
+          "start_age": 112,
+          "end_age": 121,
+          "branch_idx": 9,
+          "palace_name": "兄弟宫"
+        }
+      ],
+      "samples": [
+        {
+          "query_date": "2007-6-15",
+          "virtual_age": 14,
+          "engine_decadal_ganzhi": "癸亥",
+          "engine_decadal_palace": "父母宫",
+          "iztro_decadal_ganzhi": "癸亥",
+          "iztro_yearly_ganzhi": "丁亥",
+          "decadal_match": true,
+          "trust_level": "advisory"
+        },
+        {
+          "query_date": "2018-6-29",
+          "virtual_age": 26,
+          "engine_decadal_ganzhi": "甲子",
+          "engine_decadal_palace": "福德宫",
+          "iztro_decadal_ganzhi": "甲子",
+          "iztro_yearly_ganzhi": "戊戌",
+          "decadal_match": true,
+          "trust_level": "advisory"
+        },
+        {
+          "query_date": "2026-7-12",
+          "virtual_age": 34,
+          "engine_decadal_ganzhi": "乙丑",
+          "engine_decadal_palace": "田宅宫",
+          "iztro_decadal_ganzhi": "乙丑",
+          "iztro_yearly_ganzhi": "丙午",
+          "decadal_match": true,
+          "trust_level": "advisory"
+        }
+      ]
+    }
+  ]
+}

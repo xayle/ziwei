@@ -1,0 +1,758 @@
+{
+  "generated_at": "2026-07-12T21:54:53.852355+00:00",
+  "target_score": 10.0,
+  "summary": {
+    "overall": 10.0,
+    "bazi_avg": 10.0,
+    "ziwei_avg": 10.0,
+    "cross_avg": 10.0,
+    "passed_count": 24,
+    "total_count": 24,
+    "gt_cases": 50,
+    "zw_cases": 20,
+    "gt_align_rate": 1.0,
+    "pytest_core_ok": true
+  },
+  "items": [
+    {
+      "id": "B-01",
+      "name": "四柱排盘与历法边界",
+      "baseline": 8.0,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "solar_time_v2",
+          "ok": true
+        },
+        {
+          "name": "zi_day_rule",
+          "ok": true
+        },
+        {
+          "name": "solar_zi_boundary_test",
+          "ok": true
+        },
+        {
+          "name": "standard_meridian",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-02",
+      "name": "五行旺衰/日主强弱",
+      "baseline": 7.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "month_commander",
+          "ok": true
+        },
+        {
+          "name": "weight_profile",
+          "ok": true
+        },
+        {
+          "name": "strength_tests",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-03",
+      "name": "格局判定",
+      "baseline": 7.8,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "quzhi",
+          "ok": true
+        },
+        {
+          "name": "yanshang",
+          "ok": true
+        },
+        {
+          "name": "runxia",
+          "ok": true
+        },
+        {
+          "name": "derived_geju",
+          "ok": true
+        },
+        {
+          "name": "po_jiu",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-04",
+      "name": "用神喜忌",
+      "baseline": 7.6,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "primary_secondary",
+          "ok": true
+        },
+        {
+          "name": "cong_true_false",
+          "ok": true
+        },
+        {
+          "name": "priority_reason",
+          "ok": true
+        },
+        {
+          "name": "align_95",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-05",
+      "name": "大运流年",
+      "baseline": 6.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "geju_impact",
+          "ok": true
+        },
+        {
+          "name": "yongshen_shift",
+          "ok": true
+        },
+        {
+          "name": "geju_po_jiu",
+          "ok": true
+        },
+        {
+          "name": "overlay_bazi",
+          "ok": true
+        },
+        {
+          "name": "flow_score_3",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-06",
+      "name": "合冲刑害/神煞",
+      "baseline": 7.0,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "stem_combinations",
+          "ok": true
+        },
+        {
+          "name": "sanhui",
+          "ok": true
+        },
+        {
+          "name": "shensha_geju",
+          "ok": true
+        },
+        {
+          "name": "relations_tests",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-07",
+      "name": "古籍语料",
+      "baseline": 7.8,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "classics_480",
+          "ok": true
+        },
+        {
+          "name": "geju_candidates",
+          "ok": true
+        },
+        {
+          "name": "autogen_gate",
+          "ok": true
+        },
+        {
+          "name": "verify_ctext",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-08",
+      "name": "黄金用例",
+      "baseline": 8.2,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "gt_36",
+          "ok": true
+        },
+        {
+          "name": "combined_50",
+          "ok": true
+        },
+        {
+          "name": "pytest_golden",
+          "ok": true
+        },
+        {
+          "name": "align_95",
+          "ok": true
+        },
+        {
+          "name": "zip17_22",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-09",
+      "name": "分析断语层",
+      "baseline": 5.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "classical_narrative",
+          "ok": true
+        },
+        {
+          "name": "shun_ni",
+          "ok": true
+        },
+        {
+          "name": "geju_classic_sentence",
+          "ok": true
+        },
+        {
+          "name": "scoring_layer",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "B-10",
+      "name": "八字产品呈现",
+      "baseline": 6.8,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "report_classic",
+          "ok": true
+        },
+        {
+          "name": "yongshen_ui",
+          "ok": true
+        },
+        {
+          "name": "boundary_warning",
+          "ok": true
+        },
+        {
+          "name": "report_view",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-01",
+      "name": "安星诀",
+      "baseline": 8.3,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "no_debug_print",
+          "ok": true
+        },
+        {
+          "name": "zw_8_aux",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-02",
+      "name": "宫位/命宫身宫/五行局",
+      "baseline": 8.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "body_badge",
+          "ok": true
+        },
+        {
+          "name": "borrow_star",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-03",
+      "name": "四化体系",
+      "baseline": 8.0,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "sihua_ui",
+          "ok": true
+        },
+        {
+          "name": "algo_settings",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-04",
+      "name": "大限流年流月流日",
+      "baseline": 7.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "start_age_exact",
+          "ok": true
+        },
+        {
+          "name": "overlay_palace",
+          "ok": true
+        },
+        {
+          "name": "timeline_route",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-05",
+      "name": "格局判定",
+      "baseline": 5.8,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "brightness_gate",
+          "ok": true
+        },
+        {
+          "name": "ZRULE_043",
+          "ok": true
+        },
+        {
+          "name": "ZRULE_050",
+          "ok": true
+        },
+        {
+          "name": "top20_tight",
+          "ok": true
+        },
+        {
+          "name": "zw_pattern_regression",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-06",
+      "name": "飞星/叠宫",
+      "baseline": 6.0,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "forecast_overlay",
+          "ok": true
+        },
+        {
+          "name": "overlay_palace_map",
+          "ok": true
+        },
+        {
+          "name": "forecast_tier",
+          "ok": true
+        },
+        {
+          "name": "flying_ui",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-07",
+      "name": "断语与分析层",
+      "baseline": 4.8,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "combo_table",
+          "ok": true
+        },
+        {
+          "name": "forecast_tier",
+          "ok": true
+        },
+        {
+          "name": "compat_heuristic",
+          "ok": true
+        },
+        {
+          "name": "layer_heuristic",
+          "ok": true
+        },
+        {
+          "name": "classical_narrative_bazi",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-08",
+      "name": "黄金用例",
+      "baseline": 4.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "zw_json",
+          "ok": true
+        },
+        {
+          "name": "zw_8",
+          "ok": true
+        },
+        {
+          "name": "zw_regression",
+          "ok": true
+        },
+        {
+          "name": "dual_verify",
+          "ok": true
+        },
+        {
+          "name": "zw_verified",
+          "ok": true
+        },
+        {
+          "name": "zw_tests_pass",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-09",
+      "name": "流派参数/真太阳时",
+      "baseline": 7.2,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "solar_longitude",
+          "ok": true
+        },
+        {
+          "name": "algo_profile",
+          "ok": true
+        },
+        {
+          "name": "ziwei_provenance_api",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "Z-10",
+      "name": "紫微产品呈现",
+      "baseline": 5.0,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "timeline_tab",
+          "ok": true
+        },
+        {
+          "name": "report_brightness",
+          "ok": true
+        },
+        {
+          "name": "field_coverage",
+          "ok": true
+        },
+        {
+          "name": "fusheng_timeline",
+          "ok": true
+        },
+        {
+          "name": "report_body_sihua",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "X-01",
+      "name": "体系统合",
+      "baseline": 6.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "dual_verify",
+          "ok": true
+        },
+        {
+          "name": "combined_gt",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "X-02",
+      "name": "可信度分层标注",
+      "baseline": 5.0,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "provenance_schema",
+          "ok": true
+        },
+        {
+          "name": "bazi_provenance",
+          "ok": true
+        },
+        {
+          "name": "ziwei_provenance",
+          "ok": true
+        },
+        {
+          "name": "heuristic_layer",
+          "ok": true
+        },
+        {
+          "name": "bazi_service_prov",
+          "ok": true
+        },
+        {
+          "name": "ziwei_router_prov",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "X-04",
+      "name": "学术严谨度",
+      "baseline": 7.5,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "scorecard_script",
+          "ok": true
+        },
+        {
+          "name": "scorecard_json",
+          "ok": true
+        },
+        {
+          "name": "gap_audit",
+          "ok": true
+        },
+        {
+          "name": "scorecard_report",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "id": "X-03",
+      "name": "执业就绪度",
+      "baseline": 6.8,
+      "score": 10.0,
+      "target": 10.0,
+      "passed": true,
+      "checks": [
+        {
+          "name": "product_disclaimer",
+          "ok": true
+        },
+        {
+          "name": "drift_list",
+          "ok": true
+        },
+        {
+          "name": "dual_track_zip09",
+          "ok": true
+        },
+        {
+          "name": "dual_verify_data",
+          "ok": true
+        },
+        {
+          "name": "stretch_perfect",
+          "ok": true
+        }
+      ],
+      "gaps": []
+    }
+  ]
+}

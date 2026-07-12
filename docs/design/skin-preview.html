@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>浮生 · 宋式典籍册页极简 · 皮肤样页</title>
+  <!-- Token 真源：与 frontend/src/assets/variables.css 同步（F1-6 · T009） -->
+  <link rel="stylesheet" href="../../frontend/src/assets/variables.css" />
+  <style>
+    :root {
+      --shadow-elevated: 0 4px 20px rgba(26, 20, 16, 0.08);
+    }
+
+    body {
+      background-size: 180px;
+    }
+
+    .preview-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 14px 24px;
+      background: var(--hdr-bg);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(6px);
+    }
+
+    .preview-header h1 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .preview-header p {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-2);
+      font-family: var(--font-ui);
+    }
+
+    .preview-wrap {
+      max-width: var(--page-max-w);
+      margin: 0 auto;
+      padding: 28px clamp(16px, 4vw, 28px) 64px;
+      display: grid;
+      gap: 40px;
+    }
+
+    .section {
+      display: grid;
+      gap: 16px;
+    }
+
+    .section__head {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-md);
+    }
+
+    .section__num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--brand-gold-dark);
+      font-family: var(--font-ui);
+    }
+
+    .section__title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .section__note {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-3);
+      font-family: var(--font-ui);
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* ── 1 背景对比 ── */
+    .bg-swatch {
+      flex: 1 1 200px;
+      min-height: 88px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .bg-swatch strong { font-size: 13px; font-family: var(--font-ui); }
+    .bg-swatch code { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+
+    .bg-swatch--paper { background: var(--brand-paper); }
+    .bg-swatch--surface { background: var(--surface); }
+    .bg-swatch--wrong {
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(15, 23, 42, 0.08), transparent 24%),
+        #f5f0e6;
+      border-color: #93c5fd;
+    }
+    .bg-swatch--wrong strong { color: var(--wx-fire); }
+
+    /* ── 2 按钮 ── */
+    .btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+    }
+    .btn--primary {
+      background: var(--brand-gold);
+      color: var(--surface);
+      border-color: var(--brand-gold-dark);
+    }
+    .btn--primary:hover { background: var(--brand-gold-dark); }
+    .btn--secondary {
+      background: var(--surface);
+      border-color: var(--border-md);
+      color: var(--text);
+    }
+    .btn--ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-2);
+    }
+    .btn--danger {
+      background: var(--surface);
+      border-color: var(--brand-cinnabar);
+      color: var(--brand-cinnabar);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* ── 3 卡片 ── */
+    .card {
+      flex: 1 1 280px;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .card--flat {
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .card--elevated {
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      box-shadow: var(--shadow-elevated);
+    }
+    .card h3 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+    .card p { font-size: 13px; color: var(--text-2); font-family: var(--font-ui); }
+
+    /* ── 4 SummaryStrip ── */
+    .summary-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 24px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .summary-strip__item { display: grid; gap: 4px; min-width: 88px; }
+    .summary-strip__label {
+      font-size: 11px;
+      color: var(--text-2);
+      letter-spacing: 0.06em;
+      font-family: var(--font-ui);
+    }
+    .summary-strip__value {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--brand-gold-dark);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── 5 六柱表 miniature ── */
+    .pillar-grid {
+      overflow-x: auto;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      padding: 4px;
+    }
+    .pillar-table {
+      width: 100%;
+      min-width: 640px;
+      border-collapse: collapse;
+      font-family: var(--font-display);
+    }
+    .pillar-table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.08em;
+      font-family: var(--font-ui);
+    }
+    .pillar-table td {
+      text-align: center;
+      padding: 12px 8px;
+      border-right: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .pillar-table td:last-child { border-right: none; }
+    .pillar-table .col-day {
+      background: rgba(240, 224, 199, 0.35);
+    }
+    .glyph {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .glyph--stem-甲 { color: var(--wx-wood); }
+    .glyph--stem-丙 { color: var(--wx-fire); }
+    .glyph--stem-戊 { color: var(--wx-earth); }
+    .glyph--stem-庚 { color: var(--wx-metal); }
+    .glyph--stem-壬 { color: var(--wx-water); }
+    .hidden-stem {
+      display: block;
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 4px;
+    }
+
+    /* ── 6 Trust 脚注（朱批左线，无 alert 铺底） ── */
+    .trust-footnote {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 12px 14px;
+      font-size: 12px;
+      font-family: var(--font-ui);
+    }
+    .trust-footnote__title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .trust-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0 6px 10px;
+      border-bottom: 1px dashed var(--border);
+      border-left: 3px solid transparent;
+    }
+    .trust-row:last-child { border-bottom: none; }
+    .trust-row--ok { border-left-color: var(--border-md); }
+    .trust-row--drift { border-left-color: var(--brand-gold); }
+    .trust-row--missing { border-left-color: var(--brand-cinnabar); }
+    .trust-icon {
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+      color: var(--text-3);
+    }
+    .trust-badge {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border-md);
+      color: var(--text-2);
+    }
+    .trust-badge--drift {
+      border-color: var(--brand-gold);
+      color: var(--brand-gold-dark);
+    }
+    .trust-badge--missing {
+      border-color: var(--brand-cinnabar);
+      color: var(--brand-cinnabar);
+    }
+
+    /* ── 7 内容层 badge（fact / cite / inference） ── */
+    .layer-badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      font-family: var(--font-ui);
+      background: var(--surface);
+      border: 1px solid var(--border-md);
+      color: var(--text-2);
+    }
+    .layer-badge--fact {
+      border-color: var(--brand-mist);
+    }
+    .layer-badge--cite {
+      border-color: var(--brand-gold);
+      color: var(--brand-gold-dark);
+    }
+    .layer-badge--inference {
+      color: var(--text-3);
+    }
+
+    /* ── 8 深度切换 ── */
+    .depth-toggle {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      gap: 4px;
+    }
+    .depth-toggle__btn {
+      min-height: 36px;
+      padding: 0 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      cursor: pointer;
+      font-family: var(--font-ui);
+    }
+    .depth-toggle__btn.is-active {
+      background: var(--surface);
+      color: var(--brand-gold-dark);
+      box-shadow: var(--shadow);
+    }
+
+    .explain-block {
+      padding: 14px 16px 14px 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      max-width: 520px;
+    }
+    .explain-block--fact { border-left: 3px solid var(--brand-mist); }
+    .explain-block--cite { border-left: 3px solid var(--brand-gold); }
+    .explain-block--inference { border-left: 3px solid var(--text-3); }
+    .explain-block h4 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .explain-block p {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.75;
+      font-family: var(--font-ui);
+    }
+
+    /* ── 9 六卷卷目（T010） ── */
+    .volume-toc {
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .volume-toc__head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--brand-paper);
+    }
+    .volume-toc__head h3 {
+      font-family: var(--font-display);
+      font-size: var(--fs-2xl);
+      font-weight: 600;
+    }
+    .volume-toc__head p {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-2);
+      font-family: var(--font-ui);
+    }
+    .volume-toc__list {
+      list-style: none;
+    }
+    .volume-toc__item {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-ui);
+    }
+    .volume-toc__item:last-child { border-bottom: none; }
+    .volume-toc__item.is-active {
+      background: rgba(240, 224, 199, 0.25);
+    }
+    .volume-toc__id {
+      font-size: 11px;
+      color: var(--brand-gold-dark);
+      letter-spacing: 0.08em;
+      min-width: 48px;
+    }
+    .volume-toc__title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .volume-toc__sub {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    /* ── 10 字体 A/B（T010） ── */
+    .font-ab {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .font-panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 20px;
+    }
+    .font-panel__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--brand-gold-dark);
+      margin-bottom: 12px;
+      font-family: var(--font-ui);
+    }
+    .font-panel__sample-display {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+    .font-panel__sample-ui {
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text-2);
+    }
+    .font-panel__meta {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--font-mono);
+    }
+
+    /* ── 11 八字页布局 + 紫微方盘示意 ── */
+    .layout-demo {
+      border: 2px dashed var(--border-md);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: var(--surface);
+    }
+    .layout-demo__label {
+      font-size: 11px;
+      color: var(--brand-gold-dark);
+      letter-spacing: 0.14em;
+      margin-bottom: 12px;
+      font-family: var(--font-ui);
+    }
+    .layout-caliber {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 12px;
+      font-family: var(--font-ui);
+    }
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(240px, 0.75fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .layout-hero {
+      min-height: 200px;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      color: var(--text-2);
+      font-size: 13px;
+    }
+    .ziwei-plate-demo {
+      min-height: 280px;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 1px;
+      padding: 8px;
+    }
+    .ziwei-cell {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-size: 12px;
+      color: var(--text-2);
+      min-height: 56px;
+    }
+    .ziwei-cell--center {
+      grid-column: 2 / span 2;
+      grid-row: 2 / span 2;
+      background: var(--surface);
+      font-size: 14px;
+      color: var(--brand-gold-dark);
+    }
+    .layout-aside {
+      display: grid;
+      gap: 10px;
+    }
+    .layout-aside__card {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      font-size: 12px;
+      color: var(--text-2);
+      font-family: var(--font-ui);
+    }
+    .layout-trust {
+      padding: 10px 12px 10px 14px;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--brand-cinnabar);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-size: 11px;
+      color: var(--text-3);
+      margin-bottom: 12px;
+      font-family: var(--font-ui);
+    }
+    .layout-explain {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .layout-explain__cell {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-size: 11px;
+      color: var(--text-3);
+      text-align: center;
+      font-family: var(--font-ui);
+    }
+
+    @media (max-width: 768px) {
+      .layout-grid { grid-template-columns: 1fr; }
+      .layout-explain { grid-template-columns: 1fr; }
+      .summary-strip { display: grid; grid-template-columns: 1fr 1fr; }
+      .font-ab { grid-template-columns: 1fr; }
+      .section__note { margin-left: 0; width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="preview-header">
+    <h1>浮生 · 宋式典籍册页极简</h1>
+    <p>定案 <code>FUSHENG-DESIGN-MASTERPLAN.md</code> · 任务 F1-6/T009 · Token <code>variables.css</code></p>
+  </header>
+
+  <main class="preview-wrap">
+    <section class="section" id="bg">
+      <div class="section__head">
+        <span class="section__num">01</span>
+        <h2 class="section__title">背景对比</h2>
+        <span class="section__note">纸底 vs 内容白 · 反例仅对照</span>
+      </div>
+      <div class="row">
+        <div class="bg-swatch bg-swatch--paper">
+          <strong>纸底 · 采用</strong>
+          <code>--brand-paper #f5f0e6</code>
+        </div>
+        <div class="bg-swatch bg-swatch--surface">
+          <strong>内容白 · 卡片</strong>
+          <code>--surface #fffaf5</code>
+        </div>
+        <div class="bg-swatch bg-swatch--wrong">
+          <strong>反例 · 禁止</strong>
+          <code>body 蓝紫 radial 渐变</code>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="buttons">
+      <div class="section__head">
+        <span class="section__num">02</span>
+        <h2 class="section__title">按钮</h2>
+        <span class="section__note">主 CTA 实心铜 · 无 gradient</span>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn--primary">主 CTA</button>
+        <button type="button" class="btn btn--secondary">次要</button>
+        <button type="button" class="btn btn--ghost">幽灵</button>
+        <button type="button" class="btn btn--danger">危险</button>
+        <button type="button" class="btn btn--primary" disabled>禁用</button>
+      </div>
+    </section>
+
+    <section class="section" id="cards">
+      <div class="section__head">
+        <span class="section__num">03</span>
+        <h2 class="section__title">卡片两档</h2>
+        <span class="section__note">elevated 每页 ≤1</span>
+      </div>
+      <div class="row">
+        <article class="card card--flat">
+          <h3>flat · 默认区块</h3>
+          <p>细边框、无阴影。解读区、辅助面板、校勘脚注均用此档。</p>
+        </article>
+        <article class="card card--elevated">
+          <h3>elevated · Hero</h3>
+          <p>首页档案就绪卡。全页唯一强调。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="summary">
+      <div class="section__head">
+        <span class="section__num">04</span>
+        <h2 class="section__title">SummaryStrip</h2>
+        <span class="section__note">KPI 铜色 · 标签雾棕</span>
+      </div>
+      <div class="summary-strip" role="region" aria-label="摘要样例">
+        <div class="summary-strip__item">
+          <span class="summary-strip__label">日主</span>
+          <strong class="summary-strip__value">甲木</strong>
+        </div>
+        <div class="summary-strip__item">
+          <span class="summary-strip__label">强弱</span>
+          <strong class="summary-strip__value">偏弱</strong>
+        </div>
+        <div class="summary-strip__item">
+          <span class="summary-strip__label">格局</span>
+          <strong class="summary-strip__value">正印格</strong>
+        </div>
+        <div class="summary-strip__item">
+          <span class="summary-strip__label">用神</span>
+          <strong class="summary-strip__value">水木</strong>
+        </div>
+        <div class="summary-strip__item">
+          <span class="summary-strip__label">流年</span>
+          <strong class="summary-strip__value">乙巳</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pillars">
+      <div class="section__head">
+        <span class="section__num">05</span>
+        <h2 class="section__title">六柱表 miniature</h2>
+        <span class="section__note">刻本宋干支 · 五行色仅字符</span>
+      </div>
+      <div class="pillar-grid">
+        <table class="pillar-table">
+          <thead>
+            <tr>
+              <th>流年</th><th>大运</th><th>年柱</th><th>月柱</th>
+              <th>日柱</th><th>时柱</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="glyph glyph--stem-乙">乙</span><span class="glyph" style="color:var(--wx-fire)">巳</span></td>
+              <td><span class="glyph glyph--stem-甲">甲</span><span class="glyph" style="color:var(--wx-water)">子</span></td>
+              <td><span class="glyph glyph--stem-庚">庚</span><span class="glyph" style="color:var(--wx-earth)">午</span></td>
+              <td><span class="glyph glyph--stem-丙">丙</span><span class="glyph" style="color:var(--wx-earth)">戌</span></td>
+              <td class="col-day"><span class="glyph glyph--stem-甲">甲</span><span class="glyph" style="color:var(--wx-earth)">辰</span></td>
+              <td><span class="glyph glyph--stem-壬">壬</span><span class="glyph" style="color:var(--wx-water)">申</span></td>
+            </tr>
+            <tr>
+              <td colspan="6" style="font-size:11px;color:var(--text-3);padding:8px;font-family:var(--font-ui)">藏干示例：辰 → 乙·劫财 · 戊·偏财 · 癸·正印</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="trust">
+      <div class="section__head">
+        <span class="section__num">06</span>
+        <h2 class="section__title">校勘脚注</h2>
+        <span class="section__note">朱批左线 · 无绿黄 alert 铺底</span>
+      </div>
+      <div class="trust-footnote">
+        <p class="trust-footnote__title">引擎校验 · 跋前脚注</p>
+        <div class="trust-row trust-row--ok">
+          <span class="trust-icon">✓</span>
+          <span class="trust-badge">核对</span>
+          <span>四柱干支与档案签名一致</span>
+        </div>
+        <div class="trust-row trust-row--drift">
+          <span class="trust-icon">△</span>
+          <span class="trust-badge trust-badge--drift">双轨</span>
+          <span>ZIP09 recorded 从官杀格 · engine 七杀格</span>
+        </div>
+        <div class="trust-row trust-row--missing">
+          <span class="trust-icon">!</span>
+          <span class="trust-badge trust-badge--missing">缺失</span>
+          <span>神煞细目 · 纳音备注</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="layer">
+      <div class="section__head">
+        <span class="section__num">07</span>
+        <h2 class="section__title">内容层 badge</h2>
+        <span class="section__note">fact · cite · inference</span>
+      </div>
+      <div class="row">
+        <span class="layer-badge layer-badge--fact">排盘推算</span>
+        <span class="layer-badge layer-badge--cite">典籍依据</span>
+        <span class="layer-badge layer-badge--inference">经验推断</span>
+      </div>
+    </section>
+
+    <section class="section" id="depth">
+      <div class="section__head">
+        <span class="section__num">08</span>
+        <h2 class="section__title">深度切换 + 三层块</h2>
+        <span class="section__note">推断默认折叠</span>
+      </div>
+      <div class="depth-toggle" role="tablist" aria-label="阅读深度">
+        <button type="button" class="depth-toggle__btn is-active" role="tab" aria-selected="true">速览</button>
+        <button type="button" class="depth-toggle__btn" role="tab">结构</button>
+        <button type="button" class="depth-toggle__btn" role="tab">深读</button>
+      </div>
+      <div class="row" style="margin-top:8px;gap:16px;align-items:stretch">
+        <div class="explain-block explain-block--fact">
+          <h4>排盘推算</h4>
+          <p>事实 KPI、干支、分数。纸面白底 + 雾褐左边线。</p>
+        </div>
+        <div class="explain-block explain-block--cite">
+          <h4>典籍依据</h4>
+          <p>仅 verified classic_id。铜色左边线 3px。</p>
+        </div>
+        <div class="explain-block explain-block--inference">
+          <h4>经验推断</h4>
+          <p>默认折叠。淡墨左边线 + badge「推断」。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="volumes">
+      <div class="section__head">
+        <span class="section__num">09</span>
+        <h2 class="section__title">报告六卷 + 跋 卷目</h2>
+        <span class="section__note">F1-1 / T010 · 与 ReportView 冻结</span>
+      </div>
+      <nav class="volume-toc" aria-label="人生六卷卷目">
+        <div class="volume-toc__head">
+          <h3>刘博 · 命盘辑录</h3>
+          <p>卷首导读 · 连续阅读 · 跋可展开校勘</p>
+        </div>
+        <ol class="volume-toc__list">
+          <li class="volume-toc__item"><span class="volume-toc__id">卷首</span><span class="volume-toc__title">导读</span><span class="volume-toc__sub">preface</span></li>
+          <li class="volume-toc__item is-active"><span class="volume-toc__id">卷一</span><span class="volume-toc__title">命之根</span><span class="volume-toc__sub">vol1</span></li>
+          <li class="volume-toc__item"><span class="volume-toc__id">卷二</span><span class="volume-toc__title">业之象</span><span class="volume-toc__sub">vol2</span></li>
+          <li class="volume-toc__item"><span class="volume-toc__id">卷三</span><span class="volume-toc__title">运之波</span><span class="volume-toc__sub">vol3</span></li>
+          <li class="volume-toc__item"><span class="volume-toc__id">卷四</span><span class="volume-toc__title">宫之图</span><span class="volume-toc__sub">vol4</span></li>
+          <li class="volume-toc__item"><span class="volume-toc__id">卷五</span><span class="volume-toc__title">事之理</span><span class="volume-toc__sub">vol5 · 推断折叠</span></li>
+          <li class="volume-toc__item"><span class="volume-toc__id">卷六</span><span class="volume-toc__title">问书</span><span class="volume-toc__sub">vol6 · 手动</span></li>
+          <li class="volume-toc__item"><span class="volume-toc__id">跋</span><span class="volume-toc__title">校勘</span><span class="volume-toc__sub">colophon</span></li>
+        </ol>
+      </nav>
+    </section>
+
+    <section class="section" id="fonts">
+      <div class="section__head">
+        <span class="section__num">10</span>
+        <h2 class="section__title">字体 A / B 对比</h2>
+        <span class="section__note">display 刻本宋 vs ui 系统无衬线</span>
+      </div>
+      <div class="font-ab">
+        <div class="font-panel">
+          <p class="font-panel__label">A · --font-display（卷名 / 干支）</p>
+          <p class="font-panel__sample-display">卷一·命之根<br />甲子 乙丑 丙寅</p>
+          <p class="font-panel__sample-ui" style="font-family:var(--font-display);font-size:13px">《子平真诠》· 论用神</p>
+          <p class="font-panel__meta">LXGW Neo ZhiSong → Source Han Serif SC → STSong</p>
+        </div>
+        <div class="font-panel">
+          <p class="font-panel__label">B · --font-ui（导航 / 表单 / KPI 标签）</p>
+          <p class="font-panel__sample-ui" style="font-size:16px;font-weight:600;color:var(--text)">八字盘面 · 档案口径</p>
+          <p class="font-panel__sample-ui">日主强弱、格局用神、流年干支 — 表头与按钮用此栈。</p>
+          <p class="font-panel__meta">-apple-system → PingFang SC → Microsoft YaHei UI</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="layout-bazi">
+      <div class="section__head">
+        <span class="section__num">11</span>
+        <h2 class="section__title">八字页布局（母版 A）</h2>
+        <span class="section__note">handbook-bazi-layout.md</span>
+      </div>
+      <div class="layout-demo">
+        <p class="layout-demo__label">CHART-CENTRIC · 1120px</p>
+        <div class="layout-caliber">口径：真太阳时 · 子时早子 · 排盘推算</div>
+        <div class="summary-strip" style="margin-bottom:12px">
+          <div class="summary-strip__item"><span class="summary-strip__label">日主</span><strong class="summary-strip__value">甲</strong></div>
+          <div class="summary-strip__item"><span class="summary-strip__label">格局</span><strong class="summary-strip__value">正印</strong></div>
+          <div class="summary-strip__item"><span class="summary-strip__label">用神</span><strong class="summary-strip__value">水</strong></div>
+        </div>
+        <div class="layout-grid">
+          <div class="layout-hero">六柱表 Hero · ≥55% 宽</div>
+          <div class="layout-aside">
+            <div class="layout-aside__card">流日卡</div>
+            <div class="layout-aside__card">卷二 · 业之象摘要</div>
+          </div>
+        </div>
+        <div class="layout-trust">校勘脚注 — 朱批左线，非 alert 色块</div>
+        <div class="layout-explain">
+          <div class="layout-explain__cell">排盘推算</div>
+          <div class="layout-explain__cell">典籍依据</div>
+          <div class="layout-explain__cell">推断（折叠）</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="layout-ziwei">
+      <div class="section__head">
+        <span class="section__num">12</span>
+        <h2 class="section__title">紫微方盘示意（母版 A）</h2>
+        <span class="section__note">纯色底 · 无 gradient · T014 ziwei.png 来源</span>
+      </div>
+      <div class="layout-demo">
+        <p class="layout-demo__label">PLATE HERO · --surface 纯色</p>
+        <div class="ziwei-plate-demo" aria-label="方盘网格示意">
+          <div class="ziwei-cell">迁移</div>
+          <div class="ziwei-cell">疾厄</div>
+          <div class="ziwei-cell">财帛</div>
+          <div class="ziwei-cell">子女</div>
+          <div class="ziwei-cell">仆役</div>
+          <div class="ziwei-cell ziwei-cell--center">紫微<br />命宫</div>
+          <div class="ziwei-cell">官禄</div>
+          <div class="ziwei-cell">田宅</div>
+          <div class="ziwei-cell">福德</div>
+          <div class="ziwei-cell">父母</div>
+          <div class="ziwei-cell">兄弟</div>
+          <div class="ziwei-cell">夫妻</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('.depth-toggle__btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.depth-toggle__btn').forEach((b) => {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-selected', 'true');
+      });
+    });
+  </script>
+</body>
+</html>

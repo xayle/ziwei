@@ -1,0 +1,29 @@
+# 项目计划索引
+
+> **开发统一入口：** [`../DEVELOPMENT.md`](../DEVELOPMENT.md)
+
+## 活跃计划
+
+| 文档 | 说明 |
+|------|------|
+| [**FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md**](./FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) | ⭐ **主执行** W1–W16（细节与周表） |
+| [**FUSHENG-EXECUTION-REMAINING.md**](./FUSHENG-EXECUTION-REMAINING.md) | ⭐⭐ **剩余工作免对话 R001–R116**（当前主执行） |
+| [**FUSHENG-EXECUTION-PRIORITY.md**](./FUSHENG-EXECUTION-PRIORITY.md) | 打磨期全量 **T001–T070**（含已完成） |
+| [**FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md**](./FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md) | 八字紫微打磨细节 **BZ001–BZ088** |
+| [**FUSHENG-EXECUTION-PRIORITY-POST-W14.md**](./FUSHENG-EXECUTION-PRIORITY-POST-W14.md) | **T070 后**免对话 **T071–T140**（U5·GTM·平台；打磨完成后再开） |
+| [**FUSHENG-MARKET-ENTRY-STRATEGY.md**](./FUSHENG-MARKET-ENTRY-STRATEGY.md) | 赛道 · 竞品 · 战略映射 |
+| [**BACKEND-MASTER-PLAN-2026-07-12.md**](./BACKEND-MASTER-PLAN-2026-07-12.md) | 后端专章 v2.2 |
+| [**FE-BE-DECISIONS.md**](./FE-BE-DECISIONS.md) | 前后端协作决议 |
+| [**FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md**](./FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) | 增长 W15+ |
+| [**PLATFORM-EVOLUTION-ROADMAP.md**](./PLATFORM-EVOLUTION-ROADMAP.md) | 平台 W17+ |
+| [**ENGINE-CORE-FIX-PLAN-2026-07-11.md**](./ENGINE-CORE-FIX-PLAN-2026-07-11.md) | 引擎修复 ✅ 已完成 |
+
+## 快速链接
+
+- 执行周表 → [INTEGRATED §六](./FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#六联合周计划w1w16)
+- **当前执行（剩余工作）** → [EXECUTION-REMAINING R001–R116](./FUSHENG-EXECUTION-REMAINING.md)
+- 按编号开发（全量含已完成）→ [EXECUTION-PRIORITY T001–T070](./FUSHENG-EXECUTION-PRIORITY.md)
+- **T070 完成后** → [EXECUTION-PRIORITY-POST-W14 T071–T140](./FUSHENG-EXECUTION-PRIORITY-POST-W14.md)
+- 契约 JSON → [`../contracts/`](../contracts/)
+- 预警门禁 → [INTEGRATED §5.11](./FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#511-前端落地预警risk-alert-并入)
+- 已归档计划 → [`../archive/superseded/dev-consolidation-2026-07-12/`](../archive/superseded/dev-consolidation-2026-07-12/)

@@ -1,0 +1,409 @@
+{
+  "available": true,
+  "trust_level": "advisory",
+  "note": "Palace overlay diffs are advisory; age-range agreement is primary signal.",
+  "count": 3,
+  "cases": [
+    {
+      "id": "WM01",
+      "trust_level": "advisory",
+      "dayun_ranges_found": 12,
+      "age_range_matches": 12,
+      "palace_name_matches": 12,
+      "palaces": [
+        {
+          "wenmo_palace": "福德宫",
+          "wenmo_branch": "甲子",
+          "wenmo_range": "22 ~ 31",
+          "start_age": 22,
+          "end_age": 31,
+          "engine_ganzhi": "甲子",
+          "engine_palace": "福德宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "田宅宫",
+          "wenmo_branch": "乙丑",
+          "wenmo_range": "32 ~ 41",
+          "start_age": 32,
+          "end_age": 41,
+          "engine_ganzhi": "乙丑",
+          "engine_palace": "田宅宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "官禄宫",
+          "wenmo_branch": "甲寅",
+          "wenmo_range": "42 ~ 51",
+          "start_age": 42,
+          "end_age": 51,
+          "engine_ganzhi": "甲寅",
+          "engine_palace": "官禄宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "交友宫",
+          "wenmo_branch": "乙卯",
+          "wenmo_range": "52 ~ 61",
+          "start_age": 52,
+          "end_age": 61,
+          "engine_ganzhi": "乙卯",
+          "engine_palace": "交友宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "迁移宫",
+          "wenmo_branch": "丙辰",
+          "wenmo_range": "62 ~ 71",
+          "start_age": 62,
+          "end_age": 71,
+          "engine_ganzhi": "丙辰",
+          "engine_palace": "迁移宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "疾厄宫",
+          "wenmo_branch": "丁巳",
+          "wenmo_range": "72 ~ 81",
+          "start_age": 72,
+          "end_age": 81,
+          "engine_ganzhi": "丁巳",
+          "engine_palace": "疾厄宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "财帛宫",
+          "wenmo_branch": "戊午",
+          "wenmo_range": "82 ~ 91",
+          "start_age": 82,
+          "end_age": 91,
+          "engine_ganzhi": "戊午",
+          "engine_palace": "财帛宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "子女宫",
+          "wenmo_branch": "己未",
+          "wenmo_range": "92 ~ 101",
+          "start_age": 92,
+          "end_age": 101,
+          "engine_ganzhi": "己未",
+          "engine_palace": "子女宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "夫妻宫",
+          "wenmo_branch": "庚申",
+          "wenmo_range": "102 ~ 111",
+          "start_age": 102,
+          "end_age": 111,
+          "engine_ganzhi": "庚申",
+          "engine_palace": "夫妻宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "兄弟宫",
+          "wenmo_branch": "辛酉",
+          "wenmo_range": "112 ~ 121",
+          "start_age": 112,
+          "end_age": 121,
+          "engine_ganzhi": "辛酉",
+          "engine_palace": "兄弟宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "命宫",
+          "wenmo_branch": "壬戌",
+          "wenmo_range": "2 ~ 11",
+          "start_age": 2,
+          "end_age": 11,
+          "engine_ganzhi": "壬戌",
+          "engine_palace": "命宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "父母宫",
+          "wenmo_branch": "癸亥",
+          "wenmo_range": "12 ~ 21",
+          "start_age": 12,
+          "end_age": 21,
+          "engine_ganzhi": "癸亥",
+          "engine_palace": "父母宫",
+          "palace_match": true,
+          "age_range_match": true
+        }
+      ]
+    },
+    {
+      "id": "WM02",
+      "trust_level": "advisory",
+      "dayun_ranges_found": 11,
+      "age_range_matches": 11,
+      "palace_name_matches": 11,
+      "palaces": [
+        {
+          "wenmo_palace": "夫妻宫",
+          "wenmo_branch": "乙丑",
+          "wenmo_range": "102 ~ 111",
+          "start_age": 102,
+          "end_age": 111,
+          "engine_ganzhi": "乙丑",
+          "engine_palace": "夫妻宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "兄弟宫",
+          "wenmo_branch": "甲寅",
+          "wenmo_range": "112 ~ 121",
+          "start_age": 112,
+          "end_age": 121,
+          "engine_ganzhi": "甲寅",
+          "engine_palace": "兄弟宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "命宫",
+          "wenmo_branch": "乙卯",
+          "wenmo_range": "2 ~ 11",
+          "start_age": 2,
+          "end_age": 11,
+          "engine_ganzhi": "乙卯",
+          "engine_palace": "命宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "父母宫",
+          "wenmo_branch": "丙辰",
+          "wenmo_range": "12 ~ 21",
+          "start_age": 12,
+          "end_age": 21,
+          "engine_ganzhi": "丙辰",
+          "engine_palace": "父母宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "福德宫",
+          "wenmo_branch": "丁巳",
+          "wenmo_range": "22 ~ 31",
+          "start_age": 22,
+          "end_age": 31,
+          "engine_ganzhi": "丁巳",
+          "engine_palace": "福德宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "田宅宫",
+          "wenmo_branch": "戊午",
+          "wenmo_range": "32 ~ 41",
+          "start_age": 32,
+          "end_age": 41,
+          "engine_ganzhi": "戊午",
+          "engine_palace": "田宅宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "官禄宫",
+          "wenmo_branch": "己未",
+          "wenmo_range": "42 ~ 51",
+          "start_age": 42,
+          "end_age": 51,
+          "engine_ganzhi": "己未",
+          "engine_palace": "官禄宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "交友宫",
+          "wenmo_branch": "庚申",
+          "wenmo_range": "52 ~ 61",
+          "start_age": 52,
+          "end_age": 61,
+          "engine_ganzhi": "庚申",
+          "engine_palace": "交友宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "迁移宫",
+          "wenmo_branch": "辛酉",
+          "wenmo_range": "62 ~ 71",
+          "start_age": 62,
+          "end_age": 71,
+          "engine_ganzhi": "辛酉",
+          "engine_palace": "迁移宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "疾厄宫",
+          "wenmo_branch": "壬戌",
+          "wenmo_range": "72 ~ 81",
+          "start_age": 72,
+          "end_age": 81,
+          "engine_ganzhi": "壬戌",
+          "engine_palace": "疾厄宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "财帛宫",
+          "wenmo_branch": "癸亥",
+          "wenmo_range": "82 ~ 91",
+          "start_age": 82,
+          "end_age": 91,
+          "engine_ganzhi": "癸亥",
+          "engine_palace": "财帛宫",
+          "palace_match": true,
+          "age_range_match": true
+        }
+      ]
+    },
+    {
+      "id": "WM03",
+      "trust_level": "advisory",
+      "dayun_ranges_found": 11,
+      "age_range_matches": 11,
+      "palace_name_matches": 11,
+      "palaces": [
+        {
+          "wenmo_palace": "福德宫",
+          "wenmo_branch": "乙丑",
+          "wenmo_range": "22 ~ 31",
+          "start_age": 22,
+          "end_age": 31,
+          "engine_ganzhi": "乙丑",
+          "engine_palace": "福德宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "田宅宫",
+          "wenmo_branch": "甲寅",
+          "wenmo_range": "32 ~ 41",
+          "start_age": 32,
+          "end_age": 41,
+          "engine_ganzhi": "甲寅",
+          "engine_palace": "田宅宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "官禄宫",
+          "wenmo_branch": "乙卯",
+          "wenmo_range": "42 ~ 51",
+          "start_age": 42,
+          "end_age": 51,
+          "engine_ganzhi": "乙卯",
+          "engine_palace": "官禄宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "交友宫",
+          "wenmo_branch": "丙辰",
+          "wenmo_range": "52 ~ 61",
+          "start_age": 52,
+          "end_age": 61,
+          "engine_ganzhi": "丙辰",
+          "engine_palace": "交友宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "迁移宫",
+          "wenmo_branch": "丁巳",
+          "wenmo_range": "62 ~ 71",
+          "start_age": 62,
+          "end_age": 71,
+          "engine_ganzhi": "丁巳",
+          "engine_palace": "迁移宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "疾厄宫",
+          "wenmo_branch": "戊午",
+          "wenmo_range": "72 ~ 81",
+          "start_age": 72,
+          "end_age": 81,
+          "engine_ganzhi": "戊午",
+          "engine_palace": "疾厄宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "财帛宫",
+          "wenmo_branch": "己未",
+          "wenmo_range": "82 ~ 91",
+          "start_age": 82,
+          "end_age": 91,
+          "engine_ganzhi": "己未",
+          "engine_palace": "财帛宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "子女宫",
+          "wenmo_branch": "庚申",
+          "wenmo_range": "92 ~ 101",
+          "start_age": 92,
+          "end_age": 101,
+          "engine_ganzhi": "庚申",
+          "engine_palace": "子女宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "夫妻宫",
+          "wenmo_branch": "辛酉",
+          "wenmo_range": "102 ~ 111",
+          "start_age": 102,
+          "end_age": 111,
+          "engine_ganzhi": "辛酉",
+          "engine_palace": "夫妻宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "兄弟宫",
+          "wenmo_branch": "壬戌",
+          "wenmo_range": "112 ~ 121",
+          "start_age": 112,
+          "end_age": 121,
+          "engine_ganzhi": "壬戌",
+          "engine_palace": "兄弟宫",
+          "palace_match": true,
+          "age_range_match": true
+        },
+        {
+          "wenmo_palace": "命宫",
+          "wenmo_branch": "癸亥",
+          "wenmo_range": "2 ~ 11",
+          "start_age": 2,
+          "end_age": 11,
+          "engine_ganzhi": "癸亥",
+          "engine_palace": "命宫",
+          "palace_match": true,
+          "age_range_match": true
+        }
+      ]
+    }
+  ]
+}

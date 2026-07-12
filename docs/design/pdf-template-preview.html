@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF 模板预览</title>
+  <style>
+    :root {
+      --bg: #09111f;
+      --shell: #f3eee5;
+      --paper: #fffdf8;
+      --paper-2: #faf6ee;
+      --line: #ddd1bf;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #9a5b17;
+      --accent-2: #c98a3a;
+      --accent-soft: #f7e7c9;
+      --success: #14532d;
+      --warn: #854d0e;
+      --info: #1d4ed8;
+      --shadow: 0 24px 60px rgba(15, 23, 42, .18);
+      --radius: 26px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(201,138,58,.18), transparent 22%),
+        radial-gradient(circle at 82% 0%, rgba(59,130,246,.12), transparent 18%),
+        linear-gradient(180deg, #0b1324 0%, #101827 100%);
+    }
+    .wrap {
+      width: min(1360px, calc(100vw - 40px));
+      margin: 0 auto;
+      padding: 36px 0 72px;
+    }
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px 28px 30px;
+      color: #f8fafc;
+    }
+    .hero h1 {
+      margin: 12px 0 10px;
+      font-size: clamp(30px, 3.6vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -.04em;
+    }
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(201,138,58,.15);
+      color: #fbbf24;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+    .hero-note {
+      align-self: end;
+      max-width: 280px;
+      color: #dbe4f0;
+      line-height: 1.7;
+      font-size: 13px;
+    }
+    .pages {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 26px;
+    }
+    .page {
+      aspect-ratio: 210 / 297;
+      background: var(--shell);
+      border-radius: 28px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .sheet {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      padding: 26px;
+      border-radius: 20px;
+      border: 1px solid #e5d9c7;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,245,236,.98));
+    }
+    .sheet::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at top right, rgba(154,91,23,.07), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(29,78,216,.05), transparent 24%);
+    }
+    .sheet::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(154,91,23,.08);
+      border-radius: 16px;
+      pointer-events: none;
+    }
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cover-top {
+      display: grid;
+      gap: 18px;
+      position: relative;
+      z-index: 1;
+    }
+    .cover-mark {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .1em;
+    }
+    .cover-title {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1.03;
+      letter-spacing: -.05em;
+      color: #162033;
+    }
+    .cover-subtitle {
+      margin: 0;
+      max-width: 430px;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+    .cover-profile {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .profile-card {
+      min-height: 92px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.86);
+      padding: 14px;
+    }
+    .profile-label {
+      display: block;
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .profile-text {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .cover-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      position: relative;
+      z-index: 1;
+    }
+    .cover-footer .stamp {
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.78);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .cover-footer .stamp strong {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      z-index: 1;
+    }
+    .section-no {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .section-title h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -.02em;
+    }
+    .toc-list {
+      display: grid;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .toc-item {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.9);
+    }
+    .toc-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .toc-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .toc-badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .high { background: #dcfce7; color: #166534; }
+    .mid { background: #dbeafe; color: #1d4ed8; }
+    .inf { background: #f3e8ff; color: #7c3aed; }
+    .section-blocks {
+      display: grid;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .block {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.9);
+      padding: 14px;
+      min-height: 96px;
+    }
+    .block-label {
+      display: block;
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .block-text {
+      margin: 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .fact-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .fact-chip {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.88);
+    }
+    .fact-chip span {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .fact-chip strong {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .pattern-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .pattern-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.9);
+      padding: 12px 14px;
+    }
+    .pattern-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .pattern-top strong { font-size: 13px; }
+    .pattern-item p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 12px;
+    }
+    .summary-callout {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(180, 83, 9, 0.18);
+      background: rgba(254, 243, 199, 0.34);
+    }
+    .timeline {
+      display: grid;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .timeline-item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.9);
+      padding: 12px;
+    }
+    .timeline-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .timeline-head strong {
+      font-size: 13px;
+      color: var(--text);
+    }
+    .timeline-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .warning-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .warning {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,.9);
+    }
+    .warning.danger { border-color: #fca5a5; background: #fff1f2; }
+    .warning.warn { border-color: #fcd34d; background: #fffbeb; }
+    .warning.info { border-color: #bfdbfe; background: #eff6ff; }
+    .warning-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .warning-top strong {
+      font-size: 13px;
+      color: var(--text);
+    }
+    .warning p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .page-foot {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      bottom: 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      z-index: 1;
+    }
+    .page-foot span:last-child {
+      text-align: right;
+    }
+    @media (max-width: 1120px) {
+      .pages { grid-template-columns: 1fr; }
+      .hero { flex-direction: column; }
+      .hero-note { max-width: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <span class="pill">PDF Template Preview</span>
+        <h1>档案型命理 PDF 模板预览</h1>
+        <p>当前模板以“正式档案交付”为目标，强调封面、目录、基础档案、时间轴、主动预警、紫微与附录批注的一致层级。</p>
+      </div>
+      <div class="hero-note">
+        设计方向：克制、正式、可打印。<br />
+        主结论前置，解释后置，保留人工注释空间。
+      </div>
+    </div>
+
+    <div class="pages">
+      <section class="page">
+        <div class="sheet cover">
+          <div class="cover-top">
+            <span class="cover-mark">命理档案报告 · 封面</span>
+            <div>
+              <h2 class="cover-title">程安东<br />个人档案</h2>
+              <p class="cover-subtitle">填写基础信息后自动生成个人数据卡，汇总八字、紫微、姓名与时间轴信息，形成可讲解、可留档的正式 PDF。</p>
+            </div>
+            <div class="cover-profile">
+              <div class="profile-card">
+                <span class="profile-label">档案快照</span>
+                <p class="profile-text">姓名、出生地、出生时间、时间基准、现居地。</p>
+              </div>
+              <div class="profile-card">
+                <span class="profile-label">结果分层</span>
+                <p class="profile-text">高置信 / 中置信 / 推断项，统一标识。</p>
+              </div>
+              <div class="profile-card">
+                <span class="profile-label">交付闭环</span>
+                <p class="profile-text">PDF、PNG 分享卡、人工批注页。</p>
+              </div>
+              <div class="profile-card">
+                <span class="profile-label">时间轴</span>
+                <p class="profile-text">出生、起运、大运、流年、关键年份。</p>
+              </div>
+            </div>
+          </div>
+          <div class="cover-footer">
+            <div class="stamp">
+              <strong>档案交付版</strong>
+              可打印、可讲解、可复盘
+            </div>
+            <div class="stamp">
+              <strong>人工注释区</strong>
+              留出后续批注与讲解空间
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page">
+        <div class="sheet">
+          <div class="section-title">
+            <span class="section-no">01</span>
+            <h3>目录</h3>
+          </div>
+          <div class="toc-list">
+            <div class="toc-item"><span class="toc-index">1</span><span class="toc-title">个人基础档案</span><span class="toc-badge high">高置信</span></div>
+            <div class="toc-item"><span class="toc-index">2</span><span class="toc-title">八字总览</span><span class="toc-badge high">高置信</span></div>
+            <div class="toc-item"><span class="toc-index">3</span><span class="toc-title">八字深度分析</span><span class="toc-badge mid">中置信</span></div>
+            <div class="toc-item"><span class="toc-index">4</span><span class="toc-title">运势时间轴</span><span class="toc-badge mid">中置信</span></div>
+            <div class="toc-item"><span class="toc-index">5</span><span class="toc-title">紫微命盘总览</span><span class="toc-badge high">高置信</span></div>
+            <div class="toc-item"><span class="toc-index">6</span><span class="toc-title">紫微宫位分析</span><span class="toc-badge mid">中置信</span></div>
+            <div class="toc-item"><span class="toc-index">7</span><span class="toc-title">姓名分析</span><span class="toc-badge high">高置信</span></div>
+            <div class="toc-item"><span class="toc-index">8</span><span class="toc-title">应用建议与参考</span><span class="toc-badge inf">推断项</span></div>
+            <div class="toc-item"><span class="toc-index">9</span><span class="toc-title">附录与人工批注</span><span class="toc-badge mid">中置信</span></div>
+          </div>
+          <div class="page-foot">
+            <span>目录页</span>
+            <span>章节锚点清晰，便于装订和人工讲解</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="page">
+        <div class="sheet">
+          <div class="section-title">
+            <span class="section-no">02</span>
+            <h3>基础档案 + 八字总览</h3>
+          </div>
+          <div class="section-blocks">
+            <div class="block">
+              <span class="block-label">个人基础档案</span>
+              <p class="block-text">姓名、性别、出生日期、出生时间、出生地、经纬度、时区、真太阳时开关、当前关注重点。</p>
+            </div>
+            <div class="block">
+              <span class="block-label">八字总览</span>
+              <p class="block-text">四柱、十神、五行分布、日主强弱、用神喜忌、格局结论、置信度分层。</p>
+            </div>
+            <div class="block">
+              <span class="block-label">时间基准</span>
+              <p class="block-text">出生时间精度、未知时辰兜底、公历/农历切换、夏令时归一化、现居地信息。</p>
+            </div>
+            <div class="block">
+              <span class="block-label">结果摘要</span>
+              <p class="block-text">先结论，后细节；先卡片，后展开；重点信息在前，人工注释在后。</p>
+            </div>
+          </div>
+          <div class="page-foot">
+            <span>正文页 1</span>
+            <span>档案内容优先级最高</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="page">
+        <div class="sheet">
+          <div class="section-title">
+            <span class="section-no">03</span>
+            <h3>时间轴 + 主动预警</h3>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-head"><strong>出生</strong><span class="toc-badge high">高置信</span></div>
+              <p class="timeline-text">出生年月日时、出生地和时间基准作为时间轴起点。</p>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-head"><strong>起运 / 当前大运 / 下一换运</strong><span class="toc-badge mid">中置信</span></div>
+              <p class="timeline-text">把起运、当前大运和下一换运放在同一条时间线上，便于讲解阶段变化。</p>
+            </div>
+          </div>
+          <div class="warning-grid">
+            <div class="warning danger">
+              <div class="warning-top"><strong>本命年</strong><span class="toc-badge">当前 / 下一次</span></div>
+              <p>优先提示本命年、换运、冲克与关键年份，作为人工讲解前置提醒。</p>
+            </div>
+            <div class="warning warn">
+              <div class="warning-top"><strong>换运</strong><span class="toc-badge">临界期</span></div>
+              <p>把大运切换点与敏感年份提前标记，减少解释时的跳转成本。</p>
+            </div>
+            <div class="warning info">
+              <div class="warning-top"><strong>冲克 / 校验</strong><span class="toc-badge">提醒</span></div>
+              <p>将冲克与结果校验并列展示，避免用户只看到结论，看不到依据。</p>
+            </div>
+          </div>
+          <div class="page-foot">
+            <span>正文页 2</span>
+            <span>时间轴与预警使用同一套报告语言</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="page">
+        <div class="sheet">
+          <div class="section-title">
+            <span class="section-no">05</span>
+            <h3>五、紫微命盘总览</h3>
+          </div>
+          <div class="overview-grid">
+            <div class="block">
+              <span class="block-label">紫微命盘总览</span>
+              <div class="fact-grid">
+                <div class="fact-chip"><span>命主星</span><strong>武曲</strong></div>
+                <div class="fact-chip"><span>身主星</span><strong>火星</strong></div>
+                <div class="fact-chip"><span>五行局</span><strong>水二局</strong></div>
+                <div class="fact-chip"><span>命宫干支</span><strong>乙酉</strong></div>
+              </div>
+              <div class="summary-callout">
+                <span class="block-label">总览摘要</span>
+                <p class="block-text">命宫为酉宫（乙酉），身宫为卯宫，五行局为水二局；命宫主星以天同为主，气质偏向温和享福、贵人多助。</p>
+              </div>
+              <p class="block-text">命主星、身主星、五行局、命宫干支统一放在总览卡中，先给结论，再进入细节。</p>
+            </div>
+            <div class="block">
+              <span class="block-label">结构摘要</span>
+              <div class="pattern-stack">
+                <div class="pattern-item">
+                  <div class="pattern-top"><strong>紫府同宫</strong><span class="toc-badge high">大吉</span></div>
+                  <p>核心格局优先呈现，摘要只保留一个判断句，细节交给后续章节。</p>
+                </div>
+                <div class="pattern-item">
+                  <div class="pattern-top"><strong>化忌守命</strong><span class="toc-badge mid">凶</span></div>
+                  <p>结构摘要只放关键格局名与一句解释，避免和命盘概述混写。</p>
+                </div>
+                <div class="pattern-item">
+                  <div class="pattern-top"><strong>禄马交驰</strong><span class="toc-badge high">大吉</span></div>
+                  <p>保持摘要层克制，确保总览卡和结构摘要卡各讲各的内容。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="page-foot">
+            <span>正文页 4</span>
+            <span>可直接打印或转发归档</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-07-12T21:56:34.533377+00:00",
+  "pass": true,
+  "checks": {
+    "python": true,
+    "node": true,
+    "npm": true,
+    "frontend_node_modules": true,
+    "playwright_cli": true,
+    "vitest_bin": true,
+    "requirements_txt": true
+  },
+  "note": "R001/R003/R005/R006 remain human; this script covers R002/R004 machine checks only."
+}

@@ -1,0 +1,37 @@
+<mxfile host="app.diagrams.net" modified="2026-07-12T00:00:00.000Z" agent="Cursor" version="22.1.0">
+  <diagram id="profile-tabs" name="Profile Tab 档案页">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="浮生 · 档案 /profile&#xa;v3 线框 — Tab 化 + 口径分组" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#1a1410;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="500" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="shell" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f0e6;strokeColor=#b8894d;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1080" height="680" as="geometry" />
+        </mxCell>
+        <mxCell id="nav" value="顶栏：首页 | 档案● | 八字 | 紫微 | 报告" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#e5dcc8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="1040" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="tabs" value="[ 基础 ] [ 八字口径 ] [ 紫微口径 ] [ 高级▼ ] [ 云端 ]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0e0c7;strokeColor=#b8894d;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="160" width="640" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="readiness" value="完整度 85%&#xa;时间可信度：中" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#b8894d;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="720" y="150" width="360" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="form" value="表单区（当前 Tab）&#xa;&#xa;· 出生时间 / CityPicker&#xa;· 性别 / 历法 / 闰月&#xa;· 真太阳时开关&#xa;· zi_day_rule 下拉 + 说明 tooltip&#xa;&#xa;[ 保存档案 ] [ 同步云端 ] [ 查看八字 ]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d4c4a8;align=left;spacingLeft=12;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="220" width="640" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="ziwei-tab-note" value="紫微口径 Tab 要点：&#xa;year_divide / day_divide&#xa;late_zishi / brightness / youbi&#xa;&#xa;[ 一键对齐 iztro hour 右弼 ]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fefce8;strokeColor=#b8894d;dashed=1;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="720" y="230" width="360" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="toast" value="浮条：口径已变更 → 将重新排盘 [确认]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef2f2;strokeColor=#8b3a2a;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="720" y="390" width="360" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="note" value="设计备注：改口径 → fushengReport.invalidate()&#xa;云端 Tab 需登录后显示 Case / 快照" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontColor=#6b5d4f;" vertex="1" parent="1">
+          <mxGeometry x="60" y="660" width="500" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
