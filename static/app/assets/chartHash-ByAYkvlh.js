@@ -1,0 +1,1 @@
+async function e(t){const a=new TextEncoder().encode(t),n=await crypto.subtle.digest("SHA-256",a);return Array.from(new Uint8Array(n)).map(r=>r.toString(16).padStart(2,"0")).join("").slice(0,24)}export{e as b};

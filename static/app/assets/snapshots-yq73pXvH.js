@@ -1,1 +1,0 @@
-import{a as n}from"./client-CuyCQV6X.js";async function i(a,s){const{data:t}=await n.post(`/api/v1/cases/${a}/snapshots`,s);return t}async function p(a,s){const{data:t}=await n.get(`/api/v1/cases/${a}/snapshots`,{params:s});return t}async function c(a,s){const{data:t}=await n.get("/api/v1/snapshots/diff",{params:{a,b:s}});return t}export{i as c,c as d,p as l};

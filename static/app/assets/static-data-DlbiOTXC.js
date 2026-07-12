@@ -1,1 +1,0 @@
-import{a as s}from"./client-CuyCQV6X.js";async function i(a){const{data:t}=await s.get("/api/v1/glossary",{params:a});return t}async function o(a,t){const{data:n}=await s.put(`/api/v1/glossary/${encodeURIComponent(a)}`,t);return n}async function r(a){const{data:t}=await s.get("/api/v1/cities",{params:a});return t}export{r as a,i as g,o as u};

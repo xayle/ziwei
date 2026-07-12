@@ -1,0 +1,1 @@
+const o="fusheng_flow_v1";function a(n,s){try{const t=localStorage.getItem(o),e=t?JSON.parse(t):[];e.push({step:n,detail:s,at:new Date().toISOString()}),localStorage.setItem(o,JSON.stringify(e.slice(-50)))}catch{}}export{a as t};

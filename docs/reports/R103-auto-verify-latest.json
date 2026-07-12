@@ -1,0 +1,13 @@
+{
+  "pass": true,
+  "auto": "6/7",
+  "checks": {
+    "r01_r05_e2e_specs": true,
+    "debt_scan_zero": true,
+    "anti_slop_structural_e2e": true,
+    "targets_compare_json": true,
+    "bazi_no_vol5_domains": true,
+    "vol6_on_demand_only": true,
+    "anti_slop_q5_blind": false
+  }
+}

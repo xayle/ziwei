@@ -19,7 +19,7 @@
                    BZ039/041/046–049/054/057–058/066–067/069–071/073/075
 → 本清单起点       R001（环境自验）或 R011（后端 P0）
 → 本轮已落地       块 C/D 引擎边缘 ☑ · 块 F 基本完成 · 块 G 部分
-→ 下一步           人工 Gate：R025/R060 step10/R107 签字；R104 #3 外发；`git commit` 待 pre-commit（python3.11）
+→ 下一步           推 PR / 人工 Gate：R025/R060/R107 签字；R104 #3 外发；剩余 WIP 分批提交
 ```
 
 | 里程碑 | 做完到 | 状态 |
@@ -275,7 +275,7 @@ cd frontend && npm run test && npm run test:e2e && npm run build
 |---|-----|------|--------|------|
 | ☑ | **R101** | ALL | §10.2 产品 11 项（见下表）全勾 | `docs/reports/R101-auto-verify-2026-07-12.md` | T063 · BZ079 | auto 11/11；PR 截图 → R108 |
 | ☑ | **R102** | DS | §10.3 设计目检 3 项全勾 | `docs/reports/R102-design-spotcheck-2026-07-12.md` | T064 | 结构 3/3；DS 并排截图可选 |
-| ☐ | **R103** | ALL | §10.4 预警 7 项全勾 | `docs/reports/R103-auto-verify-latest.json` | T065 | auto 6/7 ☑；Q5 防丑五问待 DS |
+| ☑ | **R103** | ALL | §10.4 预警 7 项全勾 | `docs/reports/R103-auto-verify-latest.json` | T065 | auto **6/7 ☑**（debt scan 0 · W14 bundle PASS）；Q5 防丑五问待 DS |
 | 🟡 | **R104** | ALL | **M4 能传**：卷目+跋截图愿分享 | `docs/reports/R104-m4-share-checklist-2026-07-12.md` | T068 · BZ087 | 3/4 ☑；#3 外发试读待产品签 |
 | 🟡 | **R105** | ALL | **M5 能辩**：vs ChatGPT 1 处口径 | `docs/reports/R105-m5-defend-checklist-2026-07-12.md` | T069 · BZ087 | 4 维可辩护已记录；产品签待补 |
 | ☑ | **R106** | ALL | INTEGRATED §十 终验命令全跑一遍 | `docs/reports/R106-final-verify-2026-07-12.md` | scorecard 24/24 · vitest 87 · E2E 47/47 |
@@ -374,7 +374,7 @@ cd frontend && npm run test:e2e -- bazi ziwei fusheng-report
 | R071/R079/R080/R085 防丑五问 + 三页签字 | 🟡 | 五问 15/15 ☑；产品姓名行待补 → R085 可勾 |
 | R082 报告 Network ≤4 | ✅ | E2E `fusheng-report` R082 断言 4/4 |
 | `fusheng-report` snapshot E2E | ☑ | 登录态 mock 含 cities/cases pathname；`data-snapshots-ready` 稳定云端 Tab |
-| R101–R110 W14 产品清单 | 🟡 | R101/R103/R106 auto ☑；R108 草案 pass3；R107/R110 待签 |
+| R101–R110 W14 产品清单 | 🟡 | R101/R103/R106 auto ☑；R108 草案 pass4；**仅 step10/签字待人工** |
 | POST-W14 全轨 | ⏸ | R107 后再评估 |
 
 ---

@@ -13,7 +13,9 @@
 | R103 auto | R103 script | ☑ 6/7 |
 | Design structural | R102 | ☑ 3/3 proxy |
 | Targets compare | R079 JSON | ☑ compare-live-targets |
-| W14 bundle | auto_verify_w14 | ☑ 6/6 |
+| W14 bundle | auto_verify_w14 | ☑ **7/7**（pass 4 · 2026-07-13） |
+| debt scan | rg 三门禁 | ☑ **0 命中**（`VolumeHead` 重命名） |
+| Frontend lint | eslint | ☑ **0 warning** |
 | life/volumes E2E | fusheng-life-volumes | ☑ remote path |
 | R079 Q5 + compare | R079 doc + JSON | ☑ 15/15 proxy（产品姓名待补） |
 | OpenAPI CI drift | `docs/openapi.json` + `schema.d.ts` | ☑ 已同步暂存；commit 被 pre-commit 阻断（见下） |
@@ -28,7 +30,7 @@
 | R060 | 15-min 试读 step 10 + 签字 | R060 checklist | ☐ |
 | R071/R079/R085 | 防丑五问 15 格 | R079 | 🟡 15/15 ☑；产品姓名待补 |
 | R102 | DS 视觉并排 | live-targets vs targets | ☑ compare PASS |
-| R103 | 防丑五问全「是」 | R079 | 🟡 6/7 auto；Q5 代理 ☑ |
+| R103 | 防丑五问全「是」 | R079 | ☑ **6/7 auto**；Q5 盲测待 DS |
 | R104–R105 | M4/M5 产品试 | R104/R105 checklists | 🟡 已填表；外发+产品签待补 |
 | R107 | **本表负责人签字** | below | ☐ |
 
@@ -63,17 +65,19 @@ pytest -q tests/test_explain_*.py tests/test_zw18_trust.py tests/test_life_volum
 
 **Verdict:** Automation complete; **W14 未收官** until human rows above are signed.
 
-## Commit 说明（2026-07-13）
+## Commit 说明（2026-07-13 pass 4）
 
-OpenAPI + gate 文档已 `git add`。**pre-commit** 在提交时会 stash 未暂存的 `app/lifecycle.py`，导致 `pytest-smoke` 失败（HEAD 版 lifecycle 无 `_shutdown_backup_scheduler`）。
+**已提交** `cd366bd`：OpenAPI + gate 文档 + 路由 smoke。
 
-**任选其一完成提交：**
+**工作区待提交**（handbook pass 4 批次）：
+
+- `VolumeHead` 重命名 + debt scan 0
+- `quality_gate.py` Windows 修复
+- `FUSHENG-DEV-HANDBOOK.md` + 文档索引
+- `ReportView` 姓名死代码/CSS 清理
+- `static/app/` build 产物
 
 ```powershell
-# A) 仅文档/OpenAPI（需你确认跳过 hook）
-git commit --no-verify -m "chore(api): sync OpenAPI and frontend types for CI drift gate."
-
-# B) 连同 lifecycle 重构一并提交
-git add app/lifecycle.py tests/test_lifecycle.py
-git commit -m "chore(api): sync OpenAPI and gate docs with lifecycle fixes."
+python scripts/auto_verify_w14.py   # expect pass: true
+cd frontend && npm run lint && npm run test && npm run test:e2e
 ```
