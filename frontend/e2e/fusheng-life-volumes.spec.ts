@@ -28,7 +28,11 @@ test.describe('life/volumes 可选权威路径', () => {
     })
   })
 
-  test('登录+remoteCaseId 时使用 remote 数据源', async ({ page }) => {
+  test('登录+remoteCaseId 时使用 remote 数据源且跳过 explain（T082）', async ({ page }) => {
+    const explainHits: string[] = []
+    page.on('request', (req) => {
+      if (req.url().includes('/explain/batch')) explainHits.push(req.url())
+    })
     const lifeReq = page.waitForResponse(
       (res) => res.url().includes('/api/v1/life/volumes/') && res.status() === 200,
       { timeout: 15_000 },
@@ -38,10 +42,13 @@ test.describe('life/volumes 可选权威路径', () => {
     await expect(page.getByTestId('report-vol5-chapter')).toBeVisible({ timeout: 15_000 })
     await expect(page.locator('[data-life-volume-source="remote"]')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByRole('heading', { name: LIFE_VOLUME_LABELS.vol5 })).toBeVisible()
+    expect(explainHits.length).toBe(0)
+    // volumes 单源：不叠 archive AnalysisPanel 典籍层
+    await expect(page.locator('#report-volume-vol1').getByText('格局（引擎层）')).toHaveCount(0)
+    await expect(page.locator('#report-volume-vol1').getByText('E2E volumes 正官格讲解')).toBeVisible()
   })
 
-  test('T079 volumes 权威开关：跳过 explain/batch，仍 remote 单源', async ({ page }) => {
-    // 必须排在 seedLoggedIn 的 clear 之后注册，导航时会先 seed 再写 flag
+  test('T079 volumes flag：跳过 explain/batch，仍 remote 单源', async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('fusheng-use-life-volumes-api', '1')
     })
@@ -65,5 +72,16 @@ test.describe('life/volumes 可选权威路径', () => {
     await expect(page.locator('[data-life-volume-source="remote"]')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByTestId('report-vol5-chapter')).toBeVisible({ timeout: 15_000 })
     expect(explainHits.length).toBe(0)
+  })
+
+  test('T083 volumes 路径六卷+跋可见', async ({ page }) => {
+    await gotoApp(page, 'report')
+    await expect(page.locator('[data-life-volume-source="remote"]')).toBeVisible({ timeout: 15_000 })
+    for (const label of Object.values(LIFE_VOLUME_LABELS)) {
+      if (label === LIFE_VOLUME_LABELS.preface) continue
+      await expect(page.getByRole('heading', { name: label })).toBeVisible()
+    }
+    await expect(page.getByText('E2E 跋')).toBeVisible()
+    await expect(page.getByTestId('reading-guide-dynamic')).toContainText('E2E volumes 读法')
   })
 })

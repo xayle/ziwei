@@ -303,12 +303,11 @@ frontend/src/
 archive-bundle / bazi+ziwei full
         ↓
 GET /life/volumes（登录案例 或 VITE_USE_LIFE_VOLUMES_API / localStorage flag）
-        ↓  remote 成功且 flag 权威 → 跳过 explain/batch + 不跑 Adapter（T079–T081）
+        ↓  remote 成功 → 跳过 explain/batch；卷内已有 explain 段则隐藏对应 AnalysisPanel（T079–T083）
         ↓  remote 失败 → explain/batch + buildLifeVolumes（deprecated 回退）
         ↓
 VolumeSection × N + ColophonFootnote
-```
-DOM：`data-life-volume-source="local|remote"`  
+```DOM：`data-life-volume-source="local|remote"`  
 Hash 续卷：`/report#report-volume-vol5`（router scrollBehavior + ReportView sync）
 
 ### 7.4 主要 API

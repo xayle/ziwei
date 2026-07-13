@@ -118,16 +118,10 @@ const selectedLlmModule = ref<LlmModuleId>('career_detail')
 const chartHashRef = ref('pending')
 const explainBatch = ref<ExplainBatchResponse | null>(null)
 const lifeVolumeRemote = ref<LifeVolumeResponse | null>(null)
-const {
-  readingParagraphs: reportReadingParagraphs,
-  usingDynamicReading: reportUsingDynamicReading,
-  readingFailed: reportReadingFailed,
-} = useReportReadingGuide(explainBatch)
 
 const reportPageClass = computed(() => ({
   'report-page--continuous': continuousRead.value,
 }))
-
 async function applyYoubiHour() {
   lifeVolumeRemote.value = null
   await alignYoubiHour(async () => {
@@ -205,6 +199,26 @@ const lifeVolumeResolved = computed(() => resolveLifeVolumeDoc({
 }))
 const lifeVolumeDoc = computed(() => lifeVolumeResolved.value.doc)
 const lifeVolumeSource = computed(() => lifeVolumeResolved.value.source)
+
+/** T082：仅当 remote 卷已含对应 explain 段时，隐藏 archive AnalysisPanel，避免双重 cite */
+function remoteVolumeHasSection(volumeId: string, sectionIds: string[]): boolean {
+  if (lifeVolumeSource.value !== 'remote') return false
+  const vol = lifeVolumeDoc.value.volumes.find((v) => v.id === volumeId)
+  return (vol?.sections ?? []).some((s) => sectionIds.includes(s.id))
+}
+const hideVol1ArchivePanels = computed(() => remoteVolumeHasSection('vol1', ['geju-explain']))
+const hideVol4ArchivePanels = computed(() => remoteVolumeHasSection('vol4', ['palaces-explain']))
+const hideVol5ArchivePanels = computed(() => remoteVolumeHasSection('vol5', ['domains-explain']))
+
+const {
+  readingParagraphs: reportReadingParagraphs,
+  usingDynamicReading: reportUsingDynamicReading,
+  readingFailed: reportReadingFailed,
+} = useReportReadingGuide(explainBatch, lifeVolumeDoc)
+
+const readingGuideReady = computed(() => (
+  Boolean(explainBatch.value) || lifeVolumeSource.value === 'remote' || !loading.value
+))
 
 const { resumeLabel, lastVolumeId, save: saveReadingProgress, load: reloadReadingProgress } = useReadingProgress(
   () => activeProfileId.value || 'default',
@@ -494,14 +508,16 @@ async function finalizeReportLoad() {
   } catch {
     chartHashRef.value = 'local'
   }
-  // T079：volumes 权威开启时先拉 BE 六卷；成功则跳过 explain/batch（单源，瀑布 ≤ archive + volumes）
+  // T079/T082：先拉 life/volumes；remote 已含 BE explain 则跳过 explain/batch（无双重 cite）
   await loadLifeVolumesRemote()
-  const volumesAuthority = useLifeVolumesApiEnabled() && Boolean(lifeVolumeRemote.value)
-  if (!volumesAuthority) {
+  const volumesHasExplain = Boolean(lifeVolumeRemote.value)
+  if (!volumesHasExplain) {
     await loadExplainBatches()
     if (explainBatch.value?.chart_hash) {
       chartHashRef.value = explainBatch.value.chart_hash
     }
+  } else if (lifeVolumeRemote.value?.chart_hash) {
+    chartHashRef.value = lifeVolumeRemote.value.chart_hash
   }
   if (auth.isLoggedIn && profile.activeProfile?.remoteCaseId) {
     void profile.pullRemoteSnapshots()
@@ -572,12 +588,11 @@ onMounted(() => {
           :show-layer-legend="true"
           :show-resume="true"
           :reading-paragraphs="reportReadingParagraphs"
-          :reading-loading="loading && !explainBatch"
+          :reading-loading="loading && !readingGuideReady"
           :reading-failed="reportReadingFailed"
           :using-dynamic-reading="reportUsingDynamicReading"
           @resume="resumeReading"
         />
-
         <TrustDegradedBanner
           v-if="iztro?.status === 'degraded'"
           :message="iztro.message"
@@ -626,9 +641,12 @@ onMounted(() => {
             <div class="report-embed report-embed--compact" data-testid="report-vol1-compact-chart">
               <BaziReferenceTable :columns="baziColumns" active-key="day" :show-detail-rows="false" />
             </div>
-            <AnalysisPanel :blocks="baziBlocks" default-open-id="bazi-engine" />
+            <AnalysisPanel
+              v-if="!hideVol1ArchivePanels"
+              :blocks="baziBlocks"
+              default-open-id="bazi-engine"
+            />
           </template>
-
           <template v-else-if="volume.id === 'vol2'">
             <TrustDegradedBanner
               v-if="crossValidation.overall === 'warn'"
@@ -783,7 +801,11 @@ onMounted(() => {
                 </tr>
               </tbody>
             </table>
-            <AnalysisPanel :blocks="ziweiBlocks" :default-open-id="ziweiBlocks[0]?.id" />
+            <AnalysisPanel
+              v-if="!hideVol4ArchivePanels"
+              :blocks="ziweiBlocks"
+              :default-open-id="ziweiBlocks[0]?.id"
+            />
             <section v-if="palaceStructured?.length" class="report-palace-structured" data-testid="report-palace-structured">
               <h3>宫论（结构化）</h3>
               <article v-for="row in palaceStructured" :key="row.name" class="report-palace-structured__row">
@@ -797,7 +819,7 @@ onMounted(() => {
               </article>
             </section>
             <AnalysisPanel
-              v-if="ziweiInsightBlocks.length"
+              v-if="!hideVol4ArchivePanels && ziweiInsightBlocks.length"
               data-testid="report-ziwei-insight"
               :blocks="ziweiInsightBlocks"
               default-open-id="ziwei-forecast-year"
@@ -806,8 +828,14 @@ onMounted(() => {
 
           <template v-else-if="volume.id === 'vol5'">
             <p class="hint">性格、事业、财运、婚恋、健康、人际等引擎模块；推断层默认折叠。</p>
-            <AnalysisPanel v-if="domainBlocks.length" :blocks="domainBlocks" />
-            <p v-else class="report-placeholder">域分析待生成，请先完成八字排盘。</p>
+            <AnalysisPanel
+              v-if="!hideVol5ArchivePanels && domainBlocks.length"
+              :blocks="domainBlocks"
+            />
+            <p
+              v-else-if="!hideVol5ArchivePanels"
+              class="report-placeholder"
+            >域分析待生成，请先完成八字排盘。</p>
           </template>
 
           <template v-else-if="volume.id === 'vol6'">

@@ -352,14 +352,51 @@ export const mockLifeVolumesPayload = {
   chart_hash: 'e2e-life-hash',
   disclaimer_block: { text: 'E2E 免责声明', version: '1.0' },
   volumes: [
-    { id: 'preface', title: LIFE_VOLUME_LABELS.preface, sections: [] },
-    { id: 'vol1', title: LIFE_VOLUME_LABELS.vol1, sections: [] },
+    {
+      id: 'preface',
+      title: LIFE_VOLUME_LABELS.preface,
+      sections: [
+        {
+          id: 'reading-guide',
+          title: '读法导览',
+          layer: 'fact',
+          blocks: [{ text: 'E2E volumes 读法：卷一至卷五分层阅读。', layer: 'fact' }],
+        },
+      ],
+    },
+    {
+      id: 'vol1',
+      title: LIFE_VOLUME_LABELS.vol1,
+      sections: [
+        {
+          id: 'geju-explain',
+          title: '格局讲解',
+          layer: 'cite',
+          blocks: [{ text: 'E2E volumes 正官格讲解（单源 cite）。', layer: 'cite', classic_id: 'CL-E2E' }],
+        },
+      ],
+    },
     { id: 'vol2', title: LIFE_VOLUME_LABELS.vol2, sections: [] },
     { id: 'vol3', title: LIFE_VOLUME_LABELS.vol3, sections: [] },
     { id: 'vol4', title: LIFE_VOLUME_LABELS.vol4, sections: [] },
-    { id: 'vol5', title: LIFE_VOLUME_LABELS.vol5, sections: [] },
+    {
+      id: 'vol5',
+      title: LIFE_VOLUME_LABELS.vol5,
+      sections: [],
+    },
     { id: 'vol6', title: LIFE_VOLUME_LABELS.vol6, sections: [] },
-    { id: 'colophon', title: LIFE_VOLUME_LABELS.colophon, sections: [] },
+    {
+      id: 'colophon',
+      title: LIFE_VOLUME_LABELS.colophon,
+      sections: [
+        {
+          id: 'colophon-note',
+          title: '跋',
+          layer: 'fact',
+          blocks: [{ text: 'E2E volumes 跋记。', layer: 'fact' }],
+        },
+      ],
+    },
   ],
   colophon: { summary_lines: ['E2E 跋'], expandable: true },
 }

@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.3 |
+| **版本** | post-w14-1.4 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase E** — **T079–T081 ☑** → **下一项 T075**（liunian Redis）或 **T082**（无双重 cite） |
+| **当前优先级** | ▶ **Phase E** — **T079–T083 ☑** → **下一项 T075**（liunian Redis）或 **T084**（legacy 瘦化） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -18,7 +18,7 @@
 前置  T070 ☑（W14 · W102-22 closeout）
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE    T072–T074 机读已落地 ☑ · T075–T078 待/partial
-FE    T079–T081 ☑（volumes 权威 + Adapter deprecated）→ 下一项 T082
+FE    T079–T083 ☑（volumes 权威 · 无双重 cite · E2E 六卷+跋）→ 下一项 T084 / 并行 T075
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -101,8 +101,8 @@ P14  上线评估  T136–T140
 | ☑ | **T079** | FE | `api/life.ts` 真 API；flag=`VITE_USE_LIFE_VOLUMES_API` / localStorage `fusheng-use-life-volumes-api=1` | `api/life.ts` · `ReportView` | flag 开且 remote 成功 → 跳过 explain/batch |
 | ☑ | **T080** | FE | Report 主路径优先 `GET life/volumes`；权威态无 explain/batch 瀑布 | `ReportView.vue` · E2E | `fusheng-life-volumes` 2/2 |
 | ☑ | **T081** | FE | `buildLifeVolumes.ts` 标 **deprecated**；remote 成功时生产路径不调用 | 注释 + `shouldBuildLifeVolumesAdapter` + FE-DEV | Vitest + Report 门控 |
-| ☐ | **T082** | FE | 删除 mount 对 archive-bundle 的重复 explain 拼装（若 volumes 已含） | `ReportView.vue` | 无双重 cite |
-| ☐ | **T083** | ALL | E2E：volumes API 路径六卷+跋断言 | `e2e/fusheng-report.spec.ts` | CI 绿 |
+| ☑ | **T082** | FE | remote volumes 成功则跳过 explain/batch；卷内已有 explain 段时隐藏对应 AnalysisPanel | `ReportView.vue` | 无双重 cite · waterfall archive+volumes |
+| ☑ | **T083** | ALL | E2E：volumes API 路径六卷+跋断言 | `e2e/fusheng-life-volumes.spec.ts` | 3/3 + report 11/11 |
 | ☐ | **T084** | BE | Compute **legacy 瘦化收尾**：`interpretation_text` 默认 off；文档迁移说明 | `bazi/full` · `ziwei/full` | Q4 闭环 |
 | ☐ | **T085** | ALL | **U5 签字**：15 分钟建档→报告；数据来自 **life/volumes**；跋权威 | — | **P3 Gate** |
 
@@ -305,6 +305,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-1.4 | 2026-07-14 | **T082–T083 ☑** · 无双重 cite · volumes E2E 六卷+跋 · 下一项 T075/T084 |
 | post-w14-1.3 | 2026-07-14 | **T081 ☑** · buildLifeVolumes deprecated · remote 成功跳过 Adapter · 下一项 T075/T082 |
 | post-w14-1.2 | 2026-07-14 | **T079–T080 ☑** · volumes flag + 跳过 explain/batch · 下一项 T075/T081 |
 | post-w14-1.1 | 2026-07-14 | **T071 ☑** · T072–T074 机读落地 · 下一项 T079 |

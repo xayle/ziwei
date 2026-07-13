@@ -177,6 +177,15 @@ jobs:
       - name: Volume names aligned
         run: make verify-volume-names
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps (OpenAPI types)
+        run: cd frontend && npm ci
+
       - name: OpenAPI export drift check
         run: |
           python scripts/export_openapi.py
@@ -233,10 +242,6 @@ jobs:
         run: python run_cases.py
         continue-on-error: true
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
       - name: iztro cross-check (advisory)
         run: make verify-iztro
         continue-on-error: true
@@ -288,13 +293,7 @@ jobs:
       - name: Alembic upgrade head (PostgreSQL)
         run: |
           set -e
-          echo "DATABASE_URL dialect check..."
-          python - <<'PY'
-          import os
-          from migrations.env import get_sqlalchemy_url
-          url = get_sqlalchemy_url()
-          print(url.split("@")[-1] if "@" in url else url)
-          PY
+          echo "Using DATABASE_URL host: ${DATABASE_URL##*@}"
           alembic upgrade head
 
       - name: Quality gate backend checks

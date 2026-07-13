@@ -101,16 +101,17 @@ test.describe('报告与新功能', () => {
     await expect(page.getByTestId('report-notes')).toBeVisible()
   })
 
-  test('报告首屏 chart waterfall ≤4 请求（R082）', async ({ page }) => {
-    const chartUrls = [
+  test('报告首屏 waterfall：登录+volumes 权威 ≤ archive+volumes（T082）', async ({ page }) => {
+    const chartPaths = [
       '/api/v1/fusheng/archive-bundle',
+      '/api/v1/life/volumes/',
       '/api/v1/bazi/explain/batch',
       '/api/v1/ziwei/explain/batch',
     ]
     const seen = new Set<string>()
 
     page.on('request', (req) => {
-      const hit = chartUrls.find((path) => req.url().includes(path))
+      const hit = chartPaths.find((path) => req.url().includes(path))
       if (hit) seen.add(hit)
     })
 
@@ -118,12 +119,8 @@ test.describe('报告与新功能', () => {
       (res) => res.url().includes('/api/v1/fusheng/archive-bundle') && res.ok(),
       { timeout: 20_000 },
     )
-    const baziExplainDone = page.waitForResponse(
-      (res) => res.url().includes('/api/v1/bazi/explain/batch') && res.ok(),
-      { timeout: 20_000 },
-    )
-    const ziweiExplainDone = page.waitForResponse(
-      (res) => res.url().includes('/api/v1/ziwei/explain/batch') && res.ok(),
+    const volumesDone = page.waitForResponse(
+      (res) => res.url().includes('/api/v1/life/volumes/') && res.ok(),
       { timeout: 20_000 },
     )
 
@@ -134,14 +131,13 @@ test.describe('报告与新功能', () => {
 
     await expect(page.getByText('正在生成报告…')).toHaveCount(0, { timeout: 20_000 })
     await expect(page.getByTestId('report-vol5-chapter')).toBeVisible({ timeout: 15_000 })
-    await bundleDone
-    await baziExplainDone
-    await ziweiExplainDone
+    await Promise.all([bundleDone, volumesDone])
 
-    expect(seen.size).toBeLessThanOrEqual(4)
     expect(seen.has('/api/v1/fusheng/archive-bundle')).toBe(true)
-    expect(seen.has('/api/v1/bazi/explain/batch')).toBe(true)
-    expect(seen.has('/api/v1/ziwei/explain/batch')).toBe(true)
+    expect(seen.has('/api/v1/life/volumes/')).toBe(true)
+    expect(seen.has('/api/v1/bazi/explain/batch')).toBe(false)
+    expect(seen.has('/api/v1/ziwei/explain/batch')).toBe(false)
+    expect(seen.size).toBeLessThanOrEqual(4)
   })
 
   test('点击 report-youbi-hour-btn 切换档案右弼为 hour', async ({ page }) => {
