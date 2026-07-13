@@ -26,9 +26,7 @@ export function useReportReadingGuide(
     extractAllReadingGuideParagraphs(batch.value).length > 0
     || extractReadingGuideFromLifeVolumes(volumeDoc?.value).length > 0
   ))
-  const readingFailed = computed(() => (
-    Boolean(batch.value) && extractAllReadingGuideParagraphs(batch.value).length === 0
-    && extractReadingGuideFromLifeVolumes(volumeDoc?.value).length === 0
-  ))
+  // volumes 权威路径下可能跳过 explain；两侧均无读法时展示默认文案 + 降级提示
+  const readingFailed = computed(() => !usingDynamicReading.value)
   return { readingParagraphs, usingDynamicReading, readingFailed }
 }

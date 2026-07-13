@@ -66,6 +66,7 @@ export async function seedLoggedInProfileWithRemoteCase(page: Page, caseId = 'ca
     localStorage.setItem('token', 'e2e-test-token')
     localStorage.setItem('refresh_token', 'e2e-test-refresh')
     localStorage.setItem('username', 'e2e-user')
+    localStorage.setItem('fusheng-use-life-volumes-api', '1')
     localStorage.setItem('profile_active_id_v1', profileId)
     localStorage.setItem('profile_records_v1', JSON.stringify([
       {

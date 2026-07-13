@@ -105,11 +105,9 @@ function section(
 }
 
 function buildPrefaceSections(input: BuildLifeVolumesInput): VolumeSection[] {
-  const sections: VolumeSection[] = [
-    section('reading-guide', '读法导览', 'fact', [
-      block('卷一至卷五按 fact（排盘推算）· cite（典籍依据）· inference（经验推断）分层阅读；卷六为问书助手，需主动展开。', 'fact'),
-    ]),
-  ]
+  // 读法由 ReadingGuide（explain / remote volumes / DEFAULT）负责；
+  // Adapter 不再植入壳段落，否则 explain 失败时无法展示 fallback（W102-11）。
+  const sections: VolumeSection[] = []
   const explainReading = input.explain?.sections.find((s) => s.section_id === 'reading')
   if (explainReading?.blocks.length) {
     sections.push(section('bazi-reading', '八字读法', 'cite', explainReading.blocks.map((b) => ({
