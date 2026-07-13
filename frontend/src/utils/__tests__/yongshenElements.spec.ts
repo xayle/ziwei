@@ -14,3 +14,12 @@ describe('toCnElements', () => {
     expect(toCnElements(['wood', '木', 'metal'])).toEqual(['木', '金'])
   })
 })
+
+describe('formatCnElementsJoin', () => {
+  it('joins localized elements with fallback', async () => {
+    const { formatCnElementsJoin } = await import('@/utils/yongshenElements')
+    expect(formatCnElementsJoin(['wood', 'earth'])).toBe('木、土')
+    expect(formatCnElementsJoin([])).toBe('缺失')
+    expect(formatCnElementsJoin(undefined, '—')).toBe('—')
+  })
+})

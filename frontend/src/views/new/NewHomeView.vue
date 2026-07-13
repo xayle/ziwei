@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { BRAND_HOME_LAYERS, BRAND_HOME_OPEN, BRAND_HOME_VOLUMES } from '@/constants/brandHome'
+import {
+  BRAND_HOME_LAYERS,
+  BRAND_HOME_OPEN,
+  BRAND_HOME_POEM,
+  BRAND_HOME_VOLUMES,
+  BRAND_HOME_WATERMARK,
+} from '@/constants/brandHome'
 import { useFushengFlow } from '@/composables/useFushengFlow'
+import songMarginalCorner from '@/assets/brand/song-marginal-corner.svg'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
@@ -22,17 +29,45 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
 
 <template>
   <div class="brand-home" aria-label="品牌首页">
+    <span class="brand-home__scene" aria-hidden="true">案</span>
+
     <section class="brand-spread" aria-label="浮生 · 人生六卷">
+      <figure class="brand-spread__marginal" aria-hidden="true">
+        <img :src="songMarginalCorner" alt="" width="320" height="240" decoding="async" />
+      </figure>
+
       <div class="brand-spread__frame">
-        <div class="brand-spread__watermark" aria-hidden="true">卷</div>
+        <span class="brand-spread__glyph brand-spread__glyph--right" aria-hidden="true">
+          {{ BRAND_HOME_WATERMARK.right }}
+        </span>
 
         <div class="brand-spread__left">
+          <span class="brand-spread__glyph brand-spread__glyph--left" aria-hidden="true">
+            {{ BRAND_HOME_WATERMARK.left }}
+          </span>
           <div class="brand-island">
-            <h1 class="brand-island__word">浮生</h1>
-            <p class="brand-island__tag">浮生若梦</p>
-            <p class="brand-island__series">人生六卷辑录</p>
-            <p class="brand-island__verse">读人生如戏，展卷而后，方入其事。</p>
-            <button type="button" class="brand-island__profile" @click="goProfile">录入生辰</button>
+            <div class="brand-island__mast">
+              <blockquote class="brand-island__poem" aria-label="录辰">
+                <p
+                  v-for="(line, index) in BRAND_HOME_POEM"
+                  :key="index"
+                  class="brand-island__poem-line"
+                >
+                  {{ line }}
+                </p>
+              </blockquote>
+
+              <div class="brand-island__body">
+                <div class="brand-island__head">
+                  <h1 class="brand-island__word">浮生</h1>
+                  <p class="brand-island__tag">浮生若梦</p>
+                  <p class="brand-island__series">人生六卷辑录</p>
+                </div>
+                <button type="button" class="brand-island__profile" @click="goProfile">
+                  录入生辰
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -71,44 +106,117 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
 
 <style scoped>
 .brand-home {
+  position: relative;
   max-width: min(1180px, 100%);
   margin: 0 auto;
   color: var(--brand-ink);
+  isolation: isolate;
+}
+
+.brand-home__scene {
+  position: absolute;
+  left: 50%;
+  top: clamp(280px, 42vh, 480px);
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-size: clamp(200px, 38vw, 420px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--brand-gold);
+  opacity: 0.08;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
 }
 
 .brand-spread {
-  padding: 0 20px 64px;
+  position: relative;
+  z-index: 1;
+  padding: clamp(12px, 2vw, 24px) clamp(20px, 3vw, 32px) clamp(24px, 3vw, 40px);
+}
+
+.brand-spread__marginal {
+  position: absolute;
+  left: clamp(8px, 2vw, 24px);
+  bottom: clamp(8px, 1.5vh, 20px);
+  z-index: 0;
+  margin: 0;
+  width: clamp(140px, 19vw, 220px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.44;
+  -webkit-mask-image: linear-gradient(155deg, #000 58%, transparent 96%);
+  mask-image: linear-gradient(155deg, #000 58%, transparent 96%);
+}
+
+.brand-spread__marginal img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.brand-spread::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(calc(100% - 4px), 1160px);
+  height: calc(100% - 12px);
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 100% 86% at 50% 48%,
+    rgba(255, 250, 245, 0.82),
+    transparent 68%
+  );
 }
 
 .brand-spread__frame {
   position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(240px, 0.92fr) minmax(0, 1.18fr);
   grid-template-rows: 1fr auto;
   gap: clamp(24px, 4vw, 48px) clamp(24px, 4vw, 56px);
-  min-height: calc(100dvh - 56px - 48px);
+  min-height: auto;
   padding: clamp(32px, 5vw, 56px) clamp(28px, 4vw, 52px);
   background:
-    radial-gradient(ellipse 80% 60% at 100% 100%, rgba(184, 137, 77, 0.06), transparent 55%),
+    radial-gradient(ellipse 80% 60% at 100% 100%, rgba(184, 137, 77, 0.09), transparent 55%),
     var(--surface);
   border: 1px solid var(--border-md);
   box-shadow:
     inset 0 0 0 1px var(--border),
-    0 18px 48px rgba(26, 20, 16, 0.06);
+    0 28px 64px rgba(26, 20, 16, 0.11),
+    0 10px 24px rgba(184, 137, 77, 0.1);
 }
 
-.brand-spread__watermark {
+.brand-spread__glyph {
   position: absolute;
-  right: clamp(12px, 3vw, 28px);
-  bottom: clamp(72px, 12vw, 120px);
-  font-size: clamp(96px, 16vw, 168px);
+  z-index: 0;
   line-height: 1;
-  letter-spacing: 0.08em;
-  color: var(--brand-gold);
-  opacity: 0.06;
-  pointer-events: none;
+  letter-spacing: 0.06em;
   font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--brand-gold);
+  pointer-events: none;
   user-select: none;
+}
+
+.brand-spread__glyph--left {
+  left: clamp(0px, 6%, 28px);
+  top: 46%;
+  transform: translateY(-50%);
+  font-size: clamp(120px, 19vw, 196px);
+  opacity: 0.055;
+}
+
+.brand-spread__glyph--right {
+  right: clamp(16px, 4vw, 36px);
+  bottom: clamp(80px, 14vw, 128px);
+  font-size: clamp(104px, 17vw, 172px);
+  opacity: 0.065;
 }
 
 .brand-spread__left {
@@ -123,22 +231,6 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
   padding-right: clamp(8px, 2vw, 16px);
 }
 
-.brand-spread__left::before {
-  content: '若';
-  position: absolute;
-  left: -6%;
-  top: 50%;
-  transform: translateY(-52%);
-  font-size: clamp(160px, 26vw, 260px);
-  line-height: 1;
-  letter-spacing: 0.06em;
-  font-family: var(--font-display);
-  color: var(--brand-gold);
-  opacity: 0.04;
-  pointer-events: none;
-  user-select: none;
-}
-
 .brand-spread__left::after {
   content: '';
   position: absolute;
@@ -148,58 +240,88 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
       0deg,
       transparent,
       transparent 3px,
-      rgba(184, 137, 77, 0.018) 3px,
-      rgba(184, 137, 77, 0.018) 4px
+      rgba(184, 137, 77, 0.022) 3px,
+      rgba(184, 137, 77, 0.022) 4px
     ),
-    radial-gradient(ellipse 85% 75% at 15% 50%, rgba(184, 137, 77, 0.07), transparent 68%);
+    radial-gradient(ellipse 85% 75% at 15% 50%, rgba(184, 137, 77, 0.09), transparent 68%);
   pointer-events: none;
 }
 
 .brand-island {
   position: relative;
   z-index: 1;
-  width: min(100%, 300px);
+  width: min(100%, 380px);
+}
+
+.brand-island__mast {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(20px, 3.5vw, 32px);
+}
+
+.brand-island__poem {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  gap: clamp(10px, 2vw, 16px);
+  margin: 0;
+  padding: 4px clamp(16px, 2.5vw, 22px) 4px 0;
+  border: none;
+  border-right: 1px solid var(--border-md);
+  flex-shrink: 0;
+}
+
+.brand-island__poem-line {
+  margin: 0;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  color: var(--brand-mist);
+  font-family: var(--font-display);
+}
+
+.brand-island__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
 }
 
 .brand-island__word {
-  margin: 0 0 16px;
-  font-size: clamp(3.75rem, 9.5vw, 5.25rem);
+  margin: 0 0 14px;
+  font-size: clamp(3.25rem, 8vw, 4.5rem);
   font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.2em;
-  padding-left: 0.1em;
+  letter-spacing: 0.18em;
+  padding-left: 0.08em;
   font-family: var(--font-display);
   color: var(--brand-ink);
 }
 
 .brand-island__tag {
   margin: 0;
-  font-size: 15px;
-  letter-spacing: 0.34em;
+  font-size: 14px;
+  letter-spacing: 0.3em;
   color: var(--brand-mist);
   font-family: var(--font-display);
 }
 
 .brand-island__series {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   font-size: 12px;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.24em;
   color: var(--brand-gold-dark);
   font-family: var(--font-display);
 }
 
-.brand-island__verse {
-  margin: 28px 0 0;
-  max-width: 16em;
-  font-size: 14px;
-  line-height: 1.85;
-  letter-spacing: 0.06em;
-  color: var(--text-3);
-  font-family: var(--font-display);
-}
-
 .brand-island__profile {
-  margin-top: 24px;
+  align-self: flex-start;
+  margin-top: clamp(24px, 4vw, 40px);
   padding: 0 0 3px;
   border: none;
   border-bottom: 1px solid var(--brand-ink);
@@ -217,6 +339,8 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
 }
 
 .brand-spread__right {
+  position: relative;
+  z-index: 1;
   grid-column: 2;
   grid-row: 1;
   display: flex;
@@ -327,6 +451,16 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
 }
 
 @media (max-width: 860px) {
+  .brand-home__scene {
+    font-size: clamp(160px, 50vw, 280px);
+    opacity: 0.04;
+  }
+
+  .brand-spread__marginal {
+    width: clamp(120px, 30vw, 180px);
+    opacity: 0.36;
+  }
+
   .brand-spread__frame {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
@@ -355,8 +489,16 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
     grid-template-columns: 1fr;
   }
 
-  .brand-island__verse {
-    max-width: none;
+  .brand-island__mast {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .brand-island__poem {
+    justify-content: center;
+    padding: 20px 0 0;
+    border-right: none;
+    border-top: 1px solid var(--border-md);
   }
 }
 

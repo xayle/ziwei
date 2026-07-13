@@ -19,6 +19,10 @@ function isHomePath(path: string) {
   return path === '/' || path === '/home' || path === '/new'
 }
 
+function isArchivePath(path: string) {
+  return path === '/profile' || path.startsWith('/profile/')
+}
+
 function isNavItemActive(item: { id: string; path: string }) {
   if (item.id === 'home') return isHomePath(route.path)
   if (item.id === 'extensions') return route.path.startsWith('/extensions')
@@ -55,7 +59,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="shell" :class="{ 'shell--home': isHomePath(route.path) }">
+  <div
+    class="shell"
+    :class="{
+      'shell--home': isHomePath(route.path),
+      'shell--archive': isArchivePath(route.path),
+    }"
+  >
     <p v-if="backendDown" class="backend-banner">
       后端服务暂不可用，排盘与报告可能失败。请确认 API 已启动后刷新页面。
       <button type="button" class="backend-banner__dismiss" @click="backendDown = false">知道了</button>
@@ -126,8 +136,101 @@ onUnmounted(() => {
   padding-bottom: 0;
 }
 
-.shell--home {
-  background: var(--brand-paper);
+.shell--home,
+.shell--archive {
+  position: relative;
+  isolation: isolate;
+  background-color: #d4c8b4;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 4px,
+      rgba(26, 20, 16, 0.03) 4px,
+      rgba(26, 20, 16, 0.03) 5px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(139, 94, 52, 0.024) 3px,
+      rgba(139, 94, 52, 0.024) 4px
+    ),
+    radial-gradient(ellipse 82% 56% at 50% 36%, rgba(255, 250, 245, 0.92), transparent 62%),
+    radial-gradient(ellipse 130% 72% at 50% 100%, rgba(184, 137, 77, 0.28), transparent 48%),
+    radial-gradient(ellipse 70% 45% at 0% 0%, rgba(184, 137, 77, 0.14), transparent 42%),
+    radial-gradient(ellipse 65% 45% at 100% 0%, rgba(184, 137, 77, 0.12), transparent 40%),
+    linear-gradient(168deg, #e0d4c2 0%, #f0e9dc 32%, #f3ede3 56%, #cfc3ae 100%);
+}
+
+.shell--home::before,
+.shell--archive::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 115% 88% at 50% 50%, transparent 42%, rgba(26, 20, 16, 0.08) 100%),
+    radial-gradient(circle at 8% 14%, rgba(184, 137, 77, 0.18), transparent 22%),
+    radial-gradient(circle at 92% 86%, rgba(184, 137, 77, 0.15), transparent 26%);
+}
+
+.shell--home::after,
+.shell--archive::after {
+  content: '';
+  position: fixed;
+  inset: clamp(10px, 2.8vw, 32px);
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid rgba(184, 137, 77, 0.42);
+  opacity: 0.92;
+  background:
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left top / 36px 1px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left top / 1px 36px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right top / 36px 1px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right top / 1px 36px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left bottom / 36px 1px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left bottom / 1px 36px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right bottom / 36px 1px no-repeat,
+    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right bottom / 1px 36px no-repeat;
+}
+
+.shell--home > .backend-banner,
+.shell--home > .bar,
+.shell--home > .content,
+.shell--home > .bottom-nav,
+.shell--archive > .backend-banner,
+.shell--archive > .bar,
+.shell--archive > .content,
+.shell--archive > .bottom-nav {
+  position: relative;
+  z-index: 1;
+}
+
+.shell--archive::before {
+  background:
+    radial-gradient(ellipse 115% 88% at 50% 50%, transparent 48%, rgba(26, 20, 16, 0.06) 100%),
+    radial-gradient(circle at 8% 14%, rgba(184, 137, 77, 0.12), transparent 22%),
+    radial-gradient(circle at 92% 86%, rgba(184, 137, 77, 0.1), transparent 26%);
+}
+
+.shell--archive {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.shell--archive .content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: min(1180px, 100%);
+  padding: 12px 20px 32px;
 }
 
 .bar {
@@ -277,13 +380,14 @@ onUnmounted(() => {
 }
 
 .shell--home .bar {
-  border-bottom-color: var(--border);
-  background: rgba(245, 240, 230, 0.92);
+  border-bottom-color: rgba(212, 196, 168, 0.5);
+  background: rgba(245, 240, 230, 0.78);
+  backdrop-filter: blur(10px);
 }
 
 .shell--home .content {
   max-width: min(1180px, 100%);
-  padding: 20px 20px 40px;
+  padding: 12px 20px 28px;
 }
 
 .shell--home .nav-btn {

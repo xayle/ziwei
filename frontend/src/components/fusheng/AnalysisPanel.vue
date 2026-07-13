@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import PatternTierBadge from '@/components/fusheng/PatternTierBadge.vue'
 
 export type AnalysisBlock = {
@@ -18,16 +18,29 @@ const props = defineProps<{
   defaultOpenId?: string
   /** 默认折叠 heuristic / modern_convention 层 */
   collapseHeuristic?: boolean
+  /** 深读等场景：默认展开全部手风琴块 */
+  defaultExpandAll?: boolean
 }>()
 
 const collapseHeuristic = props.collapseHeuristic !== false
 
-const openIds = ref<Set<string>>(new Set(props.defaultOpenId ? [props.defaultOpenId] : []))
-const heuristicExpanded = ref<Set<string>>(new Set())
-
 function isHeuristic(block: AnalysisBlock): boolean {
   return block.layer === 'heuristic' || block.layer === 'modern_convention'
 }
+
+function initialOpenIds(): Set<string> {
+  if (props.defaultExpandAll && props.blocks.length) {
+    return new Set(props.blocks.map((block) => block.id))
+  }
+  return new Set(props.defaultOpenId ? [props.defaultOpenId] : [])
+}
+
+const openIds = ref<Set<string>>(initialOpenIds())
+const heuristicExpanded = ref<Set<string>>(
+  props.defaultExpandAll
+    ? new Set(props.blocks.filter(isHeuristic).map((block) => block.id))
+    : new Set(),
+)
 
 function isVisible(block: AnalysisBlock): boolean {
   if (!collapseHeuristic || !isHeuristic(block)) return true
@@ -47,6 +60,16 @@ function toggle(id: string) {
   else next.add(id)
   openIds.value = next
 }
+
+watch(
+  () => [props.blocks.map((block) => block.id).join('|'), props.defaultExpandAll, props.defaultOpenId] as const,
+  () => {
+    openIds.value = initialOpenIds()
+    if (props.defaultExpandAll) {
+      heuristicExpanded.value = new Set(props.blocks.filter(isHeuristic).map((block) => block.id))
+    }
+  },
+)
 </script>
 
 <template>

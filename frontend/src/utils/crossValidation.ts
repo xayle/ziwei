@@ -1,5 +1,6 @@
 import type { BaziResponse } from '@/api/bazi'
 import type { ZiweiResponse } from '@/api/ziwei'
+import { formatCnElementsJoin } from '@/utils/yongshenElements'
 
 export type CrossValidationItem = {
   label: string
@@ -66,7 +67,7 @@ export function validateBaziZiweiConsistency(
     items.push({
       label: '八字格局',
       status: 'pass',
-      detail: `${bazi.geju.geju_name}，用神 ${bazi.yongshen?.favor?.join('、') || '缺失'}`,
+      detail: `${bazi.geju.geju_name}，用神 ${formatCnElementsJoin(bazi.yongshen?.favor, '缺失')}`,
     })
   }
 

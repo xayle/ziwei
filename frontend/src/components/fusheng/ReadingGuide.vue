@@ -10,6 +10,9 @@ const props = defineProps<{
   resumeVolumeId?: string | null
   resumeLabel?: string | null
   showLayerLegend?: boolean
+  showTitle?: boolean
+  showResume?: boolean
+  variant?: 'card' | 'plain'
   readingParagraphs?: string[]
   readingLoading?: boolean
   readingFailed?: boolean
@@ -20,14 +23,24 @@ const emit = defineEmits<{
   resume: []
 }>()
 
+const isPlain = computed(() => props.variant === 'plain')
+const showHeading = computed(() => props.showTitle !== false && !isPlain.value)
+const showResumeLink = computed(() => props.showResume !== false)
+
 const displayParagraphs = computed(() => (
   props.readingParagraphs?.length ? props.readingParagraphs : [...DEFAULT_READING_GUIDE_PARAGRAPHS]
 ))
 </script>
 
 <template>
-  <aside class="reading-guide fs-card" role="complementary" aria-label="读法导览">
-    <h2 class="reading-guide__title">读法导览</h2>
+  <aside
+    class="reading-guide"
+    :class="{ 'fs-card': !isPlain, 'reading-guide--plain': isPlain }"
+    role="complementary"
+    aria-label="读法导览"
+  >
+    <p v-if="isPlain" class="reading-guide__eyebrow">读法</p>
+    <h2 v-if="showHeading" class="reading-guide__title">读法导览</h2>
 
     <p v-if="readingLoading" class="reading-guide__text" data-testid="reading-guide-loading">
       正在加载读法导览…
@@ -35,9 +48,13 @@ const displayParagraphs = computed(() => (
     <template v-else>
       <div v-if="readingFailed" data-testid="reading-guide-fallback">
         <TrustDegradedBanner
+          v-if="!isPlain"
           message="读法导览暂不可用，以下为默认说明。"
           status="warn"
         />
+        <p v-else class="reading-guide__fallback">
+          读法导览暂不可用，以下为默认说明。
+        </p>
       </div>
       <p
         v-for="(paragraph, index) in displayParagraphs"
@@ -49,9 +66,9 @@ const displayParagraphs = computed(() => (
       </p>
     </template>
 
-    <ContentLayerLegend v-if="showLayerLegend !== false" />
+    <ContentLayerLegend v-if="showLayerLegend !== false && !isPlain" />
     <p class="reading-guide__disclaimer">{{ disclaimer.text }}</p>
-    <p v-if="resumeVolumeId && resumeLabel" class="reading-guide__resume">
+    <p v-if="showResumeLink && resumeVolumeId && resumeLabel" class="reading-guide__resume">
       续读：
       <button
         type="button"
@@ -71,6 +88,18 @@ const displayParagraphs = computed(() => (
   gap: 10px;
 }
 
+.reading-guide--plain {
+  gap: 8px;
+}
+
+.reading-guide__eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: var(--brand-gold);
+  font-family: var(--font-display);
+}
+
 .reading-guide__title {
   margin: 0;
   font-size: 16px;
@@ -79,17 +108,36 @@ const displayParagraphs = computed(() => (
 }
 
 .reading-guide__text,
-.reading-guide__disclaimer {
+.reading-guide__disclaimer,
+.reading-guide__fallback {
   margin: 0;
   font-size: 13px;
   line-height: 1.7;
   color: var(--text-2);
 }
 
+.reading-guide--plain .reading-guide__text,
+.reading-guide--plain .reading-guide__disclaimer,
+.reading-guide--plain .reading-guide__fallback {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.reading-guide__fallback {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
 .reading-guide__disclaimer {
   padding-top: 8px;
   border-top: 1px solid var(--border);
   font-size: 12px;
+}
+
+.reading-guide--plain .reading-guide__disclaimer {
+  padding-top: 12px;
+  margin-top: 4px;
+  color: var(--text-3);
 }
 
 .reading-guide__resume-btn {

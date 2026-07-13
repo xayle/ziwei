@@ -7,11 +7,11 @@ test.describe('八字紫微页面打磨', () => {
     await setupChartApiMocks(page)
   })
 
-  test('八字速览首屏仅 KPI 与盘面', async ({ page }) => {
+  test('八字速览首屏仅盘面无 KPI', async ({ page }) => {
     await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
-    await expect(page.getByTestId('bazi-layer-summary')).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByTestId('bazi-layer-structure')).toBeVisible()
+    await expect(page.getByTestId('bazi-layer-structure')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('bazi-layer-summary')).toHaveCount(0)
     await expect(page.getByTestId('bazi-vol2-block')).toHaveCount(0)
     await expect(page.getByTestId('bazi-layer-trust')).toHaveCount(0)
   })
@@ -83,9 +83,13 @@ test.describe('八字紫微页面打磨', () => {
     await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
     await page.waitForResponse((res) => res.url().includes('/api/v1/bazi/full') && res.status() === 200)
-    await page.getByRole('button', { name: '查看紫微' }).click()
-    await page.waitForResponse((res) => res.url().includes('/api/v1/ziwei/full') && res.status() === 200)
+    await Promise.all([
+      page.waitForResponse((res) => res.url().includes('/api/v1/ziwei/full') && res.status() === 200),
+      page.getByRole('button', { name: '查看紫微' }).click(),
+    ])
+    await expect(page.getByTestId('ziwei-layer-summary')).toBeVisible({ timeout: 15_000 })
     await page.getByRole('button', { name: '查看八字' }).click()
+    await expect(page.getByTestId('bazi-layer-structure')).toBeVisible({ timeout: 15_000 })
     await page.getByTestId('bazi-depth-toggle').getByRole('button', { name: '结构' }).click()
     await expect(page.getByTestId('cross-validation-hint')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('cross-validation-hint')).toContainText('日柱')
@@ -103,16 +107,16 @@ test.describe('八字紫微页面打磨', () => {
     await page.getByTestId('profile-bazi').click()
     await expect(page.getByTestId('bazi-trust-overview')).toBeVisible({ timeout: 15_000 })
     await page.getByTestId('bazi-trust-overview').locator('summary').click()
-    await expect(page.getByTestId('bazi-trust-overview').getByTestId('missing-fields')).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByTestId('missing-fields')).toContainText('hour_pillar')
+    await expect(page.getByTestId('bazi-trust-overview')).toContainText('时柱（引擎未返回）')
   })
 
-  test('八字速览首屏可见 provenance', async ({ page }) => {
+  test('八字速览折叠校勘不含 provenance', async ({ page }) => {
     await fillMinimalProfile(page)
     await page.getByTestId('profile-bazi').click()
     await expect(page.getByTestId('bazi-trust-overview')).toBeVisible({ timeout: 15_000 })
     await page.getByTestId('bazi-trust-overview').locator('summary').click()
-    await expect(page.getByTestId('bazi-trust-overview').getByTestId('provenance-section')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('bazi-trust-overview').getByTestId('provenance-section')).toHaveCount(0)
+    await expect(page.getByTestId('bazi-trust-overview').getByText('切至「结构」')).toBeVisible()
   })
 
   test('紫微速览首屏可见 missing_fields 与 provenance', async ({ page }) => {

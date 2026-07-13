@@ -12,11 +12,12 @@ import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
-import VolumeHead from '@/components/fusheng/VolumeHead.vue'
+import CodexPanel from '@/components/fusheng/CodexPanel.vue'
 import ZiweiFlyingTab from '@/components/ziwei/ZiweiFlyingTab.vue'
 import ZiweiAlgoSettings from '@/components/ziwei/ZiweiAlgoSettings.vue'
 import { useProfileStore } from '@/stores/profile'
 import PalaceAnalysisGrid from '@/components/fusheng/PalaceAnalysisGrid.vue'
+import VolumeHead from '@/components/fusheng/VolumeHead.vue'
 import { buildZiweiInsightBlocks, buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { truncateText } from '@/utils/truncateText'
 import '@/assets/fusheng-page.css'
@@ -227,7 +228,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <section class="ziwei-hero fs-card fs-card--hero" data-testid="ziwei-layer-plate">
+        <CodexPanel class="ziwei-hero" data-testid="ziwei-layer-plate">
           <p class="fs-section-kicker">传统方盘（本命）</p>
           <p v-if="depth === 'overview'" class="natal-scope-note natal-scope-note--compact">
             运限时间轴见
@@ -241,7 +242,7 @@ onMounted(() => {
           <div class="ziwei-hero__plate">
             <FushengZiweiPlate :result="ziwei" />
           </div>
-        </section>
+        </CodexPanel>
 
         <section
           v-if="depth === 'overview' && (missingFields.length || provenanceRows.length)"
@@ -272,18 +273,18 @@ onMounted(() => {
           </details>
         </section>
 
-        <section v-if="depth === 'structure'" class="fs-card">
-          <h2>算法口径（ZiweiAlgo）</h2>
+        <CodexPanel v-if="depth === 'structure'">
+          <h2 class="fs-section-rule">算法口径（ZiweiAlgo）</h2>
           <ZiweiAlgoSettings
             :profile="profileData"
             :provenance="ziwei.provenance"
             @update:brightness-method="onBrightnessMethod"
             @update:youbi-method="onYoubiMethod"
           />
-        </section>
+        </CodexPanel>
 
-        <section v-if="depth === 'deep'" class="fs-card" data-testid="ziwei-layer-explain">
-          <h2>卷四·星之命（解读）</h2>
+        <CodexPanel v-if="depth === 'deep'" data-testid="ziwei-layer-explain">
+          <h2 class="fs-section-rule">卷四·星之命（解读）</h2>
           <div v-if="explainFailed" data-testid="ziwei-explain-banner">
             <TrustDegradedBanner
               message="典籍解读暂不可用，下方为引擎宫论与格局摘要。"
@@ -297,28 +298,28 @@ onMounted(() => {
             :blocks="explainAnalysisBlocks"
             :default-open-id="defaultExplainOpenId"
           />
-        </section>
+        </CodexPanel>
 
-        <section v-if="depth === 'deep'" class="fs-card">
-          <h2>飞星盘（flying）</h2>
+        <CodexPanel v-if="depth === 'deep'">
+          <h2 class="fs-section-rule">飞星盘（flying）</h2>
           <ZiweiFlyingTab :flying="ziwei.flying" />
-        </section>
+        </CodexPanel>
 
-        <section v-if="depth === 'deep'" class="fs-card" data-testid="ziwei-palace-structured">
-          <h2>宫论</h2>
+        <CodexPanel v-if="depth === 'deep'" data-testid="ziwei-palace-structured">
+          <h2 class="fs-section-rule">宫论</h2>
           <p class="palace-structured-lead">十二宫结构化解读（引擎 COMBO 层），与报告紫微章同源。</p>
           <PalaceAnalysisGrid :rows="palaceStructured" />
-        </section>
+        </CodexPanel>
 
-        <section v-if="depth === 'deep'" class="fs-card">
-          <h2>格局·大运分析</h2>
+        <CodexPanel v-if="depth === 'deep'">
+          <h2 class="fs-section-rule">格局·大运分析</h2>
           <AnalysisPanel :blocks="patternBlocks" :default-open-id="patternBlocks[0]?.id" />
-        </section>
+        </CodexPanel>
 
-        <section v-if="depth === 'deep' && insightBlocks.length" class="fs-card" data-testid="ziwei-insight-section">
-          <h2>运势与生活建议</h2>
+        <CodexPanel v-if="depth === 'deep' && insightBlocks.length" data-testid="ziwei-insight-section">
+          <h2 class="fs-section-rule">运势与生活建议</h2>
           <AnalysisPanel :blocks="insightBlocks" default-open-id="ziwei-forecast-year" />
-        </section>
+        </CodexPanel>
       </template>
     </template>
   </main>

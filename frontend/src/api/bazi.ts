@@ -10,8 +10,6 @@ export interface BaziRequest {
   gender?: 'male' | 'female' | ''
   city_tier?: '一线' | '新一线' | '其余' | null
   industry?: '金融IT' | '教育公务' | '其余' | null
-  city_tier?: '一线' | '新一线' | '其余' | null
-  industry?: '金融IT' | '教育公务' | '其余' | null
   target_date?: string  // ISO8601，流日/流时目标日期
   target_hour?: number  // 0-23，流时小时
   include_liuri?: boolean // 默认 true；未传 target_date 时使用当天
@@ -580,7 +578,22 @@ export interface BaziResponse {
   shishen_summary?: ShishenSummary
   // 大运/流年
   dayun?: Dayun
-  liunian?: { items?: Array<{ year?: number; stem?: string; branch?: string; ten_god?: string; clash?: string }>; years_used?: number[] }
+  liunian?: {
+    items?: Array<{
+      year?: number
+      stem?: string
+      branch?: string
+      ten_god?: string
+      clash?: string
+      hidden_stems?: Array<{ stem?: string; ten_god?: string | null }>
+      xingyun?: string | null
+      self_seat?: string | null
+      kongwang?: string[]
+      nayin?: string | null
+      shensha?: Array<{ name?: string; polarity?: string | null }>
+    }>
+    years_used?: number[]
+  }
   // 五行
   wuxing_score?: WuxingScore
   wuxing_breakdown?: Record<string, Record<string, number>>

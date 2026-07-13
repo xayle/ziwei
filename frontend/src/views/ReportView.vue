@@ -22,6 +22,7 @@ import { buildProfileSignature } from '@/utils/buildChartRequests'
 import { getProfileCompleteness, getTimeConfidence } from '@/utils/profileMetrics'
 import { buildFushengReportPdfRequest } from '@/utils/buildChartRequests'
 import { buildBaziColumns } from '@/utils/buildBaziColumns'
+import { formatCnElementsJoin } from '@/utils/yongshenElements'
 import { buildBaziModuleCards, baziModuleCardsToAnalysisBlocks } from '@/utils/buildBaziModuleCards'
 import { buildZiweiInsightBlocks, buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
@@ -273,7 +274,7 @@ const baziSummary = computed(() => {
   return [
     { label: '日主', value: day ? `${day.stem}${day.branch}` : '缺失' },
     { label: '格局', value: r.geju?.geju_name || '缺失' },
-    { label: '用神', value: r.yongshen?.favor?.join('、') || '缺失' },
+    { label: '用神', value: formatCnElementsJoin(r.yongshen?.favor) },
     { label: '强弱', value: r.day_master_strength?.tier || '缺失' },
   ]
 })
@@ -297,8 +298,8 @@ const baziBlocks = computed(() => {
   const classicBody = g?.classic_ref?.trim() || '暂无典籍句式。'
   const bullets: string[] = [
     `引擎格：${engineLead}${g?.is_broken ? '（破格）' : ''}`,
-    `用神：${r.yongshen?.favor?.join('、') || '缺失'}`,
-    `忌神：${r.yongshen?.avoid?.join('、') || '缺失'}`,
+    `用神：${formatCnElementsJoin(r.yongshen?.favor)}`,
+    `忌神：${formatCnElementsJoin(r.yongshen?.avoid)}`,
   ]
   if (g?.derived_geju && g.derived_geju !== g.geju_name) {
     bullets.push(`衍生格：${g.derived_geju}`)
@@ -1094,18 +1095,22 @@ onMounted(() => {
 
 .report-volume h2 {
   margin: 0 0 16px;
+  padding-left: var(--sp-3);
+  border-left: 3px solid var(--brand-gold);
   font-family: var(--font-cn);
   color: var(--brand-ink);
+  font-size: 17px;
+  letter-spacing: 0.08em;
 }
 
 .report-cover {
   text-align: center;
   padding: 48px 24px 40px;
   margin-bottom: 8px;
-  border: 1px solid var(--border-md);
+  border: 1px solid var(--border);
   border-radius: var(--radius-codex);
   background: var(--surface);
-  box-shadow: var(--shadow-seal);
+  box-shadow: none;
 }
 
 .report-preface-meta {

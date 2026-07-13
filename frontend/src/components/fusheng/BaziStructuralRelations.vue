@@ -1,39 +1,56 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PillarDetailRow } from '@/utils/buildEngineTrustDisplay'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   relations?: string[]
   pillarDetails?: PillarDetailRow[]
   missingFields?: string[]
-}>()
+  mode?: 'full' | 'summary'
+  maxItems?: number
+}>(), {
+  mode: 'full',
+  maxItems: 4,
+})
 
-const hasRelations = () => (props.relations?.length ?? 0) > 0
-const hasPillarDetails = () => (props.pillarDetails?.length ?? 0) > 0
+const displayRelations = computed(() => {
+  const lines = props.relations ?? []
+  if (props.mode === 'summary' && props.maxItems != null && props.maxItems > 0) {
+    return lines.slice(0, props.maxItems)
+  }
+  return lines
+})
+
+const hasRelations = computed(() => displayRelations.value.length > 0)
+const hasPillarDetails = computed(() => (props.pillarDetails?.length ?? 0) > 0)
+const isSummary = computed(() => props.mode === 'summary')
 </script>
 
 <template>
   <section class="bazi-structural" data-testid="bazi-structural-relations">
     <header class="bazi-structural__head">
-      <h2>结构关系</h2>
-      <p class="bazi-structural__lead">刑冲合害、天干冲、柱级神煞与空亡；无数据时显式标注「缺失」。</p>
+      <h2>{{ isSummary ? '关系摘要' : '结构关系' }}</h2>
+      <p v-if="!isSummary" class="bazi-structural__lead">
+        刑冲合害、天干冲、柱级神煞与空亡；无数据时显式标注「缺失」。
+      </p>
     </header>
 
-    <div v-if="missingFields?.length" class="bazi-structural__alert" data-testid="bazi-structural-missing">
+    <div v-if="missingFields?.length && !isSummary" class="bazi-structural__alert" data-testid="bazi-structural-missing">
       <strong>引擎未覆盖</strong>
       <p>{{ missingFields.join('、') }}</p>
     </div>
 
     <section class="bazi-structural__section">
-      <h3>刑冲合害 / 天干冲</h3>
-      <ul v-if="hasRelations()" class="bazi-structural__list">
-        <li v-for="(line, idx) in relations" :key="idx">{{ line }}</li>
+      <h3 v-if="!isSummary">刑冲合害 / 天干冲</h3>
+      <ul v-if="hasRelations" class="bazi-structural__list">
+        <li v-for="(line, idx) in displayRelations" :key="idx">{{ line }}</li>
       </ul>
       <p v-else class="bazi-structural__empty">缺失</p>
     </section>
 
-    <section class="bazi-structural__section">
+    <section v-if="!isSummary" class="bazi-structural__section">
       <h3>四柱细目（空亡 / 神煞 / 藏干）</h3>
-      <table v-if="hasPillarDetails()" class="bazi-structural__table">
+      <table v-if="hasPillarDetails" class="bazi-structural__table">
         <thead>
           <tr><th>柱</th><th>空亡</th><th>神煞</th><th>藏干</th></tr>
         </thead>
@@ -59,7 +76,12 @@ const hasPillarDetails = () => (props.pillarDetails?.length ?? 0) > 0
 
 .bazi-structural__head h2 {
   margin: 0;
-  font-family: var(--font-cn);
+  padding-left: 10px;
+  border-left: 3px solid var(--brand-gold);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
   color: var(--brand-ink);
 }
 
@@ -95,7 +117,7 @@ const hasPillarDetails = () => (props.pillarDetails?.length ?? 0) > 0
   padding-left: 18px;
   color: var(--text-2);
   line-height: 1.75;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .bazi-structural__table {
@@ -119,7 +141,7 @@ const hasPillarDetails = () => (props.pillarDetails?.length ?? 0) > 0
 .bazi-structural__empty {
   margin: 0;
   color: var(--text-3);
-  font-size: 14px;
+  font-size: 13px;
   font-style: italic;
 }
 </style>

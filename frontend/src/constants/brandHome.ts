@@ -32,3 +32,17 @@ export const BRAND_HOME_LAYERS = [
   { label: '引经', text: '子平诸书，有所本而不尽信。' },
   { label: '余论', text: '雾中有花，展卷而后，方入其事。' },
 ] as const
+
+/** 首页册页底纹 — 左「命」右「书」，合看为命书 */
+export const BRAND_HOME_WATERMARK = {
+  left: '命',
+  right: '书',
+} as const
+
+/** 首页左轨竖排诗 — 《录辰》原创 */
+export const BRAND_HOME_POEM = [
+  '人间行路几春秋',
+  '半卷浮生未白头',
+  '世事茫茫何所似',
+  '且向卷中认春秋',
+] as const

@@ -11,7 +11,12 @@ import {
   buildProvenanceRows,
   buildValidationLines,
   collectMissingFields,
+  formatMissingFieldLabel,
+  formatMissingFieldLine,
   formatRelationLines,
+  formatTrustValidationLine,
+  buildTrustOverviewLines,
+  trustLineTone,
 } from '@/utils/buildEngineTrustDisplay'
 
 describe('buildEngineTrustDisplay', () => {
@@ -135,11 +140,14 @@ describe('buildEngineTrustDisplay', () => {
         level: 'L2',
         mode: 'dual',
         interpretation_enabled: true,
-        reasons: ['near_boundary'],
+        reasons: ['near_shichen_boundary'],
         diff_fields: ['hour'],
       },
     } as BaziResponse)
     expect(validation.some((line) => line.includes('置信度'))).toBe(true)
+    expect(validation.some((line) => line.includes('中等'))).toBe(true)
+    expect(validation.some((line) => line.includes('双轨'))).toBe(true)
+    expect(validation.some((line) => line.includes('接近时辰交界'))).toBe(true)
     expect(validation.some((line) => line.includes('L2'))).toBe(true)
 
     const iztro = buildIztroDisplay({
@@ -166,5 +174,34 @@ describe('buildEngineTrustDisplay', () => {
     expect(iztro?.showDualTrackTable).toBe(true)
     expect(iztro?.dualTrack?.lifePalaceGz).toBe('癸丑')
     expect(iztro?.engineLifePalaceGz).toBe('乙丑')
+  })
+
+  it('formats missing field labels for register rows', () => {
+    expect(formatMissingFieldLabel('clash_summary')).toBe('刑冲摘要')
+    expect(formatMissingFieldLabel('hour_pillar')).toBe('时柱')
+  })
+
+  it('classifies trust line tone for register rows', () => {
+    expect(trustLineTone('缺失字段未覆盖')).toBe('missing')
+    expect(trustLineTone('近时辰边界 15分钟')).toBe('drift')
+    expect(trustLineTone('置信度: medium')).toBe('ok')
+  })
+
+  it('humanizes trust validation and missing lines', () => {
+    expect(formatMissingFieldLine('clash_summary').main).toBe('刑冲摘要（引擎未返回）')
+    expect(formatMissingFieldLine('clash_summary').note).toBeUndefined()
+    expect(formatTrustValidationLine('近时辰边界（15 分钟）').main).toContain('时辰交界')
+    expect(formatTrustValidationLine('置信度：medium').main).toBe('整体置信度：中等')
+    expect(formatTrustValidationLine('置信度：中等').main).toBe('整体置信度：中等')
+  })
+
+  it('builds overview preview with max two lines', () => {
+    const lines = buildTrustOverviewLines(
+      ['clash_summary', 'hour_pillar'],
+      ['置信度：medium', '近时辰边界（15 分钟）'],
+      { max: 2 },
+    )
+    expect(lines).toHaveLength(2)
+    expect(lines[0].main).toContain('刑冲摘要')
   })
 })

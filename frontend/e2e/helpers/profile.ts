@@ -13,9 +13,11 @@ export async function fillMinimalProfile(page: Page) {
   await page.getByTestId('profile-birth-dt').fill('1990-01-15T08:30')
   await page.getByTestId('profile-gender').selectOption('male')
 
-  const provinceSelect = page.locator('.city-picker-field').first().locator('select').first()
+  const cityRow = page.locator('.city-picker-row').first()
+  const provinceSelect = cityRow.locator('select').first()
+  await expect(provinceSelect).toBeEnabled({ timeout: 15_000 })
   await provinceSelect.selectOption('北京市')
-  const citySelect = page.locator('.city-picker-field').first().locator('select').nth(1)
+  const citySelect = cityRow.locator('select').nth(1)
   await expect(citySelect.locator('option', { hasText: '北京' })).toHaveCount(1, { timeout: 10_000 })
   await citySelect.selectOption('北京')
 

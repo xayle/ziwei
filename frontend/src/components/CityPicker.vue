@@ -95,7 +95,7 @@ watch(cities, () => applyCity(props.initialCity))
       {{ c.name }}
     </option>
   </select>
-  <span v-if="citiesLoading" class="hint">正在加载城市…</span>
+  <span v-if="citiesLoading" class="hint">正在加载城市…（需后端 API，若久未响应请确认已启动 uvicorn :8000）</span>
   <span v-else-if="citiesError" class="hint hint--warn">{{ citiesError }}</span>
   <span v-else-if="modelValue !== undefined" class="hint">经度 {{ modelValue.toFixed(2) }}°E</span>
   <span v-else-if="optional" class="hint">选填，用于真太阳时修正</span>

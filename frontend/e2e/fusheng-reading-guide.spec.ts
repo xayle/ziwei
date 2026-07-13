@@ -12,7 +12,8 @@ test.describe('读法导览 explain reading（W102-11）', () => {
 
   test('首页建档后展示动态读法导览', async ({ page }) => {
     await fillMinimalProfile(page)
-    await gotoApp(page, '')
+    await gotoApp(page, 'report')
+    await expect(page.getByTestId('report-cover-hero')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('reading-guide-loading')).toHaveCount(0, { timeout: 15_000 })
     await expect(page.locator('[data-testid="reading-guide-dynamic"]').first()).toContainText(/先读/, { timeout: 15_000 })
   })
@@ -33,7 +34,8 @@ test.describe('读法导览 explain reading（W102-11）', () => {
       await route.fulfill({ status: 503, contentType: 'application/json', body: '{"detail":"unavailable"}' })
     })
     await fillMinimalProfile(page)
-    await gotoApp(page, '')
+    await gotoApp(page, 'report')
+    await expect(page.getByTestId('report-cover-hero')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('reading-guide-fallback')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText('六卷辑录按分层阅读；卷五推断默认折叠，卷六问书需主动展开。')).toBeVisible()
   })

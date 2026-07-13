@@ -11,14 +11,18 @@ import { useFushengReport } from '@/composables/useFushengReport'
 import { useBaziPageExplain } from '@/composables/useBaziPageExplain'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
+import {
+  buildTrustOverviewLines,
+  countTrustOverviewItems,
+} from '@/utils/buildEngineTrustDisplay'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
-import VolumeHead from '@/components/fusheng/VolumeHead.vue'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import { useProfileStore } from '@/stores/profile'
-import { buildBaziColumns } from '@/utils/buildBaziColumns'
+import { buildBaziColumns, formatKongwangDisplay } from '@/utils/buildBaziColumns'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
 import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
+import { formatCnElementsJoin } from '@/utils/yongshenElements'
 import { truncateText } from '@/utils/truncateText'
 import type { BaziResponse } from '@/api/bazi'
 import '@/assets/fusheng-page.css'
@@ -30,8 +34,20 @@ type DetailBlock = {
   bullets: string[]
 }
 
+const DEPTH_STORAGE_KEY = 'fusheng.bazi.depth'
+
+function readStoredDepth(): 'overview' | 'structure' | 'deep' {
+  try {
+    const stored = sessionStorage.getItem(DEPTH_STORAGE_KEY)
+    if (stored === 'overview' || stored === 'structure' || stored === 'deep') return stored
+  } catch {
+    /* ignore */
+  }
+  return 'overview'
+}
+
 const router = useRouter()
-const depth = ref<'overview' | 'structure' | 'deep'>('overview')
+const depth = ref<'overview' | 'structure' | 'deep'>(readStoredDepth())
 const profile = useProfileStore()
 const { loadingBazi, loadingDayun, error, bazi: result, ziwei, dayunReport, dayunError, loadBazi, loadDayunNarratives, isCacheValid, requestMeta } = useFushengReport()
 const {
@@ -63,6 +79,34 @@ const liuriRaw = computed(() => result.value?.liuri_liushi ?? null)
 
 const currentYear = new Date().getFullYear()
 const profileLabel = computed(() => profile.activeProfile?.label || '未命名档案')
+
+const coverName = computed(() => {
+  const fullName = [profile.surname, profile.givenName].filter(Boolean).join('')
+  if (fullName) return fullName
+  const label = profileLabel.value
+  return label.replace(/\s·\s\d{4}\/\d{2}\/\d{2}$/, '').trim() || label
+})
+
+const coverDate = computed(() => {
+  const dt = profile.birthDt?.trim()
+  if (!dt) return ''
+  return dt.slice(0, 10).replace(/-/g, '/')
+})
+
+const coverTitle = computed(() => (
+  coverDate.value ? `${coverName.value} · ${coverDate.value}` : coverName.value
+))
+
+const coverMeta = computed(() => {
+  const r = result.value
+  if (!r) return '载入后可核对日主 · 格局 · 用神 · 强弱'
+  const day = r.pillars_primary?.day
+  const dayMaster = day ? `${day.stem}${day.branch}` : '—'
+  const geju = r.geju?.geju_name ?? '—'
+  const favor = formatCnElementsJoin(r.yongshen?.favor, '—')
+  const strength = r.day_master_strength?.tier ?? '—'
+  return truncateText(`${dayMaster} · ${geju} · 用神 ${favor} · ${strength}`, 96)
+})
 
 function textOrMissing(value?: string | null): string {
   const trimmed = value?.trim()
@@ -118,15 +162,23 @@ const timeWarnings = computed(() => {
   return [...new Set(warnings)]
 })
 
+const caliberDetailLines = computed(() => {
+  const lines: string[] = []
+  if (caliberBanner.value) lines.push(caliberBanner.value)
+  lines.push(...timeWarnings.value)
+  return [...new Set(lines)]
+})
+
 const hiddenContrib = computed(() => {
-  const raw = result.value?.scoring?.hidden_contrib_by_ten_god
+  const raw = result.value?.shishen_summary?.hidden_contrib_by_ten_god
+    ?? result.value?.scoring?.hidden_contrib_by_ten_god
     ?? (result.value as { hidden_contrib_by_ten_god?: Record<string, number> })?.hidden_contrib_by_ten_god
   return raw && Object.keys(raw).length ? raw : undefined
 })
 
 const yongshenNote = computed(() => {
-  const primary = listOrMissing(result.value?.yongshen?.favor)
-  const secondary = listOrMissing(result.value?.yongshen?.avoid)
+  const primary = formatCnElementsJoin(result.value?.yongshen?.favor)
+  const secondary = formatCnElementsJoin(result.value?.yongshen?.avoid)
   const hasDual = Boolean(result.value?.pillars_secondary)
   const parts = [`用神（${pillarSetLabel('primary')}）：${primary}`, `忌神：${secondary}`]
   if (hasDual) {
@@ -166,36 +218,15 @@ const currentLiunian = computed(() => (result.value?.liunian?.items ?? []).find(
 
 const columns = computed(() => buildBaziColumns(result.value, currentYear))
 const activeKey = 'day' as const
-const topSummary = computed(() => {
-  const r = result.value
-  if (!r) {
-    return truncateText(`当前档案 ${profileLabel.value} 已就绪。可先核对出生时间和出生地，再稍后重试。`)
-  }
-  const day = r.pillars_primary?.day
-  const strength = r.day_master_strength?.tier ?? '缺失'
-  const geju = r.geju?.geju_name ?? '缺失'
-  const favor = r.yongshen?.favor?.join('、') || '缺失'
-  const shishen = r.shishen_summary?.dominant?.slice(0, 2).join('、') || '缺失'
-  return truncateText(
-    `${profileLabel.value} · 日主 ${day?.stem || '—'}${day?.branch || ''} · 十神 ${shishen} · 格局 ${geju} · 用神 ${favor} · 强弱 ${strength}`,
-  )
-})
 
 const highlightCards = computed(() => {
-  const shishen = result.value?.shishen_summary
-  const shishenLabel = shishen?.dominant?.slice(0, 2).join('、')
-    || truncateText(shishen?.summary_text || '', 12)
-    || '待计算'
+  const dayPillar = result.value?.pillars_primary?.day
+  const kongwang = formatKongwangDisplay(result.value?.kongwang)
   return [
     {
       label: '日主',
-      value: result.value?.pillars_primary?.day ? `${result.value.pillars_primary.day.stem}${result.value.pillars_primary.day.branch}` : '待计算',
+      value: dayPillar ? `${dayPillar.stem}${dayPillar.branch}` : '待计算',
       note: '四柱核心',
-    },
-    {
-      label: '十神',
-      value: shishenLabel,
-      note: '结构主导',
     },
     {
       label: '格局',
@@ -203,14 +234,19 @@ const highlightCards = computed(() => {
       note: '命局结构',
     },
     {
+      label: '用神',
+      value: formatCnElementsJoin(result.value?.yongshen?.favor, '待计算'),
+      note: '喜用方向',
+    },
+    {
       label: '强弱',
       value: result.value?.day_master_strength?.tier || '待计算',
       note: '平衡判断',
     },
     {
-      label: '用神',
-      value: result.value?.yongshen?.favor?.join('、') || '待计算',
-      note: '喜用方向',
+      label: '空亡',
+      value: kongwang,
+      note: '旬空',
     },
   ]
 })
@@ -254,8 +290,8 @@ const detailBlocks = computed<DetailBlock[]>(() => {
         `土 ${scoreOrMissing(wuxing?.earth)}`,
         `金 ${scoreOrMissing(wuxing?.metal)}`,
         `水 ${scoreOrMissing(wuxing?.water)}`,
-        `偏弱：${listOrMissing(result.value?.wuxing_weak)}`,
-        `偏强：${listOrMissing(result.value?.wuxing_strong)}`,
+        `偏弱：${formatCnElementsJoin(result.value?.wuxing_weak)}`,
+        `偏强：${formatCnElementsJoin(result.value?.wuxing_strong)}`,
       ],
     },
     {
@@ -314,6 +350,33 @@ const vol2Summary = computed(() => ({
   shensha: formatShenshaSummaryText(result.value),
 }))
 
+const vol2RelationsText = computed(() => truncateText(vol2Summary.value.relations, 120))
+const vol2ShenshaText = computed(() => truncateText(vol2Summary.value.shensha, 120))
+
+const crossWarnCount = computed(() => {
+  if (!showCrossValidationHint.value) return 0
+  return crossValidation.value.items.filter((item) => item.status === 'warn' || item.status === 'fail').length
+})
+
+const trustOverviewCount = computed(() =>
+  countTrustOverviewItems(missingFields.value, validationLines.value, crossWarnCount.value),
+)
+
+const trustOverviewLines = computed(() => {
+  const crossLines = showCrossValidationHint.value
+    ? crossValidation.value.items
+      .filter((item) => item.status === 'warn' || item.status === 'fail')
+      .map((item) => ({
+        kind: 'cross' as const,
+        main: `${item.label}：${item.detail}`,
+        tone: (item.status === 'fail' ? 'missing' : 'drift') as 'missing' | 'drift',
+      }))
+    : []
+  return buildTrustOverviewLines(missingFields.value, validationLines.value, { max: 2, crossLines })
+})
+
+const showTrustOverview = computed(() => depth.value === 'overview' && trustOverviewCount.value > 0)
+
 const summaryItems = computed(() => highlightCards.value.map((card) => ({ label: card.label, value: card.value })))
 
 const analysisBlocks = computed<AnalysisBlock[]>(() => {
@@ -356,16 +419,27 @@ const dayunEngineBlocks = computed<AnalysisBlock[]>(() =>
   })),
 )
 
-const explainBlocks = computed(() => [
+const mainExplainBlocks = computed(() => [
   ...explainAnalysisBlocks.value,
   ...analysisBlocks.value,
-  ...dayunEngineBlocks.value,
-  ...dayunAnalysisBlocks.value,
 ])
 
-const defaultExplainOpenId = computed(() => (
-  explainAnalysisBlocks.value[0]?.id ?? 'bazi-0'
-))
+const dayunLoaded = computed(() => Boolean(dayunReport.value?.items?.length))
+
+const dayunExplainBlocks = computed(() => {
+  if (!dayunLoaded.value) return []
+  return [
+    ...dayunEngineBlocks.value,
+    ...dayunAnalysisBlocks.value,
+  ]
+})
+
+const defaultExplainOpenId = computed(() => {
+  const classical = explainAnalysisBlocks.value.find((block) => block.layer === 'classical')
+  if (classical) return classical.id
+  const fallback = mainExplainBlocks.value.find((block) => block.layer === 'classical')
+  return fallback?.id ?? explainAnalysisBlocks.value[0]?.id ?? 'bazi-0'
+})
 
 const explainPanelKey = computed(() => (
   explainAnalysisBlocks.value.map((block) => block.id).join('|') || 'engine-only'
@@ -402,6 +476,16 @@ watch(depth, (level) => {
   void loadPageExplain(profile.asProfileData())
 })
 
+function setDepth(level: 'overview' | 'structure' | 'deep') {
+  depth.value = level
+  try {
+    sessionStorage.setItem(DEPTH_STORAGE_KEY, level)
+  } catch {
+    /* ignore */
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 watch(() => result.value, () => {
   resetPageExplain()
 })
@@ -421,22 +505,30 @@ onMounted(() => {
 
 <template>
   <main class="fs-page bazi-page">
-    <VolumeHead
-      volume-id="vol1"
-      :title="profileLabel"
-      :desc="topSummary"
-    >
-      <template #actions>
-        <button type="button" class="fs-btn fs-btn--ghost" @click="goZiwei">查看紫微</button>
-        <button type="button" class="fs-btn fs-btn--primary" @click="goReport">进入报告</button>
-      </template>
-    </VolumeHead>
+    <header v-if="!loadingBazi" class="bazi-cover">
+      <p class="bazi-cover__eyebrow">春 · 一命之枢</p>
+      <div class="bazi-cover__row">
+        <div class="bazi-cover__copy">
+          <h1 class="bazi-cover__title">{{ coverTitle }}</h1>
+          <p class="bazi-cover__meta">{{ coverMeta }}</p>
+        </div>
+        <div class="bazi-cover__actions">
+          <button type="button" class="fs-btn fs-btn--ghost" @click="goZiwei">查看紫微</button>
+          <button type="button" class="fs-btn fs-btn--primary" @click="goReport">进入报告</button>
+        </div>
+      </div>
+    </header>
 
-    <p v-if="caliberBanner" class="fs-caliber-banner" data-testid="bazi-caliber-banner">
-      {{ caliberBanner }}
-    </p>
+    <details v-if="caliberBanner" class="bazi-caliber">
+      <summary class="fs-caliber-banner bazi-caliber__summary" data-testid="bazi-caliber-banner">
+        {{ caliberBanner }}
+      </summary>
+      <ul v-if="caliberDetailLines.length > 1" class="bazi-caliber__detail">
+        <li v-for="(line, idx) in caliberDetailLines" :key="idx">{{ line }}</li>
+      </ul>
+    </details>
     <p v-if="isCacheValid" class="fs-hint fs-hint--cache">已复用本次会话中的排盘结果。</p>
-    <p v-if="timeWarnings.length" class="fs-hint fs-hint--warn">{{ timeWarnings.join(' · ') }}</p>
+    <p v-if="!caliberBanner && timeWarnings.length" class="fs-hint fs-hint--warn">{{ timeWarnings.join(' · ') }}</p>
 
     <ResultStateCard
       v-if="loadingBazi"
@@ -454,107 +546,137 @@ onMounted(() => {
       />
 
       <template v-if="result">
-        <section data-testid="bazi-layer-summary">
-          <SummaryStrip :items="summaryItems" />
-        </section>
-
-        <section
-          v-if="depth === 'overview' && (missingFields.length || provenanceRows.length)"
-          class="fs-trust-footnote"
-          data-testid="bazi-trust-overview"
+        <nav
+          class="archive-tabs bazi-depth-tabs"
+          data-testid="bazi-depth-toggle"
+          aria-label="阅读深度"
         >
-          <details>
-            <summary>校勘提示（{{ missingFields.length }} 项）</summary>
-            <EngineTrustPanel
-              compact
-              :missing-fields="missingFields"
-              :provenance-rows="provenanceRows.slice(0, 4)"
-            />
-          </details>
-        </section>
+          <button
+            type="button"
+            class="archive-tabs__btn"
+            :class="{ 'is-active': depth === 'overview' }"
+            @click="setDepth('overview')"
+          >
+            速览
+          </button>
+          <button
+            type="button"
+            class="archive-tabs__btn"
+            :class="{ 'is-active': depth === 'structure' }"
+            @click="setDepth('structure')"
+          >
+            结构
+          </button>
+          <button
+            type="button"
+            class="archive-tabs__btn"
+            :class="{ 'is-active': depth === 'deep' }"
+            @click="setDepth('deep')"
+          >
+            深读
+          </button>
+        </nav>
 
-        <div class="bazi-page__depth-row" role="group" aria-label="阅读深度">
-          <div class="fs-depth-toggle" data-testid="bazi-depth-toggle">
-            <button
-              type="button"
-              class="fs-depth-toggle__btn"
-              :class="{ 'is-active': depth === 'overview' }"
-              @click="depth = 'overview'"
-            >
-              速览
-            </button>
-            <button
-              type="button"
-              class="fs-depth-toggle__btn"
-              :class="{ 'is-active': depth === 'structure' }"
-              @click="depth = 'structure'"
-            >
-              结构
-            </button>
-            <button
-              type="button"
-              class="fs-depth-toggle__btn"
-              :class="{ 'is-active': depth === 'deep' }"
-              @click="depth = 'deep'"
-            >
-              深读
-            </button>
+        <section class="bazi-spread" id="bazi-layer-structure" data-testid="bazi-layer-structure">
+          <div v-if="depth !== 'overview'" class="bazi-spread__kpi" data-testid="bazi-layer-summary">
+            <SummaryStrip class="bazi-kpi-strip" :items="summaryItems" />
           </div>
-        </div>
 
-        <section class="bazi-hero" id="bazi-layer-structure" data-testid="bazi-layer-structure">
-          <div class="bazi-hero__chart fs-card--hero">
+          <div class="bazi-spread__chart">
             <BaziReferenceTable
               :columns="columns"
               :active-key="activeKey"
-              :hidden-contrib-by-ten-god="depth !== 'overview' ? hiddenContrib : undefined"
-              :show-detail-rows="depth !== 'overview'"
+              :hidden-contrib-by-ten-god="hiddenContrib"
+              :show-detail-rows="true"
+              variant="spread"
             />
           </div>
 
-          <aside class="bazi-hero__aside">
-            <div class="fs-card fs-card--flat">
+          <div class="bazi-spread__insights" data-testid="bazi-spread-insights">
+            <div class="bazi-insight-panel bazi-insight-panel--liuri">
               <BaziLiuriTodayCard :liuri="liuriRaw" />
             </div>
-            <div v-if="depth !== 'overview'" class="fs-card fs-card--flat">
+            <div class="bazi-insight-panel bazi-insight-panel--relations">
               <BaziStructuralRelations
+                mode="summary"
                 :relations="relations"
-                :pillar-details="pillarDetails"
               />
             </div>
-          </aside>
+          </div>
         </section>
 
-        <section v-if="depth !== 'overview'" class="fs-card" data-testid="bazi-vol2-block">
-          <h2>卷二·业之象</h2>
-          <p class="fs-codex-line"><strong>干支关系</strong> — {{ vol2Summary.relations }}</p>
-          <p class="fs-codex-line"><strong>神煞摘要</strong> — {{ vol2Summary.shensha }}</p>
-        </section>
-
+        <div class="bazi-register-stack">
         <section
-          v-if="depth === 'structure' && dualTrackReference.length"
-          class="fs-card fs-card--flat"
-          data-testid="bazi-dual-track-block"
+          v-if="showTrustOverview"
+          class="bazi-self-check bazi-self-check--overview"
+          data-testid="bazi-trust-overview"
         >
-          <DualTrackTable :rows="dualTrackReference" title="格局双轨对照" variant="reference" />
+          <details class="bazi-self-check__fold">
+            <summary>校勘提示（{{ trustOverviewCount }} 项）</summary>
+            <div class="trust-footnote trust-footnote--preview">
+              <div
+                v-for="(row, idx) in trustOverviewLines"
+                :key="`overview-trust-${idx}`"
+                class="trust-row"
+                :class="`trust-row--${row.tone}`"
+              >
+                <span class="trust-icon">{{ row.tone === 'missing' ? '!' : row.tone === 'drift' ? '△' : '✓' }}</span>
+                <span
+                  class="trust-badge"
+                  :class="{
+                    'trust-badge--missing': row.tone === 'missing',
+                    'trust-badge--drift': row.tone === 'drift',
+                  }"
+                >
+                  {{ row.tone === 'missing' ? '缺失' : row.tone === 'drift' ? '校勘' : '核对' }}
+                </span>
+                <span class="trust-row__body">{{ row.main }}</span>
+              </div>
+              <p class="bazi-self-check__hint">
+                <button type="button" class="bazi-self-check__hint-btn" @click="setDepth('structure')">
+                  切至「结构」查看全部校勘与可信度分层
+                </button>
+              </p>
+            </div>
+          </details>
         </section>
 
-        <section class="fs-trust-footnote" v-if="depth !== 'overview'" data-testid="bazi-layer-trust">
+        <section v-if="depth !== 'overview'" class="bazi-self-check" data-testid="bazi-layer-trust">
+          <h2 class="bazi-self-check__eyebrow">格物 · 校勘脚注</h2>
           <EngineTrustPanel
+            layout="register"
             compact
             :missing-fields="missingFields"
             :provenance-rows="provenanceRows"
             :dual-tracks="dualTracks"
             :validation-lines="validationLines"
             :liuri="liuri"
+            :pillar-details="pillarDetails"
+            :relations="relations"
             :strength-factor-lines="strengthFactorLines"
             :bazi-structural="baziStructural"
             :cross-validation-items="showCrossValidationHint ? crossValidation.items : undefined"
           />
         </section>
 
-        <section v-if="depth === 'deep'" class="fs-card" data-testid="bazi-layer-explain">
-          <h2>卷一·命之根（深读）</h2>
+        <section v-if="depth !== 'overview'" class="bazi-vol2" data-testid="bazi-vol2-block">
+          <h2 class="bazi-vol2__eyebrow">卷二 · 业之象</h2>
+          <div class="bazi-vol2__body">
+            <p class="bazi-vol2__line"><strong>干支关系</strong> — {{ vol2RelationsText }}</p>
+            <p class="bazi-vol2__line"><strong>神煞摘要</strong> — {{ vol2ShenshaText }}</p>
+          </div>
+        </section>
+
+        <section
+          v-if="depth !== 'overview' && dualTrackReference.length"
+          class="bazi-dual-track-block"
+          data-testid="bazi-dual-track-block"
+        >
+          <DualTrackTable :rows="dualTrackReference" title="格局双轨对照（样例）" variant="reference" />
+        </section>
+
+        <section v-if="depth === 'deep'" class="bazi-layer-explain" data-testid="bazi-layer-explain">
+          <h2 class="bazi-layer-explain__eyebrow">引经 · 卷一命之根</h2>
           <div v-if="explainFailed" data-testid="bazi-explain-banner">
             <TrustDegradedBanner
               message="典籍解读暂不可用，下方为引擎摘要。"
@@ -564,25 +686,34 @@ onMounted(() => {
           <p v-else-if="loadingExplain" class="fs-hint fs-hint--cache">正在加载典籍解读…</p>
           <AnalysisPanel
             :key="explainPanelKey"
-            :blocks="explainBlocks"
-            :default-open-id="defaultExplainOpenId"
+            :blocks="mainExplainBlocks"
+            :default-expand-all="true"
+            :collapse-heuristic="false"
           />
-
-          <div v-if="depth === 'deep'" class="fs-codex-line">
-            <h2>大运叙事</h2>
-            <button
-              v-if="!dayunReport?.items?.length && !loadingDayun"
-              type="button"
-              class="fs-btn fs-btn--ghost"
-              data-testid="bazi-load-dayun"
-              @click="loadDayunOnDemand"
-            >
-              加载大运叙事（需主动触发）
-            </button>
-            <p v-if="loadingDayun" class="fs-hint fs-hint--cache">正在加载大运叙事…</p>
-            <p v-else-if="dayunError" class="fs-hint fs-hint--warn">{{ dayunError }}</p>
-          </div>
         </section>
+
+        <section v-if="depth === 'deep'" class="bazi-dayun-block" data-testid="bazi-dayun-block">
+          <h2 class="bazi-dayun-block__eyebrow">大运叙事</h2>
+          <p class="bazi-dayun-block__lead">按需加载 LLM 大运叙事；不自动请求。</p>
+          <button
+            v-if="!dayunLoaded && !loadingDayun"
+            type="button"
+            class="fs-btn fs-btn--ghost"
+            data-testid="bazi-load-dayun"
+            @click="loadDayunOnDemand"
+          >
+            加载大运叙事
+          </button>
+          <p v-if="loadingDayun" class="fs-hint fs-hint--cache">正在加载大运叙事…</p>
+          <p v-else-if="dayunError" class="fs-hint fs-hint--warn">{{ dayunError }}</p>
+          <AnalysisPanel
+            v-if="dayunExplainBlocks.length"
+            :blocks="dayunExplainBlocks"
+            :default-expand-all="true"
+            :collapse-heuristic="false"
+          />
+        </section>
+        </div>
       </template>
     </template>
   </main>

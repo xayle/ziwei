@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { LiuriLiushiModel } from '@/api/bazi'
 
-defineProps<{
+const props = defineProps<{
   liuri?: LiuriLiushiModel | null
 }>()
 
@@ -9,6 +10,14 @@ function scoreLabel(value?: number | null): string {
   if (value == null || !Number.isFinite(value)) return '—'
   return String(value)
 }
+
+const transitionHint = computed(() => {
+  const hint = props.liuri?.transition_hint?.trim()
+  if (!hint) return ''
+  const summary = props.liuri?.flow_summary?.trim() ?? ''
+  if (summary && summary.includes(hint)) return ''
+  return hint
+})
 </script>
 
 <template>
@@ -38,7 +47,7 @@ function scoreLabel(value?: number | null): string {
         <span class="value">{{ scoreLabel(liuri.flow_score_geju) }}</span>
       </div>
     </div>
-    <p v-if="liuri.transition_hint" class="liuri-today__hint">{{ liuri.transition_hint }}</p>
+    <p v-if="transitionHint" class="liuri-today__hint">{{ transitionHint }}</p>
     <ul v-if="liuri.warnings?.length" class="liuri-today__warnings">
       <li v-for="(w, idx) in liuri.warnings" :key="idx">{{ w }}</li>
     </ul>
@@ -53,7 +62,12 @@ function scoreLabel(value?: number | null): string {
 
 .liuri-today__head h2 {
   margin: 0;
-  font-family: var(--font-cn);
+  padding-left: 10px;
+  border-left: 3px solid var(--brand-gold);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
   color: var(--brand-ink);
 }
 

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" fill="none" aria-hidden="true">
+  <!-- Ma Yuan corner vignette: cliff, ripples, lone boat -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M-6 246 L-6 166 L26 148 L48 112 L74 128 L96 92 L122 108 L146 74 L170 246 Z"
+      fill="#8b5e34"
+      fill-opacity="0.07"
+      stroke="#8b5e34"
+      stroke-width="1.15"
+    />
+    <path
+      d="M26 148 L48 112 L74 128 L96 92 L122 108 L146 74"
+      stroke="#8b5e34"
+      stroke-width="1.35"
+    />
+    <path
+      d="M6 204 L22 190 L38 200 M14 176 L28 166 L42 174"
+      stroke="#8b5e34"
+      stroke-width="0.65"
+      opacity="0.55"
+    />
+    <path
+      d="M58 86 L70 68 L86 82"
+      stroke="#6b5d4f"
+      stroke-width="0.75"
+      opacity="0.38"
+    />
+    <path
+      d="M0 194 C48 190 128 192 208 189 S320 191 326 188"
+      stroke="#8b5e34"
+      stroke-width="0.7"
+      opacity="0.42"
+    />
+    <path
+      d="M0 206 C64 203 144 205 224 202 S320 204 326 201"
+      stroke="#8b5e34"
+      stroke-width="0.55"
+      opacity="0.3"
+    />
+    <path
+      d="M0 216 C80 214 160 215 240 213 S320 215 326 212"
+      stroke="#6b5d4f"
+      stroke-width="0.5"
+      opacity="0.22"
+    />
+    <path
+      d="M138 186 L166 184 L169 190 L135 192 Z"
+      fill="#8b5e34"
+      fill-opacity="0.09"
+      stroke="#8b5e34"
+      stroke-width="0.85"
+    />
+    <line x1="152" y1="184" x2="152" y2="170" stroke="#8b5e34" stroke-width="0.75" />
+    <path
+      d="M152 170 C158 174 166 176 174 178"
+      stroke="#6b5d4f"
+      stroke-width="0.5"
+      opacity="0.55"
+    />
+    <path
+      d="M286 6 C272 44 254 58 236 54 M254 58 L260 50 M246 52 L252 44"
+      stroke="#6b5d4f"
+      stroke-width="0.7"
+      opacity="0.42"
+    />
+  </g>
+</svg>

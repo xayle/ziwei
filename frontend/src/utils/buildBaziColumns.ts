@@ -4,6 +4,11 @@ export type PillarKey = 'liunian' | 'dayun' | 'year' | 'month' | 'day' | 'hour'
 
 export type HiddenStemLine = { stem: string; tenGod: string }
 
+export type ShenshaChip = {
+  name: string
+  polarity?: string | null
+}
+
 export type BaziColumn = {
   key: PillarKey
   label: string
@@ -15,14 +20,43 @@ export type BaziColumn = {
   selfSeat?: string
   void?: string
   nayin?: string
-  shensha?: string[]
+  shensha?: ShenshaChip[]
 }
 
 type DayunItem = NonNullable<NonNullable<BaziResponse['dayun']>['items']>[number]
 
+type ApiHiddenStem = { stem?: string; ten_god?: string | null; tenGod?: string | null }
+type ApiShensha = { name?: string; polarity?: string | null }
+
 function textOrMissing(value?: string | null): string {
   const trimmed = value?.trim()
   return trimmed ? trimmed : '缺失'
+}
+
+export function formatKongwangDisplay(kongwang?: string[] | null): string {
+  if (!kongwang?.length) return '缺失'
+  const items = [...new Set(kongwang.map((k) => k.trim()).filter(Boolean))]
+  if (!items.length) return '缺失'
+  if (items.every((k) => k === '未知')) return '未知'
+  return items.join('、')
+}
+
+function mapHiddenStems(stems?: ApiHiddenStem[] | null): HiddenStemLine[] | undefined {
+  if (!stems?.length) return undefined
+  return stems.map((item) => ({
+    stem: item.stem?.trim() || '',
+    tenGod: item.ten_god?.trim() || item.tenGod?.trim() || '',
+  }))
+}
+
+function mapShensha(items?: ApiShensha[] | null): ShenshaChip[] {
+  if (!items?.length) return []
+  return items
+    .map((item) => ({
+      name: item.name?.trim() || '',
+      polarity: item.polarity ?? null,
+    }))
+    .filter((item) => item.name)
 }
 
 function findCurrentDayun(result: BaziResponse, currentYear: number): DayunItem | undefined {
@@ -35,12 +69,12 @@ function findCurrentDayun(result: BaziResponse, currentYear: number): DayunItem 
 
 export function buildFallbackBaziColumns(): BaziColumn[] {
   return [
-    { key: 'liunian', label: '流年', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: ['接口不可用'] },
-    { key: 'dayun', label: '大运', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: ['接口不可用'] },
-    { key: 'year', label: '年柱', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: ['接口不可用'] },
-    { key: 'month', label: '月柱', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: ['接口不可用'] },
-    { key: 'day', label: '日柱', mainStar: '日主', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: ['接口不可用'] },
-    { key: 'hour', label: '时柱', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: ['接口不可用'] },
+    { key: 'liunian', label: '流年', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
+    { key: 'dayun', label: '大运', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
+    { key: 'year', label: '年柱', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
+    { key: 'month', label: '月柱', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
+    { key: 'day', label: '日柱', mainStar: '日主', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
+    { key: 'hour', label: '时柱', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
   ]
 }
 
@@ -54,23 +88,43 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
   const monthItem = result.pillars_primary?.month
   const dayItem = result.pillars_primary?.day
   const hourItem = result.pillars_primary?.hour
-  const kongwang = result.kongwang?.length ? result.kongwang.join('、') : '缺失'
-  const liunianDetail = liunianItem as unknown as { hidden_stems?: HiddenStemLine[]; xingyun?: string; self_seat?: string; nayin?: string; shensha?: Array<{ name?: string }> } | undefined
-  const dayunDetail = currentDayun as unknown as { hidden_stems?: HiddenStemLine[]; xingyun?: string; self_seat?: string; nayin?: string; shensha?: Array<{ name?: string }> } | undefined
+  const dayKongwang = formatKongwangDisplay(result.kongwang)
+  const pillarVoid = (kongwang?: string[] | null) => formatKongwangDisplay(kongwang) || dayKongwang
+  const liunianDetail = liunianItem as unknown as {
+    hidden_stems?: ApiHiddenStem[]
+    xingyun?: string
+    self_seat?: string
+    kongwang?: string[]
+    nayin?: string
+    shensha?: ApiShensha[]
+  } | undefined
+  const dayunDetail = currentDayun as unknown as {
+    hidden_stems?: ApiHiddenStem[]
+    xingyun?: string
+    self_seat?: string
+    kongwang?: string[]
+    nayin?: string
+    shensha?: ApiShensha[]
+  } | undefined
+
+  const shenshaOrMissing = (items?: ApiShensha[] | null) => {
+    const mapped = mapShensha(items)
+    return mapped.length ? mapped : [{ name: '缺失' }]
+  }
 
   return [
     {
       key: 'liunian',
       label: '流年',
-      mainStar: liunianItem?.ten_god || result.current_fortune_summary?.current_liunian,
+      mainStar: textOrMissing(liunianItem?.ten_god),
       stem: liunianItem?.stem || '',
       branch: liunianItem?.branch || '',
-      hiddenStems: liunianDetail?.hidden_stems,
+      hiddenStems: mapHiddenStems(liunianDetail?.hidden_stems),
       xingyun: liunianDetail?.xingyun,
       selfSeat: liunianDetail?.self_seat ?? '缺失',
-      void: kongwang,
+      void: pillarVoid(liunianDetail?.kongwang),
       nayin: liunianDetail?.nayin ?? '缺失',
-      shensha: liunianDetail?.shensha?.map((item) => item.name || '').filter(Boolean) || ['缺失'],
+      shensha: shenshaOrMissing(liunianDetail?.shensha),
     },
     {
       key: 'dayun',
@@ -78,12 +132,12 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
       mainStar: currentDayun?.ten_god,
       stem: currentDayun?.stem || '',
       branch: currentDayun?.branch || '',
-      hiddenStems: dayunDetail?.hidden_stems,
+      hiddenStems: mapHiddenStems(dayunDetail?.hidden_stems),
       xingyun: dayunDetail?.xingyun,
       selfSeat: dayunDetail?.self_seat ?? '缺失',
-      void: kongwang,
+      void: pillarVoid(dayunDetail?.kongwang),
       nayin: dayunDetail?.nayin ?? '缺失',
-      shensha: dayunDetail?.shensha?.map((item) => item.name || '').filter(Boolean) || ['缺失'],
+      shensha: shenshaOrMissing(dayunDetail?.shensha),
     },
     {
       key: 'year',
@@ -91,12 +145,12 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
       mainStar: result.ten_gods?.year,
       stem: yearItem?.stem || '',
       branch: yearItem?.branch || '',
-      hiddenStems: pillarDetails.year?.hidden_stems,
+      hiddenStems: mapHiddenStems(pillarDetails.year?.hidden_stems),
       xingyun: pillarDetails.year?.xingyun,
       selfSeat: pillarDetails.year?.self_seat ?? '缺失',
-      void: kongwang,
+      void: pillarVoid(pillarDetails.year?.kongwang),
       nayin: pillarDetails.year?.nayin ?? '缺失',
-      shensha: pillarDetails.year?.shensha?.map((item) => item.name || '').filter(Boolean) || ['缺失'],
+      shensha: shenshaOrMissing(pillarDetails.year?.shensha),
     },
     {
       key: 'month',
@@ -104,12 +158,12 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
       mainStar: result.ten_gods?.month,
       stem: monthItem?.stem || '',
       branch: monthItem?.branch || '',
-      hiddenStems: pillarDetails.month?.hidden_stems,
+      hiddenStems: mapHiddenStems(pillarDetails.month?.hidden_stems),
       xingyun: pillarDetails.month?.xingyun,
       selfSeat: pillarDetails.month?.self_seat ?? '缺失',
-      void: kongwang,
+      void: pillarVoid(pillarDetails.month?.kongwang),
       nayin: pillarDetails.month?.nayin ?? '缺失',
-      shensha: pillarDetails.month?.shensha?.map((item) => item.name || '').filter(Boolean) || ['缺失'],
+      shensha: shenshaOrMissing(pillarDetails.month?.shensha),
     },
     {
       key: 'day',
@@ -117,12 +171,12 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
       mainStar: '日主',
       stem: dayItem?.stem || '',
       branch: dayItem?.branch || '',
-      hiddenStems: pillarDetails.day?.hidden_stems,
+      hiddenStems: mapHiddenStems(pillarDetails.day?.hidden_stems),
       xingyun: pillarDetails.day?.xingyun,
       selfSeat: pillarDetails.day?.self_seat ?? textOrMissing(dayItem?.branch),
-      void: kongwang,
+      void: pillarVoid(pillarDetails.day?.kongwang),
       nayin: pillarDetails.day?.nayin ?? '缺失',
-      shensha: pillarDetails.day?.shensha?.map((item) => item.name || '').filter(Boolean) || ['缺失'],
+      shensha: shenshaOrMissing(pillarDetails.day?.shensha),
     },
     {
       key: 'hour',
@@ -130,12 +184,12 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
       mainStar: result.ten_gods?.hour,
       stem: hourItem?.stem || '',
       branch: hourItem?.branch || '',
-      hiddenStems: pillarDetails.hour?.hidden_stems,
+      hiddenStems: mapHiddenStems(pillarDetails.hour?.hidden_stems),
       xingyun: pillarDetails.hour?.xingyun,
       selfSeat: pillarDetails.hour?.self_seat ?? '缺失',
-      void: kongwang,
+      void: pillarVoid(pillarDetails.hour?.kongwang),
       nayin: pillarDetails.hour?.nayin ?? '缺失',
-      shensha: pillarDetails.hour?.shensha?.map((item) => item.name || '').filter(Boolean) || ['缺失'],
+      shensha: shenshaOrMissing(pillarDetails.hour?.shensha),
     },
   ]
 }

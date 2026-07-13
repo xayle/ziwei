@@ -20,3 +20,11 @@ export function toCnElements(values: string[] | undefined): string[] {
   }
   return [...out]
 }
+
+export function formatCnElementsJoin(
+  values: string[] | undefined | null,
+  fallback = '缺失',
+): string {
+  const cn = toCnElements(values ?? undefined)
+  return cn.length ? cn.join('、') : fallback
+}

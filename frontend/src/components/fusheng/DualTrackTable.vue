@@ -20,6 +20,9 @@ withDefaults(defineProps<{
 <template>
   <div class="dual-track-table" data-testid="dual-track-table">
     <h3 v-if="title">{{ title }}</h3>
+    <p v-if="variant === 'reference'" class="dual-track-table__caption">
+      以下为典籍与引擎对照样例，非当前命盘 live 计算。
+    </p>
     <table class="dual-track-table__grid">
       <thead>
         <tr>
@@ -49,6 +52,13 @@ withDefaults(defineProps<{
   margin: 0 0 10px;
   font-size: 15px;
   color: var(--brand-gold-dark);
+}
+
+.dual-track-table__caption {
+  margin: 0 0 10px;
+  color: var(--text-3);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .dual-track-table__grid {
