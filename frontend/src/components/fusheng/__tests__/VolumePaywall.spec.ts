@@ -8,6 +8,17 @@ vi.mock('@/utils/analytics', () => ({
   track: vi.fn(),
 }))
 
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({ isLoggedIn: false }),
+}))
+
+vi.mock('@/stores/entitlement', () => ({
+  useEntitlementStore: () => ({
+    loading: false,
+    sandboxPurchase: vi.fn(async () => true),
+  }),
+}))
+
 describe('VolumePaywall (T092)', () => {
   it('shows lock need and mock unlock CTA', async () => {
     const wrapper = mount(VolumePaywall, {

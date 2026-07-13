@@ -108,6 +108,12 @@ const router = createRouter({
       meta: { title: '卷首', public: true },
     },
     {
+      path: '/payment/callback',
+      name: 'payment-callback',
+      component: () => import('@/views/payment/PaymentCallbackView.vue'),
+      meta: { title: '支付结果', public: true },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),

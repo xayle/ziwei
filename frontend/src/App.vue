@@ -7,7 +7,9 @@ import NewAppShell from '@/components/new/NewAppShell.vue'
 const router = useRouter()
 const route  = useRoute()
 
-const isBareRoute = computed(() => route.name === 'login' || route.name === 'landing')
+const isBareRoute = computed(
+  () => route.name === 'login' || route.name === 'landing' || route.name === 'payment-callback',
+)
 
 function handleUnauthorized() {
   const redirect = router.currentRoute.value.fullPath

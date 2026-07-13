@@ -45,6 +45,7 @@ import {
   DEMO_LOCKED_VOLUME_IDS,
   demoVolumeLocksEnabled,
 } from '@/constants/volumePaywall'
+import { useEntitlementStore } from '@/stores/entitlement'
 import { useYoubiHourAlign } from '@/composables/useYoubiHourAlign'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
@@ -207,8 +208,11 @@ const lifeVolumeSource = computed(() => lifeVolumeResolved.value.source)
 
 /** T092：沙箱模拟解锁的卷 id（不经支付） */
 const mockUnlockedVolumeIds = ref<Set<string>>(new Set())
+const entitlementStore = useEntitlementStore()
 
 function volumeShowsLock(volume: { id: string; locked?: boolean }): boolean {
+  // T094：权益商店已解锁的卷（含支付回调后）
+  if (entitlementStore.isVolumeUnlockedByEntitlement(volume.id)) return false
   if (mockUnlockedVolumeIds.value.has(volume.id)) return false
   if (volume.locked) return true
   return demoVolumeLocksEnabled() && (DEMO_LOCKED_VOLUME_IDS as string[]).includes(volume.id)
@@ -559,14 +563,36 @@ async function reloadFullReport() {
 onMounted(() => {
   reloadReadingProgress()
   void aiStore.loadConfig()
-  if (auth.isLoggedIn && profile.activeProfile?.remoteCaseId) {
-    void profile.pullRemoteSnapshots()
+  if (auth.isLoggedIn) {
+    void entitlementStore.refreshFromServer()
+    if (profile.activeProfile?.remoteCaseId) {
+      void profile.pullRemoteSnapshots()
+    }
   }
-  void loadReport().then(() => {
+  void loadReport().then(async () => {
     reloadReadingProgress()
-    return finalizeReportLoad().then(() => syncChapterFromHash())
+    await finalizeReportLoad()
+    // T094：支付回调带回 unlocked=1 → 再拉 volumes + 权益
+    if (route.query.unlocked === '1') {
+      await entitlementStore.refreshFromServer()
+      lifeVolumeRemote.value = null
+      await loadLifeVolumesRemote()
+      mockUnlockedVolumeIds.value = new Set()
+    }
+    syncChapterFromHash()
   })
 })
+
+watch(
+  () => route.query.unlocked,
+  async (flag) => {
+    if (flag !== '1') return
+    await entitlementStore.refreshFromServer()
+    lifeVolumeRemote.value = null
+    await loadLifeVolumesRemote()
+    mockUnlockedVolumeIds.value = new Set()
+  },
+)
 </script>
 
 <template>

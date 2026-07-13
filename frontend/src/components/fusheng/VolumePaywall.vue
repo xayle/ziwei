@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import type { LifeVolumeId } from '@/types/life-volume'
 import { paywallCopyFor } from '@/constants/volumePaywall'
 import { track } from '@/utils/analytics'
+import { useAuthStore } from '@/stores/auth'
+import { useEntitlementStore } from '@/stores/entitlement'
 
 const props = defineProps<{
   volumeId: LifeVolumeId | string
@@ -14,14 +16,22 @@ const emit = defineEmits<{
   mockUnlock: []
 }>()
 
+const auth = useAuthStore()
+const entitlement = useEntitlementStore()
 const copy = computed(() => paywallCopyFor(props.volumeId))
+const busy = computed(() => entitlement.loading)
 
-function onMockUnlock() {
+async function onMockUnlock() {
   track({
     event_type: 'volume_unlock_prompt',
     volume_id: String(props.volumeId),
     properties: { action: 'mock_unlock', sandbox: true },
   })
+  if (auth.isLoggedIn) {
+    const plan =
+      props.volumeId === 'vol5' || props.volumeId === 'vol6' ? 'full_book' : 'volume_pass'
+    await entitlement.sandboxPurchase(plan)
+  }
   emit('mockUnlock')
 }
 </script>
@@ -38,14 +48,17 @@ function onMockUnlock() {
     <div class="volume-paywall__body">
       <p class="volume-paywall__need">需{{ copy.need }}</p>
       <p class="volume-paywall__blurb">{{ detail?.trim() || copy.blurb }}</p>
-      <p class="volume-paywall__hint">真实支付见 T093；此处为沙箱模拟解锁。</p>
+      <p class="volume-paywall__hint">
+        {{ auth.isLoggedIn ? '将调用沙箱支付写入权益（T093/T094）。' : '未登录：仅本会话模拟解锁。' }}
+      </p>
       <button
         type="button"
         class="volume-paywall__cta"
         data-testid="volume-paywall-mock-unlock"
+        :disabled="busy"
         @click="onMockUnlock"
       >
-        {{ copy.cta }}
+        {{ busy ? '处理中…' : copy.cta }}
       </button>
     </div>
   </aside>
