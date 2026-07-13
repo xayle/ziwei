@@ -1,10 +1,20 @@
 import apiClient from './client'
 import type { LifeVolumeResponse } from '@/types/life-volume'
 import { isLifeVolumeResponse } from '@/utils/feBeAdapter'
+import { LIFE_VOLUMES_API_STORAGE_KEY } from '@/constants/feBeContract'
 
-/** Dev override: force BE authority path even without remote case id. */
+/**
+ * T079：volumes 权威开关。
+ * - env `VITE_USE_LIFE_VOLUMES_API=true` → 强制开
+ * - localStorage `fusheng-use-life-volumes-api=1` → E2E/联调开
+ */
 export function useLifeVolumesApiEnabled(): boolean {
-  return import.meta.env.VITE_USE_LIFE_VOLUMES_API === 'true'
+  if (import.meta.env.VITE_USE_LIFE_VOLUMES_API === 'true') return true
+  try {
+    return localStorage.getItem(LIFE_VOLUMES_API_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
 }
 
 /** W16+ authority path; returns null on miss so buildLifeVolumes Adapter keeps working. */

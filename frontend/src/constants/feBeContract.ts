@@ -80,3 +80,6 @@ export const READING_PROGRESS_STORAGE_KEY = 'fusheng-reading-progress'
 
 /** 环境变量：强制走 GET life/volumes（开发联调） */
 export const ENV_USE_LIFE_VOLUMES_API = 'VITE_USE_LIFE_VOLUMES_API'
+
+/** localStorage 开关（E2E / 本地联调；优先于缺省，不覆盖 env=true） */
+export const LIFE_VOLUMES_API_STORAGE_KEY = 'fusheng-use-life-volumes-api'

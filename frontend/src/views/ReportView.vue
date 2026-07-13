@@ -44,7 +44,7 @@ import { useYoubiHourAlign } from '@/composables/useYoubiHourAlign'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { trackFlowEvent } from '@/utils/flowAnalytics'
-import { shouldTryLifeVolumesRemote } from '@/utils/feBeAdapter'
+import { shouldTryLifeVolumesRemote, resolveLifeVolumeDoc } from '@/utils/feBeAdapter'
 import '@/assets/fusheng-page.css'
 import '@/assets/report-print.css'
 
@@ -187,8 +187,12 @@ const lifeVolumeLocal = computed(() => buildLifeVolumes({
   generatedAt: generatedAt.value ?? undefined,
 }))
 
-const lifeVolumeDoc = computed(() => lifeVolumeRemote.value ?? lifeVolumeLocal.value)
-const lifeVolumeSource = computed(() => (lifeVolumeRemote.value ? 'remote' : 'local'))
+const lifeVolumeResolved = computed(() => resolveLifeVolumeDoc({
+  remote: lifeVolumeRemote.value,
+  local: lifeVolumeLocal.value,
+}))
+const lifeVolumeDoc = computed(() => lifeVolumeResolved.value.doc)
+const lifeVolumeSource = computed(() => lifeVolumeResolved.value.source)
 
 const { resumeLabel, lastVolumeId, save: saveReadingProgress, load: reloadReadingProgress } = useReadingProgress(
   () => activeProfileId.value || 'default',
@@ -478,11 +482,15 @@ async function finalizeReportLoad() {
   } catch {
     chartHashRef.value = 'local'
   }
-  await loadExplainBatches()
-  if (explainBatch.value?.chart_hash) {
-    chartHashRef.value = explainBatch.value.chart_hash
-  }
+  // T079：volumes 权威开启时先拉 BE 六卷；成功则跳过 explain/batch（单源，瀑布 ≤ archive + volumes）
   await loadLifeVolumesRemote()
+  const volumesAuthority = useLifeVolumesApiEnabled() && Boolean(lifeVolumeRemote.value)
+  if (!volumesAuthority) {
+    await loadExplainBatches()
+    if (explainBatch.value?.chart_hash) {
+      chartHashRef.value = explainBatch.value.chart_hash
+    }
+  }
   if (auth.isLoggedIn && profile.activeProfile?.remoteCaseId) {
     void profile.pullRemoteSnapshots()
   }

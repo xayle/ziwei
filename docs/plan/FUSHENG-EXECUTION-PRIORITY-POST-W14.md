@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.1 |
+| **版本** | post-w14-1.2 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase E 已开** — [T071 门禁 ☑](../reports/T071-phase-e-gate-2026-07-14.md) → **下一项 T079**（开 volumes flag） |
+| **当前优先级** | ▶ **Phase E** — T071–T074 · **T079–T080 ☑** → **下一项 T075**（liunian Redis）或 **T081**（Adapter deprecated） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -18,7 +18,7 @@
 前置  T070 ☑（W14 · W102-22 closeout）
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE    T072–T074 机读已落地 ☑ · T075–T078 待/partial
-FE    下一项 T079–T080（Report 切 life/volumes 权威）
+FE    T079–T080 ☑（flag + volumes 权威、跳过 explain/batch）→ 下一项 T081
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -98,8 +98,8 @@ P14  上线评估  T136–T140
 | ☐ | **T076** | BE | **P3-02** `GET /api/v1/life/snippets` 草案（hooks 3–5 条） | `routers/life.py` | BOOK-GTM §5.3 形状 |
 | ☐ | **T077** | BE | **P3-04** archive-bundle 可选合并 name/zeri 指针 | `fusheng_archive` | OpenAPI 更新 |
 | ☐ | **T078** | ALL | OpenAPI export + `npm run gen:types`；life-volume 契约测试双端 | CI | PR diff 阻断 |
-| ☐ | **T079** | FE | `api/life.ts` 切 **真 API**；feature flag `USE_LIFE_VOLUMES_API` | `api/life.ts` · env | flag=true 时 Report 单源 |
-| ☐ | **T080** | FE | Report 主路径改 `GET life/volumes`；waterfall ≤2（volumes + glossary 可选） | `ReportView.vue` | T060 p95 仍 ≤4 或更优 |
+| ☑ | **T079** | FE | `api/life.ts` 真 API；flag=`VITE_USE_LIFE_VOLUMES_API` / localStorage `fusheng-use-life-volumes-api=1` | `api/life.ts` · `ReportView` | flag 开且 remote 成功 → 跳过 explain/batch |
+| ☑ | **T080** | FE | Report 主路径优先 `GET life/volumes`；权威态无 explain/batch 瀑布 | `ReportView.vue` · E2E | `fusheng-life-volumes` 2/2 |
 | ☐ | **T081** | FE | `buildLifeVolumes.ts` 标 **deprecated**；仅测试/fixture 保留 | 注释 + README | 生产路径不调用 |
 | ☐ | **T082** | FE | 删除 mount 对 archive-bundle 的重复 explain 拼装（若 volumes 已含） | `ReportView.vue` | 无双重 cite |
 | ☐ | **T083** | ALL | E2E：volumes API 路径六卷+跋断言 | `e2e/fusheng-report.spec.ts` | CI 绿 |
@@ -305,5 +305,6 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-1.2 | 2026-07-14 | **T079–T080 ☑** · volumes flag + 跳过 explain/batch · 下一项 T075/T081 |
 | post-w14-1.1 | 2026-07-14 | **T071 ☑** · T072–T074 机读落地 · 下一项 T079 |
 | post-w14-1.0 | 2026-07-12 | 初版：T071–T140；P3·GTM·Extension·平台·上线评估 |

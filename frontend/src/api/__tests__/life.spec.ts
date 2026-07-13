@@ -23,6 +23,7 @@ const sampleDoc: LifeVolumeResponse = {
 describe('fetchLifeVolumes', () => {
   beforeEach(() => {
     getMock.mockReset()
+    localStorage.clear()
   })
 
   it('returns null for empty case id', async () => {
@@ -45,5 +46,23 @@ describe('fetchLifeVolumes', () => {
     await expect(fetchLifeVolumes('case-1')).resolves.toBeNull()
     getMock.mockRejectedValue(new Error('404'))
     await expect(fetchLifeVolumes('case-1')).resolves.toBeNull()
+  })
+})
+
+describe('useLifeVolumesApiEnabled', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.resetModules()
+  })
+
+  it('reads localStorage override for E2E / 联调', async () => {
+    localStorage.setItem('fusheng-use-life-volumes-api', '1')
+    const { useLifeVolumesApiEnabled } = await import('@/api/life')
+    expect(useLifeVolumesApiEnabled()).toBe(true)
+  })
+
+  it('defaults false when storage empty', async () => {
+    const { useLifeVolumesApiEnabled } = await import('@/api/life')
+    expect(useLifeVolumesApiEnabled()).toBe(false)
   })
 })
