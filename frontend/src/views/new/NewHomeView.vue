@@ -1,259 +1,374 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import ProfileReadinessCard from '@/components/fusheng/ProfileReadinessCard.vue'
+import { BRAND_HOME_LAYERS, BRAND_HOME_OPEN, BRAND_HOME_VOLUMES } from '@/constants/brandHome'
 import { useFushengFlow } from '@/composables/useFushengFlow'
-import { useReadingGuideExplain } from '@/composables/useReadingGuideExplain'
-import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
-import VolumeTocGrid from '@/components/fusheng/VolumeTocGrid.vue'
-import { useReadingProgress } from '@/composables/useReadingProgress'
-import { defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
-import { LIFE_VOLUME_LABELS } from '@/types/life-volume'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
-const {
-  profile,
-  completeness,
-  archiveBlockers,
-  archiveEnhancers,
-  timeConfidence,
-  isArchiveComplete,
-  getArchiveBlockerLabel,
-  getArchiveEnhancerLabel,
-  navigateToStep,
-} = useFushengFlow()
-const {
-  loadingReading,
-  readingFailed,
-  readingParagraphs,
-  usingDynamicReading,
-  loadReadingGuide,
-} = useReadingGuideExplain()
-
-const { lastVolumeId, save: saveReadingProgress } = useReadingProgress(() => profile.activeProfileId || 'local')
-const disclaimer = defaultDisclaimerBlock()
-
-function resumeReport() {
-  if (!lastVolumeId.value) return
-  saveReadingProgress(lastVolumeId.value)
-  router.push('/report')
-}
-
-const resumeVolumeLabel = computed(() => (
-  lastVolumeId.value ? LIFE_VOLUME_LABELS[lastVolumeId.value] : null
-))
-
-const profileLabel = computed(() => profile.activeProfile?.label || '默认档案')
-const birthText = computed(() => {
-  if (!profile.birthDt) return '出生信息未填写，请先补全档案'
-  return `${profile.birthDt.replace('T', ' ')} · ${profile.cityName || '未填写城市'}`
-})
-
-const previewItems = computed(() => [
-  { label: '档案名', value: profileLabel.value },
-  { label: '完整度', value: `${completeness.value}%` },
-  { label: '时间可信度', value: timeConfidence.value.label },
-  { label: '关注', value: profile.focusTopic || '未填写' },
-])
+const { isArchiveComplete } = useFushengFlow()
 
 function goProfile() {
   router.push('/profile')
 }
 
-watch(
-  () => [isArchiveComplete.value, profile.birthDt] as const,
-  ([ready, birthDt]) => {
-    if (!ready || !birthDt) return
-    void loadReadingGuide(profile.asProfileData())
-  },
-  { immediate: true },
-)
+function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
+  if (entry.requiresReport && !isArchiveComplete.value) {
+    router.push({ path: '/profile', query: { reason: 'archive', redirect: entry.path } })
+    return
+  }
+  router.push(entry.path)
+}
 </script>
 
 <template>
-  <main class="fs-page home-page" aria-label="首页">
+  <div class="brand-home" aria-label="品牌首页">
+    <section class="brand-spread" aria-label="浮生 · 人生六卷">
+      <div class="brand-spread__frame">
+        <div class="brand-spread__watermark" aria-hidden="true">卷</div>
 
-    <section class="hero-card fs-card fs-card--seal">
-      <div class="hero-copy">
-        <p class="hero-copy__eyebrow">浮生 · 人生六卷</p>
-        <h1 class="hero-copy__title">{{ profileLabel }}</h1>
-        <p class="hero-copy__desc">{{ birthText }}</p>
-        <dl class="hero-copy__kpi" aria-label="档案摘要">
-          <div v-for="item in previewItems" :key="item.label">
-            <dt>{{ item.label }}</dt>
-            <dd>{{ item.value }}</dd>
+        <div class="brand-spread__left">
+          <div class="brand-island">
+            <h1 class="brand-island__word">浮生</h1>
+            <p class="brand-island__tag">浮生若梦</p>
+            <p class="brand-island__series">人生六卷辑录</p>
+            <p class="brand-island__verse">读人生如戏，展卷而后，方入其事。</p>
+            <button type="button" class="brand-island__profile" @click="goProfile">录入生辰</button>
           </div>
-        </dl>
-      </div>
+        </div>
 
-      <div class="hero-actions" aria-label="主要操作">
-        <button class="fs-btn fs-btn--ghost" @click="goProfile">补全档案</button>
-        <button
-          class="fs-btn fs-btn--primary"
-          :disabled="!isArchiveComplete"
-          @click="navigateToStep('/report', true)"
-        >
-          生成报告
-        </button>
+        <div id="brand-codex" class="brand-spread__right" aria-label="六卷卷目" data-testid="brand-codex">
+          <p class="brand-spread__k">{{ BRAND_HOME_OPEN.k }}</p>
+          <p class="brand-spread__open">
+            {{ BRAND_HOME_OPEN.lines[0] }}<br />
+            {{ BRAND_HOME_OPEN.lines[1] }}
+          </p>
+          <ol id="brand-register" class="brand-register" aria-label="六卷">
+            <li v-for="entry in BRAND_HOME_VOLUMES" :key="entry.id">
+              <button
+                type="button"
+                class="brand-register__row"
+                :data-volume-id="entry.id"
+                @click="openVolume(entry)"
+              >
+                <span class="brand-register__n">{{ entry.num }}</span>
+                <span class="brand-register__title">{{ entry.title }}</span>
+                <span class="brand-register__pi">{{ entry.pi }}</span>
+              </button>
+            </li>
+          </ol>
+        </div>
+
+        <div class="brand-spread__layers" aria-label="读法三层">
+          <div v-for="layer in BRAND_HOME_LAYERS" :key="layer.label" class="brand-layer">
+            <b>{{ layer.label }}</b>
+            <p>{{ layer.text }}</p>
+          </div>
+        </div>
       </div>
     </section>
-
-    <ReadingGuide
-      :disclaimer="disclaimer"
-      :resume-volume-id="lastVolumeId"
-      :resume-label="resumeVolumeLabel"
-      :reading-paragraphs="readingParagraphs"
-      :reading-loading="loadingReading"
-      :reading-failed="readingFailed"
-      :using-dynamic-reading="usingDynamicReading"
-      @resume="resumeReport"
-    />
-
-    <VolumeTocGrid :can-open-report="isArchiveComplete" />
-
-    <hr class="fs-codex-divider" aria-hidden="true" />
-
-    <ProfileReadinessCard
-      :completeness="completeness"
-      :blockers="archiveBlockers"
-      :enhancers="archiveEnhancers"
-      :time-label="timeConfidence.label"
-      :time-hint="timeConfidence.hint"
-      :get-blocker-label="getArchiveBlockerLabel"
-      :get-enhancer-label="getArchiveEnhancerLabel"
-      @action="goProfile"
-    />
-
-    <section class="flow-card fs-card">
-      <h2>路径与扩展</h2>
-      <p class="flow-card__desc">主路径：录入 → 排盘验证 → 正式报告。每步遵循「先摘要、再结构、后解释」。</p>
-      <p class="flow-card__tip">使用顶部或底部导航切换步骤；必填项未齐时，八字/紫微/报告会自动引导至档案页。</p>
-      <p class="flow-card__desc flow-card__desc--secondary">合婚、相似盘与择日为独立模块，不影响主路径报告。</p>
-      <button class="fs-btn fs-btn--ghost" data-testid="home-extensions" @click="router.push('/extensions')">
-        打开工具箱
-      </button>
-    </section>
-  </main>
+  </div>
 </template>
 
 <style scoped>
-.home-page {
-  gap: 14px;
-}
-
-.hero-card {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 24px 22px;
-}
-
-.hero-copy {
-  display: grid;
-  gap: 14px;
-}
-
-.hero-copy__eyebrow {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  color: var(--brand-gold-dark);
-  font-family: var(--font-display);
-  padding-left: 10px;
-  border-left: 3px solid var(--brand-gold);
-}
-
-.hero-copy__tagline {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--brand-mist);
-  font-family: var(--font-ui);
-  line-height: 1.6;
-}
-
-.hero-copy__title {
-  margin: 0;
-  font-size: clamp(26px, 4vw, 38px);
-  line-height: 1.15;
+.brand-home {
+  max-width: min(1180px, 100%);
+  margin: 0 auto;
   color: var(--brand-ink);
+}
+
+.brand-spread {
+  padding: 0 20px 64px;
+}
+
+.brand-spread__frame {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(240px, 0.92fr) minmax(0, 1.18fr);
+  grid-template-rows: 1fr auto;
+  gap: clamp(24px, 4vw, 48px) clamp(24px, 4vw, 56px);
+  min-height: calc(100dvh - 56px - 48px);
+  padding: clamp(32px, 5vw, 56px) clamp(28px, 4vw, 52px);
+  background:
+    radial-gradient(ellipse 80% 60% at 100% 100%, rgba(184, 137, 77, 0.06), transparent 55%),
+    var(--surface);
+  border: 1px solid var(--border-md);
+  box-shadow:
+    inset 0 0 0 1px var(--border),
+    0 18px 48px rgba(26, 20, 16, 0.06);
+}
+
+.brand-spread__watermark {
+  position: absolute;
+  right: clamp(12px, 3vw, 28px);
+  bottom: clamp(72px, 12vw, 120px);
+  font-size: clamp(96px, 16vw, 168px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--brand-gold);
+  opacity: 0.06;
+  pointer-events: none;
   font-family: var(--font-display);
+  user-select: none;
+}
+
+.brand-spread__left {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: clamp(8px, 2vw, 16px);
+}
+
+.brand-spread__left::before {
+  content: '若';
+  position: absolute;
+  left: -6%;
+  top: 50%;
+  transform: translateY(-52%);
+  font-size: clamp(160px, 26vw, 260px);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  font-family: var(--font-display);
+  color: var(--brand-gold);
+  opacity: 0.04;
+  pointer-events: none;
+  user-select: none;
+}
+
+.brand-spread__left::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(184, 137, 77, 0.018) 3px,
+      rgba(184, 137, 77, 0.018) 4px
+    ),
+    radial-gradient(ellipse 85% 75% at 15% 50%, rgba(184, 137, 77, 0.07), transparent 68%);
+  pointer-events: none;
+}
+
+.brand-island {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 300px);
+}
+
+.brand-island__word {
+  margin: 0 0 16px;
+  font-size: clamp(3.75rem, 9.5vw, 5.25rem);
   font-weight: 600;
-  text-wrap: balance;
-}
-
-.hero-copy__desc {
-  margin: 0;
-  color: var(--brand-mist);
-  line-height: 1.75;
-  font-size: var(--fs-sm);
-}
-
-.hero-copy__kpi {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 16px;
-  margin: 0;
-  font-size: 12px;
-}
-
-.hero-copy__kpi dt {
-  margin: 0;
-  font-weight: 500;
-  color: var(--brand-gold-dark);
-}
-
-.hero-copy__kpi dd {
-  margin: 0;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  padding-left: 0.1em;
+  font-family: var(--font-display);
   color: var(--brand-ink);
 }
 
-.hero-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+.brand-island__tag {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.34em;
+  color: var(--brand-mist);
+  font-family: var(--font-display);
 }
 
-.preview-card h2 {
-  margin: 0 0 12px;
-}
-
-.flow-card h2 {
-  margin: 0 0 8px;
-}
-
-.flow-card__desc,
-.flow-card__tip {
+.brand-island__series {
   margin: 8px 0 0;
-  color: var(--text-2);
-  line-height: 1.7;
-  font-size: 14px;
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  color: var(--brand-gold-dark);
+  font-family: var(--font-display);
 }
 
-.flow-card__tip {
+.brand-island__verse {
+  margin: 28px 0 0;
+  max-width: 16em;
+  font-size: 14px;
+  line-height: 1.85;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  font-family: var(--font-display);
+}
+
+.brand-island__profile {
+  margin-top: 24px;
+  padding: 0 0 3px;
+  border: none;
+  border-bottom: 1px solid var(--brand-ink);
+  background: transparent;
+  font-family: var(--font-display);
   font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.brand-island__profile:hover {
+  color: var(--brand-mist);
+  border-color: var(--brand-gold);
+}
+
+.brand-spread__right {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: clamp(16px, 3vw, 32px);
+  border-left: 1px solid var(--border-md);
+}
+
+.brand-spread__k {
+  margin: 0 0 16px;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: var(--brand-gold);
+  font-family: var(--font-display);
+}
+
+.brand-spread__open {
+  margin: 0 0 32px;
+  max-width: 28em;
+  font-size: 16px;
+  line-height: 2;
+  letter-spacing: 0.06em;
+  color: var(--brand-mist);
+  font-family: var(--font-display);
+}
+
+.brand-register {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border-md);
+}
+
+.brand-register__row {
+  display: grid;
+  grid-template-columns: 56px 1fr minmax(108px, 34%);
+  gap: 16px;
+  align-items: baseline;
+  width: 100%;
+  padding: 16px 0;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-display);
+  color: var(--brand-ink);
+}
+
+.brand-register__row:hover,
+.brand-register__row:focus-visible {
+  color: var(--brand-gold-dark);
+  outline: none;
+}
+
+.brand-register__row:hover .brand-register__title,
+.brand-register__row:focus-visible .brand-register__title {
+  color: var(--brand-gold-dark);
+}
+
+.brand-register__n {
+  font-size: 12px;
+  letter-spacing: 0.08em;
   color: var(--text-3);
 }
 
-.flow-card__desc--secondary {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
+.brand-register__title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.brand-register__pi {
+  font-size: 13px;
+  line-height: 1.65;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  text-align: right;
+}
+
+.brand-spread__layers {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 4vw, 40px);
+  padding-top: clamp(24px, 4vw, 36px);
+  border-top: 1px solid var(--border-md);
+}
+
+.brand-layer b {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--brand-gold);
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+.brand-layer p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--brand-mist);
+  font-family: var(--font-display);
+}
+
+@media (max-width: 860px) {
+  .brand-spread__frame {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    min-height: auto;
+  }
+
+  .brand-spread__left {
+    grid-column: 1;
+    grid-row: 1;
+    justify-content: center;
+    padding-right: 0;
+  }
+
+  .brand-spread__right {
+    grid-column: 1;
+    grid-row: 2;
+    padding-left: 0;
+    border-left: none;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-md);
+  }
+
+  .brand-spread__layers {
+    grid-column: 1;
+    grid-row: 3;
+    grid-template-columns: 1fr;
+  }
+
+  .brand-island__verse {
+    max-width: none;
+  }
 }
 
 @media (max-width: 720px) {
-  .hero-card {
-    flex-direction: column;
-    align-items: flex-start;
+  .brand-register__row {
+    grid-template-columns: 48px 1fr;
   }
 
-  .hero-actions {
-    width: 100%;
-  }
-
-  .hero-actions .fs-btn {
-    flex: 1 1 0;
+  .brand-register__pi {
+    grid-column: 2;
+    text-align: left;
+    margin-top: 4px;
   }
 }
 </style>

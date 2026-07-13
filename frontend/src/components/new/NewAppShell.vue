@@ -55,7 +55,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="shell">
+  <div class="shell" :class="{ 'shell--home': isHomePath(route.path) }">
     <p v-if="backendDown" class="backend-banner">
       后端服务暂不可用，排盘与报告可能失败。请确认 API 已启动后刷新页面。
       <button type="button" class="backend-banner__dismiss" @click="backendDown = false">知道了</button>
@@ -63,11 +63,9 @@ onUnmounted(() => {
     <header class="bar">
       <div class="brand-block">
         <img class="brand-logo" :src="brandMark" alt="浮生" width="44" height="44" />
-        <div class="title-block">
-          <p v-if="isHomePath(route.path)" class="eyebrow">浮生 · 知命知心</p>
-          <p v-else-if="volumeEyebrow" class="eyebrow">{{ volumeEyebrow }}</p>
+        <div v-if="!isHomePath(route.path)" class="title-block">
+          <p v-if="volumeEyebrow" class="eyebrow">{{ volumeEyebrow }}</p>
           <h1>{{ activeLabel }}</h1>
-          <p v-if="isHomePath(route.path)" class="subtitle">浮生若寄，以盘为据，以档为凭。</p>
         </div>
       </div>
 
@@ -128,6 +126,10 @@ onUnmounted(() => {
   padding-bottom: 0;
 }
 
+.shell--home {
+  background: var(--brand-paper);
+}
+
 .bar {
   position: sticky;
   top: 0;
@@ -176,6 +178,12 @@ onUnmounted(() => {
   letter-spacing: 0.1em;
   color: var(--brand-gold-dark);
   font-family: var(--font-display);
+}
+
+.eyebrow--home {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--brand-mist);
 }
 
 .subtitle {
@@ -266,6 +274,47 @@ onUnmounted(() => {
   max-width: var(--page-max-w);
   margin: 0 auto;
   width: 100%;
+}
+
+.shell--home .bar {
+  border-bottom-color: var(--border);
+  background: rgba(245, 240, 230, 0.92);
+}
+
+.shell--home .content {
+  max-width: min(1180px, 100%);
+  padding: 20px 20px 40px;
+}
+
+.shell--home .nav-btn {
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--brand-mist);
+}
+
+.shell--home .nav-btn:hover {
+  color: var(--brand-ink);
+  background: transparent;
+}
+
+.shell--home .nav-btn.is-active {
+  border: none;
+  border-bottom: 2px solid var(--brand-gold);
+  background: transparent;
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+.shell--home .nav-btn--auth {
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-codex);
+  padding: 0 12px;
 }
 
 .bottom-nav {
