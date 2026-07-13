@@ -2,13 +2,13 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-2.8 |
-| **日期** | 2026-07-13 |
+| **版本** | pipeline-3.0 |
+| **日期** | 2026-07-14 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
-| **当前阶段** | **W5 产品重建 · R102 closeout ✅** → 下一轨 [R086 合盘 P3](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
+| **当前阶段** | **Phase D 合盘 P3 ✅** · autopilot **30/30+20/20** → 下一轨文档消噪 / Phase E |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
-| **W102 进度** | **24/24**（**W102-22 ☑** · Phase B 完成） |
+| **W102 进度** | **24/24**（Phase B）· **W102-P3 ☑**（Phase D） |
 
 > **一句话**：**按 W102 编号顺序做 → 改完跑 dev_cycle → 全绿再提交 → 每周五 audit-content。** 不聊天也能推进；聊天只发 §六 固定句。
 
@@ -131,7 +131,7 @@ pre-commit run --all-files   # 首次或大改后
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
 **已完成：** W102-00a～**22** 全 ☑ · **Phase B closeout 2026-07-13**  
-**下一项：** **W102-P3 FE ☑**（导出 · partner 经度 · multi_compat 矩阵 · explain batch）→ 可选 autopilot 全绿复验
+**下一项：** **Phase D ☑** · autopilot **30/30 + 20/20**（2026-07-14）→ 文档消噪（P3-9～14）或 Phase E
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -267,8 +267,8 @@ python scripts/dev_cycle.py --only audit-content
 Phase A  T001–T070     ☑ 打磨期工程任务（EXECUTION-PRIORITY）
 Phase B  W102-00–22    ☑ 产品重建（R102）closeout 24/24
 Phase C  W15–W16       ⏸ life/volumes 权威化 · GTM 预备
-Phase D  W102-P3       🟡 合盘 BE+CI ☑ · FE 导出待接 ← 当前轨
-Phase E  W17+          ⏸ 平台演进
+Phase D  W102-P3       ☑ 合盘 BE+CI+FE 全链路（export · multi · explain）
+Phase E  W17+ / 文档消噪  ← 当前轨（P3-9～14 BZ/清单文案；可选 GTM）
 ```
 
 **纪律：**
@@ -310,7 +310,8 @@ Phase E  W17+          ⏸ 平台演进
 | pipeline-2.6 | 2026-07-13 | **W102-20 ☑ · 22/24** · audit rollup + CI dev_cycle advisory |
 | pipeline-2.7 | 2026-07-13 | **W102-21 ☑ · 23/24** · R060 8/10 + R079 Q5 签字 |
 | pipeline-2.8 | 2026-07-13 | **W102-22 ☑ · 24/24** · R102 closeout · Phase B 完成 |
+| pipeline-3.0 | 2026-07-14 | **Phase D ☑** · W102-P3 FE 全链路 · autopilot **30/30+20/20** |
 
 ---
 
-**下一步：** **W102-P3 ☑** · 可选跑 `auto_verify_autopilot.py` 复验全绿
+**下一步：** **Phase D ☑ · autopilot 30/30+20/20** → 文档 P3 消噪（BZ header / EXECUTION-REMAINING / plan README）或 Phase E

@@ -28,10 +28,10 @@
 | **全自动流水线（顺序·自检·提交）** | W102 任务表 · dev_cycle | [**FUSHENG-DEV-PIPELINE**](FUSHENG-DEV-PIPELINE.md) ⭐⭐⭐ |
 | **合盘 / 关系兼容（P3）** | 样张 PDF 审查 · R102 之后 | [R086](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) · [RELATION-COMPAT-MASTER-PLAN](plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) |
 | **内容厚度机读** | 六卷 thin 比例 · relations fallback | `make audit-content` → [content-hollowness-audit-latest.json](reports/content-hollowness-audit-latest.json) |
-| **研发执行（主）** | 前后端 W1–W16 周计划、任务 ID、验收 | [**INTEGRATED-DEV-PLAN**](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) |
-| **按编号依次开发（免对话）** | T001→T070 顺序打勾 | [**EXECUTION-PRIORITY**](plan/FUSHENG-EXECUTION-PRIORITY.md) ⭐ |
-| **剩余工作（免对话）** | **R001→R116 全部未完成项** | [**EXECUTION-REMAINING**](plan/FUSHENG-EXECUTION-REMAINING.md) ⭐⭐ |
-| **八字紫微打磨+前端自检（免对话）** | BZ001→BZ088；细节索引 | [**BAZI-ZIWEI-POLISH-CHECKLIST**](plan/FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md) |
+| **研发执行（周表）** | 前后端 W1–W16 周计划、任务 ID、验收 | [**INTEGRATED-DEV-PLAN**](plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) |
+| **按编号依次开发（免对话）** | T001→T070 顺序打勾（打磨期已 ☑） | [**EXECUTION-PRIORITY**](plan/FUSHENG-EXECUTION-PRIORITY.md) |
+| **剩余工作（历史档案）** | R001→R116 · **不驱动日常** · 见文首废止横幅 | [**EXECUTION-REMAINING**](plan/FUSHENG-EXECUTION-REMAINING.md) |
+| **八字紫微打磨+前端自检** | BZ001→BZ088；细节索引 | [**BAZI-ZIWEI-POLISH-CHECKLIST**](plan/FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md) |
 | **T070 完成后（免对话）** | T071→T140 权威化·GTM·平台 | [**EXECUTION-PRIORITY-POST-W14**](plan/FUSHENG-EXECUTION-PRIORITY-POST-W14.md)（打磨完成后再开） |
 | **开工前就绪自检** | T015 前一次性检查 | [**DEV-READINESS**](DEV-READINESS.md) ⭐ |
 | **产品 / PM** | 挤哪条赛道、竞品、做什么不做 | [MARKET-ENTRY-STRATEGY](plan/FUSHENG-MARKET-ENTRY-STRATEGY.md) |

@@ -6,7 +6,7 @@
 |------|------|
 | **版本** | remaining-1.0 |
 | **日期** | 2026-07-12 |
-| **定位** | **所有未完成项的唯一执行清单** — 合并 T/BZ/INTEGRATED §十/SRC；按 **R001** 顺序做 |
+| **定位** | **历史档案** — 原「未完成项唯一清单」；日常开发已改走 [FUSHENG-DEV-PIPELINE](../FUSHENG-DEV-PIPELINE.md) · [AUTOPILOT](../FUSHENG-DEV-AUTOPILOT.md) |
 | **前置** | [EXECUTION-PRIORITY](FUSHENG-EXECUTION-PRIORITY.md) T008–T055 已 ☑（文档+代码主路径） |
 | **不含** | POST-W14 T071–T140（GTM/平台）— 见 [附录 A](#附录-a-t070-后再开) |
 | **上级** | [INTEGRATED-DEV-PLAN](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) · [BAZI-ZIWEI-POLISH](FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md)（细节索引） |
