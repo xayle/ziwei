@@ -355,6 +355,15 @@ def compute_relation_full(
         }
     ]
 
+    from services.explain_relation import build_relation_cite_layers
+
+    cite_sections = build_relation_cite_layers(
+        relation_type=relation_type,
+        relation_type_label=type_cfg.get("label", relation_type),
+        combined_score=combined,
+        grade=grade,
+    )
+
     return {
         "schema_version": "relation-compat@1.0",
         "request_id": str(uuid4()),
@@ -369,7 +378,7 @@ def compute_relation_full(
         "disclaimer_block": default_disclaimer_block(),
         "layers": {
             "fact": {"collapsed_default": False, "sections": []},
-            "cite": {"collapsed_default": True, "sections": []},
+            "cite": {"collapsed_default": True, "sections": cite_sections},
             "inference": {"collapsed_default": True, "sections": inference_sections},
         },
         "dimensions": dimensions,

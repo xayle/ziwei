@@ -28,7 +28,11 @@
       "minItems": 8,
       "maxItems": 8
     },
-    "colophon": { "$ref": "#/$defs/Colophon" }
+    "colophon": { "$ref": "#/$defs/Colophon" },
+    "relation_appendix": {
+      "description": "T113 可选合盘附录；默认 null，不打断六卷 IA",
+      "$ref": "relation-appendix.schema.json"
+    }
   },
   "$defs": {
     "DisclaimerBlock": {

@@ -20,6 +20,16 @@ def _reset_cache():
     reset_snapshot_cache_for_tests()
 
 
+def test_relation_full_cite_layer_in_pdf_html(client: TestClient):
+    resp = client.post("/api/v1/relation/full", json=COUPLE_PAYLOAD)
+    assert resp.status_code == 200
+    data = resp.json()
+    html = render_relation_compat_html(data)
+    cite_sections = (data.get("layers") or {}).get("cite", {}).get("sections") or []
+    if cite_sections:
+        assert "典籍引证" in html or "引经" in html
+
+
 def test_render_relation_compat_html_contains_trust_fields():
     html = render_relation_compat_html(
         {

@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from services.chart_snapshot_service import reset_snapshot_cache_for_tests
 
@@ -54,6 +54,10 @@ class TestRelationCompatContract:
         assert len(data.get("timeline") or []) >= 4
         assert len(data.get("palace_cross") or []) >= 2
         assert data.get("disclaimer_block", {}).get("text")
+        cite_sections = (data.get("layers") or {}).get("cite", {}).get("sections") or []
+        if cite_sections:
+            blocks = cite_sections[0].get("blocks") or []
+            assert any(b.get("layer") == "cite" for b in blocks)
 
     def test_day_branch_dimension_present(self, client: TestClient):
         resp = client.post("/api/v1/relation/full", json=COUPLE_PAYLOAD)

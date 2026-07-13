@@ -7,6 +7,7 @@
 | [life-volume.schema.json](./life-volume.schema.json) | 六卷 + 卷首 + 跋响应形状 | FE Adapter W3+；BE GET /life/volumes W16+ |
 | [explain-section-map.json](./explain-section-map.json) | explain sections ↔ 卷目映射 + 报告加载策略 | P1 explain |
 | [relation-compat.schema.json](./relation-compat.schema.json) | 双人关系合盘 `POST /relation/full` 响应 | P0 relation_engine |
+| [relation-appendix.schema.json](./relation-appendix.schema.json) | 合盘附录卷 `relation-appendix@1.0`（T113 · 可选挂 `GET /life/volumes`） | P3 relation |
 | [relation-type-registry.json](./relation-type-registry.json) | 6 类关系 → 八字维/紫微宫位对/文案禁令 | P0 relation_engine |
 
 **引用文档：** [FUSHENG-INTEGRATED-DEV-PLAN](../plan/FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) · [RELATION-COMPAT-MASTER-PLAN](../plan/RELATION-COMPAT-MASTER-PLAN-2026-07-13.md) · [FE-BE-DECISIONS](../plan/FE-BE-DECISIONS.md)

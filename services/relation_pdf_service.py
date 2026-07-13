@@ -6,7 +6,30 @@ from datetime import UTC, datetime
 from html import escape
 from typing import Any
 
+from services.pdf_font_styles import pdf_body_font_family, pdf_song_font_face_css
+
 _LAYER_LABEL = {"fact": "格物", "cite": "引经", "inference": "余论"}
+
+
+def _layers_cite_html(payload: dict[str, Any]) -> str:
+    cite_block = (payload.get("layers") or {}).get("cite") or {}
+    sections = cite_block.get("sections") or []
+    if not sections:
+        return ""
+    rows = ""
+    for section in sections:
+        heading = section.get("heading") or "引经"
+        for block in section.get("blocks") or []:
+            text = block.get("text") or ""
+            if text:
+                rows += f"<li><strong>{_esc(heading)}</strong> · {_esc(text)}</li>"
+    if not rows:
+        return ""
+    return f"""
+  <section class="sheet inference">
+    <h2>典籍引证（引经 · 默认折叠）</h2>
+    <ul class="cards">{rows}</ul>
+  </section>"""
 
 
 def _esc(value: Any) -> str:
@@ -91,12 +114,17 @@ def render_relation_compat_html(payload: dict[str, Any]) -> str:
             f'<li><span class="prio">{_esc(item.get("priority") or "")}</span> {_esc(item.get("text"))}</li>'
         )
 
+    cite_html = _layers_cite_html(payload)
+    font_face_css = pdf_song_font_face_css()
+    body_font = pdf_body_font_family()
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <title>{_esc(pa.get("label"))} × {_esc(pb.get("label"))} · 关系合盘</title>
   <style>
+    {font_face_css}
     @page {{
       margin: 12mm 10mm 16mm;
       @bottom-center {{
@@ -106,7 +134,7 @@ def render_relation_compat_html(payload: dict[str, Any]) -> str:
       }}
     }}
     body {{
-      font-family: "Noto Serif SC", "Source Han Serif SC", STSong, serif;
+      font-family: {body_font};
       color: #1a1410;
       background: #f5f0e6;
       font-size: 11pt;
@@ -174,6 +202,8 @@ def render_relation_compat_html(payload: dict[str, Any]) -> str:
     <h2>行动建议（余论）</h2>
     <ul>{actions_html or "<li>—</li>"}</ul>
   </section>
+
+  {cite_html}
 
   <p class="disclaimer">{_esc(disclaimer)}</p>
 </body>

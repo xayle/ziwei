@@ -64,6 +64,10 @@ class LifeVolumeResponseModel(BaseModel):
     trust_level: Literal["full", "degraded"] | None = None
     volumes: list[LifeVolumeModel]
     colophon: ColophonModel
+    relation_appendix: RelationAppendixResponse | None = Field(
+        None,
+        description="T113: 可选合盘附录（query partner_case_id 时挂载，不进六卷 IA）",
+    )
 
 
 RelationAppendixType = Literal[

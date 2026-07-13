@@ -9446,7 +9446,7 @@
           "人生六卷"
         ],
         "summary": "人生六卷+跋（life-volume@1.0 草案）",
-        "description": "W16 权威读模型草案：聚合八字/紫微/explain，返回与 `life-volume.schema.json` 对齐的响应。\n\n打磨期 FE 仍可用 `buildLifeVolumes` Adapter；本端点供契约联调与 U5 起步。",
+        "description": "W16 权威读模型草案：聚合八字/紫微/explain，返回与 `life-volume.schema.json` 对齐的响应。\n\n打磨期 FE 仍可用 `buildLifeVolumes` Adapter；本端点供契约联调与 U5 起步。\n传 `partner_case_id` 时附加 `relation_appendix`（不进六卷 IA）。",
         "operationId": "get_life_volumes_api_v1_life_volumes__case_id__get",
         "parameters": [
           {
@@ -9457,6 +9457,60 @@
               "type": "string",
               "title": "Case Id"
             }
+          },
+          {
+            "name": "partner_case_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "T113：挂载合盘附录卷",
+              "title": "Partner Case Id"
+            },
+            "description": "T113：挂载合盘附录卷"
+          },
+          {
+            "name": "relation_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "couple",
+                "friend",
+                "parent_child",
+                "colleague",
+                "business_partner",
+                "supervisor_subordinate"
+              ],
+              "type": "string",
+              "default": "couple",
+              "title": "Relation Type"
+            }
+          },
+          {
+            "name": "supervisor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "supervisor_subordinate 时 a|b",
+              "title": "Supervisor Id"
+            },
+            "description": "supervisor_subordinate 时 a|b"
           }
         ],
         "responses": {
@@ -19595,6 +19649,17 @@
           },
           "colophon": {
             "$ref": "#/components/schemas/ColophonModel"
+          },
+          "relation_appendix": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RelationAppendixResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "T113: 可选合盘附录（query partner_case_id 时挂载，不进六卷 IA）"
           }
         },
         "type": "object",

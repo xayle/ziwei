@@ -190,7 +190,7 @@ pre-commit run --all-files   # 首次或大改后
 
 | 状态 | ID | 任务 | 参考 |
 |------|-----|------|------|
-| 🟡 | **W102-P3-01** | 合盘 BE：PDF · explain · multi_compat@1.1 · appendix · snapshots ☑；FE ☐ | [R086 §五](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
+| 🟡 | **W102-P3-01** | 合盘 BE ☑（含 T113 life/volumes appendix · PDF 宋体）；FE 导出/经度 ☐ | [R086 §五](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
 | ☑ | **W102-P3-02** | CI 改跑 `auto_verify_autopilot.py` | TD-16 · `ci.yml` autopilot job |
 
 ---

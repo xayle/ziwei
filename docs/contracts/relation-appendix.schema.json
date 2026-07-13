@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusheng.local/contracts/relation-appendix@1.0",
+  "title": "RelationAppendixResponse",
+  "description": "合盘附录卷 · 挂载于 GET /life/volumes 或独立 GET /relation/appendix",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "case_id",
+    "partner_case_id",
+    "relation_type",
+    "combined_score",
+    "sections",
+    "disclaimer_block"
+  ],
+  "properties": {
+    "schema_version": { "const": "relation-appendix@1.0" },
+    "case_id": { "type": "string" },
+    "partner_case_id": { "type": "string" },
+    "relation_type": {
+      "enum": [
+        "couple",
+        "friend",
+        "parent_child",
+        "colleague",
+        "business_partner",
+        "supervisor_subordinate"
+      ]
+    },
+    "relation_type_label": { "type": "string" },
+    "combined_score": { "type": "number" },
+    "grade": { "enum": ["上上", "上", "中", "下", "下下", "N/A"] },
+    "person_a_label": { "type": "string" },
+    "person_b_label": { "type": "string" },
+    "collapsed_default": { "type": "boolean", "default": true },
+    "sections": {
+      "type": "array",
+      "items": { "$ref": "life-volume.schema.json#/$defs/VolumeSection" }
+    },
+    "disclaimer_block": { "$ref": "life-volume.schema.json#/$defs/DisclaimerBlock" }
+  }
+}

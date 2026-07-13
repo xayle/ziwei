@@ -407,14 +407,20 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     dual_track_appendix = _render_dual_track_appendix(bazi, ziwei)
     explain_section = _render_explain_section(payload.get("explain_bazi"), payload.get("explain_ziwei"))
 
+    from services.pdf_font_styles import pdf_body_font_family, pdf_song_font_face_css
+
+    font_face_css = pdf_song_font_face_css()
+    body_font = pdf_body_font_family()
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <title>{_esc(meta.get('label'))}</title>
   <style>
+    {font_face_css}
     @page {{ size: A4; margin: 14mm; }}
-    body {{ font-family: "Noto Serif SC", "Songti SC", serif; color: #2b2118; font-size: 12px; line-height: 1.7; }}
+    body {{ font-family: {body_font}; color: #2b2118; font-size: 12px; line-height: 1.7; }}
     h1 {{ font-size: 24px; margin: 0 0 8px; }}
     h2 {{ font-size: 16px; margin: 0 0 10px; color: #5c3d2e; border-bottom: 1px solid #d4b896; padding-bottom: 4px; }}
     .page {{ page-break-after: always; padding: 8px 0 16px; }}

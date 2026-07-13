@@ -36,6 +36,42 @@ def _block(text: str, layer: str = "fact", classic_id: str | None = None) -> Exp
     return ExplainBlockModel(**cleaned)
 
 
+def build_relation_cite_layers(
+    *,
+    relation_type: str,
+    relation_type_label: str | None,
+    combined_score: float,
+    grade: str | None,
+) -> list[dict[str, Any]]:
+    """Build layers.cite sections for relation-compat (R086 Trust P0)."""
+    type_cfg = get_type_config(relation_type)
+    rel_label = relation_type_label or type_cfg.get("label") or relation_type
+    blocks: list[dict[str, Any]] = []
+    query = f"{rel_label} 合参"
+    tags = _CLASSIC_TAGS.get(relation_type, ["relationship"])
+    cid, passage = _verified_classic_for_query(query, tags=tags)
+    if cid and passage:
+        blocks.append(
+            {
+                "text": _clip(passage),
+                "layer": "cite",
+                "classic_id": cid,
+            }
+        )
+    if not blocks:
+        return []
+    heading = f"{rel_label} · 典籍引证"
+    if combined_score is not None:
+        heading = f"{heading}（综合 {combined_score} · {grade or '—'}）"
+    return [
+        {
+            "id": "relation_reading_cite",
+            "heading": heading,
+            "blocks": blocks,
+        }
+    ]
+
+
 def build_relation_section(result: dict[str, Any], section_id: str) -> ExplainSectionResultModel:
     """Build one explain section from a relation-compat@1.0 payload."""
     blocks: list[ExplainBlockModel] = []
