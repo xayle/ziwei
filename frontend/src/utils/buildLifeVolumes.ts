@@ -39,6 +39,11 @@ const VOLUME_ORDER: LifeVolumeId[] = [
   'preface', 'vol1', 'vol2', 'vol3', 'vol4', 'vol5', 'vol6', 'colophon',
 ]
 
+/**
+ * @deprecated T081 — W16+ 生产权威为 `GET /api/v1/life/volumes`（`fetchLifeVolumes`）。
+ * 仅保留：无 remote 时的本地回退、Vitest fixture、联调对比。
+ * Report 在 remote 已成功时不得再调用本函数（见 `ReportView` / `shouldBuildLifeVolumesAdapter`）。
+ */
 export function buildLifeVolumes(input: BuildLifeVolumesInput): LifeVolumeResponse {
   const volumes = VOLUME_ORDER.map((id) => buildVolume(id, input))
   return {

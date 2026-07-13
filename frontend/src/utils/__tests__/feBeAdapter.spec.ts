@@ -6,6 +6,7 @@ import {
   mapProvenanceLayerToTrustLabel,
   resolveLifeVolumeDoc,
   shouldTryLifeVolumesRemote,
+  shouldBuildLifeVolumesAdapter,
 } from '@/utils/feBeAdapter'
 import type { LifeVolumeResponse } from '@/types/life-volume'
 import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
@@ -53,5 +54,11 @@ describe('feBeAdapter', () => {
     expect(shouldTryLifeVolumesRemote({ envFlag: true, isLoggedIn: false })).toBe(true)
     expect(shouldTryLifeVolumesRemote({ envFlag: false, isLoggedIn: true, remoteCaseId: 'x' })).toBe(true)
     expect(shouldTryLifeVolumesRemote({ envFlag: false, isLoggedIn: false })).toBe(false)
+  })
+
+  it('T081 shouldBuildLifeVolumesAdapter skips when remote is valid', () => {
+    expect(shouldBuildLifeVolumesAdapter(null)).toBe(true)
+    expect(shouldBuildLifeVolumesAdapter(minimalLifeDoc())).toBe(false)
+    expect(shouldBuildLifeVolumesAdapter({ schema_version: 'other' } as LifeVolumeResponse)).toBe(true)
   })
 })

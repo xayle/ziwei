@@ -1,6 +1,7 @@
 /**
  * life-volume@1.0 — OpenAPI `LifeVolumeResponseModel` + UI 常量
- * FE Adapter：buildLifeVolumes (W3–W15) · BE 权威：GET /life/volumes (W16+)
+ * BE 权威：GET /life/volumes（W16+ / T079+）
+ * FE Adapter：`buildLifeVolumes` **@deprecated（T081）** — 仅无 remote 回退与测试
  */
 import type {
   AnalysisBlockModel,

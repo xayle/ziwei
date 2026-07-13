@@ -279,7 +279,7 @@ frontend/src/
 
 | # | 决议 | 前端实现 |
 |---|------|----------|
-| Q1 | W3–W15 `buildLifeVolumes`；W16+ `GET life/volumes` | `ReportView` local/remote |
+| Q1 | W3–W15 `buildLifeVolumes`；W16+ `GET life/volumes` | `ReportView`：remote 成功则**不调用** Adapter（T081 deprecated） |
 | Q5 | provenance ≠ UI layer | `feBeAdapter` |
 | Q8 | 不默认 `loadDayunNarratives` | 卷三仅盘面/explain |
 | Q9 | 报告 ≤4 chart + explain batch | `fetchReportExplainBatches` |
@@ -293,7 +293,7 @@ frontend/src/
 |------|------|
 | 契约常量 | `constants/feBeContract.ts` |
 | 适配函数 | `utils/feBeAdapter.ts` |
-| 六卷 Adapter | `utils/buildLifeVolumes.ts` |
+| 六卷 Adapter | `utils/buildLifeVolumes.ts`（**@deprecated T081** · 仅无 remote 回退 / Vitest） |
 | 远程六卷 | `api/life.ts` |
 | Explain batch | `api/explain.ts` |
 
@@ -302,13 +302,12 @@ frontend/src/
 ```text
 archive-bundle / bazi+ziwei full
         ↓
-fetchReportExplainBatches (geju,relations,domains,summary + palaces,fortune)
-        ↓
-buildLifeVolumes (local)  ←── 可选 GET life/volumes 覆盖
+GET /life/volumes（登录案例 或 VITE_USE_LIFE_VOLUMES_API / localStorage flag）
+        ↓  remote 成功且 flag 权威 → 跳过 explain/batch + 不跑 Adapter（T079–T081）
+        ↓  remote 失败 → explain/batch + buildLifeVolumes（deprecated 回退）
         ↓
 VolumeSection × N + ColophonFootnote
 ```
-
 DOM：`data-life-volume-source="local|remote"`  
 Hash 续卷：`/report#report-volume-vol5`（router scrollBehavior + ReportView sync）
 

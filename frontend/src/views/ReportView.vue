@@ -44,7 +44,12 @@ import { useYoubiHourAlign } from '@/composables/useYoubiHourAlign'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { trackFlowEvent } from '@/utils/flowAnalytics'
-import { shouldTryLifeVolumesRemote, resolveLifeVolumeDoc } from '@/utils/feBeAdapter'
+import {
+  shouldTryLifeVolumesRemote,
+  resolveLifeVolumeDoc,
+  shouldBuildLifeVolumesAdapter,
+  isLifeVolumeResponse,
+} from '@/utils/feBeAdapter'
 import '@/assets/fusheng-page.css'
 import '@/assets/report-print.css'
 
@@ -172,20 +177,27 @@ async function loadLifeVolumesRemote() {
   }
 }
 
-const lifeVolumeLocal = computed(() => buildLifeVolumes({
-  caseId: profile.activeProfileId || 'local',
-  chartHash: chartHashRef.value,
-  bazi: bazi.value,
-  ziwei: ziwei.value,
-  profileLabel: profile.activeProfile?.label,
-  explain: explainBatch.value,
-  trustLevel: iztro.value?.status === 'degraded' ? 'degraded' : 'full',
-  missingFields: missingFields.value,
-  iztroAdvisory: iztro.value?.message,
-  wenmoAdvisory: ziwei.value?.wenmo_advisory ?? explainBatch.value?.wenmo_advisory,
-  engineLabel: engineLabel.value,
-  generatedAt: generatedAt.value ?? undefined,
-}))
+const lifeVolumeLocal = computed(() => {
+  const remote = lifeVolumeRemote.value
+  // T081：remote 权威成功时不调用 deprecated Adapter
+  if (!shouldBuildLifeVolumesAdapter(remote) && remote && isLifeVolumeResponse(remote)) {
+    return remote
+  }
+  return buildLifeVolumes({
+    caseId: profile.activeProfileId || 'local',
+    chartHash: chartHashRef.value,
+    bazi: bazi.value,
+    ziwei: ziwei.value,
+    profileLabel: profile.activeProfile?.label,
+    explain: explainBatch.value,
+    trustLevel: iztro.value?.status === 'degraded' ? 'degraded' : 'full',
+    missingFields: missingFields.value,
+    iztroAdvisory: iztro.value?.message,
+    wenmoAdvisory: ziwei.value?.wenmo_advisory ?? explainBatch.value?.wenmo_advisory,
+    engineLabel: engineLabel.value,
+    generatedAt: generatedAt.value ?? undefined,
+  })
+})
 
 const lifeVolumeResolved = computed(() => resolveLifeVolumeDoc({
   remote: lifeVolumeRemote.value,

@@ -17,7 +17,7 @@ export function useLifeVolumesApiEnabled(): boolean {
   }
 }
 
-/** W16+ authority path; returns null on miss so buildLifeVolumes Adapter keeps working. */
+/** W16+ 权威路径；失败返回 null，由 Report 回退 deprecated `buildLifeVolumes`。 */
 export async function fetchLifeVolumes(caseId: string): Promise<LifeVolumeResponse | null> {
   const id = caseId.trim()
   if (!id) return null

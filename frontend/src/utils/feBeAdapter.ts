@@ -61,6 +61,14 @@ export function resolveLifeVolumeDoc(input: ResolveLifeVolumeInput): {
   return { doc: input.local, source: 'local' }
 }
 
+/**
+ * T081：remote 已是合法 life-volume 时，生产路径不再跑 `buildLifeVolumes`。
+ * （resolve 会选 remote；local 入参可复用同一份 doc，避免空壳类型。）
+ */
+export function shouldBuildLifeVolumesAdapter(remote: LifeVolumeResponse | null): boolean {
+  return !(remote != null && isLifeVolumeResponse(remote))
+}
+
 export function shouldTryLifeVolumesRemote(options: {
   envFlag: boolean
   isLoggedIn: boolean
