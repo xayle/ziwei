@@ -80,9 +80,23 @@ function liunianYearFromTargetDate(targetDate?: string, fallback?: number): numb
   return parsed.getFullYear()
 }
 
+/** 与后端 `_default_liunian_years` 对齐：±2 年偏移 + 当前日历年 */
+export function buildDefaultLiunianYearOffsets(birthYear: number, calendarYear = new Date().getFullYear()): number[] {
+  const deltas = new Set<number>([-2, -1, 0, 1, 2])
+  deltas.add(calendarYear - birthYear)
+  return [...deltas].sort((a, b) => a - b)
+}
+
+function birthYearFromIsoDt(dt: string): number {
+  const year = Number.parseInt(dt.slice(0, 4), 10)
+  return Number.isFinite(year) ? year : new Date().getFullYear()
+}
+
 export function buildBaziRequest(data: ProfileData, targetDate?: string): BaziRequest {
   const meta = buildChartRequestMeta(data)
   const normalizedTargetDate = normalizeTargetDate(targetDate)
+  const calendarYear = liunianYearFromTargetDate(targetDate)
+  const birthYear = birthYearFromIsoDt(meta.normalizedBirthDt)
   return {
     dt: meta.normalizedBirthDt,
     lon: data.lon ?? 116.41,
@@ -95,6 +109,7 @@ export function buildBaziRequest(data: ProfileData, targetDate?: string): BaziRe
     ...(data.cityTier ? { city_tier: data.cityTier } : {}),
     ...(data.industry ? { industry: data.industry } : {}),
     include_liuri: true,
+    liunian_years: buildDefaultLiunianYearOffsets(birthYear, calendarYear),
     ...(normalizedTargetDate ? { target_date: normalizedTargetDate } : {}),
   }
 }

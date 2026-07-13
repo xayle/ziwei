@@ -67,6 +67,21 @@ function findCurrentDayun(result: BaziResponse, currentYear: number): DayunItem 
   }) ?? items[0]
 }
 
+export function findLiunianItemForYear(
+  result: BaziResponse | null | undefined,
+  currentYear = new Date().getFullYear(),
+) {
+  return (result?.liunian?.items ?? []).find((item) => Number(item.year) === currentYear)
+}
+
+export function baziResponseHasCurrentLiunian(
+  result: BaziResponse | null | undefined,
+  currentYear = new Date().getFullYear(),
+): boolean {
+  const item = findLiunianItemForYear(result, currentYear)
+  return Boolean(item?.stem?.trim() && item?.branch?.trim())
+}
+
 export function buildFallbackBaziColumns(): BaziColumn[] {
   return [
     { key: 'liunian', label: '流年', mainStar: '待计算', stem: '待计算', branch: '待计算', selfSeat: '待计算', void: '待计算', nayin: '待计算', shensha: [{ name: '接口不可用' }] },
@@ -82,7 +97,7 @@ export function buildBaziColumns(result: BaziResponse | null, currentYear = new 
   if (!result) return buildFallbackBaziColumns()
 
   const currentDayun = findCurrentDayun(result, currentYear)
-  const liunianItem = (result.liunian?.items ?? []).find((item) => item.year === currentYear)
+  const liunianItem = findLiunianItemForYear(result, currentYear)
   const pillarDetails = result.pillar_details ?? {}
   const yearItem = result.pillars_primary?.year
   const monthItem = result.pillars_primary?.month

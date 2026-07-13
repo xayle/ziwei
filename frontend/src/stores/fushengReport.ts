@@ -14,6 +14,7 @@ import {
   buildZiweiRequest,
   type ChartRequestMeta,
 } from '@/utils/buildChartRequests'
+import { baziResponseHasCurrentLiunian } from '@/utils/buildBaziColumns'
 import { buildDayunReportFromBazi } from '@/utils/buildDayunReport'
 import { saveReportSnapshot } from '@/utils/saveReportSnapshot'
 import type { FushengSnapshotOutput } from '@/utils/parseFushengSnapshot'
@@ -148,7 +149,9 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
     requestMeta.value = buildChartRequestMeta(data)
 
     if (!force && cachedSignature.value === signature && bazi.value) {
-      return bazi.value
+      if (baziResponseHasCurrentLiunian(bazi.value)) {
+        return bazi.value
+      }
     }
 
     loadingBazi.value = true
@@ -375,6 +378,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
     requestMeta.value = buildChartRequestMeta(data)
 
     const chartsCached = !force && cachedSignature.value === signature && bazi.value && ziwei.value
+      && baziResponseHasCurrentLiunian(bazi.value)
     const nameCached = !force && cachedSignature.value === signature && (
       !canAnalyzeName(data) || !!nameAnalysis.value
     )
@@ -400,6 +404,14 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
         } else {
           if (!bundle.bazi) failures.push('八字：档案快照未返回')
           if (!bundle.ziwei) failures.push('紫微：档案快照未返回')
+        }
+        if (bazi.value && !baziResponseHasCurrentLiunian(bazi.value)) {
+          try {
+            bazi.value = await computeBazi(buildBaziRequest(data))
+          } catch (e: unknown) {
+            const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+            failures.push(`八字：${typeof detail === 'string' ? detail : '流年数据过期，重新计算失败'}`)
+          }
         }
       } else {
         const computed = await loadChartsViaCompute(data)

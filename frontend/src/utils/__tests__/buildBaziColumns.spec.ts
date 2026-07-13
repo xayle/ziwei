@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { BaziResponse } from '@/api/bazi'
-import { buildBaziColumns, buildFallbackBaziColumns } from '@/utils/buildBaziColumns'
+import { buildBaziColumns, buildFallbackBaziColumns, baziResponseHasCurrentLiunian, findLiunianItemForYear } from '@/utils/buildBaziColumns'
 
 describe('buildBaziColumns', () => {
   it('returns fallback columns when result is null', () => {
@@ -69,6 +69,25 @@ describe('buildBaziColumns', () => {
 
     const liunianCol = buildBaziColumns(result, 2026).find((c) => c.key === 'liunian')
     expect(liunianCol?.mainStar).toBe('缺失')
+  })
+
+  it('matches liunian item when year is string from JSON', () => {
+    const result = {
+      pillars_primary: {
+        year: { stem: '庚', branch: '午' },
+        month: { stem: '己', branch: '丑' },
+        day: { stem: '甲', branch: '子' },
+        hour: { stem: '丙', branch: '寅' },
+      },
+      liunian: {
+        items: [{ year: '2026' as unknown as number, stem: '丙', branch: '午', ten_god: '食神' }],
+      },
+    } as unknown as BaziResponse
+
+    expect(findLiunianItemForYear(result, 2026)?.stem).toBe('丙')
+    expect(baziResponseHasCurrentLiunian(result, 2026)).toBe(true)
+    const liunianCol = buildBaziColumns(result, 2026).find((c) => c.key === 'liunian')
+    expect(liunianCol?.mainStar).toBe('食神')
   })
 
   it('maps API ten_god into hidden stem rows', () => {

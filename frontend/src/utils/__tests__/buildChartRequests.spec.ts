@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ProfileData } from '@/stores/profile'
 import {
   buildBaziRequest,
+  buildDefaultLiunianYearOffsets,
   buildFushengReportPdfRequest,
   buildProfileSignature,
   buildZiweiCacheKey,
@@ -48,6 +49,7 @@ describe('buildChartRequests', () => {
     const req = buildBaziRequest(profile)
     expect(req.dt).toContain('1990-01-15')
     expect(req.lon).toBe(116.41)
+    expect(req.liunian_years).toEqual(buildDefaultLiunianYearOffsets(1990, 2026))
     expect(req.gender).toBe('male')
     expect(req.include_liuri).toBe(true)
   })
