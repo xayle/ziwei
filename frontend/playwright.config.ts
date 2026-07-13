@@ -16,8 +16,8 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // 优先使用本机 Chrome，避免 CI/本地未执行 playwright install 时失败
-        channel: process.env.PW_CHANNEL as 'chrome' | undefined || 'chrome',
+        // CI 使用 playwright install 的 chromium；本地默认本机 Chrome
+        ...(process.env.CI ? {} : { channel: (process.env.PW_CHANNEL as 'chrome' | undefined) || 'chrome' }),
       },
     },
   ],

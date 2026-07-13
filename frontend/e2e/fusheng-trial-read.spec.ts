@@ -18,6 +18,8 @@ test.describe('P1 试读路径（R060）', () => {
       localStorage.setItem('fusheng-reading-progress', JSON.stringify({ [activeId]: 'vol5' }))
     })
     await gotoApp(page, '')
+    await page.getByTestId('brand-gate-enter').scrollIntoViewIfNeeded()
+    await page.locator('.brand-after').scrollIntoViewIfNeeded()
     await expect(page.getByText('续读：')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByTestId('reading-guide-resume')).toBeVisible()
 
