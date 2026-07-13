@@ -59,7 +59,7 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
 
               <div class="brand-island__body">
                 <div class="brand-island__head">
-                  <h1 class="brand-island__word">浮生</h1>
+                  <h1 class="brand-island__word hero-copy__title">浮生</h1>
                   <p class="brand-island__tag">浮生若梦</p>
                   <p class="brand-island__series">人生六卷辑录</p>
                 </div>

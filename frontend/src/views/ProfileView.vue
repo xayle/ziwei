@@ -895,14 +895,14 @@ function applyZiweiAlgoPreset(presetId: string) {
 
             <div class="archive-aside__block">
               <h2 class="archive-aside__title">档案摘要</h2>
-              <dl class="archive-meta-list">
+              <dl class="archive-meta-list meta-list--brief">
                 <div><dt>姓名</dt><dd>{{ form.surname }}{{ form.givenName }}</dd></div>
                 <div><dt>出生</dt><dd>{{ form.birthDt ? form.birthDt.replace('T', ' ').slice(0, 16) : '未填写' }}</dd></div>
                 <div><dt>性别</dt><dd>{{ form.gender === 'male' ? '男' : form.gender === 'female' ? '女' : '未填' }}</dd></div>
                 <div><dt>出生地</dt><dd>{{ form.cityName || '未填写' }}{{ form.lon !== undefined ? ` · ${form.lon.toFixed(2)}°E` : '' }}</dd></div>
                 <div v-if="form.focusTopic"><dt>关注</dt><dd>{{ form.focusTopic }}</dd></div>
               </dl>
-              <details class="archive-advanced">
+              <details class="archive-advanced profile-advanced-meta">
                 <summary>高级口径（可选）</summary>
                 <dl class="archive-meta-list">
                   <div><dt>保存状态</dt><dd>{{ profile.saved ? '已保存' : '未保存' }}</dd></div>
