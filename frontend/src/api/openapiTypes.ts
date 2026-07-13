@@ -165,6 +165,7 @@ export type LayerBlockModel = S['LayerBlockModel']
 // ── /fusheng/archive-bundle · report/pdf ───────────────────
 export type ArchiveBundleRequest = S['ArchiveBundleRequest']
 export type SchemaArchiveBundleResponse = S['ArchiveBundleResponse']
+export type ArchiveExtensionPointer = S['ArchiveExtensionPointer']
 export type FushengReportPdfRequest = S['FushengReportPdfRequest']
 
 // ── /bazi|ziwei/explain/batch ──────────────────────────────
@@ -173,12 +174,14 @@ export type ExplainBlockModel = S['ExplainBlockModel']
 export type ExplainSectionResultModel = S['ExplainSectionResultModel']
 export type DisclaimerBlockModel = S['DisclaimerBlockModel']
 
-// ── /life/volumes/{case_id} ────────────────────────────────
+// ── /life/volumes/{case_id} · /life/snippets/{case_id} ─────
 export type LifeVolumeResponseModel = S['LifeVolumeResponseModel']
 export type LifeVolumeModel = S['LifeVolumeModel']
 export type VolumeSectionModel = S['VolumeSectionModel']
 export type AnalysisBlockModel = S['AnalysisBlockModel']
 export type ColophonModel = S['ColophonModel']
+export type LifeSnippetsResponseModel = S['LifeSnippetsResponseModel']
+export type LifeSnippetHookModel = S['LifeSnippetHookModel']
 
 // ── /cases · snapshots ─────────────────────────────────────
 export type CaseCreate = S['CaseCreate']

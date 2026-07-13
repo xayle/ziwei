@@ -584,8 +584,10 @@ export interface paths {
         put?: never;
         /**
          * 提交流年年度报告生成任务（异步 202）
-         * @description D4: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。
-         *     - 立即返回 202 Accepted + task_id
+         * @description D4 / T075: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。
+         *     - 立即返回 202 Accepted + task_id（含 queue_backend=redis|asyncio）
+         *     - 有 REDIS_URL / LIUNIAN_REDIS_URL 时入队，由 ``scripts/run_liunian_worker.py`` 消费
+         *     - 无 Redis 时回退 asyncio.create_task（单进程开发）
          *     - 轮询 GET /api/v1/bazi/liunian-report/{task_id} 获取结果
          */
         post: operations["submit_liunian_report_api_v1_bazi_liunian_report_post"];
@@ -2632,6 +2634,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/life/snippets/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 人生钩子句 snippets（BOOK-GTM §5.3 草案）
+         * @description T076 / P3-02：抖音竖屏用短句（3–5 条），优先 engine 事实 + 至多一条典籍。
+         *     形状对齐 BOOK-GTM §5.3；叙事长文仍走 explain / life/volumes。
+         */
+        get: operations["get_life_snippets_api_v1_life_snippets__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/life/volumes/{case_id}": {
         parameters: {
             query?: never;
@@ -3532,6 +3555,18 @@ export interface components {
              * @default true
              */
             include_ziwei: boolean;
+            /**
+             * Include Name Pointer
+             * @description T077：附带姓名学扩展指针（不执行 analyze，仅路径+stub）
+             * @default false
+             */
+            include_name_pointer: boolean;
+            /**
+             * Include Zeri Pointer
+             * @description T077：附带择日扩展指针（依赖紫微命宫/五行局 stub）
+             * @default false
+             */
+            include_zeri_pointer: boolean;
         };
         /** ArchiveBundleResponse */
         ArchiveBundleResponse: {
@@ -3547,6 +3582,38 @@ export interface components {
             } | null;
             /** Missing Fields */
             missing_fields?: string[];
+            /** @description T077：include_name_pointer 时返回 */
+            name?: components["schemas"]["ArchiveExtensionPointer"] | null;
+            /** @description T077：include_zeri_pointer 时返回 */
+            zeri?: components["schemas"]["ArchiveExtensionPointer"] | null;
+        };
+        /**
+         * ArchiveExtensionPointer
+         * @description 可选扩展入口：FE 可跳转，不把长结果并入 bundle。
+         */
+        ArchiveExtensionPointer: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "name" | "zeri";
+            /** Path */
+            path: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "GET" | "POST";
+            /** Ready */
+            ready: boolean;
+            /** Label */
+            label: string;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            };
+            /** Note */
+            note?: string | null;
         };
         /** AspectItem */
         AspectItem: {
@@ -6702,6 +6769,51 @@ export interface components {
             /** Optimal Action */
             optimal_action?: string | null;
         };
+        /** LifeSnippetHookModel */
+        LifeSnippetHookModel: {
+            /**
+             * Tag
+             * @description 展示标签：事实 / 典籍 / 推算 …
+             */
+            tag: string;
+            /**
+             * Text
+             * @description ≤80 字钩子句，适合竖屏字幕
+             */
+            text: string;
+            /**
+             * Layer
+             * @description engine=排盘事实；classical=典籍句
+             * @enum {string}
+             */
+            layer: "engine" | "classical";
+        };
+        /** LifeSnippetsResponseModel */
+        LifeSnippetsResponseModel: {
+            /**
+             * Schema Version
+             * @default life-snippets@0.1
+             * @constant
+             */
+            schema_version: "life-snippets@0.1";
+            /** Case Id */
+            case_id: string;
+            /**
+             * Hooks
+             * @description 3–5 条钩子句（草案默认取满可用事实）
+             */
+            hooks: components["schemas"]["LifeSnippetHookModel"][];
+            /**
+             * Vertical Title
+             * @description 竖版分享卡卷目标题
+             */
+            vertical_title: string;
+            /**
+             * Disclaimer
+             * @description 短免责声明（抖音口播用）
+             */
+            disclaimer: string;
+        };
         /** LifeSuggestionResponse */
         LifeSuggestionResponse: {
             /**
@@ -6955,6 +7067,11 @@ export interface components {
             } | null;
             /** Error */
             error?: string | null;
+            /**
+             * Queue Backend
+             * @description T075：redis（多实例队列）或 asyncio（单进程回退）
+             */
+            queue_backend?: string | null;
         };
         /** LiunianResponse */
         LiunianResponse: {
@@ -17984,6 +18101,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArchiveBundleResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_life_snippets_api_v1_life_snippets__case_id__get: {
+        parameters: {
+            query?: {
+                /** @description 返回钩子条数 3–5 */
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifeSnippetsResponseModel"];
                 };
             };
             400: components["responses"]["ValidationError"];

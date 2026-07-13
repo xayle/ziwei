@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.7 |
+| **版本** | post-w14-1.8 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase E** — **T075–T077 · T079–T084 ☑** → **下一项 T078**（OpenAPI/types）或 **T085**（U5 签字） |
+| **当前优先级** | ▶ **Phase E** — **T072–T084 ☑（跳号无：T078 已勾）** → **下一项 T085**（U5 签字） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -17,8 +17,8 @@
 ```text
 前置  T070 ☑（W14 · W102-22 closeout）
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
-BE    T072–T077 · T084 ☑ · T078 待
-FE    T079–T083 ☑ → 下一项 **T085 U5 签字**（或并行 T078）
+BE    T072–T078 · T084 ☑
+FE    T079–T083 ☑ → **下一项 T085 U5 签字**
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -97,7 +97,7 @@ P14  上线评估  T136–T140
 | ☑ | **T075** | BE | **P3-03** liunian Redis worker 生产配置 | `liunian_queue.py` · `run_liunian_worker.py` · compose profile | 可观测 enqueued/done/poison · 无 Redis 回退 asyncio |
 | ☑ | **T076** | BE | **P3-02** `GET /api/v1/life/snippets/{case_id}`（hooks 3–5 条） | `life_snippets_service` · BOOK-GTM §5.3 | schema `life-snippets@0.1` · 单测绿 |
 | ☑ | **T077** | BE | **P3-04** archive-bundle 可选 name/zeri 指针 | `fusheng_archive.py` | `include_*_pointer` · OpenAPI · 单测 |
-| ☐ | **T078** | ALL | OpenAPI export + `npm run gen:types`；life-volume 契约测试双端 | CI | PR diff 阻断 |
+| ☑ | **T078** | ALL | OpenAPI export + `npm run gen:types`；life-volume 契约测试双端 | [T078 报告](../reports/T078-openapi-types-2026-07-14.md) · CI drift | PR diff 阻断 |
 | ☑ | **T079** | FE | `api/life.ts` 真 API；flag=`VITE_USE_LIFE_VOLUMES_API` / localStorage `fusheng-use-life-volumes-api=1` | `api/life.ts` · `ReportView` | flag 开且 remote 成功 → 跳过 explain/batch |
 | ☑ | **T080** | FE | Report 主路径优先 `GET life/volumes`；权威态无 explain/batch 瀑布 | `ReportView.vue` · E2E | `fusheng-life-volumes` 2/2 |
 | ☑ | **T081** | FE | `buildLifeVolumes.ts` 标 **deprecated**；remote 成功时生产路径不调用 | 注释 + `shouldBuildLifeVolumesAdapter` + FE-DEV | Vitest + Report 门控 |
@@ -305,6 +305,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-1.8 | 2026-07-14 | **T078 ☑** · OpenAPI/types 双端契约 · 下一项 T085 U5 |
 | post-w14-1.7 | 2026-07-14 | **T077 ☑** · archive name/zeri 指针 · 下一项 T078/T085 |
 | post-w14-1.6 | 2026-07-14 | **T076 ☑** · life/snippets §5.3 · 下一项 T077/T085 |
 | post-w14-1.5 | 2026-07-14 | **T075 · T084 ☑** · liunian Redis 队列/worker · Q4 legacy 收尾 · 下一项 T076/T085 |
