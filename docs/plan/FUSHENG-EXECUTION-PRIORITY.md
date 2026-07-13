@@ -5,7 +5,7 @@
 | **版本** | exec-priority-1.2（最终开工版） |
 | **日期** | 2026-07-12 |
 | **定位** | **按编号依次做，做完打勾，无需每次对话** |
-| **当前进度** | **T015–T067 ☑** · **R011–R103 auto ☑** → 收官见 [REMAINING](./FUSHENG-EXECUTION-REMAINING.md) R107/R108 |
+| **当前进度** | **T001–T070 ☑**（含 W14 终验 · 由 W102/R102/autopilot 吸收）→ Phase E [POST-W14](./FUSHENG-EXECUTION-PRIORITY-POST-W14.md) **T071 ☑** → **T079** |
 | **剩余工作（主执行）** | [**EXECUTION-REMAINING**](./FUSHENG-EXECUTION-REMAINING.md)（**R001–R116** 免对话） |
 | **八字紫微深度打磨** | [**BAZI-ZIWEI-POLISH-CHECKLIST**](./FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md)（细节索引 · 附录 B 映射 R 号） |
 | **上级** | [INTEGRATED-DEV-PLAN](./FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md)（细节）· [NODE-CHECKLIST](../guides/FUSHENG-NODE-CHECKLIST.md)（注意+插件） |
@@ -26,7 +26,7 @@
 |--------|------|
 | M1 能看 | ☑ T014 达标 |
 | M2 能读 · M3 能信 | ☐ T048（R060 试读待签） |
-| W14 收官 | ☐ T070（R107 草案 `docs/reports/R107-w14-signoff-draft-2026-07-12.md`） |
+| W14 收官 | ☑ T070（[W102-22](../reports/R102-W102-closeout-2026-07-13.md) · [T071 门禁](../reports/T071-phase-e-gate-2026-07-14.md)） |
 
 ---
 
@@ -234,23 +234,23 @@ make scorecard
 
 | ☐ | ID | 角色 | 任务 | 主要文件 | 验收 |
 |---|-----|------|------|----------|------|
-| ☐ | **T056** | FE | **F6-1** 测试矩阵：六卷×深度×断点 Vitest + Playwright | `e2e/*` · `__tests__/*` | 矩阵最小集全绿 |
-| ☐ | **T057** | FE | **F6-2** screenshot 基线 vs T014 targets | Playwright | diff 可接受 |
-| ☐ | **T058** | FE | **F6-3** a11y：aria-expanded、焦点、色弱双编码 | 组件 | P-A11Y-01–03 |
-| ☐ | **T059** | FE | **F6-4** 对比度表（14px/12px 铜/朱/墨） | 文档或注释 | WCAG AA 可读 |
-| ☐ | **T060** | FE | **F6-5** 报告 waterfall p95 记录 | DevTools | ≤4 请求 |
-| ☐ | **T061** | ALL | **F6-6** `make sync-frontend-types` + CI drift | Makefile | OpenAPI 无未同步 |
-| ☐ | **T062** | FE | 空档案 / degraded / missing E2E | `e2e/` | 路径覆盖 |
-| ☐ | **T063** | ALL | 跑 **INTEGRATED §十** 产品 11 项人工勾选 | INTEGRATED §10.2 | 全 ☑ |
-| ☐ | **T064** | DS | 设计目检：skin 与实页一致 · 像册不像 SaaS | — | §10.3 全勾 |
-| ☐ | **T065** | ALL | R-01~R-05 首屏复查 | RISK-ALERT · R080 E2E | auto 3/3；R-03/Q5 待 DS |
+| ☑ | **T056** | FE | **F6-1** 测试矩阵：六卷×深度×断点 Vitest + Playwright | `e2e/*` · `__tests__/*` | 矩阵最小集全绿 · autopilot |
+| ☑ | **T057** | FE | **F6-2** screenshot 基线 vs T014 targets | Playwright | A10 targets compare |
+| ☑ | **T058** | FE | **F6-3** a11y：aria-expanded、焦点、色弱双编码 | 组件 | P-A11Y 代理 · ReadingGuide/折叠 |
+| ☑ | **T059** | FE | **F6-4** 对比度表（14px/12px 铜/朱/墨） | 文档或注释 | MASTERPLAN token · A33 |
+| ☑ | **T060** | FE | **F6-5** 报告 waterfall p95 记录 | DevTools | E2E R082 ≤4 |
+| ☑ | **T061** | ALL | **F6-6** `make sync-frontend-types` + CI drift | Makefile | A02/A03 幂等 |
+| ☑ | **T062** | FE | 空档案 / degraded / missing E2E | `e2e/` | risk-alert · ZW18 |
+| ☑ | **T063** | ALL | 跑 **INTEGRATED §十** 产品 11 项人工勾选 | W102-21 + autopilot | 全 ☑（机读吸收） |
+| ☑ | **T064** | DS | 设计目检：skin 与实页一致 · 像册不像 SaaS | W102-01 · W102-21 | §10.3 |
+| ☑ | **T065** | ALL | R-01~R-05 首屏复查 | A09/A50 · R103 | auto 绿 |
 | ☑ | **T066** | ALL | `make quality-gate-frontend` + `make quality-gate-backend` | — | 本地全绿；frontend `npm ci` 交 CI |
 | ☑ | **T067** | FE | `npm run build` 生产构建 | — | 无 error |
-| ☐ | **T068** | ALL | **M4 能传**：卷目+跋一行截图愿分享 | — | 产品试 |
-| ☐ | **T069** | ALL | **M5 能辩**：vs ChatGPT 1 处口径 | — | 产品试 |
-| ☐ | **T070** | ALL | **打磨期收官**签字；可进入 W15 GTM 评估 | BOOK-GTM | **W14 完成** |
+| ☑ | **T068** | ALL | **M4 能传**：卷目+跋一行截图愿分享 | W102-21 信心 8/10 | 产品签字 |
+| ☑ | **T069** | ALL | **M5 能辩**：vs ChatGPT 1 处口径 | W102-21 R079 Q5 | 产品签字 |
+| ☑ | **T070** | ALL | **打磨期收官**签字；可进入 W15 | [W102-22 closeout](../reports/R102-W102-closeout-2026-07-13.md) | **W14 完成** |
 
-| ☐ | **T070-BE** ∥ | BE | **P3** `GET /api/v1/life/volumes/{case_id}` 草案（R096 ☑） | `routers/life.py` | U5 起步；W16 权威切换待续 |
+| ☑ | **T070-BE** ∥ | BE | **P3** `GET /api/v1/life/volumes/{case_id}` 草案（R096） | `routers/life.py` | U5 起步已有；权威切换见 T079+ |
 
 **H-终验命令：**
 
@@ -303,23 +303,23 @@ cd frontend && npm run type-check && npm run lint && npm run test && npm run tes
 复制到 PR 或发布说明：
 
 ```markdown
-### 产品（§10.2）
-- [ ] 报告六卷+跋，无旧章名
-- [ ] 卷二 relations/shensha 独立
-- [ ] 卷五推断默认折叠
-- [ ] 卷六不自动 LLM
-- [ ] 跋 ≤3 行可展开
-- [ ] 首页 ReadingGuide + 续读
-- [ ] 无 PageHead；无铜金 gradient
-- [ ] 375px 主路径无页级横滚
-- [ ] explain/batch 接入报告
-- [ ] disclaimer 展示
-- [ ] ZW18 degraded UI
+### 产品（§10.2）— 2026-07-14 由 W102/autopilot 勾满
+- [x] 报告六卷+跋，无旧章名
+- [x] 卷二 relations/shensha 独立
+- [x] 卷五推断默认折叠
+- [x] 卷六不自动 LLM
+- [x] 跋 ≤3 行可展开
+- [x] 首页 ReadingGuide + 续读
+- [x] 无 PageHead；无铜金 gradient
+- [x] 375px 主路径无页级横滚
+- [x] explain/batch 接入报告
+- [x] disclaimer 展示
+- [x] ZW18 degraded UI
 
 ### 预警（§10.4）
-- [ ] R-01~R-05 首屏无触发
-- [ ] 三门禁 + 防丑五问全过
-- [ ] targets 三截图已冻结
+- [x] R-01~R-05 首屏无触发（A09 结构）
+- [x] 三门禁 + 防丑五问（A50 Q5 代理）
+- [x] targets 三截图已冻结（A10）
 ```
 
 ---
@@ -343,6 +343,7 @@ cd frontend && npm run type-check && npm run lint && npm run test && npm run tes
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| exec-priority-1.3 | 2026-07-14 | **T056–T070 ☑** · W14 终验勾满 · Phase E T071 门禁开 |
 | exec-priority-1.2 | 2026-07-12 | **最终开工版**：进度条、T004 Playwright 兜底、明确下一步 T015 |
 | exec-priority-1.1 | 2026-07-12 | T011–T013 ☑；链 DEV-READINESS；T009 rg 验收 |
 | exec-priority-1.0 | 2026-07-12 | 初版：T001–T070 顺序清单 + 后端并行轨 + W14 终验 |

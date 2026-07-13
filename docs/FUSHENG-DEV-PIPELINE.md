@@ -2,11 +2,11 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-3.1 |
+| **版本** | pipeline-3.2 |
 | **日期** | 2026-07-14 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
-| **当前阶段** | **文档消噪收口 ✅** · Phase D ✅ · 下一轨 Phase E / POST-W14（只读待开） |
+| **当前阶段** | **Phase E ▶** · T071 ☑ · 下一项 **T079**（Report 切 life/volumes） |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
 | **W102 进度** | **24/24**（Phase B）· **W102-P3 ☑**（Phase D） |
 
@@ -131,7 +131,7 @@ pre-commit run --all-files   # 首次或大改后
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
 **已完成：** W102-00a～**22** 全 ☑ · **Phase B closeout 2026-07-13**  
-**下一项：** **文档消噪收口 ✅** → Phase E（POST-W14 选开）或实机维护
+**下一项：** **Phase E** · [T071 门禁](reports/T071-phase-e-gate-2026-07-14.md) ☑ → **T079** FE volumes 权威路径
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -268,13 +268,13 @@ Phase A  T001–T070     ☑ 打磨期工程任务（EXECUTION-PRIORITY）
 Phase B  W102-00–22    ☑ 产品重建（R102）closeout 24/24
 Phase C  W15–W16       ⏸ life/volumes 权威化 · GTM 预备
 Phase D  W102-P3       ☑ 合盘 BE+CI+FE 全链路（export · multi · explain）
-Phase E  W17+ / GTM 预备  ← 当前轨（文档消噪收口；增长见 POST-W14 只读）
+Phase E  W15–W16 U5    ← **当前轨** · T071 ☑ · 下一项 T079（POST-W14）
 ```
 
 **纪律：**
 
 - Phase B 未完成 → 不开 Phase D 合盘大功能
-- 增长/平台文档（BOOK-GTM / PLATFORM）→ **只读参考，禁止提前做**（除非显式开 Phase E 子任务）
+- GTM（T086+）→ **T085 U5 签字前禁止**（POST-W14 块 J 门禁）
 
 ---
 
@@ -312,7 +312,8 @@ Phase E  W17+ / GTM 预备  ← 当前轨（文档消噪收口；增长见 POST-
 | pipeline-2.8 | 2026-07-13 | **W102-22 ☑ · 24/24** · R102 closeout · Phase B 完成 |
 | pipeline-3.0 | 2026-07-14 | **Phase D ☑** · W102-P3 FE 全链路 · autopilot **30/30+20/20** |
 | pipeline-3.1 | 2026-07-14 | **文档消噪收口** · P2-2/P3-17 · FE-DEV §12.3 static 约定 |
+| pipeline-3.2 | 2026-07-14 | **Phase E 开** · T071 门禁 ☑ · T072–T074 ☑ · 下一项 T079 |
 
 ---
 
-**下一步：** **文档消噪收口 ✅**（P2-2 · P3-9～17）→ Phase E 或 POST-W14 选开
+**下一步：** **T079** · Report 开启 / 默认优先 `GET life/volumes`（flag + 登录案例）

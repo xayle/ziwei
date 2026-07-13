@@ -2,21 +2,23 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.0 |
-| **日期** | 2026-07-12 |
+| **版本** | post-w14-1.1 |
+| **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ⏸ **打磨期优先** — 先完成 [EXECUTION-PRIORITY](FUSHENG-EXECUTION-PRIORITY.md) + [BAZI-ZIWEI-POLISH](FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md)，再开本文 |
+| **当前优先级** | ▶ **Phase E 已开** — [T071 门禁 ☑](../reports/T071-phase-e-gate-2026-07-14.md) → **下一项 T079**（开 volumes flag） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
-| **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) |
+| **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
 
 ---
 
 ## 开工状态
 
 ```text
-前置  T070 ☑（W14 打磨期收官）
-→ 本清单 T071 起
+前置  T070 ☑（W14 · W102-22 closeout）
+门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
+BE    T072–T074 机读已落地 ☑ · T075–T078 待/partial
+FE    下一项 T079–T080（Report 切 life/volumes 权威）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -77,11 +79,11 @@ P14  上线评估  T136–T140
 
 | ☐ | ID | 角色 | 任务 | 验收 |
 |---|-----|------|------|------|
-| ☐ | **T071** | ALL | 确认 [EXECUTION-PRIORITY](FUSHENG-EXECUTION-PRIORITY.md) **T063–T070 全 ☑**；§六 W14 终验 11+7 项已勾 | PR/发布说明附勾选截图 |
-| ☐ | **T071-BE** | BE | `make scorecard` 24/24 · explain batch fixture 绿 · `test_zw18_trust` 绿 | 无回归恶化 |
-| ☐ | **T071-FE** | FE | `npm run test:e2e -- fusheng-report` 绿 · Report 无「四维分析」 | T070 状态复核 |
+| ☑ | **T071** | ALL | 确认 [EXECUTION-PRIORITY](FUSHENG-EXECUTION-PRIORITY.md) **T063–T070 全 ☑**；§六 W14 终验 11+7 项已勾 | [T071 门禁报告](../reports/T071-phase-e-gate-2026-07-14.md) |
+| ☑ | **T071-BE** | BE | `make scorecard` 24/24 · explain/schema · `test_zw18_trust` 绿 | 2026-07-14 复验 |
+| ☑ | **T071-FE** | FE | `npm run test:e2e -- fusheng-report` 绿 · Report 无「四维分析」 | 11/11 passed |
 
-**未过 T071 不得进入 T072。**
+**T071 已过 → 进入 T072+。**
 
 ---
 
@@ -89,9 +91,9 @@ P14  上线评估  T136–T140
 
 | ☐ | ID | 角色 | 任务 | 主要文件 | 验收 |
 |---|-----|------|------|----------|------|
-| ☐ | **T072** | BE | **P3-01** `GET /api/v1/life/volumes/{case_id}` 返回 life-volume@1.0 | `routers/life.py` · `services/life_volume_service.py` | schema validate 绿 |
-| ☐ | **T073** | BE | colophon 后端聚合（iztro/wenmo/missing/disclaimer） | 同上 · **SRC-10** | 响应含 `colophon` 全字段 |
-| ☐ | **T074** | BE | explain 结果写入 volume sections（非 FE 拼 cite） | `life_volume_service.py` | 卷一/二/四/五 cite 来自 BE |
+| ☑ | **T072** | BE | **P3-01** `GET /api/v1/life/volumes/{case_id}` 返回 life-volume@1.0 | `routers/life.py` · `services/life_volume_service.py` | schema 契约绿 |
+| ☑ | **T073** | BE | colophon 后端聚合（iztro/wenmo/missing/disclaimer） | `_build_colophon` | 响应含 colophon |
+| ☑ | **T074** | BE | explain 结果写入 volume sections（非 FE 拼 cite） | `life_volume_service` | 卷一/二/四/五 explain 来自 BE |
 | ☐ | **T075** | BE | **P3-03** liunian Redis worker 生产配置 | `services/liunian_*` · docker/compose | 队列消费可观测 |
 | ☐ | **T076** | BE | **P3-02** `GET /api/v1/life/snippets` 草案（hooks 3–5 条） | `routers/life.py` | BOOK-GTM §5.3 形状 |
 | ☐ | **T077** | BE | **P3-04** archive-bundle 可选合并 name/zeri 指针 | `fusheng_archive` | OpenAPI 更新 |
@@ -303,4 +305,5 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-1.1 | 2026-07-14 | **T071 ☑** · T072–T074 机读落地 · 下一项 T079 |
 | post-w14-1.0 | 2026-07-12 | 初版：T071–T140；P3·GTM·Extension·平台·上线评估 |
