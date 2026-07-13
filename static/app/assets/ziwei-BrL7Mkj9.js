@@ -1,1 +1,0 @@
-import{g as e}from"./index-DeSZ8FKm.js";function a(t){const i=String(t??"").trim().toLowerCase();return i==="女"||i==="female"||i==="f"?"女":"男"}async function o(t){const{data:i}=await e.post("/api/v1/ziwei/full",{...t,gender:a(t.gender)});return i}async function r(t){const{data:i}=await e.post("/api/v1/ziwei/compatibility",t);return i}export{o as c,r as z};

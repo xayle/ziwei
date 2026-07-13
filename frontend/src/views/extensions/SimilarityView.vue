@@ -43,9 +43,9 @@ async function runSearch() {
         birth_day: day,
         birth_hour: hour,
         gender: data.gender === 'female' ? 'female' : data.gender === 'male' ? 'male' : 'unknown',
-        wuxing_ju_name: ziwei.value?.wuxing_ju_name,
-        life_palace_gz: ziwei.value?.life_palace_gz,
-        pattern_summary: bazi.value?.geju?.geju_name,
+        wuxing_ju_name: ziwei.value?.wuxing_ju_name ?? '',
+        life_palace_gz: ziwei.value?.life_palace_gz ?? '',
+        patterns: bazi.value?.geju?.geju_name ? [{ name: bazi.value.geju.geju_name }] : [],
         source_label: profile.activeProfile?.label || 'fusheng',
       })
     } catch {
@@ -86,11 +86,11 @@ onMounted(() => {
           <tr><th>案例</th><th>相似度</th><th>五行局</th><th>命宫</th></tr>
         </thead>
         <tbody>
-          <tr v-for="item in items" :key="item.case_id">
-            <td>{{ item.case_id.slice(0, 8) }}…</td>
-            <td>{{ Math.round(item.score * 100) }}%</td>
-            <td>{{ item.wuxing_ju_name || ziwei?.wuxing_ju_name || '—' }}</td>
-            <td>{{ item.life_palace_gz || ziwei?.life_palace_gz || '—' }}</td>
+          <tr v-for="item in items" :key="item.case.id">
+            <td>{{ item.case.chart_hash.slice(0, 8) }}…</td>
+            <td>{{ Math.round(item.similarity * 100) }}%</td>
+            <td>{{ item.case.wuxing_ju_name || ziwei?.wuxing_ju_name || '—' }}</td>
+            <td>{{ item.case.life_palace_gz || ziwei?.life_palace_gz || '—' }}</td>
           </tr>
         </tbody>
       </table>

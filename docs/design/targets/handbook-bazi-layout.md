@@ -2,8 +2,8 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | target-bazi-1.1 |
-| **状态** | S2 母版 A 已落地 `NewBaziView.vue`（2026-07-12） |
+| **版本** | target-bazi-1.2 |
+| **状态** | S2 母版 A 已落地 · **布局 v1.2 见 [`FUSHENG-BAZI-PAGE-DESIGN.md`](../FUSHENG-BAZI-PAGE-DESIGN.md)** |
 | **日期** | 2026-07-12 |
 | **页面** | `/new/bazi` · `NewBaziView.vue` |
 | **母版** | Chart-Centric（§2.6） |

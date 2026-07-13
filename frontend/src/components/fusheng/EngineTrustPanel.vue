@@ -7,7 +7,7 @@ import type {
   PillarDetailRow,
   ProvenanceRow,
 } from '@/utils/buildEngineTrustDisplay'
-import { formatMissingFieldLine, formatTrustValidationLine, trustLineTone } from '@/utils/buildEngineTrustDisplay'
+import { formatMissingFieldLine, formatTrustValidationLine } from '@/utils/buildEngineTrustDisplay'
 
 const props = defineProps<{
   missingFields?: string[]

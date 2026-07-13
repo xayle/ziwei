@@ -85,6 +85,9 @@
   --bazi-layer-structure-bg: var(--surface);
   --bazi-layer-trust-bg: var(--trust-alert-surface);
   --bazi-layer-explain-bg: var(--surface-2);
+  /* 八字册页 register 表（skin-preview §11 · handbook-bazi-layout） */
+  --register-ink: var(--brand-ink);
+  --register-muted: var(--text-3);
 
   /* 语义色 */
   --success-dark: #15803d;
@@ -263,6 +266,7 @@ body {
 body {
   background-color: var(--bg);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 180px;
 }
 
 a { color: var(--accent-dark); text-decoration: none; }

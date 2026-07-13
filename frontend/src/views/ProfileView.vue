@@ -317,13 +317,6 @@ const completeness = computed(() => getProfileCompleteness(profileSnapshot.value
 const missingFields = computed(() => getMissingProfileFields(profileSnapshot.value))
 const timeConfidence = computed(() => getTimeConfidence(profileSnapshot.value))
 
-const profileDisplayLabel = computed(() => {
-  const label = profile.activeProfile?.label?.trim()
-  if (label) return label
-  const name = [form.surname, form.givenName].filter(Boolean).join('')
-  return name || '未命名档案'
-})
-
 const engineSummaryItems = computed(() => {
   const s = engineSummary.value
   if (!s) return [] as Array<{ label: string; value: string }>

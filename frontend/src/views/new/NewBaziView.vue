@@ -434,13 +434,6 @@ const dayunExplainBlocks = computed(() => {
   ]
 })
 
-const defaultExplainOpenId = computed(() => {
-  const classical = explainAnalysisBlocks.value.find((block) => block.layer === 'classical')
-  if (classical) return classical.id
-  const fallback = mainExplainBlocks.value.find((block) => block.layer === 'classical')
-  return fallback?.id ?? explainAnalysisBlocks.value[0]?.id ?? 'bazi-0'
-})
-
 const explainPanelKey = computed(() => (
   explainAnalysisBlocks.value.map((block) => block.id).join('|') || 'engine-only'
 ))
@@ -587,6 +580,7 @@ onMounted(() => {
               :columns="columns"
               :active-key="activeKey"
               :hidden-contrib-by-ten-god="hiddenContrib"
+              :chart-shensha="result?.shensha"
               :show-detail-rows="true"
               variant="spread"
             />

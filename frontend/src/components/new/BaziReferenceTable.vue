@@ -35,10 +35,13 @@ const props = withDefaults(defineProps<{
   hiddenContribByTenGod?: Record<string, number>
   showDetailRows?: boolean
   variant?: 'default' | 'spread'
+  /** 命局神煞清单，用于册页神煞行对齐对照 */
+  chartShensha?: Array<{ name?: string | null; priority?: string | null }>
 }>(), {
   activeKey: 'day',
   showDetailRows: true,
   variant: 'default',
+  chartShensha: () => [],
 })
 
 const hiddenContribRows = computed(() => {
@@ -53,6 +56,18 @@ const hiddenContribMax = computed(() => {
   const scores = hiddenContribRows.value.map(([, score]) => score)
   return scores.length ? Math.max(...scores) : 1
 })
+
+const inkGlyphs = computed(() => props.variant === 'spread')
+
+function glyphStemStyle(stem?: string): Record<string, string> | undefined {
+  if (inkGlyphs.value) return undefined
+  return { color: stemColor(stem) }
+}
+
+function glyphBranchStyle(branch?: string): Record<string, string> | undefined {
+  if (inkGlyphs.value) return undefined
+  return { color: branchColor(branch) }
+}
 
 const STEM_COLORS: Record<string, string> = {
   甲: '#3d6b48',
@@ -87,6 +102,10 @@ function textOrMissing(value?: string | null): string {
   return trimmed ? trimmed : '缺失'
 }
 
+function isMissing(value?: string | null): boolean {
+  return !value?.trim()
+}
+
 function stemColor(stem?: string): string {
   return stem ? (STEM_COLORS[stem] || '#6b7280') : '#9ca3af'
 }
@@ -96,9 +115,81 @@ function branchColor(branch?: string): string {
 }
 
 function shenshaChipClass(polarity?: string | null): string {
-  if (polarity === '+') return 'shensha-chip--auspicious'
-  if (polarity === '-') return 'shensha-chip--inauspicious'
-  return 'shensha-chip--neutral'
+  if (polarity === '+') return 'shensha-item--auspicious'
+  if (polarity === '-') return 'shensha-item--inauspicious'
+  return 'shensha-item--neutral'
+}
+
+function displayShensha(items?: ShenshaChip[]): ShenshaChip[] {
+  const seen = new Set<string>()
+  const out: ShenshaChip[] = []
+  for (const item of items ?? []) {
+    const name = item.name.trim()
+    if (!name || name === '缺失' || seen.has(name)) continue
+    seen.add(name)
+    out.push({ name, polarity: item.polarity ?? null })
+  }
+  return out
+}
+
+type ShenshaMatrixRow = {
+  name: string
+  present: boolean
+  polarity?: string | null
+}
+
+function shenshaPriorityRank(priority?: string | null): number {
+  if (priority === 'A') return 0
+  if (priority === 'B') return 1
+  if (priority === 'C') return 2
+  return 3
+}
+
+const shenshaCatalog = computed(() => {
+  const catalog = new Map<string, { priority?: string | null }>()
+
+  for (const item of props.chartShensha ?? []) {
+    const name = item.name?.trim()
+    if (!name || name === '缺失') continue
+    catalog.set(name, { priority: item.priority ?? null })
+  }
+
+  for (const col of props.columns) {
+    for (const item of displayShensha(col.shensha)) {
+      if (!catalog.has(item.name)) {
+        catalog.set(item.name, { priority: null })
+      }
+    }
+  }
+
+  return [...catalog.entries()]
+    .sort((a, b) => {
+      const rankDiff = shenshaPriorityRank(a[1].priority) - shenshaPriorityRank(b[1].priority)
+      if (rankDiff !== 0) return rankDiff
+      return a[0].localeCompare(b[0], 'zh-CN')
+    })
+    .map(([name]) => name)
+})
+
+function shenshaMatrixRows(col: BaziColumn): ShenshaMatrixRow[] {
+  const present = new Map(
+    displayShensha(col.shensha).map((item) => [item.name, item.polarity ?? null]),
+  )
+  return shenshaCatalog.value.map((name) => ({
+    name,
+    present: present.has(name),
+    polarity: present.get(name) ?? null,
+  }))
+}
+
+function shenshaItemClass(row: ShenshaMatrixRow): string[] {
+  if (!row.present) return ['shensha-item--absent']
+  return ['shensha-item--present', shenshaChipClass(row.polarity)]
+}
+
+function registerCellText(value?: string | null): string {
+  if (props.variant === 'spread' && isMissing(value)) return '—'
+  return textOrMissing(value)
 }
 </script>
 
@@ -115,17 +206,21 @@ function shenshaChipClass(polarity?: string | null): string {
       </div>
     </div>
 
-    <div class="bazi-card__table-wrap">
+    <div class="bazi-card__table-wrap" :class="{ 'bazi-register-wrap': variant === 'spread' }">
       <table class="bazi-table bazi-ref-table" :class="{ 'bazi-table--register': variant === 'spread' }">
-        <colgroup>
+        <colgroup v-if="variant === 'spread'">
+          <col class="bazi-table__label-col" />
+          <col span="6" class="bazi-table__data-col" />
+        </colgroup>
+        <colgroup v-else>
           <col class="bazi-table__label-col" />
           <col class="bazi-table__flow-col" />
           <col class="bazi-table__flow-col" />
           <col span="4" class="bazi-table__pillar-col" />
         </colgroup>
         <thead>
-          <tr>
-            <th class="bazi-table__corner">日期</th>
+          <tr class="bazi-table__row bazi-table__row--head">
+            <th class="bazi-table__corner">{{ variant === 'spread' ? '列' : '日期' }}</th>
             <th
               v-for="col in props.columns"
               :key="`${col.key}-head`"
@@ -138,19 +233,19 @@ function shenshaChipClass(polarity?: string | null): string {
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr class="bazi-table__row bazi-table__row--main">
             <th class="bazi-table__row-label">主星</th>
             <td
               v-for="col in props.columns"
               :key="`${col.key}-mainStar`"
               class="bazi-table__cell bazi-table__cell--main"
-              :class="{ 'is-active': col.key === props.activeKey }"
+              :class="{ 'is-active': col.key === props.activeKey, 'bazi-table__missing': isMissing(col.mainStar) }"
             >
-              {{ textOrMissing(col.mainStar) }}
+              {{ registerCellText(col.mainStar) }}
             </td>
           </tr>
 
-          <tr>
+          <tr class="bazi-table__row bazi-table__row--glyph">
             <th class="bazi-table__row-label">天干</th>
             <td
               v-for="col in props.columns"
@@ -158,13 +253,17 @@ function shenshaChipClass(polarity?: string | null): string {
               class="bazi-table__cell bazi-table__cell--stem"
               :class="{ 'is-active': col.key === props.activeKey }"
             >
-              <span class="bazi-table__glyph" :style="{ color: stemColor(col.stem) }">
-                {{ textOrMissing(col.stem) }}
+              <span
+                class="bazi-table__glyph"
+                :class="{ 'bazi-table__missing': isMissing(col.stem) }"
+                :style="glyphStemStyle(col.stem)"
+              >
+                {{ registerCellText(col.stem) }}
               </span>
             </td>
           </tr>
 
-          <tr>
+          <tr class="bazi-table__row bazi-table__row--glyph bazi-table__row--glyph-last">
             <th class="bazi-table__row-label">地支</th>
             <td
               v-for="col in props.columns"
@@ -172,13 +271,17 @@ function shenshaChipClass(polarity?: string | null): string {
               class="bazi-table__cell bazi-table__cell--branch"
               :class="{ 'is-active': col.key === props.activeKey }"
             >
-              <span class="bazi-table__glyph" :style="{ color: branchColor(col.branch) }">
-                {{ textOrMissing(col.branch) }}
+              <span
+                class="bazi-table__glyph"
+                :class="{ 'bazi-table__missing': isMissing(col.branch) }"
+                :style="glyphBranchStyle(col.branch)"
+              >
+                {{ registerCellText(col.branch) }}
               </span>
             </td>
           </tr>
 
-          <tr v-if="showDetailRows">
+          <tr v-if="showDetailRows" class="bazi-table__row bazi-table__row--hidden">
             <th class="bazi-table__row-label">藏干</th>
             <td
               v-for="col in props.columns"
@@ -188,81 +291,97 @@ function shenshaChipClass(polarity?: string | null): string {
             >
               <div v-if="col.hiddenStems?.length" class="hidden-list">
                 <div v-for="line in col.hiddenStems" :key="`${col.key}-${line.stem}-${line.tenGod}`" class="hidden-line">
-                  <span class="hidden-line__stem" :style="{ color: stemColor(line.stem) }">{{ line.stem }}</span>
-                  <span class="hidden-line__god">{{ line.tenGod || '缺失' }}</span>
+                  <span
+                    class="hidden-line__stem"
+                    :style="inkGlyphs ? undefined : { color: stemColor(line.stem) }"
+                  >{{ line.stem }}</span>
+                  <span class="hidden-line__sep" aria-hidden="true">·</span>
+                  <span class="hidden-line__god">{{ line.tenGod || '—' }}</span>
                 </div>
               </div>
-              <span v-else class="bazi-table__missing">缺失</span>
+              <span v-else class="bazi-table__missing">—</span>
             </td>
           </tr>
 
-          <tr v-if="showDetailRows">
+          <tr v-if="showDetailRows" class="bazi-table__row bazi-table__row--meta">
             <th class="bazi-table__row-label">星运</th>
             <td
               v-for="col in props.columns"
               :key="`${col.key}-xingyun`"
               class="bazi-table__cell"
-              :class="{ 'is-active': col.key === props.activeKey }"
+              :class="{ 'is-active': col.key === props.activeKey, 'bazi-table__missing': isMissing(col.xingyun) }"
             >
-              {{ textOrMissing(col.xingyun) }}
+              {{ registerCellText(col.xingyun) }}
             </td>
           </tr>
 
-          <tr v-if="showDetailRows">
+          <tr v-if="showDetailRows" class="bazi-table__row bazi-table__row--meta">
             <th class="bazi-table__row-label">自坐</th>
             <td
               v-for="col in props.columns"
               :key="`${col.key}-selfSeat`"
               class="bazi-table__cell"
-              :class="{ 'is-active': col.key === props.activeKey }"
+              :class="{ 'is-active': col.key === props.activeKey, 'bazi-table__missing': isMissing(col.selfSeat) }"
             >
-              {{ textOrMissing(col.selfSeat) }}
+              {{ registerCellText(col.selfSeat) }}
             </td>
           </tr>
 
-          <tr v-if="showDetailRows">
+          <tr v-if="showDetailRows" class="bazi-table__row bazi-table__row--meta">
             <th class="bazi-table__row-label">空亡</th>
             <td
               v-for="col in props.columns"
               :key="`${col.key}-void`"
               class="bazi-table__cell"
-              :class="{ 'is-active': col.key === props.activeKey }"
+              :class="{ 'is-active': col.key === props.activeKey, 'bazi-table__missing': isMissing(col.void) }"
             >
-              {{ textOrMissing(col.void) }}
+              {{ registerCellText(col.void) }}
             </td>
           </tr>
 
-          <tr v-if="showDetailRows">
+          <tr v-if="showDetailRows" class="bazi-table__row bazi-table__row--meta">
             <th class="bazi-table__row-label">纳音</th>
             <td
               v-for="col in props.columns"
               :key="`${col.key}-nayin`"
               class="bazi-table__cell bazi-table__cell--nayin"
-              :class="{ 'is-active': col.key === props.activeKey }"
+              :class="{ 'is-active': col.key === props.activeKey, 'bazi-table__missing': isMissing(col.nayin) }"
             >
-              {{ textOrMissing(col.nayin) }}
+              {{ registerCellText(col.nayin) }}
             </td>
           </tr>
 
-          <tr v-if="showDetailRows">
+          <tr v-if="showDetailRows" class="bazi-table__row bazi-table__row--shensha">
             <th class="bazi-table__row-label">神煞</th>
             <td
               v-for="col in props.columns"
               :key="`${col.key}-shensha`"
               class="bazi-table__cell bazi-table__cell--shensha"
               :class="{ 'is-active': col.key === props.activeKey }"
+              :style="variant === 'spread' && shenshaCatalog.length ? { '--shensha-rows': shenshaCatalog.length } : undefined"
             >
-              <div v-if="col.shensha?.length" class="shensha-list">
-                <span
-                  v-for="item in col.shensha"
+              <ul v-if="variant === 'spread' && shenshaCatalog.length" class="shensha-stack shensha-stack--matrix">
+                <li
+                  v-for="row in shenshaMatrixRows(col)"
+                  :key="`${col.key}-${row.name}`"
+                  class="shensha-item"
+                  :class="shenshaItemClass(row)"
+                  :aria-hidden="!row.present"
+                >
+                  {{ row.name }}
+                </li>
+              </ul>
+              <ul v-else-if="displayShensha(col.shensha).length" class="shensha-stack">
+                <li
+                  v-for="item in displayShensha(col.shensha)"
                   :key="`${col.key}-${item.name}`"
-                  class="shensha-chip"
+                  class="shensha-item shensha-item--present"
                   :class="shenshaChipClass(item.polarity)"
                 >
                   {{ item.name }}
-                </span>
-              </div>
-              <span v-else class="bazi-table__missing">缺失</span>
+                </li>
+              </ul>
+              <span v-else class="bazi-table__missing">—</span>
             </td>
           </tr>
         </tbody>
@@ -549,133 +668,254 @@ function shenshaChipClass(polarity?: string | null): string {
   min-width: 100%;
 }
 
+.bazi-register-wrap {
+  background: var(--surface);
+}
+
 .bazi-table--register {
+  min-width: 100%;
   table-layout: fixed;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.bazi-table--register th,
+.bazi-table--register td {
+  border: 1px solid var(--border);
+  padding: 0;
+  margin: 0;
+  background: var(--surface);
+  text-align: center;
+  vertical-align: middle;
 }
 
 .bazi-table--register .bazi-table__label-col {
-  width: 72px;
+  width: 56px;
 }
 
-.bazi-table--register .bazi-table__flow-col {
-  width: 10%;
-}
-
-.bazi-table--register .bazi-table__pillar-col {
-  width: 15%;
+.bazi-table--register .bazi-table__data-col {
+  width: calc((100% - 56px) / 6);
 }
 
 .bazi-table--register .bazi-table__corner,
 .bazi-table--register .bazi-table__row-label {
-  width: 72px;
-  background: var(--surface-2);
-  color: var(--brand-mist);
+  width: 56px;
+  color: var(--register-muted);
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  writing-mode: horizontal-tb;
 }
 
 .bazi-table--register .bazi-table__head {
-  background: var(--surface-2);
-  color: var(--brand-mist);
+  color: var(--register-muted);
   font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  border-bottom: 1px solid var(--border-md);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
 }
 
 .bazi-table--register .bazi-table__head.is-active {
-  background: rgba(240, 224, 199, 0.45);
-  box-shadow: inset 0 2px 0 var(--brand-gold);
-  color: var(--brand-ink);
+  color: var(--register-ink);
+  font-weight: 600;
+}
+
+.bazi-table--register .bazi-table__head.is-active .bazi-table__head-label::after {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 2px;
+  margin: 3px auto 0;
+  background: var(--brand-cinnabar);
 }
 
 .bazi-table--register .bazi-table__head-badge {
   display: block;
-  margin: 6px auto 0;
-  width: fit-content;
-  border-radius: 2px;
+  margin: 1px auto 0;
   font-family: var(--font-display);
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--brand-cinnabar);
+  font-weight: 500;
 }
 
-.bazi-table--register .bazi-table__cell.is-active {
-  background: rgba(240, 224, 199, 0.22);
+.bazi-table--register .bazi-table__cell.is-active .bazi-table__glyph:not(.bazi-table__missing) {
+  color: var(--register-ink);
+  font-weight: 700;
+}
+
+.bazi-table--register .bazi-table__cell {
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--register-ink);
+  letter-spacing: 0.04em;
+}
+
+.bazi-table--register .bazi-table__cell.bazi-table__missing {
+  color: var(--register-muted);
+  font-weight: 300;
+  opacity: 0.45;
+}
+
+.bazi-table--register .bazi-table__row--head th {
+  height: 42px;
+}
+
+.bazi-table--register .bazi-table__row--main th,
+.bazi-table--register .bazi-table__row--main td {
+  height: 34px;
+}
+
+.bazi-table--register .bazi-table__row--glyph th,
+.bazi-table--register .bazi-table__row--glyph td {
+  height: 46px;
+}
+
+.bazi-table--register .bazi-table__row--glyph-last th,
+.bazi-table--register .bazi-table__row--glyph-last td {
+  border-bottom-color: var(--border-md);
+}
+
+.bazi-table--register .bazi-table__row--hidden th,
+.bazi-table--register .bazi-table__row--hidden td {
+  height: 66px;
+}
+
+.bazi-table--register .bazi-table__row--meta th,
+.bazi-table--register .bazi-table__row--meta td {
+  height: 34px;
+}
+
+.bazi-table--register .bazi-table__row--shensha th,
+.bazi-table--register .bazi-table__row--shensha td {
+  height: auto;
+  min-height: max(78px, calc(var(--shensha-rows, 4) * 18px + 16px));
 }
 
 .bazi-table--register .bazi-table__cell--main {
   font-family: var(--font-display);
-  font-size: 13px;
-  letter-spacing: 0.04em;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--register-ink);
+  font-weight: 500;
+}
+
+.bazi-table--register .bazi-table__cell--main.bazi-table__missing {
+  font-weight: 400;
 }
 
 .bazi-table--register .bazi-table__glyph {
-  font-size: clamp(26px, 2.6vw, 30px);
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.2vw, 26px);
   font-weight: 600;
+  line-height: 1;
+  color: var(--register-ink);
 }
 
 .bazi-table--register .hidden-list {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 72px;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  padding: 4px 2px;
 }
 
 .bazi-table--register .hidden-line {
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .bazi-table--register .hidden-line__stem {
   font-family: var(--font-display);
   font-weight: 600;
+  color: var(--register-ink);
+}
+
+.bazi-table--register .hidden-line__sep {
+  color: var(--register-muted);
+  font-size: 10px;
+  opacity: 0.7;
 }
 
 .bazi-table--register .hidden-line__god {
   font-family: var(--font-display);
-  font-size: 12px;
-  color: var(--brand-mist);
+  font-size: 11px;
+  color: var(--register-muted);
+  font-weight: 400;
 }
 
 .bazi-table--register .bazi-table__cell--nayin {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--register-ink);
+  letter-spacing: 0.04em;
 }
 
-.bazi-table--register .shensha-list {
+.bazi-table--register .shensha-stack {
+  list-style: none;
+  margin: 0;
+  padding: 6px 4px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 2px 0;
+  gap: 2px;
 }
 
-.bazi-table--register .shensha-chip {
-  border-radius: 2px;
-  padding: 1px 7px;
-  font-size: 11px;
-  font-family: var(--font-display);
-  letter-spacing: 0.06em;
-  background: var(--surface);
+.bazi-table--register .shensha-stack--matrix {
+  gap: 1px;
+  justify-content: flex-start;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
-.bazi-table--register .shensha-chip--neutral {
-  color: var(--brand-mist);
-  border: 1px solid var(--border);
+.bazi-table--register .shensha-item--present {
+  color: var(--register-ink);
+  font-weight: 600;
+  opacity: 1;
 }
 
-.bazi-table--register .shensha-chip--auspicious {
-  color: var(--brand-ink);
-  border: 1px solid var(--border-md);
-  border-left: 2px solid var(--brand-gold);
-}
-
-.bazi-table--register .shensha-chip--inauspicious {
+.bazi-table--register .shensha-item--present.shensha-item--inauspicious {
   color: var(--brand-cinnabar);
-  border: 1px solid var(--border-md);
-  border-left: 2px solid var(--brand-cinnabar);
+}
+
+.bazi-table--register .shensha-item--absent {
+  color: var(--register-muted);
+  font-weight: 300;
+  opacity: 0.16;
+  user-select: none;
+}
+
+.bazi-table--register .shensha-item {
+  font-family: var(--font-display);
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.bazi-table--register .shensha-item--neutral,
+.bazi-table--register .shensha-item--auspicious {
+  color: inherit;
 }
 
 .bazi-table--register .bazi-table__missing {
   font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  color: var(--register-muted);
+  font-weight: 300;
+  opacity: 0.45;
+  letter-spacing: 0;
 }
 
 .bazi-card--spread .bazi-card__contrib {

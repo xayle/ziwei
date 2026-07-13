@@ -12,6 +12,9 @@
 | `04-ziwei-timeline.drawio` | `/new/ziwei/timeline` | 卷三运限叙事（F5-4） |
 | `05-ziwei-plate.drawio` | `/new/ziwei` | 方盘 Hero、纯色底（F5-3） |
 | [`05-home-song-target.html`](05-home-song-target.html) | `/` | **首页 · 简约国风**（[`FUSHENG-MINIMAL-GUOFENG-DESIGN`](../FUSHENG-MINIMAL-GUOFENG-DESIGN.md)） |
+| [`06-bazi-self-check-target.html`](06-bazi-self-check-target.html) | `/new/bazi` | **八字 · 格物校勘脚注** v1.1（[`FUSHENG-BAZI-PAGE-DESIGN`](../FUSHENG-BAZI-PAGE-DESIGN.md) §四） |
+| [`07-bazi-page-layout-target.html`](07-bazi-page-layout-target.html) | `/new/bazi` | **八字 · 三档布局** 速览/结构/深读可切换（v1.2 §二） |
+| [`08-bazi-cover-spread-target.html`](08-bazi-cover-spread-target.html) | `/new/bazi` | **八字 · 卷封 + KPI + 单块 spread**（v1.2 §11.2 · P2） |
 | [`fusheng-home-song-aesthetic-mockup.png`](fusheng-home-song-aesthetic-mockup.png) | `/` | AI 概念稿（已废弃路线，仅作反例对照） |
 
 ## 如何打开
