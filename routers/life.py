@@ -7,15 +7,45 @@ from sqlmodel import Session
 
 from app.dependencies import RequiredUser
 from app.models import Case
+from app.schemas.life_snippets import LifeSnippetsResponseModel
 from app.schemas.life_volume import LifeVolumeResponseModel
 from app.schemas.relation_compat import RelationTypeEnum
 from db import get_session
+from services.life_snippets_service import build_life_snippets_for_case
 from services.life_volume_service import build_life_volumes_for_case
 from services.quota_service import enforce_quota
 from services.rate_limit import limiter
 from services.relation_appendix_service import build_relation_appendix_for_cases
 
 router = APIRouter(prefix="/api/v1/life", tags=["人生六卷"])
+
+
+@router.get(
+    "/snippets/{case_id}",
+    response_model=LifeSnippetsResponseModel,
+    summary="人生钩子句 snippets（BOOK-GTM §5.3 草案）",
+)
+@limiter.limit("30/minute")
+async def get_life_snippets(
+    request: Request,
+    case_id: str,
+    user: RequiredUser,
+    session: Session = Depends(get_session),
+    limit: int = Query(5, ge=3, le=5, description="返回钩子条数 3–5"),
+) -> LifeSnippetsResponseModel:
+    """
+    T076 / P3-02：抖音竖屏用短句（3–5 条），优先 engine 事实 + 至多一条典籍。
+    形状对齐 BOOK-GTM §5.3；叙事长文仍走 explain / life/volumes。
+    """
+    enforce_quota(request, "structured_text")
+    case = session.get(Case, case_id)
+    if case is None or case.deleted_at is not None or case.owner_id != user.id:
+        raise HTTPException(status_code=404, detail="案例不存在")
+    return build_life_snippets_for_case(
+        case,
+        limit=limit,
+        request_id=f"life-snip-{case_id}",
+    )
 
 
 @router.get(

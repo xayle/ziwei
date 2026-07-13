@@ -1825,7 +1825,7 @@
           "bazi"
         ],
         "summary": "提交流年年度报告生成任务（异步 202）",
-        "description": "D4: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。\n- 立即返回 202 Accepted + task_id\n- 轮询 GET /api/v1/bazi/liunian-report/{task_id} 获取结果",
+        "description": "D4 / T075: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。\n- 立即返回 202 Accepted + task_id（含 queue_backend=redis|asyncio）\n- 有 REDIS_URL / LIUNIAN_REDIS_URL 时入队，由 ``scripts/run_liunian_worker.py`` 消费\n- 无 Redis 时回退 asyncio.create_task（单进程开发）\n- 轮询 GET /api/v1/bazi/liunian-report/{task_id} 获取结果",
         "operationId": "submit_liunian_report_api_v1_bazi_liunian_report_post",
         "requestBody": {
           "content": {
@@ -9458,6 +9458,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ArchiveBundleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/life/snippets/{case_id}": {
+      "get": {
+        "tags": [
+          "人生六卷"
+        ],
+        "summary": "人生钩子句 snippets（BOOK-GTM §5.3 草案）",
+        "description": "T076 / P3-02：抖音竖屏用短句（3–5 条），优先 engine 事实 + 至多一条典籍。\n形状对齐 BOOK-GTM §5.3；叙事长文仍走 explain / life/volumes。",
+        "operationId": "get_life_snippets_api_v1_life_snippets__case_id__get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5,
+              "minimum": 3,
+              "description": "返回钩子条数 3–5",
+              "default": 5,
+              "title": "Limit"
+            },
+            "description": "返回钩子条数 3–5"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LifeSnippetsResponseModel"
                 }
               }
             }
@@ -19544,6 +19616,78 @@
         "title": "LifeArcModel",
         "description": "一生运势总论（Tab 0 总览精简卡片 + Tab 5 摘要完整展示）"
       },
+      "LifeSnippetHookModel": {
+        "properties": {
+          "tag": {
+            "type": "string",
+            "title": "Tag",
+            "description": "展示标签：事实 / 典籍 / 推算 …"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "≤80 字钩子句，适合竖屏字幕"
+          },
+          "layer": {
+            "type": "string",
+            "enum": [
+              "engine",
+              "classical"
+            ],
+            "title": "Layer",
+            "description": "engine=排盘事实；classical=典籍句"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag",
+          "text",
+          "layer"
+        ],
+        "title": "LifeSnippetHookModel"
+      },
+      "LifeSnippetsResponseModel": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "life-snippets@0.1",
+            "title": "Schema Version",
+            "default": "life-snippets@0.1"
+          },
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "hooks": {
+            "items": {
+              "$ref": "#/components/schemas/LifeSnippetHookModel"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Hooks",
+            "description": "3–5 条钩子句（草案默认取满可用事实）"
+          },
+          "vertical_title": {
+            "type": "string",
+            "title": "Vertical Title",
+            "description": "竖版分享卡卷目标题"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer",
+            "description": "短免责声明（抖音口播用）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "case_id",
+          "hooks",
+          "vertical_title",
+          "disclaimer"
+        ],
+        "title": "LifeSnippetsResponseModel"
+      },
       "LifeSuggestionResponse": {
         "properties": {
           "id": {
@@ -20202,6 +20346,18 @@
               }
             ],
             "title": "Error"
+          },
+          "queue_backend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Backend",
+            "description": "T075：redis（多实例队列）或 asyncio（单进程回退）"
           }
         },
         "type": "object",
