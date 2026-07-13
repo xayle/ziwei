@@ -7,7 +7,7 @@
 | **定位** | **前端相关开发文档的唯一权威** — 合并 UI 开发、方案、预警、上手、环境 |
 | **全栈入口** | [`DEVELOPMENT.md`](../DEVELOPMENT.md) |
 | **规矩·命令·插件** | [**`FUSHENG-DEV-AUTOPILOT.md`**](../FUSHENG-DEV-AUTOPILOT.md) ← **全自动权威** |
-| **执行打勾** | [`EXECUTION-REMAINING`](../plan/FUSHENG-EXECUTION-REMAINING.md) R061–R085 |
+| **执行打勾** | [`FUSHENG-DEV-PIPELINE`](../FUSHENG-DEV-PIPELINE.md) · BZ 细节见 [BAZI-ZIWEI-POLISH](../plan/FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md) |
 
 > **一句话**：算法写命盘，典籍写讲解，**前端编成书** — 宋式六卷辑录；UI 只暴露 **排盘推算 / 典籍依据 / 经验推断** 三层语义。
 
@@ -450,6 +450,7 @@ npm run lint
 npm run test
 npm run test:e2e -- fusheng-report fusheng-bazi-ziwei fusheng-anti-slop
 npm run build
+# → 输出写入 ../static/app/（FastAPI 静态入口）；**须与源码同 commit**（见 §12.3）
 
 # 根目录
 make scorecard
@@ -473,6 +474,16 @@ node scripts/compare-live-targets.mjs   # 需先 E2E 导出 targets
 - [ ] targets 三截图 vs 实机（或 compare JSON PASS）  
 - [ ] 防丑五问 15 格签字  
 - [ ] 衬线仅在 display 白名单  
+
+### 12.3 部署约定（TD-31 / P3-17）
+
+| 项 | 约定 |
+|----|------|
+| **运行时入口** | 后端挂载 `static/app/`（`/static/app/`） |
+| **源码真源** | `frontend/src/`；改 UI 后必须 `npm run build` |
+| **产物入库** | **`static/app/` 随 PR 提交**（单仓部署，CI 不单独发布 frontend dist） |
+| **禁止** | 只改 `frontend/src` 不重建静态度；或本地 `static/app` 长期落后于 main 却另开功能 PR |
+| **字体** | `frontend/public/fonts/*.woff2` 与 `static/app/fonts/` **已入库**（~4.3MB；pre-commit `maxkb` 已豁免） |
 
 ---
 

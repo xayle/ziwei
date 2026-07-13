@@ -19,22 +19,12 @@
 
 ---
 
-## 自托管计划（T021）
+## 自托管状态（T021 ✅）
 
-1. 从 [LXGW Neo ZhiSong](https://github.com/lxgw/LxgwNeoZhiSong) 子集化常用汉字 + 干支 + 卷名用字
-2. 输出 `LXGWNeoZhiSong-subset.woff2` 放本目录（约 4.3MB；pre-commit 已对 `public/fonts` 与 `static/app/fonts` 的 woff2 豁免体积检查）
-3. 在 `variables.css` 增加：
-
-```css
-@font-face {
-  font-family: "LXGW Neo ZhiSong";
-  src: url("/fonts/LXGWNeoZhiSong-subset.woff2") format("woff2");
-  font-display: swap;
-  font-weight: 400 700;
-}
-```
-
-4. 验收：Network 见 woff2；卷名与盘面用 display 栈渲染
+1. ~~从 LXGW Neo ZhiSong 子集化~~ → **已完成**：`LXGWNeoZhiSong-subset.woff2`（约 4.3MB）
+2. **路径**：本目录 + `static/app/fonts/`（**均已 git 跟踪**；pre-commit 对 woff2 豁免体积检查）
+3. `@font-face` 见 `frontend/src/assets/variables.css`
+4. 验收：autopilot **A33** · Network 见 woff2
 
 ---
 

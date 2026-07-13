@@ -72,6 +72,8 @@ tmp_pdf_text.txt
 output/
 web/
 frontend/test-results/
+frontend/ci-log.zip
+frontend/*.ci-log.zip
 
 # IDE / editor (local only)
 .cursor/
