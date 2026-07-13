@@ -4548,6 +4548,21 @@ export interface components {
             notes?: string | null;
             /** Tags */
             tags?: string | null;
+            /**
+             * Utm Source
+             * @description 渠道，如 douyin
+             */
+            utm_source?: string | null;
+            /**
+             * Utm Campaign
+             * @description 活动/话题
+             */
+            utm_campaign?: string | null;
+            /**
+             * Content Id
+             * @description 抖音视频 ID 等素材 ID
+             */
+            content_id?: string | null;
         };
         /**
          * CaseOut
@@ -4665,6 +4680,21 @@ export interface components {
             notes?: string | null;
             /** Tags */
             tags?: string[] | null;
+            /**
+             * Utm Source
+             * @description 渠道，如 douyin
+             */
+            utm_source?: string | null;
+            /**
+             * Utm Campaign
+             * @description 活动/话题
+             */
+            utm_campaign?: string | null;
+            /**
+             * Content Id
+             * @description 抖音视频 ID 等素材 ID
+             */
+            content_id?: string | null;
             /** Id */
             id: string;
             /**
@@ -9006,9 +9036,24 @@ export interface components {
         };
         /**
          * RegisterRequest
-         * @description 注册请求
+         * @description 注册请求（可选携带抖音等 utm 首触归因）
          */
         RegisterRequest: {
+            /**
+             * Utm Source
+             * @description 渠道，如 douyin
+             */
+            utm_source?: string | null;
+            /**
+             * Utm Campaign
+             * @description 活动/话题，如 geju_hook
+             */
+            utm_campaign?: string | null;
+            /**
+             * Content Id
+             * @description 抖音视频 ID 等素材 ID
+             */
+            content_id?: string | null;
             /** Username */
             username: string;
             /** Email */

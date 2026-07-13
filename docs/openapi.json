@@ -14327,6 +14327,42 @@
               }
             ],
             "title": "Tags"
+          },
+          "utm_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Source",
+            "description": "渠道，如 douyin"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Campaign",
+            "description": "活动/话题"
+          },
+          "content_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Id",
+            "description": "抖音视频 ID 等素材 ID"
           }
         },
         "type": "object",
@@ -14543,6 +14579,42 @@
               }
             ],
             "title": "Tags"
+          },
+          "utm_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Source",
+            "description": "渠道，如 douyin"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Campaign",
+            "description": "活动/话题"
+          },
+          "content_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Id",
+            "description": "抖音视频 ID 等素材 ID"
           },
           "id": {
             "type": "string",
@@ -24854,6 +24926,42 @@
       },
       "RegisterRequest": {
         "properties": {
+          "utm_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Source",
+            "description": "渠道，如 douyin"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Campaign",
+            "description": "活动/话题，如 geju_hook"
+          },
+          "content_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Id",
+            "description": "抖音视频 ID 等素材 ID"
+          },
           "username": {
             "type": "string",
             "title": "Username"
@@ -24874,7 +24982,7 @@
           "password"
         ],
         "title": "RegisterRequest",
-        "description": "注册请求"
+        "description": "注册请求（可选携带抖音等 utm 首触归因）"
       },
       "RejectBody": {
         "properties": {
