@@ -22,7 +22,7 @@
 ## 自托管计划（T021）
 
 1. 从 [LXGW Neo ZhiSong](https://github.com/lxgw/LxgwNeoZhiSong) 子集化常用汉字 + 干支 + 卷名用字
-2. 输出 `LXGWNeoZhiSong-subset.woff2` 放本目录
+2. 输出 `LXGWNeoZhiSong-subset.woff2` 放本目录（约 4.3MB；pre-commit 已对 `public/fonts` 与 `static/app/fonts` 的 woff2 豁免体积检查）
 3. 在 `variables.css` 增加：
 
 ```css
