@@ -15,7 +15,7 @@ def main() -> int:
     import os
 
     npm = "npm.cmd" if platform.system() == "Windows" else "npm"
-    env = {**os.environ, "CI": "1", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+    env = {**os.environ, "AUTOPILOT_E2E": "1", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
     proc = subprocess.run(
         [npm, "run", "test:e2e", "--", "fusheng-trial-read"],
         cwd=FRONTEND,

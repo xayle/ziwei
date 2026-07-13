@@ -42,7 +42,7 @@ def _run(cmd: list[str], *, cwd: Path | None = None) -> tuple[bool, str]:
     env = {**dict(__import__("os").environ), "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
     if _is_e2e_cmd(cmd):
         # Fresh Playwright webServer per suite — avoids ERR_CONNECTION_REFUSED after prior run exits.
-        env["CI"] = "1"
+        env["AUTOPILOT_E2E"] = "1"
     proc = subprocess.run(
         cmd,
         cwd=cwd or ROOT,
