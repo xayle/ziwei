@@ -156,6 +156,10 @@ jobs:
         run: python scripts/verify_surface_levels.py
         continue-on-error: true
 
+      - name: Relation PDF HTML gate (advisory · R086 T123)
+        run: python scripts/verify_relation_pdf_html.py
+        continue-on-error: true
+
       - name: Upload dev-cycle reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -164,6 +168,7 @@ jobs:
           path: |
             docs/reports/dev-cycle-latest.json
             docs/reports/content-hollowness-audit-latest.json
+            docs/reports/relation-pdf-html-check-latest.json
           if-no-files-found: ignore
 
       - name: sxtwl tests (best-effort)

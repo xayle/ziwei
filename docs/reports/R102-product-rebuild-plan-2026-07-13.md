@@ -287,15 +287,15 @@ make audit-content
 | TD-07 | 手写 API types 与 `schema.d.ts` 双轨 | `make sync-frontend-types` 后仍手写 | Week4 |
 | TD-08 | `formatRelationsSummaryText` fallback | ✅ W102-06 · vol2 0% | — |
 | TD-09 | 卷三大运展示 `0.0岁起`（float 未格式化） | `buildLifeVolumes` 卷三 adapter | ✅ W102-12 |
-| TD-10 | 六卷 PDF 与合盘 PDF 共用 `render_html_to_pdf` | 合盘 P3 见 [R086 §五](R086-relation-compat-sample-pdf-review-2026-07-13.md#五差距与优先级) | R102 之后 |
+| TD-10 | 六卷 PDF 与合盘 PDF 共用 `render_html_to_pdf` | 合盘 P3 见 [R086 §五](R086-relation-compat-sample-pdf-review-2026-07-13.md#五差距与优先级) | ✅ W102-P3 |
 | TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | ✅ W102-15 |
 | TD-12 | `archive-bundle` 参数缺口 + FE 零调用 | `fusheng_archive.py` · 无 TS client | ✅ W102-16/17 |
 | TD-13 | `lateZishi` 仅存 case tags，bundle 不读 | `case_fusheng_tags.py` · tags `lz:` | ✅ BE 2026-07-13 |
 | TD-14 | Q12 页面 explain 常量未接线 | ✅ 八字 + 紫微页 | Week2 |
 | TD-15 | `fetchLifeVolumes` 失败静默 fallback | `api/life.ts` · `ReportView` | Week2 |
-| TD-16 | CI 跑 `auto_verify_w14` ≠ 本地 autopilot 全量 | `.github/workflows/ci.yml` | W102-P3-02 |
+| TD-16 | CI 跑 `auto_verify_w14` ≠ 本地 autopilot 全量 | `.github/workflows/ci.yml` | ✅ W102-P3-02 |
 | TD-17 | `audit-content` 未进 CI | Makefile 有 · CI 无 | ✅ W102-20 · advisory |
-| TD-18 | `verify_surface_levels.py`（A45）未进 CI | AUTOPILOT | Week4 |
+| TD-18 | `verify_surface_levels.py`（A45）未进 CI | AUTOPILOT | ✅ advisory · `ci.yml` |
 | TD-19 | `auto_verify_r007` 只验 markdown 不验实现 | FE-BE Q12/Q6/Q9 | 🟡 |
 | TD-20 | AUTOPILOT 文称 A30–A59，脚本止于 A50 | 编号口径 | ✅ W102-00b 修正 |
 | TD-21 | 扩展页 partner 经度/性别（CompatView · ZiweiCompatView） | `extensions/*` | R086 之后 |
