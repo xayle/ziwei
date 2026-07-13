@@ -12,7 +12,10 @@ FRONTEND = ROOT / "frontend"
 
 
 def main() -> int:
+    import os
+
     npm = "npm.cmd" if platform.system() == "Windows" else "npm"
+    env = {**os.environ, "CI": "1", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
     proc = subprocess.run(
         [npm, "run", "test:e2e", "--", "fusheng-trial-read"],
         cwd=FRONTEND,
@@ -20,6 +23,7 @@ def main() -> int:
         text=True,
         encoding="utf-8",
         errors="replace",
+        env=env,
     )
     ok = proc.returncode == 0
     tail = (proc.stdout or "")[-1500:]
