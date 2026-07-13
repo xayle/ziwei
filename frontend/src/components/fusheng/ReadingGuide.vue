@@ -25,7 +25,7 @@ const emit = defineEmits<{
 
 const isPlain = computed(() => props.variant === 'plain')
 const showHeading = computed(() => props.showTitle !== false && !isPlain.value)
-const showResumeLink = computed(() => props.showResume !== false)
+const showResumeLink = computed(() => props.showResume === true || props.showResume === undefined)
 
 const displayParagraphs = computed(() => (
   props.readingParagraphs?.length ? props.readingParagraphs : [...DEFAULT_READING_GUIDE_PARAGRAPHS]

@@ -140,27 +140,16 @@ onUnmounted(() => {
 .shell--archive {
   position: relative;
   isolation: isolate;
-  background-color: #d4c8b4;
+  background-color: #e8dfd0;
   background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 4px,
-      rgba(26, 20, 16, 0.03) 4px,
-      rgba(26, 20, 16, 0.03) 5px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 3px,
-      rgba(139, 94, 52, 0.024) 3px,
-      rgba(139, 94, 52, 0.024) 4px
-    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%3E%3Crect width='4' height='1' fill='rgba(26,20,16,0.03)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='4' viewBox='0 0 5 4'%3E%3Crect width='1' height='4' fill='rgba(139,94,52,0.024)'/%3E%3C/svg%3E"),
     radial-gradient(ellipse 82% 56% at 50% 36%, rgba(255, 250, 245, 0.92), transparent 62%),
     radial-gradient(ellipse 130% 72% at 50% 100%, rgba(184, 137, 77, 0.28), transparent 48%),
     radial-gradient(ellipse 70% 45% at 0% 0%, rgba(184, 137, 77, 0.14), transparent 42%),
     radial-gradient(ellipse 65% 45% at 100% 0%, rgba(184, 137, 77, 0.12), transparent 40%),
-    linear-gradient(168deg, #e0d4c2 0%, #f0e9dc 32%, #f3ede3 56%, #cfc3ae 100%);
+    radial-gradient(ellipse 120% 80% at 50% 18%, #f0e9dc, transparent 52%),
+    radial-gradient(ellipse 100% 70% at 50% 88%, #cfc3ae, transparent 58%);
 }
 
 .shell--home::before,
@@ -186,14 +175,14 @@ onUnmounted(() => {
   border: 1px solid rgba(184, 137, 77, 0.42);
   opacity: 0.92;
   background:
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left top / 36px 1px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left top / 1px 36px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right top / 36px 1px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right top / 1px 36px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left bottom / 36px 1px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) left bottom / 1px 36px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right bottom / 36px 1px no-repeat,
-    linear-gradient(rgba(184, 137, 77, 0.75), rgba(184, 137, 77, 0.75)) right bottom / 1px 36px no-repeat;
+    rgba(184, 137, 77, 0.75) left top / 36px 1px no-repeat,
+    rgba(184, 137, 77, 0.75) left top / 1px 36px no-repeat,
+    rgba(184, 137, 77, 0.75) right top / 36px 1px no-repeat,
+    rgba(184, 137, 77, 0.75) right top / 1px 36px no-repeat,
+    rgba(184, 137, 77, 0.75) left bottom / 36px 1px no-repeat,
+    rgba(184, 137, 77, 0.75) left bottom / 1px 36px no-repeat,
+    rgba(184, 137, 77, 0.75) right bottom / 36px 1px no-repeat,
+    rgba(184, 137, 77, 0.75) right bottom / 1px 36px no-repeat;
 }
 
 .shell--home > .backend-banner,

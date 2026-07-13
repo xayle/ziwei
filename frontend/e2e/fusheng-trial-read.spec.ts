@@ -33,7 +33,7 @@ test.describe('P1 试读路径（R060）', () => {
     await gotoApp(page, 'report')
     const vol5 = page.getByTestId('report-vol5-chapter')
     await expect(vol5).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByRole('heading', { name: '读法导览' })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('complementary', { name: '读法导览' }).getByRole('heading', { name: '读法导览' })).toBeVisible({ timeout: 15_000 })
     await expect(vol5.getByText('事业宜深耕专业')).not.toBeVisible()
 
     const colophon = page.locator('#report-volume-colophon .colophon-footnote')

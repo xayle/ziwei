@@ -194,6 +194,9 @@ const { resumeLabel, lastVolumeId, save: saveReadingProgress, load: reloadReadin
   () => activeProfileId.value || 'default',
 )
 
+const resumeVolumeIdProp = computed((): LifeVolumeId | null => lastVolumeId.value)
+const resumeLabelProp = computed((): string | null => resumeLabel.value)
+
 function resumeReading() {
   if (!lastVolumeId.value) return
   navigateToChapter(lastVolumeId.value)
@@ -543,10 +546,11 @@ onMounted(() => {
       <article ref="reportBodyRef" class="report-body">
         <ReadingGuide
           :disclaimer="lifeVolumeDoc.disclaimer_block"
-          :resume-volume-id="lastVolumeId ?? undefined"
-          :resume-label="resumeLabel ?? undefined"
+          :resume-volume-id="resumeVolumeIdProp"
+          :resume-label="resumeLabelProp"
           :show-title="true"
           :show-layer-legend="true"
+          :show-resume="true"
           :reading-paragraphs="reportReadingParagraphs"
           :reading-loading="loading && !explainBatch"
           :reading-failed="reportReadingFailed"

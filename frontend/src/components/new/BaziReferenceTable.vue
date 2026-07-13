@@ -953,7 +953,7 @@ function registerCellText(value?: string | null): string {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--brand-gold-lt), var(--brand-gold));
+  background: var(--brand-gold);
 }
 
 .contrib-bar__value {

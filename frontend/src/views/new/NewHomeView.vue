@@ -146,8 +146,8 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
   pointer-events: none;
   user-select: none;
   opacity: 0.44;
-  -webkit-mask-image: linear-gradient(155deg, #000 58%, transparent 96%);
-  mask-image: linear-gradient(155deg, #000 58%, transparent 96%);
+  -webkit-mask-image: radial-gradient(ellipse 120% 90% at 30% 70%, #000 40%, transparent 78%);
+  mask-image: radial-gradient(ellipse 120% 90% at 30% 70%, #000 40%, transparent 78%);
 }
 
 .brand-spread__marginal img {
@@ -236,13 +236,7 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
   position: absolute;
   inset: 0;
   background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(184, 137, 77, 0.022) 3px,
-      rgba(184, 137, 77, 0.022) 4px
-    ),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='5' viewBox='0 0 4 5'%3E%3Crect width='4' height='1' fill='rgba(184,137,77,0.022)'/%3E%3C/svg%3E"),
     radial-gradient(ellipse 85% 75% at 15% 50%, rgba(184, 137, 77, 0.09), transparent 68%);
   pointer-events: none;
 }

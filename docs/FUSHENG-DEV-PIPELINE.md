@@ -131,7 +131,7 @@ pre-commit run --all-files   # 首次或大改后
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
 **已完成：** W102-00a～**22** 全 ☑ · **Phase B closeout 2026-07-13**  
-**下一项：** **W102-P3-01** FE（导出按钮 · partner 经度 · PNG 分享）；BE `export/pdf` · `export/png` · 模板分离已 ☑
+**下一项：** **W102-P3 FE ☑**（导出 · partner 经度 · multi_compat 矩阵 · explain batch）→ 可选 autopilot 全绿复验
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -190,7 +190,7 @@ pre-commit run --all-files   # 首次或大改后
 
 | 状态 | ID | 任务 | 参考 |
 |------|-----|------|------|
-| ☑ | **W102-P3-01** | 合盘 BE 全链路 ☑（PDF · PNG · explain · multi_compat · appendix · snapshots · cite · relation_type 模板）；FE 导出/经度 ☐ | [R086 §五](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
+| ☑ | **W102-P3-01** | 合盘 BE+FE 全链路 ☑（PDF · PNG · explain · multi_compat · 导出/经度/矩阵） | [R086 §五](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
 | ☑ | **W102-P3-02** | CI 改跑 `auto_verify_autopilot.py` | TD-16 · `ci.yml` autopilot job |
 | ☑ | **W102-P3-03** | `verify_relation_pdf_html` 升 blocking · couple/biz 双样例 · `POST /relation/export/png` | R086 P2 #8 · T123 |
 
@@ -313,4 +313,4 @@ Phase E  W17+          ⏸ 平台演进
 
 ---
 
-**下一步：** **W102-P3-01** FE（RelationCompatView 导出 PDF/PNG · partner 经度）— BE 已就绪；国风 P3 由你并行
+**下一步：** **W102-P3 ☑** · 可选跑 `auto_verify_autopilot.py` 复验全绿
