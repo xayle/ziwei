@@ -2721,7 +2721,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 支付 webhook stub（验签未实现，仅记录事件） */
+        /** 支付 webhook（沙箱写入 entitlement；验签未实现） */
         post: operations["payment_webhook_api_v1_payment_webhook_post"];
         delete?: never;
         options?: never;
@@ -8629,17 +8629,21 @@ export interface components {
             provider: "stripe" | "wechat";
             /**
              * Event Type
-             * @description checkout.completed | subscription.updated 等
+             * @description checkout.completed | subscription.updated | payment.success
              */
             event_type: string;
-            /** User Id */
+            /**
+             * User Id
+             * @description 目标用户 id（沙箱必填以写 entitlement）
+             */
             user_id?: number | null;
             /**
              * Plan
-             * @default pro
+             * @description free | volume_pass | full_book；pro/pass/book 为别名
+             * @default volume_pass
              * @enum {string}
              */
-            plan: "free" | "pro";
+            plan: "free" | "volume_pass" | "full_book" | "pro" | "pass" | "book";
             /** Raw */
             raw?: {
                 [key: string]: unknown;
@@ -8651,10 +8655,19 @@ export interface components {
             accepted: boolean;
             /** Plan Applied */
             plan_applied: string;
+            /** Entitlement Applied */
+            entitlement_applied?: ("free" | "volume_pass" | "full_book") | null;
+            /** User Id */
+            user_id?: number | null;
             /** Processed At */
             processed_at: string;
             /** Note */
             note: string;
+            /**
+             * Sandbox
+             * @default true
+             */
+            sandbox: boolean;
         };
         /**
          * PeriodForecastResponse

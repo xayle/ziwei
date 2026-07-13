@@ -9773,7 +9773,7 @@
         "tags": [
           "支付"
         ],
-        "summary": "支付 webhook stub（验签未实现，仅记录事件）",
+        "summary": "支付 webhook（沙箱写入 entitlement；验签未实现）",
         "operationId": "payment_webhook_api_v1_payment_webhook_post",
         "requestBody": {
           "content": {
@@ -23904,7 +23904,7 @@
           "event_type": {
             "type": "string",
             "title": "Event Type",
-            "description": "checkout.completed | subscription.updated 等"
+            "description": "checkout.completed | subscription.updated | payment.success"
           },
           "user_id": {
             "anyOf": [
@@ -23915,16 +23915,22 @@
                 "type": "null"
               }
             ],
-            "title": "User Id"
+            "title": "User Id",
+            "description": "目标用户 id（沙箱必填以写 entitlement）"
           },
           "plan": {
             "type": "string",
             "enum": [
               "free",
-              "pro"
+              "volume_pass",
+              "full_book",
+              "pro",
+              "pass",
+              "book"
             ],
             "title": "Plan",
-            "default": "pro"
+            "description": "free | volume_pass | full_book；pro/pass/book 为别名",
+            "default": "volume_pass"
           },
           "raw": {
             "additionalProperties": true,
@@ -23948,6 +23954,33 @@
             "type": "string",
             "title": "Plan Applied"
           },
+          "entitlement_applied": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "free",
+                  "volume_pass",
+                  "full_book"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entitlement Applied"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
           "processed_at": {
             "type": "string",
             "title": "Processed At"
@@ -23955,6 +23988,11 @@
           "note": {
             "type": "string",
             "title": "Note"
+          },
+          "sandbox": {
+            "type": "boolean",
+            "title": "Sandbox",
+            "default": true
           }
         },
         "type": "object",
