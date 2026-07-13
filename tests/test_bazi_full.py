@@ -272,3 +272,23 @@ def test_bazi_full_guichou_kongwang_and_pillar_shensha():
     assert "harm_summary" not in missing
     highlights = (data.get("shensha_summary") or {}).get("highlights") or []
     assert len(highlights) == len(set(highlights))
+
+
+def test_bazi_full_default_liunian_includes_current_calendar_year():
+    """Contract: default /full (no liunian_years) must return current-year liunian with pillar fields."""
+    from datetime import date
+
+    resp = client.post("/api/v1/bazi/full", json=_full_payload())
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    current_year = date.today().year
+    items = (data.get("liunian") or {}).get("items") or []
+    years = [item.get("year") for item in items]
+    assert current_year in years, f"liunian.items missing {current_year}, got {years}"
+
+    cur = next(item for item in items if item.get("year") == current_year)
+    for key in ("stem", "branch", "ten_god"):
+        assert cur.get(key), f"liunian {current_year} missing {key}"
+    assert isinstance(cur.get("hidden_stems"), list) and cur["hidden_stems"]
+    assert cur.get("nayin")
+    assert isinstance(cur.get("shensha"), list)
