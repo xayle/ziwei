@@ -123,7 +123,8 @@ def test_relation_export_pdf_endpoint(client: TestClient, monkeypatch: pytest.Mo
         assert COUPLE_PAYLOAD["person_a"]["label"] in html
         return b"%PDF-1.4 fake"
 
-    monkeypatch.setattr("services.pdf_exporter.render_html_to_pdf", _fake_pdf)
+    # relation_compat 顶部 from-import，必须 patch 路由模块内绑定名
+    monkeypatch.setattr("routers.relation_compat.render_html_to_pdf", _fake_pdf)
 
     resp = client.post("/api/v1/relation/export/pdf", json=COUPLE_PAYLOAD)
     assert resp.status_code == 200, resp.text
