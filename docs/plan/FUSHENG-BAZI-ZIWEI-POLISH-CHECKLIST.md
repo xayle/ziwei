@@ -2,11 +2,11 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | bz-polish-1.0 |
-| **日期** | 2026-07-12 |
-| **定位** | **只打磨八字/紫微 + 前端自检**；细节索引；**执行请用 [EXECUTION-REMAINING](./FUSHENG-EXECUTION-REMAINING.md)** |
+| **版本** | bz-polish-1.2 |
+| **日期** | 2026-07-14 |
+| **定位** | **只打磨八字/紫微 + 前端自检**；细节索引；**日常执行请用 [FUSHENG-DEV-PIPELINE](../FUSHENG-DEV-PIPELINE.md)** |
 | **不含** | GTM · Extension · 平台 E0–E1 · 付费墙 · snippets · 埋点漏斗（见 [POST-W14](FUSHENG-EXECUTION-PRIORITY-POST-W14.md) §暂停说明） |
-| **上级** | [INTEGRATED-DEV-PLAN](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) · [RISK-ALERT](../guides/FUSHENG-FRONTEND-RISK-ALERT.md) · [NODE-CHECKLIST](../guides/FUSHENG-NODE-CHECKLIST.md) |
+| **上级** | [INTEGRATED-DEV-PLAN](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md) · [RISK-ALERT](../guides/FUSHENG-FRONTEND-RISK-ALERT.md) · [AUTOPILOT](../FUSHENG-DEV-AUTOPILOT.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) |
 
 ---
@@ -14,9 +14,10 @@
 ## 开工状态
 
 ```text
-引擎 scorecard     24/24（基线绿，边缘项仍待补）
-主清单进度         T015–T055 ☑ · T046 ☑ · 待 T039/T048/T056–T070
-本清单             BZ001–BZ030 E1 待做 · BZ011–045 E3 ☑ · BZ046–086 大部 ☑ · BZ079–088 终验待签
+引擎 scorecard     24/24（A01 绿 · BZ001/BZ016 回归验收以此为准）
+主清单进度         T001–T070 ☑ · W102 24/24 ☑ · Phase D 合盘 ☑
+本清单             E1/E2/E3/F1/F2 ☑ · F3 大部 ☑ · BZ079–088 终验/签字可后置
+机读门禁           autopilot 30/30+20/20 · anti-slop A09/A50 覆盖 BZ064
 ```
 
 | 轨道 | 做完到 | 含义 |
@@ -30,9 +31,9 @@
 
 ## 零、怎么用本文（不用聊天）
 
-1. **主顺序仍走 T001→T070**；本清单 **BZ###** 为八字/紫微深度补漏，编号独立，可与 T 号并行。
+1. **日常主顺序走 [PIPELINE](../FUSHENG-DEV-PIPELINE.md)**；本清单 **BZ###** 为八字/紫微深度补漏与索引，编号独立。
 2. 每完成一条：`☐` → `☑`，提交信息写 `BZ0XX: 简述`。
-3. **BE 块**（BZ001–BZ045）可与前端 F2/F3 并行；**不得**用 advisory 结果覆盖 canonical 引擎。
+3. **不得**用 advisory 结果覆盖 canonical 引擎；scorecard / autopilot 为机读真源。
 4. Cursor 一句话：
 
    ```text
@@ -75,7 +76,7 @@ X   统一终验         BZ076–BZ088
 
 | ☐ | ID | 角色 | 任务 | 主要文件 / 参考 | 验收 |
 |---|-----|------|------|-----------------|------|
-| ☐ | **BZ001** | BE | **GT50** 回归无恶化；`ground_truth_cases.json` 与引擎 geju 对齐率 100% | `data/ground_truth_cases.json` · `make scorecard` | scorecard B-01~B-08 全 10 |
+| ☑ | **BZ001** | BE | **GT50** 回归无恶化；`ground_truth_cases.json` 与引擎 geju 对齐率 100% | `data/ground_truth_cases.json` · `make scorecard` | scorecard 24/24 · B 轨全 10 |
 | ☑ | **BZ002** | BE | `relations_summary` 稳定输出（合冲刑害/六合/三合等结构化） | `services/bazi_full_service.py` · `app/schemas/bazi.py` | `test_bazi_full_relations_summary_structure` |
 | ☑ | **BZ003** | BE | `shensha_summary` 与柱级 `shensha` 一致；空时显式 `[]` | 同上 | pillar↔summary pytest |
 | ☑ | **BZ004** | BE | `missing_fields` 覆盖：时柱未知、节气边界、双轨副盘 | `BaziFullRequest` · `bazi_full_service.py` | hour/jieqi/dual pytest |
@@ -105,7 +106,7 @@ make sync-frontend-types
 
 | ☐ | ID | 角色 | 任务 | 主要文件 / 参考 | 验收 |
 |---|-----|------|------|-----------------|------|
-| ☐ | **BZ016** | BE | **ZW20** 黄金集回归；`ziwei_ground_truth.json` 全绿 | `make scorecard` | scorecard Z-01~Z-12 全 10 |
+| ☑ | **BZ016** | BE | **ZW20** 黄金集回归；`ziwei_ground_truth.json` 全绿 | `make scorecard` | scorecard 24/24 · Z 轨全 10 |
 | ☑ | **BZ017** | BE | **ZW18 裁决**（P0-01）：1998-1-28 命宫 trust + `test_zw18_trust` | REGISTRY Z-11 · `tests/test_zw18_trust.py` | 裁决写入文档；测试绿 |
 | ☑ | **BZ018** | BE | `trust_level` 全 API 回传（P0-04）：verified / reference / advisory / degraded | `app/schemas/ziwei.py` | FE 契约 §十四 |
 | ☑ | **BZ019** | BE | **ZW03 双轨** by design：文墨/iztro 与引擎差异仅 advisory | PRODUCT.md 双轨原则 | colophon 脚注不覆盖盘 |
@@ -199,7 +200,7 @@ cd frontend && npm run test:e2e -- bazi
 | ☑ | **BZ061** | FE | 深度三档：概览 / 结构 / 深读 口径与八字一致 | `FushengZiweiView.vue` | 切换无布局跳 |
 | ☑ | **BZ062** | FE | `FushengZiweiTimeline` 运限分节 + sticky 日期 | `FushengZiweiTimeline.vue` | 卷三叙事感 |
 | ☑ | **BZ063** | FE | 宫位说明不用长 `interpretation_text` 充首屏 | plate 周边文案 | ≤80 字或折叠 |
-| ☐ | **BZ064** | ALL | 三门禁 + 防丑五问（紫微页） | RISK-ALERT §5.4 | 5 问全「是」 |
+| ☑ | **BZ064** | ALL | 三门禁 + 防丑五问（紫微页） | RISK-ALERT §5.4 · AUTOPILOT A09/A50 | anti-slop E2E + Q5 代理绿 |
 | ☑ | **BZ065** | FE | E2E：紫微加载 · 运限 · degraded | `e2e/*` | 绿 |
 
 **F2-验收：**
@@ -340,13 +341,13 @@ cd frontend && npm run test:e2e -- bazi ziwei fusheng-report
 | **GAP-Z01** | ZW18 命宫 trust 待裁决 + 测试 | 🟡 | BZ017 |
 | **GAP-Z02** | 宫干/十神部分空 | ✅ | `palace_ten_gods` missing_fields |
 | **GAP-Z03** | 右弼 ±1 advisory 未 UI 注明 | ✅ | BZ020 · BZ060 · trust advisory |
-| **GAP-E01** | `content_policy` / explain 路由未落地 | 🔴 | BZ011 · BZ031 |
-| **GAP-E02** | `ChartSnapshot` 服务未落地 | 🔴 | BZ012 |
-| **GAP-E03** | MVP-20 verified 未齐 | 🟡 | BZ035 |
+| **GAP-E01** | `content_policy` / explain 路由未落地 | ✅ | BZ011 · BZ031 ☑ |
+| **GAP-E02** | `ChartSnapshot` 服务未落地 | ✅ | BZ012 ☑ |
+| **GAP-E03** | MVP-20 verified 未齐 | ✅ | BZ035 ☑ |
 | **GAP-C01** | horoscope iztro/文墨对照脚本未建 | ✅ | BZ024–BZ025 已落地 |
 | **GAP-F01** | `quality-gate` 未含 scorecard/iztro | 🟢 | `--with-scorecard` + `make quality-gate-full` |
 
-状态图例：🔴 阻塞 M2/M3 · 🟡 advisory/可延期 · 🟢 已关闭
+状态图例：🔴 阻塞 · 🟡 advisory/可延期 · 🟢/✅ 已关闭
 
 ---
 
@@ -366,5 +367,6 @@ cd frontend && npm run test:e2e -- bazi ziwei fusheng-report
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| bz-polish-1.2 | 2026-07-14 | **P3-10～12** · GAP-E01–E03 ✅ · BZ001/016/064 ☑ · 入口改 PIPELINE |
 | bz-polish-1.1 | 2026-07-12 | FE 块 BZ046–075 进度；GAP-B01/B02 关闭；链 DEV-AUDIT |
 | bz-polish-1.0 | 2026-07-12 | 初版：八字紫微引擎边缘 + 三页自检 + 与 T015–T070 映射 |

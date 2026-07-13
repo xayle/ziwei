@@ -314,4 +314,4 @@ Phase E  W17+ / 文档消噪  ← 当前轨（P3-9～14 BZ/清单文案；可选
 
 ---
 
-**下一步：** **Phase D ☑ · autopilot 30/30+20/20** → 文档 P3 消噪（BZ header / EXECUTION-REMAINING / plan README）或 Phase E
+**下一步：** 文档消噪剩余 **P3-17**（static 部署策略）或 **Phase E**；BZ P3-10～12 ✅
