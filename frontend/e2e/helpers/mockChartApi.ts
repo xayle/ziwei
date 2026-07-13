@@ -404,7 +404,7 @@ export async function setupLoggedInApiMocks(page: Page) {
     },
   )
 
-  await page.route('**/api/v1/life/volumes/**', async (route) => {
+  await page.route('**/api/v1/life/volumes/*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -421,6 +421,45 @@ export async function setupLoggedInApiMocks(page: Page) {
         refresh_token: 'e2e-test-refresh',
       }),
     })
+  })
+
+  await page.route('**/api/v1/auth/logout', async (route) => {
+    await route.fulfill({ status: 204, body: '' })
+  })
+
+  await page.route('**/api/v1/cases/*', async (route) => {
+    const url = route.request().url()
+    if (url.includes('/snapshots')) {
+      await route.fallback()
+      return
+    }
+    if (route.request().method() === 'PATCH') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'case-e2e-001',
+          label: 'E2E 档案',
+          birth_dt: '1990-01-15T08:30:00',
+          gender: 'male',
+        }),
+      })
+      return
+    }
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'case-e2e-001',
+          label: 'E2E 档案',
+          birth_dt: '1990-01-15T08:30:00',
+          gender: 'male',
+        }),
+      })
+      return
+    }
+    await route.fallback()
   })
 }
 
@@ -534,6 +573,19 @@ export async function setupSnapshotApiMocks(page: Page, caseId = 'case-e2e-001')
             created_at: createdAt,
           },
         ]),
+      })
+      return
+    }
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'snap-e2e-new',
+          case_id: caseId,
+          kind: 'fusheng_report',
+          created_at: createdAt,
+        }),
       })
       return
     }
