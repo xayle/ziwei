@@ -6,7 +6,11 @@ import ResultStateCard from '@/components/new/ResultStateCard.vue'
 import { useProfileStore } from '@/stores/profile'
 import {
   RELATION_TYPE_OPTIONS,
+  relationExportPdf,
+  relationExportPng,
   relationFull,
+  saveBlobAsFile,
+  type RelationFullRequest,
   type RelationFullResponse,
   type RelationType,
 } from '@/api/relation'
@@ -23,11 +27,16 @@ const relationType = ref<RelationType>(
 const partnerBirthDt = ref('')
 const partnerGender = ref('female')
 const partnerLabel = ref('')
+const partnerLon = ref<number | null>(null)
+const partnerTz = ref('Asia/Shanghai')
 const supervisorId = ref<'a' | 'b'>('a')
 const showInference = ref(false)
 const loading = ref(false)
+const exportingPdf = ref(false)
+const exportingPng = ref(false)
 const error = ref('')
 const rawResult = ref<RelationFullResponse | null>(null)
+const lastRequest = ref<RelationFullRequest | null>(null)
 
 const display = computed(() => (rawResult.value ? buildRelationCompat(rawResult.value) : null))
 
@@ -45,6 +54,35 @@ function toIsoLocal(dtLocal: string): string {
   return dtLocal
 }
 
+function buildRelationRequest(): RelationFullRequest {
+  const lonB = Number.isFinite(partnerLon.value) ? partnerLon.value! : (profile.lon ?? 116.41)
+  return {
+    relation_type: relationType.value,
+    supervisor_id: relationType.value === 'supervisor_subordinate' ? supervisorId.value : undefined,
+    person_a: {
+      birth_datetime: toIsoLocal(profile.birthDt),
+      tz: profile.tz || 'Asia/Shanghai',
+      longitude: profile.lon,
+      gender: profile.gender || 'male',
+      label: profile.activeProfile?.label || '我',
+    },
+    person_b: {
+      birth_datetime: toIsoLocal(partnerBirthDt.value.trim()),
+      tz: partnerTz.value || 'Asia/Shanghai',
+      longitude: lonB,
+      gender: partnerGender.value,
+      label: partnerLabel.value.trim() || '对方',
+    },
+    options: { include_bazi: true, include_ziwei: true, liunian_year: new Date().getFullYear() },
+  }
+}
+
+function exportFilename(ext: 'pdf' | 'png'): string {
+  const labelA = profile.activeProfile?.label || '我'
+  const labelB = partnerLabel.value.trim() || '对方'
+  return `合盘-${labelA}-${labelB}.${ext}`
+}
+
 async function runRelation() {
   if (!profile.birthDt?.trim()) {
     error.value = '请先补全当前档案出生时间。'
@@ -58,31 +96,45 @@ async function runRelation() {
   loading.value = true
   error.value = ''
   rawResult.value = null
+  lastRequest.value = null
+
+  const body = buildRelationRequest()
 
   try {
-    rawResult.value = await relationFull({
-      relation_type: relationType.value,
-      supervisor_id: relationType.value === 'supervisor_subordinate' ? supervisorId.value : undefined,
-      person_a: {
-        birth_datetime: toIsoLocal(profile.birthDt),
-        tz: profile.tz || 'Asia/Shanghai',
-        longitude: profile.lon,
-        gender: profile.gender || 'male',
-        label: profile.activeProfile?.label || '我',
-      },
-      person_b: {
-        birth_datetime: toIsoLocal(partnerBirthDt.value.trim()),
-        tz: 'Asia/Shanghai',
-        longitude: 116.41,
-        gender: partnerGender.value,
-        label: partnerLabel.value.trim() || '对方',
-      },
-      options: { include_bazi: true, include_ziwei: true, liunian_year: new Date().getFullYear() },
-    })
+    rawResult.value = await relationFull(body)
+    lastRequest.value = body
   } catch {
     error.value = '关系合盘分析失败，请检查输入后重试。'
   } finally {
     loading.value = false
+  }
+}
+
+async function downloadRelationPdf() {
+  if (!lastRequest.value) return
+  exportingPdf.value = true
+  error.value = ''
+  try {
+    const blob = await relationExportPdf(lastRequest.value)
+    saveBlobAsFile(blob, exportFilename('pdf'))
+  } catch {
+    error.value = 'PDF 导出失败，请稍后重试。'
+  } finally {
+    exportingPdf.value = false
+  }
+}
+
+async function downloadRelationPng() {
+  if (!lastRequest.value) return
+  exportingPng.value = true
+  error.value = ''
+  try {
+    const blob = await relationExportPng(lastRequest.value)
+    saveBlobAsFile(blob, exportFilename('png'))
+  } catch {
+    error.value = '分享卡导出失败，请稍后重试。'
+  } finally {
+    exportingPng.value = false
   }
 }
 </script>
@@ -96,6 +148,24 @@ async function runRelation() {
     >
       <template #actions>
         <button class="fs-btn fs-btn--ghost" @click="router.push('/extensions')">返回工具箱</button>
+        <button
+          v-if="display && lastRequest"
+          class="fs-btn fs-btn--ghost"
+          :disabled="exportingPdf || exportingPng"
+          data-testid="relation-export-pdf"
+          @click="downloadRelationPdf"
+        >
+          {{ exportingPdf ? '导出中…' : '导出 PDF' }}
+        </button>
+        <button
+          v-if="display && lastRequest"
+          class="fs-btn fs-btn--ghost"
+          :disabled="exportingPdf || exportingPng"
+          data-testid="relation-export-png"
+          @click="downloadRelationPng"
+        >
+          {{ exportingPng ? '导出中…' : '分享 PNG' }}
+        </button>
       </template>
     </VolumeHead>
 
@@ -140,6 +210,27 @@ async function runRelation() {
             <option value="female">女</option>
             <option value="male">男</option>
           </select>
+        </label>
+        <label class="field">
+          <span>经度</span>
+          <input
+            v-model.number="partnerLon"
+            type="number"
+            step="0.001"
+            min="-180"
+            max="180"
+            :placeholder="String(profile.lon ?? 116.41)"
+            data-testid="relation-partner-lon"
+          />
+        </label>
+        <label class="field">
+          <span>时区</span>
+          <input
+            v-model="partnerTz"
+            type="text"
+            placeholder="Asia/Shanghai"
+            data-testid="relation-partner-tz"
+          />
         </label>
       </div>
       <button

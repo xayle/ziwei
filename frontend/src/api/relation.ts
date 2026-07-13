@@ -36,6 +36,24 @@ export async function relationFull(body: RelationFullRequest): Promise<RelationF
   return data
 }
 
+export async function relationExportPdf(body: RelationFullRequest): Promise<Blob> {
+  const { data } = await apiClient.post<Blob>('/api/v1/relation/export/pdf', body, {
+    responseType: 'blob',
+    timeout: 120_000,
+  })
+  return data
+}
+
+export async function relationExportPng(body: RelationFullRequest): Promise<Blob> {
+  const { data } = await apiClient.post<Blob>('/api/v1/relation/export/png', body, {
+    responseType: 'blob',
+    timeout: 60_000,
+  })
+  return data
+}
+
+export { saveBlobAsFile } from './fushengReport'
+
 export async function profileSummary(caseId: string): Promise<ProfileSummaryResponse> {
   const { data } = await apiClient.get<ProfileSummaryResponse>(`/api/v1/profile/${caseId}/summary`)
   return data

@@ -93,4 +93,31 @@ test.describe('关系合盘 fusheng-relation', () => {
     await page.getByTestId('relation-run').click()
     await expect(page.getByTestId('relation-result')).toBeVisible({ timeout: 10_000 })
   })
+
+  test('fusheng-relation-export：结果页可导出 PDF/PNG', async ({ page }) => {
+    await page.route('**/api/v1/relation/export/pdf', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/pdf',
+        body: Buffer.from('%PDF-1.4 e2e'),
+      })
+    })
+    await page.route('**/api/v1/relation/export/png', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'image/png',
+        body: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+      })
+    })
+    await fillMinimalProfile(page)
+    await gotoApp(page, 'relation/new?type=couple')
+    await page.getByTestId('relation-partner-birth').fill('1992-05-20T14:00')
+    await page.getByTestId('relation-partner-lon').fill('122.117')
+    await page.getByTestId('relation-run').click()
+    await expect(page.getByTestId('relation-result')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('relation-export-pdf')).toBeVisible()
+    await expect(page.getByTestId('relation-export-png')).toBeVisible()
+    await page.getByTestId('relation-export-pdf').click()
+    await page.getByTestId('relation-export-png').click()
+  })
 })
