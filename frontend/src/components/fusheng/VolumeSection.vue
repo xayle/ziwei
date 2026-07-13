@@ -12,23 +12,33 @@ function blockLayerLabel(block: AnalysisBlock): string {
 const props = defineProps<{
   section: VolumeSection
   volumeId?: string
+  /** 卷已锁定时强化展示（T092） */
+  volumeLocked?: boolean
 }>()
 
 const expanded = ref(!props.section.collapsed_default)
 
 const isInference = computed(() => props.section.layer === 'inference')
+const isLockTeaser = computed(() => props.section.id === 'locked' || props.volumeLocked === true)
 </script>
 
 <template>
   <section
     class="volume-section"
-    :class="{ 'volume-section--inference': isInference }"
+    :class="{
+      'volume-section--inference': isInference,
+      'volume-section--locked': isLockTeaser,
+    }"
     :data-volume="volumeId"
     :data-section="section.id"
+    :data-locked="isLockTeaser ? '1' : undefined"
   >
     <header class="volume-section__head">
       <div>
-        <h3 class="volume-section__heading">{{ section.heading }}</h3>
+        <h3 class="volume-section__heading">
+          <span v-if="isLockTeaser" class="volume-section__lock" aria-hidden="true">锁</span>
+          {{ section.heading }}
+        </h3>
         <span v-if="!section.blocks.length" class="volume-section__layer" :data-layer="section.layer">
           {{ CONTENT_LAYER_LABELS[section.layer] }}
         </span>
@@ -124,5 +134,19 @@ const isInference = computed(() => props.section.layer === 'inference')
 
 .volume-section--inference .volume-section__block {
   color: var(--brand-mist);
+}
+
+.volume-section--locked {
+  border-left: 3px solid var(--brand-cinnabar);
+  padding-left: 12px;
+  background: var(--surface);
+}
+
+.volume-section__lock {
+  display: inline-block;
+  margin-right: 6px;
+  font-size: 12px;
+  color: var(--brand-cinnabar);
+  letter-spacing: 0.08em;
 }
 </style>

@@ -72,7 +72,7 @@ export const PROVENANCE_LAYER_TRUST_LABELS: Record<string, string> = {
   modern_convention: '现代约定',
 }
 
-/** 打磨期：卷 locked 恒 false（FE-BE Q2） */
+/** GTM：卷 locked 由 life/volumes + entitlement 决定（T087/T092）；Adapter 仍为 false */
 export const LIFE_VOLUME_LOCKED_DEFAULT = false
 
 /** localStorage 续读键前缀（FE-BE Q13） */

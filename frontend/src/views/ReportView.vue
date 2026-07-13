@@ -30,16 +30,21 @@ import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
 import { buildChartHash } from '@/utils/chartHash'
 import { fetchLifeVolumes, useLifeVolumesApiEnabled } from '@/api/life'
 import { fetchReportExplainBatches, type ExplainBatchResponse } from '@/api/explain'
-import type { LifeVolumeResponse } from '@/types/life-volume'
+import type { LifeVolumeResponse, LifeVolume } from '@/types/life-volume'
 import { buildBaziRequest, buildZiweiRequest } from '@/utils/buildChartRequests'
 import ReportChapterNav from '@/components/fusheng/ReportChapterNav.vue'
 import VolumeSection from '@/components/fusheng/VolumeSection.vue'
+import VolumePaywall from '@/components/fusheng/VolumePaywall.vue'
 import ColophonFootnote from '@/components/fusheng/ColophonFootnote.vue'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { useReportReadingGuide } from '@/composables/useReportReadingGuide'
 import { LIFE_VOLUME_LABELS, type LifeVolumeId } from '@/types/life-volume'
+import {
+  DEMO_LOCKED_VOLUME_IDS,
+  demoVolumeLocksEnabled,
+} from '@/constants/volumePaywall'
 import { useYoubiHourAlign } from '@/composables/useYoubiHourAlign'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
@@ -199,6 +204,27 @@ const lifeVolumeResolved = computed(() => resolveLifeVolumeDoc({
 }))
 const lifeVolumeDoc = computed(() => lifeVolumeResolved.value.doc)
 const lifeVolumeSource = computed(() => lifeVolumeResolved.value.source)
+
+/** T092：沙箱模拟解锁的卷 id（不经支付） */
+const mockUnlockedVolumeIds = ref<Set<string>>(new Set())
+
+function volumeShowsLock(volume: { id: string; locked?: boolean }): boolean {
+  if (mockUnlockedVolumeIds.value.has(volume.id)) return false
+  if (volume.locked) return true
+  return demoVolumeLocksEnabled() && (DEMO_LOCKED_VOLUME_IDS as string[]).includes(volume.id)
+}
+
+function lockedSectionDetail(volume: LifeVolume): string | null {
+  const teaser = volume.sections?.find((s) => s.id === 'locked')
+  const text = teaser?.blocks?.[0]?.text?.trim()
+  return text || null
+}
+
+function onMockUnlock(volumeId: string) {
+  const next = new Set(mockUnlockedVolumeIds.value)
+  next.add(volumeId)
+  mockUnlockedVolumeIds.value = next
+}
 
 /** T082：仅当 remote 卷已含对应 explain 段时，隐藏 archive AnalysisPanel，避免双重 cite */
 function remoteVolumeHasSection(volumeId: string, sectionIds: string[]): boolean {
@@ -604,11 +630,23 @@ onMounted(() => {
           :key="volume.id"
           :id="`report-volume-${volume.id}`"
           class="report-volume"
-          :class="{ 'is-active': isChapterActive(volume.id) }"
+          :class="{
+            'is-active': isChapterActive(volume.id),
+            'is-locked': volumeShowsLock(volume),
+          }"
+          :data-locked="volumeShowsLock(volume) ? '1' : undefined"
           :data-testid="volume.id === 'preface' ? 'report-cover-chapter' : volume.id === 'vol5' ? 'report-vol5-chapter' : undefined"
         >
           <h2 v-if="volume.id !== 'preface'">{{ LIFE_VOLUME_LABELS[volume.id] }}</h2>
 
+          <VolumePaywall
+            v-if="volumeShowsLock(volume)"
+            :volume-id="volume.id"
+            :detail="lockedSectionDetail(volume)"
+            @mock-unlock="onMockUnlock(volume.id)"
+          />
+
+          <template v-if="!volumeShowsLock(volume)">
           <template v-if="volume.id === 'preface'">
             <div class="report-cover" data-testid="report-cover-hero">
               <img :src="brandMark" alt="浮生" class="report-cover__logo" width="96" height="96" />
@@ -917,7 +955,9 @@ onMounted(() => {
             :key="sec.id"
             :section="sec"
             :volume-id="volume.id"
+            :volume-locked="volumeShowsLock(volume)"
           />
+          </template>
         </section>
       </article>
     </div>
@@ -1133,6 +1173,10 @@ onMounted(() => {
 .report-volume.is-active {
   display: grid;
   gap: 12px;
+}
+
+.report-volume.is-locked > h2 {
+  color: var(--brand-mist);
 }
 
 .report-page--continuous .report-volume {
