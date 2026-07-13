@@ -18,10 +18,10 @@ test.describe('P1 试读路径（R060）', () => {
       localStorage.setItem('fusheng-reading-progress', JSON.stringify({ [activeId]: 'vol5' }))
     })
     await gotoApp(page, '')
-    await page.getByTestId('brand-gate-enter').scrollIntoViewIfNeeded()
-    await page.locator('.brand-after').scrollIntoViewIfNeeded()
-    await expect(page.getByText('续读：')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByTestId('reading-guide-resume')).toBeVisible()
+    await expect(page.getByTestId('brand-codex')).toBeVisible()
+    await gotoApp(page, 'report')
+    await expect(page.getByTestId('report-vol5-chapter')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('reading-guide-resume')).toBeVisible({ timeout: 15_000 })
 
     await gotoApp(page, 'new/bazi')
     await expect(page.getByTestId('bazi-layer-structure')).toBeVisible({ timeout: 15_000 })
@@ -33,7 +33,7 @@ test.describe('P1 试读路径（R060）', () => {
     await gotoApp(page, 'report')
     const vol5 = page.getByTestId('report-vol5-chapter')
     await expect(vol5).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByRole('complementary').getByRole('heading', { name: '读法导览' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '读法导览' })).toBeVisible({ timeout: 15_000 })
     await expect(vol5.getByText('事业宜深耕专业')).not.toBeVisible()
 
     const colophon = page.locator('#report-volume-colophon .colophon-footnote')

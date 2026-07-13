@@ -38,6 +38,7 @@ const displayParagraphs = computed(() => (
     :class="{ 'fs-card': !isPlain, 'reading-guide--plain': isPlain }"
     role="complementary"
     aria-label="读法导览"
+    data-testid="reading-guide"
   >
     <p v-if="isPlain" class="reading-guide__eyebrow">读法</p>
     <h2 v-if="showHeading" class="reading-guide__title">读法导览</h2>

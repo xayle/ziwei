@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import AnalysisPanel, { type AnalysisBlock } from '@/components/fusheng/AnalysisPanel.vue'
@@ -73,6 +74,7 @@ const {
   snapshotNote,
   snapshotError,
 } = useFushengReport()
+const { activeProfileId } = storeToRefs(profile)
 const {
   missingFields,
   provenanceRows,
@@ -188,7 +190,9 @@ const lifeVolumeLocal = computed(() => buildLifeVolumes({
 const lifeVolumeDoc = computed(() => lifeVolumeRemote.value ?? lifeVolumeLocal.value)
 const lifeVolumeSource = computed(() => (lifeVolumeRemote.value ? 'remote' : 'local'))
 
-const { resumeLabel, lastVolumeId, save: saveReadingProgress } = useReadingProgress(() => profile.activeProfileId || 'local')
+const { resumeLabel, lastVolumeId, save: saveReadingProgress, load: reloadReadingProgress } = useReadingProgress(
+  () => activeProfileId.value || 'default',
+)
 
 function resumeReading() {
   if (!lastVolumeId.value) return
@@ -488,11 +492,15 @@ async function reloadFullReport() {
 }
 
 onMounted(() => {
+  reloadReadingProgress()
   void aiStore.loadConfig()
   if (auth.isLoggedIn && profile.activeProfile?.remoteCaseId) {
     void profile.pullRemoteSnapshots()
   }
-  void loadReport().then(() => finalizeReportLoad().then(() => syncChapterFromHash()))
+  void loadReport().then(() => {
+    reloadReadingProgress()
+    return finalizeReportLoad().then(() => syncChapterFromHash())
+  })
 })
 </script>
 
@@ -535,8 +543,10 @@ onMounted(() => {
       <article ref="reportBodyRef" class="report-body">
         <ReadingGuide
           :disclaimer="lifeVolumeDoc.disclaimer_block"
-          :resume-volume-id="lastVolumeId"
-          :resume-label="resumeLabel"
+          :resume-volume-id="lastVolumeId ?? undefined"
+          :resume-label="resumeLabel ?? undefined"
+          :show-title="true"
+          :show-layer-legend="true"
           :reading-paragraphs="reportReadingParagraphs"
           :reading-loading="loading && !explainBatch"
           :reading-failed="reportReadingFailed"

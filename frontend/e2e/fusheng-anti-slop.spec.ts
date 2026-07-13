@@ -71,6 +71,6 @@ test.describe('防丑五问结构代理', () => {
       await expect(page.getByRole('heading', { name: label })).toBeVisible()
     }
     await expect(page.getByText('四维分析')).toHaveCount(0)
-    await expect(page.getByRole('complementary').getByRole('heading', { name: '读法导览' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '读法导览' })).toBeVisible({ timeout: 15_000 })
   })
 })

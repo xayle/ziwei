@@ -1,38 +1,59 @@
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { LifeVolumeId } from '@/types/life-volume'
+import { READING_PROGRESS_STORAGE_KEY } from '@/constants/feBeContract'
 
-const STORAGE_KEY = 'fusheng-reading-progress'
+const ACTIVE_PROFILE_KEY = 'profile_active_id_v1'
 
 export function useReadingProgress(caseId: () => string) {
-  const lastVolumeId = ref<LifeVolumeId | null>(null)
+  const revision = ref(0)
 
-  function load() {
+  function resolveCaseId(): string {
+    const id = caseId()
+    if (id) return id
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const map = JSON.parse(raw) as Record<string, LifeVolumeId>
-      const id = caseId()
-      if (id && map[id]) lastVolumeId.value = map[id]
+      return localStorage.getItem(ACTIVE_PROFILE_KEY) || 'default'
     } catch {
-      lastVolumeId.value = null
+      return 'default'
     }
   }
 
+  function readSavedVolume(): LifeVolumeId | null {
+    try {
+      const raw = localStorage.getItem(READING_PROGRESS_STORAGE_KEY)
+      if (!raw) return null
+      const map = JSON.parse(raw) as Record<string, LifeVolumeId>
+      const id = resolveCaseId()
+      return id && map[id] ? map[id] : null
+    } catch {
+      return null
+    }
+  }
+
+  const lastVolumeId = computed(() => {
+    revision.value
+    return readSavedVolume()
+  })
+
   function save(volumeId: LifeVolumeId) {
-    const id = caseId()
+    const id = resolveCaseId()
     if (!id) return
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw = localStorage.getItem(READING_PROGRESS_STORAGE_KEY)
       const map = raw ? JSON.parse(raw) as Record<string, LifeVolumeId> : {}
       map[id] = volumeId
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
-      lastVolumeId.value = volumeId
+      localStorage.setItem(READING_PROGRESS_STORAGE_KEY, JSON.stringify(map))
+      revision.value += 1
     } catch {
       // ignore quota errors
     }
   }
 
-  watch(caseId, () => load(), { immediate: true })
+  function load() {
+    revision.value += 1
+  }
+
+  watch(() => caseId(), () => load(), { immediate: true })
+  onMounted(() => load())
 
   const resumeLabel = computed(() => (lastVolumeId.value ? `继续阅读 ${lastVolumeId.value}` : null))
 
