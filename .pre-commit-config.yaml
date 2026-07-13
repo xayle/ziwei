@@ -16,7 +16,7 @@ repos:
         args: [--unsafe]
       - id: check-added-large-files
         args: [--maxkb=1024]
-        exclude: ^(frontend/public/fonts/|static/app/fonts/).*\.woff2$
+        exclude: ^(frontend/public/fonts/|static/app/fonts/).*\.woff2$|^docs/design/mockups/.*\.png$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.3.7
