@@ -2877,6 +2877,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/analytics/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 批量产品埋点（卷目阅读 / 术语点击等）
+         * @description 禁姓名/生日等 PII 键；命中键会被剥离并记入 scrubbed_pii_keys。可匿名或登录。
+         */
+        post: operations["post_analytics_events_api_v1_analytics_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/anonymize": {
         parameters: {
             query?: never;
@@ -3425,6 +3445,55 @@ export interface components {
             classic_id?: string | null;
             /** Evidence Ids */
             evidence_ids?: string[];
+        };
+        /** AnalyticsEventItem */
+        AnalyticsEventItem: {
+            /**
+             * Event Type
+             * @enum {string}
+             */
+            event_type: "volume_view" | "volume_dwell" | "volume_unlock_prompt" | "glossary_click" | "term_click" | "funnel_step" | "share_card_export" | "landing_cta_click";
+            /** Session Id */
+            session_id?: string | null;
+            /**
+             * Case Id
+             * @description 不透明 case UUID，可有
+             */
+            case_id?: string | null;
+            /** Volume Id */
+            volume_id?: string | null;
+            /**
+             * Ts
+             * @description 客户端事件时间
+             */
+            ts?: string | null;
+            /** Properties */
+            properties?: {
+                [key: string]: unknown;
+            };
+        };
+        /** AnalyticsEventsBatchRequest */
+        AnalyticsEventsBatchRequest: {
+            /** Events */
+            events: components["schemas"]["AnalyticsEventItem"][];
+        };
+        /** AnalyticsEventsBatchResponse */
+        AnalyticsEventsBatchResponse: {
+            /** Accepted */
+            accepted: number;
+            /**
+             * Rejected
+             * @default 0
+             */
+            rejected: number;
+            /** Scrubbed Pii Keys */
+            scrubbed_pii_keys?: string[];
+            /**
+             * Schema Version
+             * @default analytics-events@1.0
+             * @constant
+             */
+            schema_version: "analytics-events@1.0";
         };
         /** AnalyzeRequest */
         AnalyzeRequest: {
@@ -18610,6 +18679,44 @@ export interface operations {
             401: components["responses"]["UnauthorizedError"];
             403: components["responses"]["ForbiddenError"];
             404: components["responses"]["NotFoundError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    post_analytics_events_api_v1_analytics_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalyticsEventsBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsEventsBatchResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
             500: components["responses"]["InternalServerError"];
         };
     };

@@ -10247,6 +10247,63 @@
         }
       }
     },
+    "/api/v1/analytics/events": {
+      "post": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "批量产品埋点（卷目阅读 / 术语点击等）",
+        "description": "禁姓名/生日等 PII 键；命中键会被剥离并记入 scrubbed_pii_keys。可匿名或登录。",
+        "operationId": "post_analytics_events_api_v1_analytics_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticsEventsBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsEventsBatchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/api/v1/users/me/anonymize": {
       "post": {
         "tags": [
@@ -11783,6 +11840,133 @@
           "text"
         ],
         "title": "AnalysisBlockModel"
+      },
+      "AnalyticsEventItem": {
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "volume_view",
+              "volume_dwell",
+              "volume_unlock_prompt",
+              "glossary_click",
+              "term_click",
+              "funnel_step",
+              "share_card_export",
+              "landing_cta_click"
+            ],
+            "title": "Event Type"
+          },
+          "session_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Id"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id",
+            "description": "不透明 case UUID，可有"
+          },
+          "volume_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Id"
+          },
+          "ts": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ts",
+            "description": "客户端事件时间"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Properties"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_type"
+        ],
+        "title": "AnalyticsEventItem"
+      },
+      "AnalyticsEventsBatchRequest": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEventItem"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events"
+        ],
+        "title": "AnalyticsEventsBatchRequest"
+      },
+      "AnalyticsEventsBatchResponse": {
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected",
+            "default": 0
+          },
+          "scrubbed_pii_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scrubbed Pii Keys"
+          },
+          "schema_version": {
+            "type": "string",
+            "const": "analytics-events@1.0",
+            "title": "Schema Version",
+            "default": "analytics-events@1.0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accepted"
+        ],
+        "title": "AnalyticsEventsBatchResponse"
       },
       "AnalyzeRequest": {
         "properties": {

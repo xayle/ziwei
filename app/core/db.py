@@ -61,6 +61,7 @@ def get_engine():
 def init_db() -> None:
     """初始化数据库 - 导入所有模型并创建表"""
     from app.models import (
+        AnalyticsEvent,
         AuditLog,
         Case,
         Delegation,
@@ -75,7 +76,20 @@ def init_db() -> None:
     )
 
     # 确保所有SQLModel类都已注册
-    _ = (User, RefreshToken, Case, Snapshot, Member, Event, Scenario, Delegation, AuditLog, LlmDraft, LiunianReportTask)
+    _ = (
+        User,
+        RefreshToken,
+        Case,
+        Snapshot,
+        Member,
+        Event,
+        Scenario,
+        Delegation,
+        AuditLog,
+        LlmDraft,
+        LiunianReportTask,
+        AnalyticsEvent,
+    )
 
     engine = get_engine()
     SQLModel.metadata.create_all(engine)

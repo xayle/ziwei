@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from routers import analytics as analytics_router
+from routers import analytics_events as analytics_events_router
 from routers import api_keys as api_keys_router
 from routers import audit as audit_router
 from routers import auth as auth_router
@@ -81,6 +82,7 @@ def _include_workflow_routers(app: FastAPI) -> None:
     app.include_router(fengshui_router.router)
     app.include_router(rules_admin_router.router)
     app.include_router(analytics_router.router)
+    app.include_router(analytics_events_router.router)
     app.include_router(privacy_router.router)
 
 

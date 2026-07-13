@@ -25,7 +25,7 @@ from run import app
 from app.config import settings
 from app.models import (
     User, RefreshToken, Case, Snapshot, Member, Event,
-    Scenario, Delegation, AuditLog
+    Scenario, Delegation, AuditLog, AnalyticsEvent
 )
 from db import get_session
 import services.auth_service as auth_service_module
@@ -63,12 +63,12 @@ def test_db_engine():
         poolclass=pool.StaticPool,  # Required for in-memory SQLite
         echo=False,  # Set to True for SQL debugging
     )
-    
+
     # Create all tables
     SQLModel.metadata.create_all(engine)
-    
+
     yield engine
-    
+
     # Cleanup (in-memory database auto-clears)
     engine.dispose()
 
@@ -78,16 +78,16 @@ def db_session(test_db_engine) -> Generator[SQLModelSession, None, None]:
     """Create a new database session for each test (function-scoped)"""
     connection = test_db_engine.connect()
     transaction = connection.begin()
-    
+
     session = sessionmaker(
         autocommit=False,
         autoflush=False,
         bind=connection,
         class_=SQLModelSession
     )()
-    
+
     yield session
-    
+
     # Rollback after test (ensures test isolation)
     session.close()
     transaction.rollback()
@@ -103,11 +103,11 @@ def app_with_test_db(db_session: SQLModelSession):
     """Override the get_session dependency to use test database"""
     def override_get_session():
         return db_session
-    
+
     app.dependency_overrides[get_session] = override_get_session
-    
+
     yield app
-    
+
     # Clean up dependency override
     app.dependency_overrides.clear()
 
@@ -153,7 +153,7 @@ def test_user(db_session: SQLModelSession, test_user_data: Dict[str, Any]) -> Us
     """Create a test user in the database"""
     # Hash password using auth_service module
     password_hash = auth_service_module.hash_password(test_user_data["password"])
-    
+
     user = User(
         username=test_user_data["username"],
         email=test_user_data["email"],
@@ -162,11 +162,11 @@ def test_user(db_session: SQLModelSession, test_user_data: Dict[str, Any]) -> Us
         is_active=test_user_data["is_active"],
         is_admin=test_user_data["is_admin"],
     )
-    
+
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    
+
     return user
 
 
@@ -174,7 +174,7 @@ def test_user(db_session: SQLModelSession, test_user_data: Dict[str, Any]) -> Us
 def admin_user(db_session: SQLModelSession, admin_user_data: Dict[str, Any]) -> User:
     """Create an admin test user"""
     password_hash = auth_service_module.hash_password(admin_user_data["password"])
-    
+
     user = User(
         username=admin_user_data["username"],
         email=admin_user_data["email"],
@@ -183,11 +183,11 @@ def admin_user(db_session: SQLModelSession, admin_user_data: Dict[str, Any]) -> 
         is_active=admin_user_data["is_active"],
         is_admin=admin_user_data["is_admin"],
     )
-    
+
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-    
+
     return user
 
 
@@ -206,7 +206,7 @@ def access_token(test_user: User) -> str:
         role=test_user.role,
         expires_delta=timedelta(minutes=expiry_minutes)
     )
-    
+
     return token_dict["access_token"]
 
 
@@ -215,17 +215,17 @@ def refresh_token(db_session: SQLModelSession, test_user: User) -> str:
     """Create a valid refresh token in the database"""
     token = f"refresh_{uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    
+
     refresh_token_obj = RefreshToken(
         user_id=test_user.id,  # type: ignore[arg-type]
         token=token,
         expires_at=expires_at,
         is_revoked=False,
     )
-    
+
     db_session.add(refresh_token_obj)
     db_session.commit()
-    
+
     return token
 
 
@@ -269,11 +269,11 @@ def test_case(db_session: SQLModelSession, test_user: User) -> Case:
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
-    
+
     db_session.add(case)
     db_session.commit()
     db_session.refresh(case)
-    
+
     return case
 
 
@@ -281,7 +281,7 @@ def test_case(db_session: SQLModelSession, test_user: User) -> Case:
 def test_member(db_session: SQLModelSession, test_user: User) -> Member:
     """Create a test member (person in BaZi analysis)"""
     from datetime import date
-    
+
     member = Member(
         owner_id=test_user.id,  # type: ignore[arg-type]
         name="Test Member",
@@ -296,11 +296,11 @@ def test_member(db_session: SQLModelSession, test_user: User) -> Member:
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
-    
+
     db_session.add(member)
     db_session.commit()
     db_session.refresh(member)
-    
+
     return member
 
 
@@ -319,11 +319,11 @@ def test_event(db_session: SQLModelSession, test_user: User, test_member: Member
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
-    
+
     db_session.add(event)
     db_session.commit()
     db_session.refresh(event)
-    
+
     return event
 
 
@@ -345,11 +345,11 @@ def test_snapshot(db_session: SQLModelSession, test_case: Case) -> Snapshot:
         rule_version="1.0.0",
         created_at=datetime.now(timezone.utc),
     )
-    
+
     db_session.add(snapshot)
     db_session.commit()
     db_session.refresh(snapshot)
-    
+
     return snapshot
 
 
@@ -365,11 +365,11 @@ def test_scenario(db_session: SQLModelSession, test_user: User, test_member: Mem
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
-    
+
     db_session.add(scenario)
     db_session.commit()
     db_session.refresh(scenario)
-    
+
     return scenario
 
 
@@ -383,11 +383,11 @@ def test_delegation(db_session: SQLModelSession, test_user: User, admin_user: Us
         is_active=True,
         created_at=datetime.now(timezone.utc),
     )
-    
+
     db_session.add(delegation)
     db_session.commit()
     db_session.refresh(delegation)
-    
+
     return delegation
 
 
@@ -400,14 +400,14 @@ def setup_test_environment():
     """Setup test environment before running any tests"""
     # Set test database URL as environment variable
     os.environ["DATABASE_URL"] = TEST_DATABASE_URL
-    
+
     # Disable logging during tests (optional)
     import logging
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
     logging.getLogger("alembic").setLevel(logging.WARNING)
-    
+
     yield
-    
+
     # Cleanup after all tests
     if "DATABASE_URL" in os.environ:
         del os.environ["DATABASE_URL"]
@@ -482,26 +482,26 @@ def reset_request_state(client: TestClient):
 def benchmark_timer():
     """Simple benchmark timer for performance testing"""
     import time
-    
+
     class BenchmarkTimer:
         def __init__(self):
             self.start_time = None
             self.end_time = None
-        
+
         def __enter__(self):
             self.start_time = time.perf_counter()
             return self
-        
+
         def __exit__(self, *args):
             self.end_time = time.perf_counter()
-        
+
         @property
         def elapsed_ms(self) -> float:
             """Return elapsed time in milliseconds"""
             if self.start_time is None or self.end_time is None:
                 return 0.0
             return (self.end_time - self.start_time) * 1000
-    
+
     return BenchmarkTimer()
 
 
@@ -513,7 +513,7 @@ def benchmark_timer():
 def bulk_test_users(db_session: SQLModelSession) -> list[User]:
     """Create multiple test users for bulk operation testing"""
     users = []
-    
+
     for i in range(10):
         user = User(
             username=f"bulkuser{i}",
@@ -524,14 +524,14 @@ def bulk_test_users(db_session: SQLModelSession) -> list[User]:
             is_admin=False,
         )
         users.append(user)
-    
+
     db_session.add_all(users)
     db_session.commit()
-    
+
     # Refresh all to get IDs
     for user in users:
         db_session.refresh(user)
-    
+
     return users
 
 
@@ -539,7 +539,7 @@ def bulk_test_users(db_session: SQLModelSession) -> list[User]:
 def bulk_test_cases(db_session: SQLModelSession, bulk_test_users: list[User]) -> list[Case]:
     """Create multiple test cases for bulk operation testing"""
     cases = []
-    
+
     for i, user in enumerate(bulk_test_users[:5]):  # Create 5 cases
         case = Case(
             id=f"case_{uuid4().hex[:8]}",
@@ -556,12 +556,12 @@ def bulk_test_cases(db_session: SQLModelSession, bulk_test_users: list[User]) ->
             updated_at=datetime.now(timezone.utc),
         )
         cases.append(case)
-    
+
     db_session.add_all(cases)
     db_session.commit()
-    
+
     # Refresh all to ensure proper state
     for case in cases:
         db_session.refresh(case)
-    
+
     return cases

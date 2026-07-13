@@ -1,6 +1,7 @@
 """数据模型包 - 集中导出所有SQLModel模型."""
 
 # Core models
+from .analytics_event import AnalyticsEvent
 from .api_key import ApiKey
 from .async_task import LiunianReportTask
 from .base import RefreshToken, RevokedJti, User
@@ -36,6 +37,8 @@ __all__ = [
     # Experiment
     "Experiment",
     "ExperimentEvent",
+    # Analytics
+    "AnalyticsEvent",
     # LLM
     "LlmDraft",
     # Async tasks
