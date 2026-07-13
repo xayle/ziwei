@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.9 |
+| **版本** | post-w14-2.0 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase E U5 ☑** — [T085 签字](../reports/T085-u5-gate-2026-07-14.md) → **下一项 T086**（GTM 开篇） |
+| **当前优先级** | ▶ **Phase F GTM** — [T086 ☑](../reports/T086-entitlement-2026-07-14.md) → **下一项 T087**（卷 locked） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -18,7 +18,8 @@
 前置  T070 ☑（W14 · W102-22 closeout）
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE+FE T072–T084 ☑
-U5    T085 ☑（2026-07-14）→ 下一项 **T086**（块 K GTM）
+U5    T085 ☑（2026-07-14）
+GTM   T086 ☑ → 下一项 **T087**（卷 locked）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -122,7 +123,7 @@ make scorecard
 
 | ☐ | ID | 角色 | 任务 | 主要文件 | 验收 |
 |---|-----|------|------|----------|------|
-| ☐ | **T086** | BE | **BE-GTM-05** entitlement 模型：`free` / `volume_pass` / `full_book` | `quota_service` · schemas | 中间件可校验 |
+| ☑ | **T086** | BE | **BE-GTM-05** entitlement 模型：`free` / `volume_pass` / `full_book` | [T086 报告](../reports/T086-entitlement-2026-07-14.md) · `quota_service` · schemas | `enforce_entitlement` · auth/me · 单测 |
 | ☐ | **T087** | BE | 卷目 `locked` 规则（Q2：卷0–1 免费，2–4 pass，5–6 pro） | life-volume 生成逻辑 | fixture 覆盖 |
 | ☐ | **T088** | BE | **BE-GTM-02** 注册/案例 `utm_source` `utm_campaign` `content_id` | `Case` model · auth | 抖音视频 ID 可存 |
 | ☐ | **T089** | BE | **BE-GTM-01** `POST /api/v1/analytics/events` 批量事件 | `routers/analytics_events.py` | 卷目阅读/术语点击 |
@@ -271,7 +272,7 @@ make scorecard
 - [x] waterfall ≤2–4
 
 ### GTM（若做 T086–T105）
-- [ ] entitlement 中间件生效
+- [x] entitlement 中间件生效（T086 · `enforce_entitlement`）
 - [ ] utm 归因入库
 - [ ] analytics 无 PII
 - [ ] 落地页 + 锁卷 UI
@@ -305,6 +306,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-2.0 | 2026-07-14 | **T086 ☑** · entitlement free/pass/full_book · 下一项 T087 locked |
 | post-w14-1.9 | 2026-07-14 | **T085 U5 ☑** · P3 Gate 通过 · 下一项 T086 GTM |
 | post-w14-1.8 | 2026-07-14 | **T078 ☑** · OpenAPI/types 双端契约 · 下一项 T085 U5 |
 | post-w14-1.7 | 2026-07-14 | **T077 ☑** · archive name/zeri 指针 · 下一项 T078/T085 |

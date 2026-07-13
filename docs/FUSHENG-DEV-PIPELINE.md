@@ -2,11 +2,11 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-4.0 |
+| **版本** | pipeline-4.1 |
 | **日期** | 2026-07-14 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
-| **当前阶段** | **Phase E U5 ☑** · [T085](reports/T085-u5-gate-2026-07-14.md) → **下一项 T086**（GTM） |
+| **当前阶段** | **Phase F GTM** · [T086](reports/T086-entitlement-2026-07-14.md) ☑ → **下一项 T087**（卷 locked） |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
 | **W102 进度** | **24/24**（Phase B）· **W102-P3 ☑**（Phase D） |
 
@@ -131,7 +131,7 @@ pre-commit run --all-files   # 首次或大改后
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
 **已完成：** W102-00a～**22** 全 ☑ · **Phase B closeout 2026-07-13**  
-**下一项：** **T086+** GTM（POST-W14 块 K）— entitlement / 埋点 / 落地 · **U5 已签字**
+**下一项：** **T087** 卷 locked（Q2）— POST-W14 块 K；T086 entitlement 已落地
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -268,8 +268,8 @@ Phase A  T001–T070     ☑ 打磨期工程任务（EXECUTION-PRIORITY）
 Phase B  W102-00–22    ☑ 产品重建（R102）closeout 24/24
 Phase C  W15–W16       ☑ life/volumes 权威化并入 Phase E / T085
 Phase D  W102-P3       ☑ 合盘 BE+CI+FE 全链路（export · multi · explain）
-Phase E  W15–W16 U5    ← **已完成** · T085 ☑ · 下一项 GTM T086（POST-W14）
-Phase F  W17+ GTM      ← **下一轨** · T086–T105（U5 前置已满足）
+Phase E  W15–W16 U5    ☑ T085
+Phase F  W17+ GTM      ← **进行中** · T086 ☑ · 下一项 T087
 ```
 
 **纪律：**
@@ -313,6 +313,7 @@ Phase F  W17+ GTM      ← **下一轨** · T086–T105（U5 前置已满足）
 | pipeline-2.8 | 2026-07-13 | **W102-22 ☑ · 24/24** · R102 closeout · Phase B 完成 |
 | pipeline-3.0 | 2026-07-14 | **Phase D ☑** · W102-P3 FE 全链路 · autopilot **30/30+20/20** |
 | pipeline-3.1 | 2026-07-14 | **文档消噪收口** · P2-2/P3-17 · FE-DEV §12.3 static 约定 |
+| pipeline-4.1 | 2026-07-14 | **T086 ☑** · entitlement 模型 · 下一项 T087 locked |
 | pipeline-4.0 | 2026-07-14 | **T085 U5 ☑** · P3 Gate · 下一项 T086 GTM |
 | pipeline-3.9 | 2026-07-14 | **T078 ☑** · OpenAPI + gen:types 双端 · 下一项 T085 |
 | pipeline-3.8 | 2026-07-14 | **T077 ☑** · archive name/zeri 指针 · 下一项 T078/T085 |
@@ -325,4 +326,4 @@ Phase F  W17+ GTM      ← **下一轨** · T086–T105（U5 前置已满足）
 
 ---
 
-**下一步：** **T086** · GTM 开篇（entitlement / 归因）— 见 POST-W14 块 K；U5 已过
+**下一步：** **T087** · 卷目 `locked` 规则（接 T086 entitlement）

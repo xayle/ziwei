@@ -25,6 +25,8 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=True)
     role: str = Field(default="editor")
     is_admin: bool = Field(default=False)
+    # GTM BE-GTM-05：free | volume_pass | full_book（admin/owner 运行时仍升至 full_book）
+    entitlement: str = Field(default="free", max_length=32)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     deleted_at: datetime | None = None

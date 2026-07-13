@@ -36,6 +36,7 @@ from services.auth_service import (
     verify_token,
 )
 from services.delegation_service import log_action
+from services.quota_service import build_entitlement_info
 from services.rate_limit import limiter
 
 router = APIRouter(prefix="/api/v1", tags=["auth"])
@@ -373,6 +374,7 @@ def get_current_user_info(session: Session = Depends(get_session), user: TokenPa
             resource_id=str(user.user_id),
         )
 
+    entitlement = build_entitlement_info(user=db_user)
     return {
         "user_id": db_user.id,
         "username": db_user.username,
@@ -380,6 +382,8 @@ def get_current_user_info(session: Session = Depends(get_session), user: TokenPa
         "role": db_user.role,
         "is_active": db_user.is_active,
         "is_admin": db_user.is_admin,
+        "entitlement": entitlement.tier,
+        "entitlement_info": entitlement.model_dump(),
         "created_at": db_user.created_at.isoformat(),
         "updated_at": db_user.updated_at.isoformat(),
         "token_type": "bearer",
