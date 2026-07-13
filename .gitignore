@@ -3,8 +3,16 @@
 .env.*
 !.env.example
 
-# 数据库文件
+# 数据库文件与大体量本地数据（默认忽略；下列运行时必需 JSON 强制入库）
 data/
+!data/cities.json
+!data/glossary.json
+!data/ground_truth_cases.json
+!data/dual_verify_cases.json
+!data/name_eighty_one.json
+!data/name_sancai.json
+!data/name_chars.json
+!data/name_suggest_chars.json
 *.db
 
 # Python缓存

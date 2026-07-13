@@ -1,0 +1,221 @@
+{
+  "version": "1.2",
+  "description": "八字×紫微体系统合双验档案（≥5 人，供回归与 scorecard X-01）",
+  "cases": [
+    {
+      "id": "DV01",
+      "label": "ZW01 黄金盘双验",
+      "bazi_ref": "GT01",
+      "ziwei_ref": "ZW01",
+      "birth": {
+        "year": 2002,
+        "month": 3,
+        "day": 13,
+        "hour": 14,
+        "minute": 55,
+        "gender": "女",
+        "lon": 116.41,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "bazi_geju": "七杀格",
+        "ziwei_life_palace_gz": "丁未",
+        "ziwei_wuxing_ju": "水二局"
+      }
+    },
+    {
+      "id": "DV02",
+      "label": "ZIP09 双轨 + ZW04",
+      "bazi_ref": "ZIP09",
+      "ziwei_ref": "ZW04",
+      "birth": {
+        "year": 1975,
+        "month": 11,
+        "day": 20,
+        "hour": 10,
+        "minute": 0,
+        "gender": "女",
+        "lon": 121.47,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "bazi_dual_track_id": "ZIP09",
+        "bazi_engine_geju": "七杀格",
+        "ziwei_life_palace_gz": "壬午"
+      },
+      "notes": "ZIP09 四柱直测见 ground_truth pillar_direct；本 birth 为 ZW04 演示盘"
+    },
+    {
+      "id": "DV03",
+      "label": "ZW03 边界 + 八字子时",
+      "bazi_ref": "GT05",
+      "ziwei_ref": "ZW03",
+      "birth": {
+        "year": 1988,
+        "month": 2,
+        "day": 4,
+        "hour": 23,
+        "minute": 45,
+        "gender": "男",
+        "lon": 116.41,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "ziwei_engine_life_palace_gz": "乙丑",
+        "ziwei_boundary": "lichun_late_zi",
+        "ziwei_iztro_track": {
+          "year_divide": "normal",
+          "day_divide": "forward",
+          "life_palace_gz": "癸丑"
+        }
+      }
+    },
+    {
+      "id": "DV04",
+      "label": "ZW02 双验（1990 男盘）",
+      "ziwei_ref": "ZW02",
+      "birth": {
+        "year": 1990,
+        "month": 5,
+        "day": 15,
+        "hour": 8,
+        "minute": 30,
+        "gender": "男",
+        "lon": 116.41,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "ziwei_life_palace_gz": "己丑",
+        "ziwei_wuxing_ju": "火六局"
+      }
+    },
+    {
+      "id": "DV05",
+      "label": "ZW09 扩展盘双验",
+      "ziwei_ref": "ZW09",
+      "birth": {
+        "year": 1983,
+        "month": 12,
+        "day": 5,
+        "hour": 7,
+        "minute": 30,
+        "gender": "男",
+        "lon": 121.47,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "ziwei_life_palace_gz": "庚申",
+        "ziwei_wuxing_ju": "木三局"
+      }
+    },
+    {
+      "id": "DV06",
+      "label": "ZIP09 用神冲突双验",
+      "bazi_ref": "ZIP09",
+      "ziwei_ref": "ZW04",
+      "dual_track_id": "ZIP09",
+      "birth": {
+        "year": 1975,
+        "month": 11,
+        "day": 20,
+        "hour": 10,
+        "minute": 0,
+        "gender": "女",
+        "lon": 121.47,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "bazi_dual_track_id": "ZIP09",
+        "bazi_recorded_geju": "从官杀格",
+        "bazi_engine_geju": "七杀格"
+      },
+      "notes": "用神/格局双轨：古籍从杀 vs 引擎七杀"
+    },
+    {
+      "id": "DV07",
+      "label": "ZW03 晚子双验",
+      "bazi_ref": "GT05",
+      "ziwei_ref": "ZW03",
+      "dual_track_id": "ZW03",
+      "birth": {
+        "year": 1988,
+        "month": 2,
+        "day": 4,
+        "hour": 23,
+        "minute": 45,
+        "gender": "男",
+        "lon": 116.41,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "ziwei_boundary": "lichun_late_zi",
+        "ziwei_engine_life_palace_gz": "乙丑"
+      },
+      "notes": "立春前一日 + 晚子时"
+    },
+    {
+      "id": "DV08",
+      "label": "换运年双验",
+      "bazi_ref": "GT01",
+      "ziwei_ref": "ZW01",
+      "dual_track_id": "DAYUN-TRANSITION",
+      "birth": {
+        "year": 2002,
+        "month": 3,
+        "day": 13,
+        "hour": 14,
+        "minute": 55,
+        "gender": "女",
+        "lon": 116.41,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "dayun_transition_year": 2026,
+        "ziwei_life_palace_gz": "丁未"
+      },
+      "notes": "换运年前后流年/大限对照"
+    },
+    {
+      "id": "DV09",
+      "label": "GT09 + ZW17 双验",
+      "bazi_ref": "GT09",
+      "ziwei_ref": "ZW17",
+      "birth": {
+        "year": 1987,
+        "month": 7,
+        "day": 7,
+        "hour": 11,
+        "minute": 0,
+        "gender": "男",
+        "lon": 116.4,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "ziwei_life_palace_gz": "癸丑",
+        "bazi_engine_geju": "曲直格"
+      },
+      "notes": "BE-P1-04 dual-verify expansion"
+    },
+    {
+      "id": "DV10",
+      "label": "GT10 + ZW18 双验",
+      "bazi_ref": "GT10",
+      "ziwei_ref": "ZW18",
+      "birth": {
+        "year": 1998,
+        "month": 1,
+        "day": 28,
+        "hour": 8,
+        "minute": 0,
+        "gender": "女",
+        "lon": 121.5,
+        "tz": "Asia/Shanghai"
+      },
+      "expect": {
+        "ziwei_life_palace_gz": "庚戌",
+        "bazi_engine_geju": "偏财格"
+      },
+      "notes": "BE-P1-04 dual-verify expansion"
+    }
+  ]
+}
