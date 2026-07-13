@@ -59,15 +59,33 @@ def _run(cmd: list[str], *, cwd: Path | None = None) -> tuple[bool, str]:
 
 def _rg_debt_zero() -> bool:
     pattern = r"linear-gradient|PageHead|#334155|-ok-bg|trust-drift-bg|四维分析|ChapterStub"
-    proc = subprocess.run(
-        ["rg", pattern, str(FRONTEND / "src")],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return proc.returncode != 0
+    src = FRONTEND / "src"
+    rg = shutil.which("rg")
+    if rg:
+        proc = subprocess.run(
+            [rg, pattern, str(src)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        return proc.returncode != 0
+
+    # CI runners may lack ripgrep — fall back to a pure-Python scan.
+    import re
+
+    rx = re.compile(pattern)
+    for path in src.rglob("*"):
+        if path.suffix not in {".vue", ".ts", ".js", ".css"}:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if rx.search(text):
+            return False
+    return True
 
 
 def _git_tracked(rel: str) -> bool:
@@ -259,11 +277,19 @@ def main() -> int:
     }
     REPORT.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps({"pass": payload["pass"], "summary": payload["summary"]}, ensure_ascii=False))
-    failed = [c.id for c in checks if not c.ok]
+    failed = [c for c in checks if not c.ok]
     if failed:
-        print("FAILED: " + ", ".join(failed), file=sys.stderr)
+        print("FAILED: " + ", ".join(c.id for c in failed), file=sys.stderr)
+        for c in failed:
+            detail = (c.detail or "").replace("\n", " ").replace("%", "pct")[-240:]
+            # GitHub Actions workflow command → annotation on the Autopilot step
+            print(f"::error title=Autopilot {c.id} {c.name}::{detail or 'failed'}")
     return 0 if payload["pass"] else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        raise SystemExit(main())
+    except Exception as exc:  # noqa: BLE001 — surface unexpected crash to CI annotations
+        print(f"::error title=Autopilot crashed::{type(exc).__name__}: {exc}")
+        raise

@@ -75,6 +75,9 @@ jobs:
       - name: Install Playwright browsers
         run: cd frontend && npx playwright install chromium --with-deps
 
+      - name: Install ripgrep (autopilot A07 debt scan)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+
       - name: Autopilot full bundle (W102-P3-02 · S2 alignment)
         run: python scripts/auto_verify_autopilot.py
 
@@ -102,7 +105,8 @@ jobs:
                       # GitHub Actions annotation (visible without downloading logs)
                       print(f"::error title=Autopilot {cid}::{row[:200]}")
           summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-          body = "\n".join(["## Autopilot failures", "", *[f"- `{x}`" for x in fails] or ["(none)"], ""])
+          fail_lines = [f"- `{x}`" for x in fails] if fails else ["(none)"]
+          body = "\n".join(["## Autopilot failures", "", *fail_lines, ""])
           if summary_path:
               with open(summary_path, "a", encoding="utf-8") as fh:
                   fh.write(body)
