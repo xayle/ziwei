@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test'
+import { LIFE_VOLUME_LABELS } from '../../src/types/life-volume'
 
 /** ≥300 城 mock，满足 citiesCache MIN_CITIES 与 E2E 建档选城 */
 export const mockCitiesPayload = (() => {
@@ -345,6 +346,24 @@ export const mockZiweiPayload = {
   },
 }
 
+export const mockLifeVolumesPayload = {
+  schema_version: 'life-volume@1.0',
+  case_id: 'case-e2e-001',
+  chart_hash: 'e2e-life-hash',
+  disclaimer_block: { text: 'E2E 免责声明', version: '1.0' },
+  volumes: [
+    { id: 'preface', title: LIFE_VOLUME_LABELS.preface, sections: [] },
+    { id: 'vol1', title: LIFE_VOLUME_LABELS.vol1, sections: [] },
+    { id: 'vol2', title: LIFE_VOLUME_LABELS.vol2, sections: [] },
+    { id: 'vol3', title: LIFE_VOLUME_LABELS.vol3, sections: [] },
+    { id: 'vol4', title: LIFE_VOLUME_LABELS.vol4, sections: [] },
+    { id: 'vol5', title: LIFE_VOLUME_LABELS.vol5, sections: [] },
+    { id: 'vol6', title: LIFE_VOLUME_LABELS.vol6, sections: [] },
+    { id: 'colophon', title: LIFE_VOLUME_LABELS.colophon, sections: [] },
+  ],
+  colophon: { summary_lines: ['E2E 跋'], expandable: true },
+}
+
 export async function setupLoggedInApiMocks(page: Page) {
   await setupCitiesApiMock(page)
 
@@ -384,6 +403,25 @@ export async function setupLoggedInApiMocks(page: Page) {
       await route.fallback()
     },
   )
+
+  await page.route('**/api/v1/life/volumes/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockLifeVolumesPayload),
+    })
+  })
+
+  await page.route('**/api/v1/auth/refresh', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: 'e2e-test-token',
+        refresh_token: 'e2e-test-refresh',
+      }),
+    })
+  })
 }
 
 /** 拦截排盘相关 API，使 E2E 不依赖真实后端 */
