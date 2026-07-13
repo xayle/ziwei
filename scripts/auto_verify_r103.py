@@ -16,6 +16,10 @@ _DEBT_PATTERN = r"linear-gradient|PageHead|#334155|-ok-bg|trust-drift-bg|四维�
 
 
 def _frontend_e2e_ready() -> bool:
+    import os
+
+    if os.environ.get("W14_SKIP_E2E", "").strip() in {"1", "true", "TRUE", "yes"}:
+        return False
     if not (FRONTEND / "node_modules").is_dir():
         return False
     return bool(shutil.which("npm") or shutil.which("npm.cmd"))

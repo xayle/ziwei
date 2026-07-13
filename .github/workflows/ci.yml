@@ -172,6 +172,9 @@ jobs:
         run: make quality-gate-backend
 
       - name: W14 auto verify bundle
+        env:
+          # test job 有 npm ci 但未装 Playwright 浏览器；E2E 由 frontend/autopilot 闸门覆盖
+          W14_SKIP_E2E: "1"
         run: python scripts/auto_verify_w14.py
 
       - name: Volume names aligned
@@ -292,9 +295,14 @@ jobs:
 
       - name: Alembic upgrade head (PostgreSQL)
         run: |
-          set -e
+          set -euo pipefail
           echo "Using DATABASE_URL host: ${DATABASE_URL##*@}"
-          alembic upgrade head
+          alembic upgrade head || {
+            echo "::error::alembic upgrade head failed"
+            alembic history -v | tail -n 40 || true
+            alembic current || true
+            exit 1
+          }
 
       - name: Quality gate backend checks
         run: make quality-gate-backend

@@ -14,6 +14,8 @@ FRONTEND = ROOT / "frontend"
 
 
 def _frontend_e2e_ready() -> bool:
+    if os.environ.get("W14_SKIP_E2E", "").strip() in {"1", "true", "TRUE", "yes"}:
+        return False
     if not (FRONTEND / "node_modules").is_dir():
         return False
     npm = shutil.which("npm") or shutil.which("npm.cmd")
