@@ -6,6 +6,7 @@ import ResultStateCard from '@/components/new/ResultStateCard.vue'
 import { useProfileStore } from '@/stores/profile'
 import {
   RELATION_TYPE_OPTIONS,
+  relationExplainBatch,
   relationExportPdf,
   relationExportPng,
   relationFull,
@@ -14,7 +15,11 @@ import {
   type RelationFullResponse,
   type RelationType,
 } from '@/api/relation'
+import type { MultiCompatResponse } from '@/api/ziwei'
+import { ziweiMultiCompat, ziweiMultiCompatExportPdf } from '@/api/ziwei'
+import type { ExplainBatchResponse } from '@/api/explain'
 import { buildRelationCompat, cardToneClass, dimensionPct } from '@/utils/buildRelationCompat'
+import { birthDatetimeToZiweiRequest, buildZiweiRequest } from '@/utils/buildChartRequests'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
@@ -29,16 +34,40 @@ const partnerGender = ref('female')
 const partnerLabel = ref('')
 const partnerLon = ref<number | null>(null)
 const partnerTz = ref('Asia/Shanghai')
+const enableThirdPerson = ref(false)
+const thirdBirthDt = ref('')
+const thirdGender = ref('female')
+const thirdLabel = ref('')
+const thirdLon = ref<number | null>(null)
 const supervisorId = ref<'a' | 'b'>('a')
 const showInference = ref(false)
+const showExplain = ref(false)
 const loading = ref(false)
 const exportingPdf = ref(false)
 const exportingPng = ref(false)
+const exportingMultiPdf = ref(false)
 const error = ref('')
 const rawResult = ref<RelationFullResponse | null>(null)
 const lastRequest = ref<RelationFullRequest | null>(null)
+const multiResult = ref<MultiCompatResponse | null>(null)
+const explainBatch = ref<ExplainBatchResponse | null>(null)
 
 const display = computed(() => (rawResult.value ? buildRelationCompat(rawResult.value) : null))
+
+const multiLabels = computed(() => {
+  if (!multiResult.value) return [] as string[]
+  const n = multiResult.value.person_count || multiResult.value.matrix.length
+  const defaults = [
+    profile.activeProfile?.label || '我',
+    partnerLabel.value.trim() || '对方',
+    thirdLabel.value.trim() || '第三人',
+  ]
+  return defaults.slice(0, n)
+})
+
+const explainBlocks = computed(() =>
+  explainBatch.value?.sections?.flatMap((s) => s.blocks ?? []) ?? [],
+)
 
 watch(
   () => route.query.type,
@@ -54,8 +83,12 @@ function toIsoLocal(dtLocal: string): string {
   return dtLocal
 }
 
+function partnerLongitude(): number {
+  return Number.isFinite(partnerLon.value) ? partnerLon.value! : (profile.lon ?? 116.41)
+}
+
 function buildRelationRequest(): RelationFullRequest {
-  const lonB = Number.isFinite(partnerLon.value) ? partnerLon.value! : (profile.lon ?? 116.41)
+  const lonB = partnerLongitude()
   return {
     relation_type: relationType.value,
     supervisor_id: relationType.value === 'supervisor_subordinate' ? supervisorId.value : undefined,
@@ -75,6 +108,52 @@ function buildRelationRequest(): RelationFullRequest {
     },
     options: { include_bazi: true, include_ziwei: true, liunian_year: new Date().getFullYear() },
   }
+}
+
+function buildMultiCompatRequest() {
+  const profileData = profile.asProfileData()
+  const lonB = partnerLongitude()
+  const labels = [profile.activeProfile?.label || '我', partnerLabel.value.trim() || '对方']
+  const personList = [
+    buildZiweiRequest(profileData),
+    birthDatetimeToZiweiRequest(partnerBirthDt.value.trim(), partnerGender.value, lonB, profileData),
+  ]
+
+  if (enableThirdPerson.value && thirdBirthDt.value.trim()) {
+    const lonC = Number.isFinite(thirdLon.value) ? thirdLon.value! : lonB
+    labels.push(thirdLabel.value.trim() || '第三人')
+    personList.push(
+      birthDatetimeToZiweiRequest(thirdBirthDt.value.trim(), thirdGender.value, lonC, profileData),
+    )
+  }
+
+  if (personList.length < 2) return null
+
+  return {
+    person_list: personList,
+    relation_type: relationType.value,
+    labels,
+    include_relation_dims: true,
+    supervisor_id: relationType.value === 'supervisor_subordinate' ? supervisorId.value : undefined,
+  }
+}
+
+function matrixCellLabel(i: number, j: number, score: number): string {
+  if (i === j) return '—'
+  const pair = multiResult.value?.pairs.find(
+    (p) =>
+      (p.person_a_idx === i && p.person_b_idx === j)
+      || (p.person_a_idx === j && p.person_b_idx === i),
+  )
+  if (pair?.combined_score != null) {
+    const parts = [`${score}%`]
+    if (pair.bazi_score != null && pair.ziwei_score != null) {
+      parts.push(`八字 ${pair.bazi_score} · 紫微 ${pair.ziwei_score}`)
+    }
+    if (pair.combined_score != null) parts.push(`综合 ${pair.combined_score.toFixed(1)}`)
+    return parts.join(' · ')
+  }
+  return `${score}%`
 }
 
 function exportFilename(ext: 'pdf' | 'png'): string {
@@ -97,12 +176,24 @@ async function runRelation() {
   error.value = ''
   rawResult.value = null
   lastRequest.value = null
+  multiResult.value = null
+  explainBatch.value = null
 
   const body = buildRelationRequest()
+  const multiBody = buildMultiCompatRequest()
 
   try {
-    rawResult.value = await relationFull(body)
+    const [full, multi, explain] = await Promise.all([
+      relationFull(body),
+      multiBody && multiBody.person_list.length >= 3
+        ? ziweiMultiCompat(multiBody)
+        : Promise.resolve(null),
+      relationExplainBatch({ ...body, sections: ['relation_reading'] }).catch(() => null),
+    ])
+    rawResult.value = full
     lastRequest.value = body
+    multiResult.value = multi
+    explainBatch.value = explain
   } catch {
     error.value = '关系合盘分析失败，请检查输入后重试。'
   } finally {
@@ -137,6 +228,21 @@ async function downloadRelationPng() {
     exportingPng.value = false
   }
 }
+
+async function downloadMultiMatrixPdf() {
+  const multiBody = buildMultiCompatRequest()
+  if (!multiBody || multiBody.person_list.length < 2) return
+  exportingMultiPdf.value = true
+  error.value = ''
+  try {
+    const blob = await ziweiMultiCompatExportPdf(multiBody)
+    saveBlobAsFile(blob, '合盘-多人矩阵.pdf')
+  } catch {
+    error.value = '多人矩阵 PDF 导出失败，请稍后重试。'
+  } finally {
+    exportingMultiPdf.value = false
+  }
+}
 </script>
 
 <template>
@@ -165,6 +271,15 @@ async function downloadRelationPng() {
           @click="downloadRelationPng"
         >
           {{ exportingPng ? '导出中…' : '分享 PNG' }}
+        </button>
+        <button
+          v-if="multiResult && multiResult.matrix.length >= 3"
+          class="fs-btn fs-btn--ghost"
+          :disabled="exportingMultiPdf"
+          data-testid="relation-export-multi-pdf"
+          @click="downloadMultiMatrixPdf"
+        >
+          {{ exportingMultiPdf ? '导出中…' : '矩阵 PDF' }}
         </button>
       </template>
     </VolumeHead>
@@ -233,6 +348,43 @@ async function downloadRelationPng() {
           />
         </label>
       </div>
+
+      <div class="third-toggle">
+        <label class="checkbox-row">
+          <input v-model="enableThirdPerson" type="checkbox" data-testid="relation-enable-third" />
+          <span>加入第三人（多人缘分矩阵 · 3×3）</span>
+        </label>
+      </div>
+
+      <div v-if="enableThirdPerson" class="field-grid third-grid">
+        <label class="field">
+          <span>第三人称呼</span>
+          <input v-model="thirdLabel" type="text" placeholder="可选" data-testid="relation-third-label" />
+        </label>
+        <label class="field">
+          <span>出生时间</span>
+          <input v-model="thirdBirthDt" type="datetime-local" data-testid="relation-third-birth" />
+        </label>
+        <label class="field">
+          <span>性别</span>
+          <select v-model="thirdGender">
+            <option value="female">女</option>
+            <option value="male">男</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>经度</span>
+          <input
+            v-model.number="thirdLon"
+            type="number"
+            step="0.001"
+            min="-180"
+            max="180"
+            :placeholder="String(partnerLongitude())"
+            data-testid="relation-third-lon"
+          />
+        </label>
+      </div>
       <button
         class="fs-btn fs-btn--primary"
         :disabled="loading"
@@ -272,16 +424,50 @@ async function downloadRelationPng() {
         <h2>分维得分</h2>
         <table class="dim-table">
           <thead>
-            <tr><th>维度</th><th>得分</th><th>说明</th></tr>
+            <tr><th>维度</th><th>得分</th><th>引擎</th><th>说明</th></tr>
           </thead>
           <tbody>
             <tr v-for="d in display.dimensions" :key="d.id">
               <td>{{ d.label }}</td>
               <td>{{ d.score }}/{{ d.max_score }} ({{ dimensionPct(d) }}%)</td>
+              <td>{{ d.engine || '—' }}</td>
               <td>{{ d.description }}</td>
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <section v-if="multiResult && multiResult.matrix.length >= 2" class="fs-card" data-testid="relation-multi-matrix">
+        <h2>多人缘分矩阵</h2>
+        <p class="matrix-harmony">团队和谐度 {{ multiResult.team_harmony_score }}%</p>
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th />
+              <th v-for="(label, idx) in multiLabels" :key="`col-${idx}`">{{ label }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, i) in multiResult.matrix" :key="`row-${i}`">
+              <th>{{ multiLabels[i] }}</th>
+              <td v-for="(score, j) in row" :key="`cell-${i}-${j}`">
+                {{ matrixCellLabel(i, j, score) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section v-if="explainBlocks.length" class="fs-card inference-section">
+        <button class="fs-btn fs-btn--ghost" data-testid="relation-explain-toggle" @click="showExplain = !showExplain">
+          {{ showExplain ? '收起' : '展开' }}关系解读（cite / inference）
+        </button>
+        <ul v-if="showExplain" class="action-list">
+          <li v-for="(block, idx) in explainBlocks" :key="idx" class="explain-line">
+            <span class="layer-tag">{{ block.layer }}</span>
+            {{ block.text }}
+          </li>
+        </ul>
       </section>
 
       <section v-if="display.palaceCross.length" class="fs-card">
@@ -357,6 +543,53 @@ async function downloadRelationPng() {
 }
 
 .field { display: grid; gap: 4px; font-size: 13px; }
+
+.third-toggle { margin: 8px 0 12px; }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.matrix-harmony {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.matrix-table th,
+.matrix-table td {
+  border: 1px solid var(--border-1, #eee);
+  padding: 8px 6px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.explain-line {
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-1, #eee);
+}
+
+.layer-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--inset-tint, #f5f0e6);
+  color: var(--text-3);
+}
 
 .score-hero { text-align: center; }
 

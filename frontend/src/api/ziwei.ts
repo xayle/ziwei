@@ -144,6 +144,15 @@ export async function ziweiMultiCompat(req: MultiCompatRequest): Promise<MultiCo
   return data
 }
 
+/** POST /api/v1/ziwei/multi_compat/export/pdf — 多人矩阵 PDF */
+export async function ziweiMultiCompatExportPdf(req: MultiCompatRequest): Promise<Blob> {
+  const { data } = await apiClient.post<Blob>('/api/v1/ziwei/multi_compat/export/pdf', req, {
+    responseType: 'blob',
+    timeout: 120_000,
+  })
+  return data
+}
+
 /** POST /api/v1/ziwei/batch — 批量排盘（上传CSV，返回ZIP） */
 export async function ziweiBatch(file: File, templateVersion?: string): Promise<Blob> {
   const formData = new FormData()

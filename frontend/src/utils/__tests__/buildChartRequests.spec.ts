@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ProfileData } from '@/stores/profile'
 import {
+  birthDatetimeToZiweiRequest,
   buildBaziRequest,
   buildDefaultLiunianYearOffsets,
   buildFushengReportPdfRequest,
@@ -108,6 +109,16 @@ describe('buildChartRequests', () => {
     expect(req.unknown_time_fallback).toBe('midday')
     expect(req.include_liuri).toBe(true)
     expect(req.notes).toBe('批注')
+  })
+
+  it('birthDatetimeToZiweiRequest parses partner datetime', () => {
+    const req = birthDatetimeToZiweiRequest('1992-05-20T14:00', 'female', 122.117, profile)
+    expect(req.year).toBe(1992)
+    expect(req.month).toBe(5)
+    expect(req.day).toBe(20)
+    expect(req.hour).toBe(14)
+    expect(req.gender).toBe('女')
+    expect(req.longitude).toBe(122.117)
   })
 
   it('passes target_date when provided for bazi', () => {

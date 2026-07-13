@@ -233,3 +233,39 @@ export function buildZiweiCacheKey(data: ProfileData, targetDate?: string): stri
     timelineTargetDate: normalizeTargetDate(targetDate) ?? '',
   })
 }
+
+/** 合盘/多人矩阵：由 datetime-local + 经度构造 ZiweiRequest（继承档案紫微口径） */
+export function birthDatetimeToZiweiRequest(
+  birthDtLocal: string,
+  gender: string,
+  lon: number,
+  defaults: ProfileData,
+): ZiweiRequest {
+  const normalized = birthDtLocal.trim().includes('T')
+    ? (birthDtLocal.trim().length === 16 ? `${birthDtLocal.trim()}:00` : birthDtLocal.trim())
+    : birthDtLocal.trim()
+  const [datePart, timePart = '08:30:00'] = normalized.split('T')
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hour, minute = 0] = timePart.split(':').map(Number)
+  const genderZiwei = gender === 'female' ? '女' : gender === 'male' ? '男' : gender
+
+  return {
+    year,
+    month,
+    day,
+    hour,
+    minute: minute || 0,
+    gender: genderZiwei,
+    longitude: lon,
+    liunian_year: new Date().getFullYear(),
+    template_version: defaults.templateVersion ?? 'standard',
+    late_zishi: defaults.lateZishi ?? true,
+    year_divide: defaults.yearDivide ?? 'lichun',
+    day_divide: defaults.dayDivide ?? 'solar_next',
+    brightness_method: defaults.ziweiBrightnessMethod ?? 'standard',
+    youbi_method: defaults.ziweiYoubiMethod ?? 'month',
+    liunian_sihua_method: defaults.liunianSihuaMethod ?? 'year_stem',
+    kuiyue_method: defaults.kuiyueMethod ?? 'standard',
+    tianma_method: defaults.tianmaMethod ?? 'year',
+  }
+}

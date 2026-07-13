@@ -120,4 +120,50 @@ test.describe('关系合盘 fusheng-relation', () => {
     await page.getByTestId('relation-export-pdf').click()
     await page.getByTestId('relation-export-png').click()
   })
+
+  test('fusheng-relation-multi：第三人矩阵与解读', async ({ page }) => {
+    await page.route('**/api/v1/relation/explain/batch', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          chart_hash: 'relation:couple:test',
+          disclaimer_block: { text: 'E2E explain', version: '1' },
+          sections: [{
+            section_id: 'relation_reading',
+            blocks: [{ text: 'E2E 关系解读', layer: 'cite' }],
+          }],
+        }),
+      })
+    })
+    await page.route('**/api/v1/ziwei/multi_compat', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          schema_version: 'multi-compat@1.1',
+          person_count: 3,
+          relation_type: 'couple',
+          team_harmony_score: 66,
+          matrix: [[100, 66, 80], [66, 100, 59], [80, 59, 100]],
+          pairs: [
+            { person_a_idx: 0, person_b_idx: 1, total_score: 66, max_score: 100, level: '中', combined_score: 65.5, bazi_score: 60, ziwei_score: 71 },
+            { person_a_idx: 0, person_b_idx: 2, total_score: 80, max_score: 100, level: '上', combined_score: 80, bazi_score: 77, ziwei_score: 83 },
+            { person_a_idx: 1, person_b_idx: 2, total_score: 59, max_score: 100, level: '中', combined_score: 59, bazi_score: 52, ziwei_score: 66 },
+          ],
+        }),
+      })
+    })
+    await fillMinimalProfile(page)
+    await gotoApp(page, 'relation/new?type=couple')
+    await page.getByTestId('relation-partner-birth').fill('1992-05-20T14:00')
+    await page.getByTestId('relation-enable-third').check()
+    await page.getByTestId('relation-third-birth').fill('1993-06-29T15:15')
+    await page.getByTestId('relation-third-lon').fill('122.117')
+    await page.getByTestId('relation-run').click()
+    await expect(page.getByTestId('relation-result')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByTestId('relation-multi-matrix')).toBeVisible()
+    await page.getByTestId('relation-explain-toggle').click()
+    await expect(page.getByText('E2E 关系解读')).toBeVisible()
+  })
 })

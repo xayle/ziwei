@@ -1,9 +1,11 @@
 import apiClient from './client'
+import type { ExplainBatchResponse } from './explain'
 import type {
   ActionItemModel,
   DimensionScoreModel,
   PalaceCrossModel,
   ProfileSummaryResponse,
+  RelationExplainBatchRequest,
   RelationFullRequest,
   RelationFullResponse,
   RelationPersonInput,
@@ -13,7 +15,7 @@ import type {
 
 // ── 请求 / 响应（OpenAPI 真源 · P3-3）──────────────────────
 export type RelationType = RelationFullRequest['relation_type']
-export type { RelationFullRequest, RelationFullResponse, RelationPersonInput, ProfileSummaryResponse }
+export type { RelationExplainBatchRequest, RelationFullRequest, RelationFullResponse, RelationPersonInput, ProfileSummaryResponse }
 
 // ── 嵌套模型（FE 别名 · 向后兼容）──────────────────────────
 export type SummaryCard = SummaryCardModel
@@ -49,6 +51,13 @@ export async function relationExportPng(body: RelationFullRequest): Promise<Blob
     responseType: 'blob',
     timeout: 60_000,
   })
+  return data
+}
+
+export async function relationExplainBatch(
+  body: RelationExplainBatchRequest,
+): Promise<ExplainBatchResponse> {
+  const { data } = await apiClient.post<ExplainBatchResponse>('/api/v1/relation/explain/batch', body)
   return data
 }
 
