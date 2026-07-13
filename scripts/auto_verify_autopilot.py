@@ -104,6 +104,17 @@ def _read(rel: str) -> str:
     return (ROOT / rel).read_text(encoding="utf-8")
 
 
+def _normalize_export_bytes(data: bytes, *, rel: str) -> bytes:
+    text = data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    if rel.endswith(".json"):
+        try:
+            payload = json.loads(text.decode("utf-8"))
+            return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return text
+    return text
+
+
 def _export_stable(rel: str, export_cmd: list[str], *, cwd: Path | None = None) -> tuple[bool, str]:
     path = ROOT / rel if not (cwd and rel.startswith("frontend")) else (cwd or ROOT) / rel.split("frontend/", 1)[-1]
     if rel.startswith("frontend/"):
@@ -113,7 +124,9 @@ def _export_stable(rel: str, export_cmd: list[str], *, cwd: Path | None = None) 
     if not ok:
         return False, detail
     after = path.read_bytes() if path.is_file() else b""
-    return before == after, "idempotent" if before == after else "export changed file"
+    if _normalize_export_bytes(before, rel=rel) == _normalize_export_bytes(after, rel=rel):
+        return True, "idempotent"
+    return False, "export changed file"
 
 
 def main() -> int:

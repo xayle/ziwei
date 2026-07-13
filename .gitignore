@@ -9,6 +9,10 @@ data/
 !data/glossary.json
 !data/ground_truth_cases.json
 !data/dual_verify_cases.json
+!data/ziwei_ground_truth.json
+!data/relation_golden_cases.json
+!data/classics.json
+!data/concepts.json
 !data/name_eighty_one.json
 !data/name_sancai.json
 !data/name_chars.json

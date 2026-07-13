@@ -1,0 +1,165 @@
+{
+  "schema_version": "relation-golden@1.0",
+  "cases": [
+    {
+      "id": "RG-COUPLE-01",
+      "relation_type": "couple",
+      "description": "刘博 × 程安东 · 日支丑未冲",
+      "request": {
+        "relation_type": "couple",
+        "person_a": {
+          "birth_datetime": "1990-07-17T12:25:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 117.18,
+          "gender": "female",
+          "label": "刘博"
+        },
+        "person_b": {
+          "birth_datetime": "1990-06-17T20:15:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 117.49,
+          "gender": "male",
+          "label": "程安东"
+        },
+        "options": {
+          "include_bazi": true,
+          "include_ziwei": true,
+          "liunian_year": 2026
+        }
+      },
+      "assertions": {
+        "day_branch_max_score_ratio": 0.2,
+        "day_branch_contains": "丑",
+        "summary_cards_conflict_contains": "丑",
+        "min_dimensions": 6,
+        "min_timeline_nodes": 4,
+        "min_palace_cross": 2
+      }
+    },
+    {
+      "id": "RG-FRIEND-01",
+      "relation_type": "friend",
+      "request": {
+        "relation_type": "friend",
+        "person_a": {
+          "birth_datetime": "1990-07-17T12:25:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 117.18,
+          "gender": "female",
+          "label": "甲"
+        },
+        "person_b": {
+          "birth_datetime": "1992-03-08T08:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "male",
+          "label": "乙"
+        }
+      },
+      "assertions": {
+        "forbidden_in_summary": ["婚后"],
+        "min_summary_cards": 3
+      }
+    },
+    {
+      "id": "RG-PARENT-01",
+      "relation_type": "parent_child",
+      "request": {
+        "relation_type": "parent_child",
+        "person_a": {
+          "birth_datetime": "1970-05-01T10:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "female",
+          "label": "母"
+        },
+        "person_b": {
+          "birth_datetime": "2000-08-15T14:30:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "male",
+          "label": "子"
+        }
+      },
+      "assertions": {
+        "min_palace_cross": 1,
+        "forbidden_in_summary": ["婚嫁"]
+      }
+    },
+    {
+      "id": "RG-BIZ-01",
+      "relation_type": "business_partner",
+      "request": {
+        "relation_type": "business_partner",
+        "person_a": {
+          "birth_datetime": "1985-11-20T09:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 121.47,
+          "gender": "male",
+          "label": "合伙人A"
+        },
+        "person_b": {
+          "birth_datetime": "1988-02-14T16:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 114.05,
+          "gender": "male",
+          "label": "合伙人B"
+        }
+      },
+      "assertions": {
+        "dimension_ids_include": ["wealth_cross"],
+        "min_palace_cross": 2
+      }
+    },
+    {
+      "id": "RG-COLLEAGUE-01",
+      "relation_type": "colleague",
+      "request": {
+        "relation_type": "colleague",
+        "person_a": {
+          "birth_datetime": "1993-04-05T08:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "female",
+          "label": "同事A"
+        },
+        "person_b": {
+          "birth_datetime": "1991-09-12T18:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "male",
+          "label": "同事B"
+        }
+      },
+      "assertions": {
+        "palace_cross_contains_palace": "官禄宫"
+      }
+    },
+    {
+      "id": "RG-SUP-01",
+      "relation_type": "supervisor_subordinate",
+      "request": {
+        "relation_type": "supervisor_subordinate",
+        "supervisor_id": "a",
+        "person_a": {
+          "birth_datetime": "1980-01-10T09:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "male",
+          "label": "上级"
+        },
+        "person_b": {
+          "birth_datetime": "1995-06-25T10:00:00",
+          "tz": "Asia/Shanghai",
+          "longitude": 116.41,
+          "gender": "female",
+          "label": "下属"
+        }
+      },
+      "assertions": {
+        "dimension_ids_include": ["official_kill_cross"],
+        "requires_supervisor_id": true
+      }
+    }
+  ]
+}
