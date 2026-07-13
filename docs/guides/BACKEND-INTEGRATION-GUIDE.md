@@ -109,6 +109,16 @@ Windows 下也可以使用项目已有的启动脚本。如果 8000 被占用，
 - `POST /api/v1/bazi/batch-compare`
 - `POST /api/v1/bazi/liunian-report`
 - `GET /api/v1/bazi/liunian-report/{task_id}`
+
+**T075 生产队列：** 设 `REDIS_URL`（或 `LIUNIAN_REDIS_URL`）后提交走 Redis list；启动 worker：
+
+```bash
+docker compose --profile liunian up -d redis liunian-worker
+# 或本地：python scripts/run_liunian_worker.py
+```
+
+响应字段 `queue_backend`：`redis` | `asyncio`（无 Redis 时单进程回退）。指标 Hash：`fusheng:liunian:metrics`（enqueued/done/failed/poison）。
+
 - `GET /api/v1/bazi/golden-cases`
 
 ### 紫微

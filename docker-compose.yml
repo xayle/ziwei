@@ -12,43 +12,43 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    
+
     container_name: bazi-api
-    
+
     # 端口映射
     ports:
       - "${API_PORT:-8000}:8000"
-    
+
     # 环境变量
     environment:
       # Python配置
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
-      
+
       # 应用配置
       TZ: Asia/Shanghai
-      
+
       # Uvicorn配置
       UVICORN_WORKERS: "${UVICORN_WORKERS:-4}"
       UVICORN_LOG_LEVEL: "${UVICORN_LOG_LEVEL:-info}"
-      
+
       # 数据库配置 (可选，默认SQLite)
       DB_PATH: "${DB_PATH:-/app/data/mingli.db}"
-      
+
       # 引擎路由开关 (M1任务1.23: M1完成后切为 true)
       ENGINE_V2: "${ENGINE_V2:-true}"
-      
+
       # API配置
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}"
-    
+
     # 卷挂载 (用于数据持久化)
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    
+
     # 重启策略
     restart: unless-stopped
-    
+
     # 资源限制 (生产环境推荐)
     deploy:
       resources:
@@ -58,7 +58,7 @@ services:
         reservations:
           cpus: "${DEPLOY_CPU_RESERVE:-0.5}"
           memory: "${DEPLOY_MEMORY_RESERVE:-256M}"
-    
+
     # 健康检查
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
@@ -66,7 +66,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    
+
     # 日志配置
     logging:
       driver: "json-file"
@@ -92,6 +92,47 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # T075 · P3-03 — liunian Redis 队列（可选；profile=liunian）
+  redis:
+    profiles: ["liunian"]
+    image: redis:7-alpine
+    container_name: bazi-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  liunian-worker:
+    profiles: ["liunian"]
+    image: bazi:v8.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bazi-liunian-worker
+    command: ["python", "scripts/run_liunian_worker.py"]
+    environment:
+      PYTHONUNBUFFERED: 1
+      TZ: Asia/Shanghai
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
+      LIUNIAN_REDIS_URL: "${LIUNIAN_REDIS_URL:-redis://redis:6379/0}"
+      DB_PATH: "${DB_PATH:-/app/data/mingli.db}"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 # ============================================================================
 # 网络配置

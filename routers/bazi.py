@@ -1166,8 +1166,6 @@ def get_golden_cases(
 
 
 # ─────────────────────────── D4: 流年年度报告（异步 202 · DB 持久化） ────────────────────────────────
-import asyncio as _asyncio  # noqa: E402
-
 from services.liunian_report_service import (
     build_liunian_report as _run_liunian_report_task,
 )
@@ -1193,6 +1191,10 @@ class LiunianReportResponse(BaseModel):
     finished_at: str | None = None
     result: dict | None = None
     error: str | None = None
+    queue_backend: str | None = Field(
+        default=None,
+        description="T075：redis（多实例队列）或 asyncio（单进程回退）",
+    )
 
 
 @router.post(
@@ -1208,8 +1210,10 @@ async def submit_liunian_report(
     session: Session = Depends(get_session),
 ):
     """
-    D4: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。
-    - 立即返回 202 Accepted + task_id
+    D4 / T075: 异步生成流年年度报告（DB 持久化，进程重启可恢复轮询）。
+    - 立即返回 202 Accepted + task_id（含 queue_backend=redis|asyncio）
+    - 有 REDIS_URL / LIUNIAN_REDIS_URL 时入队，由 ``scripts/run_liunian_worker.py`` 消费
+    - 无 Redis 时回退 asyncio.create_task（单进程开发）
     - 轮询 GET /api/v1/bazi/liunian-report/{task_id} 获取结果
     """
     from app.models import Case as _Case2
@@ -1225,11 +1229,18 @@ async def submit_liunian_report(
         year=payload.year,
         include_months=payload.include_months,
     )
-    _bg_task = _asyncio.create_task(
-        _run_liunian_report_task(task.id, payload.case_id, payload.year, payload.include_months)
+    from services.liunian_queue import dispatch_liunian_job
+
+    backend = dispatch_liunian_job(
+        task_id=task.id,
+        case_id=payload.case_id,
+        year=payload.year,
+        include_months=payload.include_months,
+        runner=_run_liunian_report_task,
     )
-    del _bg_task
-    return task_to_response_dict(task)
+    out = task_to_response_dict(task)
+    out["queue_backend"] = backend
+    return out
 
 
 @router.get(

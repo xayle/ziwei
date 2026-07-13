@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.4 |
+| **版本** | post-w14-1.5 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase E** — **T079–T083 ☑** → **下一项 T075**（liunian Redis）或 **T084**（legacy 瘦化） |
+| **当前优先级** | ▶ **Phase E** — **T075 · T079–T084 ☑** → **下一项 T076**（snippets）或 **T085**（U5 签字） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -17,8 +17,8 @@
 ```text
 前置  T070 ☑（W14 · W102-22 closeout）
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
-BE    T072–T074 机读已落地 ☑ · T075–T078 待/partial
-FE    T079–T083 ☑（volumes 权威 · 无双重 cite · E2E 六卷+跋）→ 下一项 T084 / 并行 T075
+BE    T072–T075 · T084 ☑ · T076–T078 待
+FE    T079–T083 ☑ → 下一项 **T085 U5 签字**（或并行 T076）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -94,7 +94,7 @@ P14  上线评估  T136–T140
 | ☑ | **T072** | BE | **P3-01** `GET /api/v1/life/volumes/{case_id}` 返回 life-volume@1.0 | `routers/life.py` · `services/life_volume_service.py` | schema 契约绿 |
 | ☑ | **T073** | BE | colophon 后端聚合（iztro/wenmo/missing/disclaimer） | `_build_colophon` | 响应含 colophon |
 | ☑ | **T074** | BE | explain 结果写入 volume sections（非 FE 拼 cite） | `life_volume_service` | 卷一/二/四/五 explain 来自 BE |
-| ☐ | **T075** | BE | **P3-03** liunian Redis worker 生产配置 | `services/liunian_*` · docker/compose | 队列消费可观测 |
+| ☑ | **T075** | BE | **P3-03** liunian Redis worker 生产配置 | `liunian_queue.py` · `run_liunian_worker.py` · compose profile | 可观测 enqueued/done/poison · 无 Redis 回退 asyncio |
 | ☐ | **T076** | BE | **P3-02** `GET /api/v1/life/snippets` 草案（hooks 3–5 条） | `routers/life.py` | BOOK-GTM §5.3 形状 |
 | ☐ | **T077** | BE | **P3-04** archive-bundle 可选合并 name/zeri 指针 | `fusheng_archive` | OpenAPI 更新 |
 | ☐ | **T078** | ALL | OpenAPI export + `npm run gen:types`；life-volume 契约测试双端 | CI | PR diff 阻断 |
@@ -103,7 +103,7 @@ P14  上线评估  T136–T140
 | ☑ | **T081** | FE | `buildLifeVolumes.ts` 标 **deprecated**；remote 成功时生产路径不调用 | 注释 + `shouldBuildLifeVolumesAdapter` + FE-DEV | Vitest + Report 门控 |
 | ☑ | **T082** | FE | remote volumes 成功则跳过 explain/batch；卷内已有 explain 段时隐藏对应 AnalysisPanel | `ReportView.vue` | 无双重 cite · waterfall archive+volumes |
 | ☑ | **T083** | ALL | E2E：volumes API 路径六卷+跋断言 | `e2e/fusheng-life-volumes.spec.ts` | 3/3 + report 11/11 |
-| ☐ | **T084** | BE | Compute **legacy 瘦化收尾**：`interpretation_text` 默认 off；文档迁移说明 | `bazi/full` · `ziwei/full` | Q4 闭环 |
+| ☑ | **T084** | BE | Compute **legacy 瘦化收尾**：`interpretation_text` 默认 off；文档迁移说明 | [T084 报告](../reports/T084-legacy-slim-2026-07-14.md) | Q4 闭环 |
 | ☐ | **T085** | ALL | **U5 签字**：15 分钟建档→报告；数据来自 **life/volumes**；跋权威 | — | **P3 Gate** |
 
 **J-验收命令：**
@@ -305,6 +305,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-1.5 | 2026-07-14 | **T075 · T084 ☑** · liunian Redis 队列/worker · Q4 legacy 收尾 · 下一项 T076/T085 |
 | post-w14-1.4 | 2026-07-14 | **T082–T083 ☑** · 无双重 cite · volumes E2E 六卷+跋 · 下一项 T075/T084 |
 | post-w14-1.3 | 2026-07-14 | **T081 ☑** · buildLifeVolumes deprecated · remote 成功跳过 Adapter · 下一项 T075/T082 |
 | post-w14-1.2 | 2026-07-14 | **T079–T080 ☑** · volumes flag + 跳过 explain/batch · 下一项 T075/T081 |
