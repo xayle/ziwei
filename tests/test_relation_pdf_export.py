@@ -84,6 +84,8 @@ def test_render_relation_compat_html_contains_trust_fields():
 def test_render_multi_compat_html_matrix():
     html = render_multi_compat_html(
         {
+            "schema_version": "multi-compat@1.1",
+            "request_id": "req-multi-test",
             "person_count": 2,
             "team_harmony_score": 66,
             "matrix": [[100, 66], [66, 100]],
@@ -94,6 +96,10 @@ def test_render_multi_compat_html_matrix():
     assert "多人缘分矩阵" in html
     assert "黄" in html and "路" in html
     assert "66" in html
+    assert "multi-compat@1.1" in html
+    assert "req-multi-test" in html
+    assert "@page" in html
+    assert "counter(page)" in html
 
 
 def test_relation_export_png_endpoint(client: TestClient, monkeypatch: pytest.MonkeyPatch):
@@ -126,8 +132,12 @@ def test_relation_export_pdf_endpoint(client: TestClient, monkeypatch: pytest.Mo
 
 
 def test_multi_compat_export_pdf_endpoint(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    import re
+
     async def _fake_pdf(html: str) -> bytes:
         assert "多人缘分矩阵" in html
+        assert "multi-compat@" in html
+        assert re.search(r"[0-9a-f]{8}-[0-9a-f]{4}-", html), "PDF meta should include request_id UUID"
         return b"%PDF-1.4 multi"
 
     monkeypatch.setattr("services.pdf_exporter.render_html_to_pdf", _fake_pdf)

@@ -273,6 +273,10 @@ def render_multi_compat_html(payload: dict[str, Any], labels: list[str] | None =
     names = labels or [f"成员{i + 1}" for i in range(n)]
     matrix = payload.get("matrix") or []
     generated = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    request_id = payload.get("request_id") or "—"
+    schema_version = payload.get("schema_version") or "multi-compat@1.0"
+    font_face_css = pdf_song_font_face_css()
+    body_font = pdf_body_font_family()
 
     header = "".join(f"<th>{_esc(names[i] if i < len(names) else i + 1)}</th>" for i in range(n))
     body_rows = ""
@@ -303,17 +307,39 @@ def render_multi_compat_html(payload: dict[str, Any], labels: list[str] | None =
   <meta charset="utf-8" />
   <title>多人合盘矩阵</title>
   <style>
-    body {{ font-family: "Noto Serif SC", STSong, serif; color: #1a1410; background: #f5f0e6; font-size: 11pt; }}
-    .sheet {{ background: #fffaf5; border: 1px solid #d4c4a8; padding: 24px; margin-bottom: 16px; }}
-    h1 {{ font-size: 18pt; margin: 0 0 16px; }}
-    table {{ width: 100%; border-collapse: collapse; }}
-    th, td {{ border: 1px solid #e5dcc8; padding: 8px; text-align: center; }}
+    {font_face_css}
+    @page {{
+      margin: 12mm 10mm 16mm;
+      @bottom-center {{
+        content: counter(page) " / " counter(pages);
+        font-size: 9pt;
+        color: #9a8b7a;
+      }}
+    }}
+    body {{
+      font-family: {body_font};
+      color: #1a1410;
+      background: #f5f0e6;
+      font-size: 11pt;
+      line-height: 1.65;
+    }}
+    .sheet {{
+      background: #fffaf5;
+      border: 1px solid #d4c4a8;
+      padding: 28px 32px;
+      margin-bottom: 16px;
+    }}
+    h1 {{ font-size: 20pt; letter-spacing: 0.12em; margin: 0 0 8px; }}
+    h2 {{ font-size: 13pt; margin: 24px 0 12px; border-left: 3px solid #b8894d; padding-left: 10px; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 10pt; }}
+    th, td {{ border-bottom: 1px solid #e5dcc8; padding: 8px 6px; text-align: center; vertical-align: top; }}
+    th {{ color: #6b5d4f; font-weight: 600; }}
     .meta {{ color: #6b5d4f; font-size: 9pt; }}
   </style>
 </head>
 <body>
   <section class="sheet">
-    <p class="meta">浮生 · multi_compat · {_esc(generated)}</p>
+    <p class="meta">浮生 · {_esc(schema_version)} · {_esc(request_id)} · {_esc(generated)}</p>
     <h1>多人缘分矩阵（{n} 人）</h1>
     <p>团队和谐指数：<strong>{_esc(harmony)}</strong> / 100</p>
     <table>
@@ -325,7 +351,7 @@ def render_multi_compat_html(payload: dict[str, Any], labels: list[str] | None =
     <h2>两两组合</h2>
     <table>
       <thead><tr><th>组合</th><th>紫微分</th><th>等级</th><th>综合分</th></tr></thead>
-      <tbody>{pair_rows or "<tr><td colspan='3'>—</td></tr>"}</tbody>
+      <tbody>{pair_rows or "<tr><td colspan='4'>—</td></tr>"}</tbody>
     </table>
   </section>
 </body>

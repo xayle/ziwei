@@ -9,6 +9,7 @@ from sqlmodel import Session, select
 
 from app.dependencies import RequiredUser
 from app.models import Case
+from app.schemas.disclaimer import DisclaimerBlockModel
 from app.schemas.relation_compat import ProfileSummaryResponse
 from db import get_session
 from services.case_chart_requests import case_to_bazi_request, case_to_ziwei_request
@@ -107,5 +108,5 @@ def get_profile_summary(
         ziwei_ming_one_liner=ziwei_ming,
         current_dayun=dayun_label,
         liunian_2026_tag=liunian_tag,
-        disclaimer_block=default_disclaimer_block(),
+        disclaimer_block=DisclaimerBlockModel(**default_disclaimer_block()),
     )

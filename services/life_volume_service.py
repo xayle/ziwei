@@ -342,7 +342,7 @@ async def build_life_volumes_for_case(case: Case, *, request_id: str | None = No
             },
         ).model_copy(
             update={
-                "disclaimer_block": default_disclaimer_block(),
+                "disclaimer_block": DisclaimerBlockModel(**default_disclaimer_block()),
                 "content_versions": content_versions_meta(),
                 "wenmo_advisory": default_wenmo_advisory(),
             }

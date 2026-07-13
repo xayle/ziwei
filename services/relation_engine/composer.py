@@ -8,6 +8,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from app.schemas import BaziFullRequest
+from app.schemas.disclaimer import DisclaimerBlockModel
 from app.schemas.ziwei import ZiweiRequest
 from constants import RULE_VERSION
 from services.chart_snapshot_service import build_bazi_snapshot, build_ziwei_snapshot
@@ -369,7 +370,7 @@ def compute_relation_full(
         "grade": grade,
         "summary": summary,
         "summary_cards": summary_cards,
-        "disclaimer_block": default_disclaimer_block(),
+        "disclaimer_block": DisclaimerBlockModel(**default_disclaimer_block()).model_dump(mode="json"),
         "layers": {
             "fact": {"collapsed_default": False, "sections": []},
             "cite": {"collapsed_default": True, "sections": cite_sections},

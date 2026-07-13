@@ -27,6 +27,8 @@ def test_ziwei_horoscope_iztro_produces_wm01_report():
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=120,
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
@@ -44,6 +46,8 @@ def test_wenmo_bazi_diff_produces_report():
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=180,
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout
@@ -60,6 +64,8 @@ def test_wenmo_horoscope_diff_produces_report():
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=120,
     )
     assert proc.returncode == 0, proc.stderr or proc.stdout

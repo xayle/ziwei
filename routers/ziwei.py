@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from starlette.requests import Request
 from starlette.responses import Response
 
+from app.schemas.disclaimer import DisclaimerBlockModel
 from app.schemas.explain import ExplainBatchResponse, ZiweiExplainBatchRequest
 from app.schemas.provenance import ResponseProvenance
 from app.schemas.ziwei import (
@@ -739,7 +740,7 @@ async def compute_ziwei(request: Request, req: ZiweiRequest) -> ZiweiResponse:
     return apply_trust_level(
         response.model_copy(
             update={
-                "disclaimer_block": default_disclaimer_block(),
+                "disclaimer_block": DisclaimerBlockModel(**default_disclaimer_block()),
                 "content_versions": content_versions_meta(),
                 "wenmo_advisory": default_wenmo_advisory(),
             }
@@ -951,12 +952,16 @@ async def _compute_multi_compat(req: MultiCompatRequest) -> MultiCompatResponse:
 @limiter.limit("10/minute")
 async def multi_compat_export_pdf(request: Request, req: MultiCompatRequest) -> Response:
     """R086 P1：multi_compat 矩阵走 render_html_to_pdf 正式管线。"""
+    from uuid import uuid4
+
     from services.pdf_exporter import render_html_to_pdf
     from services.relation_pdf_service import render_multi_compat_html
 
     result = await _compute_multi_compat(req)
     labels = [getattr(p, "gender", None) or f"成员{i + 1}" for i, p in enumerate(req.person_list)]
-    html = render_multi_compat_html(result.model_dump(mode="json"), labels=labels)
+    payload = result.model_dump(mode="json")
+    payload["request_id"] = str(uuid4())
+    html = render_multi_compat_html(payload, labels=labels)
     try:
         pdf_bytes = await render_html_to_pdf(html)
     except Exception as exc:

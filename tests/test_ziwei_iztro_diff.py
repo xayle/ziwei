@@ -27,6 +27,8 @@ def test_ziwei_iztro_diff_produces_report():
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=120,
     )
     assert REPORT.exists(), proc.stderr or proc.stdout
@@ -50,6 +52,8 @@ def test_ziwei_iztro_hour_mode_aux_aligned():
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=120,
         env={**dict(os.environ), "PYTHONIOENCODING": "utf-8"},
     )
