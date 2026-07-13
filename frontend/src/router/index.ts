@@ -102,6 +102,12 @@ const router = createRouter({
       meta: { title: '登录', public: true },
     },
     {
+      path: '/landing',
+      name: 'landing',
+      component: () => import('@/views/landing/LandingVolume.vue'),
+      meta: { title: '卷首', public: true },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),

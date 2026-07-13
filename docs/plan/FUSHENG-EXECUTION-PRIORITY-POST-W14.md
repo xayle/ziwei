@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-2.4 |
+| **版本** | post-w14-2.5 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase F GTM** — T086–T090 ☑ → **下一项 T091**（LandingVolume） |
+| **当前优先级** | ▶ **Phase F GTM** — T086–T091 ☑ → **下一项 T092**（卷锁定态 UI） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -19,7 +19,7 @@
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE+FE T072–T084 ☑
 U5    T085 ☑（2026-07-14）
-GTM   T086–T090 ☑ → 下一项 **T091**（LandingVolume）
+GTM   T086–T091 ☑ → 下一项 **T092**（卷锁定态 UI）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -128,7 +128,7 @@ make scorecard
 | ☑ | **T088** | BE | **BE-GTM-02** 注册/案例 `utm_source` `utm_campaign` `content_id` | [T088 报告](../reports/T088-utm-attribution-2026-07-14.md) · Case/User · auth | 抖音视频 ID 可存 |
 | ☑ | **T089** | BE | **BE-GTM-01** `POST /api/v1/analytics/events` 批量事件 | [T089 报告](../reports/T089-analytics-events-2026-07-14.md) · `analytics_events` | 卷目阅读/术语点击 · PII scrub |
 | ☑ | **T090** | FE | **FE-GTM-06** `utils/analytics.ts` 封装；**禁**姓名/生日进 payload | [T090 报告](../reports/T090-fe-analytics-2026-07-14.md) | Vitest 隐私评审 |
-| ☐ | **T091** | FE | **FE-GTM-01** `LandingVolume.vue` 卷首摘要 + CTA 建档 | `views/landing/` | 375px 无横滚 |
+| ☑ | **T091** | FE | **FE-GTM-01** `LandingVolume.vue` 卷首摘要 + CTA 建档 | [T091 报告](../reports/T091-landing-volume-2026-07-14.md) · `/landing` | 375px 无横滚 E2E |
 | ☐ | **T092** | FE | **FE-GTM-03** 卷锁定态 UI + 付费墙文案（可 mock 支付） | `VolumeSection.vue` | locked 卷显示锁+说明 |
 | ☐ | **T093** | BE | **BE-GTM-06** 支付 webhook → 写 entitlement | `routers/payment.py` | 沙箱回调通 |
 | ☐ | **T094** | FE | 支付成功刷新 entitlement；解锁卷三~五 | 支付回调页 | 卷目可展开 |
@@ -275,7 +275,8 @@ make scorecard
 - [x] entitlement 中间件生效（T086 · `enforce_entitlement`）
 - [x] utm 归因入库（T088）
 - [x] analytics 无 PII（T089 BE scrub；T090 FE 封装）
-- [ ] 落地页 + 锁卷 UI
+- [x] 落地页（T091 LandingVolume · 375 无横滚）
+- [ ] 锁卷 UI
 - [ ] disclaimer 合规
 
 ### Extension（若做 T106–T115）
@@ -306,6 +307,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-2.5 | 2026-07-14 | **T091 ☑** · LandingVolume 抖音落地 · 下一项 T092 锁卷 UI |
 | post-w14-2.4 | 2026-07-14 | **T090 ☑** · FE analytics.ts 隐私守卫 · 下一项 T091 LandingVolume |
 | post-w14-2.3 | 2026-07-14 | **T089 ☑** · analytics/events 批量埋点 · 下一项 T090 FE |
 | post-w14-2.2 | 2026-07-14 | **T088 ☑** · utm 归因注册/建档 · 下一项 T089 analytics |

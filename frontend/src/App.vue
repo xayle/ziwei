@@ -7,7 +7,7 @@ import NewAppShell from '@/components/new/NewAppShell.vue'
 const router = useRouter()
 const route  = useRoute()
 
-const isLoginRoute = computed(() => route.name === 'login')
+const isBareRoute = computed(() => route.name === 'login' || route.name === 'landing')
 
 function handleUnauthorized() {
   const redirect = router.currentRoute.value.fullPath
@@ -23,8 +23,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 登录页：裸渲染，无三栏壳 -->
-  <RouterView v-if="isLoginRoute" />
+  <!-- 登录 / 抖音落地：裸渲染，无三栏壳 -->
+  <RouterView v-if="isBareRoute" />
 
   <!-- 其他页面：统一使用新壳 -->
   <NewAppShell v-else>
