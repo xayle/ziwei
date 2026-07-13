@@ -28,13 +28,15 @@ import { buildBaziModuleCards, baziModuleCardsToAnalysisBlocks } from '@/utils/b
 import { buildZiweiInsightBlocks, buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
 import { buildChartHash } from '@/utils/chartHash'
-import { fetchLifeVolumes, useLifeVolumesApiEnabled } from '@/api/life'
+import { fetchLifeVolumes, fetchLifeSnippets, useLifeVolumesApiEnabled } from '@/api/life'
+import type { LifeSnippetsResponseModel } from '@/api/openapiTypes'
 import { fetchReportExplainBatches, type ExplainBatchResponse } from '@/api/explain'
 import type { LifeVolumeResponse, LifeVolume } from '@/types/life-volume'
 import { buildBaziRequest, buildZiweiRequest } from '@/utils/buildChartRequests'
 import ReportChapterNav from '@/components/fusheng/ReportChapterNav.vue'
 import VolumeSection from '@/components/fusheng/VolumeSection.vue'
 import VolumePaywall from '@/components/fusheng/VolumePaywall.vue'
+import SnippetHooksPanel from '@/components/fusheng/SnippetHooksPanel.vue'
 import ColophonFootnote from '@/components/fusheng/ColophonFootnote.vue'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
@@ -175,6 +177,16 @@ async function loadLifeVolumesRemote() {
   if (doc.chart_hash) {
     chartHashRef.value = doc.chart_hash
   }
+}
+
+const lifeSnippets = ref<LifeSnippetsResponseModel | null>(null)
+
+async function loadLifeSnippets() {
+  lifeSnippets.value = null
+  if (!auth.isLoggedIn) return
+  const caseId = profile.activeProfile?.remoteCaseId ?? profile.activeProfileId
+  if (!caseId) return
+  lifeSnippets.value = await fetchLifeSnippets(caseId)
 }
 
 const lifeVolumeLocal = computed(() => {
@@ -540,6 +552,7 @@ async function finalizeReportLoad() {
   }
   // T079/T082：先拉 life/volumes；remote 已含 BE explain 则跳过 explain/batch（无双重 cite）
   await loadLifeVolumesRemote()
+  void loadLifeSnippets()
   const volumesHasExplain = Boolean(lifeVolumeRemote.value)
   if (!volumesHasExplain) {
     await loadExplainBatches()
@@ -556,6 +569,7 @@ async function finalizeReportLoad() {
 
 async function reloadFullReport() {
   lifeVolumeRemote.value = null
+  lifeSnippets.value = null
   await loadReport()
   await finalizeReportLoad()
 }
@@ -644,6 +658,15 @@ watch(
           :reading-failed="reportReadingFailed"
           :using-dynamic-reading="reportUsingDynamicReading"
           @resume="resumeReading"
+        />
+        <SnippetHooksPanel
+          v-if="lifeSnippets?.hooks?.length"
+          class="no-print"
+          :hooks="lifeSnippets.hooks"
+          :case-id="lifeSnippets.case_id"
+          :vertical-title="lifeSnippets.vertical_title"
+          :disclaimer="lifeSnippets.disclaimer"
+          source="report"
         />
         <TrustDegradedBanner
           v-if="iztro?.status === 'degraded'"

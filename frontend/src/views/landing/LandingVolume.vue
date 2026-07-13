@@ -6,6 +6,9 @@ import {
   LANDING_CTA,
   LANDING_DISCLAIMER,
   LANDING_HEADLINE,
+  LANDING_HOOK_SNIPPETS,
+  LANDING_HOOKS_DISCLAIMER,
+  LANDING_HOOKS_TITLE,
   LANDING_LEAD,
   LANDING_PREFACE_PARAS,
   LANDING_TAGLINE,
@@ -13,6 +16,7 @@ import {
 } from '@/constants/landingVolume'
 import { captureUtmFromQuery, utmAsQuery } from '@/utils/utmCapture'
 import { flushAnalytics, track, trackLandingCta, trackVolumeView } from '@/utils/analytics'
+import SnippetHooksPanel from '@/components/fusheng/SnippetHooksPanel.vue'
 import '@/assets/variables.css'
 
 const route = useRoute()
@@ -67,6 +71,13 @@ function goArchive() {
           <span class="landing-volume__teaser-note">{{ item.note }}</span>
         </li>
       </ul>
+
+      <SnippetHooksPanel
+        :hooks="LANDING_HOOK_SNIPPETS"
+        :vertical-title="LANDING_HOOKS_TITLE"
+        :disclaimer="LANDING_HOOKS_DISCLAIMER"
+        source="landing"
+      />
 
       <div class="landing-volume__cta-row">
         <button

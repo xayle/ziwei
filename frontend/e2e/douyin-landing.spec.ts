@@ -18,6 +18,8 @@ test.describe('抖音落地页 LandingVolume', () => {
     await expect(page.getByTestId('landing-volume')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('landing-cta')).toBeVisible()
     await expect(page.getByTestId('landing-disclaimer')).toBeVisible()
+    await expect(page.getByTestId('snippet-hooks')).toBeVisible()
+    await expect(page.getByTestId('snippet-copy-0')).toBeVisible()
     await expect(page.getByText('浮生').first()).toBeVisible()
     await assertNoPageOverflow(page)
   })

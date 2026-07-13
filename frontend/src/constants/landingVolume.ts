@@ -26,3 +26,9 @@ export const LANDING_VOL_TEASERS = [
   { id: 'vol2', label: '卷二·业之象', note: '免费试读' },
   { id: 'vol3', label: '卷三·运之波', note: '读卷 Pass' },
 ] as const
+
+export {
+  LANDING_HOOK_SNIPPETS,
+  LANDING_HOOKS_TITLE,
+  LANDING_HOOKS_DISCLAIMER,
+} from './landingHooks'
