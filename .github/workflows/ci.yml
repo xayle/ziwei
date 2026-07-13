@@ -286,7 +286,16 @@ jobs:
           python -m pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Alembic upgrade head (PostgreSQL)
-        run: alembic upgrade head
+        run: |
+          set -e
+          echo "DATABASE_URL dialect check..."
+          python - <<'PY'
+          import os
+          from migrations.env import get_sqlalchemy_url
+          url = get_sqlalchemy_url()
+          print(url.split("@")[-1] if "@" in url else url)
+          PY
+          alembic upgrade head
 
       - name: Quality gate backend checks
         run: make quality-gate-backend

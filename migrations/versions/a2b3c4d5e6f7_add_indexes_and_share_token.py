@@ -20,47 +20,54 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # ── B6: share_token 列 ────────────────────────────────────
-    with op.batch_alter_table("cases") as batch_op:
-        batch_op.add_column(
-            sa.Column("share_token", sa.String(), nullable=True)
-        )
-        batch_op.add_column(
-            sa.Column("share_expires_at", sa.DateTime(), nullable=True)
-        )
+    bind = op.get_bind()
+    cols = {c["name"] for c in sa.inspect(bind).get_columns("cases")}
+    if "share_token" not in cols:
+        op.add_column("cases", sa.Column("share_token", sa.String(), nullable=True))
+    if "share_expires_at" not in cols:
+        op.add_column("cases", sa.Column("share_expires_at", sa.DateTime(), nullable=True))
 
-    # ── O5: 性能索引 ─────────────────────────────────────────
-    # cases 表：分享 token 快查
-    op.create_index("idx_cases_share_token",   "cases",      ["share_token"])
+    indexes = {i["name"] for i in sa.inspect(bind).get_indexes("cases")}
+    if "idx_cases_share_token" not in indexes and "ix_cases_share_token" not in indexes:
+        op.create_index("idx_cases_share_token", "cases", ["share_token"])
 
-    # snapshots 表：按 case_id 快查（如果表存在）
-    try:
-        op.create_index("idx_snapshots_case_id", "snapshots",  ["case_id"])
-    except Exception:
-        pass  # 表不存在时跳过
-
-    # audit_logs 表：按 created_at / user_id 过滤
-    try:
-        op.create_index("idx_audit_logs_created_at", "audit_logs", ["created_at"])
-        op.create_index("idx_audit_logs_user_id",    "audit_logs", ["user_id"])
-    except Exception:
-        pass  # 表不存在时跳过
+    tables = set(sa.inspect(bind).get_table_names())
+    if "snapshots" in tables:
+        snap_idx = {i["name"] for i in sa.inspect(bind).get_indexes("snapshots")}
+        if "idx_snapshots_case_id" not in snap_idx:
+            try:
+                op.create_index("idx_snapshots_case_id", "snapshots", ["case_id"])
+            except Exception:
+                pass
+    if "audit_logs" in tables:
+        audit_idx = {i["name"] for i in sa.inspect(bind).get_indexes("audit_logs")}
+        if "idx_audit_logs_created_at" not in audit_idx:
+            try:
+                op.create_index("idx_audit_logs_created_at", "audit_logs", ["created_at"])
+            except Exception:
+                pass
+        if "idx_audit_logs_user_id" not in audit_idx:
+            try:
+                op.create_index("idx_audit_logs_user_id", "audit_logs", ["user_id"])
+            except Exception:
+                pass
 
 
 def downgrade() -> None:
-    # 删除索引（忽略不存在的）
     for idx, tbl in [
-        ("idx_audit_logs_user_id",    "audit_logs"),
+        ("idx_audit_logs_user_id", "audit_logs"),
         ("idx_audit_logs_created_at", "audit_logs"),
-        ("idx_snapshots_case_id",     "snapshots"),
-        ("idx_cases_share_token",     "cases"),
+        ("idx_snapshots_case_id", "snapshots"),
+        ("idx_cases_share_token", "cases"),
     ]:
         try:
             op.drop_index(idx, table_name=tbl)
         except Exception:
             pass
 
-    # 删除 share_token 列
-    with op.batch_alter_table("cases") as batch_op:
-        batch_op.drop_column("share_expires_at")
-        batch_op.drop_column("share_token")
+    bind = op.get_bind()
+    cols = {c["name"] for c in sa.inspect(bind).get_columns("cases")}
+    if "share_expires_at" in cols:
+        op.drop_column("cases", "share_expires_at")
+    if "share_token" in cols:
+        op.drop_column("cases", "share_token")

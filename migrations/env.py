@@ -30,12 +30,17 @@ def get_sqlalchemy_url() -> str:
     # First try to get from environment variable
     url = os.environ.get("DATABASE_URL")
     if url:
+        # SQLAlchemy 2 + psycopg2：显式 driver，避免 CI 解析歧义
+        if url.startswith("postgresql://") and "+psycopg" not in url:
+            url = "postgresql+psycopg2://" + url[len("postgresql://") :]
         return url
 
     # Otherwise use config (fallback to SQLite)
     db_url = settings.database_url
     if db_url is None:
         db_url = f"sqlite:///{settings.db_path}"
+    elif db_url.startswith("postgresql://") and "+psycopg" not in db_url:
+        db_url = "postgresql+psycopg2://" + db_url[len("postgresql://") :]
     return db_url
 
 

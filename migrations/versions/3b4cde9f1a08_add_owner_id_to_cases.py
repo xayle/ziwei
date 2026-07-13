@@ -20,16 +20,20 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # SQLite 不支持 ADD COLUMN + FK 约束语法，使用无约束的列迁移
-    with op.batch_alter_table("cases") as batch_op:
-        batch_op.add_column(
-            sa.Column("owner_id", sa.Integer(), nullable=True)
-        )
-    # 手动创建索引
-    op.create_index("idx_cases_owner_id", "cases", ["owner_id"])
+    bind = op.get_bind()
+    cols = {c["name"] for c in sa.inspect(bind).get_columns("cases")}
+    if "owner_id" not in cols:
+        op.add_column("cases", sa.Column("owner_id", sa.Integer(), nullable=True))
+    indexes = {i["name"] for i in sa.inspect(bind).get_indexes("cases")}
+    if "idx_cases_owner_id" not in indexes:
+        op.create_index("idx_cases_owner_id", "cases", ["owner_id"])
 
 
 def downgrade() -> None:
-    op.drop_index("idx_cases_owner_id", table_name="cases")
-    with op.batch_alter_table("cases") as batch_op:
-        batch_op.drop_column("owner_id")
+    bind = op.get_bind()
+    indexes = {i["name"] for i in sa.inspect(bind).get_indexes("cases")}
+    if "idx_cases_owner_id" in indexes:
+        op.drop_index("idx_cases_owner_id", table_name="cases")
+    cols = {c["name"] for c in sa.inspect(bind).get_columns("cases")}
+    if "owner_id" in cols:
+        op.drop_column("cases", "owner_id")

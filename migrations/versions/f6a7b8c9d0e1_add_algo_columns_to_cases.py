@@ -19,20 +19,19 @@ depends_on = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("cases") as batch_op:
-        batch_op.add_column(
-            sa.Column("year_divide", sa.String(), nullable=False, server_default=sa.text("'lichun'"))
-        )
-        batch_op.add_column(
-            sa.Column("day_divide", sa.String(), nullable=False, server_default=sa.text("'solar_next'"))
-        )
-        batch_op.add_column(
-            sa.Column("zi_day_rule", sa.String(), nullable=False, server_default=sa.text("'sxtwl'"))
-        )
+    bind = op.get_bind()
+    cols = {c["name"] for c in sa.inspect(bind).get_columns("cases")}
+    adds = [
+        ("year_divide", sa.Column("year_divide", sa.String(), nullable=False, server_default="lichun")),
+        ("day_divide", sa.Column("day_divide", sa.String(), nullable=False, server_default="solar_next")),
+        ("zi_day_rule", sa.Column("zi_day_rule", sa.String(), nullable=False, server_default="sxtwl")),
+    ]
+    for name, col in adds:
+        if name not in cols:
+            op.add_column("cases", col)
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("cases") as batch_op:
-        batch_op.drop_column("zi_day_rule")
-        batch_op.drop_column("day_divide")
-        batch_op.drop_column("year_divide")
+    op.drop_column("cases", "zi_day_rule")
+    op.drop_column("cases", "day_divide")
+    op.drop_column("cases", "year_divide")
