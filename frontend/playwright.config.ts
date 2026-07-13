@@ -8,7 +8,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: autopilotE2e ? 1 : process.env.CI ? 1 : 0,
   workers: autopilotE2e ? 1 : process.env.CI ? 1 : undefined,
-  reporter: 'list',
+  reporter: process.env.CI
+    ? [['list'], ['github'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
+    : 'list',
   use: {
     baseURL: 'http://127.0.0.1:5173/static/app/',
     trace: 'on-first-retry',
