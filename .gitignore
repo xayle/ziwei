@@ -78,6 +78,10 @@ scripts/import_mlk_to_db.py
 scripts/check_day_gz.py
 scripts/_dpapi_try.py
 scripts/_mem_scan.py
+scripts/archive/_*.ps1
+scripts/archive/_*.js
+scripts/perf/*_report.json
+scripts/perf/*_verification.json
 
 # iztro verification (local npm install)
 scripts/iztro/node_modules/
