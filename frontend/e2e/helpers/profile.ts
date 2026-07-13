@@ -14,14 +14,18 @@ export async function fillMinimalProfile(page: Page) {
   await page.getByTestId('profile-gender').selectOption('male')
 
   const cityRow = page.locator('.city-picker-row').first()
+  await cityRow.scrollIntoViewIfNeeded()
   const provinceSelect = cityRow.locator('select').first()
   await expect(provinceSelect).toBeEnabled({ timeout: 15_000 })
   await provinceSelect.selectOption('北京市')
   const citySelect = cityRow.locator('select').nth(1)
+  await expect(citySelect).toBeEnabled({ timeout: 10_000 })
   await expect(citySelect.locator('option', { hasText: '北京' })).toHaveCount(1, { timeout: 10_000 })
   await citySelect.selectOption('北京')
+  await expect(page.getByText(/经度\s+116\.\d+°E/).first()).toBeVisible({ timeout: 10_000 })
 
   await page.getByTestId('profile-save').click()
+  await expect(page.getByTestId('profile-bazi')).toBeEnabled({ timeout: 15_000 })
 }
 
 export async function seedLoggedInProfileWithRemoteCase(page: Page, caseId = 'case-e2e-001') {
