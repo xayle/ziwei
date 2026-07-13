@@ -38,6 +38,10 @@
     "bazi_page": ["geju", "relations", "reading"],
     "ziwei_page": ["palaces", "reading"],
     "report_page": ["geju", "relations", "domains", "summary"],
-    "report_page_ziwei": ["palaces", "fortune"]
+    "report_page_ziwei": ["palaces", "fortune"],
+    "relation_page": ["relation_reading"]
+  },
+  "relation": {
+    "relation_reading": { "volume_id": "extension", "section_ids": ["relation_reading"], "note": "合盘 cite 层，不进六卷 IA" }
   }
 }

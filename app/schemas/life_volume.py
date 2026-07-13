@@ -64,3 +64,30 @@ class LifeVolumeResponseModel(BaseModel):
     trust_level: Literal["full", "degraded"] | None = None
     volumes: list[LifeVolumeModel]
     colophon: ColophonModel
+
+
+RelationAppendixType = Literal[
+    "couple",
+    "friend",
+    "parent_child",
+    "colleague",
+    "business_partner",
+    "supervisor_subordinate",
+]
+
+
+class RelationAppendixResponse(BaseModel):
+    """T113: relation appendix outside six-volume IA (BE-only extension)."""
+
+    schema_version: Literal["relation-appendix@1.0"] = "relation-appendix@1.0"
+    case_id: str
+    partner_case_id: str
+    relation_type: RelationAppendixType
+    relation_type_label: str | None = None
+    combined_score: float
+    grade: Literal["上上", "上", "中", "下", "下下", "N/A"] | None = None
+    person_a_label: str | None = None
+    person_b_label: str | None = None
+    collapsed_default: bool = True
+    sections: list[VolumeSectionModel] = Field(default_factory=list)
+    disclaimer_block: DisclaimerBlockModel

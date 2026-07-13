@@ -859,15 +859,17 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
     """
     输入 2-4 人出生信息，返回所有两两组合的合盘分析，
     以及 N×N 缘分矩阵和整体团队和谐指数。
-
-    矩阵对角线固定为 100（自身），非对角线为两人合盘总分。
-    团队和谐指数为所有两两组合均值。
     """
+    return await _compute_multi_compat(req)
+
+
+async def _compute_multi_compat(req: MultiCompatRequest) -> MultiCompatResponse:
+    from services.multi_compat_service import enrich_pair_with_relation_dims
     from services.ziwei_engine.compatibility import calc_compatibility
 
     n = len(req.person_list)
+    labels = req.labels
 
-    # 并发计算所有人的命盘
     async def _calc(p: ZiweiRequest) -> ZiweiChart:
         async with _CALC_SEM:
             return await asyncio.to_thread(ziwei_full, *_ziwei_full_args(p))
@@ -877,7 +879,6 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    # 两两合盘
     pairs: list[MultiCompatPairResponse] = []
     pair_scores: list[int] = []
     raw_scores: dict[tuple[int, int], int] = {}
@@ -892,17 +893,33 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
             raw_scores[(i, j)] = score
             raw_scores[(j, i)] = score
             pair_scores.append(score)
-            pairs.append(
-                MultiCompatPairResponse(
+            label_a = labels[i] if labels else None
+            label_b = labels[j] if labels else None
+            if req.include_relation_dims:
+                pair = await asyncio.to_thread(
+                    enrich_pair_with_relation_dims,
+                    req.person_list[i],
+                    req.person_list[j],
+                    relation_type=req.relation_type,
+                    label_a=label_a,
+                    label_b=label_b,
+                    ziwei_score=result.total_score,
+                    max_score=result.max_score,
+                    level=result.level,
+                    person_a_idx=i,
+                    person_b_idx=j,
+                    supervisor_id=req.supervisor_id,
+                )
+            else:
+                pair = MultiCompatPairResponse(
                     person_a_idx=i,
                     person_b_idx=j,
                     total_score=result.total_score,
                     max_score=result.max_score,
                     level=result.level,
                 )
-            )
+            pairs.append(pair)
 
-    # N×N 矩阵（对角线=100）
     matrix: list[list[int]] = []
     for i in range(n):
         row = []
@@ -913,19 +930,46 @@ async def multi_compat(request: Request, req: MultiCompatRequest) -> MultiCompat
                 row.append(raw_scores.get((i, j), 0))
         matrix.append(row)
 
-    # 团队和谐指数
     team_harmony_score = round(sum(pair_scores) / len(pair_scores)) if pair_scores else 100
+    schema_version = "multi-compat@1.1" if req.include_relation_dims else "multi-compat@1.0"
 
     return MultiCompatResponse(
+        schema_version=schema_version,
         person_count=n,
+        relation_type=req.relation_type if req.include_relation_dims else None,
         pairs=pairs,
         matrix=matrix,
         team_harmony_score=team_harmony_score,
     )
 
 
+@router.post(
+    "/multi_compat/export/pdf",
+    summary="多人合盘矩阵 PDF 导出",
+    response_class=Response,
+)
+@limiter.limit("10/minute")
+async def multi_compat_export_pdf(request: Request, req: MultiCompatRequest) -> Response:
+    """R086 P1：multi_compat 矩阵走 render_html_to_pdf 正式管线。"""
+    from services.pdf_exporter import render_html_to_pdf
+    from services.relation_pdf_service import render_multi_compat_html
+
+    result = await _compute_multi_compat(req)
+    labels = [getattr(p, "gender", None) or f"成员{i + 1}" for i, p in enumerate(req.person_list)]
+    html = render_multi_compat_html(result.model_dump(mode="json"), labels=labels)
+    try:
+        pdf_bytes = await render_html_to_pdf(html)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"PDF 渲染失败: {exc}") from exc
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="multi-compat-matrix.pdf"'},
+    )
+
+
 # ──────────────────────────────────────────────────────────────
-# §6 批量排盘  POST /api/v1/ziwei/batch
+# §5 批量排盘  POST /api/v1/ziwei/batch
 # ──────────────────────────────────────────────────────────────
 
 import csv  # noqa: E402

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
@@ -131,6 +132,30 @@ class RelationFullResponse(BaseModel):
     tensions: list[TensionNoteModel] = Field(default_factory=list)
     missing_fields: list[str] = Field(default_factory=list)
     meta: dict[str, Any] | None = None
+
+
+class RelationSnapshotSummary(BaseModel):
+    """BE-R16: relation_v1 snapshot list item."""
+
+    id: str
+    case_id: str
+    partner_case_id: str
+    relation_type: RelationTypeEnum
+    combined_score: float | None = None
+    grade: Literal["上上", "上", "中", "下", "下下", "N/A"] | None = None
+    person_a_label: str | None = None
+    person_b_label: str | None = None
+    created_at: datetime
+
+
+class RelationSnapshotDetail(BaseModel):
+    """BE-R16: full relation-compat payload restored from snapshot."""
+
+    snapshot_id: str
+    case_id: str
+    partner_case_id: str
+    relation_type: RelationTypeEnum
+    output: RelationFullResponse
 
 
 class ProfileSummaryResponse(BaseModel):

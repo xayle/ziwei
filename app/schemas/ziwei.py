@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .disclaimer import DisclaimerBlockModel
 from .provenance import ResponseProvenance
+from .relation_compat import RelationTypeEnum
 
 
 class EvidenceItemModel(BaseModel):
@@ -746,6 +747,19 @@ class CompatibilityResponse(BaseModel):
 
 class MultiCompatRequest(BaseModel):
     person_list: list[ZiweiRequest]
+    relation_type: RelationTypeEnum = Field(
+        "friend",
+        description="BE-R14: relation/full 分维对齐时使用的关系类型",
+    )
+    labels: list[str] | None = Field(None, description="成员显示名，长度与 person_list 一致时可覆盖默认")
+    include_relation_dims: bool = Field(
+        False,
+        description="true 时 pairs 附加 combined_score / bazi_score / ziwei_score（multi-compat@1.1）",
+    )
+    supervisor_id: Literal["a", "b"] | None = Field(
+        None,
+        description="relation_type=supervisor_subordinate 时必填",
+    )
 
     @field_validator("person_list")
     @classmethod
@@ -756,6 +770,15 @@ class MultiCompatRequest(BaseModel):
             raise ValueError("最多支持 4 人")
         return v
 
+    @model_validator(mode="after")
+    def _validate_labels_and_supervisor(self):
+        if self.labels is not None and len(self.labels) != len(self.person_list):
+            raise ValueError("labels 长度须与 person_list 一致")
+        if self.relation_type == "supervisor_subordinate" and self.include_relation_dims:
+            if not self.supervisor_id:
+                raise ValueError("supervisor_subordinate 需 supervisor_id ('a' 或 'b')")
+        return self
+
 
 class MultiCompatPairResponse(BaseModel):
     person_a_idx: int = 0
@@ -763,10 +786,17 @@ class MultiCompatPairResponse(BaseModel):
     total_score: int = 0
     max_score: int = 100
     level: str = ""
+    combined_score: float | None = None
+    bazi_score: float | None = None
+    ziwei_score: float | None = None
+    grade: str | None = None
+    dimension_highlights: list[str] = Field(default_factory=list)
 
 
 class MultiCompatResponse(BaseModel):
+    schema_version: Literal["multi-compat@1.0", "multi-compat@1.1"] = "multi-compat@1.0"
     person_count: int = 0
+    relation_type: RelationTypeEnum | None = None
     pairs: list[MultiCompatPairResponse] = []
     matrix: list[list[int]] = []
     team_harmony_score: int = 0

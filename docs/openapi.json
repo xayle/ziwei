@@ -5480,6 +5480,370 @@
         }
       }
     },
+    "/api/v1/relation/appendix": {
+      "get": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "合盘附录卷（T113 · 不进六卷 IA）",
+        "description": "T113：返回 relation-appendix@1.0，供报告页可选挂载（默认折叠）。",
+        "operationId": "get_relation_appendix_api_v1_relation_appendix_get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "主档案 case UUID",
+              "title": "Case Id"
+            },
+            "description": "主档案 case UUID"
+          },
+          {
+            "name": "partner_case_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "对方档案 case UUID",
+              "title": "Partner Case Id"
+            },
+            "description": "对方档案 case UUID"
+          },
+          {
+            "name": "relation_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "couple",
+                "friend",
+                "parent_child",
+                "colleague",
+                "business_partner",
+                "supervisor_subordinate"
+              ],
+              "type": "string",
+              "default": "couple",
+              "title": "Relation Type"
+            }
+          },
+          {
+            "name": "supervisor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "supervisor_subordinate 时 a 或 b",
+              "title": "Supervisor Id"
+            },
+            "description": "supervisor_subordinate 时 a 或 b"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationAppendixResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/relation/snapshots": {
+      "get": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "合盘快照列表（kind=relation_v1 · BE-R16）",
+        "description": "列出某档案下的关系合盘快照（含双方 case_id 模式 /full 写入）。",
+        "operationId": "get_relation_snapshots_api_v1_relation_snapshots_get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "档案 case UUID",
+              "title": "Case Id"
+            },
+            "description": "档案 case UUID"
+          },
+          {
+            "name": "partner_case_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "可选：筛选特定对方",
+              "title": "Partner Case Id"
+            },
+            "description": "可选：筛选特定对方"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RelationSnapshotSummary"
+                  },
+                  "title": "Response Get Relation Snapshots Api V1 Relation Snapshots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/relation/snapshots/{snapshot_id}": {
+      "get": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "合盘快照详情（恢复 relation-compat@1.0）",
+        "description": "BE-R16：从 snapshot output_json 恢复完整合盘响应。",
+        "operationId": "get_relation_snapshot_api_v1_relation_snapshots__snapshot_id__get",
+        "parameters": [
+          {
+            "name": "snapshot_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Snapshot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationSnapshotDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/relation/explain/batch": {
+      "post": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "关系合盘讲解 batch（relation_reading · cite 层）",
+        "description": "BE-R15：一次请求 1–4 个 section；当前支持 `relation_reading`。",
+        "operationId": "post_relation_explain_batch_api_v1_relation_explain_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationExplainBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/relation/export/pdf": {
+      "post": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "关系合盘 PDF 导出（relation-compat@1.0 · 与 /full 同口径）",
+        "description": "R086 P0：正式 PDF 管线 — 与 UI 相同 API 响应渲染 HTML → PDF。",
+        "operationId": "export_relation_pdf_api_v1_relation_export_pdf_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationFullRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/api/v1/profile/{case_id}/summary": {
       "get": {
         "tags": [
@@ -5962,7 +6326,7 @@
           "紫微斗数"
         ],
         "summary": "多人合盘（2-4人）",
-        "description": "输入 2-4 人出生信息，返回所有两两组合的合盘分析，\n以及 N×N 缘分矩阵和整体团队和谐指数。\n\n矩阵对角线固定为 100（自身），非对角线为两人合盘总分。\n团队和谐指数为所有两两组合均值。",
+        "description": "输入 2-4 人出生信息，返回所有两两组合的合盘分析，\n以及 N×N 缘分矩阵和整体团队和谐指数。",
         "operationId": "multi_compat_api_v1_ziwei_multi_compat_post",
         "requestBody": {
           "content": {
@@ -5984,6 +6348,56 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/ziwei/multi_compat/export/pdf": {
+      "post": {
+        "tags": [
+          "紫微斗数"
+        ],
+        "summary": "多人合盘矩阵 PDF 导出",
+        "description": "R086 P1：multi_compat 矩阵走 render_html_to_pdf 正式管线。",
+        "operationId": "multi_compat_export_pdf_api_v1_ziwei_multi_compat_export_pdf_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiCompatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -21746,6 +22160,57 @@
             "type": "string",
             "title": "Level",
             "default": ""
+          },
+          "combined_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined Score"
+          },
+          "bazi_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bazi Score"
+          },
+          "ziwei_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ziwei Score"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "dimension_highlights": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dimension Highlights"
           }
         },
         "type": "object",
@@ -21759,6 +22224,57 @@
             },
             "type": "array",
             "title": "Person List"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type",
+            "description": "BE-R14: relation/full 分维对齐时使用的关系类型",
+            "default": "friend"
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labels",
+            "description": "成员显示名，长度与 person_list 一致时可覆盖默认"
+          },
+          "include_relation_dims": {
+            "type": "boolean",
+            "title": "Include Relation Dims",
+            "description": "true 时 pairs 附加 combined_score / bazi_score / ziwei_score（multi-compat@1.1）",
+            "default": false
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id",
+            "description": "relation_type=supervisor_subordinate 时必填"
           }
         },
         "type": "object",
@@ -21769,10 +22285,38 @@
       },
       "MultiCompatResponse": {
         "properties": {
+          "schema_version": {
+            "type": "string",
+            "enum": [
+              "multi-compat@1.0",
+              "multi-compat@1.1"
+            ],
+            "title": "Schema Version",
+            "default": "multi-compat@1.0"
+          },
           "person_count": {
             "type": "integer",
             "title": "Person Count",
             "default": 0
+          },
+          "relation_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "couple",
+                  "friend",
+                  "parent_child",
+                  "colleague",
+                  "business_partner",
+                  "supervisor_subordinate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relation Type"
           },
           "pairs": {
             "items": {
@@ -23986,6 +24530,117 @@
         "type": "object",
         "title": "RejectBody"
       },
+      "RelationAppendixResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "relation-appendix@1.0",
+            "title": "Schema Version",
+            "default": "relation-appendix@1.0"
+          },
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "partner_case_id": {
+            "type": "string",
+            "title": "Partner Case Id"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type"
+          },
+          "relation_type_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relation Type Label"
+          },
+          "combined_score": {
+            "type": "number",
+            "title": "Combined Score"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "上上",
+                  "上",
+                  "中",
+                  "下",
+                  "下下",
+                  "N/A"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "person_a_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person A Label"
+          },
+          "person_b_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person B Label"
+          },
+          "collapsed_default": {
+            "type": "boolean",
+            "title": "Collapsed Default",
+            "default": true
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/VolumeSectionModel"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "disclaimer_block": {
+            "$ref": "#/components/schemas/DisclaimerBlockModel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "case_id",
+          "partner_case_id",
+          "relation_type",
+          "combined_score",
+          "disclaimer_block"
+        ],
+        "title": "RelationAppendixResponse",
+        "description": "T113: relation appendix outside six-volume IA (BE-only extension)."
+      },
       "RelationComputeRequest": {
         "properties": {
           "case_a_id": {
@@ -24057,6 +24712,63 @@
           "result"
         ],
         "title": "RelationComputeResponse"
+      },
+      "RelationExplainBatchRequest": {
+        "properties": {
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type",
+            "default": "couple"
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "a",
+                  "b"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id"
+          },
+          "person_a": {
+            "$ref": "#/components/schemas/RelationPersonInput"
+          },
+          "person_b": {
+            "$ref": "#/components/schemas/RelationPersonInput"
+          },
+          "options": {
+            "$ref": "#/components/schemas/RelationFullOptions"
+          },
+          "sections": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Sections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "person_a",
+          "person_b",
+          "sections"
+        ],
+        "title": "RelationExplainBatchRequest"
       },
       "RelationFullOptions": {
         "properties": {
@@ -24599,6 +25311,142 @@
           "summary"
         ],
         "title": "RelationResult"
+      },
+      "RelationSnapshotDetail": {
+        "properties": {
+          "snapshot_id": {
+            "type": "string",
+            "title": "Snapshot Id"
+          },
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "partner_case_id": {
+            "type": "string",
+            "title": "Partner Case Id"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type"
+          },
+          "output": {
+            "$ref": "#/components/schemas/RelationFullResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snapshot_id",
+          "case_id",
+          "partner_case_id",
+          "relation_type",
+          "output"
+        ],
+        "title": "RelationSnapshotDetail",
+        "description": "BE-R16: full relation-compat payload restored from snapshot."
+      },
+      "RelationSnapshotSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "partner_case_id": {
+            "type": "string",
+            "title": "Partner Case Id"
+          },
+          "relation_type": {
+            "type": "string",
+            "enum": [
+              "couple",
+              "friend",
+              "parent_child",
+              "colleague",
+              "business_partner",
+              "supervisor_subordinate"
+            ],
+            "title": "Relation Type"
+          },
+          "combined_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Combined Score"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "上上",
+                  "上",
+                  "中",
+                  "下",
+                  "下下",
+                  "N/A"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "person_a_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person A Label"
+          },
+          "person_b_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person B Label"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "case_id",
+          "partner_case_id",
+          "relation_type",
+          "created_at"
+        ],
+        "title": "RelationSnapshotSummary",
+        "description": "BE-R16: relation_v1 snapshot list item."
       },
       "RelationsSummaryModel": {
         "properties": {

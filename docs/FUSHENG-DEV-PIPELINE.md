@@ -131,7 +131,7 @@ pre-commit run --all-files   # 首次或大改后
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
 **已完成：** W102-00a～**22** 全 ☑ · **Phase B closeout 2026-07-13**  
-**下一项：** **W102-P3-01**（合盘）或国风线（产品择一）
+**下一项：** **W102-P3-01** FE（导出按钮 · partner 经度）；BE PDF 端点已 ☑
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -190,8 +190,8 @@ pre-commit run --all-files   # 首次或大改后
 
 | 状态 | ID | 任务 | 参考 |
 |------|-----|------|------|
-| ☐ | **W102-P3-01** | 合盘 FE / PDF / multi_compat | [R086 §五](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
-| ☐ | **W102-P3-02** | CI 改跑 `auto_verify_autopilot.py` | TD-16 |
+| 🟡 | **W102-P3-01** | 合盘 BE：PDF · explain · multi_compat@1.1 · appendix · snapshots ☑；FE ☐ | [R086 §五](reports/R086-relation-compat-sample-pdf-review-2026-07-13.md) |
+| ☑ | **W102-P3-02** | CI 改跑 `auto_verify_autopilot.py` | TD-16 · `ci.yml` autopilot job |
 
 ---
 
@@ -266,7 +266,7 @@ python scripts/dev_cycle.py --only audit-content
 Phase A  T001–T070     ☑ 打磨期工程任务（EXECUTION-PRIORITY）
 Phase B  W102-00–22    ☑ 产品重建（R102）closeout 24/24
 Phase C  W15–W16       ⏸ life/volumes 权威化 · GTM 预备
-Phase D  W102-P3       🟡 合盘 · CI autopilot 对齐 ← 下一执行轨
+Phase D  W102-P3       🟡 合盘 BE+CI ☑ · FE 导出待接 ← 当前轨
 Phase E  W17+          ⏸ 平台演进
 ```
 
@@ -281,12 +281,12 @@ Phase E  W17+          ⏸ 平台演进
 
 | 项 | 本地 dev_cycle | GitHub CI |
 |----|----------------|-----------|
-| 全量 autopilot | ✅ S2 | ⏸ 当前仅 `auto_verify_w14.py` |
+| 全量 autopilot | ✅ S2 | ✅ `auto_verify_autopilot.py`（W102-P3-02 · `autopilot` job） |
 | audit-content | ✅ S3 | ✅ advisory（`dev_cycle --quick`） |
 | dev_cycle JSON | 本地 | ✅ artifact `dev-cycle-reports` |
 | E2E | autopilot 内 | ✅ test job |
 
-**W102-P3-02** 目标：CI 与本地 S2 对齐。
+**W102-P3-02** ✅ CI 与本地 S2 对齐（`autopilot` job · 2026-07-13）。
 
 ---
 
@@ -312,4 +312,4 @@ Phase E  W17+          ⏸ 平台演进
 
 ---
 
-**下一步：** **W102-P3-01**（合盘 FE/PDF）或国风线 — 见 [R102 closeout](reports/R102-W102-closeout-2026-07-13.md) §5
+**下一步：** **W102-P3-01** FE（RelationCompatView 导出 · partner 经度）— BE 已就绪；国风 P3 由你并行

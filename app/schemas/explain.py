@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from app.schemas import BaziFullRequest
 from app.schemas.disclaimer import DisclaimerBlockModel
+from app.schemas.relation_compat import RelationFullRequest
 from app.schemas.ziwei import ZiweiRequest
 
 ContentLayer = Literal["fact", "cite", "inference"]
@@ -31,6 +32,10 @@ class ExplainBatchRequest(BaziFullRequest):
 
 
 class ZiweiExplainBatchRequest(ZiweiRequest):
+    sections: list[str] = Field(..., min_length=1, max_length=4)
+
+
+class RelationExplainBatchRequest(RelationFullRequest):
     sections: list[str] = Field(..., min_length=1, max_length=4)
 
 
