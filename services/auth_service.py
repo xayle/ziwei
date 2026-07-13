@@ -26,6 +26,10 @@ ALGORITHM = "HS256"
 # ✅ Priority 3.1: 读取配置而非硬编码（env var → settings → 默认15分钟）
 ACCESS_TOKEN_EXPIRE_MINUTES: int = settings.jwt_access_minutes
 REFRESH_TOKEN_EXPIRE_DAYS: int = settings.jwt_refresh_days
+# T095 / BE-GTM-07：H5 落地页试读短 token（默认可短于正式 access）
+H5_PREVIEW_EXPIRE_MINUTES: int = int(os.getenv("H5_PREVIEW_TOKEN_MINUTES", "30"))
+H5_PREVIEW_SCOPE = "life_vol1_preview"
+H5_PREVIEW_TOKEN_USE = "h5_preview"
 
 # Argon2密码哈希器
 _argon2_hasher = PasswordHasher()
@@ -172,6 +176,110 @@ def create_access_token(
         "expires_in": int(expires_delta.total_seconds()),
         "role": role,
     }
+
+
+class H5PreviewPayload(BaseModel):
+    """H5 试读短 token 声明（不可当作正式登录 access）。"""
+
+    user_id: int
+    case_id: str
+    scope: str = H5_PREVIEW_SCOPE
+    exp: datetime | None = None
+    iat: datetime | None = None
+    jti: str | None = None
+
+
+def create_h5_preview_token(
+    *,
+    user_id: int,
+    case_id: str,
+    expires_delta: timedelta | None = None,
+) -> dict:
+    """签发绑 case 的短时 JWT，仅允许读卷一摘要（T095 / BE-GTM-07）。
+
+    故意不含 username/role，无法通过 verify_token / 正式鉴权依赖。
+    """
+    if expires_delta is None:
+        expires_delta = timedelta(minutes=H5_PREVIEW_EXPIRE_MINUTES)
+
+    now = datetime.now(UTC)
+    expire = now + expires_delta
+    jti = str(uuid.uuid4())
+    payload = {
+        "token_use": H5_PREVIEW_TOKEN_USE,
+        "scope": H5_PREVIEW_SCOPE,
+        "user_id": user_id,
+        "case_id": case_id,
+        "exp": int(expire.timestamp()),
+        "iat": int(now.timestamp()),
+        "jti": jti,
+    }
+    encoded_jwt = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return {
+        "access_token": encoded_jwt,
+        "token_type": "bearer",
+        "expires_in": int(expires_delta.total_seconds()),
+        "case_id": case_id,
+        "scope": H5_PREVIEW_SCOPE,
+    }
+
+
+def verify_h5_preview_token(token: str) -> H5PreviewPayload:
+    """校验 H5 试读短 token；失败抛 AuthenticationException。"""
+    if not token:
+        raise AuthenticationException(
+            code=ErrorCode.AUTH_MISSING_TOKEN,
+            message="H5 preview token is missing",
+        )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("token_use") != H5_PREVIEW_TOKEN_USE:
+            raise AuthenticationException(
+                code=ErrorCode.AUTH_TOKEN_INVALID,
+                message="Not an H5 preview token",
+            )
+        if payload.get("scope") != H5_PREVIEW_SCOPE:
+            raise AuthenticationException(
+                code=ErrorCode.AUTH_TOKEN_INVALID,
+                message="Invalid H5 preview scope",
+            )
+        jti = payload.get("jti")
+        if jti and jti in _revoked_jtis:
+            raise AuthenticationException(
+                code=ErrorCode.AUTH_TOKEN_INVALID,
+                message="Token has been revoked",
+            )
+        user_id_value = payload.get("user_id")
+        case_id_value = payload.get("case_id")
+        if not isinstance(user_id_value, int) or not isinstance(case_id_value, str) or not case_id_value:
+            raise AuthenticationException(
+                code=ErrorCode.AUTH_TOKEN_INVALID,
+                message="Invalid H5 preview token structure",
+            )
+        exp_timestamp = payload.get("exp")
+        iat_timestamp = payload.get("iat")
+        return H5PreviewPayload(
+            user_id=user_id_value,
+            case_id=case_id_value,
+            scope=str(payload.get("scope") or H5_PREVIEW_SCOPE),
+            exp=datetime.fromtimestamp(exp_timestamp, tz=UTC) if exp_timestamp else None,
+            iat=datetime.fromtimestamp(iat_timestamp, tz=UTC) if iat_timestamp else None,
+            jti=jti if isinstance(jti, str) else None,
+        )
+    except AuthenticationException:
+        raise
+    except JWTError as e:
+        if "expired" in str(e).lower():
+            raise AuthenticationException(
+                code=ErrorCode.AUTH_TOKEN_EXPIRED,
+                message="H5 preview token has expired",
+                details={"error": str(e)},
+            )
+        raise AuthenticationException(
+            code=ErrorCode.AUTH_TOKEN_INVALID,
+            message="Invalid or malformed H5 preview token",
+            details={"error": str(e)},
+        ) from e
 
 
 def verify_token(token: str) -> TokenPayload | None:

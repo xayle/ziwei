@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-2.8 |
+| **版本** | post-w14-2.9 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase F GTM** — T086–T094 ☑ → **下一项 T095**（H5 短 token） |
+| **当前优先级** | ▶ **Phase F GTM** — T086–T095 ☑ → **下一项 T096**（钩子句复制） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -19,7 +19,7 @@
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE+FE T072–T084 ☑
 U5    T085 ☑（2026-07-14）
-GTM   T086–T094 ☑ → 下一项 **T095**（H5 短 token）
+GTM   T086–T095 ☑ → 下一项 **T096**（钩子句复制）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -132,7 +132,7 @@ make scorecard
 | ☑ | **T092** | FE | **FE-GTM-03** 卷锁定态 UI + 付费墙文案（可 mock 支付） | [T092 报告](../reports/T092-volume-paywall-2026-07-14.md) · VolumePaywall | locked 卷显示锁+说明 |
 | ☑ | **T093** | BE | **BE-GTM-06** 支付 webhook → 写 entitlement | [T093 报告](../reports/T093-payment-webhook-2026-07-14.md) · payment.py | 沙箱回调通 |
 | ☑ | **T094** | FE | 支付成功刷新 entitlement；解锁卷三~五 | [T094 报告](../reports/T094-payment-callback-2026-07-14.md) · PaymentCallback | 卷目可展开 |
-| ☐ | **T095** | BE | **BE-GTM-07** H5 短 token 读卷一摘要（可选） | `auth` | 落地页免登录试读 |
+| ☑ | **T095** | BE | **BE-GTM-07** H5 短 token 读卷一摘要（可选） | [T095 报告](../reports/T095-h5-preview-token-2026-07-14.md) · `auth` · `life/preview` | 落地页免登录试读 |
 | ☐ | **T096** | FE | **FE-GTM-04** 钩子句复制（接 T076 snippets） | Report/Landing | 一键复制拍视频 |
 | ☐ | **T097** | BE | **BE-GTM-11** `export/card?layout=douyin` 9:16 | `pdf_exporter` | PNG 输出 |
 | ☐ | **T098** | FE | **FE-GTM-07** 竖版分享预览 + 导出 | 分享组件 | 纸纹+卷名+事实句 |
@@ -307,6 +307,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-2.9 | 2026-07-14 | **T095 ☑** · H5 短 token 卷一试读 · 下一项 T096 |
 | post-w14-2.8 | 2026-07-14 | **T094 ☑** · 支付回调刷新 entitlement · 下一项 T095 |
 | post-w14-2.7 | 2026-07-14 | **T093 ☑** · 支付 webhook 写 entitlement · 下一项 T094 FE |
 | post-w14-2.6 | 2026-07-14 | **T092 ☑** · 卷锁定态/付费墙 mock · 下一项 T093 支付 |

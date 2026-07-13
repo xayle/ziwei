@@ -168,6 +168,42 @@ def _apply_volume_locks(
     return out
 
 
+_H5_PREVIEW_VOLUME_IDS = frozenset({"preface", "vol1"})
+_H5_PREVIEW_BLOCK_CHARS = 200
+_H5_PREVIEW_MAX_SECTIONS = 2
+_H5_PREVIEW_MAX_BLOCKS = 2
+
+
+def project_h5_vol1_preview(response: LifeVolumeResponseModel) -> LifeVolumeResponseModel:
+    """T095：落地页试读仅保留卷首 + 卷一，并裁剪为摘要长度。"""
+    slim_volumes: list[LifeVolumeModel] = []
+    for vol in response.volumes:
+        if vol.id not in _H5_PREVIEW_VOLUME_IDS:
+            continue
+        sections: list[VolumeSectionModel] = []
+        for section in vol.sections[:_H5_PREVIEW_MAX_SECTIONS]:
+            blocks = [
+                block.model_copy(update={"text": _clip(block.text, _H5_PREVIEW_BLOCK_CHARS)})
+                for block in section.blocks[:_H5_PREVIEW_MAX_BLOCKS]
+            ]
+            sections.append(section.model_copy(update={"blocks": blocks}))
+        slim_volumes.append(vol.model_copy(update={"locked": False, "sections": sections}))
+    return response.model_copy(
+        update={
+            "volumes": slim_volumes,
+            "relation_appendix": None,
+            "colophon": ColophonModel(
+                summary_lines=(response.colophon.summary_lines or [])[:1] or ["试读摘要 · 完整卷见建档后。"],
+                missing_fields=None,
+                iztro_advisory=None,
+                wenmo_advisory=None,
+                dual_track_note=None,
+                expandable=False,
+            ),
+        }
+    )
+
+
 def build_life_volumes_from_charts(
     *,
     case_id: str,

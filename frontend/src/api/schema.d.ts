@@ -759,6 +759,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/h5-preview-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 签发 H5 试读短 token（卷一摘要）
+         * @description 登录用户为自己案例签发短时 token，供落地页免登录读卷一摘要。
+         */
+        post: operations["mint_h5_preview_token_api_v1_auth_h5_preview_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -2628,6 +2648,28 @@ export interface paths {
         put?: never;
         /** 八字+紫微一屏编排快照 */
         post: operations["archive_bundle_api_v1_fusheng_archive_bundle_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/life/preview/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * H5 试读：免登录卷一摘要（短 token）
+         * @description T095 / BE-GTM-07：落地页携带短 token，无需登录即可读卷首+卷一摘要。
+         *
+         *     Token 由 `POST /auth/h5-preview-token` 签发，绑定 case_id，不可当登录 access。
+         */
+        get: operations["get_life_vol1_preview_api_v1_life_preview__case_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6594,6 +6636,30 @@ export interface components {
             score: number;
             /** Desc */
             desc: string;
+        };
+        /**
+         * H5PreviewTokenRequest
+         * @description T095 / BE-GTM-07：为指定案例签发 H5 试读短 token。
+         */
+        H5PreviewTokenRequest: {
+            /** Case Id */
+            case_id: string;
+        };
+        /** H5PreviewTokenResponse */
+        H5PreviewTokenResponse: {
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             */
+            token_type: string;
+            /** Expires In */
+            expires_in: number;
+            /** Case Id */
+            case_id: string;
+            /** Scope */
+            scope: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -14207,6 +14273,44 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    mint_h5_preview_token_api_v1_auth_h5_preview_token_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["H5PreviewTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["H5PreviewTokenResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     get_current_user_info_api_v1_auth_me_get: {
         parameters: {
             query?: never;
@@ -18228,6 +18332,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArchiveBundleResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_life_vol1_preview_api_v1_life_preview__case_id__get: {
+        parameters: {
+            query?: {
+                /** @description H5 试读短 token（亦可 Authorization: Bearer） */
+                token?: string | null;
+            };
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifeVolumeResponseModel"];
                 };
             };
             400: components["responses"]["ValidationError"];

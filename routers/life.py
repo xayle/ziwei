@@ -6,18 +6,64 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlmodel import Session
 
 from app.dependencies import RequiredUser
+from app.exceptions import AuthenticationException
 from app.models import Case
 from app.schemas.life_snippets import LifeSnippetsResponseModel
 from app.schemas.life_volume import LifeVolumeResponseModel
 from app.schemas.relation_compat import RelationTypeEnum
 from db import get_session
+from services.auth_service import verify_h5_preview_token
 from services.life_snippets_service import build_life_snippets_for_case
-from services.life_volume_service import build_life_volumes_for_case
+from services.life_volume_service import build_life_volumes_for_case, project_h5_vol1_preview
 from services.quota_service import enforce_quota, resolve_entitlement
 from services.rate_limit import limiter
 from services.relation_appendix_service import build_relation_appendix_for_cases
 
 router = APIRouter(prefix="/api/v1/life", tags=["人生六卷"])
+
+
+@router.get(
+    "/preview/{case_id}",
+    response_model=LifeVolumeResponseModel,
+    summary="H5 试读：免登录卷一摘要（短 token）",
+)
+@limiter.limit("30/minute")
+async def get_life_vol1_preview(
+    request: Request,
+    case_id: str,
+    session: Session = Depends(get_session),
+    token: str | None = Query(None, description="H5 试读短 token（亦可 Authorization: Bearer）"),
+) -> LifeVolumeResponseModel:
+    """
+    T095 / BE-GTM-07：落地页携带短 token，无需登录即可读卷首+卷一摘要。
+
+    Token 由 `POST /auth/h5-preview-token` 签发，绑定 case_id，不可当登录 access。
+    """
+    raw = token
+    if not raw:
+        auth_header = request.headers.get("Authorization") or ""
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            raw = parts[1]
+    if not raw:
+        raise HTTPException(status_code=401, detail="缺少 H5 试读 token")
+    try:
+        claims = verify_h5_preview_token(raw)
+    except AuthenticationException as exc:
+        raise HTTPException(status_code=401, detail=exc.message) from exc
+    if claims.case_id != case_id:
+        raise HTTPException(status_code=403, detail="token 与案例不匹配")
+
+    case = session.get(Case, case_id)
+    if case is None or case.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="案例不存在")
+    # 试读不计入完整 structured_text 配额；轻量读模型即可
+    full = await build_life_volumes_for_case(
+        case,
+        request_id=f"life-preview-{case_id}",
+        entitlement="free",
+    )
+    return project_h5_vol1_preview(full)
 
 
 @router.get(

@@ -21,13 +21,14 @@ from app.exceptions import (
     ResourceNotFoundException,
     ValidationException,
 )
-from app.models import RefreshToken, User
+from app.models import Case, RefreshToken, User
 from app.schemas.utm import UtmAttributionFields
 from db import get_session
 from services.auth_service import (
     TokenPayload,
     TokenResponse,
     create_access_token,
+    create_h5_preview_token,
     create_refresh_token_record,
     hash_password,
     revoke_access_token_jti,
@@ -361,6 +362,46 @@ def register(body: RegisterRequest, request: Request, session: Session = Depends
             message="Registration failed",
             details={"username": body.username},
         )
+
+
+class H5PreviewTokenRequest(BaseModel):
+    """T095 / BE-GTM-07：为指定案例签发 H5 试读短 token。"""
+
+    case_id: str
+
+
+class H5PreviewTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    case_id: str
+    scope: str
+
+
+@router.post(
+    "/auth/h5-preview-token",
+    response_model=H5PreviewTokenResponse,
+    summary="签发 H5 试读短 token（卷一摘要）",
+)
+@handle_exceptions(ErrorCode.SYSTEM_INTERNAL_ERROR)
+@limiter.limit("20/minute")
+def mint_h5_preview_token(
+    body: H5PreviewTokenRequest,
+    request: Request,
+    session: Session = Depends(get_session),
+    user: TokenPayload = Depends(require_user),
+) -> H5PreviewTokenResponse:
+    """登录用户为自己案例签发短时 token，供落地页免登录读卷一摘要。"""
+    case = session.get(Case, body.case_id)
+    if case is None or case.deleted_at is not None or case.owner_id != user.user_id:
+        raise ResourceNotFoundException(
+            code=ErrorCode.RESOURCE_NOT_FOUND,
+            message="案例不存在",
+            resource_type="Case",
+            resource_id=body.case_id,
+        )
+    minted = create_h5_preview_token(user_id=user.user_id, case_id=body.case_id)
+    return H5PreviewTokenResponse(**minted)
 
 
 @router.get("/auth/me")

@@ -2515,6 +2515,63 @@
         }
       }
     },
+    "/api/v1/auth/h5-preview-token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "签发 H5 试读短 token（卷一摘要）",
+        "description": "登录用户为自己案例签发短时 token，供落地页免登录读卷一摘要。",
+        "operationId": "mint_h5_preview_token_api_v1_auth_h5_preview_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/H5PreviewTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/H5PreviewTokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/api/v1/auth/me": {
       "get": {
         "tags": [
@@ -9458,6 +9515,82 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ArchiveBundleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/life/preview/{case_id}": {
+      "get": {
+        "tags": [
+          "人生六卷"
+        ],
+        "summary": "H5 试读：免登录卷一摘要（短 token）",
+        "description": "T095 / BE-GTM-07：落地页携带短 token，无需登录即可读卷首+卷一摘要。\n\nToken 由 `POST /auth/h5-preview-token` 签发，绑定 case_id，不可当登录 access。",
+        "operationId": "get_life_vol1_preview_api_v1_life_preview__case_id__get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "H5 试读短 token（亦可 Authorization: Bearer）",
+              "title": "Token"
+            },
+            "description": "H5 试读短 token（亦可 Authorization: Bearer）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LifeVolumeResponseModel"
                 }
               }
             }
@@ -19335,6 +19468,53 @@
         ],
         "title": "GridInfoResponse",
         "description": "单格（天/人/地/外/总格）分析结果。"
+      },
+      "H5PreviewTokenRequest": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "case_id"
+        ],
+        "title": "H5PreviewTokenRequest",
+        "description": "T095 / BE-GTM-07：为指定案例签发 H5 试读短 token。"
+      },
+      "H5PreviewTokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "expires_in",
+          "case_id",
+          "scope"
+        ],
+        "title": "H5PreviewTokenResponse"
       },
       "HTTPValidationError": {
         "properties": {
