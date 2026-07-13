@@ -9,23 +9,14 @@ from sqlmodel import Session, select
 
 from app.dependencies import RequiredUser
 from app.models import Case
-from app.schemas import BaziFullRequest
 from app.schemas.relation_compat import ProfileSummaryResponse
-from app.schemas.ziwei import ZiweiRequest
 from db import get_session
+from services.case_chart_requests import case_to_bazi_request, case_to_ziwei_request
 from services.chart_snapshot_service import build_bazi_snapshot, build_ziwei_snapshot
 from services.content_policy import default_disclaimer_block
 from services.relation_engine.timeline import _liunian_branch, _tai_sui_tag
 
 router = APIRouter(prefix="/api/v1/profile", tags=["profile"])
-
-
-def _parse_case_dt(case: Case) -> tuple[datetime, float, str]:
-    dt_str = case.birth_dt_local or ""
-    tz = case.tz or "Asia/Shanghai"
-    dt = datetime.fromisoformat(dt_str)
-    lon = float(case.lon or 116.41)
-    return dt, lon, tz
 
 
 @router.get(
@@ -44,18 +35,17 @@ def get_profile_summary(
     if case.owner_id != user.id:
         raise HTTPException(403, "Forbidden")
 
-    dt, lon, tz = _parse_case_dt(case)
-    gender = "male" if (case.gender or "").lower() in ("male", "m", "男") else "female"
+    from routers.bazi import _normalize_birth_dt_text
 
-    bazi_snap = build_bazi_snapshot(
-        BaziFullRequest(
-            dt=dt,
-            lon=lon,
-            tz=tz,
-            mode="single",
-            gender=gender,
-        )
+    dt = _normalize_birth_dt_text(
+        case.birth_dt_local,
+        case.tz or "Asia/Shanghai",
+        precision=case.birth_time_precision or "exact",
+        unknown_time_fallback=case.unknown_time_fallback or "midday",
     )
+
+    bazi_req = case_to_bazi_request(case, dt)
+    bazi_snap = build_bazi_snapshot(bazi_req)
     resp = bazi_snap.response
     pillars = resp.pillars_primary
     pillars_dict = {
@@ -97,19 +87,9 @@ def get_profile_summary(
     if ts:
         liunian_tag = ts
 
-    gender_zw = "男" if gender == "male" else "女"
     try:
-        zw = build_ziwei_snapshot(
-            ZiweiRequest(
-                year=dt.year,
-                month=dt.month,
-                day=dt.day,
-                hour=dt.hour,
-                minute=dt.minute,
-                gender=gender_zw,
-                longitude=lon,
-            )
-        ).chart
+        zw_req = case_to_ziwei_request(case, dt)
+        zw = build_ziwei_snapshot(zw_req).chart
         ziwei_ming = f"{zw.life_palace_gz}"
         life_p = next((p for p in zw.palaces if p.name == "命宫"), None)
         if life_p and life_p.main_stars:

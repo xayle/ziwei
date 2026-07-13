@@ -290,7 +290,7 @@ make audit-content
 | TD-10 | 六卷 PDF 与合盘 PDF 共用 `render_html_to_pdf` | 合盘 P3 见 [R086 §五](R086-relation-compat-sample-pdf-review-2026-07-13.md#五差距与优先级) | R102 之后 |
 | TD-11 | PDF 请求「幽灵字段」（FE 发 `birth_time_precision`/`late_zishi` BE 不收） | `buildFushengReportPdfRequest` vs `FushengReportPdfRequest` | ✅ W102-15 |
 | TD-12 | `archive-bundle` 参数缺口 + FE 零调用 | `fusheng_archive.py` · 无 TS client | ✅ W102-16/17 |
-| TD-13 | `lateZishi` 仅存 case tags，bundle 不读 | `profileCaseSync.ts` · `Case` 无列 | Week3 |
+| TD-13 | `lateZishi` 仅存 case tags，bundle 不读 | `case_fusheng_tags.py` · tags `lz:` | ✅ BE 2026-07-13 |
 | TD-14 | Q12 页面 explain 常量未接线 | ✅ 八字 + 紫微页 | Week2 |
 | TD-15 | `fetchLifeVolumes` 失败静默 fallback | `api/life.ts` · `ReportView` | Week2 |
 | TD-16 | CI 跑 `auto_verify_w14` ≠ 本地 autopilot 全量 | `.github/workflows/ci.yml` | W102-P3-02 |
@@ -299,7 +299,7 @@ make audit-content
 | TD-19 | `auto_verify_r007` 只验 markdown 不验实现 | FE-BE Q12/Q6/Q9 | 🟡 |
 | TD-20 | AUTOPILOT 文称 A30–A59，脚本止于 A50 | 编号口径 | ✅ W102-00b 修正 |
 | TD-21 | 扩展页 partner 经度/性别（CompatView · ZiweiCompatView） | `extensions/*` | R086 之后 |
-| TD-22 | `profile/summary` 精简排盘 vs workbench 不一致 | `profile_summary.py` | Week3 |
+| TD-22 | `profile/summary` 精简排盘 vs workbench 不一致 | 共用 `case_chart_requests` + `_normalize_birth_dt` | ✅ BE 2026-07-13 |
 | TD-23 | Q6 `source_page` FE 未展示 | FE-BE W12 | Week4 |
 | TD-24 | audit JSON 缺 rollup 字段（thin 合计等） | `audit_content_hollowness.py` | ✅ W102-20 |
 | TD-25 | `explain.ts` / life API 等静默失败（除 TD-05） | 见 DEV-AUDIT P2-9 链 | Week2 |

@@ -7,7 +7,7 @@ import pytest
 from sqlmodel import Session
 
 from app.models import Case, User
-from routers.fusheng_archive import _case_to_bazi_request, _case_to_ziwei_request
+from services.case_chart_requests import case_to_bazi_request, case_to_ziwei_request
 
 
 def _make_case(**overrides) -> Case:
@@ -39,21 +39,21 @@ def _make_case(**overrides) -> Case:
 def test_case_to_ziwei_request_maps_male_to_nan():
     case = _make_case(gender="male")
     dt = datetime(2000, 1, 1, 12, 0)
-    req = _case_to_ziwei_request(case, dt)
+    req = case_to_ziwei_request(case, dt)
     assert req.gender == "男"
 
 
 def test_case_to_ziwei_request_maps_female_to_nv():
     case = _make_case(gender="female")
     dt = datetime(2000, 1, 1, 12, 0)
-    req = _case_to_ziwei_request(case, dt)
+    req = case_to_ziwei_request(case, dt)
     assert req.gender == "女"
 
 
 def test_case_to_ziwei_request_aligns_algo_fields():
     case = _make_case(solar_time_enabled=True)
     dt = datetime(2000, 1, 1, 12, 30)
-    req = _case_to_ziwei_request(case, dt)
+    req = case_to_ziwei_request(case, dt)
 
     assert req.year_divide == "normal"
     assert req.day_divide == "forward"
@@ -71,7 +71,7 @@ def test_case_to_ziwei_request_aligns_algo_fields():
 def test_case_to_bazi_request_aligns_algo_fields():
     case = _make_case(gender="female")
     dt = datetime(2000, 1, 1, 12, 0)
-    req = _case_to_bazi_request(case, dt)
+    req = case_to_bazi_request(case, dt)
 
     assert req.gender == "female"
     assert req.zi_day_rule == "early_zi_prev_day"

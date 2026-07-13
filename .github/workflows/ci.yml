@@ -113,6 +113,10 @@ jobs:
         run: python scripts/dev_cycle.py --quick
         continue-on-error: true
 
+      - name: Surface levels A45 (advisory · TD-18)
+        run: python scripts/verify_surface_levels.py
+        continue-on-error: true
+
       - name: Upload dev-cycle reports
         if: always()
         uses: actions/upload-artifact@v4
