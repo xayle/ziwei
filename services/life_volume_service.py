@@ -8,6 +8,7 @@ from typing import Any
 from app.models import Case
 from app.schemas import BaziFullRequest
 from app.schemas.disclaimer import DisclaimerBlockModel
+from app.schemas.entitlement import EntitlementTier
 from app.schemas.explain import ExplainBatchRequest, ZiweiExplainBatchRequest
 from app.schemas.life_volume import (
     LIFE_VOLUME_LABELS,
@@ -21,6 +22,7 @@ from app.schemas.ziwei import ZiweiRequest, ZiweiResponse
 from services.chart_snapshot_service import build_bazi_snapshot
 from services.content_policy import content_versions_meta, default_disclaimer_block
 from services.explain_service import explain_bazi_batch, explain_ziwei_batch
+from services.quota_service import is_volume_unlocked
 from services.ziwei_engine import ziwei_full
 from services.ziwei_trust import apply_trust_level
 
@@ -121,6 +123,51 @@ def _build_colophon(
     )
 
 
+def _locked_teaser(volume_id: str) -> list[VolumeSectionModel]:
+    need = {
+        "vol2": "读卷 Pass",
+        "vol3": "读卷 Pass",
+        "vol4": "读卷 Pass",
+        "vol5": "全书权益",
+        "vol6": "全书权益",
+    }.get(volume_id, "更高权益")
+    return [
+        VolumeSectionModel(
+            id="locked",
+            heading="本卷未解锁",
+            layer="fact",
+            collapsed_default=False,
+            blocks=[
+                AnalysisBlockModel(
+                    text=f"本卷需{need}后方可展开全文（当前档位不足）。",
+                    layer="fact",
+                )
+            ],
+        )
+    ]
+
+
+def _apply_volume_locks(
+    volumes: list[LifeVolumeModel],
+    entitlement: EntitlementTier,
+) -> list[LifeVolumeModel]:
+    """T087 / Q2：按 entitlement 写 locked，并替换锁定卷正文为占位节。"""
+    out: list[LifeVolumeModel] = []
+    for vol in volumes:
+        if is_volume_unlocked(entitlement, vol.id):
+            out.append(vol.model_copy(update={"locked": False}))
+        else:
+            out.append(
+                vol.model_copy(
+                    update={
+                        "locked": True,
+                        "sections": _locked_teaser(vol.id),
+                    }
+                )
+            )
+    return out
+
+
 def build_life_volumes_from_charts(
     *,
     case_id: str,
@@ -130,6 +177,7 @@ def build_life_volumes_from_charts(
     explain_bazi: dict[str, Any],
     explain_ziwei: dict[str, Any],
     profile_label: str | None = None,
+    entitlement: EntitlementTier = "full_book",
 ) -> LifeVolumeResponseModel:
     missing: list[str] = list(bazi.get("missing_fields") or [])
     if ziwei:
@@ -269,16 +317,19 @@ def build_life_volumes_from_charts(
         )
     ]
 
-    volumes = [
-        LifeVolumeModel(id="preface", title=LIFE_VOLUME_LABELS["preface"], sections=preface_sections),
-        LifeVolumeModel(id="vol1", title=LIFE_VOLUME_LABELS["vol1"], sections=vol1_sections),
-        LifeVolumeModel(id="vol2", title=LIFE_VOLUME_LABELS["vol2"], sections=vol2_sections),
-        LifeVolumeModel(id="vol3", title=LIFE_VOLUME_LABELS["vol3"], sections=vol3_sections),
-        LifeVolumeModel(id="vol4", title=LIFE_VOLUME_LABELS["vol4"], sections=vol4_sections),
-        LifeVolumeModel(id="vol5", title=LIFE_VOLUME_LABELS["vol5"], sections=vol5_sections),
-        LifeVolumeModel(id="vol6", title=LIFE_VOLUME_LABELS["vol6"], sections=vol6_sections),
-        LifeVolumeModel(id="colophon", title=LIFE_VOLUME_LABELS["colophon"], sections=colophon_vol_sections),
-    ]
+    volumes = _apply_volume_locks(
+        [
+            LifeVolumeModel(id="preface", title=LIFE_VOLUME_LABELS["preface"], sections=preface_sections),
+            LifeVolumeModel(id="vol1", title=LIFE_VOLUME_LABELS["vol1"], sections=vol1_sections),
+            LifeVolumeModel(id="vol2", title=LIFE_VOLUME_LABELS["vol2"], sections=vol2_sections),
+            LifeVolumeModel(id="vol3", title=LIFE_VOLUME_LABELS["vol3"], sections=vol3_sections),
+            LifeVolumeModel(id="vol4", title=LIFE_VOLUME_LABELS["vol4"], sections=vol4_sections),
+            LifeVolumeModel(id="vol5", title=LIFE_VOLUME_LABELS["vol5"], sections=vol5_sections),
+            LifeVolumeModel(id="vol6", title=LIFE_VOLUME_LABELS["vol6"], sections=vol6_sections),
+            LifeVolumeModel(id="colophon", title=LIFE_VOLUME_LABELS["colophon"], sections=colophon_vol_sections),
+        ],
+        entitlement,
+    )
 
     disclaimer_raw = explain_bazi.get("disclaimer_block") or default_disclaimer_block()
     return LifeVolumeResponseModel(
@@ -298,7 +349,12 @@ def build_life_volumes_from_charts(
     )
 
 
-async def build_life_volumes_for_case(case: Case, *, request_id: str | None = None) -> LifeVolumeResponseModel:
+async def build_life_volumes_for_case(
+    case: Case,
+    *,
+    request_id: str | None = None,
+    entitlement: EntitlementTier = "full_book",
+) -> LifeVolumeResponseModel:
     from routers.bazi import _normalize_birth_dt_text
     from routers.ziwei import _chart_to_response, _ziwei_full_args
     from services.content_policy import content_versions_meta, default_disclaimer_block, default_wenmo_advisory
@@ -365,4 +421,5 @@ async def build_life_volumes_for_case(case: Case, *, request_id: str | None = No
         explain_bazi=explain_bazi,
         explain_ziwei=explain_ziwei,
         profile_label=case.name,
+        entitlement=entitlement,
     )

@@ -13,7 +13,7 @@ from app.schemas.relation_compat import RelationTypeEnum
 from db import get_session
 from services.life_snippets_service import build_life_snippets_for_case
 from services.life_volume_service import build_life_volumes_for_case
-from services.quota_service import enforce_quota
+from services.quota_service import enforce_quota, resolve_entitlement
 from services.rate_limit import limiter
 from services.relation_appendix_service import build_relation_appendix_for_cases
 
@@ -83,7 +83,11 @@ async def get_life_volumes(
         )
     ):
         raise HTTPException(status_code=422, detail="supervisor_subordinate 需 supervisor_id=a|b")
-    response = await build_life_volumes_for_case(case, request_id=f"life-vol-{case_id}")
+    response = await build_life_volumes_for_case(
+        case,
+        request_id=f"life-vol-{case_id}",
+        entitlement=resolve_entitlement(user=user),
+    )
     if partner_case_id:
         appendix = build_relation_appendix_for_cases(
             session,
