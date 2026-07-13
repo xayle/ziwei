@@ -230,3 +230,8 @@ export type InterpretModule = S['InterpretModule']
 export type ChartReviewCreate = S['ChartReviewCreate']
 export type ChartReviewResponse = S['ChartReviewResponse']
 export type CityModel = S['CityModel']
+
+// ── /analytics/events（T089–T090）──────────────────────────
+export type AnalyticsEventItem = S['AnalyticsEventItem']
+export type AnalyticsEventsBatchRequest = S['AnalyticsEventsBatchRequest']
+export type AnalyticsEventsBatchResponse = S['AnalyticsEventsBatchResponse']
