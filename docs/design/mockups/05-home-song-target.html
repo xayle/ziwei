@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>浮生 · 人生六卷辑录</title>
+  <!--
+    简约国风 · 宋式章法 · 首页 v4
+    定案：docs/design/FUSHENG-MINIMAL-GUOFENG-DESIGN.md
+    Token：frontend/src/assets/variables.css
+  -->
+  <style>
+    @font-face {
+      font-family: "LXGW Neo ZhiSong";
+      src: url("../../../frontend/public/fonts/LXGWNeoZhiSong-subset.woff2") format("woff2");
+      font-display: swap;
+    }
+
+    :root {
+      --brand-paper: #f5f0e6;
+      --surface: #fffaf5;
+      --brand-ink: #1a1410;
+      --brand-mist: #6b5d4f;
+      --text-3: #9a8b7a;
+      --brand-gold: #b8894d;
+      --brand-cinnabar: #8b3a2a;
+      --border: #e5dcc8;
+      --border-md: #d4c4a8;
+      --font: "LXGW Neo ZhiSong", "Noto Serif SC", STSong, serif;
+      --page: min(1120px, 100% - 64px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      color: var(--brand-ink);
+      background: var(--brand-paper);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--brand-gold); text-decoration: none; }
+    a:hover { color: var(--brand-ink); }
+
+    /* ── 顶栏 ── */
+    .hdr {
+      max-width: var(--page);
+      margin: 0 auto;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hdr__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--brand-ink);
+    }
+
+    .hdr__logo {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+
+    .hdr__name {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+    }
+
+    .hdr__login {
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      color: var(--brand-mist);
+    }
+
+    /* ══ 首屏：一屏一事 · LOGO ══ */
+    .gate {
+      max-width: var(--page);
+      margin: 0 auto;
+      padding: 48px 32px 96px;
+      min-height: calc(100vh - 88px);
+      min-height: calc(100dvh - 88px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    /* 品牌岛：LOGO 黑底不裁、不圆切 */
+    .gate__emblem {
+      width: min(52vw, 220px);
+      margin-bottom: 40px;
+      line-height: 0;
+    }
+
+    .gate__emblem img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .gate__series {
+      font-size: 14px;
+      letter-spacing: 0.38em;
+      color: var(--brand-mist);
+      margin-bottom: 32px;
+    }
+
+    .gate__rule {
+      width: 48px;
+      height: 1px;
+      background: var(--brand-gold);
+      opacity: 0.55;
+      margin-bottom: 32px;
+    }
+
+    .gate__enter {
+      font-size: 15px;
+      letter-spacing: 0.24em;
+      color: var(--brand-ink);
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border-md);
+    }
+
+    .gate__enter:hover {
+      color: var(--brand-gold);
+      border-color: var(--brand-gold);
+    }
+
+    .gate__hint {
+      margin-top: 16px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+    }
+
+    /* ══ 卷目：宋式登记 · 纸→白两级 ══ */
+    .codex {
+      max-width: var(--page);
+      margin: 0 auto;
+      padding: 0 32px 96px;
+    }
+
+    .codex__panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 48px 56px 56px;
+    }
+
+    .codex__k {
+      font-size: 12px;
+      letter-spacing: 0.28em;
+      color: var(--brand-gold);
+      margin-bottom: 24px;
+    }
+
+    .codex__open {
+      font-size: 16px;
+      line-height: 2;
+      letter-spacing: 0.06em;
+      color: var(--brand-mist);
+      max-width: 28em;
+      margin-bottom: 48px;
+    }
+
+    .register {
+      list-style: none;
+      border-top: 1px solid var(--border-md);
+    }
+
+    .register__row {
+      display: grid;
+      grid-template-columns: 56px 1fr minmax(120px, 34%);
+      gap: 16px;
+      align-items: baseline;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .register__n {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+    }
+
+    .register__title {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+    }
+
+    .register__pi {
+      font-size: 13px;
+      line-height: 1.65;
+      letter-spacing: 0.04em;
+      color: var(--text-3);
+      text-align: right;
+    }
+
+    /* ══ 次屏：读法 + 案头 ══ */
+    .after {
+      max-width: var(--page);
+      margin: 0 auto;
+      padding: 0 32px 96px;
+    }
+
+    .after__inner {
+      padding-top: 48px;
+      border-top: 1px solid var(--border-md);
+    }
+
+    .layers {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 48px;
+      max-width: 36em;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 12px;
+    }
+
+    .layer b {
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      color: var(--brand-gold);
+      font-weight: 600;
+    }
+
+    .layer p {
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--brand-mist);
+    }
+
+    .desk {
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      color: var(--brand-mist);
+      padding: 24px 0;
+      border-top: 1px solid var(--border);
+      max-width: 36em;
+    }
+
+    .desk em {
+      font-style: normal;
+      font-weight: 600;
+      color: var(--brand-ink);
+    }
+
+    .tail {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--text-3);
+      margin-top: 32px;
+    }
+
+    @media (max-width: 720px) {
+      .hdr, .gate, .codex, .after { padding-left: 20px; padding-right: 20px; }
+      .codex__panel { padding: 32px 24px; }
+      .register__row {
+        grid-template-columns: 48px 1fr;
+      }
+      .register__pi {
+        grid-column: 2;
+        text-align: left;
+        margin-top: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hdr">
+    <div class="hdr__brand">
+      <img class="hdr__logo" src="../../../frontend/src/assets/brand/fusheng-mark.svg" alt="" width="40" height="40" />
+      <span class="hdr__name">浮生</span>
+    </div>
+    <a class="hdr__login" href="#">登录</a>
+  </header>
+
+  <!-- 首屏：品牌 LOGO · 一屏一事 -->
+  <section class="gate" aria-label="品牌">
+    <figure class="gate__emblem">
+      <img
+        src="../../../frontend/src/assets/brand/fusheng-mark.svg"
+        alt="浮生 · 浮生若寄，知命知心"
+        width="300"
+        height="300"
+      />
+    </figure>
+    <p class="gate__series">人生六卷辑录</p>
+    <div class="gate__rule" aria-hidden="true"></div>
+    <a class="gate__enter" href="#codex">进入辑录</a>
+    <p class="gate__hint">录入生辰 · 开启命书</p>
+  </section>
+
+  <!-- 滚动：六卷登记（宋式行界） -->
+  <section class="codex" id="codex" aria-label="六卷">
+    <div class="codex__panel">
+      <p class="codex__k">开卷</p>
+      <p class="codex__open">
+        六卷命书，如展一幅长卷。<br />
+        远观其格，近察其运；势理既明，事乃可观。
+      </p>
+
+      <ol class="register">
+        <li class="register__row">
+          <span class="register__n">卷一</span>
+          <span class="register__title">命之根</span>
+          <span class="register__pi">根于阴阳，命之所系</span>
+        </li>
+        <li class="register__row">
+          <span class="register__n">卷二</span>
+          <span class="register__title">业之象</span>
+          <span class="register__pi">合冲错综，象而后明</span>
+        </li>
+        <li class="register__row">
+          <span class="register__n">卷三</span>
+          <span class="register__title">运之波</span>
+          <span class="register__pi">运如江河，波随岁转</span>
+        </li>
+        <li class="register__row">
+          <span class="register__n">卷四</span>
+          <span class="register__title">宫之图</span>
+          <span class="register__pi">十二宫阙，界画昭然</span>
+        </li>
+        <li class="register__row">
+          <span class="register__n">卷五</span>
+          <span class="register__title">事之理</span>
+          <span class="register__pi">事有常理，慎而观之</span>
+        </li>
+        <li class="register__row">
+          <span class="register__n">卷六</span>
+          <span class="register__title">问书</span>
+          <span class="register__pi">疑则问书，展卷乃见</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="after">
+    <div class="after__inner">
+      <div class="layers">
+        <div class="layer"><b>格物</b><p>干支历数，一行一行读去，如刻本之精密。</p></div>
+        <div class="layer"><b>引经</b><p>子平诸书，有所本而不尽信。</p></div>
+        <div class="layer"><b>余论</b><p>雾中有花，展卷而后，方入其事。</p></div>
+      </div>
+      <aside class="desk">案头有一册 · <em>刘博</em> · 命书 · <a href="#">续读卷一</a></aside>
+      <p class="tail">跋 · 余论仅供观览</p>
+    </div>
+  </section>
+
+</body>
+</html>

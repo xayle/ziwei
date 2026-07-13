@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>浮生 · 品牌标识 v2 预览</title>
+  <style>
+    @font-face {
+      font-family: "LXGW Neo ZhiSong";
+      src: url("../../../frontend/public/fonts/LXGWNeoZhiSong-subset.woff2") format("woff2");
+    }
+    body {
+      margin: 0;
+      font-family: "LXGW Neo ZhiSong", serif;
+      background: #f5f0e6;
+      color: #1a1410;
+      padding: 48px;
+    }
+    h1 { font-size: 18px; letter-spacing: 0.2em; font-weight: 600; margin-bottom: 8px; }
+    p { font-size: 13px; color: #6b5d4f; margin-bottom: 32px; }
+    .row { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; margin-bottom: 48px; }
+    .tile { text-align: center; }
+    .tile span { display: block; margin-top: 12px; font-size: 12px; color: #9a8b7a; }
+    .sizes img { display: block; margin: 0 auto 16px; }
+  </style>
+</head>
+<body>
+  <h1>浮生 · 标识 v2</h1>
+  <p>界画铜弧 · 墨字 · 朱线 · 透明底</p>
+
+  <div class="row">
+    <div class="tile">
+      <img src="../../../frontend/src/assets/brand/fusheng-mark.svg" width="220" height="220" alt="mark 220" />
+      <span>mark · 220px</span>
+    </div>
+    <div class="tile">
+      <img src="../../../frontend/src/assets/brand/fusheng-logo.svg" width="320" alt="lockup" />
+      <span>横排锁标</span>
+    </div>
+  </div>
+
+  <div class="row sizes">
+    <div class="tile"><img src="../../../frontend/src/assets/brand/fusheng-mark.svg" width="44" height="44" alt="" /><span>44 · 导航</span></div>
+    <div class="tile"><img src="../../../frontend/src/assets/brand/fusheng-mark.svg" width="88" height="88" alt="" /><span>88 · 报告</span></div>
+    <div class="tile"><img src="../../../frontend/src/assets/brand/fusheng-mark.svg" width="128" height="128" alt="" /><span>128</span></div>
+  </div>
+</body>
+</html>
