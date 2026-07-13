@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-1.8 |
+| **版本** | post-w14-1.9 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase E** — **T072–T084 ☑（跳号无：T078 已勾）** → **下一项 T085**（U5 签字） |
+| **当前优先级** | ▶ **Phase E U5 ☑** — [T085 签字](../reports/T085-u5-gate-2026-07-14.md) → **下一项 T086**（GTM 开篇） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -17,8 +17,8 @@
 ```text
 前置  T070 ☑（W14 · W102-22 closeout）
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
-BE    T072–T078 · T084 ☑
-FE    T079–T083 ☑ → **下一项 T085 U5 签字**
+BE+FE T072–T084 ☑
+U5    T085 ☑（2026-07-14）→ 下一项 **T086**（块 K GTM）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -104,7 +104,7 @@ P14  上线评估  T136–T140
 | ☑ | **T082** | FE | remote volumes 成功则跳过 explain/batch；卷内已有 explain 段时隐藏对应 AnalysisPanel | `ReportView.vue` | 无双重 cite · waterfall archive+volumes |
 | ☑ | **T083** | ALL | E2E：volumes API 路径六卷+跋断言 | `e2e/fusheng-life-volumes.spec.ts` | 3/3 + report 11/11 |
 | ☑ | **T084** | BE | Compute **legacy 瘦化收尾**：`interpretation_text` 默认 off；文档迁移说明 | [T084 报告](../reports/T084-legacy-slim-2026-07-14.md) | Q4 闭环 |
-| ☐ | **T085** | ALL | **U5 签字**：15 分钟建档→报告；数据来自 **life/volumes**；跋权威 | — | **P3 Gate** |
+| ☑ | **T085** | ALL | **U5 签字**：15 分钟建档→报告；数据来自 **life/volumes**；跋权威 | [T085 门禁](../reports/T085-u5-gate-2026-07-14.md) | **P3 Gate** |
 
 **J-验收命令：**
 
@@ -265,10 +265,10 @@ make scorecard
 
 ```markdown
 ### P3 权威（U5）
-- [ ] GET life/volumes 为报告唯一数据源
+- [x] GET life/volumes 为报告唯一数据源
 - [x] buildLifeVolumes 已 deprecated
-- [ ] colophon 含 wenmo/iztro/disclaimer（BE 聚合）
-- [ ] waterfall ≤2–4
+- [x] colophon 含 wenmo/iztro/disclaimer（BE 聚合）
+- [x] waterfall ≤2–4
 
 ### GTM（若做 T086–T105）
 - [ ] entitlement 中间件生效
@@ -305,6 +305,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-1.9 | 2026-07-14 | **T085 U5 ☑** · P3 Gate 通过 · 下一项 T086 GTM |
 | post-w14-1.8 | 2026-07-14 | **T078 ☑** · OpenAPI/types 双端契约 · 下一项 T085 U5 |
 | post-w14-1.7 | 2026-07-14 | **T077 ☑** · archive name/zeri 指针 · 下一项 T078/T085 |
 | post-w14-1.6 | 2026-07-14 | **T076 ☑** · life/snippets §5.3 · 下一项 T077/T085 |
