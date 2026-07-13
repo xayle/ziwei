@@ -338,16 +338,11 @@ def get_kongwang(stem: str, branch: str) -> tuple[str, str]:
     """
     stem_idx = STEMS.index(stem)
     branch_idx = BRANCHES.index(branch)
-    # 旬首: 同组的甲干对应地支
-    branch_idx % 12
-    # 找旬首: stem_idx%10 与 branch_idx%12 关系
-    # 旬首天干必定是甲，地支从子到亥每10步一旬
-    # 找旬首地支: xun_start = branch_idx - (branch_idx - stem_idx*1) % 10
-    offset = (branch_idx - stem_idx) % 10
-    xun_start_branch_idx = (branch_idx - offset) % 12
-    xun_branch = BRANCHES[xun_start_branch_idx]
-    key = f"甲{xun_branch}"
-    return KONGWANG.get(key, ("未知", "未知"))
+    ganzhi_index = next((i for i in range(60) if i % 10 == stem_idx and i % 12 == branch_idx), None)
+    if ganzhi_index is None:
+        return ("未知", "未知")
+    xun_keys = ("甲子", "甲戌", "甲申", "甲午", "甲辰", "甲寅")
+    return KONGWANG[xun_keys[ganzhi_index // 10]]
 
 
 # ─────────────────────────────────────────────────────────────────────────────

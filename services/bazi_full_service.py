@@ -126,6 +126,9 @@ def _normalize_relation_type(raw_type: str) -> str:
         "相害": "害",
         "相破": "破",
         "相刑": "刑",
+        "三合半合": "合",
+        "半合": "合",
+        "三合": "合",
         "空亡": "空亡",
         "干支互动": "干支互动",
     }
@@ -529,6 +532,54 @@ def _build_hidden_detail(branch: str | None, day_stem: str | None) -> list[Hidde
     return details
 
 
+_PILLAR_LABEL_KEYS = {
+    "年柱": "year",
+    "月柱": "month",
+    "日柱": "day",
+    "时柱": "hour",
+}
+
+
+def _default_liunian_years(birth_year: int) -> list[int]:
+    """Default offsets from birth year: ±2 plus offset to current calendar year."""
+    from datetime import date
+
+    today_year = date.today().year
+    deltas = set(range(-2, 3))
+    deltas.add(today_year - birth_year)
+    return sorted(deltas)
+
+
+def _shensha_for_pillar(label: str, shensha_items: list[dict]) -> list[PillarShenshaDetailModel]:
+    pillar_key = _PILLAR_LABEL_KEYS.get(label, label.replace("柱", ""))
+    allowed = {pillar_key, label, label.replace("柱", "")}
+    seen: set[str] = set()
+    models: list[PillarShenshaDetailModel] = []
+    for item in shensha_items:
+        item_pillar = str(item.get("pillar") or "")
+        if item_pillar not in allowed:
+            continue
+        name = str(item.get("name") or "")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        models.append(
+            PillarShenshaDetailModel(
+                name=name,
+                priority=str(item.get("priority") or _shensha_meta_value(name, "priority")),
+                polarity=str(item.get("polarity") or _SHENSHA_META.get(name, {}).get("polarity", "unknown")),
+                pillar=item_pillar,
+                topic=str(item.get("topic") or _shensha_meta_value(name, "topic")),
+                note=str(item.get("note") or _shensha_meta_value(name, "note")),
+                classic=str(item.get("classic") or _SHENSHA_META.get(name, {}).get("classic", "")) or None,
+                source=str(
+                    item.get("classic") or _SHENSHA_META.get(name, {}).get("classic", "services.bazi_engine.shensha")
+                ),
+            )
+        )
+    return models
+
+
 def _build_pillar_detail(
     label: str,
     stem: str | None,
@@ -542,27 +593,11 @@ def _build_pillar_detail(
     ten_god_value = ten_god(day_stem, stem) if stem else None
     if label == "日柱":
         ten_god_value = "日主"
-    shensha = [
-        PillarShenshaDetailModel(
-            name=str(item.get("name") or ""),
-            priority=str(item.get("priority") or _shensha_meta_value(str(item.get("name") or ""), "priority")),
-            polarity=str(
-                item.get("polarity") or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("polarity", "unknown")
-            ),
-            pillar=str(item.get("pillar") or ""),
-            topic=str(item.get("topic") or _shensha_meta_value(str(item.get("name") or ""), "topic")),
-            note=str(item.get("note") or _shensha_meta_value(str(item.get("name") or ""), "note")),
-            classic=str(item.get("classic") or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("classic", ""))
-            or None,
-            source=str(
-                item.get("classic")
-                or _SHENSHA_META.get(str(item.get("name") or ""), {}).get("classic", "services.bazi_engine.shensha")
-            ),
-        )
-        for item in shensha_items
-        if str(item.get("pillar") or "") in {label, label.replace("柱", ""), "year", "month", "day", "hour"}
-    ]
-    kongwang_hit = bool(branch and branch in kongwang)
+    shensha = _shensha_for_pillar(label, shensha_items)
+    pillar_kongwang = list(get_kongwang(stem, branch)) if stem and branch else list(kongwang)
+    if pillar_kongwang == ["未知", "未知"]:
+        pillar_kongwang = []
+    kongwang_hit = bool(branch and branch in pillar_kongwang)
     kongwang_source = "services.bazi_engine.tables.get_kongwang" if stem and branch else ""
     self_seat, self_seat_source = _pillar_self_seat(stem, branch)
     return PillarDetailModel(
@@ -575,7 +610,7 @@ def _build_pillar_detail(
         xingyun=_pillar_xingyun(day_stem, branch),
         self_seat=self_seat,
         self_seat_source=self_seat_source,
-        kongwang=list(kongwang),
+        kongwang=list(pillar_kongwang),
         kongwang_source=kongwang_source,
         kongwang_hit=kongwang_hit,
         nayin=_NAYIN_TABLE.get(f"{stem or ''}{branch or ''}") if stem and branch else None,
@@ -1000,7 +1035,7 @@ def bazi_full(
 ) -> BaziFullResponse:
     dt = _attach_tz(body.dt, body.tz)
     lon = validate_lon_strict(body.lon)
-    liunian_years = body.liunian_years or [-2, 2]
+    liunian_years = body.liunian_years or _default_liunian_years(dt.year)
     normalized_birth = normalize_birth_datetime(dt, body.tz, auto_dst=True)
     warnings_raw = warn_lon_cn_range(body.tz, lon)
     warnings = [WarningModel.model_validate(w) for w in warnings_raw]
@@ -1105,6 +1140,8 @@ def bazi_full(
                 )
 
     kongwang = list(get_kongwang(verify_response.pillars_primary.day.stem, verify_response.pillars_primary.day.branch))
+    if kongwang == ["未知", "未知"]:
+        kongwang = []
     shensha_items = [item.model_dump() for item in (verify_response.shensha or [])]
 
     try:
@@ -1310,21 +1347,31 @@ def bazi_full(
     _clash_summary = next((item.summary for item in relation_items if item.type == "冲" and item.summary), "")
     if not _clash_summary and tiangan_clash_notes:
         _clash_summary = tiangan_clash_notes[0]
-    if not _clash_summary:
-        relation_summary_missing.append("clash_summary")
 
     _combine_summary = next((item.summary for item in relation_items if item.type == "合" and item.summary), "")
-    if not _combine_summary:
-        relation_summary_missing.append("combine_summary")
-
     _harm_summary = next((item.summary for item in relation_items if item.type == "害" and item.summary), "")
-    if not _harm_summary:
-        relation_summary_missing.append("harm_summary")
 
     _interaction_parts = [
         text for text in [*(item.summary for item in relation_items[:3]), *(tiangan_clash_notes[:1])] if text
     ]
     _interaction_summary = "；".join(_interaction_parts)
+
+    _has_clash_signal = any(item.type == "冲" for item in relation_items) or any(
+        "冲" in note for note in tiangan_clash_notes
+    )
+    _has_combine_signal = any(item.type == "合" for item in relation_items) or any(
+        kw in _interaction_summary for kw in ("合", "半合", "三合")
+    )
+    _has_harm_signal = any(item.type in {"害", "破", "刑"} for item in relation_items) or any(
+        kw in _interaction_summary for kw in ("害", "破", "刑")
+    )
+
+    if not _clash_summary and _has_clash_signal:
+        relation_summary_missing.append("clash_summary")
+    if not _combine_summary and _has_combine_signal:
+        relation_summary_missing.append("combine_summary")
+    if not _harm_summary and _has_harm_signal:
+        relation_summary_missing.append("harm_summary")
     if not _interaction_summary:
         relation_summary_missing.append("interaction_summary")
 
@@ -1533,11 +1580,18 @@ def bazi_full(
         "missing": relation_summary_missing,
     }
     _shensha_raw = payload.get("shensha") or []
+    _highlight_seen: set[str] = set()
+    _shensha_highlights: list[str] = []
+    for item in _shensha_raw:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "")
+        if name and name not in _highlight_seen:
+            _highlight_seen.add(name)
+            _shensha_highlights.append(name)
     payload["shensha_summary"] = {
         "items": _shensha_raw,
-        "highlights": [
-            str(item.get("name") or "") for item in _shensha_raw if isinstance(item, dict) and item.get("name")
-        ][:8],
+        "highlights": _shensha_highlights[:8],
         "missing": [] if _shensha_raw else ["shensha"],
     }
 

@@ -99,10 +99,16 @@ class TestTables:
         assert (k1, k2) == ("戌", "亥")
 
     def test_get_kongwang_gengwu(self):
-        """get_kongwang：庚午（属甲午旬）→ 空亡辰巳"""
+        """get_kongwang：庚午（甲子旬）→ 空亡戌亥"""
         from services.bazi_engine.tables import get_kongwang
         k1, k2 = get_kongwang("庚", "午")
-        assert (k1, k2) == ("辰", "巳")
+        assert (k1, k2) == ("戌", "亥")
+
+    def test_get_kongwang_guichou(self):
+        """get_kongwang：癸丑（属甲辰旬）→ 空亡寅卯"""
+        from services.bazi_engine.tables import get_kongwang
+        k1, k2 = get_kongwang("癸", "丑")
+        assert (k1, k2) == ("寅", "卯")
 
     def test_get_kongwang_returns_tuple(self):
         """get_kongwang 对任意合法干支返回长度为2的元组"""

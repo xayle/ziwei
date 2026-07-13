@@ -463,8 +463,13 @@ def compute_shensha(
         "hour": hour_stem,
     }
     results: list[dict] = []
+    _seen: set[tuple[str, str]] = set()
 
     def _add(name: str, pillar: str) -> None:
+        key = (name, pillar)
+        if key in _seen:
+            return
+        _seen.add(key)
         if name in SHENSHA_META:
             meta = SHENSHA_META[name]
             results.append(

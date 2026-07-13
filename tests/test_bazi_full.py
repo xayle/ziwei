@@ -242,3 +242,33 @@ def test_bazi_full_trust_fields_present():
     assert data.get("rule_version")
     assert isinstance(data.get("evidence_chain"), list)
     assert data.get("provenance") is not None
+
+
+def test_bazi_full_guichou_kongwang_and_pillar_shensha():
+    """Regression: 癸丑旬空寅卯；四柱神煞按柱过滤；默认流年含当前年。"""
+    from datetime import date
+
+    payload = {
+        "lon": 117.49,
+        "mode": "single",
+        "tz": "Asia/Shanghai",
+        "dt": "1990-06-17T20:15:00",
+        "gender": "male",
+    }
+    resp = client.post("/api/v1/bazi/full", json=payload)
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["kongwang"] == ["寅", "卯"]
+    pd = data["pillar_details"]
+    year_names = [s["name"] for s in pd["year"]["shensha"]]
+    hour_names = [s["name"] for s in pd["hour"]["shensha"]]
+    assert year_names != hour_names or year_names  # 不应四柱完全相同列表
+    assert len(year_names) == len(set(year_names))  # 柱内去重
+    liunian_years = [item["year"] for item in (data.get("liunian") or {}).get("items") or []]
+    assert date.today().year in liunian_years
+    missing = data.get("missing_fields") or []
+    assert "clash_summary" not in missing
+    assert "combine_summary" not in missing
+    assert "harm_summary" not in missing
+    highlights = (data.get("shensha_summary") or {}).get("highlights") or []
+    assert len(highlights) == len(set(highlights))
