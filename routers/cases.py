@@ -65,6 +65,13 @@ def create_case(payload: CaseCreate, current_user: RequiredUser, session: Sessio
     inferred_leap_month = infer_case_leap_month(case_data.get("birth_dt_local"), case_data.get("calendar_mode"))
     if inferred_leap_month is not None:
         case_data["is_leap_month"] = inferred_leap_month
+    # 案例未带 utm 时继承用户首触归因
+    if case_data.get("utm_source") is None and getattr(current_user, "utm_source", None):
+        case_data["utm_source"] = current_user.utm_source
+    if case_data.get("utm_campaign") is None and getattr(current_user, "utm_campaign", None):
+        case_data["utm_campaign"] = current_user.utm_campaign
+    if case_data.get("content_id") is None and getattr(current_user, "content_id", None):
+        case_data["content_id"] = current_user.content_id
     case = Case(**case_data)
     # 本地 bypass 兜底场景下，current_user.id 可能为空或无效。
     # 仅在用户 ID 有效时写入 owner_id，避免外键约束导致 500。

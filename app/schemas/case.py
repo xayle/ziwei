@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from app.schemas.utm import clean_optional
 from constants import MAX_LON, MIN_LON
 
 _TAG_PATTERN = re.compile(r"^[\w\s,\-:/.\u4e00-\u9fff]+$")
@@ -100,6 +101,23 @@ class CaseBase(BaseModel):
     ziwei_template_version: str = Field(default="standard", description="紫微模板：standard | pro | simple")
     notes: str | None = None
     tags: str | None = None
+    utm_source: str | None = Field(default=None, description="渠道，如 douyin")
+    utm_campaign: str | None = Field(default=None, description="活动/话题")
+    content_id: str | None = Field(default=None, description="抖音视频 ID 等素材 ID")
+
+    @field_validator("utm_source", "utm_campaign", mode="before")
+    @classmethod
+    def validate_utm_text(cls, v: object) -> str | None:
+        if v is None or isinstance(v, str):
+            return clean_optional(v if isinstance(v, str) else None, max_len=128)
+        raise ValueError("must be a string or null")
+
+    @field_validator("content_id", mode="before")
+    @classmethod
+    def validate_content_id(cls, v: object) -> str | None:
+        if v is None or isinstance(v, str):
+            return clean_optional(v if isinstance(v, str) else None, max_len=64)
+        raise ValueError("must be a string or null")
 
     @field_validator("birth_dt_local")
     @classmethod

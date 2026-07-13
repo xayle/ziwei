@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-2.1 |
+| **版本** | post-w14-2.2 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase F GTM** — T086–T087 ☑ → **下一项 T088**（utm 归因） |
+| **当前优先级** | ▶ **Phase F GTM** — T086–T088 ☑ → **下一项 T089**（analytics events） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -19,7 +19,7 @@
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE+FE T072–T084 ☑
 U5    T085 ☑（2026-07-14）
-GTM   T086–T087 ☑ → 下一项 **T088**（utm 归因）
+GTM   T086–T088 ☑ → 下一项 **T089**（analytics events）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -125,7 +125,7 @@ make scorecard
 |---|-----|------|------|----------|------|
 | ☑ | **T086** | BE | **BE-GTM-05** entitlement 模型：`free` / `volume_pass` / `full_book` | [T086 报告](../reports/T086-entitlement-2026-07-14.md) · `quota_service` · schemas | `enforce_entitlement` · auth/me · 单测 |
 | ☑ | **T087** | BE | 卷目 `locked` 规则（Q2：卷0–1 免费，2–4 pass，5–6 pro） | [T087 报告](../reports/T087-volume-locks-2026-07-14.md) · `life_volume_service` | free/pass/full_book fixture |
-| ☐ | **T088** | BE | **BE-GTM-02** 注册/案例 `utm_source` `utm_campaign` `content_id` | `Case` model · auth | 抖音视频 ID 可存 |
+| ☑ | **T088** | BE | **BE-GTM-02** 注册/案例 `utm_source` `utm_campaign` `content_id` | [T088 报告](../reports/T088-utm-attribution-2026-07-14.md) · Case/User · auth | 抖音视频 ID 可存 |
 | ☐ | **T089** | BE | **BE-GTM-01** `POST /api/v1/analytics/events` 批量事件 | `routers/analytics_events.py` | 卷目阅读/术语点击 |
 | ☐ | **T090** | FE | **FE-GTM-06** `utils/analytics.ts` 封装；**禁**姓名/生日进 payload | 新文件 | 隐私评审 |
 | ☐ | **T091** | FE | **FE-GTM-01** `LandingVolume.vue` 卷首摘要 + CTA 建档 | `views/landing/` | 375px 无横滚 |
@@ -273,7 +273,7 @@ make scorecard
 
 ### GTM（若做 T086–T105）
 - [x] entitlement 中间件生效（T086 · `enforce_entitlement`）
-- [ ] utm 归因入库
+- [x] utm 归因入库（T088）
 - [ ] analytics 无 PII
 - [ ] 落地页 + 锁卷 UI
 - [ ] disclaimer 合规
@@ -306,6 +306,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-2.2 | 2026-07-14 | **T088 ☑** · utm 归因注册/建档 · 下一项 T089 analytics |
 | post-w14-2.1 | 2026-07-14 | **T087 ☑** · volumes locked Q2 · 下一项 T088 utm |
 | post-w14-2.0 | 2026-07-14 | **T086 ☑** · entitlement free/pass/full_book · 下一项 T087 locked |
 | post-w14-1.9 | 2026-07-14 | **T085 U5 ☑** · P3 Gate 通过 · 下一项 T086 GTM |

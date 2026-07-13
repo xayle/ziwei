@@ -46,6 +46,10 @@ class Case(SQLModel, table=True):
     ziwei_template_version: str = Field(default="standard", description="紫微模板：standard | pro | simple")
     notes: str | None = None
     tags: str | None = None
+    # GTM BE-GTM-02：案例级归因（可覆盖用户首触）
+    utm_source: str | None = Field(default=None, max_length=128)
+    utm_campaign: str | None = Field(default=None, max_length=128)
+    content_id: str | None = Field(default=None, max_length=64)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_snapshot_at: datetime | None = None

@@ -27,6 +27,10 @@ class User(SQLModel, table=True):
     is_admin: bool = Field(default=False)
     # GTM BE-GTM-05：free | volume_pass | full_book（admin/owner 运行时仍升至 full_book）
     entitlement: str = Field(default="free", max_length=32)
+    # GTM BE-GTM-02：注册首触归因（抖音等）
+    utm_source: str | None = Field(default=None, max_length=128)
+    utm_campaign: str | None = Field(default=None, max_length=128)
+    content_id: str | None = Field(default=None, max_length=64)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     deleted_at: datetime | None = None

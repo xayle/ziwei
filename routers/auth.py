@@ -22,6 +22,7 @@ from app.exceptions import (
     ValidationException,
 )
 from app.models import RefreshToken, User
+from app.schemas.utm import UtmAttributionFields
 from db import get_session
 from services.auth_service import (
     TokenPayload,
@@ -113,8 +114,8 @@ class LoginRequest(BaseModel):
         return v
 
 
-class RegisterRequest(BaseModel):
-    """注册请求"""
+class RegisterRequest(UtmAttributionFields):
+    """注册请求（可选携带抖音等 utm 首触归因）"""
 
     username: str
     email: str  # 使用自定义验证器验证邮箱格式
@@ -309,6 +310,9 @@ def register(body: RegisterRequest, request: Request, session: Session = Depends
         is_active=True,
         role="owner",  # 上帚虉下的数据可应有完整控制权
         is_admin=False,
+        utm_source=body.utm_source,
+        utm_campaign=body.utm_campaign,
+        content_id=body.content_id,
     )
 
     # 原子操作：用户创建 + refresh_token 创建
@@ -334,7 +338,12 @@ def register(body: RegisterRequest, request: Request, session: Session = Depends
                 resource_id=str(new_user.id),
                 ip_address=ip_address,
                 user_agent=user_agent,
-                details={"username": new_user.username},
+                details={
+                    "username": new_user.username,
+                    "utm_source": new_user.utm_source,
+                    "utm_campaign": new_user.utm_campaign,
+                    "content_id": new_user.content_id,
+                },
             )
         except Exception as exc:
             logger.warning("register: audit log failed: %s", exc)
@@ -384,6 +393,9 @@ def get_current_user_info(session: Session = Depends(get_session), user: TokenPa
         "is_admin": db_user.is_admin,
         "entitlement": entitlement.tier,
         "entitlement_info": entitlement.model_dump(),
+        "utm_source": db_user.utm_source,
+        "utm_campaign": db_user.utm_campaign,
+        "content_id": db_user.content_id,
         "created_at": db_user.created_at.isoformat(),
         "updated_at": db_user.updated_at.isoformat(),
         "token_type": "bearer",
