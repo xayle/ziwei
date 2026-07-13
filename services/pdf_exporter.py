@@ -69,6 +69,22 @@ async def generate_pdf(base_url: str, params: dict, output_path: str | None = No
             await browser.close()
 
 
+async def render_html_to_png(html: str, *, width: int = 400, height: int = 280) -> bytes:
+    """Render static HTML to PNG screenshot."""
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page(viewport={"width": width, "height": height})
+        try:
+            await page.set_content(html, wait_until="load", timeout=15000)
+            await page.wait_for_timeout(300)
+            return await page.screenshot(type="png")
+        except Exception as e:
+            logger.error(f"HTML PNG 渲染失败: {e}")
+            raise
+        finally:
+            await browser.close()
+
+
 async def render_html_to_pdf(html: str) -> bytes:
     """将静态 HTML 渲染为 A4 PDF（浮生报告等服务端导出）。"""
     async with async_playwright() as p:
@@ -156,3 +172,11 @@ async def generate_share_card(case, snapshot=None) -> bytes:
             return await page.screenshot(type="png")
         finally:
             await browser.close()
+
+
+async def generate_relation_share_card(payload: dict) -> bytes:
+    """Generate relation-compat share card PNG from API response dict."""
+    from services.relation_pdf_service import render_relation_share_card_html
+
+    html = render_relation_share_card_html(payload)
+    return await render_html_to_png(html)

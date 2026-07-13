@@ -117,6 +117,8 @@ def render_relation_compat_html(payload: dict[str, Any]) -> str:
     cite_html = _layers_cite_html(payload)
     font_face_css = pdf_song_font_face_css()
     body_font = pdf_body_font_family()
+    inference_heading = (payload.get("meta") or {}).get("inference_heading") or "行动建议（余论）"
+    template_id = (payload.get("meta") or {}).get("template_id") or payload.get("relation_type") or "—"
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -162,7 +164,7 @@ def render_relation_compat_html(payload: dict[str, Any]) -> str:
 </head>
 <body>
   <section class="sheet">
-    <p class="meta">浮生 · relation-compat@1.0 · {_esc(request_id)} · {_esc(generated)}</p>
+    <p class="meta">浮生 · relation-compat@1.0 · {_esc(request_id)} · {_esc(generated)} · template:{_esc(template_id)}</p>
     <h1>{_esc(rel_label)}</h1>
     <p><strong>{_esc(pa.get("label"))}</strong> × <strong>{_esc(pb.get("label"))}</strong></p>
     <p class="meta">甲方四柱：{_esc(_pillars_line(pa))}<br />
@@ -199,13 +201,68 @@ def render_relation_compat_html(payload: dict[str, Any]) -> str:
   </section>
 
   <section class="sheet inference">
-    <h2>行动建议（余论）</h2>
+    <h2>{_esc(inference_heading)}（余论）</h2>
     <ul>{actions_html or "<li>—</li>"}</ul>
   </section>
 
   {cite_html}
 
   <p class="disclaimer">{_esc(disclaimer)}</p>
+</body>
+</html>"""
+
+
+def render_relation_share_card_html(payload: dict[str, Any]) -> str:
+    """Compact share card HTML (400×280) for relation-compat@1.0."""
+    pa = payload.get("person_a") or {}
+    pb = payload.get("person_b") or {}
+    rel_label = payload.get("relation_type_label") or payload.get("relation_type") or "合盘"
+    score = payload.get("combined_score")
+    grade = payload.get("grade") or "—"
+    summary = str(payload.get("summary") or "")[:110]
+    bazi_block = payload.get("bazi") or {}
+    ziwei_block = payload.get("ziwei") or {}
+    bazi_score = bazi_block.get("score")
+    ziwei_score = ziwei_block.get("score")
+    engine_line = ""
+    if bazi_score is not None and ziwei_score is not None:
+        engine_line = f"八字 {_esc(bazi_score)} · 紫微 {_esc(ziwei_score)}"
+    elif bazi_score is not None:
+        engine_line = f"八字 {_esc(bazi_score)}"
+    elif ziwei_score is not None:
+        engine_line = f"紫微 {_esc(ziwei_score)}"
+
+    font_face_css = pdf_song_font_face_css()
+    body_font = pdf_body_font_family()
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    {font_face_css}
+    body {{
+      font-family: {body_font};
+      width: 400px;
+      margin: 0;
+      padding: 24px;
+      background: #faf6ef;
+      color: #2b2118;
+      box-sizing: border-box;
+    }}
+    h1 {{ font-size: 17px; margin: 0 0 6px; letter-spacing: 0.08em; }}
+    .pair {{ font-size: 13px; margin: 0 0 10px; }}
+    .score {{ font-size: 26px; color: #b8894d; margin: 8px 0; }}
+    .meta {{ color: #7a5c3a; font-size: 11px; line-height: 1.5; }}
+    .summary {{ font-size: 12px; margin-top: 8px; line-height: 1.55; }}
+  </style>
+</head>
+<body>
+  <h1>{_esc(rel_label)}</h1>
+  <p class="pair"><strong>{_esc(pa.get("label"))}</strong> × <strong>{_esc(pb.get("label"))}</strong></p>
+  <div class="score">{_esc(score)} <span style="font-size:13px">/ 100 · {_esc(grade)}</span></div>
+  <p class="meta">{engine_line or "合盘"} · relation-compat@1.0</p>
+  <p class="summary">{_esc(summary)}</p>
 </body>
 </html>"""
 

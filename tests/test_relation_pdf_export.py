@@ -96,6 +96,21 @@ def test_render_multi_compat_html_matrix():
     assert "66" in html
 
 
+def test_relation_export_png_endpoint(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    dummy_png = b"\x89PNG\r\n\x1a\nfake"
+
+    async def _fake_png(payload: dict) -> bytes:
+        assert payload.get("relation_type") == "couple"
+        return dummy_png
+
+    monkeypatch.setattr("routers.relation_compat.generate_relation_share_card", _fake_png)
+
+    resp = client.post("/api/v1/relation/export/png", json=COUPLE_PAYLOAD)
+    assert resp.status_code == 200, resp.text
+    assert resp.headers.get("content-type", "").startswith("image/png")
+    assert resp.content == dummy_png
+
+
 def test_relation_export_pdf_endpoint(client: TestClient, monkeypatch: pytest.MonkeyPatch):
     async def _fake_pdf(html: str) -> bytes:
         assert "relation-compat@1.0" in html

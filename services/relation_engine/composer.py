@@ -17,6 +17,8 @@ from services.relation_engine.copy_templates import (
     build_action_items,
     build_summary,
     check_forbidden,
+    finalize_relation_payload,
+    merged_forbidden_phrases,
     sanitize_text,
     score_to_grade,
 )
@@ -195,7 +197,7 @@ def compute_relation_full(
     if type_cfg.get("requires_role") and not supervisor_id:
         raise ValueError("supervisor_subordinate requires supervisor_id ('a' or 'b')")
 
-    forbidden = list(type_cfg.get("forbidden_copy") or [])
+    forbidden = merged_forbidden_phrases(relation_type, type_cfg)
     bazi_specs = list(type_cfg.get("bazi_dimensions") or [])
     palace_pairs = list(type_cfg.get("ziwei_palace_pairs") or [])
 
@@ -347,14 +349,6 @@ def compute_relation_full(
         wuxing_ju_name=chart_b.wuxing_ju_name if chart_b else None,
     )
 
-    inference_sections = [
-        {
-            "id": "advice",
-            "heading": "相处建议",
-            "blocks": [{"text": item["text"]} for item in action_items[:5]],
-        }
-    ]
-
     from services.explain_relation import build_relation_cite_layers
 
     cite_sections = build_relation_cite_layers(
@@ -364,7 +358,7 @@ def compute_relation_full(
         grade=grade,
     )
 
-    return {
+    result = {
         "schema_version": "relation-compat@1.0",
         "request_id": str(uuid4()),
         "relation_type": relation_type,
@@ -379,7 +373,7 @@ def compute_relation_full(
         "layers": {
             "fact": {"collapsed_default": False, "sections": []},
             "cite": {"collapsed_default": True, "sections": cite_sections},
-            "inference": {"collapsed_default": True, "sections": inference_sections},
+            "inference": {"collapsed_default": True, "sections": []},
         },
         "dimensions": dimensions,
         "bazi": {
@@ -412,3 +406,4 @@ def compute_relation_full(
             "layer": "heuristic",
         },
     }
+    return finalize_relation_payload(result, relation_type, type_cfg)

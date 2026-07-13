@@ -156,9 +156,8 @@ jobs:
         run: python scripts/verify_surface_levels.py
         continue-on-error: true
 
-      - name: Relation PDF HTML gate (advisory · R086 T123)
+      - name: Relation PDF HTML gate (blocking · R086 T123)
         run: python scripts/verify_relation_pdf_html.py
-        continue-on-error: true
 
       - name: Upload dev-cycle reports
         if: always()

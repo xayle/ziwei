@@ -24,7 +24,7 @@ from app.schemas.relation_compat import (
 from constants import API_VERSION, RULE_VERSION
 from db import get_session
 from services.explain_service import explain_relation_batch
-from services.pdf_exporter import render_html_to_pdf
+from services.pdf_exporter import generate_relation_share_card, render_html_to_pdf
 from services.relation_appendix_service import build_relation_appendix_for_cases
 from services.relation_compat_flow import compute_relation_full_with_persons
 from services.relation_pdf_service import render_relation_compat_html
@@ -98,6 +98,11 @@ def _maybe_store_snapshots(
 
 def _safe_pdf_filename(label_a: str, label_b: str) -> str:
     raw = f"合盘-{label_a}-{label_b}.pdf"
+    return "".join(c if c.isalnum() or c in "._-" else "_" for c in raw)
+
+
+def _safe_png_filename(label_a: str, label_b: str) -> str:
+    raw = f"合盘-{label_a}-{label_b}.png"
     return "".join(c if c.isalnum() or c in "._-" else "_" for c in raw)
 
 
@@ -222,5 +227,35 @@ async def export_relation_pdf(
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
+    )
+
+
+@router.post(
+    "/export/png",
+    summary="关系合盘分享卡片 PNG（relation-compat@1.0 · 与 /full 同口径）",
+    response_class=Response,
+)
+async def export_relation_png(
+    body: RelationFullRequest,
+    user: CurrentUser,
+    session: Session = Depends(get_session),
+) -> Response:
+    """R086 P2：合盘分享卡 — 与 PDF 相同计算口径，输出 400×280 PNG。"""
+    result, person_a, person_b = await compute_relation_full_with_persons(body, user=user, session=session)
+    _maybe_store_snapshots(body, result, user, session, person_a, person_b)
+
+    try:
+        png_bytes = await generate_relation_share_card(result)
+    except Exception as exc:
+        raise HTTPException(500, f"PNG 渲染失败: {exc}") from exc
+
+    label_a = (result.get("person_a") or {}).get("label") or "甲方"
+    label_b = (result.get("person_b") or {}).get("label") or "乙方"
+    filename = _safe_png_filename(str(label_a), str(label_b))
+    encoded = quote(filename)
+    return Response(
+        content=png_bytes,
+        media_type="image/png",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded}"},
     )

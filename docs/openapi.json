@@ -5844,6 +5844,56 @@
         }
       }
     },
+    "/api/v1/relation/export/png": {
+      "post": {
+        "tags": [
+          "relation"
+        ],
+        "summary": "关系合盘分享卡片 PNG（relation-compat@1.0 · 与 /full 同口径）",
+        "description": "R086 P2：合盘分享卡 — 与 PDF 相同计算口径，输出 400×280 PNG。",
+        "operationId": "export_relation_png_api_v1_relation_export_png_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationFullRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/api/v1/profile/{case_id}/summary": {
       "get": {
         "tags": [
