@@ -1,0 +1,1397 @@
+{
+  "_meta": {
+    "count": 3
+  },
+  "cases": [
+    {
+      "id": "WM01",
+      "name": "华倩",
+      "gender": "female",
+      "birth_year": 1993,
+      "birth_month": 6,
+      "birth_day": 29,
+      "birth_hour": 15,
+      "birth_minute": 15,
+      "solar_corrected_hour": 15,
+      "solar_corrected_minute": 20,
+      "longitude": 122.117,
+      "pillars": "癸酉 戊午 辛巳 丙申",
+      "wuxing_ju": "水二局",
+      "ming_zhu": "禄存",
+      "shen_zhu": "天同",
+      "life_palace_gz": "壬戌",
+      "source": "文墨天机",
+      "source_file": "d:\\Users\\Administrator\\Desktop\\文墨天机\\华.xlsx",
+      "trust_level": "advisory",
+      "purpose": "wenmo_crosscheck",
+      "palaces": [
+        {
+          "palace": "福德宫",
+          "branch": "甲子",
+          "major": [
+            {
+              "name": "贪狼",
+              "brightness": "旺",
+              "transforms": [
+                "年忌",
+                "↑禄"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "文曲",
+              "brightness": "得",
+              "transforms": null
+            },
+            {
+              "name": "禄存",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天喜",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "解神",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "副截",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "22 ~ 31"
+        },
+        {
+          "palace": "田宅宫",
+          "branch": "乙丑",
+          "major": [
+            {
+              "name": "天同",
+              "brightness": "不",
+              "transforms": null
+            },
+            {
+              "name": "巨门",
+              "brightness": "不",
+              "transforms": [
+                "年权"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "擎羊",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天刑",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "龙池",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "凤阁",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "截空",
+              "brightness": "不",
+              "transforms": null
+            },
+            {
+              "name": "年解",
+              "brightness": "得",
+              "transforms": null
+            },
+            {
+              "name": "华盖",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "32 ~ 41"
+        },
+        {
+          "palace": "官禄宫",
+          "branch": "甲寅",
+          "major": [
+            {
+              "name": "武曲",
+              "brightness": "得",
+              "transforms": [
+                "↓科",
+                "↑权"
+              ]
+            },
+            {
+              "name": "天相",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "文昌",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "台辅",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "大耗",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "劫煞",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "月德",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "42 ~ 51"
+        },
+        {
+          "palace": "交友宫",
+          "branch": "乙卯",
+          "major": [
+            {
+              "name": "太阳",
+              "brightness": "庙",
+              "transforms": [
+                "↑权"
+              ]
+            },
+            {
+              "name": "天梁",
+              "brightness": "庙",
+              "transforms": [
+                "↓权"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "天魁",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "地空",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天伤",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "天虚",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "52 ~ 61"
+        },
+        {
+          "palace": "迁移宫",
+          "branch": "丙辰",
+          "major": [
+            {
+              "name": "七杀",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [],
+          "misc": [
+            {
+              "name": "龙德",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "62 ~ 71"
+        },
+        {
+          "palace": "疾厄宫",
+          "branch": "丁巳",
+          "major": [
+            {
+              "name": "天机",
+              "brightness": "平",
+              "transforms": [
+                "↓科"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "天钺",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天姚",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "三台",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "天福",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "天使",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "天巫",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "破碎",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "72 ~ 81"
+        },
+        {
+          "palace": "财帛宫",
+          "branch": "戊午",
+          "major": [
+            {
+              "name": "紫微",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "右弼",
+              "brightness": "旺",
+              "transforms": [
+                "↓科"
+              ]
+            },
+            {
+              "name": "铃星",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "红鸾",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "天官",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "咸池",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "阴煞",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "天德",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "82 ~ 91"
+        },
+        {
+          "palace": "子女宫",
+          "branch": "己未",
+          "major": [],
+          "minor": [
+            {
+              "name": "地劫",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天才",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "天月",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "寡宿",
+              "brightness": "不",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "92 ~ 101"
+        },
+        {
+          "palace": "夫妻宫",
+          "branch": "庚申",
+          "major": [
+            {
+              "name": "破军",
+              "brightness": "得",
+              "transforms": [
+                "年禄",
+                "↑权"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "左辅",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天贵",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "102 ~ 111"
+        },
+        {
+          "palace": "兄弟宫",
+          "branch": "辛酉",
+          "major": [],
+          "minor": [],
+          "misc": [
+            {
+              "name": "八座",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "天哭",
+              "brightness": "不",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "112 ~ 121"
+        },
+        {
+          "palace": "命宫",
+          "branch": "壬戌",
+          "major": [
+            {
+              "name": "廉贞",
+              "brightness": "利",
+              "transforms": [
+                "↑忌"
+              ]
+            },
+            {
+              "name": "天府",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [],
+          "misc": [
+            {
+              "name": "恩光",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "封诰",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "副旬",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "天空",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "2 ~ 11"
+        },
+        {
+          "palace": "父母宫",
+          "branch": "癸亥",
+          "major": [
+            {
+              "name": "太阴",
+              "brightness": "庙",
+              "transforms": [
+                "年科",
+                "↓科",
+                "↑禄"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "陀罗",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "火星",
+              "brightness": "利",
+              "transforms": null
+            },
+            {
+              "name": "天马",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天寿",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "天厨",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "旬空",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "孤辰",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "蜚廉",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "12 ~ 21"
+        }
+      ],
+      "ming_palace_verified": true,
+      "notes": "第三方排盘对照轨；不覆盖引擎 canonical 输出"
+    },
+    {
+      "id": "WM02",
+      "name": "黄振",
+      "gender": "male",
+      "birth_year": 1988,
+      "birth_month": 6,
+      "birth_day": 25,
+      "birth_hour": 6,
+      "birth_minute": 10,
+      "solar_corrected_hour": 5,
+      "solar_corrected_minute": 56,
+      "longitude": 117.183,
+      "pillars": "戊辰 戊午 辛亥 辛卯",
+      "wuxing_ju": "水二局",
+      "ming_zhu": "文曲",
+      "shen_zhu": "文昌",
+      "life_palace_gz": "乙卯",
+      "body_palace_branch": "酉",
+      "source": "文墨天机",
+      "source_file": "d:\\Users\\Administrator\\Desktop\\文墨天机\\黄.xlsx",
+      "trust_level": "advisory",
+      "purpose": "wenmo_crosscheck",
+      "palaces": [
+        {
+          "palace": "夫妻宫",
+          "branch": "乙丑",
+          "major": [
+            {
+              "name": "天相",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "天魁",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "铃星",
+              "brightness": "得",
+              "transforms": null
+            },
+            {
+              "name": "天刑",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "misc": [],
+          "dayun_range": "102 ~ 111"
+        },
+        {
+          "palace": "兄弟宫",
+          "branch": "甲寅",
+          "major": [
+            {
+              "name": "天同",
+              "brightness": "利",
+              "transforms": [
+                "↑忌"
+              ]
+            },
+            {
+              "name": "天梁",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "地劫",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "天马",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "misc": [],
+          "dayun_range": "112 ~ 121"
+        },
+        {
+          "palace": "命宫",
+          "branch": "乙卯",
+          "major": [
+            {
+              "name": "武曲",
+              "brightness": "利",
+              "transforms": null
+            },
+            {
+              "name": "七杀",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "minor": [],
+          "misc": [],
+          "dayun_range": "2 ~ 11"
+        },
+        {
+          "palace": "父母宫",
+          "branch": "丙辰",
+          "major": [
+            {
+              "name": "太阳",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "陀罗",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [],
+          "dayun_range": "12 ~ 21"
+        },
+        {
+          "palace": "福德宫",
+          "branch": "丁巳",
+          "major": [],
+          "minor": [
+            {
+              "name": "禄存",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "火星",
+              "brightness": "得",
+              "transforms": null
+            },
+            {
+              "name": "天喜",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "天姚",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "恩光",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "天贵",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "22 ~ 31"
+        },
+        {
+          "palace": "田宅宫",
+          "branch": "戊午",
+          "major": [
+            {
+              "name": "天机",
+              "brightness": "庙",
+              "transforms": [
+                "年忌",
+                "↓忌"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "右弼",
+              "brightness": "旺",
+              "transforms": [
+                "年科",
+                "↓科"
+              ]
+            },
+            {
+              "name": "擎羊",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "misc": [],
+          "dayun_range": "32 ~ 41"
+        },
+        {
+          "palace": "官禄宫",
+          "branch": "己未",
+          "major": [
+            {
+              "name": "紫微",
+              "brightness": "庙",
+              "transforms": [
+                "↑科"
+              ]
+            },
+            {
+              "name": "破军",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "文昌",
+              "brightness": "利",
+              "transforms": null
+            },
+            {
+              "name": "文曲",
+              "brightness": "旺",
+              "transforms": [
+                "↓忌"
+              ]
+            },
+            {
+              "name": "天钺",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "三台",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "八座",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "42 ~ 51"
+        },
+        {
+          "palace": "交友宫",
+          "branch": "庚申",
+          "major": [],
+          "minor": [
+            {
+              "name": "左辅",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "地空",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [],
+          "dayun_range": "52 ~ 61"
+        },
+        {
+          "palace": "迁移宫",
+          "branch": "辛酉",
+          "major": [
+            {
+              "name": "天府",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "minor": [],
+          "misc": [],
+          "dayun_range": "62 ~ 71"
+        },
+        {
+          "palace": "疾厄宫",
+          "branch": "壬戌",
+          "major": [
+            {
+              "name": "太阴",
+              "brightness": "旺",
+              "transforms": [
+                "年权"
+              ]
+            }
+          ],
+          "minor": [],
+          "misc": [],
+          "dayun_range": "72 ~ 81"
+        },
+        {
+          "palace": "财帛宫",
+          "branch": "癸亥",
+          "major": [
+            {
+              "name": "廉贞",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "贪狼",
+              "brightness": "陷",
+              "transforms": [
+                "年禄",
+                "↓忌"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "红鸾",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [],
+          "dayun_range": "82 ~ 91"
+        },
+        {
+          "palace": "大限序号",
+          "branch": "大限宫位",
+          "major": [
+            {
+              "name": "起止年份(虚岁范围)",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "大限四化",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "流年年份",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": null
+        }
+      ],
+      "ming_palace_verified": true,
+      "notes": "第三方排盘对照轨；不覆盖引擎 canonical 输出"
+    },
+    {
+      "id": "WM03",
+      "name": "路琳清",
+      "gender": "female",
+      "birth_year": 1993,
+      "birth_month": 3,
+      "birth_day": 6,
+      "birth_hour": 8,
+      "birth_minute": 35,
+      "solar_corrected_hour": 8,
+      "solar_corrected_minute": 12,
+      "longitude": 117.183,
+      "pillars": "癸酉 乙卯 丙戌 壬辰",
+      "wuxing_ju": "水二局",
+      "ming_zhu": "巨门",
+      "shen_zhu": "天同",
+      "life_palace_gz": "癸亥",
+      "source": "文墨天机",
+      "source_file": "d:\\Users\\Administrator\\Desktop\\文墨天机\\路.xlsx",
+      "trust_level": "advisory",
+      "purpose": "wenmo_crosscheck",
+      "palaces": [
+        {
+          "palace": "福德宫",
+          "branch": "乙丑",
+          "major": [
+            {
+              "name": "天梁",
+              "brightness": "旺",
+              "transforms": [
+                "↓权",
+                "↑科"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "擎羊",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "龙池",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "凤阁",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "截空",
+              "brightness": "不",
+              "transforms": null
+            },
+            {
+              "name": "年解",
+              "brightness": "得",
+              "transforms": null
+            },
+            {
+              "name": "华盖",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "22 ~ 31"
+        },
+        {
+          "palace": "田宅宫",
+          "branch": "甲寅",
+          "major": [
+            {
+              "name": "七杀",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "铃星",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天姚",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "大耗",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "劫煞",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "月德",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "32 ~ 41"
+        },
+        {
+          "palace": "官禄宫",
+          "branch": "乙卯",
+          "major": [
+            {
+              "name": "天同",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "天魁",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "地劫",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天虚",
+              "brightness": "庙",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "42 ~ 51"
+        },
+        {
+          "palace": "交友宫",
+          "branch": "丙辰",
+          "major": [
+            {
+              "name": "武曲",
+              "brightness": "庙",
+              "transforms": [
+                "↑忌"
+              ]
+            }
+          ],
+          "minor": [],
+          "misc": [
+            {
+              "name": "天寿",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "天伤",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "龙德",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "52 ~ 61"
+        },
+        {
+          "palace": "迁移宫",
+          "branch": "丁巳",
+          "major": [
+            {
+              "name": "太阳",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "左辅",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "天钺",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天福",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "天月",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "破碎",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "62 ~ 71"
+        },
+        {
+          "palace": "疾厄宫",
+          "branch": "戊午",
+          "major": [
+            {
+              "name": "破军",
+              "brightness": "庙",
+              "transforms": [
+                "年禄",
+                "↑权"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "文昌",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "红鸾",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "三台",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "恩光",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "天官",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "天使",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "封诰",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "咸池",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "天德",
+              "brightness": "旺",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "72 ~ 81"
+        },
+        {
+          "palace": "财帛宫",
+          "branch": "己未",
+          "major": [
+            {
+              "name": "天机",
+              "brightness": "陷",
+              "transforms": [
+                "↑禄"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "火星",
+              "brightness": "利",
+              "transforms": null
+            },
+            {
+              "name": "地空",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "寡宿",
+              "brightness": "不",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "82 ~ 91"
+        },
+        {
+          "palace": "子女宫",
+          "branch": "庚申",
+          "major": [
+            {
+              "name": "紫微",
+              "brightness": "旺",
+              "transforms": null
+            },
+            {
+              "name": "天府",
+              "brightness": "得",
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "文曲",
+              "brightness": "得",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "八座",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "天贵",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "天才",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "解神",
+              "brightness": "不",
+              "transforms": null
+            },
+            {
+              "name": "天巫",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "92 ~ 101"
+        },
+        {
+          "palace": "夫妻宫",
+          "branch": "辛酉",
+          "major": [
+            {
+              "name": "太阴",
+              "brightness": "旺",
+              "transforms": [
+                "年科",
+                "↑忌"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "右弼",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天哭",
+              "brightness": "不",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "102 ~ 111"
+        },
+        {
+          "palace": "兄弟宫",
+          "branch": "壬戌",
+          "major": [
+            {
+              "name": "贪狼",
+              "brightness": "庙",
+              "transforms": [
+                "年忌"
+              ]
+            }
+          ],
+          "minor": [],
+          "misc": [
+            {
+              "name": "天刑",
+              "brightness": "庙",
+              "transforms": null
+            },
+            {
+              "name": "台辅",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "副旬",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "天空",
+              "brightness": "陷",
+              "transforms": null
+            }
+          ],
+          "dayun_range": "112 ~ 121"
+        },
+        {
+          "palace": "命宫",
+          "branch": "癸亥",
+          "major": [
+            {
+              "name": "巨门",
+              "brightness": "旺",
+              "transforms": [
+                "年权",
+                "↓权",
+                "↑忌"
+              ]
+            }
+          ],
+          "minor": [
+            {
+              "name": "陀罗",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "天马",
+              "brightness": "平",
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "天厨",
+              "brightness": null,
+              "transforms": null
+            },
+            {
+              "name": "旬空",
+              "brightness": "平",
+              "transforms": null
+            },
+            {
+              "name": "孤辰",
+              "brightness": "陷",
+              "transforms": null
+            },
+            {
+              "name": "蜚廉",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": "2 ~ 11"
+        },
+        {
+          "palace": "大限序号",
+          "branch": "大限宫位",
+          "major": [
+            {
+              "name": "起止年份(虚岁范围)",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "minor": [
+            {
+              "name": "大限四化",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "misc": [
+            {
+              "name": "流年年份",
+              "brightness": null,
+              "transforms": null
+            }
+          ],
+          "dayun_range": null
+        }
+      ],
+      "ming_palace_verified": true,
+      "notes": "第三方排盘对照轨；不覆盖引擎 canonical 输出"
+    }
+  ]
+}

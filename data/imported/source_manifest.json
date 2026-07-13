@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "generated": "2026-07-11T20:58:03.650505+00:00",
+  "desktop_root": "d:\\Users\\Administrator\\Desktop",
+  "sources": {
+    "资料": {
+      "path": "d:\\Users\\Administrator\\Desktop\\资料",
+      "integrated": [
+        "学习文件/ziwei-main → docs/design/ziwei (pre-synced, MD5 verified)",
+        "学习文件/1 (iztro) → brightness cross-check via scripts/iztro",
+        "iztro-main, ziwei-main repos → algorithm reference only (not copied)"
+      ],
+      "skipped": [
+        "DAO_DE_JING-main — general classics; use import_github_classics.py instead",
+        "FortuneTelling/xuanxue* — out of MVP scope",
+        "奇门遁甲 — out of MVP scope"
+      ]
+    },
+    "文墨天机": {
+      "path": "d:\\Users\\Administrator\\Desktop\\文墨天机",
+      "integrated": [
+        "华/黄/路.xlsx → data/imported/wenmo_reference_cases.json",
+        "合盘.docx + 华.docx excerpts → narrative_style_samples.json"
+      ],
+      "skipped": [
+        "App.swf / .exe / assets — runtime binaries, not content",
+        "刘.docx — empty file"
+      ]
+    },
+    "紫薇": {
+      "path": "d:\\Users\\Administrator\\Desktop\\紫薇",
+      "integrated": [],
+      "skipped": [
+        "Older c2 snapshot; c2 repo is canonical"
+      ]
+    }
+  },
+  "outputs": {
+    "wenmo_reference_cases": "data\\imported\\wenmo_reference_cases.json",
+    "star_profiles": "data\\ziwei\\star_profiles.json",
+    "narrative_style_samples": "data\\imported\\narrative_style_samples.json",
+    "glossary": "data/glossary.json"
+  },
+  "policy": {
+    "verified_classics": "classics.json + ziwei_classic_refs",
+    "reference_profiles": "data/ziwei/star_profiles.json",
+    "advisory_crosscheck": "wenmo_reference_cases.json (trust_level=advisory)",
+    "experience_narrative": "narrative_style_samples.json (ui_label=经验推断)"
+  }
+}

@@ -109,7 +109,8 @@ def _normalize_export_bytes(data: bytes, *, rel: str) -> bytes:
     if rel.endswith(".json"):
         try:
             payload = json.loads(text.decode("utf-8"))
-            return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+            # sort_keys：忽略 key 顺序差异；indent 稳定换行
+            return (json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
         except (UnicodeDecodeError, json.JSONDecodeError):
             return text
     return text
@@ -124,9 +125,15 @@ def _export_stable(rel: str, export_cmd: list[str], *, cwd: Path | None = None) 
     if not ok:
         return False, detail
     after = path.read_bytes() if path.is_file() else b""
-    if _normalize_export_bytes(before, rel=rel) == _normalize_export_bytes(after, rel=rel):
+    nb = _normalize_export_bytes(before, rel=rel)
+    na = _normalize_export_bytes(after, rel=rel)
+    if nb == na:
         return True, "idempotent"
-    return False, "export changed file"
+    import hashlib
+
+    hb = hashlib.sha256(nb).hexdigest()[:12]
+    ha = hashlib.sha256(na).hexdigest()[:12]
+    return False, f"export changed file before={hb} after={ha} bytes={len(nb)}->{len(na)}"
 
 
 def main() -> int:

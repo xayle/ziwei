@@ -1,0 +1,1169 @@
+[
+  {
+    "id": "zw_aux_lucky_001",
+    "source": "《紫微斗数全书》",
+    "text": "左辅化气为助力，主贵人佐命；命宫会照则得人扶。",
+    "category": "吉星",
+    "tags": [
+      "左辅",
+      "六吉"
+    ],
+    "source_page": "卷一·辅星 p.42",
+    "ctext_page": 42,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=42"
+  },
+  {
+    "id": "zw_aux_lucky_002",
+    "source": "《紫微斗数全书》",
+    "text": "右弼主辅佐策划；与左辅同会，左右夹命，格局清贵。",
+    "category": "吉星",
+    "tags": [
+      "右弼",
+      "六吉"
+    ],
+    "source_page": "卷一·辅星 p.43",
+    "ctext_page": 43,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=43"
+  },
+  {
+    "id": "zw_aux_lucky_003",
+    "source": "《紫微斗数全书》",
+    "text": "文昌主科名文章；命宫会照利考试进修。",
+    "category": "吉星",
+    "tags": [
+      "文昌",
+      "六吉"
+    ],
+    "source_page": "卷一·辅星 p.44",
+    "ctext_page": 44,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=44"
+  },
+  {
+    "id": "zw_aux_lucky_004",
+    "source": "《紫微斗数全书》",
+    "text": "文曲主口才技艺；与文昌会照，文星并明。",
+    "category": "吉星",
+    "tags": [
+      "文曲",
+      "六吉"
+    ],
+    "source_page": "卷一·辅星 p.45",
+    "ctext_page": 45,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=45"
+  },
+  {
+    "id": "zw_aux_lucky_005",
+    "source": "《紫微斗数全书》",
+    "text": "天魁为阳贵，主昼贵提携；会命宫则易得长辈助。",
+    "category": "吉星",
+    "tags": [
+      "天魁",
+      "六吉"
+    ],
+    "source_page": "卷一·辅星 p.46",
+    "ctext_page": 46,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=46"
+  },
+  {
+    "id": "zw_aux_lucky_006",
+    "source": "《紫微斗数全书》",
+    "text": "天钺为阴贵，主夜贵暗助；迁移会之，出外有逢。",
+    "category": "吉星",
+    "tags": [
+      "天钺",
+      "六吉"
+    ],
+    "source_page": "卷一·辅星 p.47",
+    "ctext_page": 47,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=47"
+  },
+  {
+    "id": "zw_aux_evil_001",
+    "source": "《紫微斗数全书》",
+    "text": "擎羊化气为刑，主刚烈伤灾；羊陀夹命多阻滞。",
+    "category": "煞星",
+    "tags": [
+      "擎羊",
+      "六煞"
+    ],
+    "source_page": "卷一·煞星 p.48",
+    "ctext_page": 48,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=48"
+  },
+  {
+    "id": "zw_aux_evil_002",
+    "source": "《紫微斗数全书》",
+    "text": "陀罗主拖延纠缠；与擎羊同宫，刑伤加重。",
+    "category": "煞星",
+    "tags": [
+      "陀罗",
+      "六煞"
+    ],
+    "source_page": "卷一·煞星 p.49",
+    "ctext_page": 49,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=49"
+  },
+  {
+    "id": "zw_aux_evil_003",
+    "source": "《紫微斗数全书》",
+    "text": "火星主急躁突发；遇贪狼成火贪，横发之机。",
+    "category": "煞星",
+    "tags": [
+      "火星",
+      "六煞"
+    ],
+    "source_page": "卷一·煞星 p.50",
+    "ctext_page": 50,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=50"
+  },
+  {
+    "id": "zw_aux_evil_004",
+    "source": "《紫微斗数全书》",
+    "text": "铃星主暗伤隐忍；遇贪狼成铃贪，亦主暴发。",
+    "category": "煞星",
+    "tags": [
+      "铃星",
+      "六煞"
+    ],
+    "source_page": "卷一·煞星 p.51",
+    "ctext_page": 51,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=51"
+  },
+  {
+    "id": "zw_aux_evil_005",
+    "source": "《紫微斗数全书》",
+    "text": "地空主空想破耗；财帛逢之，理财宜守。",
+    "category": "煞星",
+    "tags": [
+      "地空",
+      "六煞"
+    ],
+    "source_page": "卷一·煞星 p.52",
+    "ctext_page": 52,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=52"
+  },
+  {
+    "id": "zw_aux_evil_006",
+    "source": "《紫微斗数全书》",
+    "text": "地劫主劫夺波折；与地空同会，空劫夹命。",
+    "category": "煞星",
+    "tags": [
+      "地劫",
+      "六煞"
+    ],
+    "source_page": "卷一·煞星 p.53",
+    "ctext_page": 53,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=53"
+  },
+  {
+    "id": "zw_misc_001",
+    "source": "《紫微斗数全书》",
+    "text": "禄存主财禄守库；不入命宫亦宜财帛田宅会照。",
+    "category": "辅星",
+    "tags": [
+      "禄存"
+    ],
+    "source_page": "卷一·杂曜 p.54",
+    "ctext_page": 54,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=54"
+  },
+  {
+    "id": "zw_misc_002",
+    "source": "《紫微斗数全书》",
+    "text": "天马主奔波变动；迁移会之，动中求财。",
+    "category": "辅星",
+    "tags": [
+      "天马"
+    ],
+    "source_page": "卷一·杂曜 p.55",
+    "ctext_page": 55,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=55"
+  },
+  {
+    "id": "zw_misc_003",
+    "source": "《紫微斗数全书》",
+    "text": "天刑主刑法官非；疾厄逢之，身心宜检。",
+    "category": "辅星",
+    "tags": [
+      "天刑"
+    ],
+    "source_page": "卷一·杂曜 p.56",
+    "ctext_page": 56,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=56"
+  },
+  {
+    "id": "zw_misc_004",
+    "source": "《紫微斗数全书》",
+    "text": "天姚主桃花艳遇；夫妻会之，感情多姿。",
+    "category": "辅星",
+    "tags": [
+      "天姚"
+    ],
+    "source_page": "卷一·杂曜 p.57",
+    "ctext_page": 57,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=57"
+  },
+  {
+    "id": "zw_misc_005",
+    "source": "《紫微斗数全书》",
+    "text": "红鸾主婚姻喜庆；流年逢之，姻缘可动。",
+    "category": "辅星",
+    "tags": [
+      "红鸾"
+    ],
+    "source_page": "卷一·杂曜 p.58",
+    "ctext_page": 58,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=58"
+  },
+  {
+    "id": "zw_misc_006",
+    "source": "《紫微斗数全书》",
+    "text": "天喜主喜庆添丁；与红鸾会照，好事成双。",
+    "category": "辅星",
+    "tags": [
+      "天喜"
+    ],
+    "source_page": "卷一·杂曜 p.59",
+    "ctext_page": 59,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=59"
+  },
+  {
+    "id": "zw_misc_007",
+    "source": "《紫微斗数全书》",
+    "text": "寡宿主孤独少伴；福德逢之，宜修心。",
+    "category": "辅星",
+    "tags": [
+      "寡宿"
+    ],
+    "source_page": "卷一·杂曜 p.60",
+    "ctext_page": 60,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=60"
+  },
+  {
+    "id": "zw_misc_008",
+    "source": "《紫微斗数全书》",
+    "text": "孤辰主孤单离群；与寡宿同见，亲缘稍薄。",
+    "category": "辅星",
+    "tags": [
+      "孤辰"
+    ],
+    "source_page": "卷一·杂曜 p.61",
+    "ctext_page": 61,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=61"
+  },
+  {
+    "id": "zw_misc_009",
+    "source": "《紫微斗数全书》",
+    "text": "龙池主清贵才艺；会文昌，文章更显。",
+    "category": "辅星",
+    "tags": [
+      "龙池"
+    ],
+    "source_page": "卷一·杂曜 p.62",
+    "ctext_page": 62,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=62"
+  },
+  {
+    "id": "zw_misc_010",
+    "source": "《紫微斗数全书》",
+    "text": "凤阁主风雅声誉；会文曲，技艺出众。",
+    "category": "辅星",
+    "tags": [
+      "凤阁"
+    ],
+    "source_page": "卷一·杂曜 p.63",
+    "ctext_page": 63,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=63"
+  },
+  {
+    "id": "zw_misc_011",
+    "source": "《紫微斗数全书》",
+    "text": "天才主聪慧机敏；命宫会照，学习力强。",
+    "category": "辅星",
+    "tags": [
+      "天才"
+    ],
+    "source_page": "卷一·杂曜 p.64",
+    "ctext_page": 64,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=64"
+  },
+  {
+    "id": "zw_misc_012",
+    "source": "《紫微斗数全书》",
+    "text": "天寿主寿算康宁；疾厄会之，养生有益。",
+    "category": "辅星",
+    "tags": [
+      "天寿"
+    ],
+    "source_page": "卷一·杂曜 p.65",
+    "ctext_page": 65,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=65"
+  },
+  {
+    "id": "zw_misc_013",
+    "source": "《紫微斗数全书》",
+    "text": "三台主科名台阶；官禄会照，升迁可期。",
+    "category": "辅星",
+    "tags": [
+      "三台"
+    ],
+    "source_page": "卷一·杂曜 p.66",
+    "ctext_page": 66,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=66"
+  },
+  {
+    "id": "zw_misc_014",
+    "source": "《紫微斗数全书》",
+    "text": "八座主地位尊崇；与三台会，贵气倍增。",
+    "category": "辅星",
+    "tags": [
+      "八座"
+    ],
+    "source_page": "卷一·杂曜 p.67",
+    "ctext_page": 67,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=67"
+  },
+  {
+    "id": "zw_misc_015",
+    "source": "《紫微斗数全书》",
+    "text": "恩光主恩惠荣耀；会天魁天钺，贵人更显。",
+    "category": "辅星",
+    "tags": [
+      "恩光"
+    ],
+    "source_page": "卷一·杂曜 p.68",
+    "ctext_page": 68,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=68"
+  },
+  {
+    "id": "zw_misc_016",
+    "source": "《紫微斗数全书》",
+    "text": "天贵主贵气名望；命宫会之，举止不凡。",
+    "category": "辅星",
+    "tags": [
+      "天贵"
+    ],
+    "source_page": "卷一·杂曜 p.69",
+    "ctext_page": 69,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=69"
+  },
+  {
+    "id": "zw_misc_017",
+    "source": "《紫微斗数全书》",
+    "text": "台辅主辅佐幕僚；官禄会照，得人提挈。",
+    "category": "辅星",
+    "tags": [
+      "台辅"
+    ],
+    "source_page": "卷一·杂曜 p.70",
+    "ctext_page": 70,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=70"
+  },
+  {
+    "id": "zw_misc_018",
+    "source": "《紫微斗数全书》",
+    "text": "封诰主封赠荣誉；父母官禄会之，门第有光。",
+    "category": "辅星",
+    "tags": [
+      "封诰"
+    ],
+    "source_page": "卷一·杂曜 p.71",
+    "ctext_page": 71,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=71"
+  },
+  {
+    "id": "zw_misc_019",
+    "source": "《紫微斗数全书》",
+    "text": "天官主官禄清要；官禄宫逢，仕途平稳。",
+    "category": "辅星",
+    "tags": [
+      "天官"
+    ],
+    "source_page": "卷一·杂曜 p.72",
+    "ctext_page": 72,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=72"
+  },
+  {
+    "id": "zw_misc_020",
+    "source": "《紫微斗数全书》",
+    "text": "天福主福泽安逸；福德会照，心宽体健。",
+    "category": "辅星",
+    "tags": [
+      "天福"
+    ],
+    "source_page": "卷一·杂曜 p.73",
+    "ctext_page": 73,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=73"
+  },
+  {
+    "id": "zw_misc_021",
+    "source": "《紫微斗数全书》",
+    "text": "天厨主饮食福禄；财帛会之，衣食无忧。",
+    "category": "辅星",
+    "tags": [
+      "天厨"
+    ],
+    "source_page": "卷一·杂曜 p.74",
+    "ctext_page": 74,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=74"
+  },
+  {
+    "id": "zw_misc_022",
+    "source": "《紫微斗数全书》",
+    "text": "解神主化解灾厄；逢煞可减其凶。",
+    "category": "辅星",
+    "tags": [
+      "解神"
+    ],
+    "source_page": "卷一·杂曜 p.75",
+    "ctext_page": 75,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=75"
+  },
+  {
+    "id": "zw_misc_023",
+    "source": "《紫微斗数全书》",
+    "text": "阴煞主暗中阻滞；迁移逢之，小人宜防。",
+    "category": "辅星",
+    "tags": [
+      "阴煞"
+    ],
+    "source_page": "卷一·杂曜 p.76",
+    "ctext_page": 76,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=76"
+  },
+  {
+    "id": "zw_misc_024",
+    "source": "《紫微斗数全书》",
+    "text": "天巫主术数灵感；福德会之，宜研玄理。",
+    "category": "辅星",
+    "tags": [
+      "天巫"
+    ],
+    "source_page": "卷一·杂曜 p.77",
+    "ctext_page": 77,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=77"
+  },
+  {
+    "id": "zw_misc_025",
+    "source": "《紫微斗数全书》",
+    "text": "天月主缠绵小病；疾厄会之，养生为要。",
+    "category": "辅星",
+    "tags": [
+      "天月"
+    ],
+    "source_page": "卷一·杂曜 p.78",
+    "ctext_page": 78,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=78"
+  },
+  {
+    "id": "zw_misc_026",
+    "source": "《紫微斗数全书》",
+    "text": "蜚廉主是非口舌；迁移会之，言语宜慎。",
+    "category": "辅星",
+    "tags": [
+      "蜚廉"
+    ],
+    "source_page": "卷一·杂曜 p.79",
+    "ctext_page": 79,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=79"
+  },
+  {
+    "id": "zw_misc_027",
+    "source": "《紫微斗数全书》",
+    "text": "破碎主破败损耗；财帛逢之，投资宜守。",
+    "category": "辅星",
+    "tags": [
+      "破碎"
+    ],
+    "source_page": "卷一·杂曜 p.80",
+    "ctext_page": 80,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=80"
+  },
+  {
+    "id": "zw_misc_028",
+    "source": "《紫微斗数全书》",
+    "text": "华盖主孤高清逸；福德会之，宜宗教艺术。",
+    "category": "辅星",
+    "tags": [
+      "华盖"
+    ],
+    "source_page": "卷一·杂曜 p.81",
+    "ctext_page": 81,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=81"
+  },
+  {
+    "id": "zw_misc_029",
+    "source": "《紫微斗数全书》",
+    "text": "劫煞主劫夺波折；流年逢之，谨慎远行。",
+    "category": "辅星",
+    "tags": [
+      "劫煞"
+    ],
+    "source_page": "卷一·杂曜 p.82",
+    "ctext_page": 82,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=82"
+  },
+  {
+    "id": "zw_misc_030",
+    "source": "《紫微斗数全书》",
+    "text": "咸池主桃花色欲；夫妻会之，情缘复杂。",
+    "category": "辅星",
+    "tags": [
+      "咸池"
+    ],
+    "source_page": "卷一·杂曜 p.83",
+    "ctext_page": 83,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=83"
+  },
+  {
+    "id": "zw_pal_extra_001",
+    "source": "《紫微斗数全书》",
+    "text": "兄弟宫主手足同侪；会命宫三方，定人缘助力。",
+    "category": "宫位",
+    "tags": [
+      "兄弟",
+      "兄弟宫"
+    ],
+    "source_page": "卷二·宫位 p.84",
+    "ctext_page": 84,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=84"
+  },
+  {
+    "id": "zw_pal_extra_002",
+    "source": "《紫微斗数全书》",
+    "text": "子女宫主子息晚辈；会田宅父母，定生育教养。",
+    "category": "宫位",
+    "tags": [
+      "子女",
+      "子女宫"
+    ],
+    "source_page": "卷二·宫位 p.85",
+    "ctext_page": 85,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=85"
+  },
+  {
+    "id": "zw_pal_extra_003",
+    "source": "《紫微斗数全书》",
+    "text": "仆役宫主下属朋友；官禄会照，定团队协作。",
+    "category": "宫位",
+    "tags": [
+      "仆役",
+      "仆役宫"
+    ],
+    "source_page": "卷二·宫位 p.86",
+    "ctext_page": 86,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=86"
+  },
+  {
+    "id": "zw_pal_extra_004",
+    "source": "《紫微斗数全书》",
+    "text": "迁移宫主外出际遇；会命宫，定在外发展。",
+    "category": "宫位",
+    "tags": [
+      "迁移",
+      "迁移宫"
+    ],
+    "source_page": "卷二·宫位 p.87",
+    "ctext_page": 87,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=87"
+  },
+  {
+    "id": "zw_pal_extra_005",
+    "source": "《紫微斗数全书》",
+    "text": "田宅宫主不动产家宅；会财帛，定置产安居。",
+    "category": "宫位",
+    "tags": [
+      "田宅",
+      "田宅宫"
+    ],
+    "source_page": "卷二·宫位 p.88",
+    "ctext_page": 88,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=88"
+  },
+  {
+    "id": "zw_pal_extra_006",
+    "source": "《紫微斗数全书》",
+    "text": "福德宫主精神享受；会命宫，定心性福分。",
+    "category": "宫位",
+    "tags": [
+      "福德",
+      "福德宫"
+    ],
+    "source_page": "卷二·宫位 p.89",
+    "ctext_page": 89,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=89"
+  },
+  {
+    "id": "zw_pal_extra_007",
+    "source": "《紫微斗数全书》",
+    "text": "父母宫主双亲长辈；会命宫，定家庭背景。",
+    "category": "宫位",
+    "tags": [
+      "父母",
+      "父母宫"
+    ],
+    "source_page": "卷二·宫位 p.90",
+    "ctext_page": 90,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=90"
+  },
+  {
+    "id": "zw_pat_extra_001",
+    "source": "《紫微斗数全书》",
+    "text": "太阳太阴同会或并照，主聪明秀丽；须看昼夜庙旺。",
+    "category": "格局",
+    "tags": [
+      "日月并明"
+    ],
+    "source_page": "卷二·格局 p.91",
+    "ctext_page": 91,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=91"
+  },
+  {
+    "id": "zw_pat_extra_002",
+    "source": "《紫微斗数全书》",
+    "text": "日陷月弱或日月分居不利位，主辛劳；宜借吉星化解。",
+    "category": "格局",
+    "tags": [
+      "日月反背"
+    ],
+    "source_page": "卷二·格局 p.92",
+    "ctext_page": 92,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=92"
+  },
+  {
+    "id": "zw_pat_extra_003",
+    "source": "《紫微斗数全书》",
+    "text": "天机太阴天同天梁会照，主清贵公职；利考试仕途。",
+    "category": "格局",
+    "tags": [
+      "机月同梁"
+    ],
+    "source_page": "卷二·格局 p.93",
+    "ctext_page": 93,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=93"
+  },
+  {
+    "id": "zw_pat_extra_004",
+    "source": "《紫微斗数全书》",
+    "text": "武曲贪狼同宫，主财欲进取；火铃会之可发。",
+    "category": "格局",
+    "tags": [
+      "武贪同行"
+    ],
+    "source_page": "卷二·格局 p.94",
+    "ctext_page": 94,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=94"
+  },
+  {
+    "id": "zw_pat_extra_005",
+    "source": "《紫微斗数全书》",
+    "text": "天府天相朝垣，主稳厚衣食；财官互护。",
+    "category": "格局",
+    "tags": [
+      "府相朝垣"
+    ],
+    "source_page": "卷二·格局 p.95",
+    "ctext_page": 95,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=95"
+  },
+  {
+    "id": "zw_pat_extra_006",
+    "source": "《紫微斗数全书》",
+    "text": "天梁为印，天同天府为荫，夹命主贵。",
+    "category": "格局",
+    "tags": [
+      "财荫夹印"
+    ],
+    "source_page": "卷二·格局 p.96",
+    "ctext_page": 96,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=96"
+  },
+  {
+    "id": "zw_pat_extra_007",
+    "source": "《紫微斗数全书》",
+    "text": "天相为印，擎羊陀罗夹之，主阻滞官非。",
+    "category": "格局",
+    "tags": [
+      "刑忌夹印"
+    ],
+    "source_page": "卷二·格局 p.97",
+    "ctext_page": 97,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=97"
+  },
+  {
+    "id": "zw_pat_extra_008",
+    "source": "《紫微斗数全书》",
+    "text": "天马与禄存等会于旺宫，主奔波中得财。",
+    "category": "格局",
+    "tags": [
+      "马头带箭"
+    ],
+    "source_page": "卷二·格局 p.98",
+    "ctext_page": 98,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=98"
+  },
+  {
+    "id": "zw_pat_extra_009",
+    "source": "《紫微斗数全书》",
+    "text": "巨门居旺宫会吉，主口才终得发。",
+    "category": "格局",
+    "tags": [
+      "石中隐玉"
+    ],
+    "source_page": "卷二·格局 p.99",
+    "ctext_page": 99,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=99"
+  },
+  {
+    "id": "zw_pat_extra_010",
+    "source": "《紫微斗数全书》",
+    "text": "廉贞七杀会于旺宫，主威权勇进。",
+    "category": "格局",
+    "tags": [
+      "雄宿朝元"
+    ],
+    "source_page": "卷二·格局 p.100",
+    "ctext_page": 100,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=100"
+  },
+  {
+    "id": "zw_pat_extra_011",
+    "source": "《紫微斗数全书》",
+    "text": "破军居子午庙地，主开创有成。",
+    "category": "格局",
+    "tags": [
+      "英星入庙"
+    ],
+    "source_page": "卷二·格局 p.101",
+    "ctext_page": 101,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=101"
+  },
+  {
+    "id": "zw_pat_extra_012",
+    "source": "《紫微斗数全书》",
+    "text": "文昌文曲会命，主科甲文章。",
+    "category": "格局",
+    "tags": [
+      "文桂文华"
+    ],
+    "source_page": "卷二·格局 p.102",
+    "ctext_page": 102,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=102"
+  },
+  {
+    "id": "zw_pat_extra_013",
+    "source": "《紫微斗数全书》",
+    "text": "左辅右弼同会命宫，主得力辅佐。",
+    "category": "格局",
+    "tags": [
+      "左右同宫"
+    ],
+    "source_page": "卷二·格局 p.103",
+    "ctext_page": 103,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=103"
+  },
+  {
+    "id": "zw_pat_extra_014",
+    "source": "《紫微斗数全书》",
+    "text": "文昌文曲夹命宫，主聪明贵显。",
+    "category": "格局",
+    "tags": [
+      "昌曲夹命"
+    ],
+    "source_page": "卷二·格局 p.104",
+    "ctext_page": 104,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=104"
+  },
+  {
+    "id": "zw_pat_extra_015",
+    "source": "《紫微斗数全书》",
+    "text": "禄存天马会照，主动中求财。",
+    "category": "格局",
+    "tags": [
+      "禄马交驰"
+    ],
+    "source_page": "卷二·格局 p.105",
+    "ctext_page": 105,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=105"
+  },
+  {
+    "id": "zw_pat_extra_016",
+    "source": "《紫微斗数全书》",
+    "text": "化禄与禄存会照，主福财丰厚。",
+    "category": "格局",
+    "tags": [
+      "双禄交流"
+    ],
+    "source_page": "卷二·格局 p.106",
+    "ctext_page": 106,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=106"
+  },
+  {
+    "id": "zw_pat_extra_017",
+    "source": "《紫微斗数全书》",
+    "text": "化科化权化禄三会，主名利双收。",
+    "category": "格局",
+    "tags": [
+      "科权禄会"
+    ],
+    "source_page": "卷二·格局 p.107",
+    "ctext_page": 107,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=107"
+  },
+  {
+    "id": "zw_pat_extra_018",
+    "source": "《紫微斗数全书》",
+    "text": "地空地劫夹命宫，主理想多变破耗。",
+    "category": "格局",
+    "tags": [
+      "空劫夹命"
+    ],
+    "source_page": "卷二·格局 p.108",
+    "ctext_page": 108,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=108"
+  },
+  {
+    "id": "zw_pat_extra_019",
+    "source": "《紫微斗数全书》",
+    "text": "火星铃星夹命，主性急突发。",
+    "category": "格局",
+    "tags": [
+      "火铃夹命"
+    ],
+    "source_page": "卷二·格局 p.109",
+    "ctext_page": 109,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=109"
+  },
+  {
+    "id": "zw_pat_extra_020",
+    "source": "《紫微斗数全书》",
+    "text": "天马会地空地劫，主奔波而虚耗。",
+    "category": "格局",
+    "tags": [
+      "马落空亡"
+    ],
+    "source_page": "卷二·格局 p.110",
+    "ctext_page": 110,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=110"
+  },
+  {
+    "id": "zw_sihua_stem_001",
+    "source": "《紫微斗数全书》",
+    "text": "甲廉破武阳：廉贞化禄、破军化权、武曲化科、太阳化忌。",
+    "category": "四化",
+    "tags": [
+      "甲",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.111",
+    "ctext_page": 111,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=111"
+  },
+  {
+    "id": "zw_sihua_stem_002",
+    "source": "《紫微斗数全书》",
+    "text": "乙机梁紫阴：天机化禄、天梁化权、紫微化科、太阴化忌。",
+    "category": "四化",
+    "tags": [
+      "乙",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.112",
+    "ctext_page": 112,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=112"
+  },
+  {
+    "id": "zw_sihua_stem_003",
+    "source": "《紫微斗数全书》",
+    "text": "丙同机昌廉：天同化禄、天机化权、文昌化科、廉贞化忌。",
+    "category": "四化",
+    "tags": [
+      "丙",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.113",
+    "ctext_page": 113,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=113"
+  },
+  {
+    "id": "zw_sihua_stem_004",
+    "source": "《紫微斗数全书》",
+    "text": "丁阴同机巨：太阴化禄、天同化权、天机化科、巨门化忌。",
+    "category": "四化",
+    "tags": [
+      "丁",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.114",
+    "ctext_page": 114,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=114"
+  },
+  {
+    "id": "zw_sihua_stem_005",
+    "source": "《紫微斗数全书》",
+    "text": "戊贪阴右机：贪狼化禄、太阴化权、右弼化科、天机化忌。",
+    "category": "四化",
+    "tags": [
+      "戊",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.115",
+    "ctext_page": 115,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=115"
+  },
+  {
+    "id": "zw_sihua_stem_006",
+    "source": "《紫微斗数全书》",
+    "text": "己武贪梁曲：武曲化禄、贪狼化权、天梁化科、文曲化忌。",
+    "category": "四化",
+    "tags": [
+      "己",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.116",
+    "ctext_page": 116,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=116"
+  },
+  {
+    "id": "zw_sihua_stem_007",
+    "source": "《紫微斗数全书》",
+    "text": "庚阳武阴同：太阳化禄、武曲化权、太阴化科、天同化忌。",
+    "category": "四化",
+    "tags": [
+      "庚",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.117",
+    "ctext_page": 117,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=117"
+  },
+  {
+    "id": "zw_sihua_stem_008",
+    "source": "《紫微斗数全书》",
+    "text": "辛巨阳曲昌：巨门化禄、太阳化权、文曲化科、文昌化忌。",
+    "category": "四化",
+    "tags": [
+      "辛",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.118",
+    "ctext_page": 118,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=118"
+  },
+  {
+    "id": "zw_sihua_stem_009",
+    "source": "《紫微斗数全书》",
+    "text": "壬梁紫左武：天梁化禄、紫微化权、左辅化科、武曲化忌。",
+    "category": "四化",
+    "tags": [
+      "壬",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.119",
+    "ctext_page": 119,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=119"
+  },
+  {
+    "id": "zw_sihua_stem_010",
+    "source": "《紫微斗数全书》",
+    "text": "癸破巨阴贪：破军化禄、巨门化权、太阴化科、贪狼化忌。",
+    "category": "四化",
+    "tags": [
+      "癸",
+      "四化",
+      "十干"
+    ],
+    "source_page": "卷三·四化 p.120",
+    "ctext_page": 120,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=120"
+  },
+  {
+    "id": "zw_mw_001",
+    "source": "《紫微斗数全书》",
+    "text": "星曜入庙旺则力显；入陷弱则力减，须借对宫与三方解救。",
+    "category": "庙旺",
+    "tags": [
+      "庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.121",
+    "ctext_page": 121,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=121"
+  },
+  {
+    "id": "zw_mw_002",
+    "source": "《紫微斗数全书》",
+    "text": "紫微在丑未午子等宫庙旺，主贵气厚重。",
+    "category": "庙旺",
+    "tags": [
+      "紫微庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.122",
+    "ctext_page": 122,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=122"
+  },
+  {
+    "id": "zw_mw_003",
+    "source": "《紫微斗数全书》",
+    "text": "天机在卯酉等宫庙旺，主智谋出众。",
+    "category": "庙旺",
+    "tags": [
+      "天机庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.123",
+    "ctext_page": 123,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=123"
+  },
+  {
+    "id": "zw_mw_004",
+    "source": "《紫微斗数全书》",
+    "text": "太阳在卯午等宫庙旺，昼生尤佳。",
+    "category": "庙旺",
+    "tags": [
+      "太阳庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.124",
+    "ctext_page": 124,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=124"
+  },
+  {
+    "id": "zw_mw_005",
+    "source": "《紫微斗数全书》",
+    "text": "太阴在酉子亥等宫庙旺，夜生尤佳。",
+    "category": "庙旺",
+    "tags": [
+      "太阴庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.125",
+    "ctext_page": 125,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=125"
+  },
+  {
+    "id": "zw_mw_006",
+    "source": "《紫微斗数全书》",
+    "text": "武曲在丑未辰戌等宫庙旺，主财权稳固。",
+    "category": "庙旺",
+    "tags": [
+      "武曲庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.126",
+    "ctext_page": 126,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=126"
+  },
+  {
+    "id": "zw_mw_007",
+    "source": "《紫微斗数全书》",
+    "text": "贪狼在亥卯未等宫庙旺，主欲望才艺并显。",
+    "category": "庙旺",
+    "tags": [
+      "贪狼庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.127",
+    "ctext_page": 127,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=127"
+  },
+  {
+    "id": "zw_mw_008",
+    "source": "《紫微斗数全书》",
+    "text": "七杀在寅申子午等宫庙旺，主威权决断。",
+    "category": "庙旺",
+    "tags": [
+      "七杀庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.128",
+    "ctext_page": 128,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=128"
+  },
+  {
+    "id": "zw_mw_009",
+    "source": "《紫微斗数全书》",
+    "text": "破军在子午等宫庙旺，主开创魄力。",
+    "category": "庙旺",
+    "tags": [
+      "破军庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.129",
+    "ctext_page": 129,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=129"
+  },
+  {
+    "id": "zw_mw_010",
+    "source": "《紫微斗数全书》",
+    "text": "廉贞在寅申等宫庙旺，主政治手腕。",
+    "category": "庙旺",
+    "tags": [
+      "廉贞庙旺"
+    ],
+    "source_page": "卷三·庙旺 p.130",
+    "ctext_page": 130,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=130"
+  },
+  {
+    "id": "zw_fly_001",
+    "source": "《紫微斗数全书》",
+    "text": "飞星以宫干四化飞入诸宫，观禄权科忌之落点定吉凶。",
+    "category": "飞星",
+    "tags": [
+      "飞星"
+    ],
+    "source_page": "卷四·飞星 p.131",
+    "ctext_page": 131,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=131"
+  },
+  {
+    "id": "zw_fly_002",
+    "source": "《紫微斗数全书》",
+    "text": "宫干四化飞回本宫为自化，主该宫事体自我转化。",
+    "category": "飞星",
+    "tags": [
+      "自化"
+    ],
+    "source_page": "卷四·飞星 p.132",
+    "ctext_page": 132,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=132"
+  },
+  {
+    "id": "zw_fly_003",
+    "source": "《紫微斗数全书》",
+    "text": "飞化落宫之对宫受冲，主暗中波及。",
+    "category": "飞星",
+    "tags": [
+      "飞化冲"
+    ],
+    "source_page": "卷四·飞星 p.133",
+    "ctext_page": 133,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=133"
+  },
+  {
+    "id": "zw_fly_004",
+    "source": "《紫微斗数全书》",
+    "text": "化禄飞入财帛宫，主财源机缘。",
+    "category": "飞星",
+    "tags": [
+      "化禄飞财"
+    ],
+    "source_page": "卷四·飞星 p.134",
+    "ctext_page": 134,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=134"
+  },
+  {
+    "id": "zw_fly_005",
+    "source": "《紫微斗数全书》",
+    "text": "化忌飞入命宫，主阻滞亏欠，宜修身化解。",
+    "category": "飞星",
+    "tags": [
+      "化忌飞命"
+    ],
+    "source_page": "卷四·飞星 p.135",
+    "ctext_page": 135,
+    "ctext_ref": "https://ctext.org/wiki.pl?if=en&res=979714&chapter=135"
+  }
+]

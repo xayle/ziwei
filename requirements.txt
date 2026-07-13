@@ -1,4 +1,7 @@
-fastapi>=0.110,<1
+# 钉版本：避免 CI pip 解析到不同 FastAPI/Pydantic 导致 openapi.json 非幂等（A02/A03）
+fastapi==0.129.0
+pydantic==2.12.5
+starlette==0.52.1
 uvicorn[standard]>=0.23,<1
 jinja2>=3.1,<4
 python-multipart>=0.0.9

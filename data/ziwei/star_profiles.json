@@ -1,0 +1,438 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "generated": "2026-07-11T20:58:03.102395+00:00",
+    "generator": "scripts/import_desktop_content.py",
+    "trust_level": "reference",
+    "note": "Explain-layer star profiles; not verified classic citations"
+  },
+  "stars": [
+    {
+      "key": "紫微",
+      "name": "紫微星",
+      "alias": "帝王星",
+      "type": "major",
+      "five_elements": "阴土",
+      "dou_series": "北斗主星",
+      "huaqi": "尊贵",
+      "representative": "周文王",
+      "pros": [
+        "领导力强",
+        "高贵威严",
+        "仁慈宽厚",
+        "有决断力"
+      ],
+      "cons": [
+        "主观固执",
+        "好面子",
+        "孤傲",
+        "依赖性强"
+      ],
+      "key_points": [
+        "帝王之星，需要辅佐星（左辅右弼）才能发挥最大能量",
+        "独坐命宫缺乏吉曜 → 决策过于主观",
+        "有天府、左右相伴 → 一呼百诺"
+      ],
+      "brightness_sensitive": false,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "天机",
+      "name": "天机星",
+      "alias": "智囊星",
+      "type": "major",
+      "five_elements": "阴木",
+      "dou_series": "南斗",
+      "huaqi": "善、兄弟主",
+      "representative": "姜子牙",
+      "pros": [
+        "聪明机智",
+        "思维敏捷",
+        "学习力强",
+        "善于策划"
+      ],
+      "cons": [
+        "多思多虑",
+        "神经质",
+        "容易焦虑",
+        "投机取巧"
+      ],
+      "key_points": [
+        "军师谋臣之星，适合辅佐他人",
+        "不宜独立创业，适合幕僚角色",
+        "善变、喜欢新鲜事物"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "太阳",
+      "name": "太阳星",
+      "alias": "光明星",
+      "type": "major",
+      "five_elements": "阳火",
+      "dou_series": "中天星",
+      "huaqi": "贵、官禄主",
+      "representative": "比干",
+      "pros": [
+        "光明磊落",
+        "慷慨大方",
+        "有正义感",
+        "博爱无私"
+      ],
+      "cons": [
+        "过于直接",
+        "锋芒毕露",
+        "易招是非",
+        "劳心劳力"
+      ],
+      "key_points": [
+        "代表男性、父亲、上司",
+        "庙旺位置：寅卯辰巳午未（日出到日中）",
+        "落陷位置：申酉戌亥子丑（日落后）",
+        "白天生人太阳力量更强"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "武曲",
+      "name": "武曲星",
+      "alias": "将星",
+      "type": "major",
+      "five_elements": "阴金",
+      "dou_series": "北斗",
+      "huaqi": "财",
+      "representative": "周武王",
+      "pros": [
+        "刚毅果断",
+        "理财有方",
+        "执行力强",
+        "重视效率"
+      ],
+      "cons": [
+        "孤僻固执",
+        "不善言辞",
+        "待人严苛",
+        "不近人情"
+      ],
+      "key_points": [
+        "财星，主正财、辛苦财",
+        "适合金融、财务、军警职业",
+        "刚克之星，需要柔和星曜调和"
+      ],
+      "brightness_sensitive": false,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "天同",
+      "name": "天同星",
+      "alias": "福星",
+      "type": "major",
+      "five_elements": "阳水",
+      "dou_series": "南斗",
+      "huaqi": "福、福德主",
+      "representative": "周文王",
+      "pros": [
+        "心地善良",
+        "温和有礼",
+        "随和乐观",
+        "知足常乐"
+      ],
+      "cons": [
+        "缺乏斗志",
+        "做事拖延",
+        "不切实际",
+        "依赖性强"
+      ],
+      "key_points": [
+        "最祥和的福星",
+        "适合享受生活，不适合竞争环境",
+        "晚年运势通常较好"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "廉贞",
+      "name": "廉贞星",
+      "alias": "囚星",
+      "type": "major",
+      "five_elements": "阴火/阳木",
+      "dou_series": "北斗",
+      "huaqi": "囚、官禄主",
+      "representative": "费仲",
+      "pros": [
+        "负责尽职",
+        "积极进取",
+        "是非分明",
+        "敢做敢当"
+      ],
+      "cons": [
+        "心高气傲",
+        "情绪多变",
+        "锋芒太露",
+        "逞强好胜"
+      ],
+      "key_points": [
+        "古称\"杀星\"与\"囚星\"",
+        "十四主星中最高傲、最暴烈",
+        "事业主星，适合军警、政法",
+        "次桃花星"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "天府",
+      "name": "天府星",
+      "alias": "库星",
+      "type": "major",
+      "five_elements": "阳土",
+      "dou_series": "南斗主星",
+      "huaqi": "贤能、田宅主",
+      "representative": "姜太后",
+      "pros": [
+        "稳重保守",
+        "包容宽厚",
+        "理财有方",
+        "值得信赖"
+      ],
+      "cons": [
+        "过于保守",
+        "缺乏冲劲",
+        "不喜变化",
+        "安于现状"
+      ],
+      "key_points": [
+        "财库星，守财能力强",
+        "南斗之主，与紫微齐名",
+        "需看府库是否充盈（周围星曜配置）"
+      ],
+      "brightness_sensitive": false,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "太阴",
+      "name": "太阴星",
+      "alias": "月亮星",
+      "type": "major",
+      "five_elements": "阴水",
+      "dou_series": "中天星",
+      "huaqi": "富、田宅主",
+      "representative": "嫦娥",
+      "pros": [
+        "温柔细腻",
+        "富有内涵",
+        "艺术气质",
+        "善解人意"
+      ],
+      "cons": [
+        "多愁善感",
+        "优柔寡断",
+        "过于敏感",
+        "缺乏魄力"
+      ],
+      "key_points": [
+        "代表女性、母亲、妻子",
+        "财星，主不动产",
+        "夜晚生人太阴力量更强",
+        "庙旺：酉戌亥子丑（月升后）",
+        "落陷：卯辰巳午未（白天）"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "贪狼",
+      "name": "贪狼星",
+      "alias": "桃花星",
+      "type": "major",
+      "five_elements": "阳木/阴水",
+      "dou_series": "北斗",
+      "huaqi": "桃花、祸福",
+      "representative": "妲己",
+      "pros": [
+        "多才多艺",
+        "交际广泛",
+        "机智灵活",
+        "欲望强烈"
+      ],
+      "cons": [
+        "贪多嚼不烂",
+        "好色贪财",
+        "投机取巧",
+        "不够专一"
+      ],
+      "key_points": [
+        "**第一桃花星**",
+        "欲望之星，追求物质与情感",
+        "能文能武，适应性强",
+        "花钱大方，挥霍浪费"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "巨门",
+      "name": "巨门星",
+      "alias": "暗星",
+      "type": "major",
+      "five_elements": "阴水/阴土",
+      "dou_series": "北斗",
+      "huaqi": "暗、是非",
+      "representative": "马千金",
+      "pros": [
+        "口才犀利",
+        "分析力强",
+        "直言不讳",
+        "善于辩论"
+      ],
+      "cons": [
+        "多疑猜忌",
+        "好生是非",
+        "尖酸刻薄",
+        "人缘欠佳"
+      ],
+      "key_points": [
+        "是非之星，口舌之星",
+        "适合律师、教师、销售、主持",
+        "需要化禄化权才能转凶为吉"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "天相",
+      "name": "天相星",
+      "alias": "印星",
+      "type": "major",
+      "five_elements": "阳水",
+      "dou_series": "南斗",
+      "huaqi": "印、官禄主",
+      "representative": "闻仲太师",
+      "pros": [
+        "忠诚可靠",
+        "公正无私",
+        "善于协调",
+        "受人尊重"
+      ],
+      "cons": [
+        "过于保守",
+        "缺乏创新",
+        "容易受制",
+        "优柔寡断"
+      ],
+      "key_points": [
+        "宰相之星，辅佐之臣",
+        "需看\"刑忌夹\"或\"财荫夹\"",
+        "适合公务员、秘书、助理"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "天梁",
+      "name": "天梁星",
+      "alias": "荫星",
+      "type": "major",
+      "five_elements": "阳土/阳木",
+      "dou_series": "南斗",
+      "huaqi": "荫、寿",
+      "representative": "李靖",
+      "pros": [
+        "正直善良",
+        "乐于助人",
+        "长者风范",
+        "化解灾厄"
+      ],
+      "cons": [
+        "好为人师",
+        "自以为是",
+        "管闲事",
+        "神经过敏"
+      ],
+      "key_points": [
+        "寿星、荫星",
+        "能化解灾厄，遇难呈祥",
+        "适合教育、医疗、公益"
+      ],
+      "brightness_sensitive": true,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "七杀",
+      "name": "七杀星",
+      "alias": "将星",
+      "type": "major",
+      "five_elements": "阴金/阳火",
+      "dou_series": "南斗",
+      "huaqi": "权、将星",
+      "representative": "黄飞虎",
+      "pros": [
+        "勇敢果断",
+        "独立自主",
+        "有魄力",
+        "敢于挑战"
+      ],
+      "cons": [
+        "冲动鲁莽",
+        "独断专行",
+        "好斗好胜",
+        "不服管教"
+      ],
+      "key_points": [
+        "杀破狼之一",
+        "孤独刚克之星",
+        "适合军警、运动员、企业家",
+        "喜紫微同宫或会照（化杀为权）"
+      ],
+      "brightness_sensitive": false,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    },
+    {
+      "key": "破军",
+      "name": "破军星",
+      "alias": "耗星",
+      "type": "major",
+      "five_elements": "阴水/阳水",
+      "dou_series": "北斗",
+      "huaqi": "耗、夫妻主",
+      "representative": "纣王",
+      "pros": [
+        "勇于开拓",
+        "敢于创新",
+        "不畏困难",
+        "破而后立"
+      ],
+      "cons": [
+        "破坏性强",
+        "难以持久",
+        "情绪不稳",
+        "人际关系差"
+      ],
+      "key_points": [
+        "杀破狼之一",
+        "破坏与重建之星",
+        "最喜化权，能力极强",
+        "不利女命（缺乏小鸟依人气质）"
+      ],
+      "brightness_sensitive": false,
+      "source": "docs\\design\\ziwei\\02-星曜体系\\01-十四主星.md",
+      "trust_level": "reference"
+    }
+  ]
+}

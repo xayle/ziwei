@@ -1,0 +1,452 @@
+[
+  {
+    "id": "remedy_001",
+    "name": "化忌守命·修心积德",
+    "trigger": {"type": "palace_hua", "palace": "命宫", "hua": "化忌"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "每日静坐或冥想 10 分钟，培养内观能力",
+      "定期参与志愿服务或捐助，以德化煞",
+      "避免与人争功计较，低调行事减少口舌是非"
+    ],
+    "evidence_template": "命宫主星 {stars} 化忌，主命主波折，以德行化解为要。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_002",
+    "name": "化忌入财·理财防损",
+    "trigger": {"type": "palace_hua", "palace": "财帛宫", "hua": "化忌"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "建立月度收支记账习惯，清晰掌握现金流",
+      "避免高风险投资和民间借贷，防止资金陷入纠纷",
+      "给大额资产购买保险，降低意外损耗风险"
+    ],
+    "evidence_template": "财帛宫主星 {stars} 化忌，财务风险较高，谨慎管理为先。",
+    "disclaimer": "以上为参考性建议，重大财务决策请咨询专业理财顾问。"
+  },
+  {
+    "id": "remedy_003",
+    "name": "化忌入官·职场韬光",
+    "trigger": {"type": "palace_hua", "palace": "官禄宫", "hua": "化忌"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "保持低调，减少不必要的职场争斗与锋芒外露",
+      "做好本职工作，留下书面记录，防止被甩锅",
+      "主动维护与上级及同事的关系，减少摩擦"
+    ],
+    "evidence_template": "官禄宫主星 {stars} 化忌，事业易逢阻碍，宜低调稳健。",
+    "disclaimer": "以上为参考性建议，请结合职场实际情况理性应对。"
+  },
+  {
+    "id": "remedy_004",
+    "name": "化忌入迁移·安土守家",
+    "trigger": {"type": "palace_hua", "palace": "迁移宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "尽量减少不必要的长途出行，尤其避免高风险地区",
+      "出行前做好攻略与保险安排，降低在途突发风险",
+      "若有移居计划，建议充分调研目的地再行决定"
+    ],
+    "evidence_template": "迁移宫主星 {stars} 化忌，出行海外易生变故，稳守为佳。",
+    "disclaimer": "以上为参考性建议，重大迁居决策请充分评估利弊。"
+  },
+  {
+    "id": "remedy_005",
+    "name": "化忌入夫妻·感情维护",
+    "trigger": {"type": "palace_hua", "palace": "夫妻宫", "hua": "化忌"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "主动增加与伴侣的深度沟通，避免冷战积怨",
+      "学习非暴力沟通（NVC）技巧，减少情绪性争吵",
+      "在大运化忌期间可暂缓结婚计划，先稳固感情基础"
+    ],
+    "evidence_template": "夫妻宫主星 {stars} 化忌，感情易逢波折，需用心经营。",
+    "disclaimer": "以上为参考性建议，感情问题请结合实际情况与伴侣共商。"
+  },
+  {
+    "id": "remedy_006",
+    "name": "化忌入疾厄·健康防护",
+    "trigger": {"type": "palace_hua", "palace": "疾厄宫", "hua": "化忌"},
+    "priority": 1,
+    "cost_level": "中",
+    "valid_scope": "长期",
+    "actions": [
+      "每年定期进行一次全面体检，关注慢性病预警指标",
+      "保持规律作息，避免熬夜与暴饮暴食",
+      "中年后可增加中医调理，按季节调整养生方案"
+    ],
+    "evidence_template": "疾厄宫主星 {stars} 化忌，身体需用心养护，防病于未然。",
+    "disclaimer": "以上为参考性建议，具体健康问题请咨询执业医师。"
+  },
+  {
+    "id": "remedy_007",
+    "name": "化忌入田宅·居家谨慎",
+    "trigger": {"type": "palace_hua", "palace": "田宅宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "中",
+    "valid_scope": "长期",
+    "actions": [
+      "房产交易前做好尽调，避免在化忌流年匆促买卖",
+      "注意居家安全，定期检查水电煤气等基础设施",
+      "若有家庭纠纷，建议通过调解而非法律手段先行化解"
+    ],
+    "evidence_template": "田宅宫主星 {stars} 化忌，房产与家族事务需谨慎处理。",
+    "disclaimer": "以上为参考性建议，重大房产决策请咨询专业律师与房产顾问。"
+  },
+  {
+    "id": "remedy_008",
+    "name": "羊陀夹命·韧性处世",
+    "trigger": {"type": "pattern", "pattern_name": "羊陀夹命"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "培养耐心与抗压能力，遇挫折不轻言放弃",
+      "避免与人正面冲突，以柔克刚化解对立",
+      "在大运逢煞年份前增加储蓄，做好应急资金准备"
+    ],
+    "evidence_template": "羊陀夹命，双煞压迫，命途多折，以韧性应对为上。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_009",
+    "name": "火铃夹命·修身控情",
+    "trigger": {"type": "pattern", "pattern_name": "火铃夹命"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "练习正念呼吸，在情绪激动时先暂停再回应",
+      "避免冲动决策，重大事项延迟 24 小时再行动",
+      "参加适度体育锻炼（如跑步、太极）释放压力"
+    ],
+    "evidence_template": "火铃夹命，性情易暴烈，宜修身养性以防意外。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_010",
+    "name": "空劫夹命·防虚耗财",
+    "trigger": {"type": "pattern", "pattern_name": "空劫夹命"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "避免追逐一夜暴富的投机项目，脚踏实地稳步积累",
+      "定期检视生活开销，清理不必要的订阅和浪费",
+      "给自己设置强制储蓄目标，每月自动转入独立账户"
+    ],
+    "evidence_template": "空劫夹命，财易被虚耗，需严控非必要消费。",
+    "disclaimer": "以上为参考性建议，重大财务决策请咨询专业理财顾问。"
+  },
+  {
+    "id": "remedy_011",
+    "name": "化忌守命·流年加重·紧急应对",
+    "trigger": {"type": "pattern_and_liunian", "pattern_name": "化忌守命"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "actions": [
+      "该流年减少冒进行动，凡事多请教信任的长辈或顾问",
+      "关注身心健康，减少过度劳累",
+      "主动参与公益活动，积功德以化解流年不顺"
+    ],
+    "evidence_template": "命宫化忌遇流年叠加，{liunian_year} 年尤需谨慎。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_012",
+    "name": "三方无吉曜·补充贵人",
+    "trigger": {"type": "pattern", "pattern_name": "三方无吉曜"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "主动拓展人脉，多参加行业交流与学习型社群",
+      "寻找导师或职业顾问，补充命盘贵人不足的短板",
+      "培养一到两项专业技能，以实力吸引贵人关注"
+    ],
+    "evidence_template": "三方四正星曜稀疏，格局空旷，需后天积极补足。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_013",
+    "name": "廉贞化忌守命·守法避讼",
+    "trigger": {"type": "pattern", "pattern_name": "廉贞化忌守命"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "所有合同、协议均请律师审阅再签，避免隐患",
+      "远离非法经营与灰色地带，杜绝侥幸心理",
+      "减少与争强好胜者的正面冲突，遇纠纷优先调解"
+    ],
+    "evidence_template": "廉贞化忌坐命，刑讼风险较高，守法为首要之务。",
+    "disclaimer": "以上为参考性建议，法律相关事务请务必咨询执业律师。"
+  },
+  {
+    "id": "remedy_014",
+    "name": "刑囚夹印·防诉讼牢狱",
+    "trigger": {"type": "pattern", "pattern_name": "刑囚夹印"},
+    "priority": 1,
+    "cost_level": "中",
+    "valid_scope": "大运",
+    "actions": [
+      "在该大运期间保守经营，不参与任何法律灰色项目",
+      "提前咨询法律顾问，梳理现有合同与合规风险",
+      "适当参与宗教或慈善活动，积累阴德以化解凶象"
+    ],
+    "evidence_template": "廉贞天相逢化忌，刑囚夹印，{dayun} 大运尤需注意法律风险。",
+    "disclaimer": "以上为参考性建议，法律相关事务请务必咨询执业律师。"
+  },
+  {
+    "id": "remedy_015",
+    "name": "马头带箭·以刚制刚",
+    "trigger": {"type": "pattern", "pattern_name": "马头带箭"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "选择与擎羊特质匹配的职业（竞技、军警、外科、锻造等）",
+      "体育锻炼和技艺训练是最佳「疏煞」途径",
+      "避免酒后驾车及危险运动，降低意外伤损概率"
+    ],
+    "evidence_template": "命宫午支逢擎羊，马头带箭，冲劲十足但需疏导方向。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_016",
+    "name": "白虎守身·关注健检",
+    "trigger": {"type": "pattern", "pattern_name": "白虎守身"},
+    "priority": 2,
+    "cost_level": "中",
+    "valid_scope": "长期",
+    "actions": [
+      "每 1–2 年进行一次全面体检，关注心血管与意外风险",
+      "为自己和家人购买充足的意外险与重疾险",
+      "大限逢白虎年份，主动减少高风险活动"
+    ],
+    "evidence_template": "白虎坐身宫，孝服意外之象较强，需提前防护。",
+    "disclaimer": "以上为参考性建议，具体健康问题请咨询执业医师。"
+  },
+  {
+    "id": "remedy_017",
+    "name": "羊陀逢化忌·双重化解",
+    "trigger": {"type": "pattern", "pattern_name": "羊陀逢化忌"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "actions": [
+      "在化忌大运年份主动降低风险敞口，缩减扩张计划",
+      "寻求心理辅导或宗教信仰支持，保持心态稳定",
+      "增加储蓄至收入的 30% 以上，应对突发困境"
+    ],
+    "evidence_template": "羊陀夹命兼化忌在三方，双重凶象叠加，{dayun} 大运需格外谨慎。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_018",
+    "name": "生离死别·珍惜当下",
+    "trigger": {"type": "pattern", "pattern_name": "生离死别"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "主动关心至亲，增加陪伴时间，减少遗憾",
+      "感情上学会放下执念，以豁达心态面对聚散",
+      "在大限感情宫逢化忌时慎重做重大感情决定"
+    ],
+    "evidence_template": "日月双化忌，生离死别之象，感情与亲缘需格外珍护。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_019",
+    "name": "擎羊守官禄·以技立身",
+    "trigger": {"type": "pattern", "pattern_name": "擎羊守官禄"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "选择适合擎羊特质的行业（外科医学、律师、军警、工程）",
+      "以专业技能立身，而非人际关系晋升，降低斗争风险",
+      "避免与上司正面对抗，遇职场打压时优先选择离开"
+    ],
+    "evidence_template": "擎羊坐官禄宫，职场竞争激烈，以技艺立身为上策。",
+    "disclaimer": "以上为参考性建议，请结合职场实际情况理性应对。"
+  },
+  {
+    "id": "remedy_020",
+    "name": "曲昌夹忌·文书细心",
+    "trigger": {"type": "pattern", "pattern_name": "曲昌夹忌"},
+    "priority": 3,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "签署任何文件合同前仔细逐条阅读，不轻易授权",
+      "考试前充分准备，避免粗心失误影响应试发挥",
+      "写作与学术成果记得备份，防止被窃取或误删"
+    ],
+    "evidence_template": "文曲/文昌夹化忌，文书考试易出差错，细心为要。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_021",
+    "name": "铃昌陀武·严控投资风险",
+    "trigger": {"type": "pattern", "pattern_name": "铃昌陀武"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "对高波动性资产（股票期货加密货币）严格限仓，不超过总资产 10%",
+      "避免向他人借钱投资，防止因破财引发人际矛盾",
+      "每半年检视一次资产配置，优先配置保守型低风险产品"
+    ],
+    "evidence_template": "铃星、陀罗、武曲形成破财煞局，财务风险需格外控制。",
+    "disclaimer": "以上为参考性建议，重大财务决策请咨询专业理财顾问。"
+  },
+  {
+    "id": "remedy_022",
+    "name": "化忌入子女宫·亲子关系维护",
+    "trigger": {"type": "palace_hua", "palace": "子女宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "多与子女平等沟通，倾听其想法而非单向管控",
+      "备孕或孕期期间加强孕检，降低生育风险",
+      "关注子女心理健康，必要时寻求专业辅导"
+    ],
+    "evidence_template": "子女宫主星 {stars} 化忌，子女缘较薄或管教费心，需用心经营亲子关系。",
+    "disclaimer": "以上为参考性建议，子女健康问题请咨询执业医师。"
+  },
+  {
+    "id": "remedy_023",
+    "name": "化忌入交友宫·慎交益友",
+    "trigger": {"type": "palace_hua", "palace": "交友宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "审慎扩展交际圈，宁缺毋滥，优先深交少数可靠之人",
+      "合伙或借款前务必了解对方信用背景，签订书面协议",
+      "定期梳理身边人际关系，与负能量圈子保持距离"
+    ],
+    "evidence_template": "交友宫主星 {stars} 化忌，小人是非风险较高，慎交友为上。",
+    "disclaimer": "以上为参考性建议，请结合自身情况理性评估。"
+  },
+  {
+    "id": "remedy_024",
+    "name": "化忌入福德宫·培养心境",
+    "trigger": {"type": "palace_hua", "palace": "福德宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "建立每日冥想或正念练习习惯，关注内在精神需求",
+      "减少娱乐过度消耗，培养阅读、音乐或自然类兴趣",
+      "关注焦虑与抑郁的早期信号，必要时寻求心理咨询"
+    ],
+    "evidence_template": "福德宫主星 {stars} 化忌，心神容易不安，需主动培养精神修炼。",
+    "disclaimer": "以上为参考性建议，心理健康问题请咨询执业心理咨询师或医师。"
+  },
+  {
+    "id": "remedy_025",
+    "name": "化忌入父母宫·孝顺亲长",
+    "trigger": {"type": "palace_hua", "palace": "父母宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "与父母保持定期联络与探望，化解代际隔阂",
+      "关注父母健康状况，督促其定期体检",
+      "避免在家庭重大决策上与父母正面对立，寻求和解之道"
+    ],
+    "evidence_template": "父母宫主星 {stars} 化忌，与长辈缘分或健康需额外关注。",
+    "disclaimer": "以上为参考性建议，长辈健康问题请咨询执业医师。"
+  },
+  {
+    "id": "remedy_026",
+    "name": "化忌入兄弟宫·慎重合伙",
+    "trigger": {"type": "palace_hua", "palace": "兄弟宫", "hua": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "与兄弟姐妹合伙经营时务必签订书面协议，明确权责",
+      "避免因情感因素替亲属承担财务责任或担保",
+      "维持手足情谊，定期家庭聚会增进联络"
+    ],
+    "evidence_template": "兄弟宫主星 {stars} 化忌，手足合伙或财务往来需格外谨慎。",
+    "disclaimer": "以上为参考性建议，合伙法律事务请咨询执业律师。"
+  },
+  {
+    "id": "remedy_027",
+    "name": "禄存守命·守稳固财",
+    "trigger": {"type": "pattern", "pattern_name": "禄存守命"},
+    "priority": 3,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "巩固稳健理财习惯，以储蓄和固收类资产为核心配置",
+      "禄存有「禄随羊陀夹」特性，警惕暴富诱惑引起的反弹",
+      "善用第一桶金稳步拓展，避免一次性冒险押注"
+    ],
+    "evidence_template": "禄存守命财禄稳厚，但需防羊陀夹禄的破财风险。",
+    "disclaimer": "以上为参考性建议，具体理财请量力而为。"
+  },
+  {
+    "id": "remedy_028",
+    "name": "武贪格·把握中年偏财机缘",
+    "trigger": {"type": "pattern", "pattern_name": "武贪格"},
+    "priority": 3,
+    "cost_level": "中",
+    "valid_scope": "大运",
+    "actions": [
+      "武贪格在 35–45 岁后偏财运渐旺，适时加大拓展力度",
+      "擅长实业、投资或竞技类领域，中年后可重点布局",
+      "保持耐心，不必在早年强行催动偏财，以免事倍功半"
+    ],
+    "evidence_template": "武曲贪狼同宫，武贪格中年后偏财渐开，{dayun} 大运或为转机。",
+    "disclaimer": "以上为参考性建议，投资理财请量力而为，不构成投资建议。"
+  },
+  {
+    "id": "remedy_029",
+    "name": "机月同梁·公职稳进",
+    "trigger": {"type": "pattern", "pattern_name": "机月同梁"},
+    "priority": 3,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "actions": [
+      "优先考虑政府机关、国有企业、教育科研等稳定单位",
+      "发挥幕僚参谋特质，做好辅助与执行角色而非冒险开创",
+      "注重专业资格证书的积累，以学历和证书构筑职业护城河"
+    ],
+    "evidence_template": "机月同梁格局，适合稳健公职路线，循序渐进必有所成。",
+    "disclaimer": "以上为参考性建议，职业选择请综合自身兴趣与实际情况决定。"
+  },
+  {
+    "id": "remedy_030",
+    "name": "禄马交驰·动中得财",
+    "trigger": {"type": "pattern", "pattern_name": "禄马交驰"},
+    "priority": 3,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "actions": [
+      "积极拓展跨城市、跨地区甚至海外的业务机会",
+      "出差、商旅或异地工作对本命盘有正面加成，勇于迁动",
+      "流动性强的职业（销售、贸易、物流、外交）契合禄马特质"
+    ],
+    "evidence_template": "禄存与天马在三方（{dayun} 大运），动中得财，宜把握外出机遇。",
+    "disclaimer": "以上为参考性建议，跨地区发展请提前做好风险评估。"
+  }
+]

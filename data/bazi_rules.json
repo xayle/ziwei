@@ -1,0 +1,485 @@
+[
+  {
+    "id": "BRULE_001",
+    "group": "格局类",
+    "name": "正官格身强用财官",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "正官格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["official_scholar", "stable_career", "loyal_marriage"],
+    "evidence_template": "正官格清纯，以财官为用，主仕途稳健、婚姻美满",
+    "classic_hint": "神峰通考",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_002",
+    "group": "格局类",
+    "name": "正官格用印化官",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "正官格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ],
+      "any": [
+        {"field": "yongshen.favor", "op": "contains", "value": "木"},
+        {"field": "yongshen.favor", "op": "contains", "value": "水"}
+      ]
+    },
+    "flags": ["official_scholar", "academic_achievement", "gentle_authority"],
+    "evidence_template": "正官格以印绶为辅，官印相生，文仕两宜，学历与仕途互相加持",
+    "classic_hint": "神峰通考",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_003",
+    "group": "格局类",
+    "name": "正官格破格变局",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "正官格"},
+        {"field": "geju.is_broken", "op": "eq", "value": true}
+      ]
+    },
+    "flags": ["broken_geju", "career_instability", "need_remedy"],
+    "evidence_template": "正官格遭破，格局受损，仕途多波折，须修身养性以补格局之缺",
+    "classic_hint": "子平真诠",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_004",
+    "group": "格局类",
+    "name": "七杀格食神制杀",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "七杀格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["power_authority", "competitive_spirit", "high_achievement"],
+    "evidence_template": "七杀格有制，化杀为权，主魄力与权威，适合竞争激烈的领域",
+    "classic_hint": "神峰通考",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_005",
+    "group": "格局类",
+    "name": "七杀格印星化杀",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "七杀格"}
+      ],
+      "any": [
+        {"field": "yongshen.favor", "op": "contains", "value": "木"},
+        {"field": "yongshen.favor", "op": "contains", "value": "火"},
+        {"field": "yongshen.favor", "op": "contains", "value": "土"}
+      ]
+    },
+    "flags": ["kill_seal_harmony", "inner_excellence", "resilient"],
+    "evidence_template": "七杀格以印绶化杀，内秀外刚，逆境中磨砺真知，韧性超凡",
+    "classic_hint": "神峰通考",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_006",
+    "group": "格局类",
+    "name": "七杀格无制凶险",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "七杀格"},
+        {"field": "geju.is_broken", "op": "eq", "value": true}
+      ]
+    },
+    "flags": ["broken_geju", "risk_prone", "volatile_fortune"],
+    "evidence_template": "七杀格无制或破格，凶性难驯，运程起伏大，须以德行修身化解",
+    "classic_hint": "神峰通考",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_007",
+    "group": "格局类",
+    "name": "食神格生财",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "食神格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["talent_wealth", "comfortable_life", "creative"],
+    "evidence_template": "食神格生财，衣食丰裕，才华横溢，主安逸舒适的生活状态",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_008",
+    "group": "格局类",
+    "name": "食神格制杀有功",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "食神格"}
+      ],
+      "any": [
+        {"field": "geju.geju_level", "op": "in", "value": ["上格", "中格"]}
+      ]
+    },
+    "flags": ["talent_authority", "well_rounded", "notable_achievement"],
+    "evidence_template": "食神格有力，才华制衡权威，文武双全，成就斐然",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_009",
+    "group": "格局类",
+    "name": "伤官格配财",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "伤官格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["intelligent_unconventional", "career_talent", "wealth_talent"],
+    "evidence_template": "伤官格配财，才华转化为财富，适合商业与创意领域，官场需谨慎",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_010",
+    "group": "格局类",
+    "name": "伤官格佩印",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "伤官格"}
+      ],
+      "any": [
+        {"field": "yongshen.favor", "op": "contains", "value": "火"},
+        {"field": "yongshen.favor", "op": "contains", "value": "木"},
+        {"field": "yongshen.favor", "op": "contains", "value": "土"}
+      ]
+    },
+    "flags": ["brilliant_mind", "academic_talent", "restrained_talent"],
+    "evidence_template": "伤官格佩印，大智若愚，聪明才华有正确引导，文名远播",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_011",
+    "group": "格局类",
+    "name": "正财格财官双美",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "正财格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["steady_wealth", "happy_marriage", "reliable"],
+    "evidence_template": "正财格清纯，财官双美，主富贵两全，婚姻稳定，财运持续",
+    "classic_hint": "子平真诠",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_012",
+    "group": "格局类",
+    "name": "偏财格生官",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "偏财格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["commercial_talent", "social_network", "wealth_variety"],
+    "evidence_template": "偏财格广结善缘，商业天赋出色，财路宽广，善于整合资源",
+    "classic_hint": "子平真诠",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_013",
+    "group": "格局类",
+    "name": "正印格官印相生",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "正印格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["scholarly", "benefactors", "cultural_talent"],
+    "evidence_template": "正印格官印相生，贵气绵延，学识丰厚，宜正统仕途或学术道路",
+    "classic_hint": "子平真诠",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_014",
+    "group": "格局类",
+    "name": "偏印格智慧奇特",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "偏印格"}
+      ]
+    },
+    "flags": ["unconventional_wisdom", "intuitive", "specialized_skill"],
+    "evidence_template": "偏印格智慧超群但路径偏特，直觉力出众，宜在独特领域深耕",
+    "classic_hint": "子平真诠",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_015",
+    "group": "格局类",
+    "name": "建禄格旺身用官",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "建禄格"}
+      ]
+    },
+    "flags": ["strong_willpower", "self_reliance", "leadership"],
+    "evidence_template": "建禄格日主得禄极旺，以官财为用，凭自身力量开拓事业，领导力出众",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_016",
+    "group": "格局类",
+    "name": "羊刃格配官煞",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "羊刃格"}
+      ]
+    },
+    "flags": ["strong_will", "authority_apt", "brave"],
+    "evidence_template": "羊刃格须官煞驾驭，刃有制则为权威，军警政法领域最易出头",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_017",
+    "group": "格局类",
+    "name": "比劫格官煞制劫",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_name", "op": "eq", "value": "比劫格"}
+      ]
+    },
+    "flags": ["competitive", "team_player", "resilient"],
+    "evidence_template": "比劫格群劫旺身，须官煞制化，在竞争中磨砺，团队合作是关键",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_018",
+    "group": "格局类",
+    "name": "格局上格贵命",
+    "trigger": {
+      "all": [
+        {"field": "geju.geju_level", "op": "eq", "value": "上格"},
+        {"field": "geju.is_broken", "op": "eq", "value": false}
+      ]
+    },
+    "flags": ["noble_destiny", "high_achievement", "auspicious"],
+    "evidence_template": "格局清纯为上格，贵气天成，一生大运顺遂，成就高于常人",
+    "classic_hint": "命理探原",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_019",
+    "group": "格局类",
+    "name": "格局破格需调候",
+    "trigger": {
+      "all": [
+        {"field": "geju.is_broken", "op": "eq", "value": true}
+      ]
+    },
+    "flags": ["broken_geju", "need_remedy", "variable_fortune"],
+    "evidence_template": "格局破损，运程起伏较大，宜以大运弥补破格之缺，调候用神尤为关键",
+    "classic_hint": "命理探原",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_020",
+    "group": "用神类",
+    "name": "木为用神",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "木"}
+      ],
+      "none": [
+        {"field": "yongshen.favor", "op": "contains", "value": "金"}
+      ]
+    },
+    "flags": ["favor_wood", "east_direction", "spring_energy"],
+    "evidence_template": "甲乙木为用神，喜东方木地大运，宜从事与木相关行业（教育、文化、建材、农业），东方居住更利运",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_021",
+    "group": "用神类",
+    "name": "火为用神",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "火"}
+      ],
+      "none": [
+        {"field": "yongshen.favor", "op": "contains", "value": "水"}
+      ]
+    },
+    "flags": ["favor_fire", "south_direction", "summer_energy"],
+    "evidence_template": "丙丁火为用神，喜南方火地大运，宜从事与火相关行业（能源、餐饮、娱乐、传媒），南方居住更利运",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_022",
+    "group": "用神类",
+    "name": "土为用神",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "土"}
+      ]
+    },
+    "flags": ["favor_earth", "center_direction", "stable_energy"],
+    "evidence_template": "戊己土为用神，喜中央或西南土地大运，宜从事实业、房地产、农业，稳健积累为上",
+    "classic_hint": "渊海子平",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_023",
+    "group": "用神类",
+    "name": "金为用神",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "金"}
+      ],
+      "none": [
+        {"field": "yongshen.favor", "op": "contains", "value": "木"}
+      ]
+    },
+    "flags": ["favor_metal", "west_direction", "autumn_energy"],
+    "evidence_template": "庚辛金为用神，喜西方金地大运，宜从事金融、制造、科技、法律，西方居住更利运",
+    "classic_hint": "渊海子平",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_024",
+    "group": "用神类",
+    "name": "水为用神",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "水"}
+      ],
+      "none": [
+        {"field": "yongshen.favor", "op": "contains", "value": "土"}
+      ]
+    },
+    "flags": ["favor_water", "north_direction", "winter_energy"],
+    "evidence_template": "壬癸水为用神，喜北方水地大运，宜从事流通、贸易、旅游、水产，北方居住更利运",
+    "classic_hint": "穷通宝鉴",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_025",
+    "group": "神煞类",
+    "name": "天乙贵人逢凶化吉",
+    "trigger": {
+      "any": [
+        {"field": "shensha.name", "op": "contains", "value": "天乙贵人"}
+      ]
+    },
+    "flags": ["benefactor_star", "lucky_support", "auspicious_shensha"],
+    "evidence_template": "命中带天乙贵人，逢凶化吉，贵人相助力量强，逆境中往往有贵人出现",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_026",
+    "group": "神煞类",
+    "name": "羊刃气血刚烈",
+    "trigger": {
+      "any": [
+        {"field": "shensha.name", "op": "contains", "value": "羊刃"}
+      ]
+    },
+    "flags": ["strong_willpower", "brave_decisive", "military_apt"],
+    "evidence_template": "命中带羊刃，气血刚烈，须以官煞驾驭，适合竞争激烈的职业，亦需注意锋芒过盛",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_027",
+    "group": "神煞类",
+    "name": "文昌学业出众",
+    "trigger": {
+      "any": [
+        {"field": "shensha.name", "op": "contains", "value": "文昌"}
+      ]
+    },
+    "flags": ["academic_star", "literary_talent", "scholarly"],
+    "evidence_template": "命中带文昌，聪明好学，学业出众，宜走文教、科研路径，口才与文才均佳",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_028",
+    "group": "神煞类",
+    "name": "驿马动荡奔波",
+    "trigger": {
+      "any": [
+        {"field": "shensha.name", "op": "contains", "value": "驿马"}
+      ]
+    },
+    "flags": ["mobility", "travel_prone", "versatile"],
+    "evidence_template": "命中带驿马，主奔波动荡、善于变通，适合与出行、贸易、外事相关的工作",
+    "classic_hint": "三命通会",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_029",
+    "group": "五行类",
+    "name": "金水伤官聪颖",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "金"}
+      ],
+      "any": [
+        {"field": "geju.geju_name", "op": "eq", "value": "伤官格"}
+      ]
+    },
+    "flags": ["metal_water_talent", "sharp_mind", "law_finance_apt"],
+    "evidence_template": "金水伤官，头脑清晰，口才出众，逻辑性强，宜法律、金融、辩论等需要清晰思维的领域",
+    "classic_hint": "滴天髓",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_030",
+    "group": "五行类",
+    "name": "木火通明文化昌盛",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.favor", "op": "contains", "value": "木"}
+      ],
+      "any": [
+        {"field": "yongshen.favor", "op": "contains", "value": "火"}
+      ]
+    },
+    "flags": ["wood_fire_brilliance", "cultural_talent", "expressive"],
+    "evidence_template": "木火通明，文化气息浓厚，思维敏捷，表达力出众，宜文教、传媒、艺术等创意类工作",
+    "classic_hint": "滴天髓",
+    "disclaimer": "仅供学术研究参考"
+  },
+  {
+    "id": "BRULE_031",
+    "group": "五行类",
+    "name": "土厚埋金潜力难显",
+    "trigger": {
+      "all": [
+        {"field": "yongshen.avoid", "op": "contains", "value": "土"}
+      ],
+      "any": [
+        {"field": "yongshen.favor", "op": "contains", "value": "金"}
+      ]
+    },
+    "flags": ["buried_talent", "late_bloomer", "need_adversity"],
+    "evidence_template": "土厚埋金，才华藏于内而难以施展，须经历磨砺后方能展露，宜中年后发展",
+    "classic_hint": "滴天髓",
+    "disclaimer": "仅供学术研究参考"
+  }
+]

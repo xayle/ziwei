@@ -3,20 +3,12 @@
 .env.*
 !.env.example
 
-# 数据库文件与大体量本地数据（默认忽略；下列运行时必需 JSON 强制入库）
-data/
-!data/cities.json
-!data/glossary.json
-!data/ground_truth_cases.json
-!data/dual_verify_cases.json
-!data/ziwei_ground_truth.json
-!data/relation_golden_cases.json
-!data/classics.json
-!data/concepts.json
-!data/name_eighty_one.json
-!data/name_sancai.json
-!data/name_chars.json
-!data/name_suggest_chars.json
+# 数据库文件与大体量本地数据（忽略内容；再取消忽略 JSON，便于 CI/回归）
+# 注意：不能写 data/（会忽略目录自身，导致 ! 无法反选子文件）
+data/**
+!data/**/
+!data/**/*.json
+data/_ctext_ziping.json
 *.db
 
 # Python缓存

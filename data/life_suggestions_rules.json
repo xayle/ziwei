@@ -1,0 +1,723 @@
+[
+  {
+    "id": "js_001",
+    "category": "jewelry",
+    "name": "佩戴黄金饰品旺财",
+    "trigger": {"type": "palace_star", "palace": "财帛", "stars": ["武曲", "天府"]},
+    "priority": 1,
+    "cost_level": "中",
+    "valid_scope": "长期",
+    "short_desc": "命盘财帛宫有武曲或天府，金属属性强，黄金饰品可助旺财气。",
+    "actions": [
+      "佩戴黄金项链或金手链，以足金或18K为佳",
+      "戴在右手腕（阴命人）或左手腕（阳命人）",
+      "避免与银饰同时佩戴，以免金银相克"
+    ],
+    "evidence_template": "财帛宫含{stars}，金金相生，有助财运稳固。",
+    "notes": "金饰宜选圆形造型，避免尖角；过敏体质可选镀金或黄铜代替。",
+    "disclaimer": "以上为参考性建议，购买贵金属请量力而为，不作为投资建议。"
+  },
+  {
+    "id": "js_002",
+    "category": "jewelry",
+    "name": "蓝色水晶化解化忌",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "命宫"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "命宫化忌入主，情绪与决策易受阻，蓝色水晶（海蓝宝/青金石）有助镇静心神。",
+    "actions": [
+      "佩戴海蓝宝石或青金石手串（左手佩戴）",
+      "或随身携带一颗蓝色萤石小原石",
+      "每月初一、十五以清水净化饰品"
+    ],
+    "evidence_template": "命宫出现{transform}，心神易扰，水系色调饰品有助平静。",
+    "notes": "避免与红色系宝石同时佩戴；萤石脆弱，不宜泡水。",
+    "disclaimer": "仅供命理参考，不替代心理咨询或医疗建议。"
+  },
+  {
+    "id": "js_003",
+    "category": "jewelry",
+    "name": "紫水晶提升官印运",
+    "trigger": {"type": "palace_star", "palace": "官禄", "stars": ["紫微", "天梁"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "官禄宫有紫微或天梁，事业领导力强，紫水晶可加强智慧与权威气场。",
+    "actions": [
+      "工位桌面摆放紫水晶簇，置于左前方",
+      "或佩戴紫水晶手串（左手）",
+      "避免放置在储物间或背阴处"
+    ],
+    "evidence_template": "官禄宫含{stars}，紫气助权，紫水晶共鸣效果佳。",
+    "notes": "紫水晶怕强光，避免长期暴晒，以免褪色。",
+    "disclaimer": "命理建议仅供参考，职业发展需结合实际工作努力。"
+  },
+  {
+    "id": "js_004",
+    "category": "jewelry",
+    "name": "玫瑰粉晶旺桃花缘",
+    "trigger": {"type": "palace_star", "palace": "夫妻", "stars": ["贪狼", "太阴", "天同"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "夫妻宫有贪狼/太阴/天同，感情与人际缘分旺，粉晶可助催桃花感情。",
+    "actions": [
+      "佩戴粉水晶手串（左手）或粉晶项链",
+      "也可在卧室西南角摆放粉晶球（直径5–8cm）",
+      "保持饰品清洁，每月以月光净化一次"
+    ],
+    "evidence_template": "夫妻宫含{stars}，感情宫位活跃，粉晶强化人际吸引力。",
+    "notes": "粉晶不宜与煞星宝石（如黑曜石）同放；避免阳光直射。",
+    "disclaimer": "感情发展需自身积极投入，饰品仅辅助心态调整。"
+  },
+  {
+    "id": "js_005",
+    "category": "jewelry",
+    "name": "黑曜石护身避煞",
+    "trigger": {"type": "pattern", "pattern_name_contains": "羊陀"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "命盘含擎羊/陀罗等煞星组合，意外与阻碍较多，黑曜石护身符可作防御屏障。",
+    "actions": [
+      "佩戴黑曜石貔貅或黑曜石手串（左手）",
+      "护身符宜贴身随携，不宜让他人触碰",
+      "每年清明或冬至前后以流动清水净化"
+    ],
+    "evidence_template": "命盘检测到{pattern_name}，煞气较重，黑曜石助化煞护身。",
+    "notes": "黑曜石能量较强，体质敏感者可先在右手试戴1–2周再换左手。",
+    "disclaimer": "避煞建议为命理参考，出行安全需遵守交通法规，不可替代。"
+  },
+  {
+    "id": "js_006",
+    "category": "jewelry",
+    "name": "铜铃手环增强事业气场",
+    "trigger": {"type": "palace_transform", "transform": "化权", "palace": "官禄"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "官禄宫化权，事业进取心强，铜铃手环（金属属性）可共鸣权力气场。",
+    "actions": [
+      "佩戴铜制手环或铜铃项链，以传统錾刻花纹为佳",
+      "外出洽谈或重要会议时佩戴；居家可不戴",
+      "定期以干布擦拭保持光泽"
+    ],
+    "evidence_template": "官禄宫{transform}，事业欲强，金属属性饰品助势。",
+    "notes": "铜饰易氧化，有铜皮肤过敏者改用黄铜镀金代替。",
+    "disclaimer": "命理参考，事业提升核心在实际能力和人际关系。"
+  },
+  {
+    "id": "pl_001",
+    "category": "plants",
+    "name": "富贵竹招财旺财气",
+    "trigger": {"type": "palace_star", "palace": "财帛", "stars": ["武曲", "天府", "太阴"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "财帛宫星曜旺，适合以富贵竹在财位加强财气循环。",
+    "actions": [
+      "在客厅或书房东南角（财位）摆放一束5–9枝富贵竹",
+      "以透明玻璃瓶水培，每周换水，水中可加少量硬币",
+      "保持充足散射光，避免直射强光"
+    ],
+    "evidence_template": "财帛宫含{stars}，财气旺盛，富贵竹可顺势加强。",
+    "notes": "富贵竹对猫狗有毒，家有宠物请放置高处或改用金钱草（水草）。",
+    "disclaimer": "摆放植物为传统风水参考，财务决策请以专业理财建议为准。"
+  },
+  {
+    "id": "pl_002",
+    "category": "plants",
+    "name": "绿萝净化空间化煞",
+    "trigger": {"type": "pattern", "pattern_name_contains": "化忌"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "命盘化忌气场较杂，绿萝净化空气与磁场，有助稳定家居能量。",
+    "actions": [
+      "在玄关或客厅摆放绿萝盆栽，高度以腰部以下为佳",
+      "保持盆土湿润但不积水；叶片定期擦拭积尘",
+      "枯叶及时修剪以保持生气"
+    ],
+    "evidence_template": "当前命盘出现{pattern_name}，绿萝生命力强，可辅助稳定气场。",
+    "notes": "绿萝汁液对皮肤可能刺激，修剪时戴手套；猫咪误食有毒，有宠请悬挂高处。",
+    "disclaimer": "植物摆放为辅助性建议，不替代专业环境或心理健康干预。"
+  },
+  {
+    "id": "pl_003",
+    "category": "plants",
+    "name": "金钱树助旺财运",
+    "trigger": {"type": "palace_transform", "transform": "化禄", "palace": "财帛"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "财帛宫化禄，财运走旺，金钱树传统上象征财富积累，可助维持财气。",
+    "actions": [
+      "在家中财位（客厅西北或东南角）摆放金钱树",
+      "选叶片圆润饱满的健康株，盆器宜用陶瓷或金色花盆",
+      "冬季减少浇水，落叶属正常现象，春季恢复"
+    ],
+    "evidence_template": "财帛宫化禄，财气聚拢，金钱树可锁住财运能量。",
+    "notes": "金钱树不耐涝，切勿过度浇水；对猫狗有轻微毒性，有宠物家庭需注意。",
+    "disclaimer": "传统风水参考，财务增值需配合理财规划。"
+  },
+  {
+    "id": "pl_004",
+    "category": "plants",
+    "name": "仙人掌化解是非小人",
+    "trigger": {"type": "palace_star", "palace": "交友", "stars": ["擎羊", "陀罗", "火星", "铃星"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "交友宫有煞星，人际易有是非摩擦，仙人掌置于窗边可化解外来煞气。",
+    "actions": [
+      "在面向外部（大门边或窗台）摆放小型仙人掌",
+      "选球形或柱形品种，避免过弯曲/奇异形状",
+      "保持干燥，每月浇水1–2次即可"
+    ],
+    "evidence_template": "交友宫含{stars}，人际有暗流，仙人掌刺针象征防御阻挡外煞。",
+    "notes": "仙人掌有刺，避免放在儿童活动区域；对猫狗无明显毒性但刺针可能伤口。",
+    "disclaimer": "化煞仅为心理与环境辅助，人际问题建议积极沟通解决。"
+  },
+  {
+    "id": "pl_005",
+    "category": "plants",
+    "name": "薰衣草舒缓健康压力",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "疾厄"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "疾厄宫化忌，健康状态需留意，薰衣草香气有助纾压助眠。",
+    "actions": [
+      "卧室床头柜摆放薰衣草干花束或薰衣草盆栽",
+      "睡前可用薰衣草精油在颈部轻抹或熏香",
+      "保持室内通风，盆栽需充足光照"
+    ],
+    "evidence_template": "疾厄宫{transform}，身体状态承压，芳香植物有助调节睡眠与情绪。",
+    "notes": "薰衣草精油孕妇慎用；猫咪对薰衣草有轻微毒性，有猫家庭请谨慎。",
+    "disclaimer": "健康问题请及时就医，植物辅助不替代医疗建议。"
+  },
+  {
+    "id": "ob_001",
+    "category": "objects",
+    "name": "铜制貔貅镇宅旺财",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "财帛"},
+    "priority": 1,
+    "cost_level": "中",
+    "valid_scope": "长期",
+    "short_desc": "财帛宫化忌，财务易有意外损耗，铜制貔貅可镇守财气出入。",
+    "actions": [
+      "在客厅财位（进门左侧或东南角）摆放铜貔貅一对，头朝门外",
+      "每年清明节前开光或用清水冲洗净化",
+      "摆放高度以腰部至胸部之间为宜，勿放地面"
+    ],
+    "evidence_template": "财帛宫{transform}，财气不稳，貔貅镇守可稳固财库。",
+    "notes": "貔貅嘴部不宜朝向神台或卧室；摆放后非业主不宜随意移动。",
+    "disclaimer": "摆件为传统风水参考，财务安全需配合专业规划与保险。"
+  },
+  {
+    "id": "ob_002",
+    "category": "objects",
+    "name": "流水摆件助旺偏财运",
+    "trigger": {"type": "palace_star", "palace": "财帛", "stars": ["天同", "太阴"]},
+    "priority": 2,
+    "cost_level": "中",
+    "valid_scope": "长期",
+    "short_desc": "财帛宫有天同或太阴，水性旺，循环流水摆件可活化财气流动。",
+    "actions": [
+      "在客厅北方或东北角摆放小型室内流水盆（电动循环）",
+      "水流方向朝向室内（聚财），切勿向门外",
+      "定期清洁水盆避免水垢与藻类滋生"
+    ],
+    "evidence_template": "财帛宫含{stars}，水性财气旺，流水摆件助活化财气循环。",
+    "notes": "流水摆件不宜放卧室（影响睡眠）；有老人小孩家庭注意用电安全。",
+    "disclaimer": "传统风水参考，实际财运提升需依靠自身努力与规划。"
+  },
+  {
+    "id": "ob_003",
+    "category": "objects",
+    "name": "铜铃化解官司口舌",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "官禄"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "官禄宫化忌，职场是非与纠纷风险升高，铜铃可化解语言与文书之煞。",
+    "actions": [
+      "在书房或办公区桌面西北角悬挂六铜铃（葫芦形）",
+      "铃口朝下，用红绳系挂（绳长9cm、18cm或27cm倍数）",
+      "每季度取下摇动三次以激活化煞功效"
+    ],
+    "evidence_template": "官禄宫{transform}，公事不利，六铜铃金气助化口舌是非。",
+    "notes": "铜铃产生轻微声响，对声音敏感者可改为无铃款铜葫芦；注意勿碰落。",
+    "disclaimer": "官司/纠纷需寻求法律专业建议，摆件仅为心理辅助层面。"
+  },
+  {
+    "id": "ob_004",
+    "category": "objects",
+    "name": "泰山石敢当镇煞护宅",
+    "trigger": {"type": "pattern", "pattern_name_contains": "空劫夹"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "命盘空劫夹命，气场虚漏，泰山石敢当小石牌可镇守宅基稳定能量。",
+    "actions": [
+      "在大门入口内侧或正对窗的墙角摆放泰山石敢当石牌（高5–10cm）",
+      "以红布包裹放置，初一十五点一支香敬奉",
+      "石牌文字面朝外（朝向门窗）"
+    ],
+    "evidence_template": "命盘检测到{pattern_name}，宅气需固，石牌镇守可稳定宅场能量。",
+    "notes": "石牌宜选天然石材（花岗岩/大理石），塑料制品效果存疑。",
+    "disclaimer": "传统民俗摆件，仅为参考，建筑结构安全需咨询专业工程师。"
+  },
+  {
+    "id": "ob_005",
+    "category": "objects",
+    "name": "文昌塔助提升学业考运",
+    "trigger": {"type": "palace_star", "palace": "官禄", "stars": ["文昌", "文曲", "天机"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "官禄宫有文昌/文曲/天机，学习能力强，文昌塔可凝聚学业智慧气场。",
+    "actions": [
+      "在书房或学习桌左前方（东北或北方）摆放铜制或木制七层文昌塔",
+      "高度以桌面摆放为佳（约20–30cm），塔尖向上",
+      "保持清洁，每年开学前用清水擦拭净化"
+    ],
+    "evidence_template": "官禄宫含{stars}，文思活跃，文昌塔助凝聚学习能量。",
+    "notes": "文昌塔不宜放厕所旁；塔身不宜有缺陷或破损，否则更换。",
+    "disclaimer": "学业提升核心在于认真学习与科学复习方法，摆件为辅助参考。"
+  },
+  {
+    "id": "bd_001",
+    "category": "bed",
+    "name": "床头朝北或朝东（坐北/坐东）",
+    "trigger": {"type": "wuxing_ju", "values": ["水二局", "木三局"]},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "水局或木局命格，床头朝北或朝东有利于与五行能量共振，助改善睡眠与健康。",
+    "actions": [
+      "调整床位使床头靠北墙（或东墙），床尾朝南（或朝西）",
+      "床头与墙之间留5–10cm间距，避免紧贴墙面",
+      "睡眠方向：头朝北，脚朝南"
+    ],
+    "evidence_template": "{wuxing_ju}，五行水/木旺，北/东方位与命格能量共振。",
+    "notes": "如无法调整床位，可在枕头下放一张写有本命卦方位的红纸作替代方案。",
+    "disclaimer": "床位调整请确保安全稳固，房屋结构不允许改动时以安全为先。"
+  },
+  {
+    "id": "bd_002",
+    "category": "bed",
+    "name": "床头朝南或朝西（坐南/坐西）",
+    "trigger": {"type": "wuxing_ju", "values": ["火六局", "金四局"]},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "火局或金局命格，床头朝南或朝西可强化命格五行共振，改善精力与睡眠质量。",
+    "actions": [
+      "调整床位使床头靠南墙（或西墙），注意不正对卫生间门",
+      "床正上方不宜有横梁，若有请以床幔遮挡",
+      "床头柜左右对称，避免高低差过大"
+    ],
+    "evidence_template": "{wuxing_ju}，五行火/金旺，南/西方位与命格五行共振。",
+    "notes": "床不宜正对房门（形成【冲】），如不得已可用屏风或厚窗帘隔挡。",
+    "disclaimer": "床位调整涉及家具移动，需评估安全及承重，建议专业家具师协助。"
+  },
+  {
+    "id": "bd_003",
+    "category": "bed",
+    "name": "避免床位正对卫生间",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "疾厄"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "疾厄宫化忌，健康气场弱，若床位正对卫生间门，湿气与秽气直冲，需立即调整。",
+    "actions": [
+      "调整床位角度，不与卫生间门正对",
+      "若无法移床，可在卫生间门外悬挂珠帘或安装推拉门",
+      "卫生间门保持常关，每日通风换气至少30分钟"
+    ],
+    "evidence_template": "疾厄宫{transform}，睡眠环境直接影响健康恢复，卫生间湿气加重不利。",
+    "notes": "卫生间门宜保持清洁，有条件可放置竹炭包吸湿除味。",
+    "disclaimer": "健康问题请及时就医，睡眠环境改善为辅助性建议。"
+  },
+  {
+    "id": "bd_004",
+    "category": "bed",
+    "name": "书桌背靠实墙增强专注力",
+    "trigger": {"type": "palace_star", "palace": "官禄", "stars": ["天机", "文昌", "文曲"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "官禄宫文曲/文昌/天机旺，学习与事业潜力强，书桌靠实墙可给予坚实背景支撑。",
+    "actions": [
+      "将书桌移至靠实墙位置（背后不空、不对窗），称为【有靠山】",
+      "桌面保持整洁，左侧（青龙位）可放置书本或绿植助文气",
+      "坐向宜面朝文昌方位（东北、北、东方之一）"
+    ],
+    "evidence_template": "官禄宫含{stars}，书桌布局影响专注与文思，背靠实墙为佳。",
+    "notes": "若背后必须靠窗，可在椅背放置高靠背垫作替代【靠山】。",
+    "disclaimer": "工作效率核心在于习惯和方法，布局为辅助参考。"
+  },
+  {
+    "id": "bd_005",
+    "category": "bed",
+    "name": "镜子不正对床位",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "命宫"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "命宫化忌，气场不稳，镜子正对床会倍增不安能量，影响睡眠深度。",
+    "actions": [
+      "检查卧室内所有镜子（包括梳妆台、衣柜镜）是否正对床位",
+      "如有，将衣柜镜改为内嵌折叠式，或用深色布幔夜间遮盖",
+      "避免在床头正上方安装反光装饰材料"
+    ],
+    "evidence_template": "命宫{transform}，镜对床会扰动睡眠中的元神，需回避。",
+    "notes": "穿衣镜宜放置侧墙（非正对床），开门见镜同样需调整。",
+    "disclaimer": "睡眠健康问题请结合作息调整及必要时咨询医生，布局为辅助参考。"
+  },
+  {
+    "id": "tm_001",
+    "category": "timing",
+    "name": "春季（寅月）动土或布局最佳",
+    "trigger": {"type": "wuxing_ju", "values": ["木三局"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "木局命格，春季寅月（2–3月）木气最旺，宜启动新计划、布局风水或开业动工。",
+    "actions": [
+      "新年计划、装修动工、开业等重大事宜宜安排在寅月（约2/4–3/5）",
+      "可在2月4日立春当天进行家居净化仪式（开窗通风、燃艾熏房）",
+      "避免在金气旺盛的秋季（申酉月）做重大决策（木克于金）"
+    ],
+    "evidence_template": "{wuxing_ju}，木气最旺在春，寅月行动力强、万物生发。",
+    "notes": "具体择日需参考当年黄历吉日，避免冲日（冲本命地支之日）。",
+    "disclaimer": "择吉仅为传统参考，重要事项请结合实际情况与专业建议综合决策。"
+  },
+  {
+    "id": "tm_002",
+    "category": "timing",
+    "name": "化忌流年避免重大决策",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "命宫"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "命宫流年化忌，判断力与运势受阻，当年宜守不宜攻，避免重大商业或投资决策。",
+    "actions": [
+      "当年（化忌流年）推迟重大签约、投资、置业等事项至下一个流年",
+      "若必须行事，选在本命地支三合年份或化禄月份进行",
+      "年初可进行开运仪式：到本命庙宇上香并静思年度方向"
+    ],
+    "evidence_template": "命宫在当前流年出现{transform}，运势伏笔较多，宜低调稳健。",
+    "notes": "化忌年虽挑战多，但内省与修炼反而事半功倍，可做长期规划与学习。",
+    "disclaimer": "择时建议为传统命理参考，重要决策请结合专业法律、财务建议。"
+  },
+  {
+    "id": "tm_003",
+    "category": "timing",
+    "name": "化禄大运把握扩张时机",
+    "trigger": {"type": "palace_transform", "transform": "化禄", "palace": "命宫"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "命宫化禄大运，十年运势整体向好，宜积极扩张、建立资源与人脉。",
+    "actions": [
+      "大运起始年（可查大运交替时间）启动新业务、拓展合作、升级居住环境",
+      "在大运起始日前后100天内完成最重要的签约或购置",
+      "此运内每年生日前后一个月特别旺，可安排重要场合"
+    ],
+    "evidence_template": "命宫大运{transform}，十年运势广开，适合积极建设与扩张。",
+    "notes": "化禄运虽顺，也需防因过于顺利而忽视细节，仍需谨慎合同与财务管理。",
+    "disclaimer": "命理大运仅为趋势参考，具体决策需专业财务与法律评估。"
+  },
+  {
+    "id": "tm_004",
+    "category": "timing",
+    "name": "煞星当令年份低调保守",
+    "trigger": {"type": "pattern", "pattern_name_contains": "马头带箭"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "命盘含马头带箭格，流年适逢激活期时意外风险升高，宜低调出行，减少冒险行为。",
+    "actions": [
+      "当年减少长途出行或危险运动（高空、水上、骑行等）",
+      "出行前查阅黄历，避免驿马动土冲日",
+      "随身佩戴黑曜石或护身符，增加出行防护意识"
+    ],
+    "evidence_template": "命盘检测到{pattern_name}，当前流年风险意识需提升。",
+    "notes": "低调保守不代表不作为，可将精力转向内部建设和专业提升。",
+    "disclaimer": "出行安全最重要，请遵守交通安全法规。命理建议仅为辅助参考。"
+  },
+  {
+    "id": "tm_005",
+    "category": "timing",
+    "name": "冬至后启动健康调养计划",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "疾厄"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "疾厄宫化忌，健康宜积极管理，冬至（12月22日前后）为一年阳气最低点，此后调养效果最佳。",
+    "actions": [
+      "冬至当日起开始制定或执行健康调养计划（作息、饮食、运动）",
+      "可做年度体检，提前了解健康状况",
+      "冬至饺子/汤圆仪式后，写下健康目标贴于床头以强化意念"
+    ],
+    "evidence_template": "疾厄宫{transform}，健康管理需主动，冬至节气启动调养事半功倍。",
+    "notes": "健康调养计划需持续执行，仅做计划不实施效果有限。",
+    "disclaimer": "健康问题请及时就医，择日调养建议为辅助参考，不替代医疗干预。"
+  },
+  {
+    "id": "js_027",
+    "category": "jewelry",
+    "name": "粉水晶修复夫妻感情",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "夫妻"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "夫妻宫化忌，感情易生裂痕或摩擦，玫瑰粉水晶有助软化对立、重拾温柔。",
+    "actions": [
+      "佩戴天然玫瑰粉晶手串（左手），选粉色均匀无杂色为佳",
+      "或在卧室床头柜放置一颗粉晶球（直径5–8cm）",
+      "每月农历初一以玫瑰花水浸泡净化饰品15分钟"
+    ],
+    "evidence_template": "夫妻宫出现{transform}，感情能量受阻，粉晶柔和属性有助化解冲突。",
+    "notes": "粉晶能量属阴柔，男性佩戴建议搭配黑曜石以平衡气场；避免阳光长期直射。",
+    "disclaimer": "感情问题需双方积极沟通，饰品仅为心理辅助，不替代情感咨询。"
+  },
+  {
+    "id": "js_028",
+    "category": "jewelry",
+    "name": "绿幽灵/碧玺保健防病",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "疾厄"},
+    "priority": 1,
+    "cost_level": "中",
+    "valid_scope": "大运",
+    "short_desc": "疾厄宫化忌，身体能量场弱，绿幽灵（幽灵水晶）或碧玺有助强化生命力气场。",
+    "actions": [
+      "佩戴绿幽灵水晶手串或碧玺项链（左手佩戴为主）",
+      "选含幽灵包裹体饱满、色泽鲜亮的绿幽灵，碧玺宜选绿色或粉绿色",
+      "每季度以月光（满月夜）净化一夜，恢复能量"
+    ],
+    "evidence_template": "疾厄宫{transform}，健康气场偏弱，绿色系水晶对应心轮与生命力。",
+    "notes": "碧玺价格差异大，量力而为；体质虚寒者可搭配红石榴石增加阳性能量。",
+    "disclaimer": "健康问题请及时就医，宝石为辅助性建议，不替代医疗。"
+  },
+  {
+    "id": "js_029",
+    "category": "plants",
+    "name": "玫瑰/绣球花催旺婚姻桃花",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "夫妻"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "夫妻宫化忌年，感情宜主动维系，在卧室或阳台种植玫瑰/绣球花可催动桃花与和谐气氛。",
+    "actions": [
+      "在卧室窗台或阳台西南角种植粉色玫瑰或蓝紫色绣球花",
+      "保持花朵开放期间室内门窗半开，让花香流通",
+      "枯萎花朵及时修剪，保持植株生气勃勃"
+    ],
+    "evidence_template": "夫妻宫{transform}，感情需滋养，花卉象征感情生机。",
+    "notes": "玫瑰有刺，剪枝时戴手套；绣球花对猫狗有毒，有宠物家庭请放置高处。",
+    "disclaimer": "感情发展核心在双方用心经营，植物摆放为辅助性风水参考。"
+  },
+  {
+    "id": "js_030",
+    "category": "plants",
+    "name": "虎皮兰/芦荟化解家宅煞气",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "田宅"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "田宅宫化忌，居住环境能量不稳，虎皮兰与芦荟吸附负能量，有助净化家宅气场。",
+    "actions": [
+      "在客厅或玄关摆放虎皮兰（高约40–60cm），角落或茶几均可",
+      "浴室或厨房可放置芦荟小盆栽，吸湿除味",
+      "每隔2–3个月换盆新土，保持植株旺盛"
+    ],
+    "evidence_template": "田宅宫{transform}，家居气场需净化，耐阴植物可吸附负能量。",
+    "notes": "虎皮兰耐旱，切勿过度浇水；芦荟汁液对猫有轻微毒性，有猫家庭慎用。",
+    "disclaimer": "家居气场调整为传统参考，居住安全问题请咨询专业机构。"
+  },
+  {
+    "id": "js_031",
+    "category": "objects",
+    "name": "五帝钱门口化煞聚财",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "田宅"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "田宅宫化忌，家宅气场受扰，五帝钱（清朝五位皇帝铜钱）悬挂门口可镇煞聚财。",
+    "actions": [
+      "将五枚五帝钱用红绳串连，悬挂于大门内侧门框上方",
+      "也可铺于门垫之下（铜钱面朝上）作门槛镇宅之用",
+      "每年春节前取下以清酒或盐水擦拭净化后重新悬挂"
+    ],
+    "evidence_template": "田宅宫{transform}，家宅能量需稳固，五帝钱金气镇守门户。",
+    "notes": "五帝钱宜选真品或高仿铜制品，纯装饰塑料制品效果有限；勿与佛像同挂。",
+    "disclaimer": "传统风水摆件仅供参考，家居安全以实际结构安全为首要。"
+  },
+  {
+    "id": "js_032",
+    "category": "objects",
+    "name": "文昌笔架助考运文运",
+    "trigger": {"type": "palace_transform", "transform": "化科", "palace": "官禄"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "官禄宫化科，学术与文书能力突出，配合文昌笔架或毛笔摆件可加强科名运。",
+    "actions": [
+      "在书桌左前方（文昌位，通常为北偏东方）摆放铜制或玉石笔架",
+      "笔架上放置一支未使用的红杆毛笔，笔尖朝上",
+      "考试或重要文书签署前，在笔架旁点燃一柱清香以凝神"
+    ],
+    "evidence_template": "官禄宫{transform}，文书智慧运旺，文昌笔架可共鸣科名能量。",
+    "notes": "笔架宜保持整洁，旁边不宜堆放杂物；红杆毛笔为装饰用途，勿与日常文具混用。",
+    "disclaimer": "考试成功核心在于扎实学习，摆件为心理辅助与传统文化参考。"
+  },
+  {
+    "id": "js_033",
+    "category": "objects",
+    "name": "黑曜石镇宅化命宫化忌",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "命宫"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "命宫化忌年，自身气场偏弱，黑曜石摆件放于玄关可护宅护身、阻隔负能量入侵。",
+    "actions": [
+      "在玄关鞋柜上摆放黑曜石貔貅或黑曜石球（直径8–10cm）",
+      "黑曜石球下垫红布，球体对准大门方向",
+      "每三个月取下以流动清水冲洗净化"
+    ],
+    "evidence_template": "命宫{transform}，自身防护气场弱，黑曜石高密度能量形成保护屏障。",
+    "notes": "黑曜石球重，须放在稳固平面；家有孕妇一说法认为不宜放卧室。",
+    "disclaimer": "摆件为传统风水辅助参考，个人安全需以行为与法律规范为主。"
+  },
+  {
+    "id": "js_034",
+    "category": "bed",
+    "name": "床头方向对应本命天干",
+    "trigger": {"type": "palace_star", "palace": "命宫", "stars": ["紫微", "天府", "太阳", "太阴"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "命宫主星强旺，床头方向与本命天干五行共振可增强睡眠中的能量修复效率。",
+    "actions": [
+      "甲/乙年生（木命）：床头宜朝东或东南",
+      "丙/丁年生（火命）：床头宜朝南",
+      "庚/辛年生（金命）：床头宜朝西或西北",
+      "壬/癸年生（水命）：床头宜朝北"
+    ],
+    "evidence_template": "命宫含{stars}，五行能量强，床头对应天干方位可提升睡眠质量。",
+    "notes": "实际床头方向受房屋格局限制时，可在枕头下放写有吉方符文的红纸作替代。",
+    "disclaimer": "床位调整请确保家具稳固安全，无法移动时不必强求，安全为先。"
+  },
+  {
+    "id": "js_035",
+    "category": "bed",
+    "name": "疾厄化忌—床位远离厕所墙",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "疾厄"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "疾厄宫化忌，健康气场承压，若床位紧贴厕所墙面，湿寒气直透，需立即调整。",
+    "actions": [
+      "检查床头或床侧是否紧贴卫生间/厕所的墙壁",
+      "若有，将床位移离至少50cm，或在该面墙贴防潮隔热板",
+      "在床与厕所墙之间的地面放置竹炭包（每3个月更换）以吸湿"
+    ],
+    "evidence_template": "疾厄宫{transform}，睡眠环境中湿寒因素会加重健康隐患。",
+    "notes": "竹炭包约500g/包，放于床底或床头柜下即可；无须明显摆出。",
+    "disclaimer": "健康问题请及时就医，卧室环境优化为辅助性建议。"
+  },
+  {
+    "id": "js_036",
+    "category": "timing",
+    "name": "禄存/禄马交驰—流年出行旺财时机",
+    "trigger": {"type": "palace_star", "palace": "迁移", "stars": ["禄存", "天马"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "迁移宫有禄存或天马，动中得财格局，把握流年出行旺季可带来意外收获。",
+    "actions": [
+      "流年驿马月（寅申巳亥月，约2、5、8、11月）安排重要出差或跨城商务活动",
+      "出行前一日以本命吉方（东南/北方）开门出行以顺势借力",
+      "旅途中保持社交活跃，商务拜访、社群活动均宜"
+    ],
+    "evidence_template": "迁移宫含{stars}，驿马禄气并临，流年出行旺，动中有财。",
+    "notes": "出行时机宜与实际业务节奏结合，不必为择日而刻意打乱正常计划。",
+    "disclaimer": "传统命理参考，出行安全请遵守法规，不作为商业决策依据。"
+  },
+  {
+    "id": "js_037",
+    "category": "timing",
+    "name": "三方逢科权禄—流年事业起步吉期",
+    "trigger": {"type": "pattern", "pattern_name_contains": "三奇"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "官禄宫三方逢科权禄，事业运强盛，流年内把握春秋两季启动重要计划事半功倍。",
+    "actions": [
+      "流年事业关键动作（注册、签约、开业）宜安排在寅月（2–3月）或申月（8–9月）",
+      "重要面试或晋升申请宜选当年化禄月份（可查流月化禄进一步精确）",
+      "在启动日前三天保持充足睡眠与正向情绪，以积蓄气场"
+    ],
+    "evidence_template": "官禄宫呈现{stars}，三奇会命，事业势头强，把握吉期可倍增效果。",
+    "notes": "流年吉期仍需配合个人实际准备度，时机再好仍需实力支撑。",
+    "disclaimer": "择时建议为传统命理参考，商业决策请结合专业财务与法律评估。"
+  },
+  {
+    "id": "js_038",
+    "category": "timing",
+    "name": "化忌入迁移—流年慎选长途出行时段",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "迁移"},
+    "priority": 1,
+    "cost_level": "低",
+    "valid_scope": "流年",
+    "short_desc": "迁移宫化忌，出行运受阻，流年内长途出行、移民、跨城变动宜谨慎选时。",
+    "actions": [
+      "避免在流年化忌月（可查流月飞星）安排长途出行或搬家",
+      "不得不出行时，随身佩戴黑曜石护身，出发前查阅当日吉凶",
+      "境外旅行务必购买旅行保险，证件备份存于云端"
+    ],
+    "evidence_template": "迁移宫{transform}，流年出行运滞，宜减少长途变动，动则须防护到位。",
+    "notes": "短途（同城）出行影响较小，主要针对跨省/跨国长途或永久性迁居。",
+    "disclaimer": "出行安全请遵守法规，命理仅为辅助参考，不替代专业旅行安全建议。"
+  },
+  {
+    "id": "js_039",
+    "category": "jewelry",
+    "name": "月长石安抚太阴感性能量",
+    "trigger": {"type": "palace_star", "palace": "命宫", "stars": ["太阴"]},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "大运",
+    "short_desc": "命宫太阴守命，情感细腻敏感，月长石与太阴水月属性契合，可稳定情绪波动。",
+    "actions": [
+      "佩戴天然月长石（月光石）戒指（右手中指）或手串（左手）",
+      "选蓝色光晕（蓝光月光石）为佳，透明度高者能量更纯净",
+      "满月夜将月光石置于窗台月光下净化充能一夜"
+    ],
+    "evidence_template": "命宫含{stars}，太阴主水主情，月长石与其月亮属性高度共振。",
+    "notes": "月光石硬度较低（莫氏6–6.5），避免碰撞；不宜与钻石或刚玉类同袋存放。",
+    "disclaimer": "饰品选购量力而为，情绪管理需结合心理健康方法，不以宝石替代。"
+  },
+  {
+    "id": "js_040",
+    "category": "objects",
+    "name": "铜葫芦化病气助健康",
+    "trigger": {"type": "palace_transform", "transform": "化忌", "palace": "疾厄"},
+    "priority": 2,
+    "cost_level": "低",
+    "valid_scope": "长期",
+    "short_desc": "疾厄宫化忌，健康气场堵滞，铜葫芦传统上有吸纳病气、保健护体之效。",
+    "actions": [
+      "在卧室床头柜或病患者常待位置悬挂小铜葫芦（高8–15cm）",
+      "葫芦口朝下，以红绳悬挂于床头侧上方，距头部约50cm",
+      "每年春节前取下用清酒擦拭净化，重新悬挂"
+    ],
+    "evidence_template": "疾厄宫{transform}，铜葫芦金气收煞、吸纳浊气，为传统健康风水常用器。",
+    "notes": "铜葫芦宜选传统铸铜工艺，表面有铜绿属正常氧化；不宜用化学药水擦拭。",
+    "disclaimer": "健康问题请及时就医，风水摆件为辅助文化参考，不替代医疗建议。"
+  }
+]
