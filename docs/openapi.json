@@ -12055,6 +12055,18 @@
             "type": "boolean",
             "title": "Include Ziwei",
             "default": true
+          },
+          "include_name_pointer": {
+            "type": "boolean",
+            "title": "Include Name Pointer",
+            "description": "T077：附带姓名学扩展指针（不执行 analyze，仅路径+stub）",
+            "default": false
+          },
+          "include_zeri_pointer": {
+            "type": "boolean",
+            "title": "Include Zeri Pointer",
+            "description": "T077：附带择日扩展指针（依赖紫微命宫/五行局 stub）",
+            "default": false
           }
         },
         "type": "object",
@@ -12092,6 +12104,28 @@
             },
             "type": "array",
             "title": "Missing Fields"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ArchiveExtensionPointer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "T077：include_name_pointer 时返回"
+          },
+          "zeri": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ArchiveExtensionPointer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "T077：include_zeri_pointer 时返回"
           }
         },
         "type": "object",
@@ -12100,6 +12134,64 @@
           "bazi"
         ],
         "title": "ArchiveBundleResponse"
+      },
+      "ArchiveExtensionPointer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "name",
+              "zeri"
+            ],
+            "title": "Kind"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "title": "Method"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "path",
+          "method",
+          "ready",
+          "label"
+        ],
+        "title": "ArchiveExtensionPointer",
+        "description": "可选扩展入口：FE 可跳转，不把长结果并入 bundle。"
       },
       "AspectItem": {
         "properties": {

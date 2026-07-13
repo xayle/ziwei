@@ -90,6 +90,58 @@ def test_archive_bundle_returns_bazi_and_ziwei(client_with_auth, test_case):
     assert data["bazi"]
     assert data["ziwei"]
     assert not any(m.startswith("ziwei_bundle:") for m in data["missing_fields"])
+    assert data.get("name") is None
+    assert data.get("zeri") is None
+
+
+def test_archive_bundle_name_zeri_pointers(client_with_auth, db_session: Session, test_user: User):
+    """T077：可选 name/zeri 指针，不执行重计算。"""
+    case = Case(
+        id=str(uuid4()),
+        name="欧阳修远",
+        gender="male",
+        birth_dt_local="1990-01-15T08:30:00",
+        tz="Asia/Shanghai",
+        lon=116.41,
+        owner_id=test_user.id,
+    )
+    db_session.add(case)
+    db_session.commit()
+
+    resp = client_with_auth.post(
+        "/api/v1/fusheng/archive-bundle",
+        json={
+            "case_id": case.id,
+            "include_ziwei": True,
+            "include_name_pointer": True,
+            "include_zeri_pointer": True,
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    name = data["name"]
+    assert name["kind"] == "name"
+    assert name["path"] == "/api/v1/name/analyze"
+    assert name["method"] == "POST"
+    assert name["ready"] is True
+    assert name["params"]["surname"] == "欧阳"
+    assert name["params"]["given_name"] == "修远"
+
+    zeri = data["zeri"]
+    assert zeri["kind"] == "zeri"
+    assert zeri["path"] == "/api/v1/zeri/recommend"
+    assert zeri["method"] == "GET"
+    assert zeri["ready"] is True
+    assert zeri["params"]["life_palace_branch"] in "子丑寅卯辰巳午未申酉戌亥"
+    assert zeri["params"]["wuxing_ju_name"]
+
+
+def test_split_chinese_name_helpers():
+    from routers.fusheng_archive import _split_chinese_name
+
+    assert _split_chinese_name("张三") == ("张", "三")
+    assert _split_chinese_name("司马懿") == ("司马", "懿")
+    assert _split_chinese_name("Archive Case") == (None, None)
 
 
 def test_archive_bundle_female_case(db_session: Session, test_user: User, client_with_auth):
