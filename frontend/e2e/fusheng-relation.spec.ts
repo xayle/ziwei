@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { fillMinimalProfile, gotoApp } from './helpers/profile'
+import { setupCitiesApiMock } from './helpers/mockChartApi'
 
 const MOCK_RELATION_RESPONSE = {
   schema_version: 'relation-compat@1.0',
@@ -55,6 +56,7 @@ const MOCK_RELATION_RESPONSE = {
 
 test.describe('关系合盘 fusheng-relation', () => {
   test.beforeEach(async ({ page }) => {
+    await setupCitiesApiMock(page)
     await page.route('**/api/v1/relation/full', async (route) => {
       await route.fulfill({
         status: 200,

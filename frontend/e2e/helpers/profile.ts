@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { setupCitiesApiMock } from './mockChartApi'
 
 /** 在 SPA base（/static/app/）内导航 */
 export async function gotoApp(page: Page, path = '') {
@@ -8,6 +9,8 @@ export async function gotoApp(page: Page, path = '') {
 
 /** 填写最小可排盘档案（北京 1990-01-15 08:30 男） */
 export async function fillMinimalProfile(page: Page) {
+  // CI 无后端；必须 mock cities，不可依赖本地 uvicorn 代理
+  await setupCitiesApiMock(page)
   await gotoApp(page, 'profile')
 
   await page.getByTestId('profile-birth-dt').fill('1990-01-15T08:30')

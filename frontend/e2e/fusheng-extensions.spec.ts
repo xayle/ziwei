@@ -20,6 +20,7 @@ test.describe('扩展工具路由', () => {
   })
 
   test('工具箱可进入合婚/相似盘/择日', async ({ page }) => {
+    await setupChartApiMocks(page)
     await fillMinimalProfile(page)
     await gotoApp(page, 'extensions')
     await page.getByRole('button', { name: '进入' }).first().click()
@@ -47,6 +48,7 @@ test.describe('扩展工具路由', () => {
   })
 
   test('合婚页可提交表单（mock API）', async ({ page }) => {
+    await setupChartApiMocks(page)
     await fillMinimalProfile(page)
     await page.route('**/api/v1/bazi/compatibility', async (route) => {
       await route.fulfill({
@@ -69,8 +71,8 @@ test.describe('扩展工具路由', () => {
   })
 
   test('择日页在 mock 紫微后可出结果', async ({ page }) => {
-    await fillMinimalProfile(page)
     await setupChartApiMocks(page)
+    await fillMinimalProfile(page)
     await page.route('**/api/v1/zeri/purposes', async (route) => {
       await route.fulfill({
         status: 200,
