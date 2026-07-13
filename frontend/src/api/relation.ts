@@ -1,92 +1,26 @@
 import apiClient from './client'
+import type {
+  ActionItemModel,
+  DimensionScoreModel,
+  PalaceCrossModel,
+  ProfileSummaryResponse,
+  RelationFullRequest,
+  RelationFullResponse,
+  RelationPersonInput,
+  SummaryCardModel,
+  TimelineNodeModel,
+} from './openapiTypes'
 
-export type RelationType =
-  | 'couple'
-  | 'friend'
-  | 'parent_child'
-  | 'colleague'
-  | 'business_partner'
-  | 'supervisor_subordinate'
+// ── 请求 / 响应（OpenAPI 真源 · P3-3）──────────────────────
+export type RelationType = RelationFullRequest['relation_type']
+export type { RelationFullRequest, RelationFullResponse, RelationPersonInput, ProfileSummaryResponse }
 
-export interface RelationPersonInput {
-  case_id?: string
-  birth_datetime: string
-  tz?: string
-  longitude?: number
-  latitude?: number
-  gender?: string
-  label?: string
-}
-
-export interface RelationFullRequest {
-  relation_type: RelationType
-  supervisor_id?: 'a' | 'b'
-  person_a: RelationPersonInput
-  person_b: RelationPersonInput
-  options?: {
-    include_bazi?: boolean
-    include_ziwei?: boolean
-    timeline_years?: number[]
-    liunian_year?: number
-  }
-}
-
-export interface SummaryCard {
-  id: string
-  tone: 'support' | 'conflict' | 'neutral' | 'action'
-  text: string
-}
-
-export interface DimensionScore {
-  id: string
-  label: string
-  score: number
-  max_score: number
-  weight: number
-  description: string
-  layer: string
-  engine?: string
-}
-
-export interface PalaceCross {
-  pair_id: string
-  a_palace: string
-  b_palace: string
-  relation_tag: string
-  summary: string
-}
-
-export interface TimelineNode {
-  year: number
-  label: string
-  summary: string
-  risk_level?: '低' | '中' | '高'
-}
-
-export interface ActionItem {
-  id: string
-  text: string
-  priority?: string
-}
-
-export interface RelationFullResponse {
-  schema_version: string
-  relation_type: RelationType
-  relation_type_label?: string
-  person_a: { label: string; birth_solar: string; pillars_primary: Record<string, { stem: string; branch: string }> }
-  person_b: { label: string; birth_solar: string; pillars_primary: Record<string, { stem: string; branch: string }> }
-  combined_score: number
-  grade?: string
-  summary: string
-  summary_cards: SummaryCard[]
-  dimensions: DimensionScore[]
-  palace_cross: PalaceCross[]
-  timeline: TimelineNode[]
-  action_items: ActionItem[]
-  tensions: { code: string; message: string }[]
-  missing_fields: string[]
-  disclaimer_block: { text: string; version: string }
-}
+// ── 嵌套模型（FE 别名 · 向后兼容）──────────────────────────
+export type SummaryCard = SummaryCardModel
+export type DimensionScore = DimensionScoreModel
+export type PalaceCross = PalaceCrossModel
+export type TimelineNode = TimelineNodeModel
+export type ActionItem = ActionItemModel
 
 export const RELATION_TYPE_OPTIONS: { value: RelationType; label: string }[] = [
   { value: 'couple', label: '情侣合盘' },
@@ -100,19 +34,6 @@ export const RELATION_TYPE_OPTIONS: { value: RelationType; label: string }[] = [
 export async function relationFull(body: RelationFullRequest): Promise<RelationFullResponse> {
   const { data } = await apiClient.post<RelationFullResponse>('/api/v1/relation/full', body)
   return data
-}
-
-export interface ProfileSummaryResponse {
-  schema_version: string
-  case_id?: string
-  pillars_primary: Record<string, string>
-  geju_one_liner?: string
-  yongshen_favor: string[]
-  strength_tier?: string
-  ziwei_ming_one_liner?: string
-  current_dayun?: string
-  liunian_2026_tag?: string
-  disclaimer_block: { text: string; version: string }
 }
 
 export async function profileSummary(caseId: string): Promise<ProfileSummaryResponse> {

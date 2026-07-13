@@ -1,29 +1,23 @@
 import apiClient from '@/api/client'
+import type {
+  ExplainBatchResponse as SchemaExplainBatchResponse,
+  ExplainBlockModel,
+  ExplainSectionResultModel,
+} from '@/api/openapiTypes'
 import {
   REPORT_BAZI_EXPLAIN_SECTIONS,
   REPORT_ZIWEI_EXPLAIN_SECTIONS,
 } from '@/constants/feBeContract'
-import type { ContentLayer } from '@/types/life-volume'
 
-export interface ExplainBlock {
-  text: string
-  layer: ContentLayer
-  classic_id?: string
-  evidence_ids?: string[]
-}
+// ── 嵌套模型（OpenAPI 真源 · P3-3）──────────────────────────
+export type ExplainBlock = ExplainBlockModel
+export type ExplainSectionResult = ExplainSectionResultModel
 
-export interface ExplainSectionResult {
-  section_id: string
-  blocks: ExplainBlock[]
-  verified?: boolean
-}
-
-export interface ExplainBatchResponse {
-  chart_hash?: string
-  disclaimer_block?: { text: string; version: string; jurisdiction?: string }
-  content_versions?: Record<string, string>
-  wenmo_advisory?: string
-  sections: ExplainSectionResult[]
+/** 成功响应对齐 schema；错误 stub 可仅含 sections */
+export type ExplainBatchResponse = Partial<
+  Pick<SchemaExplainBatchResponse, 'chart_hash' | 'disclaimer_block' | 'content_versions' | 'wenmo_advisory'>
+> & {
+  sections?: ExplainSectionResultModel[]
 }
 
 export function mergeExplainResponses(
@@ -48,7 +42,7 @@ export async function fetchBaziExplainBatchWithMeta(
   profilePayload: Record<string, unknown>,
 ): Promise<ExplainBatchResult> {
   try {
-    const { data } = await apiClient.post<ExplainBatchResponse>('/api/v1/bazi/explain/batch', {
+    const { data } = await apiClient.post<SchemaExplainBatchResponse>('/api/v1/bazi/explain/batch', {
       sections,
       ...profilePayload,
     })
@@ -76,7 +70,7 @@ export async function fetchZiweiExplainBatchWithMeta(
   profilePayload: Record<string, unknown>,
 ): Promise<ExplainBatchResult> {
   try {
-    const { data } = await apiClient.post<ExplainBatchResponse>('/api/v1/ziwei/explain/batch', {
+    const { data } = await apiClient.post<SchemaExplainBatchResponse>('/api/v1/ziwei/explain/batch', {
       sections,
       ...profilePayload,
     })

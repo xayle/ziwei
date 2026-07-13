@@ -1547,6 +1547,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/relation/appendix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 合盘附录卷（T113 · 不进六卷 IA）
+         * @description T113：返回 relation-appendix@1.0，供报告页可选挂载（默认折叠）。
+         */
+        get: operations["get_relation_appendix_api_v1_relation_appendix_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/relation/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 合盘快照列表（kind=relation_v1 · BE-R16）
+         * @description 列出某档案下的关系合盘快照（含双方 case_id 模式 /full 写入）。
+         */
+        get: operations["get_relation_snapshots_api_v1_relation_snapshots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/relation/snapshots/{snapshot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 合盘快照详情（恢复 relation-compat@1.0）
+         * @description BE-R16：从 snapshot output_json 恢复完整合盘响应。
+         */
+        get: operations["get_relation_snapshot_api_v1_relation_snapshots__snapshot_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/relation/explain/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 关系合盘讲解 batch（relation_reading · cite 层）
+         * @description BE-R15：一次请求 1–4 个 section；当前支持 `relation_reading`。
+         */
+        post: operations["post_relation_explain_batch_api_v1_relation_explain_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/relation/export/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 关系合盘 PDF 导出（relation-compat@1.0 · 与 /full 同口径）
+         * @description R086 P0：正式 PDF 管线 — 与 UI 相同 API 响应渲染 HTML → PDF。
+         */
+        post: operations["export_relation_pdf_api_v1_relation_export_pdf_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/relation/export/png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 关系合盘分享卡片 PNG（relation-compat@1.0 · 与 /full 同口径）
+         * @description R086 P2：合盘分享卡 — 与 PDF 相同计算口径，输出 400×280 PNG。
+         */
+        post: operations["export_relation_png_api_v1_relation_export_png_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profile/{case_id}/summary": {
         parameters: {
             query?: never;
@@ -1735,11 +1855,28 @@ export interface paths {
          * 多人合盘（2-4人）
          * @description 输入 2-4 人出生信息，返回所有两两组合的合盘分析，
          *     以及 N×N 缘分矩阵和整体团队和谐指数。
-         *
-         *     矩阵对角线固定为 100（自身），非对角线为两人合盘总分。
-         *     团队和谐指数为所有两两组合均值。
          */
         post: operations["multi_compat_api_v1_ziwei_multi_compat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ziwei/multi_compat/export/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 多人合盘矩阵 PDF 导出
+         * @description R086 P1：multi_compat 矩阵走 render_html_to_pdf 正式管线。
+         */
+        post: operations["multi_compat_export_pdf_api_v1_ziwei_multi_compat_export_pdf_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2507,6 +2644,7 @@ export interface paths {
          * @description W16 权威读模型草案：聚合八字/紫微/explain，返回与 `life-volume.schema.json` 对齐的响应。
          *
          *     打磨期 FE 仍可用 `buildLifeVolumes` Adapter；本端点供契约联调与 U5 起步。
+         *     传 `partner_case_id` 时附加 `relation_appendix`（不进六卷 IA）。
          */
         get: operations["get_life_volumes_api_v1_life_volumes__case_id__get"];
         put?: never;
@@ -6653,6 +6791,8 @@ export interface components {
             /** Volumes */
             volumes: components["schemas"]["LifeVolumeModel"][];
             colophon: components["schemas"]["ColophonModel"];
+            /** @description T113: 可选合盘附录（query partner_case_id 时挂载，不进六卷 IA） */
+            relation_appendix?: components["schemas"]["RelationAppendixResponse"] | null;
         };
         /**
          * LifestyleModel
@@ -7688,19 +7828,60 @@ export interface components {
              * @default
              */
             level: string;
+            /** Combined Score */
+            combined_score?: number | null;
+            /** Bazi Score */
+            bazi_score?: number | null;
+            /** Ziwei Score */
+            ziwei_score?: number | null;
+            /** Grade */
+            grade?: string | null;
+            /** Dimension Highlights */
+            dimension_highlights?: string[];
         };
         /** MultiCompatRequest */
         MultiCompatRequest: {
             /** Person List */
             person_list: components["schemas"]["ZiweiRequest"][];
+            /**
+             * Relation Type
+             * @description BE-R14: relation/full 分维对齐时使用的关系类型
+             * @default friend
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            /**
+             * Labels
+             * @description 成员显示名，长度与 person_list 一致时可覆盖默认
+             */
+            labels?: string[] | null;
+            /**
+             * Include Relation Dims
+             * @description true 时 pairs 附加 combined_score / bazi_score / ziwei_score（multi-compat@1.1）
+             * @default false
+             */
+            include_relation_dims: boolean;
+            /**
+             * Supervisor Id
+             * @description relation_type=supervisor_subordinate 时必填
+             */
+            supervisor_id?: ("a" | "b") | null;
         };
         /** MultiCompatResponse */
         MultiCompatResponse: {
+            /**
+             * Schema Version
+             * @default multi-compat@1.0
+             * @enum {string}
+             */
+            schema_version: "multi-compat@1.0" | "multi-compat@1.1";
             /**
              * Person Count
              * @default 0
              */
             person_count: number;
+            /** Relation Type */
+            relation_type?: ("couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate") | null;
             /**
              * Pairs
              * @default []
@@ -8723,6 +8904,45 @@ export interface components {
             /** Reject Reason */
             reject_reason?: string | null;
         };
+        /**
+         * RelationAppendixResponse
+         * @description T113: relation appendix outside six-volume IA (BE-only extension).
+         */
+        RelationAppendixResponse: {
+            /**
+             * Schema Version
+             * @default relation-appendix@1.0
+             * @constant
+             */
+            schema_version: "relation-appendix@1.0";
+            /** Case Id */
+            case_id: string;
+            /** Partner Case Id */
+            partner_case_id: string;
+            /**
+             * Relation Type
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            /** Relation Type Label */
+            relation_type_label?: string | null;
+            /** Combined Score */
+            combined_score: number;
+            /** Grade */
+            grade?: ("上上" | "上" | "中" | "下" | "下下" | "N/A") | null;
+            /** Person A Label */
+            person_a_label?: string | null;
+            /** Person B Label */
+            person_b_label?: string | null;
+            /**
+             * Collapsed Default
+             * @default true
+             */
+            collapsed_default: boolean;
+            /** Sections */
+            sections?: components["schemas"]["VolumeSectionModel"][];
+            disclaimer_block: components["schemas"]["DisclaimerBlockModel"];
+        };
         /** RelationComputeRequest */
         RelationComputeRequest: {
             /** Case A Id */
@@ -8751,6 +8971,22 @@ export interface components {
             relation_full?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** RelationExplainBatchRequest */
+        RelationExplainBatchRequest: {
+            /**
+             * Relation Type
+             * @default couple
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            /** Supervisor Id */
+            supervisor_id?: ("a" | "b") | null;
+            person_a: components["schemas"]["RelationPersonInput"];
+            person_b: components["schemas"]["RelationPersonInput"];
+            options?: components["schemas"]["RelationFullOptions"];
+            /** Sections */
+            sections: string[];
         };
         /** RelationFullOptions */
         RelationFullOptions: {
@@ -8942,6 +9178,54 @@ export interface components {
             meta?: {
                 [key: string]: unknown;
             };
+        };
+        /**
+         * RelationSnapshotDetail
+         * @description BE-R16: full relation-compat payload restored from snapshot.
+         */
+        RelationSnapshotDetail: {
+            /** Snapshot Id */
+            snapshot_id: string;
+            /** Case Id */
+            case_id: string;
+            /** Partner Case Id */
+            partner_case_id: string;
+            /**
+             * Relation Type
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            output: components["schemas"]["RelationFullResponse"];
+        };
+        /**
+         * RelationSnapshotSummary
+         * @description BE-R16: relation_v1 snapshot list item.
+         */
+        RelationSnapshotSummary: {
+            /** Id */
+            id: string;
+            /** Case Id */
+            case_id: string;
+            /** Partner Case Id */
+            partner_case_id: string;
+            /**
+             * Relation Type
+             * @enum {string}
+             */
+            relation_type: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+            /** Combined Score */
+            combined_score?: number | null;
+            /** Grade */
+            grade?: ("上上" | "上" | "中" | "下" | "下下" | "N/A") | null;
+            /** Person A Label */
+            person_a_label?: string | null;
+            /** Person B Label */
+            person_b_label?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * RelationsSummaryModel
@@ -15343,6 +15627,234 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    get_relation_appendix_api_v1_relation_appendix_get: {
+        parameters: {
+            query: {
+                /** @description 主档案 case UUID */
+                case_id: string;
+                /** @description 对方档案 case UUID */
+                partner_case_id: string;
+                relation_type?: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+                /** @description supervisor_subordinate 时 a 或 b */
+                supervisor_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationAppendixResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_relation_snapshots_api_v1_relation_snapshots_get: {
+        parameters: {
+            query: {
+                /** @description 档案 case UUID */
+                case_id: string;
+                /** @description 可选：筛选特定对方 */
+                partner_case_id?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationSnapshotSummary"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_relation_snapshot_api_v1_relation_snapshots__snapshot_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RelationSnapshotDetail"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    post_relation_explain_batch_api_v1_relation_explain_batch_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationExplainBatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_relation_pdf_api_v1_relation_export_pdf_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationFullRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    export_relation_png_api_v1_relation_export_png_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelationFullRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     get_profile_summary_api_v1_profile__case_id__summary_get: {
         parameters: {
             query?: never;
@@ -15666,6 +16178,42 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MultiCompatResponse"];
                 };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    multi_compat_export_pdf_api_v1_ziwei_multi_compat_export_pdf_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MultiCompatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             400: components["responses"]["ValidationError"];
             401: components["responses"]["UnauthorizedError"];
@@ -17456,7 +18004,13 @@ export interface operations {
     };
     get_life_volumes_api_v1_life_volumes__case_id__get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description T113：挂载合盘附录卷 */
+                partner_case_id?: string | null;
+                relation_type?: "couple" | "friend" | "parent_child" | "colleague" | "business_partner" | "supervisor_subordinate";
+                /** @description supervisor_subordinate 时 a|b */
+                supervisor_id?: string | null;
+            };
             header?: never;
             path: {
                 case_id: string;

@@ -538,8 +538,6 @@ export const useProfileStore = defineStore('profile', () => {
     if (data.lunarBirthDt !== undefined) lunarBirthDt.value = data.lunarBirthDt
     if (data.cityTier !== undefined) cityTier.value = data.cityTier
     if (data.industry !== undefined) industry.value = data.industry
-    if (data.cityTier !== undefined) cityTier.value = data.cityTier
-    if (data.industry !== undefined) industry.value = data.industry
     saved.value = true
     save()
     void import('./fushengReport').then(({ useFushengReportStore }) => {

@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useFushengReportStore } from '@/stores/fushengReport'
 
-const mockBaziPayload = { personality: { day_stem_trait: '正直稳重' } }
+const currentYear = new Date().getFullYear()
+const mockBaziPayload = {
+  personality: { day_stem_trait: '正直稳重' },
+  liunian: {
+    items: [{ year: currentYear, stem: '丙', branch: '午' }],
+  },
+}
 const mockZiweiPayload = { wuxing_ju_name: '水二局' }
 
 const fetchArchiveBundle = vi.fn()

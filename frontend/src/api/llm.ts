@@ -1,45 +1,20 @@
 import apiClient from './client'
+import type {
+  BaziInterpretRequest,
+  InterpretModule,
+  LlmConfigResponse,
+  LlmDraftResponse,
+  LlmInterpretRequest,
+  ModuleInterpretRequest as SchemaModuleInterpretRequest,
+  ModuleInterpretResponse,
+} from './openapiTypes'
 
-export interface LlmConfigResponse {
-  provider: string
-  model: string
-  available: boolean
-  note?: string
-}
-
-export interface LlmInterpretRequest {
-  chart_hash: string
-  life_palace_gz?: string
-  wuxing_ju_name?: string
-  pattern_summary?: string
-  birth_info_summary?: string
-  evidence_snippets?: string[]
-  geju_name?: string
-  yongshen_favor?: string[]
-}
-
-export interface LlmDraftResponse {
-  id: number
-  chart_hash: string
-  provider: string
-  model: string
-  prompt_version: string
-  draft_text: string
-  status: string
-  reviewer: string
-  reviewer_notes: string
-  input_tokens: number
-  output_tokens: number
-  cost_usd_estimate: number
-  created_at: string
-  reviewed_at?: string | null
-  deleted_at?: string | null
-}
-
-export interface BaziInterpretRequest {
-  case_id: string
-  module?: string | null
-  chart_hash?: string | null
+export type {
+  BaziInterpretRequest,
+  LlmConfigResponse,
+  LlmDraftResponse,
+  LlmInterpretRequest,
+  ModuleInterpretResponse,
 }
 
 export const LLM_MODULES = [
@@ -49,21 +24,12 @@ export const LLM_MODULES = [
   { id: 'marriage_detail', label: '婚恋详解' },
   { id: 'wealth_detail', label: '财富详解' },
   { id: 'fengshui_suggestion', label: '风水建议' },
-] as const
+] as const satisfies ReadonlyArray<{ id: InterpretModule; label: string }>
 
 export type LlmModuleId = typeof LLM_MODULES[number]['id']
 
-export interface ModuleInterpretRequest {
-  case_id: string
+export type ModuleInterpretRequest = SchemaModuleInterpretRequest & {
   module: LlmModuleId
-  context?: Record<string, unknown> | null
-}
-
-export interface ModuleInterpretResponse {
-  case_id: string
-  module: string
-  interpretation: string
-  generated_at: string
 }
 
 export async function getLlmConfig(): Promise<LlmConfigResponse> {

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>八字 · 卷封 + 盘面样张 — 浮生 v1.2</title>
+  <link rel="stylesheet" href="../../../frontend/src/assets/variables.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--brand-paper);
+      color: var(--brand-ink);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .page { max-width: 1120px; margin: 0 auto; padding: 24px 28px 80px; }
+    .demo-label {
+      margin: 0 0 20px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--text-3);
+      font-family: var(--font-display);
+    }
+    /* B1 cover */
+    .bazi-cover {
+      background: var(--surface);
+      border: 1px solid var(--border-md);
+      padding: clamp(20px, 3vw, 32px) clamp(20px, 3vw, 40px) 16px;
+      margin-bottom: 16px;
+    }
+    .bazi-cover__eyebrow {
+      margin: 0 0 8px;
+      padding-left: 10px;
+      border-left: 3px solid var(--brand-gold);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--brand-gold-dark);
+      font-family: var(--font-display);
+    }
+    .bazi-cover__title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(22px, 3vw, 28px);
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+    .bazi-cover__meta {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: var(--brand-mist);
+      letter-spacing: 0.04em;
+    }
+    .bazi-cover__row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .bazi-cover__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn-ghost {
+      padding: 8px 14px;
+      border: 1px solid var(--border-md);
+      background: transparent;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--brand-ink);
+      cursor: pointer;
+    }
+    .btn-primary {
+      padding: 8px 18px;
+      border: 1px solid var(--brand-gold-dark);
+      background: var(--brand-gold-dark);
+      color: var(--surface);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+    /* B2 caliber */
+    .fs-caliber-banner {
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 12px;
+      color: var(--brand-mist);
+    }
+    /* B4 depth */
+    .depth-nav {
+      display: flex;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-md);
+    }
+    .depth-nav__btn {
+      min-height: 40px;
+      padding: 0 16px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      background: transparent;
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: var(--brand-mist);
+      cursor: pointer;
+    }
+    .depth-nav__btn.is-active {
+      color: var(--brand-ink);
+      border-bottom-color: var(--brand-gold);
+      font-weight: 600;
+    }
+    /* B5′ KPI — structure only */
+    .fs-kpi-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+    }
+    .fs-kpi-strip__label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
+    }
+    .fs-kpi-strip__value {
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--brand-gold-dark);
+      letter-spacing: 0.04em;
+    }
+    /* B5 spread */
+    .bazi-spread {
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+    .bazi-hero {
+      display: grid;
+      grid-template-columns: 1.45fr 0.75fr;
+      gap: 14px;
+    }
+    .bazi-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .bazi-table th {
+      padding: 8px 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--border-md);
+    }
+    .bazi-table td {
+      padding: 10px 6px;
+      text-align: center;
+      border-bottom: 1px dashed var(--border);
+    }
+    .bazi-table td.is-day {
+      background: rgba(240, 224, 199, 0.35);
+    }
+    .stem {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .branch {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--brand-mist);
+    }
+    .aside-card {
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .aside-card__title {
+      margin: 0 0 8px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--text-3);
+      font-family: var(--font-display);
+    }
+    .aside-card p { margin: 0; color: var(--brand-ink); }
+    .aside-card--relations li {
+      margin: 4px 0;
+      color: var(--brand-mist);
+    }
+    .note {
+      margin-top: 24px;
+      padding: 12px 14px;
+      border-left: 3px solid var(--brand-gold);
+      background: rgba(184, 137, 77, 0.06);
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    @media (max-width: 640px) {
+      .bazi-hero { grid-template-columns: 1fr; }
+      .bazi-table-wrap { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <p class="demo-label">样张 08 · 结构档 · 卷封 + KPI + 单块 spread（P2 目标）</p>
+
+    <header class="bazi-cover">
+      <p class="bazi-cover__eyebrow">春 · 一命之枢</p>
+      <div class="bazi-cover__row">
+        <div>
+          <h1 class="bazi-cover__title">程安东 · 1990/06/17</h1>
+          <p class="bazi-cover__meta">癸丑 · 偏财格 · 用神木土 · 中和</p>
+        </div>
+        <div class="bazi-cover__actions">
+          <button type="button" class="btn-ghost">查看紫微</button>
+          <button type="button" class="btn-primary">进入报告</button>
+        </div>
+      </div>
+    </header>
+
+    <p class="fs-caliber-banner">真太阳时：未启用 · 子时日界：寿星天文历 · 精度：时辰</p>
+
+    <nav class="depth-nav" aria-label="阅读深度">
+      <button type="button" class="depth-nav__btn">速览</button>
+      <button type="button" class="depth-nav__btn is-active">结构</button>
+      <button type="button" class="depth-nav__btn">深读</button>
+    </nav>
+
+    <div class="fs-kpi-strip" role="region" aria-label="摘要">
+      <div><span class="fs-kpi-strip__label">日主</span><strong class="fs-kpi-strip__value">癸水</strong></div>
+      <div><span class="fs-kpi-strip__label">格局</span><strong class="fs-kpi-strip__value">偏财格</strong></div>
+      <div><span class="fs-kpi-strip__label">用神</span><strong class="fs-kpi-strip__value">木土</strong></div>
+      <div><span class="fs-kpi-strip__label">强弱</span><strong class="fs-kpi-strip__value">中和</strong></div>
+      <div><span class="fs-kpi-strip__label">空亡</span><strong class="fs-kpi-strip__value">子丑</strong></div>
+    </div>
+
+    <section class="bazi-spread" aria-label="六柱盘面">
+      <div class="bazi-hero">
+        <div class="bazi-table-wrap">
+          <table class="bazi-table">
+            <thead>
+              <tr>
+                <th>年柱</th>
+                <th>月柱</th>
+                <th>日柱</th>
+                <th>时柱</th>
+                <th>大运</th>
+                <th>流年</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="stem">庚</span><span class="branch">午</span></td>
+                <td><span class="stem">壬</span><span class="branch">午</span></td>
+                <td class="is-day"><span class="stem">癸</span><span class="branch">丑</span></td>
+                <td><span class="stem">戊</span><span class="branch">午</span></td>
+                <td><span class="stem">甲</span><span class="branch">寅</span></td>
+                <td><span class="stem">乙</span><span class="branch">巳</span></td>
+              </tr>
+              <tr>
+                <td colspan="6" style="font-size:11px;color:var(--text-3);text-align:left;padding-left:8px;">
+                  藏干细目行（结构档）— 午藏丁己 · 丑藏己癸辛 …
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <aside>
+          <div class="aside-card">
+            <p class="aside-card__title">流日 · 今日</p>
+            <p>乙巳日 · 与日主癸丑合冲见校勘</p>
+          </div>
+          <div class="aside-card aside-card--relations">
+            <p class="aside-card__title">关系摘要（≤4 条）</p>
+            <ul>
+              <li>午丑相害</li>
+              <li>寅午半合火局</li>
+              <li>…</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <p class="note">
+      <strong>速览档差异：</strong>无 KPI 五格；六柱无藏干行；右栏仅流日卡；校勘见样张 06。<br />
+      对照 <code>FUSHENG-BAZI-PAGE-DESIGN.md</code> v1.2 §11.2 · §11.6
+    </p>
+  </div>
+</body>
+</html>

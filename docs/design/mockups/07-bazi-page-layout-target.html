@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>八字页 · 三档布局样张 — 浮生 v1.1</title>
+  <link rel="stylesheet" href="../../../frontend/src/assets/variables.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--brand-paper);
+      color: var(--brand-ink);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .page { max-width: 1120px; margin: 0 auto; padding: 24px 28px 80px; }
+    .page-title {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.08em;
+    }
+    .page-lead {
+      margin: 0 0 32px;
+      font-size: 12px;
+      color: var(--text-3);
+      letter-spacing: 0.06em;
+    }
+    .depth-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-md);
+    }
+    .depth-nav__btn {
+      min-height: 40px;
+      padding: 0 16px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      background: transparent;
+      font-family: var(--font-display);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      color: var(--brand-mist);
+      cursor: pointer;
+    }
+    .depth-nav__btn.is-active {
+      color: var(--brand-ink);
+      border-bottom-color: var(--brand-gold);
+      font-weight: 600;
+    }
+    .depth-panel { display: none; }
+    .depth-panel.is-active { display: block; }
+    .block {
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+    .block__id {
+      display: inline-block;
+      margin-bottom: 6px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--brand-gold-dark);
+      font-family: var(--font-display);
+    }
+    .block--ghost {
+      background: transparent;
+      border-style: dashed;
+      color: var(--text-3);
+      text-align: center;
+      padding: 20px;
+    }
+    .block--hidden {
+      opacity: 0.35;
+      border-style: dashed;
+      text-decoration: line-through;
+      color: var(--text-3);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.45fr 0.75fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .cover {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .cover h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 0.06em;
+    }
+    .cover p { margin: 6px 0 0; font-size: 12px; color: var(--brand-mist); }
+    .kpi {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 16px;
+    }
+    .kpi strong { color: var(--brand-gold-dark); font-size: 16px; }
+    .kpi span { font-size: 11px; color: var(--text-3); display: block; }
+    .vol2-line { margin: 4px 0; padding-left: 12px; border-left: 3px solid var(--brand-gold); }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1 class="page-title">八字页 · 三档布局样张</h1>
+    <p class="page-lead">FUSHENG-BAZI-PAGE-DESIGN v1.1 · 切换档位查看 [B0]–[B10] 可见性</p>
+
+    <nav class="depth-nav" aria-label="阅读深度">
+      <button type="button" class="depth-nav__btn is-active" data-depth="overview">速览</button>
+      <button type="button" class="depth-nav__btn" data-depth="structure">结构</button>
+      <button type="button" class="depth-nav__btn" data-depth="deep">深读</button>
+    </nav>
+
+    <!-- 速览 -->
+    <section class="depth-panel is-active" data-panel="overview">
+      <div class="cover">
+        <div>
+          <h2>程安东 · 1990/06/17</h2>
+          <p>[B1] 癸丑 · 偏财格 · 用神木土 · 中和</p>
+        </div>
+        <p style="margin:0;font-size:11px;color:var(--text-3)">[B1] 查看档案 · 进入报告</p>
+      </div>
+      <div class="block"><span class="block__id">B2</span> 口径条 · 真太阳时未启用 · 子时日界…</div>
+      <div class="grid">
+        <div class="block"><span class="block__id">B5</span> 六柱 Hero · 主表行（无藏干贡献）</div>
+        <div class="block"><span class="block__id">B5</span> 流日卡摘要</div>
+      </div>
+      <div class="block block--ghost"><span class="block__id">B5′</span> KPI 五格 — 速览隐藏</div>
+      <div class="block"><span class="block__id">B6</span> ▸ 校勘提示（3 项）· 展开 ≤2 条 + 引导切结构</div>
+      <div class="block block--hidden"><span class="block__id">B7–B10</span> 卷二 / 双轨 / 深读 / 大运 — 隐藏</div>
+    </section>
+
+    <!-- 结构 -->
+    <section class="depth-panel" data-panel="structure">
+      <div class="cover">
+        <div>
+          <h2>程安东 · 1990/06/17</h2>
+          <p>[B1] 一行 meta（同速览）</p>
+        </div>
+      </div>
+      <div class="block"><span class="block__id">B2</span> 口径条</div>
+      <div class="kpi">
+        <div><span>日主</span><strong>癸丑</strong></div>
+        <div><span>格局</span><strong>偏财格</strong></div>
+        <div><span>用神</span><strong>木土</strong></div>
+        <div><span>强弱</span><strong>中和</strong></div>
+        <div><span>十神</span><strong>劫财正印</strong></div>
+      </div>
+      <div class="grid">
+        <div class="block"><span class="block__id">B5</span> 六柱 Hero + 藏干/细目行</div>
+        <div class="block"><span class="block__id">B5</span> 流日卡 + 关系摘要 ≤4 条</div>
+      </div>
+      <div class="block"><span class="block__id">B6</span> 格物 · 校勘脚注（完整 register）</div>
+      <div class="block">
+        <span class="block__id">B7</span> 卷二 · 业之象
+        <p class="vol2-line"><strong>干支关系</strong> — 半合、冲…（一行）</p>
+        <p class="vol2-line"><strong>神煞摘要</strong> — 天乙、太极…（一行）</p>
+      </div>
+      <div class="block"><span class="block__id">B8</span> 格局双轨对照（有则显示）</div>
+      <div class="block block--hidden"><span class="block__id">B9–B10</span> 深读 — 隐藏</div>
+    </section>
+
+    <!-- 深读 -->
+    <section class="depth-panel" data-panel="deep">
+      <p style="font-size:12px;color:var(--brand-mist);margin:0 0 16px">= 结构档全部 + 下方</p>
+      <div class="block"><span class="block__id">B9</span> 卷一 · 命之根 · AnalysisPanel（推断默认折叠）</div>
+      <div class="block"><span class="block__id">B10</span> 大运叙事 · 按需加载</div>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('.depth-nav__btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const depth = btn.dataset.depth;
+        document.querySelectorAll('.depth-nav__btn').forEach((b) => b.classList.toggle('is-active', b === btn));
+        document.querySelectorAll('.depth-panel').forEach((p) => p.classList.toggle('is-active', p.dataset.panel === depth));
+      });
+    });
+  </script>
+</body>
+</html>

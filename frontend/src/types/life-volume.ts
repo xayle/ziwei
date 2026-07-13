@@ -1,28 +1,24 @@
 /**
- * life-volume@1.0 — 与 docs/contracts/life-volume.schema.json 对齐
+ * life-volume@1.0 — OpenAPI `LifeVolumeResponseModel` + UI 常量
  * FE Adapter：buildLifeVolumes (W3–W15) · BE 权威：GET /life/volumes (W16+)
  */
+import type {
+  AnalysisBlockModel,
+  ColophonModel,
+  DisclaimerBlockModel,
+  LifeVolumeModel,
+  LifeVolumeResponseModel,
+  VolumeSectionModel,
+} from '@/api/openapiTypes'
 
-export type LifeVolumeId =
-  | 'preface'
-  | 'vol1'
-  | 'vol2'
-  | 'vol3'
-  | 'vol4'
-  | 'vol5'
-  | 'vol6'
-  | 'colophon'
+export type LifeVolumeId = LifeVolumeModel['id']
 
 /** 用户语义层（UI 文案：排盘推算 / 典籍依据 / 经验推断） */
-export type ContentLayer = 'fact' | 'cite' | 'inference'
+export type ContentLayer = AnalysisBlockModel['layer']
 
-export type TrustLevel = 'full' | 'degraded'
+export type TrustLevel = NonNullable<LifeVolumeResponseModel['trust_level']>
 
-export interface DisclaimerBlock {
-  text: string
-  version: string
-  jurisdiction?: string
-}
+export type DisclaimerBlock = DisclaimerBlockModel
 
 export interface ContentVersions {
   classics?: string
@@ -39,52 +35,23 @@ export const CONTENT_LAYER_LABELS: Record<ContentLayer, string> = {
   inference: '经验推断',
 }
 
-export interface AnalysisBlock {
-  text: string
-  layer: ContentLayer
-  evidence_ids?: string[]
-  classic_id?: string
+/** Adapter 块可含 glossary / score 等扩展字段 */
+export type AnalysisBlock = AnalysisBlockModel & {
   glossary_refs?: string[]
   score?: number
   tier?: string
 }
 
-export interface VolumeSection {
-  id: string
-  heading: string
-  layer: ContentLayer
-  collapsed_default?: boolean
-  blocks: AnalysisBlock[]
-}
+export type VolumeSection = VolumeSectionModel
 
-export interface LifeVolume {
-  id: LifeVolumeId
-  title: string
+/** 卷 subtitle 为 FE Adapter 扩展，OpenAPI LifeVolumeModel 未建模 */
+export type LifeVolume = LifeVolumeModel & {
   subtitle?: string
-  locked?: boolean
-  sections: VolumeSection[]
 }
 
-export interface Colophon {
-  summary_lines: string[]
-  missing_fields?: string[]
-  iztro_advisory?: string
-  wenmo_advisory?: string
-  dual_track_note?: string
-  expandable?: boolean
-}
+export type Colophon = ColophonModel
 
-export interface LifeVolumeResponse {
-  schema_version: 'life-volume@1.0'
-  case_id: string
-  chart_hash: string
-  rule_version?: string
-  content_versions?: ContentVersions
-  disclaimer_block: DisclaimerBlock
-  trust_level?: TrustLevel
-  volumes: LifeVolume[]
-  colophon: Colophon
-}
+export type LifeVolumeResponse = LifeVolumeResponseModel
 
 /** provenance API 层 → UI ContentLayer（FE-BE Q5） */
 export const PROVENANCE_TO_CONTENT_LAYER = {

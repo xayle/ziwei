@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>八字 · 校勘脚注样张 — 浮生 v1.1</title>
+  <link rel="stylesheet" href="../../../frontend/src/assets/variables.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--brand-paper);
+      color: var(--brand-ink);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .page { max-width: 1120px; margin: 0 auto; padding: 24px 28px 64px; }
+    .demo-label {
+      margin: 0 0 16px;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--text-3);
+      font-family: var(--font-display);
+    }
+    .hero-placeholder {
+      display: grid;
+      grid-template-columns: 1.45fr 0.75fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .hero-placeholder__chart,
+    .hero-placeholder__aside {
+      min-height: 120px;
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      color: var(--brand-mist);
+      font-size: 12px;
+    }
+    .section-eyebrow {
+      margin: 0 0 12px;
+      padding-left: 12px;
+      border-left: 3px solid var(--brand-gold);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+    .trust-footnote {
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      padding: 16px 18px;
+      font-size: 12px;
+    }
+    .trust-footnote__title {
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--text-3);
+      font-family: var(--font-display);
+    }
+    .trust-row {
+      display: grid;
+      grid-template-columns: 18px auto 1fr;
+      gap: 10px;
+      padding: 7px 0 7px 10px;
+      border-bottom: 1px dashed var(--border);
+      border-left: 3px solid transparent;
+      line-height: 1.55;
+    }
+    .trust-row__body { min-width: 0; }
+    .trust-row__note {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .trust-row:last-of-type { border-bottom: none; }
+    .trust-row--ok { border-left-color: var(--border-md); }
+    .trust-row--drift { border-left-color: var(--brand-gold); }
+    .trust-row--missing { border-left-color: var(--brand-cinnabar); }
+    .trust-icon {
+      text-align: center;
+      color: var(--text-3);
+      font-family: var(--font-display);
+    }
+    .trust-badge {
+      display: inline-flex;
+      align-self: start;
+      min-width: 44px;
+      justify-content: center;
+      padding: 1px 8px;
+      border: 1px solid var(--border-md);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      font-family: var(--font-display);
+    }
+    .trust-badge--drift { border-color: var(--brand-gold); color: var(--brand-gold-dark); }
+    .trust-badge--missing { border-color: var(--brand-cinnabar); color: var(--brand-cinnabar); }
+    .trust-hint {
+      margin: 10px 0 0;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 11px;
+      color: var(--brand-mist);
+      letter-spacing: 0.04em;
+    }
+    .trust-register { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .trust-register__summary {
+      cursor: pointer;
+      list-style: none;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      font-family: var(--font-display);
+      padding-left: 12px;
+      border-left: 3px solid var(--brand-gold);
+    }
+    .trust-register__summary::-webkit-details-marker { display: none; }
+    .trust-register__body { margin-top: 12px; }
+    .trust-register__table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .trust-register__table th,
+    .trust-register__table td {
+      border: none;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px;
+      text-align: left;
+    }
+    .trust-register__table th { color: var(--brand-mist); font-family: var(--font-display); }
+    .layer-tag[data-layer='典籍'] { color: var(--brand-gold-dark); }
+    .layer-tag[data-layer='引擎'] { color: var(--brand-mist); }
+    .layer-tag[data-layer='启发式'] { color: var(--brand-cinnabar); }
+    .vol2 { margin-top: 24px; padding: 14px 16px; border: 1px solid var(--border-md); background: var(--surface); font-size: 12px; }
+    .vol2-line { margin: 8px 0 0; padding-left: 12px; border-left: 3px solid var(--brand-gold); }
+    .overview-fold {
+      margin-bottom: 24px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-md);
+      background: var(--surface);
+      font-size: 12px;
+    }
+    .overview-fold summary { cursor: pointer; color: var(--brand-mist); font-family: var(--font-display); }
+    @media (max-width: 900px) { .hero-placeholder { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="demo-label">样张 v1.1 · 结构档校勘 + 速览折叠 + 卷二两行</p>
+
+    <div class="hero-placeholder" aria-hidden="true">
+      <div class="hero-placeholder__chart">[B5] 六柱 Hero</div>
+      <div class="hero-placeholder__aside">流日 + 关系摘要 ≤4 条</div>
+    </div>
+
+    <!-- 速览折叠示例 -->
+    <details class="overview-fold">
+      <summary>▸ 校勘提示（3 项）— 速览档</summary>
+      <div class="trust-footnote" style="margin-top:12px;border:none;padding:0">
+        <div class="trust-row trust-row--missing">
+          <span class="trust-icon">!</span>
+          <span class="trust-badge trust-badge--missing">缺失</span>
+          <span class="trust-row__body">刑冲摘要（引擎未返回）</span>
+        </div>
+        <div class="trust-row trust-row--drift">
+          <span class="trust-icon">△</span>
+          <span class="trust-badge trust-badge--drift">校勘</span>
+          <span class="trust-row__body">出生时刻接近时辰交界（±15 分）</span>
+        </div>
+        <p class="trust-hint">切至「结构」查看全部校勘与可信度分层</p>
+      </div>
+    </details>
+
+    <!-- 结构档完整校勘 -->
+    <section aria-label="格物 · 校勘脚注">
+      <h2 class="section-eyebrow">格物 · 校勘脚注（结构档）</h2>
+      <div class="trust-footnote">
+        <p class="trust-footnote__title">引擎校验 · 跋前脚注</p>
+
+        <div class="trust-row trust-row--missing">
+          <span class="trust-icon">!</span>
+          <span class="trust-badge trust-badge--missing">缺失</span>
+          <span class="trust-row__body">刑冲摘要（引擎未返回）</span>
+        </div>
+        <div class="trust-row trust-row--drift">
+          <span class="trust-icon">△</span>
+          <span class="trust-badge trust-badge--drift">校勘</span>
+          <span class="trust-row__body">
+            出生时刻接近时辰交界（±15 分）
+            <span class="trust-row__note">备注 near_shichen_boundary</span>
+          </span>
+        </div>
+        <div class="trust-row trust-row--ok">
+          <span class="trust-icon">✓</span>
+          <span class="trust-badge">核对</span>
+          <span class="trust-row__body">整体置信度：中等</span>
+        </div>
+
+        <details class="trust-register" open>
+          <summary class="trust-register__summary">可信度分层</summary>
+          <div class="trust-register__body">
+            <table class="trust-register__table">
+              <thead><tr><th>域</th><th>层级</th><th>置信度</th><th>备注</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td>八字·格局</td>
+                  <td><span class="layer-tag" data-layer="典籍">典籍</span></td>
+                  <td>92%</td>
+                  <td>dual-solar-false</td>
+                </tr>
+                <tr>
+                  <td>八字·大运</td>
+                  <td><span class="layer-tag" data-layer="启发式">启发式</span></td>
+                  <td>56%</td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <details class="trust-register">
+          <summary class="trust-register__summary">四柱细目 · 刑冲细目</summary>
+          <div class="trust-register__body"><p style="margin:0;color:var(--text-3)">细目仅在此；卷二不重复</p></div>
+        </details>
+      </div>
+    </section>
+
+    <section class="vol2" aria-label="卷二 · 业之象">
+      <strong style="letter-spacing:0.08em;font-family:var(--font-display)">卷二 · 业之象</strong>
+      <p class="vol2-line"><strong>干支关系</strong> — 半合、子午冲…（一行摘要）</p>
+      <p class="vol2-line"><strong>神煞摘要</strong> — 天乙贵人、太极贵人…（一行摘要）</p>
+    </section>
+  </main>
+</body>
+</html>
