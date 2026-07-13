@@ -206,8 +206,8 @@ def score_ziwei_dimensions(
         dims.append(dim)
 
     if not dims:
-        for extra in (score_life_palace, score_wuxing_ju, score_yin_yang):
-            d = extra(chart_a, chart_b)
+        for scorer in (score_life_palace, score_wuxing_ju, score_yin_yang):
+            d = scorer(chart_a, chart_b)
             d["weight"] = 0.15
             dims.append(d)
 

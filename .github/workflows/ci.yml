@@ -83,18 +83,30 @@ jobs:
         run: |
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
           p = Path("docs/reports/autopilot-verify-latest.json")
           if not p.is_file():
               print("no autopilot report")
               raise SystemExit(0)
           d = json.loads(p.read_text(encoding="utf-8"))
-          print("pass=", d.get("pass"), "summary=", d.get("summary"))
+          lines = [f"pass={d.get('pass')} summary={d.get('summary')}"]
+          fails = []
           for track in ("engineering", "aesthetic"):
               for cid, item in sorted((d.get(track) or {}).items()):
                   if isinstance(item, dict) and item.get("ok") is False:
-                      detail = (item.get("detail") or "")[-800:]
-                      print(f"FAIL {cid} {item.get('name')}: {detail}")
+                      detail = (item.get("detail") or "").replace("\n", " ")[-500:]
+                      row = f"FAIL {cid} {item.get('name')}: {detail}"
+                      fails.append(row)
+                      lines.append(row)
+                      # GitHub Actions annotation (visible without downloading logs)
+                      print(f"::error title=Autopilot {cid}::{row[:200]}")
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          body = "\n".join(["## Autopilot failures", "", *[f"- `{x}`" for x in fails] or ["(none)"], ""])
+          if summary_path:
+              with open(summary_path, "a", encoding="utf-8") as fh:
+                  fh.write(body)
+          print("\n".join(lines))
           PY
 
       - name: Upload autopilot report
