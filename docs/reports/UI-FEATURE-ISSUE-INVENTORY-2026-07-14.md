@@ -2,21 +2,21 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.11 |
+| **版本** | inv-1.12 |
 | **日期** | 2026-07-15 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：打磨收官后进入维护；advisory missing 改为「对照 · 非故障」可读文案。
+> **一句话**：维护态；advisory missing FE/BE 文案对齐，Trust 徽章跟 tone。
 
-### 本轮修复进度（inv-1.11）
+### 本轮修复进度（inv-1.12）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.10 及前 | ✅ | 见上 |
-| 维护 | ✅ 本批 | **ADV-miss**：宫位十神 / 右弼口径 → Trust+跋「对照 · 非故障」 |
+| inv-1.11 及前 | ✅ | 见上 |
+| 维护 | ✅ 本批 | ADV-miss BE 跋标签注记 · Trust 面板 tone 徽章 |
 | 仍开 | — | AUTH-01 · NAV-03 · **GTM 未开（R109 A）** |
 
 ---
@@ -243,3 +243,4 @@ python scripts/audit_content_hollowness.py   # source=build_life_volumes_from_ch
 | inv-1.9 | 2026-07-15 | **REL-Combine**：拱合→`combine_summary`；消假 missing；后端已 reload 实机确认 |
 | inv-1.10 | 2026-07-15 | **收官**：SPA→`/static/app/`；Z-09 scorecard；W14/R103/R108 刷新绿 |
 | inv-1.11 | 2026-07-15 | **ADV-miss**：advisory missing 对照文案（Trust + 跋） |
+| inv-1.12 | 2026-07-15 | **ADV-miss**：BE 跋字段注记 · Trust tone 徽章对齐 |

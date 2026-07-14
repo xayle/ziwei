@@ -29,6 +29,22 @@ def test_enrich_vol_block_pads_short_fact():
     assert "印旺生身" in out
 
 
+def test_colophon_labels_advisory_missing_fields():
+    from services.life_volume_service import _build_colophon
+
+    colo = _build_colophon(
+        missing_fields=["palace_ten_gods", "youbi_month_vs_iztro_hour"],
+        iztro_advisory=None,
+        wenmo_advisory=None,
+        engine_label="bazi+ziwei",
+    )
+    joined = "；".join(colo.summary_lines)
+    assert "宫位十神" in joined
+    assert "右弼" in joined
+    assert "palace_ten_gods" not in joined
+    assert "非故障" in joined
+
+
 def test_build_volumes_includes_strength_factors_and_fortune_domains():
     bazi = {
         "pillars_primary": {

@@ -208,6 +208,23 @@ def _explain_sections(explain: dict[str, Any] | None, section_id: str) -> list[A
     return []
 
 
+def _missing_field_label(field: str) -> str:
+    labels = {
+        "clash_summary": "刑冲摘要",
+        "combine_summary": "合化摘要",
+        "harm_summary": "害破摘要",
+        "palace_ten_gods": "宫位十神（对照）",
+        "youbi_month_vs_iztro_hour": "右弼 month/hour 口径差（对照）",
+        "palace_stems_partial": "宫干部分（对照）",
+        "geju_detail": "格局细目",
+        "hour_pillar": "时柱",
+        "flow_score": "流日联动分",
+        "forecast": "运限预测",
+    }
+    key = (field or "").strip()
+    return labels.get(key, key.replace("_", " ") or "—")
+
+
 def _build_colophon(
     *,
     missing_fields: list[str],
@@ -216,10 +233,11 @@ def _build_colophon(
     engine_label: str,
 ) -> ColophonModel:
     lines: list[str] = [
-        f"校勘：引擎 {engine_label}；排盘字段{'未齐见下行' if missing_fields else '齐备'}，可核对卷内 fact/cite/inference 分层。"
+        f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内 fact/cite/inference 分层。"
     ]
     if missing_fields:
-        lines.append(f"未齐字段：{'、'.join(missing_fields[:4])}（不影响已写出块的阅读，展开脚注可核）。")
+        labels = [_missing_field_label(f) for f in missing_fields[:4]]
+        lines.append(f"字段注记：{'、'.join(labels)}（不影响已写出块；对照项非故障，展开脚注可核）。")
     if iztro_advisory:
         lines.append(_clip(iztro_advisory, 72))
     if len(lines) == 1 and not missing_fields:

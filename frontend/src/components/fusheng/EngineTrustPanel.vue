@@ -36,6 +36,20 @@ const props = defineProps<{
 
 const isRegister = computed(() => props.layout === 'register')
 
+const missingFieldRows = computed(() =>
+  (props.missingFields ?? []).map((field) => ({
+    field,
+    ...formatMissingFieldLine(field),
+  })),
+)
+
+const validationRows = computed(() =>
+  (props.validationLines ?? []).map((line, idx) => ({
+    idx,
+    ...formatTrustValidationLine(line),
+  })),
+)
+
 const crossWarnItems = computed(() =>
   props.crossValidationItems?.filter((item) => item.status === 'warn' || item.status === 'fail') ?? [],
 )
@@ -98,39 +112,42 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
         <span>{{ item.label }}：{{ item.detail }}</span>
       </div>
 
-      <div v-if="missingFields?.length" data-testid="missing-fields">
+      <div v-if="missingFieldRows.length" data-testid="missing-fields">
         <div
-          v-for="field in missingFields"
-          :key="`missing-${field}`"
-          class="trust-row trust-row--missing"
+          v-for="row in missingFieldRows"
+          :key="`missing-${row.field}`"
+          class="trust-row"
+          :class="`trust-row--${row.tone}`"
         >
-          <span class="trust-icon">!</span>
-          <span class="trust-badge trust-badge--missing">缺失</span>
+          <span class="trust-icon">{{ iconForTone(row.tone) }}</span>
+          <span class="trust-badge" :class="badgeForTone(row.tone).class">
+            {{ badgeForTone(row.tone).label }}
+          </span>
           <span class="trust-row__body">
-            {{ formatMissingFieldLine(field).main }}
-            <span v-if="formatMissingFieldLine(field).note" class="trust-row__note">{{ formatMissingFieldLine(field).note }}</span>
+            {{ row.main }}
+            <span v-if="row.note" class="trust-row__note">{{ row.note }}</span>
           </span>
         </div>
       </div>
 
       <div
-        v-for="(line, idx) in validationLines"
-        :key="`validation-${idx}`"
+        v-for="row in validationRows"
+        :key="`validation-${row.idx}`"
         class="trust-row"
-        :class="`trust-row--${formatTrustValidationLine(line).tone}`"
+        :class="`trust-row--${row.tone}`"
       >
-        <span class="trust-icon">{{ iconForTone(formatTrustValidationLine(line).tone) }}</span>
-        <span class="trust-badge" :class="badgeForTone(formatTrustValidationLine(line).tone).class">
-          {{ badgeForTone(formatTrustValidationLine(line).tone).label }}
+        <span class="trust-icon">{{ iconForTone(row.tone) }}</span>
+        <span class="trust-badge" :class="badgeForTone(row.tone).class">
+          {{ badgeForTone(row.tone).label }}
         </span>
         <span class="trust-row__body">
-          {{ formatTrustValidationLine(line).main }}
-          <span v-if="formatTrustValidationLine(line).note" class="trust-row__note">{{ formatTrustValidationLine(line).note }}</span>
+          {{ row.main }}
+          <span v-if="row.note" class="trust-row__note">{{ row.note }}</span>
         </span>
       </div>
 
       <p
-        v-if="!missingFields?.length && !validationLines?.length && !crossWarnItems.length && !detailSections.length"
+        v-if="!missingFieldRows.length && !validationRows.length && !crossWarnItems.length && !detailSections.length"
         class="trust-row trust-row--ok"
       >
         <span class="trust-icon">✓</span>
@@ -256,20 +273,21 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
         </ul>
       </div>
 
-      <div v-if="missingFields?.length" class="engine-trust__alert" data-testid="missing-fields">
-        <strong>缺失字段</strong>
+      <div v-if="missingFieldRows.length" class="engine-trust__alert" data-testid="missing-fields">
+        <strong>字段核对</strong>
         <ul class="engine-trust__list">
-          <li v-for="field in missingFields" :key="field">
-            {{ formatMissingFieldLine(field).main }}
+          <li v-for="row in missingFieldRows" :key="row.field">
+            {{ row.main }}
+            <span v-if="row.note" class="trust-row__note"> — {{ row.note }}</span>
           </li>
         </ul>
       </div>
 
-      <section v-if="validationLines?.length" class="engine-trust__section">
+      <section v-if="validationRows.length" class="engine-trust__section">
         <h3>校验与置信度</h3>
         <ul class="engine-trust__list">
-          <li v-for="(line, idx) in validationLines" :key="idx">
-            {{ formatTrustValidationLine(line).main }}
+          <li v-for="row in validationRows" :key="row.idx">
+            {{ row.main }}
           </li>
         </ul>
       </section>
