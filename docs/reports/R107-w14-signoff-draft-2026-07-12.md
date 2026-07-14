@@ -10,16 +10,17 @@
 | SRC advisory | R111–R115 | ☑ |
 | P3 life/volumes draft | R096/R116 | ☑ |
 | Product auto | R101 | ☑ 11/11 |
-| R103 auto | R103 script | ☑ 6/7 |
+| R103 auto | R103 script | ☑ **7/7**（2026-07-15） |
 | Design structural | R102 | ☑ 3/3 proxy |
 | Targets compare | R079 JSON | ☑ compare-live-targets |
-| W14 bundle | auto_verify_w14 | ☑ **7/7**（pass 4 · 2026-07-13） |
-| debt scan | rg 三门禁 | ☑ **0 命中**（`VolumeHead` 重命名） |
-| Frontend lint | eslint | ☑ **0 warning** |
+| W14 bundle | auto_verify_w14 | ☑ **pass**（2026-07-15 · scorecard 10.0） |
+| debt scan | rg 三门禁 | ☑ **0 命中** |
+| Frontend lint | eslint | ☑ |
 | life/volumes E2E | fusheng-life-volumes | ☑ remote path |
+| UI inventory | inv-1.10 | ☑ MR-A～H · CNT · SPA · REL-Combine（`8c10640`） |
 | R079 Q5 + compare | R079 doc + JSON | ☑ 15/15 proxy（产品姓名待补） |
-| OpenAPI CI drift | `docs/openapi.json` + `schema.d.ts` | ☑ 已同步暂存；commit 被 pre-commit 阻断（见下） |
-| snapshot restore E2E | fusheng-report | ☑ 档案云端 Tab → 报告 + `report-snapshot-note` |
+| OpenAPI CI drift | `docs/openapi.json` + `schema.d.ts` | ☑ |
+| snapshot restore E2E | fusheng-report | ☑ |
 | Backend P0 meta | R018–R019, R112–R113 | ☑ |
 
 ## Pending human sign-off
@@ -30,7 +31,7 @@
 | R060 | 15-min 试读 step 10 + 签字 | R060 checklist | ☐ |
 | R071/R079/R085 | 防丑五问 15 格 | R079 | 🟡 15/15 ☑；产品姓名待补 |
 | R102 | DS 视觉并排 | live-targets vs targets | ☑ compare PASS |
-| R103 | 防丑五问全「是」 | R079 | ☑ **6/7 auto**；Q5 盲测待 DS |
+| R103 | 防丑五问全「是」 | R079 | ☑ **7/7 auto**；Q5 盲测待 DS |
 | R104–R105 | M4/M5 产品试 | R104/R105 checklists | 🟡 已填表；外发+产品签待补 |
 | R107 | **本表负责人签字** | below | ☐ |
 
@@ -65,19 +66,13 @@ pytest -q tests/test_explain_*.py tests/test_zw18_trust.py tests/test_life_volum
 
 **Verdict:** Automation complete; **W14 未收官** until human rows above are signed.
 
-## Commit 说明（2026-07-13 pass 4）
+## Commit 说明（2026-07-15 · inv-1.10）
 
-**已提交** `cd366bd`：OpenAPI + gate 文档 + 路由 smoke。
+**已推送** `8c10640`：界面清单收口 · 六卷加厚 · SPA `/static/app/` · combine_summary · scorecard/W14 绿。
 
-**工作区待提交**（handbook pass 4 批次）：
-
-- `VolumeHead` 重命名 + debt scan 0
-- `quality_gate.py` Windows 修复
-- `FUSHENG-DEV-HANDBOOK.md` + 文档索引
-- `ReportView` 姓名死代码/CSS 清理
-- `static/app/` build 产物
+本地 `scripts/data/`（易经/民录草稿、含口令 seed 副本）已加入 `.gitignore`，不入库。
 
 ```powershell
 python scripts/auto_verify_w14.py   # expect pass: true
-cd frontend && npm run lint && npm run test && npm run test:e2e
+python scripts/auto_verify_r103.py  # expect 7/7
 ```

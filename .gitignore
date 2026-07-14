@@ -88,6 +88,8 @@ scripts/archive/_*.ps1
 scripts/archive/_*.js
 scripts/perf/*_report.json
 scripts/perf/*_verification.json
+# 本地数据草稿（易经/民录导入、含本机路径或口令的 seed 副本）
+scripts/data/
 
 # iztro verification (local npm install)
 scripts/iztro/node_modules/

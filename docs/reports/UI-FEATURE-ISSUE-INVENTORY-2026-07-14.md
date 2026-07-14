@@ -17,7 +17,7 @@
 |------|------|---------|
 | inv-1.9 及前 | ✅ | 见上 |
 | 收官验收 | ✅ 本批 | SPA rebuild · 入口冒烟 · **Z-09** scorecard（`solarTime↔longitude` 注释恢复）· W14/R108 刷新 |
-| 仍开 | — | AUTH-01 · NAV-03 · 紫微 advisory missing（刻意） |
+| 仍开 | — | AUTH-01 · NAV-03 · 紫微 advisory missing（刻意）· **R107 人工签字**（见 R109 选项 A） |
 
 ---
 

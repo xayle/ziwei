@@ -1,41 +1,43 @@
-# R109 · POST-W14 决议（自动化建议）— 2026-07-12
+# R109 · POST-W14 决议（自动化建议）— 2026-07-15 刷新
 
-依据 `auto_verify_w14` · `R103` · `R107` 草案。
+依据 `auto_verify_w14` · `R103` · `R107` 草案 · UI 清单 [inv-1.10](UI-FEATURE-ISSUE-INVENTORY-2026-07-14.md)。
 
 ## 自动化输入
 
 | 信号 | 状态 |
 |------|------|
-| W14 bundle (`w14-auto-verify-latest.json`) | pass |
-| R103 auto | 6/7（Q5 人工） |
-| R101 auto | 11/11 |
-| Scorecard | 24/24 |
-| OpenAPI/types | 已同步（待 PR 提交） |
-| 人工签字 | R025 · R060 · R079 Q5 · R107 未签 |
+| W14 bundle (`w14-auto-verify-latest.json`) | **pass**（2026-07-15） |
+| R103 auto | **7/7** |
+| Scorecard | **24/24 · 10.0/10** |
+| 空洞审计（life volumes 真源） | thin 0% · fallback 0% |
+| UI 清单 MR-A～H · CNT · REL-Combine | ✅ 已合入 `8c10640` |
+| 人工签字 | R025 · R060 · R079 Q5 · R107 **未签** |
 
 ## 决议（推荐 **选项 A**）
 
-**维持打磨优先；POST-W14 T071–T140 延后 2 周**，待：
+**维持打磨优先；POST-W14 T071–T140 延后**，待：
 
 1. R025 三方共签
 2. R060 15 分钟试读签字
-3. R079 防丑五问 Q5（15 格）
+3. R079 防丑五问 Q5（15 格 / DS）
 4. R107 负责人 W14 收官
+
+界面与契约层产品 bug 已按 inv-1.10 收口；余下为人造 Gate，**不**因此自动开启 GTM。
 
 ## 选项对照
 
 | 选项 | 条件 | 当前 |
 |------|------|------|
 | **A 延后 GTM** | 人工 Gate 未齐 | **✅ 推荐** |
-| B 进入 U5 life/volumes | R107 + R096 草案已就绪 | 可并行准备，不对外 |
-| C 开启 GTM 试投 | R104/R105 绿 | ❌ 未满足 |
+| B 进入 U5 life/volumes 深化 | R107 + 产品确认 | 可准备，不对外 |
+| C 开启 GTM 试投 | R104/R105 绿 + R107 | ❌ 未满足 |
 
 ## 触发 B/C 的最低条件
 
 ```text
-R107 ☑ + R025 ☑ + R060 ☑ + R079 Q5 ☑ + openapi PR merged
+R107 ☑ + R025 ☑ + R060 ☑ + R079 Q5 ☑
 ```
 
 ---
 
-**R109 auto verdict:** 选项 A — 继续打磨，不进入 POST-W14 执行轨。
+**R109 auto verdict:** 选项 A — 继续等待人工签字；代码轨进入维护态。
