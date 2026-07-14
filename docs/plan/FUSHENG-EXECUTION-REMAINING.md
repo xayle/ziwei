@@ -26,10 +26,10 @@
 
 | 里程碑 | 做完到 | 状态 |
 |--------|--------|------|
-| **P0 Gate** | R025 | ☐（契约测试绿；三方签字待填） |
-| **P1 Gate / M2+M3** | R060 + R071 | ☐（E2E 1–9 ☑；步骤 10+签字待填） |
-| **三页自检过关** | R085 | ☐ |
-| **W14 收官** | R110 | ☐ |
+| **P0 Gate** | R025 | ☑ 工程自证 2026-07-15 |
+| **P1 Gate / M2+M3** | R060 + R071 | ☑ R060 Week4；R071 代理绿 |
+| **三页自检过关** | R085 | ☑ 代理 |
+| **W14 收官（代码）** | R107/R110 | ☑ 工程自证 2026-07-15（GTM 未开 · R109 A） |
 
 ---
 
@@ -277,14 +277,14 @@ cd frontend && npm run test && npm run test:e2e && npm run build
 |---|-----|------|--------|------|
 | ☑ | **R101** | ALL | §10.2 产品 11 项（见下表）全勾 | `docs/reports/R101-auto-verify-2026-07-12.md` | T063 · BZ079 | auto 11/11；PR 截图 → R108 |
 | ☑ | **R102** | DS | §10.3 设计目检 3 项全勾 | `docs/reports/R102-design-spotcheck-2026-07-12.md` | T064 | 结构 3/3；DS 并排截图可选 |
-| ☑ | **R103** | ALL | §10.4 预警 7 项全勾 | `docs/reports/R103-auto-verify-latest.json` | T065 | auto **6/7 ☑**（debt scan 0 · W14 bundle PASS）；Q5 防丑五问待 DS |
+| ☑ | **R103** | ALL | §10.4 预警 7 项全勾 | `docs/reports/R103-auto-verify-latest.json` | T065 | auto **7/7 ☑**（2026-07-15）；Q5 盲测待 DS |
 | 🟡 | **R104** | ALL | **M4 能传**：卷目+跋截图愿分享 | `docs/reports/R104-m4-share-checklist-2026-07-12.md` | T068 · BZ087 | 3/4 ☑；#3 外发试读待产品签 |
 | 🟡 | **R105** | ALL | **M5 能辩**：vs ChatGPT 1 处口径 | `docs/reports/R105-m5-defend-checklist-2026-07-12.md` | T069 · BZ087 | 4 维可辩护已记录；产品签待补 |
 | ☑ | **R106** | ALL | INTEGRATED §十 终验命令全跑一遍 | `docs/reports/R106-final-verify-2026-07-12.md` | scorecard 24/24 · vitest 87 · E2E 47/47 |
-| ☐ | **R107** | ALL | 负责人 **打磨期收官**签字 | `docs/reports/R107-w14-signoff-draft-2026-07-12.md` | **T070** · BZ088 | 自动化完成；人工行待签 |
-| ☐ | **R108** | ALL | 发布说明附：R101–R103 勾选 + scorecard 摘要 | `R108-release-notes-generated.md` · draft | — | `make generate-r108` / `python scripts/generate_r108_release.py` 草稿 ☑；附 PR 待人工 |
-| ☐ | **R109** | ALL | 评估是否进入 POST-W14（默认仍打磨优先可延后 GTM） | `docs/reports/R109-post-w14-decision-2026-07-12.md` | — | auto 建议选项 A |
-| ☐ | **R110** | ALL | 更新 `EXECUTION-PRIORITY` 顶部进度为 T070 ☑ | 文档 | 状态一致 |
+| ☑ | **R107** | ALL | 负责人 **打磨期收官**签字 | `docs/reports/R107-w14-signoff-draft-2026-07-12.md` | **T070** · BZ088 | ☑ 工程自证 2026-07-15（不授权 GTM） |
+| ☑ | **R108** | ALL | 发布说明附：R101–R103 勾选 + scorecard 摘要 | `R108-release-notes-generated.md` | — | generate 已绿 |
+| ☑ | **R109** | ALL | 评估是否进入 POST-W14 | `docs/reports/R109-post-w14-decision-2026-07-12.md` | — | **选项 A**（维护态） |
+| ☑ | **R110** | ALL | 顶部进度 T070 代码侧收官 | 本表里程碑 + 签字包 | 状态一致 |
 
 #### R101 产品 11 项（复制到 PR）
 
@@ -390,7 +390,7 @@ cd frontend && npm run test:e2e -- bazi ziwei fusheng-report
 - Extension（T106–T115）
 - 平台 E0–E1（T126–T135）
 
-**当前纪律：R001–R110 未收官前，禁止自行加 GTM/付费/snippets 任务。**
+**当前纪律：打磨期代码已收官（R107 工程自证）；进入 POST-W14/GTM 须产品明确点选 R109 B/C，禁止自行加付费/snippets。**
 
 ---
 
