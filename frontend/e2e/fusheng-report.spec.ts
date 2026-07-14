@@ -39,8 +39,8 @@ test.describe('报告与新功能', () => {
     await expect(page.locator('.report-page--continuous')).toBeVisible()
 
     await expect(page.getByTestId('report-vol5-chapter')).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByRole('heading', { name: '卷五·事之理' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: '卷一·命之根' })).toBeVisible()
+    await expect(page.locator('#report-volume-vol5').getByRole('heading', { name: '卷五·事之理' })).toBeVisible()
+    await expect(page.locator('#report-volume-vol1').getByRole('heading', { name: '卷一·命之根' })).toBeVisible()
     await expect(page.getByText('四维分析')).toHaveCount(0)
     await expect(page.getByTestId('report-cross-iztro')).toBeVisible()
     await expect(page.getByTestId('report-cross-iztro')).toContainText('ZW03')

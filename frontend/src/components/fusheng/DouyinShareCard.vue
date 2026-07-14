@@ -82,10 +82,10 @@ async function onExport() {
     </header>
 
     <div class="douyin-share__stage">
-      <article class="douyin-card" data-testid="douyin-share-preview" aria-hidden="false">
+      <article class="douyin-card" data-testid="douyin-share-preview" aria-hidden="true">
         <p class="douyin-card__brand">{{ brand }}</p>
         <p class="douyin-card__tag">人生六卷 · 命书可读</p>
-        <h2 class="douyin-card__volume">{{ volumeTitle }}</h2>
+        <p class="douyin-card__volume">{{ volumeTitle }}</p>
         <p v-if="gejuLine" class="douyin-card__geju">格局 · {{ gejuLine }}</p>
         <ul class="douyin-card__facts">
           <li v-for="(line, i) in lines" :key="i">{{ line }}</li>

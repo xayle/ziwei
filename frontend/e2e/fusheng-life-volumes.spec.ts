@@ -79,7 +79,7 @@ test.describe('life/volumes 可选权威路径', () => {
     await expect(page.locator('[data-life-volume-source="remote"]')).toBeVisible({ timeout: 15_000 })
     for (const label of Object.values(LIFE_VOLUME_LABELS)) {
       if (label === LIFE_VOLUME_LABELS.preface) continue
-      await expect(page.getByRole('heading', { name: label })).toBeVisible()
+      await expect(page.locator('.report-body').getByRole('heading', { name: label })).toBeVisible()
     }
     await expect(page.getByText('E2E 跋')).toBeVisible()
     await expect(page.getByTestId('reading-guide-dynamic')).toContainText('E2E volumes 读法')

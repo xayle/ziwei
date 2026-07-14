@@ -68,7 +68,7 @@ test.describe('防丑五问结构代理', () => {
       LIFE_VOLUME_LABELS.vol5,
       LIFE_VOLUME_LABELS.colophon,
     ]) {
-      await expect(page.getByRole('heading', { name: label })).toBeVisible()
+      await expect(page.locator('.report-body').getByRole('heading', { name: label })).toBeVisible()
     }
     await expect(page.getByText('四维分析')).toHaveCount(0)
     await expect(page.getByRole('complementary', { name: '读法导览' }).getByRole('heading', { name: '读法导览' })).toBeVisible({ timeout: 15_000 })
