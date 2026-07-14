@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { Colophon } from '@/types/life-volume'
+import { formatMissingFieldLine } from '@/utils/buildEngineTrustDisplay'
 
-defineProps<{
+const props = defineProps<{
   colophon: Colophon
 }>()
 
 const expanded = ref(false)
+
+const missingLines = computed(() =>
+  (props.colophon.missing_fields ?? []).map((field) => ({
+    field,
+    ...formatMissingFieldLine(field),
+  })),
+)
 </script>
 
 <template>
@@ -31,8 +39,11 @@ const expanded = ref(false)
         <strong>iztro 对照：</strong>{{ colophon.iztro_advisory }}
       </p>
       <p v-if="colophon.dual_track_note">{{ colophon.dual_track_note }}</p>
-      <ul v-if="colophon.missing_fields?.length">
-        <li v-for="field in colophon.missing_fields" :key="field">缺失：{{ field }}</li>
+      <ul v-if="missingLines.length" class="colophon-footnote__missing">
+        <li v-for="line in missingLines" :key="line.field">
+          <span>{{ line.main }}</span>
+          <small v-if="line.note">{{ line.note }}</small>
+        </li>
       </ul>
     </div>
   </footer>
@@ -54,5 +65,22 @@ const expanded = ref(false)
 .colophon-footnote__wenmo,
 .colophon-footnote__iztro {
   color: var(--brand-cinnabar);
+}
+
+.colophon-footnote__missing {
+  margin: 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 6px;
+}
+
+.colophon-footnote__missing li {
+  display: grid;
+  gap: 2px;
+}
+
+.colophon-footnote__missing small {
+  color: var(--text-3, #8a8580);
+  font-size: 12px;
 }
 </style>

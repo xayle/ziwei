@@ -190,6 +190,13 @@ describe('buildEngineTrustDisplay', () => {
   it('humanizes trust validation and missing lines', () => {
     expect(formatMissingFieldLine('clash_summary').main).toBe('刑冲摘要（引擎未返回）')
     expect(formatMissingFieldLine('clash_summary').note).toBeUndefined()
+    expect(formatMissingFieldLine('clash_summary').tone).toBe('missing')
+    const advisory = formatMissingFieldLine('youbi_month_vs_iztro_hour')
+    expect(advisory.main).toContain('右弼')
+    expect(advisory.main).toContain('非故障')
+    expect(advisory.tone).toBe('drift')
+    expect(advisory.note).toBeTruthy()
+    expect(formatMissingFieldLabel('palace_ten_gods')).toBe('宫位十神')
     expect(formatTrustValidationLine('近时辰边界（15 分钟）').main).toContain('时辰交界')
     expect(formatTrustValidationLine('置信度：medium').main).toBe('整体置信度：中等')
     expect(formatTrustValidationLine('置信度：中等').main).toBe('整体置信度：中等')

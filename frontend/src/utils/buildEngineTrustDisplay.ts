@@ -40,13 +40,26 @@ const MISSING_FIELD_LABELS: Record<string, string> = {
   geju_detail: '格局细目',
   flow_score: '流日联动分',
   palace_stems_partial: '宫干部分缺失',
+  palace_ten_gods: '宫位十神',
+  youbi_month_vs_iztro_hour: '右弼 month/hour 口径差',
   forecast: '运限预测',
 }
+
+/** 产品刻意标 advisory 的字段：展示为对照说明，避免「引擎坏了」观感。 */
+const ADVISORY_MISSING_FIELDS = new Set([
+  'palace_ten_gods',
+  'youbi_month_vs_iztro_hour',
+  'palace_stems_partial',
+])
 
 export function formatMissingFieldLabel(field: string): string {
   const trimmed = field.trim()
   if (!trimmed) return field
   return MISSING_FIELD_LABELS[trimmed] ?? trimmed.replace(/_/g, ' ')
+}
+
+export function isAdvisoryMissingField(field: string): boolean {
+  return ADVISORY_MISSING_FIELDS.has(field.trim())
 }
 
 export type TrustDisplayLine = {
@@ -58,6 +71,14 @@ export type TrustDisplayLine = {
 
 export function formatMissingFieldLine(field: string): TrustDisplayLine {
   const label = formatMissingFieldLabel(field)
+  if (isAdvisoryMissingField(field)) {
+    return {
+      kind: 'missing',
+      main: `${label}（对照口径 · 非故障）`,
+      note: '产品主盘为 canonical；此项仅提示与对照轨可能不一致或未宣称。',
+      tone: 'drift',
+    }
+  }
   return {
     kind: 'missing',
     main: `${label}（引擎未返回）`,

@@ -42,7 +42,7 @@ const crossWarnItems = computed(() =>
 
 const badgeForTone = (tone: 'ok' | 'drift' | 'missing') => {
   if (tone === 'missing') return { label: '缺失', class: 'trust-badge--missing' }
-  if (tone === 'drift') return { label: '校勘', class: 'trust-badge--drift' }
+  if (tone === 'drift') return { label: '对照', class: 'trust-badge--drift' }
   return { label: '核对', class: '' }
 }
 
