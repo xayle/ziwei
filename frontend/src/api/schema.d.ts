@@ -18244,7 +18244,10 @@ export interface operations {
     };
     export_case_card_api_v1_cases__case_id__export_card_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description 卡片布局：default（横卡）或 douyin（9:16 竖版，T097/BE-GTM-11） */
+                layout?: string;
+            };
             header?: never;
             path: {
                 case_id: string;

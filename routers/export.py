@@ -14,7 +14,7 @@ import logging
 from typing import Annotated
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlmodel import Session, desc, select
 from starlette.requests import Request
@@ -260,13 +260,24 @@ async def export_case_card(
     case_id: str,
     current_user: RequiredUser,
     session: DbSession,
+    layout: str = Query(
+        "default",
+        description="卡片布局：default（横卡）或 douyin（9:16 竖版，T097/BE-GTM-11）",
+    ),
 ) -> Response:
     enforce_quota(request, "export")
     case = session.get(Case, case_id)
     if case is None or case.deleted_at is not None or case.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"命盘 {case_id} 不存在")
 
-    from services.pdf_exporter import generate_share_card
+    from services.pdf_exporter import SHARE_CARD_LAYOUTS, generate_share_card
+
+    layout_key = (layout or "default").strip().lower()
+    if layout_key not in SHARE_CARD_LAYOUTS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="layout 仅支持 default 或 douyin",
+        )
 
     snapshot = session.exec(
         select(Snapshot)
@@ -280,8 +291,10 @@ async def export_case_card(
     ).first()
 
     try:
-        png_bytes = await generate_share_card(case, snapshot)
+        png_bytes = await generate_share_card(case, snapshot, layout=layout_key)
         safe_name = _safe_filename(case.name or "命盘")
+        if layout_key == "douyin":
+            safe_name = f"{safe_name}-douyin"
         return Response(
             content=png_bytes,
             media_type="image/png",

@@ -9407,6 +9407,18 @@
               "type": "string",
               "title": "Case Id"
             }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "卡片布局：default（横卡）或 douyin（9:16 竖版，T097/BE-GTM-11）",
+              "default": "default",
+              "title": "Layout"
+            },
+            "description": "卡片布局：default（横卡）或 douyin（9:16 竖版，T097/BE-GTM-11）"
           }
         ],
         "responses": {

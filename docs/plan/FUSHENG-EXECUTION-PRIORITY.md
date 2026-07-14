@@ -5,7 +5,7 @@
 | **版本** | exec-priority-1.2（最终开工版） |
 | **日期** | 2026-07-12 |
 | **定位** | **按编号依次做，做完打勾，无需每次对话** |
-| **当前进度** | **T001–T070 ☑** → Phase E **T071–T085 ☑（U5）** → [POST-W14](./FUSHENG-EXECUTION-PRIORITY-POST-W14.md) **T086–T096 ☑ · 下一项 T097** |
+| **当前进度** | **T001–T070 ☑** → Phase E **T071–T085 ☑（U5）** → [POST-W14](./FUSHENG-EXECUTION-PRIORITY-POST-W14.md) **T086–T097 ☑ · 下一项 T098** |
 | **剩余工作（主执行）** | [**EXECUTION-REMAINING**](./FUSHENG-EXECUTION-REMAINING.md)（**R001–R116** 免对话） |
 | **八字紫微深度打磨** | [**BAZI-ZIWEI-POLISH-CHECKLIST**](./FUSHENG-BAZI-ZIWEI-POLISH-CHECKLIST.md)（细节索引 · 附录 B 映射 R 号） |
 | **上级** | [INTEGRATED-DEV-PLAN](./FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md)（细节）· [NODE-CHECKLIST](../guides/FUSHENG-NODE-CHECKLIST.md)（注意+插件） |
