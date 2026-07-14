@@ -5,6 +5,7 @@ import { useProfileStore } from '@/stores/profile'
 import {
   buildBaziStructuralLines,
   buildClassicPendingLines,
+  buildClassicCitationRows,
   buildDualTrackReferenceRows,
   buildDualTrackRows,
   buildIztroDisplay,
@@ -50,6 +51,7 @@ export function useEngineTrustDisplay(
   const palaceStructured = computed(() => buildPalaceStructuredRows(ziwei?.value))
   const dualTrackReference = computed(() => buildDualTrackReferenceRows())
   const classicPendingLines = computed(() => buildClassicPendingLines(classicsSpotcheck as Array<Record<string, unknown>>))
+  const classicCitationRows = computed(() => buildClassicCitationRows(classicsSpotcheck as Array<Record<string, unknown>>))
 
   return {
     missingFields,
@@ -57,6 +59,7 @@ export function useEngineTrustDisplay(
     dualTracks,
     dualTrackReference,
     classicPendingLines,
+    classicCitationRows,
     validationLines,
     iztro,
     liuri,

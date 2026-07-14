@@ -30,7 +30,7 @@ import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
 import { buildChartHash } from '@/utils/chartHash'
 import { fetchLifeVolumes, fetchLifeSnippets, useLifeVolumesApiEnabled } from '@/api/life'
 import type { LifeSnippetsResponseModel } from '@/api/openapiTypes'
-import { fetchReportExplainBatches, type ExplainBatchResponse } from '@/api/explain'
+import { fetchReportExplainBatchesWithMeta, type ExplainBatchResponse } from '@/api/explain'
 import type { LifeVolumeResponse, LifeVolume } from '@/types/life-volume'
 import { buildBaziRequest, buildZiweiRequest } from '@/utils/buildChartRequests'
 import ReportChapterNav from '@/components/fusheng/ReportChapterNav.vue'
@@ -67,6 +67,9 @@ const route = useRoute()
 const reportBodyRef = ref<HTMLElement | null>(null)
 const exportingPdf = ref(false)
 const exportingServerPdf = ref(false)
+const pdfFallbackNotice = ref('')
+const lifeVolumesDegradedNotice = ref('')
+const explainFailedNotice = ref('')
 const notesStore = useReportNotesStore()
 const aiStore = useAiStore()
 const auth = useAuthStore()
@@ -79,6 +82,7 @@ const {
   error,
   bazi,
   ziwei,
+  nameAnalysis,
   dayunReport,
   loadReport,
   requestMeta,
@@ -95,6 +99,7 @@ const {
   dualTracks,
   dualTrackReference,
   classicPendingLines,
+  classicCitationRows,
   validationLines,
   iztro,
   liuri,
@@ -127,6 +132,7 @@ const selectedLlmModule = ref<LlmModuleId>('career_detail')
 const chartHashRef = ref('pending')
 const explainBatch = ref<ExplainBatchResponse | null>(null)
 const lifeVolumeRemote = ref<LifeVolumeResponse | null>(null)
+const lifeSnippets = ref<LifeSnippetsResponseModel | null>(null)
 
 const reportPageClass = computed(() => ({
   'report-page--continuous': continuousRead.value,
@@ -139,11 +145,6 @@ async function applyYoubiHour() {
   })
 }
 
-watch(() => profile.activeProfileId, (id) => {
-  reportNotes.value = notesStore.getNotes(id)
-  lifeVolumeRemote.value = null
-}, { immediate: true })
-
 watch(reportNotes, (text) => {
   notesStore.setNotes(profile.activeProfileId, text)
 })
@@ -155,14 +156,20 @@ const volumeChapters = computed(() => (
 async function loadExplainBatches() {
   const data = profile.asProfileData()
   if (!data.birthDt) return
-  explainBatch.value = await fetchReportExplainBatches(
+  explainFailedNotice.value = ''
+  const result = await fetchReportExplainBatchesWithMeta(
     buildBaziRequest(data) as unknown as Record<string, unknown>,
     buildZiweiRequest(data) as unknown as Record<string, unknown>,
   )
+  explainBatch.value = result.data
+  if (!result.ok) {
+    explainFailedNotice.value = result.error || '解读批次加载失败，部分章节可能偏薄。'
+  }
 }
 
 async function loadLifeVolumesRemote() {
   lifeVolumeRemote.value = null
+  lifeVolumesDegradedNotice.value = ''
   const remoteCaseId = profile.activeProfile?.remoteCaseId
   const tryRemote = shouldTryLifeVolumesRemote({
     envFlag: useLifeVolumesApiEnabled(),
@@ -170,22 +177,23 @@ async function loadLifeVolumesRemote() {
     remoteCaseId,
   })
   if (!tryRemote) return
-  const caseId = remoteCaseId ?? profile.activeProfileId
-  if (!caseId) return
-  const doc = await fetchLifeVolumes(caseId)
-  if (!doc) return
+  // SHARE-01：仅真实云端 caseId，避免本地 UUID 误打 volumes
+  if (!remoteCaseId) return
+  const doc = await fetchLifeVolumes(remoteCaseId)
+  if (!doc) {
+    lifeVolumesDegradedNotice.value = '六卷远端不可用，已使用本地拼装（Adapter）。'
+    return
+  }
   lifeVolumeRemote.value = doc
   if (doc.chart_hash) {
     chartHashRef.value = doc.chart_hash
   }
 }
 
-const lifeSnippets = ref<LifeSnippetsResponseModel | null>(null)
-
 async function loadLifeSnippets() {
   lifeSnippets.value = null
   if (!auth.isLoggedIn) return
-  const caseId = profile.activeProfile?.remoteCaseId ?? profile.activeProfileId
+  const caseId = profile.activeProfile?.remoteCaseId
   if (!caseId) return
   lifeSnippets.value = await fetchLifeSnippets(caseId)
 }
@@ -239,7 +247,7 @@ const shareDisclaimer = computed(
 )
 
 const shareCaseId = computed(
-  () => profile.activeProfile?.remoteCaseId || (auth.isLoggedIn ? profile.activeProfileId : null),
+  () => profile.activeProfile?.remoteCaseId ?? null,
 )
 
 const showDouyinShare = computed(() => shareFactLines.value.length > 0 || Boolean(lifeSnippets.value))
@@ -341,6 +349,18 @@ const dayunRows = computed(() => {
       narrative: narrativeItem?.narrative || item.narrative || '',
     })
   })
+})
+
+/** BZ-Month：报告卷三月运表 */
+const monthlyFortuneRows = computed(() => {
+  const items = bazi.value?.monthly_fortune ?? []
+  return items.slice(0, 12).map((m) => ({
+    month: m.month,
+    ganzhi: m.month_ganzhi?.trim() || m.month_dizhi || '—',
+    luck: m.luck_level,
+    tip: m.tip || '—',
+    clash: m.clash_with?.trim() || '',
+  }))
 })
 
 const palaceRows = computed(() => (ziwei.value?.palaces ?? []).map((p) => ({
@@ -499,6 +519,7 @@ async function downloadPdf() {
   if (exportingServerPdf.value || exportingPdf.value) return
   const label = profile.activeProfile?.label || '浮生报告'
   const filename = `${label}.pdf`
+  pdfFallbackNotice.value = ''
 
   exportingServerPdf.value = true
   try {
@@ -510,7 +531,8 @@ async function downloadPdf() {
     trackFlowEvent('report_pdf_server', profile.activeProfileId)
     return
   } catch {
-    // 服务端不可用时回退客户端导出
+    // PDF-01：服务端失败时可见降级，不再静默
+    pdfFallbackNotice.value = '服务端 PDF 不可用，已改用当前页面导出（内容可能与服务端排版不同）。'
   } finally {
     exportingServerPdf.value = false
   }
@@ -600,6 +622,18 @@ async function reloadFullReport() {
   await finalizeReportLoad()
 }
 
+watch(() => profile.activeProfileId, (id, prev) => {
+  reportNotes.value = notesStore.getNotes(id)
+  lifeVolumeRemote.value = null
+  lifeSnippets.value = null
+  lifeVolumesDegradedNotice.value = ''
+  explainFailedNotice.value = ''
+  // RACE-01：切换档案后自动重生（首屏由 onMounted 负责）
+  if (prev && id && prev !== id) {
+    void reloadFullReport()
+  }
+}, { immediate: true })
+
 onMounted(() => {
   reloadReadingProgress()
   void aiStore.loadConfig()
@@ -660,8 +694,32 @@ watch(
 
     <p v-if="loading" class="report-status">正在生成报告…</p>
     <p v-if="error" class="report-error">{{ error }}</p>
+    <p v-if="lifeVolumesDegradedNotice" class="report-degraded-notice" data-testid="report-volumes-degraded">{{ lifeVolumesDegradedNotice }}</p>
+    <p v-if="explainFailedNotice" class="report-degraded-notice" data-testid="report-explain-failed">{{ explainFailedNotice }}</p>
+    <p v-if="pdfFallbackNotice" class="report-degraded-notice" data-testid="report-pdf-fallback">{{ pdfFallbackNotice }}</p>
     <p v-if="snapshotNote" class="report-snapshot-note" data-testid="report-snapshot-note">{{ snapshotNote }}</p>
     <p v-if="snapshotError" class="report-snapshot-error">{{ snapshotError }}</p>
+
+    <section
+      v-if="nameAnalysis"
+      class="fs-card report-name-panel no-print"
+      data-testid="report-name-analysis"
+    >
+      <h2 class="report-name-panel__title">
+        姓名五格 · {{ nameAnalysis.surname }}{{ nameAnalysis.given_name }}
+      </h2>
+      <p class="report-name-panel__summary">
+        综合 {{ nameAnalysis.overall_score }} · {{ nameAnalysis.summary }}
+      </p>
+      <ul class="report-name-panel__grids">
+        <li>天格 {{ nameAnalysis.tianke.number }}（{{ nameAnalysis.tianke.element }} · {{ nameAnalysis.tianke.lucky }}）</li>
+        <li>人格 {{ nameAnalysis.renke.number }}（{{ nameAnalysis.renke.element }} · {{ nameAnalysis.renke.lucky }}）</li>
+        <li>地格 {{ nameAnalysis.dike.number }}（{{ nameAnalysis.dike.element }} · {{ nameAnalysis.dike.lucky }}）</li>
+        <li>外格 {{ nameAnalysis.waike.number }}（{{ nameAnalysis.waike.element }} · {{ nameAnalysis.waike.lucky }}）</li>
+        <li>总格 {{ nameAnalysis.zonge.number }}（{{ nameAnalysis.zonge.element }} · {{ nameAnalysis.zonge.lucky }}）</li>
+        <li>三才 {{ nameAnalysis.sancai.pattern }}（{{ nameAnalysis.sancai.lucky }}）</li>
+      </ul>
+    </section>
 
     <div class="report-layout">
       <ReportChapterNav
@@ -681,7 +739,7 @@ watch(
           :show-resume="true"
           :reading-paragraphs="reportReadingParagraphs"
           :reading-loading="loading && !readingGuideReady"
-          :reading-failed="reportReadingFailed"
+          :reading-failed="Boolean(explainFailedNotice) && !reportUsingDynamicReading"
           :using-dynamic-reading="reportUsingDynamicReading"
           @resume="resumeReading"
         />
@@ -847,11 +905,31 @@ watch(
               />
             </div>
             <div
+              v-if="classicCitationRows.length"
+              class="report-classics-cite"
+              data-testid="report-classics-cite"
+            >
+              <h3>典籍引用（含页码）</h3>
+              <table class="report-table">
+                <thead>
+                  <tr><th>ID</th><th>书名</th><th>页/章</th><th>状态</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in classicCitationRows" :key="row.id">
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.title }}</td>
+                    <td>{{ row.sourcePage || '—' }}</td>
+                    <td>{{ row.verificationStatus }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div
               v-if="classicPendingLines.length"
               class="report-classics-pending"
               data-testid="report-classics-pending"
             >
-              <h3>典籍语料</h3>
+              <h3>典籍语料（待核）</h3>
               <ul>
                 <li v-for="(line, idx) in classicPendingLines" :key="idx">{{ line }}</li>
               </ul>
@@ -904,6 +982,25 @@ watch(
               <p v-if="row.loveHint" class="dayun-hint dayun-hint--heuristic">感情：{{ row.loveHint }}</p>
               <p v-if="row.narrative" class="dayun-detail__narrative">{{ row.narrative }}</p>
             </div>
+            <section
+              v-if="monthlyFortuneRows.length"
+              class="report-monthly"
+              data-testid="report-monthly-fortune"
+            >
+              <h3>月运（当年）</h3>
+              <p class="hint">来自排盘 `monthly_fortune`；仅供文化研究参考。</p>
+              <table class="report-table">
+                <thead><tr><th>月</th><th>干支</th><th>吉凶</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr v-for="row in monthlyFortuneRows" :key="row.month">
+                    <td>{{ row.month }}月</td>
+                    <td>{{ row.ganzhi }}</td>
+                    <td>{{ row.luck }}</td>
+                    <td>{{ row.tip }}{{ row.clash ? ` · 冲 ${row.clash}` : '' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
           </template>
 
           <template v-else-if="volume.id === 'vol4'">
@@ -961,6 +1058,9 @@ watch(
           </template>
 
           <template v-else-if="volume.id === 'vol6'">
+            <p class="hint" data-testid="vol6-ondemand-note">
+              卷六·问书为按需展开区：下方批注本地保存；AI 解读需主动展开后生成，不会自动调用。
+            </p>
             <textarea
               v-model="reportNotes"
               class="report-notes"
@@ -1064,11 +1164,41 @@ watch(
 }
 
 .report-status,
-.report-error {
+.report-error,
+.report-degraded-notice {
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
   font-size: 14px;
+}
+
+.report-degraded-notice {
+  background: color-mix(in srgb, var(--brand-cinnabar, #a65) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--brand-cinnabar, #a65) 35%, var(--border));
+  color: var(--text);
+}
+
+.report-name-panel {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+}
+
+.report-name-panel__title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.report-name-panel__summary {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text-2, var(--muted));
+}
+
+.report-name-panel__grids {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .report-status {

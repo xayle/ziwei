@@ -50,13 +50,20 @@ const displayParagraphs = computed(() => (
       <div v-if="readingFailed" data-testid="reading-guide-fallback">
         <TrustDegradedBanner
           v-if="!isPlain"
-          message="读法导览暂不可用，以下为默认说明。"
+          message="读法导览加载失败，以下为默认说明。"
           status="warn"
         />
         <p v-else class="reading-guide__fallback">
-          读法导览暂不可用，以下为默认说明。
+          读法导览加载失败，以下为默认说明。
         </p>
       </div>
+      <p
+        v-else-if="usingDynamicReading === false && !readingLoading"
+        class="reading-guide__fallback"
+        data-testid="reading-guide-default-note"
+      >
+        当前使用默认读法说明（远端读法暂未接入或未返回）。
+      </p>
       <p
         v-for="(paragraph, index) in displayParagraphs"
         :key="index"

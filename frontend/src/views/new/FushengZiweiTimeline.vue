@@ -127,32 +127,33 @@ watch(selectedDate, (date) => {
 
 
 
+function dayunEndYear(item: { start_year?: number | null; end_year?: number | null; start_age?: number | null; end_age?: number | null }): number | null {
+  if (item.end_year != null && Number.isFinite(item.end_year)) return Number(item.end_year)
+  if (item.start_year == null || !Number.isFinite(item.start_year)) return null
+  if (item.start_age != null && item.end_age != null) {
+    return item.start_year + Math.max(0, item.end_age - item.start_age)
+  }
+  return item.start_year + 9
+}
+
 const dayunRows = computed(() => {
-
   const items = ziwei.value?.dayun?.items ?? []
-
-  return items.map((item, idx) => ({
-
-    idx,
-
-    branchIdx: dayunBranchIdx(item),
-
-    ganzhi: item.ganzhi || '—',
-
-    ages: `${item.start_age ?? '—'}–${item.end_age ?? '—'} 岁`,
-
-    years: `${item.start_year ?? '—'} 起`,
-
-    sihua: Object.entries(item.sihua ?? {}).map(([star, tf]) => `${star}${tf}`).join(' · ') || '—',
-
-    active: item.start_year != null && item.end_age != null
-
-      && item.start_year <= currentYear
-
-      && currentYear <= item.start_year + (item.end_age - item.start_age),
-
-  }))
-
+  return items.map((item, idx) => {
+    const endYear = dayunEndYear(item as { start_year?: number | null; end_year?: number | null; start_age?: number | null; end_age?: number | null })
+    return {
+      idx,
+      branchIdx: dayunBranchIdx(item),
+      ganzhi: item.ganzhi || '—',
+      ages: `${item.start_age ?? '—'}–${item.end_age ?? '—'} 岁`,
+      years: item.start_year != null && endYear != null
+        ? `${item.start_year}–${endYear}`
+        : `${item.start_year ?? '—'} 起`,
+      sihua: Object.entries(item.sihua ?? {}).map(([star, tf]) => `${star}${tf}`).join(' · ') || '—',
+      active: item.start_year != null && endYear != null
+        && item.start_year <= currentYear
+        && currentYear <= endYear,
+    }
+  })
 })
 
 

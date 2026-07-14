@@ -198,4 +198,77 @@ describe('buildLifeVolumes', () => {
     expect(palaceText.length).toBeGreaterThan(40)
     expect(vol4?.sections.some((s) => s.id === 'patterns')).toBe(true)
   })
+
+  it('puts monthly_fortune into vol3 (BZ-Month)', () => {
+    const bazi = {
+      ...minimalBazi,
+      monthly_fortune: [
+        {
+          month: 3,
+          lunar_month: 2,
+          month_dizhi: '卯',
+          luck_level: '吉',
+          color_hint: '绿',
+          tip: '宜推进合作与学习',
+          month_ganzhi: '乙卯',
+          disclaimer: '仅供学术研究参考',
+        },
+      ],
+    } as BaziResponse
+
+    const doc = buildLifeVolumes({
+      caseId: 'case-1',
+      chartHash: 'hash-1',
+      bazi,
+      ziwei: null,
+    })
+
+    const vol3 = doc.volumes.find((v) => v.id === 'vol3')
+    const monthly = vol3?.sections.find((s) => s.id === 'monthly-fortune')
+    expect(monthly?.blocks[0]?.text).toContain('3月')
+    expect(monthly?.blocks[0]?.text).toContain('吉')
+    expect(monthly?.blocks[0]?.text).toContain('乙卯')
+  })
+
+  it('thickens vol1 pillars / strength (CNT-01)', () => {
+    const bazi = {
+      ...minimalBazi,
+      pillars_primary: {
+        year: { stem: '庚', branch: '午', ganzhi: '庚午' },
+        month: { stem: '戊', branch: '寅', ganzhi: '戊寅' },
+        day: { stem: '甲', branch: '子', ganzhi: '甲子' },
+        hour: { stem: '丙', branch: '寅', ganzhi: '丙寅' },
+      },
+      day_master_strength: {
+        score: 62,
+        tier: '中和偏弱',
+        factors: [{ name: '月令得分', score: 70, weight: 0.4, weighted_score: 28, reason: '月支旺相状态' }],
+      },
+      current_fortune_summary: {
+        current_dayun: '己亥',
+        dayun_years_remaining: 4,
+        current_liunian: '丙午',
+        this_year_domains: { 事业: '稳中求进' },
+        top3_actions: ['守成', '复盘'],
+      },
+    } as BaziResponse
+
+    const doc = buildLifeVolumes({
+      caseId: 'case-1',
+      chartHash: 'hash-1',
+      bazi,
+      ziwei: null,
+    })
+    const vol1 = doc.volumes.find((v) => v.id === 'vol1')
+    const pillars = vol1?.sections.find((s) => s.id === 'pillars')?.blocks[0]?.text ?? ''
+    const strength = vol1?.sections.find((s) => s.id === 'strength')?.blocks[0]?.text ?? ''
+    const fortune = vol1?.sections.find((s) => s.id === 'current-fortune')?.blocks[0]?.text ?? ''
+    expect(pillars).toContain('年柱 庚午')
+    expect(pillars).toContain('日柱 甲子')
+    expect(pillars.length).toBeGreaterThanOrEqual(40)
+    expect(strength).toContain('月令得分')
+    expect(fortune).toContain('事业')
+    expect(vol1?.sections.some((s) => s.id === 'strength')).toBe(true)
+    expect(vol1?.sections.some((s) => s.id === 'current-fortune')).toBe(true)
+  })
 })

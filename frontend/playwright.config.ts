@@ -28,7 +28,9 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev -- --host 127.0.0.1 --port 5173',
     url: 'http://127.0.0.1:5173/static/app/',
-    reuseExistingServer: !(process.env.CI || autopilotE2e),
+    // R060-env：本地/Autopilot 复用已有 Vite，避免抢 5173；CI 强制新建。
+    // 需要独占时设 PW_FORCE_NEW_SERVER=1
+    reuseExistingServer: !(process.env.CI || process.env.PW_FORCE_NEW_SERVER),
     timeout: 120_000,
   },
 })

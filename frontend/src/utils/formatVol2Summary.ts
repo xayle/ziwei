@@ -16,6 +16,17 @@ function relationItemLine(item: NonNullable<NonNullable<BaziResponse['relations_
 
 const VOL2_READING_SUFFIX = '；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读。'
 
+/** Pad short blocks so content density stays above the thin gate (<40 chars). */
+export function enrichVolumeBlockText(label: string, body: string, floor = 40): string {
+  const trimmed = body.trim()
+  if (trimmed.length >= floor) return trimmed
+  let combined = `${label}：${trimmed}。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。`
+  if (combined.length < floor) {
+    combined = `${combined}详见本节与相邻讲解。`
+  }
+  return combined
+}
+
 /** Pad short vol2 blocks so content audit thin gate passes (W102-14). */
 export function enrichVol2BlockText(label: string, body: string): string {
   const trimmed = body.trim()

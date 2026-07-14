@@ -136,6 +136,9 @@ def _normalize_relation_type(raw_type: str) -> str:
     return normalized if normalized in {"刑", "冲", "合", "害", "破", "空亡", "干支互动"} else "干支互动"
 
 
+_COMBINE_SUMMARY_HINTS = ("六合", "三合", "半合", "拱合", "合")
+
+
 BRANCH_ELEMENT = {
     "子": "water",
     "丑": "earth",
@@ -1228,9 +1231,16 @@ def bazi_full(
 
     relation_items: list[RelationItemModel] = []
     for raw_item in payload.get("dizhi_relations", []) or []:
+        rel_type = _normalize_relation_type(str(raw_item.get("type") or raw_item.get("relation") or "干支互动"))
+        summary = _text_or_empty(
+            raw_item.get("summary") or raw_item.get("desc") or raw_item.get("note") or raw_item.get("status")
+        )
+        # 引擎常给「干支互动」+ summary「拱合」：升级为合，避免 combine_summary 假缺失
+        if rel_type == "干支互动" and summary and any(kw in summary for kw in _COMBINE_SUMMARY_HINTS):
+            rel_type = "合"
         relation_items.append(
             RelationItemModel(
-                type=_normalize_relation_type(str(raw_item.get("type") or raw_item.get("relation") or "干支互动")),
+                type=rel_type,
                 subject=_text_or_empty(
                     raw_item.get("subject")
                     or raw_item.get("from")
@@ -1240,9 +1250,7 @@ def bazi_full(
                     or raw_item.get("type")
                 ),
                 target=str(raw_item.get("target") or raw_item.get("to") or raw_item.get("b") or "") or None,
-                summary=_text_or_empty(
-                    raw_item.get("summary") or raw_item.get("desc") or raw_item.get("note") or raw_item.get("status")
-                ),
+                summary=summary,
                 strength=raw_item.get("strength") if raw_item.get("strength") in {"strong", "medium", "weak"} else None,
             )
         )
@@ -1348,7 +1356,14 @@ def bazi_full(
     if not _clash_summary and tiangan_clash_notes:
         _clash_summary = tiangan_clash_notes[0]
 
+    _COMBINE_KW = _COMBINE_SUMMARY_HINTS
     _combine_summary = next((item.summary for item in relation_items if item.type == "合" and item.summary), "")
+    if not _combine_summary:
+        # type 常归一为「干支互动」，合类信号在 summary（如「拱合」）
+        _combine_summary = next(
+            (item.summary for item in relation_items if item.summary and any(kw in item.summary for kw in _COMBINE_KW)),
+            "",
+        )
     _harm_summary = next((item.summary for item in relation_items if item.type == "害" and item.summary), "")
 
     _interaction_parts = [

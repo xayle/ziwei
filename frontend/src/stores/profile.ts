@@ -229,6 +229,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   /** 用户是否主动保存过个人信息（区别于初始默认值） */
   const saved = ref(false)
+  const storageLoadError = ref('')
 
   const activeProfile = computed(() => profiles.value.find((item) => item.id === activeProfileId.value) || profiles.value[0] || null)
   const profileCount = computed(() => profiles.value.length)
@@ -452,6 +453,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   /** 从 localStorage 加载 */
   function load() {
+    storageLoadError.value = ''
     try {
       const rawProfiles = localStorage.getItem(PROFILES_KEY)
       const rawActiveId = localStorage.getItem(ACTIVE_PROFILE_KEY)
@@ -494,7 +496,18 @@ export const useProfileStore = defineStore('profile', () => {
       saved.value = true
       persistProfiles()
     } catch {
-      // ignore parse errors
+      // STORAGE-01：损坏时重置默认档并提示
+      profiles.value = [createDefaultProfileRecord()]
+      activeProfileId.value = 'default'
+      applyProfileData(DEFAULT)
+      storageLoadError.value = '本地档案数据已损坏并已重置为空档案，请重新填写生辰。'
+      try {
+        localStorage.removeItem(PROFILES_KEY)
+        localStorage.removeItem(STORAGE_KEY)
+      } catch {
+        /* ignore */
+      }
+      persistProfiles()
     }
   }
 
@@ -657,6 +670,7 @@ export const useProfileStore = defineStore('profile', () => {
     birthTimePrecision, unknownTimeFallback,
     currentCityName, currentProvince, currentLon, currentTz, focusTopic, lunarBirthDt, cityTier, industry,
     isFilled, saved,
+    storageLoadError,
     profiles, activeProfile, activeProfileId, profileCount,
     remoteCases, loadingRemoteCases, remoteCasesError,
     remoteSnapshots, loadingRemoteSnapshots, remoteSnapshotsError,

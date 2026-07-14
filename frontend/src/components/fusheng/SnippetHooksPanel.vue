@@ -54,7 +54,10 @@ function trackCopy(action: string, hook?: SnippetHookItem, index?: number) {
 
 async function copyOne(hook: SnippetHookItem, index: number) {
   const ok = await copyTextToClipboard(hook.text)
-  if (!ok) return
+  if (!ok) {
+    flashCopied(`fail-${index}`)
+    return
+  }
   flashCopied(`i-${index}`)
   trackCopy('one', hook, index)
 }
@@ -62,10 +65,19 @@ async function copyOne(hook: SnippetHookItem, index: number) {
 async function copyAll() {
   const blob = props.hooks.map((h) => h.text).filter(Boolean).join('\n')
   const ok = await copyTextToClipboard(blob)
-  if (!ok) return
+  if (!ok) {
+    flashCopied('fail-all')
+    return
+  }
   flashCopied('all')
   trackCopy('all')
 }
+
+const copyStatusMessage = computed(() => {
+  if (!copiedKey.value) return ''
+  if (copiedKey.value.startsWith('fail')) return '复制失败，请手动选择文本。'
+  return '已复制'
+})
 </script>
 
 <template>
@@ -86,9 +98,10 @@ async function copyAll() {
         data-testid="snippet-copy-all"
         @click="copyAll"
       >
-        {{ copiedKey === 'all' ? '已复制全部' : '复制全部' }}
+        {{ copiedKey === 'all' ? '已复制全部' : copiedKey === 'fail-all' ? '复制失败' : '复制全部' }}
       </button>
     </header>
+    <p class="snippet-hooks__live" role="status" aria-live="polite">{{ copyStatusMessage }}</p>
 
     <ul class="snippet-hooks__list">
       <li
@@ -105,7 +118,7 @@ async function copyAll() {
           :data-testid="`snippet-copy-${index}`"
           @click="copyOne(hook, index)"
         >
-          {{ copiedKey === `i-${index}` ? '已复制' : '复制' }}
+          {{ copiedKey === `i-${index}` ? '已复制' : copiedKey === `fail-${index}` ? '失败' : '复制' }}
         </button>
       </li>
     </ul>
@@ -205,6 +218,13 @@ async function copyAll() {
   margin: 0.75rem 0 0;
   font-size: 0.72rem;
   line-height: 1.5;
+  color: var(--text-3, #9a8b7a);
+}
+
+.snippet-hooks__live {
+  margin: 0.35rem 0 0;
+  min-height: 1.1em;
+  font-size: 0.72rem;
   color: var(--text-3, #9a8b7a);
 }
 

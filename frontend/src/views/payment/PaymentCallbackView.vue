@@ -6,6 +6,8 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useEntitlementStore } from '@/stores/entitlement'
+import { useProfileStore } from '@/stores/profile'
+import { isArchiveReady } from '@/utils/profileReadiness'
 import type { PaymentPlan } from '@/api/auth'
 import { track } from '@/utils/analytics'
 import '@/assets/variables.css'
@@ -58,6 +60,15 @@ onMounted(async () => {
     /* ignore */
   }
 
+  // AUTH-02：档案未齐时先回档案并带 redirect，避免门禁踢空
+  const profile = useProfileStore()
+  if (!isArchiveReady(profile.asProfileData())) {
+    await router.replace({
+      path: '/profile',
+      query: { reason: 'archive', redirect: '/report?unlocked=1', plan },
+    })
+    return
+  }
   await router.replace({
     path: '/report',
     query: { unlocked: '1', plan },

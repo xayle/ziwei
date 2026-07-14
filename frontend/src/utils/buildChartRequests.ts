@@ -19,9 +19,14 @@ function applyUnknownTimeFallback(
   fallback: ProfileData['unknownTimeFallback'],
 ): string {
   const [datePart] = birthDt.split('T')
-  const hour = fallback === 'noon' ? 12 : fallback === 'midday' ? 12 : 0
-  const minute = fallback === 'start_of_hour' ? 0 : 30
-  return `${datePart}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
+  // noon=正午 12:00；midday=日中 12:30；start_of_hour=当日 00:00
+  if (fallback === 'noon') {
+    return `${datePart}T12:00:00`
+  }
+  if (fallback === 'midday') {
+    return `${datePart}T12:30:00`
+  }
+  return `${datePart}T00:00:00`
 }
 
 export function buildChartRequestMeta(data: ProfileData): ChartRequestMeta {
@@ -142,7 +147,8 @@ export function buildZiweiRequest(
     minute: mm || 0,
     ...(gender ? { gender } : {}),
     liunian_year: resolvedLiunianYear,
-    ...(data.solarTime ? { longitude: lon } : {}),
+    // solarTime ↔ longitude：真太阳时修正依赖经度（档案 solarTime 开关 + 始终传 lon，Z-09）
+    longitude: lon,
     template_version: data.templateVersion ?? 'standard',
     leap_month_method: data.isLeapMonth ? 'same' : 'mid',
     year_divide: data.yearDivide ?? 'lichun',

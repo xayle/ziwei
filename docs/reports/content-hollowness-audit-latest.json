@@ -1,40 +1,41 @@
 {
   "profile": "1990-01-15 08:30 male Beijing",
+  "source": "build_life_volumes_from_charts",
   "volumes": {
     "preface": {
-      "blocks": 1,
+      "blocks": 2,
       "fallback_pct": 0.0,
       "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 84.0
+      "avg_chars": 73.5
     },
     "vol1": {
-      "blocks": 13,
+      "blocks": 10,
       "fallback_pct": 0.0,
-      "thin_pct": 46.2,
-      "trunc_pct": 0.0,
-      "avg_chars": 93.2
+      "thin_pct": 0.0,
+      "trunc_pct": 10.0,
+      "avg_chars": 155.2
     },
     "vol2": {
       "blocks": 3,
       "fallback_pct": 0.0,
       "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 72.7
+      "avg_chars": 69.3
     },
     "vol3": {
-      "blocks": 16,
-      "fallback_pct": 50.0,
+      "blocks": 29,
+      "fallback_pct": 0.0,
       "thin_pct": 0.0,
-      "trunc_pct": 50.0,
-      "avg_chars": 573.2
+      "trunc_pct": 0.0,
+      "avg_chars": 158.0
     },
     "vol4": {
       "blocks": 17,
       "fallback_pct": 0.0,
-      "thin_pct": 23.5,
+      "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 62.4
+      "avg_chars": 71.4
     },
     "vol5": {
       "blocks": 3,
@@ -48,27 +49,34 @@
       "fallback_pct": 0.0,
       "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 45.0
+      "avg_chars": 66.0
     },
     "colophon": {
-      "blocks": 1,
+      "blocks": 2,
       "fallback_pct": 0.0,
       "thin_pct": 0.0,
       "trunc_pct": 0.0,
-      "avg_chars": 55.0
+      "avg_chars": 69.0
     }
   },
   "rollup": {
-    "blocks_total": 55,
-    "thin_blocks": 10,
-    "thin_pct": 18.2,
-    "fallback_blocks": 8,
-    "fallback_pct": 14.5,
+    "blocks_total": 67,
+    "thin_blocks": 0,
+    "thin_pct": 0.0,
+    "fallback_blocks": 0,
+    "fallback_pct": 0.0,
     "week4_target_thin_pct": 35.0,
     "thin_target_met": true
   },
   "volume_samples": {
     "preface": [
+      {
+        "chars": 63,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "辑录对象：审计样本 · 1990-01-15 北京。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
+      },
       {
         "chars": 84,
         "fallback": false,
@@ -79,18 +87,18 @@
     ],
     "vol1": [
       {
-        "chars": 13,
+        "chars": 81,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "日主 庚辰；格局 正印格。"
+        "thin": false,
+        "preview": "卷一四柱根气：年柱 己巳。月柱 丁丑。日柱 庚辰。时柱 庚辰。日主 庚辰；格局 正印格。以排盘 fact 为准，配合卷内 cite/inference 分层阅读"
       },
       {
-        "chars": 10,
+        "chars": 69,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "印旺生身，利学业才德"
+        "thin": false,
+        "preview": "卷一格局：格局取「正印格」。印旺生身，利学业才德（等级 中格）。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
       },
       {
         "chars": 99,
@@ -102,18 +110,18 @@
     ],
     "vol2": [
       {
-        "chars": 72,
+        "chars": 69,
         "fallback": false,
         "truncated": false,
         "thin": false,
-        "preview": "卷二干支关系摘要：拱合；丁[火]克庚[金]；丁[火]克庚[金]；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读。"
+        "preview": "卷二干支关系摘要：拱合；丁[火]克庚[金]；丁[火]克庚[金]。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
       },
       {
-        "chars": 81,
+        "chars": 74,
         "fallback": false,
         "truncated": false,
         "thin": false,
-        "preview": "卷二神煞摘要：劫煞、天乙贵人、天德贵人、天德贵人、月德贵人、月德贵人、魁罡、天喜；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读"
+        "preview": "卷二神煞摘要：劫煞、天乙贵人、天德贵人、月德贵人、魁罡、天喜、灾煞、金舆。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
       },
       {
         "chars": 65,
@@ -125,41 +133,41 @@
     ],
     "vol3": [
       {
-        "chars": 1030,
-        "fallback": true,
-        "truncated": true,
+        "chars": 394,
+        "fallback": false,
+        "truncated": false,
         "thin": false,
-        "preview": "1. 丙子 · 0–9岁 · 1990–1999年 · 十神 七杀 · 纳音 涧下水。【0岁—9岁·丙子大运】天干丙：炎炎烈日，光芒万丈；地支子：冬水藏龙，智慧"
+        "preview": "1. 丙子 · 0–9岁 · 1990–1999年 · 十神 七杀。【0岁—9岁·丙子大运】天干丙：炎炎烈日，光芒万丈；地支子：冬水藏龙，智慧深藏。命局格局正印"
       },
       {
-        "chars": 1077,
-        "fallback": true,
-        "truncated": true,
+        "chars": 396,
+        "fallback": false,
+        "truncated": false,
         "thin": false,
-        "preview": "2. 乙亥 · 10–19岁 · 2000–2009年 · 十神 正财 · 纳音 山头火。【10岁—19岁·乙亥大运】天干乙：柔弱芳草，柔中带韧；地支亥：深冬玄"
+        "preview": "2. 乙亥 · 10–19岁 · 2000–2009年 · 十神 正财。【10岁—19岁·乙亥大运】天干乙：柔弱芳草，柔中带韧；地支亥：深冬玄水，潜龙待机。命局"
       },
       {
-        "chars": 1115,
-        "fallback": true,
-        "truncated": true,
+        "chars": 396,
+        "fallback": false,
+        "truncated": false,
         "thin": false,
-        "preview": "3. 甲戌 · 20–29岁 · 2010–2019年 · 十神 偏财 · 纳音 山头火。【20岁—29岁·甲戌大运】天干甲：参天大树，昂扬进取；地支戌：戌土燥"
+        "preview": "3. 甲戌 · 20–29岁 · 2010–2019年 · 十神 偏财。【20岁—29岁·甲戌大运】天干甲：参天大树，昂扬进取；地支戌：戌土燥烈，储藏余热。命局"
       }
     ],
     "vol4": [
       {
-        "chars": 26,
+        "chars": 50,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "卷四命盘概要：五行局 金四局；命宫 癸酉；身宫 己巳"
+        "thin": false,
+        "preview": "卷四命盘概要：五行局 金四局；命宫 癸酉；身宫 己巳。阅读时先定命身轴，再对照十二宫主星与格局条文。"
       },
       {
-        "chars": 32,
+        "chars": 75,
         "fallback": false,
         "truncated": false,
-        "thin": true,
-        "preview": "武贪格：武曲贪狼同坐官禄宫，偏财武职皆有机缘，中年以后财运渐旺。"
+        "thin": false,
+        "preview": "紫微格局：武贪格：武曲贪狼同坐官禄宫，偏财武职皆有机缘，中年以后财运渐旺。。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
       },
       {
         "chars": 42,
@@ -194,20 +202,27 @@
     ],
     "vol6": [
       {
-        "chars": 45,
+        "chars": 66,
         "fallback": false,
         "truncated": false,
         "thin": false,
-        "preview": "卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。"
+        "preview": "卷六为问书助手：需用户主动展开后选择事业/婚恋等模块提问；打磨期不自动调用 LLM，避免首屏静默消耗。展开后即可与排盘事实对照追问。"
       }
     ],
     "colophon": [
       {
-        "chars": 55,
+        "chars": 56,
         "fallback": false,
         "truncated": false,
         "thin": false,
-        "preview": "校勘摘要：排盘字段齐备时可核对 missing/iztro/wenmo；详见 expandable 校勘脚注。"
+        "preview": "校勘：引擎 bazi+ziwei；排盘字段未齐见下行，可核对卷内 fact/cite/inference 分层。"
+      },
+      {
+        "chars": 82,
+        "fallback": false,
+        "truncated": false,
+        "thin": false,
+        "preview": "未齐字段：combine_summary、palace_ten_gods、youbi_month_vs_iztro_hour（不影响已写出块的阅读，展开脚注可核"
       }
     ]
   },

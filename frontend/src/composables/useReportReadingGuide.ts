@@ -26,7 +26,9 @@ export function useReportReadingGuide(
     extractAllReadingGuideParagraphs(batch.value).length > 0
     || extractReadingGuideFromLifeVolumes(volumeDoc?.value).length > 0
   ))
-  // volumes 权威路径下可能跳过 explain；两侧均无读法时展示默认文案 + 降级提示
-  const readingFailed = computed(() => !usingDynamicReading.value)
-  return { readingParagraphs, usingDynamicReading, readingFailed }
+  // volumes 权威路径下可能跳过 explain；两侧均无读法时用默认文案
+  // REP-05：默认读法 ≠ 加载失败 —— readingFailed 仅在「期望动态读法却失败」时由调用方置 true
+  const readingFailed = computed(() => false)
+  const usingDefaultReading = computed(() => !usingDynamicReading.value)
+  return { readingParagraphs, usingDynamicReading, readingFailed, usingDefaultReading }
 }

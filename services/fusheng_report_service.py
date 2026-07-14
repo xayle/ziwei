@@ -355,8 +355,8 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     }
     precision_label = precision_labels.get(meta.get("birth_time_precision") or "exact", "精确到分")
     fallback_labels = {
-        "midday": "默认午时",
-        "noon": "正午",
+        "midday": "日中 12:30",
+        "noon": "正午 12:00",
         "start_of_hour": "时辰起点",
     }
     fallback = meta.get("unknown_time_fallback")

@@ -98,9 +98,24 @@ export async function fetchReportExplainBatches(
   baziPayload: Record<string, unknown>,
   ziweiPayload: Record<string, unknown>,
 ): Promise<ExplainBatchResponse> {
+  const result = await fetchReportExplainBatchesWithMeta(baziPayload, ziweiPayload)
+  return result.data
+}
+
+/** REP-02：带失败元信息，避免空 sections 静默当成功 */
+export async function fetchReportExplainBatchesWithMeta(
+  baziPayload: Record<string, unknown>,
+  ziweiPayload: Record<string, unknown>,
+): Promise<{ ok: boolean; data: ExplainBatchResponse; error?: string }> {
   const [baziEx, ziweiEx] = await Promise.all([
-    fetchBaziExplainBatch([...REPORT_BAZI_EXPLAIN_SECTIONS], baziPayload),
-    fetchZiweiExplainBatch([...REPORT_ZIWEI_EXPLAIN_SECTIONS], ziweiPayload),
+    fetchBaziExplainBatchWithMeta([...REPORT_BAZI_EXPLAIN_SECTIONS], baziPayload),
+    fetchZiweiExplainBatchWithMeta([...REPORT_ZIWEI_EXPLAIN_SECTIONS], ziweiPayload),
   ])
-  return mergeExplainResponses(baziEx, ziweiEx)
+  const ok = baziEx.ok || ziweiEx.ok
+  const errors = [baziEx.error, ziweiEx.error].filter(Boolean)
+  return {
+    ok,
+    data: mergeExplainResponses(baziEx.data, ziweiEx.data),
+    error: errors.length ? errors.join('；') : undefined,
+  }
 }

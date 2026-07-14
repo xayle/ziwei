@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { downloadCaseShareCard, saveShareCardPng } from '@/api/exportCard'
+import { mintH5PreviewToken } from '@/api/auth'
+import { copyTextToClipboard } from '@/utils/copyText'
 import { track } from '@/utils/analytics'
 
 const props = withDefaults(
@@ -10,7 +12,7 @@ const props = withDefaults(
     factLines: string[]
     gejuLine?: string | null
     disclaimer?: string | null
-    /** 有 case 时可调用 BE 导出 PNG */
+    /** 有 case 时可调用 BE 导出 PNG / 签发 H5 试读 */
     caseId?: string | null
     source?: string
   }>(),
@@ -27,8 +29,18 @@ const exporting = ref(false)
 const exportError = ref('')
 const exportOk = ref(false)
 
+const minting = ref(false)
+const mintStatus = ref('')
+
 const lines = computed(() => props.factLines.filter((t) => t.trim()).slice(0, 4))
 const canExport = computed(() => Boolean(props.caseId?.trim()))
+
+function buildLandingPreviewUrl(caseId: string, token: string): string {
+  const url = new URL(`${window.location.origin}/landing`)
+  url.searchParams.set('case_id', caseId)
+  url.searchParams.set('token', token)
+  return url.toString()
+}
 
 async function onExport() {
   const id = props.caseId?.trim()
@@ -55,6 +67,35 @@ async function onExport() {
     exporting.value = false
   }
 }
+
+/** SHARE-02：签发短 token 并复制落地页试读链接 */
+async function onMintPreviewLink() {
+  const id = props.caseId?.trim()
+  if (!id || minting.value) return
+  minting.value = true
+  mintStatus.value = ''
+  try {
+    const minted = await mintH5PreviewToken(id)
+    const link = buildLandingPreviewUrl(minted.case_id || id, minted.access_token)
+    const ok = await copyTextToClipboard(link)
+    mintStatus.value = ok
+      ? `试读链接已复制（约 ${Math.round(minted.expires_in / 60)} 分钟有效）`
+      : `复制失败，请手动复制：${link}`
+    track({
+      event_type: 'funnel_step',
+      case_id: id,
+      properties: {
+        step: 'h5_preview_mint',
+        source: props.source,
+        expires_in: minted.expires_in,
+      },
+    })
+  } catch {
+    mintStatus.value = '签发失败：请确认已登录且档案已同步云端。'
+  } finally {
+    minting.value = false
+  }
+}
 </script>
 
 <template>
@@ -68,18 +109,40 @@ async function onExport() {
         <p class="douyin-share__kicker">竖版分享 · 9:16</p>
         <p class="douyin-share__hint">纸纹底 · 卷名 · 事实句</p>
       </div>
-      <button
-        v-if="canExport"
-        type="button"
-        class="douyin-share__export"
-        data-testid="douyin-share-export"
-        :disabled="exporting"
-        @click="onExport"
-      >
-        {{ exporting ? '导出中…' : exportOk ? '已导出 PNG' : '导出 PNG' }}
-      </button>
-      <p v-else class="douyin-share__export-hint">登录建档后可导出 PNG</p>
+      <div class="douyin-share__actions">
+        <button
+          v-if="canExport"
+          type="button"
+          class="douyin-share__export"
+          data-testid="douyin-share-export"
+          :disabled="exporting"
+          @click="onExport"
+        >
+          {{ exporting ? '导出中…' : exportOk ? '已导出 PNG' : '导出 PNG' }}
+        </button>
+        <button
+          v-if="canExport"
+          type="button"
+          class="douyin-share__export"
+          data-testid="douyin-h5-preview-mint"
+          :disabled="minting"
+          @click="onMintPreviewLink"
+        >
+          {{ minting ? '签发中…' : '复制试读链接' }}
+        </button>
+        <p v-else class="douyin-share__export-hint">登录建档后可导出 PNG / 试读链接</p>
+      </div>
     </header>
+
+    <p
+      v-if="mintStatus"
+      class="douyin-share__mint-status"
+      role="status"
+      aria-live="polite"
+      data-testid="douyin-h5-preview-status"
+    >
+      {{ mintStatus }}
+    </p>
 
     <div class="douyin-share__stage">
       <article class="douyin-card" data-testid="douyin-share-preview" aria-hidden="true">
@@ -117,6 +180,14 @@ async function onExport() {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.85rem;
+}
+
+.douyin-share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+  align-items: flex-start;
 }
 
 .douyin-share__kicker {
@@ -162,6 +233,14 @@ async function onExport() {
   max-width: 9rem;
   text-align: right;
   line-height: 1.4;
+}
+
+.douyin-share__mint-status {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--brand-mist, #6b5d4f);
+  word-break: break-all;
 }
 
 .douyin-share__stage {

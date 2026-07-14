@@ -482,6 +482,7 @@ node scripts/compare-live-targets.mjs   # 需先 E2E 导出 targets
 | **产物入库** | **`static/app/` 随 PR 提交**（单仓部署，CI 不单独发布 frontend dist） |
 | **禁止** | 只改 `frontend/src` 不重建静态度；或本地 `static/app` 长期落后于 main 却另开功能 PR |
 | **字体** | `frontend/public/fonts/*.woff2` 与 `static/app/fonts/` **已入库**（~4.3MB；pre-commit `maxkb` 已豁免） |
+| **SPA fallback** | Vite 开发态自动回退 `index.html`（勿再写 webpack `historyApiFallback`）；生产由 FastAPI 挂载 `/static/app/` + 客户端路由 |
 
 ---
 

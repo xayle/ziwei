@@ -25,9 +25,20 @@ function isArchivePath(path: string) {
 
 function isNavItemActive(item: { id: string; path: string }) {
   if (item.id === 'home') return isHomePath(route.path)
-  if (item.id === 'extensions') return route.path.startsWith('/extensions')
+  if (item.id === 'extensions') {
+    return route.path.startsWith('/extensions') || route.path.startsWith('/relation')
+  }
   if (item.id === 'ziwei') return route.path.startsWith('/new/ziwei')
   return route.path === item.path
+}
+
+/** NAV-01：档案未齐时保留目标页，补全后可读 redirect */
+function navTarget(item: { path: string; ready?: boolean; requiresBirth?: boolean }) {
+  if (item.ready || !item.requiresBirth) return item.path
+  return {
+    path: '/profile',
+    query: { reason: 'archive', redirect: item.path },
+  }
 }
 
 const activeLabel = computed(() => {
@@ -67,7 +78,7 @@ onUnmounted(() => {
     }"
   >
     <p v-if="backendDown" class="backend-banner">
-      后端服务暂不可用，排盘与报告可能失败。请确认 API 已启动后刷新页面。
+      后端服务暂不可用，排盘与报告可能失败。请确认已启动 uvicorn（开发建议加 <code>--reload</code>）后刷新页面。
       <button type="button" class="backend-banner__dismiss" @click="backendDown = false">知道了</button>
     </p>
     <header class="bar">
@@ -88,7 +99,7 @@ onUnmounted(() => {
             'is-active': isNavItemActive(item),
             'is-locked': !item.ready,
           }"
-          :to="item.ready || !item.requiresBirth ? item.path : '/profile'"
+          :to="navTarget(item)"
         >
           {{ item.label }}
         </RouterLink>
@@ -120,7 +131,7 @@ onUnmounted(() => {
           'is-active': isNavItemActive(item),
           'is-locked': !item.ready,
         }"
-        :to="item.ready || !item.requiresBirth ? item.path : '/profile'"
+        :to="navTarget(item)"
       >
         <span class="bottom-nav__label">{{ item.label }}</span>
       </RouterLink>

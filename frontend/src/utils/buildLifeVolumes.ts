@@ -14,11 +14,12 @@ import { buildBaziModuleCards } from '@/utils/buildBaziModuleCards'
 import { buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { buildColophonSummary, defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
 import { truncateText } from '@/utils/truncateText'
-import { formatRelationsSummaryText, formatShenshaSummaryText, enrichVol2BlockText } from '@/utils/formatVol2Summary'
+import { formatRelationsSummaryText, formatShenshaSummaryText, enrichVol2BlockText, enrichVolumeBlockText } from '@/utils/formatVol2Summary'
 import {
   buildDayunVolumeText,
   formatDayunAgeRange,
 } from '@/utils/dayunDisplay'
+import { DEMO_LOCKED_VOLUME_IDS, demoVolumeLocksEnabled } from '@/constants/volumePaywall'
 
 export interface BuildLifeVolumesInput {
   caseId: string
@@ -85,7 +86,8 @@ function buildVolume(id: LifeVolumeId, input: BuildLifeVolumesInput): LifeVolume
   return {
     id,
     title: LIFE_VOLUME_LABELS[id],
-    locked: false,
+    // ENT-demo：演示锁卷时 Adapter 写出 locked，供 Report 付费墙识别
+    locked: demoVolumeLocksEnabled() && (DEMO_LOCKED_VOLUME_IDS as LifeVolumeId[]).includes(id),
     sections: builders[id](),
   }
 }
@@ -124,6 +126,15 @@ function buildPrefaceSections(input: BuildLifeVolumesInput): VolumeSection[] {
   return sections
 }
 
+function formatPillarLine(
+  label: string,
+  p?: { stem?: string | null; branch?: string | null; ganzhi?: string | null } | null,
+): string {
+  if (!p) return `${label} —`
+  const gz = (p.ganzhi?.trim() || `${p.stem ?? ''}${p.branch ?? ''}`.trim()) || '—'
+  return `${label} ${gz}`
+}
+
 function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const b = input.bazi
   if (!b) {
@@ -131,14 +142,37 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   }
   const day = b.pillars_primary?.day
   const geju = b.geju
+  const pillars = b.pillars_primary
   const sections: VolumeSection[] = [
     section('pillars', '四柱根气', 'fact', [
-      block(`日主 ${day?.stem ?? '—'}${day?.branch ?? '—'}；格局 ${geju?.geju_name ?? '待分析'}。`, 'fact'),
+      block(
+        enrichVolumeBlockText(
+          '卷一四柱根气',
+          [
+            formatPillarLine('年柱', pillars?.year),
+            formatPillarLine('月柱', pillars?.month),
+            formatPillarLine('日柱', pillars?.day),
+            formatPillarLine('时柱', pillars?.hour),
+            `日主 ${day?.stem ?? '—'}${day?.branch ?? '—'}；格局 ${geju?.geju_name ?? '待分析'}`,
+          ].join('。'),
+        ),
+        'fact',
+      ),
     ]),
   ]
-  if (geju?.geju_detail || geju?.interpretation_text) {
+  const gejuBits = [geju?.geju_detail, geju?.interpretation_text]
+    .map((s) => (s || '').trim())
+    .filter(Boolean)
+  const gejuUnique = [...new Set(gejuBits)]
+  if (gejuUnique.length || geju?.geju_name) {
+    const parts = [
+      geju?.geju_name ? `格局取「${geju.geju_name}」` : '',
+      ...gejuUnique,
+    ].filter(Boolean)
+    let body = parts.join('。')
+    if (geju?.geju_level) body = `${body}（等级 ${geju.geju_level}）`
     sections.push(section('geju', '格局', 'fact', [
-      block(geju.geju_detail || geju.interpretation_text || '', 'fact'),
+      block(enrichVolumeBlockText('卷一格局', body), 'fact'),
     ]))
   }
   const classic = geju?.classic_ref?.trim()
@@ -148,8 +182,51 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const y = b.yongshen
   if (y?.favor?.length || y?.avoid?.length) {
     sections.push(section('yongshen', '用神', 'fact', [
-      block(`喜用 ${(y.favor ?? []).join('、') || '—'}；忌 ${(y.avoid ?? []).join('、') || '—'}`, 'fact'),
+      block(
+        enrichVolumeBlockText(
+          '卷一用神',
+          `喜用 ${(y.favor ?? []).join('、') || '—'}；忌 ${(y.avoid ?? []).join('、') || '—'}`,
+        ),
+        'fact',
+      ),
     ]))
+  }
+  const strength = b.day_master_strength
+  if (strength && (strength.tier || strength.score != null)) {
+    const factors = (strength.factors ?? strength.strength_factors ?? [])
+      .slice(0, 4)
+      .map((f) => {
+        const name = f.name?.trim()
+        const reason = f.reason?.trim()
+        if (name && reason) return `${name}（${reason}）`
+        return name || ''
+      })
+      .filter(Boolean)
+    let strengthText = `日主强弱：${strength.tier || '—'}（评分 ${strength.score ?? '—'}）`
+    if (factors.length) strengthText = `${strengthText}。主要因子：${factors.join('；')}`
+    sections.push(section('strength', '日主强弱', 'fact', [
+      block(enrichVolumeBlockText('卷一强弱', strengthText), 'fact'),
+    ]))
+  }
+  const fortune = b.current_fortune_summary
+  if (fortune) {
+    const domainBits = Object.entries(fortune.this_year_domains ?? {})
+      .slice(0, 3)
+      .map(([k, v]) => `${k}：${String(v).slice(0, 80)}`)
+    const bits = [
+      fortune.current_dayun ? `当前大运 ${fortune.current_dayun}` : '',
+      fortune.current_liunian ? `流年 ${fortune.current_liunian}` : '',
+      fortune.dayun_years_remaining != null ? `大运余 ${fortune.dayun_years_remaining} 年` : '',
+      ...domainBits,
+      (fortune.top3_actions ?? []).length
+        ? `宜行： ${(fortune.top3_actions ?? []).slice(0, 2).map((a) => String(a).slice(0, 100)).join('；')}`
+        : '',
+    ].filter(Boolean)
+    if (bits.length) {
+      sections.push(section('current-fortune', '当下运势摘要', 'fact', [
+        block(bits.join(' · '), 'fact'),
+      ]))
+    }
   }
   if (b.bazi_summary?.trim()) {
     sections.push(section('summary-inference', '综合总评', 'inference', [
@@ -158,10 +235,10 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   }
   const explainGeju = input.explain?.sections.find((s) => s.section_id === 'geju')
   if (explainGeju?.blocks.length) {
-    sections.push(section('geju-explain', '格局讲解', 'cite', explainGeju.blocks.map((b) => ({
-      text: truncateText(b.text),
-      layer: b.layer,
-      classic_id: b.classic_id,
+    sections.push(section('geju-explain', '格局讲解', 'cite', explainGeju.blocks.map((blk) => ({
+      text: truncateText(blk.text),
+      layer: blk.layer,
+      classic_id: blk.classic_id,
     }))))
   }
   return sections
@@ -213,11 +290,58 @@ function buildVol3Sections(input: BuildLifeVolumesInput): VolumeSection[] {
         `${idx + 1}. ${item.ganzhi}`,
         formatDayunAgeRange(item.start_age, item.end_age),
         item.start_year ? `${item.start_year}–${item.start_year + Math.max(0, item.end_age - item.start_age)}年` : '',
-        palace ? `应 ${palace}` : '',
+        palace ? `应宫 ${palace}` : '',
         sihua ? `四化 ${sihua}` : '',
       ].filter(Boolean).join(' · ')
-      return block(line, 'fact')
+      return block(enrichVolumeBlockText('紫微大运节选', line), 'fact')
     })))
+  }
+  // BZ-Month：八字月运进卷三（勿放进卷五域分析）
+  const monthly = b?.monthly_fortune ?? []
+  if (monthly.length) {
+    sections.push(section(
+      'monthly-fortune',
+      '月运（当年）',
+      'fact',
+      monthly.slice(0, 12).map((m) => {
+        const gz = m.month_ganzhi?.trim() || `${m.month_dizhi || ''}`.trim()
+        const clash = m.clash_with?.trim() ? ` · 冲 ${m.clash_with}` : ''
+        return block(
+          `${m.month}月${gz ? ` · ${gz}` : ''} · ${m.luck_level} · ${truncateText(m.tip || '—', 80)}${clash}`,
+          'fact',
+        )
+      }),
+    ))
+  }
+  // CNT-03：流年节选进卷三，减轻「仅大运骨架」空感
+  const liunianItems = b?.liunian?.items ?? []
+  if (liunianItems.length) {
+    const year = new Date().getFullYear()
+    const nearby = liunianItems
+      .filter((it) => typeof it.year === 'number' && Math.abs(it.year - year) <= 2)
+      .slice(0, 5)
+    const pick = nearby.length ? nearby : liunianItems.slice(0, 5)
+    sections.push(section(
+      'liunian',
+      '流年节选',
+      'fact',
+      pick.map((it) => {
+        const gz = `${it.stem ?? ''}${it.branch ?? ''}`.trim()
+        const extra = [
+          it.ten_god,
+          it.xingyun ? `星运 ${it.xingyun}` : '',
+          it.nayin ? `纳音 ${it.nayin}` : '',
+          it.clash ? `冲 ${it.clash}` : '',
+        ].filter(Boolean).join(' · ')
+        return block(
+          enrichVolumeBlockText(
+            '流年节选',
+            `${it.year ?? '—'} · ${gz || '—'}${extra ? ` · ${extra}` : ''}`,
+          ),
+          'fact',
+        )
+      }),
+    ))
   }
   if (!sections.length) {
     sections.push(section('vol3-empty', '运波', 'fact', [block('运限数据待载入。', 'fact')]))
@@ -276,14 +400,18 @@ function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const sections: VolumeSection[] = [
     section('ziwei-meta', '命盘概要', 'fact', [
       block(
-        `卷四命盘概要：五行局 ${z.wuxing_ju_name ?? '—'}；命宫 ${z.life_palace_gz ?? '—'}；身宫 ${z.body_palace_gz ?? '—'}`,
+        `卷四命盘概要：五行局 ${z.wuxing_ju_name ?? '—'}；命宫 ${z.life_palace_gz ?? '—'}；身宫 ${z.body_palace_gz ?? '—'}。`
+        + '阅读时先定命身轴，再对照十二宫主星与格局条文。',
         'fact',
       ),
     ]),
   ]
   const patterns = buildPatternAnalysisBlocks(z.patterns, 4)
   if (patterns.length) {
-    sections.push(section('patterns', '格局', 'fact', patterns.map((p) => block(`${p.title}：${p.body}`, 'fact'))))
+    sections.push(section('patterns', '格局', 'fact', patterns.map((p) => block(
+      enrichVolumeBlockText('紫微格局', `${p.title}：${p.body}`),
+      'fact',
+    ))))
   }
   const explainPalaces = input.explain?.sections.find((s) => s.section_id === 'palaces')
   const palaces = z.palaces ?? []
@@ -292,11 +420,11 @@ function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
       const matched = findPalaceByExplainText(b.text, palaces) ?? palaces[idx]
       return {
         text: truncateText(enrichPalaceExplainText(b.text, matched), 500),
-        layer: (b.layer === 'cite' ? 'inference' : b.layer) as ContentLayer,
+        layer: b.layer as ContentLayer,
       }
     })))
   } else if (palaces.length) {
-    sections.push(section('palaces', '十二宫（节选）', 'fact', palaces.slice(0, 6).map((p) => block(buildPalaceVolumeText(p), 'fact'))))
+    sections.push(section('palaces', '十二宫（节选）', 'fact', palaces.slice(0, 8).map((p) => block(buildPalaceVolumeText(p), 'fact'))))
   }
   return sections
 }

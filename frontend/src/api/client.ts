@@ -34,6 +34,50 @@ const apiClient = axios.create({
 
 type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
+/** AUTH-04：并发 401 共用一次 refresh */
+let refreshInFlight: Promise<string | null> | null = null
+
+async function refreshAccessTokenShared(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return null
+
+  refreshInFlight = (async () => {
+    try {
+      const { data } = await axios.post<{
+        access_token: string
+        refresh_token: string
+      }>(`${resolveApiBaseUrl()}api/v1/auth/refresh`, { refresh_token: refreshToken })
+      localStorage.setItem('token', data.access_token)
+      localStorage.setItem('refresh_token', data.refresh_token)
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('app:tokens-refreshed', {
+          detail: {
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+          },
+        }))
+      }
+      return data.access_token
+    } catch {
+      return null
+    } finally {
+      refreshInFlight = null
+    }
+  })()
+
+  return refreshInFlight
+}
+
+function clearLocalAuthAndEmitUnauthorized(): void {
+  localStorage.removeItem('token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('username')
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('app:unauthorized'))
+  }
+}
+
 apiClient.interceptors.request.use((config) => {
   const token = getToken()
   if (token) {
@@ -54,28 +98,17 @@ apiClient.interceptors.response.use(
     }
 
     if (status === 401 && original && !original._retry) {
-      const refreshToken = getRefreshToken()
       const isAuthPath = path.includes('/auth/login') || path.includes('/auth/refresh')
-      if (refreshToken && !isAuthPath) {
+      if (!isAuthPath && getRefreshToken()) {
         original._retry = true
-        try {
-          const { data } = await axios.post<{
-            access_token: string
-            refresh_token: string
-          }>(`${resolveApiBaseUrl()}api/v1/auth/refresh`, { refresh_token: refreshToken })
-          localStorage.setItem('token', data.access_token)
-          localStorage.setItem('refresh_token', data.refresh_token)
+        const accessToken = await refreshAccessTokenShared()
+        if (accessToken) {
           original.headers = original.headers || {}
-          original.headers.Authorization = `Bearer ${data.access_token}`
+          original.headers.Authorization = `Bearer ${accessToken}`
           return apiClient(original)
-        } catch {
-          // fall through to logout flow
         }
       }
-      localStorage.removeItem('token')
-      localStorage.removeItem('refresh_token')
-      localStorage.removeItem('username')
-      window.dispatchEvent(new CustomEvent('app:unauthorized'))
+      clearLocalAuthAndEmitUnauthorized()
     }
     return Promise.reject(err)
   },

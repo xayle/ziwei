@@ -77,17 +77,24 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
             {{ BRAND_HOME_OPEN.lines[0] }}<br />
             {{ BRAND_HOME_OPEN.lines[1] }}
           </p>
+          <p class="brand-spread__lane-note" data-testid="brand-lane-note">
+            排盘台 · 成书分流：点卷进入对应工作台或报告成书。
+          </p>
           <ol id="brand-register" class="brand-register" aria-label="六卷">
             <li v-for="entry in BRAND_HOME_VOLUMES" :key="entry.id">
               <button
                 type="button"
                 class="brand-register__row"
                 :data-volume-id="entry.id"
+                :data-lane="entry.lane || 'book'"
                 @click="openVolume(entry)"
               >
                 <span class="brand-register__n">{{ entry.num }}</span>
                 <span class="brand-register__title">{{ entry.title }}</span>
-                <span class="brand-register__pi">{{ entry.pi }}</span>
+                <span class="brand-register__pi">
+                  <span class="brand-register__lane">{{ entry.lane === 'desk' ? '排盘台' : '成书' }}</span>
+                  {{ entry.pi }}
+                </span>
               </button>
             </li>
           </ol>
@@ -353,13 +360,29 @@ function openVolume(entry: (typeof BRAND_HOME_VOLUMES)[number]) {
 }
 
 .brand-spread__open {
-  margin: 0 0 32px;
+  margin: 0 0 16px;
   max-width: 28em;
   font-size: 16px;
   line-height: 2;
   letter-spacing: 0.06em;
   color: var(--brand-mist);
   font-family: var(--font-display);
+}
+
+.brand-spread__lane-note {
+  margin: 0 0 24px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  font-family: var(--font-display);
+}
+
+.brand-register__lane {
+  display: inline-block;
+  margin-right: 0.45em;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--brand-gold-dark);
 }
 
 .brand-register {

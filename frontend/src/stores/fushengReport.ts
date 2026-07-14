@@ -405,6 +405,16 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
           if (!bundle.bazi) failures.push('八字：档案快照未返回')
           if (!bundle.ziwei) failures.push('紫微：档案快照未返回')
         }
+        // REP-01：archive-bundle 失败或双盘皆空时回退即时推算
+        if ((!bazi.value && !ziwei.value) || bundle.error) {
+          const computed = await loadChartsViaCompute(data)
+          if (!bazi.value && computed.bazi) bazi.value = computed.bazi
+          if (!ziwei.value && computed.ziwei) ziwei.value = computed.ziwei
+          if (computed.bazi || computed.ziwei) {
+            failures.push('档案快照不可用，已改用即时推算')
+          }
+          failures.push(...computed.failures)
+        }
         if (bazi.value && !baziResponseHasCurrentLiunian(bazi.value)) {
           try {
             bazi.value = await computeBazi(buildBaziRequest(data))
@@ -466,12 +476,24 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
     if (output.bazi) bazi.value = output.bazi
     if (output.ziwei) ziwei.value = output.ziwei
     const data = readProfileData()
-    cachedSignature.value = buildProfileSignature(data)
+    const currentSig = buildProfileSignature(data)
+    // CASE-01：用快照签名作缓存键；与当前档案不一致时使缓存失效并提示
+    if (output.profileSignature) {
+      cachedSignature.value = output.profileSignature
+      if (output.profileSignature !== currentSig) {
+        snapshotNote.value = '已从云端快照恢复排盘；当前档案与快照签名不一致，编辑档案后请点「重新生成」。'
+        cachedSignature.value = ''
+      } else {
+        snapshotNote.value = '已从云端快照恢复排盘数据。'
+      }
+    } else {
+      cachedSignature.value = ''
+      snapshotNote.value = '已从云端快照恢复排盘数据（旧快照无签名，下次请重新生成以确保缓存正确）。'
+    }
     generatedAt.value = new Date().toISOString()
     updateEngineLabel(bazi.value, ziwei.value)
     dayunReport.value = buildDayunReportFromBazi(bazi.value)
     error.value = ''
-    snapshotNote.value = '已从云端快照恢复排盘数据。'
     snapshotError.value = ''
     skipSnapshotPersistAfterRestore.value = true
   }

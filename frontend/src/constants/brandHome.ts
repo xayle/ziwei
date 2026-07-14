@@ -7,23 +7,25 @@ export interface BrandHomeVolume {
   pi: string
   path: string
   requiresReport?: boolean
+  /** NAV-02：排盘台（工作台） vs 成书（报告连续阅读） */
+  lane?: 'desk' | 'book'
 }
 
 /** 品牌首页六卷批语 — docs/design/FUSHENG-BRAND-COPY-v1.md */
 export const BRAND_HOME_VOLUMES: BrandHomeVolume[] = [
-  { id: 'vol1', num: '卷一', title: '命之根', pi: '根于阴阳，命之所系', path: '/new/bazi' },
-  { id: 'vol2', num: '卷二', title: '业之象', pi: '合冲错综，象而后明', path: '/report#report-volume-vol2', requiresReport: true },
-  { id: 'vol3', num: '卷三', title: '运之波', pi: '运如江河，波随岁转', path: '/new/ziwei/timeline' },
-  { id: 'vol4', num: '卷四', title: '宫之图', pi: '十二宫阙，界画昭然', path: '/new/ziwei' },
-  { id: 'vol5', num: '卷五', title: '事之理', pi: '事有常理，慎而观之', path: '/report#report-volume-vol5', requiresReport: true },
-  { id: 'vol6', num: '卷六', title: '问书', pi: '疑则问书，展卷乃见', path: '/report#report-volume-vol6', requiresReport: true },
+  { id: 'vol1', num: '卷一', title: '命之根', pi: '根于阴阳，命之所系', path: '/new/bazi', lane: 'desk' },
+  { id: 'vol2', num: '卷二', title: '业之象', pi: '合冲错综，象而后明', path: '/report#report-volume-vol2', requiresReport: true, lane: 'book' },
+  { id: 'vol3', num: '卷三', title: '运之波', pi: '运如江河，波随岁转', path: '/new/ziwei/timeline', lane: 'desk' },
+  { id: 'vol4', num: '卷四', title: '宫之图', pi: '十二宫阙，界画昭然', path: '/new/ziwei', lane: 'desk' },
+  { id: 'vol5', num: '卷五', title: '事之理', pi: '事有常理，慎而观之', path: '/report#report-volume-vol5', requiresReport: true, lane: 'book' },
+  { id: 'vol6', num: '卷六', title: '问书', pi: '疑则问书，展卷乃见', path: '/report#report-volume-vol6', requiresReport: true, lane: 'book' },
 ]
 
 export const BRAND_HOME_OPEN = {
   k: '开卷',
   lines: [
     '六卷命书，如展一幅长卷。',
-    '远观其格，近察其运；势理既明，事乃可观。',
+    '卷一·卷三·卷四为排盘台；卷二·卷五·卷六在报告成书中连续阅读。',
   ],
 } as const
 

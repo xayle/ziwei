@@ -462,6 +462,20 @@ function registerCellText(value?: string | null): string {
   table-layout: fixed;
 }
 
+@media (max-width: 640px) {
+  .bazi-card__table-wrap::before {
+    content: '左右滑动查看完整四柱表';
+    display: block;
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--muted, var(--text-3));
+  }
+
+  .bazi-table {
+    min-width: 720px;
+  }
+}
+
 .bazi-table__label-col {
   width: 84px;
 }

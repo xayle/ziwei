@@ -5,6 +5,8 @@ import LandingVolume from '@/views/landing/LandingVolume.vue'
 import { LANDING_BRAND, LANDING_CTA, LANDING_DISCLAIMER } from '@/constants/landingVolume'
 import { UTM_STORAGE_KEY } from '@/utils/utmCapture'
 
+const fetchPreviewMock = vi.fn(async () => null as unknown)
+
 vi.mock('@/utils/analytics', () => ({
   track: vi.fn(),
   trackVolumeView: vi.fn(),
@@ -12,9 +14,15 @@ vi.mock('@/utils/analytics', () => ({
   flushAnalytics: vi.fn(async () => null),
 }))
 
+vi.mock('@/api/life', () => ({
+  fetchLifeVol1Preview: (...args: unknown[]) => fetchPreviewMock(...args),
+}))
+
 describe('LandingVolume (T091)', () => {
   beforeEach(() => {
     sessionStorage.clear()
+    fetchPreviewMock.mockReset()
+    fetchPreviewMock.mockResolvedValue(null)
   })
 
   async function mountLanding(query: Record<string, string> = {}) {
@@ -65,5 +73,30 @@ describe('LandingVolume (T091)', () => {
   it('root landing node is present for mobile layout', async () => {
     const wrapper = await mountLanding()
     expect(wrapper.get('[data-testid="landing-volume"]').classes()).toContain('landing-volume')
+  })
+
+  it('loads H5 vol1 preview when case_id+token present (SHARE-02)', async () => {
+    fetchPreviewMock.mockResolvedValue({
+      schema_version: 'life-volume@1.0',
+      case_id: 'c1',
+      chart_hash: 'h',
+      generated_at: '2026-01-01T00:00:00Z',
+      volumes: [{
+        id: 'vol1',
+        title: '命之根',
+        sections: [{
+          id: 's1',
+          title: 't',
+          layer: 'fact',
+          blocks: [{ text: '试读句·日主甲木', layer: 'fact' }],
+        }],
+      }],
+      disclaimer_block: { text: '仅供文化研究' },
+    })
+    const wrapper = await mountLanding({ case_id: 'c1', token: 'h5-tok' })
+    await flushPromises()
+    expect(fetchPreviewMock).toHaveBeenCalledWith('c1', 'h5-tok')
+    expect(wrapper.get('[data-testid="landing-h5-preview"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="landing-h5-preview-line"]').text()).toContain('试读句·日主甲木')
   })
 })

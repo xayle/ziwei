@@ -11,6 +11,8 @@ const profile = useProfileStore()
 
 const partnerBirthDt = ref('')
 const partnerGender = ref('female')
+const partnerLon = ref<number | null>(profile.lon ?? 116.41)
+const partnerTz = ref(profile.tz || 'Asia/Shanghai')
 const loading = ref(false)
 const error = ref('')
 const result = ref<BaziCompatibilityResponse | null>(null)
@@ -22,6 +24,10 @@ async function runCompat() {
   }
   if (!partnerBirthDt.value.trim()) {
     error.value = '请填写对方出生时间。'
+    return
+  }
+  if (!Number.isFinite(partnerLon.value)) {
+    error.value = '请填写对方出生地经度（或确认与甲方相同）。'
     return
   }
 
@@ -40,6 +46,8 @@ async function runCompat() {
       person_b: {
         birth_dt: partnerBirthDt.value.trim(),
         gender: partnerGender.value,
+        lon: partnerLon.value!,
+        tz: partnerTz.value || 'Asia/Shanghai',
       },
     })
   } catch {
@@ -55,6 +63,7 @@ async function runCompat() {
     <p class="fs-page-lead">主方：{{ profile.activeProfile?.label || '当前档案' }} · {{ profile.birthDt?.replace('T', ' ') || '出生时间未填' }}</p>
     <div class="fs-page-actions">
       <button class="fs-btn fs-btn--ghost" @click="router.push('/extensions')">返回工具箱</button>
+      <button class="fs-btn fs-btn--ghost" @click="router.push('/relation/new')">权威合盘</button>
     </div>
 
     <section class="fs-card">
@@ -71,7 +80,16 @@ async function runCompat() {
             <option value="male">男</option>
           </select>
         </label>
+        <label class="field">
+          <span>经度</span>
+          <input v-model.number="partnerLon" type="number" step="0.0001" data-testid="compat-partner-lon" />
+        </label>
+        <label class="field">
+          <span>时区</span>
+          <input v-model="partnerTz" type="text" data-testid="compat-partner-tz" />
+        </label>
       </div>
+      <p class="hint">经度默认与甲方相同，请按对方出生城市修改（勿长期沿用北京默认）。</p>
       <button class="fs-btn fs-btn--primary" :disabled="loading" data-testid="compat-run" @click="runCompat">
         {{ loading ? '分析中…' : '开始合婚分析' }}
       </button>
@@ -116,15 +134,12 @@ async function runCompat() {
   font-size: 14px;
 }
 
-.compat-score {
-  margin: 0 0 8px;
-  font-size: 15px;
+.hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-.compat-list {
-  margin: 12px 0 0;
-  padding-left: 18px;
-  color: var(--text-2);
-  line-height: 1.7;
-}
+.compat-score { margin: 0 0 8px; }
+.compat-list { margin: 8px 0 0; padding-left: 1.2em; }
 </style>

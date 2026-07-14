@@ -16,11 +16,13 @@ const { bazi, ziwei, loadReport } = useFushengReport()
 
 const loading = ref(false)
 const error = ref('')
+const indexNotice = ref('')
 const items = ref<SimilarResult[]>([])
 
 async function runSearch() {
   loading.value = true
   error.value = ''
+  indexNotice.value = ''
   items.value = []
 
   try {
@@ -49,7 +51,8 @@ async function runSearch() {
         source_label: profile.activeProfile?.label || 'fusheng',
       })
     } catch {
-      // 索引失败不阻断检索
+      // EXT-04：索引失败不阻断检索，但需可见提示
+      indexNotice.value = '索引未更新（写入失败），下列结果可能基于旧库。'
     }
 
     items.value = await searchSimilar(hash, 8)
@@ -77,7 +80,10 @@ onMounted(() => {
     </div>
 
     <ResultStateCard v-if="loading" compact title="检索中" message="正在比对命盘哈希…" />
-    <ResultStateCard v-else-if="error" title="检索结果" :message="error" />
+    <template v-else>
+      <p v-if="indexNotice" class="fs-hint" data-testid="similarity-index-notice">{{ indexNotice }}</p>
+      <ResultStateCard v-if="error" title="检索结果" :message="error" />
+    </template>
 
     <section v-if="items.length" class="fs-card">
       <h2>相似案例（{{ items.length }}）</h2>

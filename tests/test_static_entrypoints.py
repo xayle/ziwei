@@ -21,9 +21,10 @@ client = _make_client()
 
 class TestStaticEntrypoints:
     def test_resolve_page_url_prefers_spa_when_index_exists(self):
-        with patch("app.static_entrypoints.spa_index_exists", return_value=True), \
-             patch("app.static_entrypoints.spa_entry_url", return_value="/static/app/cases"):
-            assert resolve_page_url("bazi") == "/static/app/bazi"
+        with patch("app.static_entrypoints.spa_index_exists", return_value=True):
+            assert resolve_page_url("bazi") == "/static/app/new/bazi"
+            assert resolve_page_url("ziwei") == "/static/app/new/ziwei"
+            assert resolve_page_url("cases") == "/static/app/"
 
     def test_resolve_page_url_falls_back_to_legacy_when_spa_missing(self):
         with patch("app.static_entrypoints.spa_index_exists", return_value=False), \
@@ -32,10 +33,10 @@ class TestStaticEntrypoints:
 
     def test_root_redirects_to_spa_when_index_exists(self):
         with patch("app.static_routes_setup.spa_index_exists", return_value=True), \
-                patch("app.static_routes_setup.spa_entry_url", return_value="/static/app/cases"):
+                patch("app.static_routes_setup.spa_entry_url", return_value="/static/app/"):
             resp = client.get("/", follow_redirects=False)
         assert resp.status_code == 302
-        assert resp.headers["location"] == "/static/app/cases"
+        assert resp.headers["location"] == "/static/app/"
 
     def test_verify_redirects_to_legacy_when_spa_missing(self):
         with patch("app.static_routes_setup.spa_index_exists", return_value=False), \
@@ -55,17 +56,17 @@ class TestStaticEntrypoints:
 
     def test_bazi_redirects_to_spa_bazi_when_spa_exists(self):
         with patch("app.static_routes_setup.spa_index_exists", return_value=True), \
-             patch("app.static_routes_setup.resolve_page_url", return_value="/static/app/bazi"):
+             patch("app.static_routes_setup.resolve_page_url", return_value="/static/app/new/bazi"):
             resp = client.get("/bazi", follow_redirects=False)
         assert resp.status_code == 301
-        assert resp.headers["location"] == "/static/app/bazi"
+        assert resp.headers["location"] == "/static/app/new/bazi"
 
     def test_ziwei_redirects_to_spa_ziwei_when_spa_exists(self):
         with patch("app.static_routes_setup.spa_index_exists", return_value=True), \
-             patch("app.static_routes_setup.resolve_page_url", return_value="/static/app/ziwei"):
+             patch("app.static_routes_setup.resolve_page_url", return_value="/static/app/new/ziwei"):
             resp = client.get("/ziwei", follow_redirects=False)
         assert resp.status_code == 301
-        assert resp.headers["location"] == "/static/app/ziwei"
+        assert resp.headers["location"] == "/static/app/new/ziwei"
 
     def test_admin_redirects_to_legacy_when_spa_missing(self):
         with patch("app.static_routes_setup.spa_index_exists", return_value=False), \

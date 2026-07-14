@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useProfileStore } from '@/stores/profile'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 
 const router = useRouter()
 const route  = useRoute()
@@ -22,10 +23,11 @@ async function doLogin() {
     const res = await login(username.value, password.value)
     auth.setTokens(res.access_token, res.refresh_token, username.value)
     void profile.pullRemoteCases()
-    const redirect = (route.query.redirect as string) || '/'
+    const rawRedirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+    const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/'
     router.push(redirect)
   } catch (e: unknown) {
-    error.value = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '登录失败，请检查服务是否启动'
+    error.value = formatAxiosError(e, '登录失败，请检查服务是否启动')
   } finally {
     loading.value = false
   }

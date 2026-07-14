@@ -11,9 +11,14 @@ const profile = useProfileStore()
 
 const partnerBirthDt = ref('')
 const partnerGender = ref<'男' | '女'>('女')
+const partnerLon = ref<number | null>(profile.lon ?? 116.41)
 const loading = ref(false)
 const error = ref('')
 const result = ref<ZiweiCompatibilityResponse | null>(null)
+
+const selfGenderLabel = computed(() => (
+  profile.gender === 'female' ? '女' : profile.gender === 'male' ? '男' : '—'
+))
 
 function parseBirthParts(dt: string) {
   const normalized = dt.trim().replace(' ', 'T')
@@ -30,6 +35,14 @@ async function runCompat() {
   }
   if (!partnerBirthDt.value.trim()) {
     error.value = '请填写对方出生时间。'
+    return
+  }
+  if (profile.gender !== 'male' && profile.gender !== 'female') {
+    error.value = '请先在档案中设置甲方性别。'
+    return
+  }
+  if (!Number.isFinite(partnerLon.value)) {
+    error.value = '请填写对方经度（勿默认沿用甲方而不知情）。'
     return
   }
 
@@ -61,7 +74,7 @@ async function runCompat() {
         hour: partner.hour,
         minute: partner.minute,
         gender: partnerGender.value,
-        longitude: profile.lon,
+        longitude: partnerLon.value!,
       },
     })
   } catch (e: unknown) {
@@ -109,8 +122,15 @@ const dimensionRows = computed(() => {
             <option value="男">男</option>
           </select>
         </label>
+        <label class="field">
+          <span>对方经度</span>
+          <input v-model.number="partnerLon" type="number" step="0.0001" data-testid="ziwei-compat-partner-lon" />
+        </label>
       </div>
-      <p class="hint">甲方使用当前档案：{{ profile.birthDt?.replace('T', ' ') || '未填写' }} · {{ profile.gender || '—' }}</p>
+      <p class="hint">
+        甲方：{{ profile.birthDt?.replace('T', ' ') || '未填写' }} · {{ selfGenderLabel }}
+        · 对方经度默认与甲方相同，请按对方出生地修改。
+      </p>
       <button class="fs-btn fs-btn--primary" :disabled="loading" data-testid="ziwei-compat-run" @click="runCompat">
         {{ loading ? '分析中…' : '开始紫微合盘' }}
       </button>

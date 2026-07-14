@@ -8,19 +8,23 @@ vi.mock('@/utils/analytics', () => ({
   track: vi.fn(),
 }))
 
+const sandboxPurchase = vi.fn(async () => true)
+let loggedIn = false
+
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: () => ({ isLoggedIn: false }),
+  useAuthStore: () => ({ get isLoggedIn() { return loggedIn } }),
 }))
 
 vi.mock('@/stores/entitlement', () => ({
   useEntitlementStore: () => ({
     loading: false,
-    sandboxPurchase: vi.fn(async () => true),
+    sandboxPurchase,
   }),
 }))
 
 describe('VolumePaywall (T092)', () => {
   it('shows lock need and mock unlock CTA', async () => {
+    loggedIn = false
     const wrapper = mount(VolumePaywall, {
       props: { volumeId: 'vol3' },
     })
@@ -29,6 +33,17 @@ describe('VolumePaywall (T092)', () => {
     expect(wrapper.get('[data-testid="volume-paywall-mock-unlock"]').text()).toContain('模拟')
     await wrapper.get('[data-testid="volume-paywall-mock-unlock"]').trigger('click')
     expect(wrapper.emitted('mockUnlock')).toHaveLength(1)
+  })
+
+  it('ENT-01: logged-in mock unlock requires sandbox success', async () => {
+    loggedIn = true
+    sandboxPurchase.mockResolvedValueOnce(false)
+    const wrapper = mount(VolumePaywall, {
+      props: { volumeId: 'vol3' },
+    })
+    await wrapper.get('[data-testid="volume-paywall-mock-unlock"]').trigger('click')
+    expect(sandboxPurchase).toHaveBeenCalled()
+    expect(wrapper.emitted('mockUnlock')).toBeUndefined()
   })
 
   it('prefers detail blurb from BE locked section', () => {

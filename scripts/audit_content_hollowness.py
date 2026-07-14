@@ -24,9 +24,9 @@ FALLBACK_MARKERS = (
     "待计算",
     "待分析",
     "待载入",
-    "缺失",
+    "数据缺失",
+    "字段缺失",
     "暂无",
-    "—",
     "接口不可用",
     "未填写",
     "待排盘",
@@ -43,7 +43,8 @@ def is_fallback(text: object) -> bool:
     t = str(text).strip()
     if not t:
         return True
-    if len(t) <= 2 and t in ("—", "-", "…"):
+    # 单独占位符（整段）才算空洞；正文中的「—」连接号不算
+    if t in ("—", "-", "…", "－"):
         return True
     return any(m in t for m in FALLBACK_MARKERS)
 
@@ -352,6 +353,8 @@ def enrich_preface_reading_text() -> str:
 
 
 def main() -> None:
+    from services.life_volume_service import build_life_volumes_from_charts
+
     breq = BaziFullRequest(
         dt=datetime.fromisoformat("1990-01-15T08:30:00"),
         lon=116.41,
@@ -384,115 +387,43 @@ def main() -> None:
         ZiweiExplainBatchRequest(**{**zwreq.model_dump(), "sections": ["palaces", "fortune"]})
     ).model_dump(mode="json")
 
-    geju = bazi.get("geju") or {}
-    day = (bazi.get("pillars_primary") or {}).get("day") or {}
-    y = bazi.get("yongshen") or {}
-
-    vol1: list[str] = [
-        f"日主 {day.get('stem', '—')}{day.get('branch', '—')}；格局 {geju.get('geju_name', '待分析')}。",
-    ]
-    if geju.get("geju_detail") or geju.get("interpretation_text"):
-        vol1.append(geju.get("geju_detail") or geju.get("interpretation_text") or "")
-    if geju.get("classic_ref"):
-        vol1.append(str(geju.get("classic_ref")))
-    if y.get("favor") or y.get("avoid"):
-        vol1.append(f"喜用 {'、'.join(y.get('favor') or []) or '—'}；忌 {'、'.join(y.get('avoid') or []) or '—'}")
-    if bazi.get("bazi_summary"):
-        vol1.append(str(bazi.get("bazi_summary")))
-    for sec in bex.get("sections", []):
-        for bl in sec.get("blocks", []):
-            vol1.append(str(bl.get("text", ""))[:320])
-
-    rel_line = enrich_vol2_block_text("干支关系", format_relations_summary_text(bazi))
-    ss_line = enrich_vol2_block_text("神煞", format_shensha_summary_text(bazi))
-    vol2 = [rel_line, ss_line]
-    for sec in bex.get("sections", []):
-        if sec.get("section_id") == "relations":
-            for bl in sec.get("blocks", []):
-                vol2.append(str(bl.get("text", "")))
-
-    vol3: list[str] = []
-    items = (bazi.get("dayun") or {}).get("items") or (bazi.get("dayun") or {}).get("cycles") or []
-    for i, item in enumerate(items[:8]):
-        if isinstance(item, dict):
-            vol3.append(build_dayun_volume_text(item, i, items))
-    zitems = (ziwei.get("dayun") or {}).get("items") or []
-    for i, item in enumerate(zitems[:8]):
-        if not isinstance(item, dict):
-            continue
-        palace = str(item.get("palace_name") or "").strip()
-        sihua = "、".join(f"{star}{trans}" for star, trans in (item.get("sihua") or {}).items())
-        line = " · ".join(
-            x
-            for x in (
-                f"{i + 1}. {item.get('ganzhi', '—')}",
-                format_dayun_age_range(item.get("start_age"), item.get("end_age")),
-                (
-                    f"{item.get('start_year')}–{int(item.get('start_year')) + max(0, int(item.get('end_age', 0)) - int(item.get('start_age', 0)))}年"
-                    if item.get("start_year") is not None
-                    else ""
-                ),
-                f"应 {palace}" if palace else "",
-                f"四化 {sihua}" if sihua else "",
-            )
-            if x
-        )
-        vol3.append(line)
-
-    vol4: list[str] = [
-        (
-            f"卷四命盘概要：五行局 {ziwei.get('wuxing_ju_name', '—')}；"
-            f"命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}"
+    # 真源：远端 life/volumes 组装（与 GET /life/volumes 同源）
+    lv = build_life_volumes_from_charts(
+        case_id="audit-hollowness",
+        chart_hash="audit",
+        bazi=bazi,
+        ziwei=ziwei,
+        explain_bazi=bex,
+        explain_ziwei=zex,
+        profile_label="审计样本 · 1990-01-15 北京",
+        entitlement="full_book",
+    )
+    volumes: dict[str, list[str]] = {vid: [] for vid in (
+        "preface", "vol1", "vol2", "vol3", "vol4", "vol5", "vol6", "colophon",
+    )}
+    for vol in lv.volumes:
+        texts = [
+            str(bl.text)
+            for sec in vol.sections
+            for bl in sec.blocks
+            if str(bl.text or "").strip()
+        ]
+        volumes[vol.id] = texts
+    colo = [
+        *(lv.colophon.summary_lines or []),
+        *(
+            [f"双轨：{lv.colophon.dual_track_note}"]
+            if lv.colophon.dual_track_note
+            else []
         ),
     ]
-    for pattern in (ziwei.get("patterns") or [])[:4]:
-        if isinstance(pattern, dict):
-            vol4.append(f"{pattern.get('name', '格局')}：{pattern.get('description', '')}")
-    palaces = [p for p in (ziwei.get("palaces") or []) if isinstance(p, dict)]
-    explain_blocks: list[str] = []
-    for sec in zex.get("sections", []):
-        if sec.get("section_id") == "palaces":
-            for bl in sec.get("blocks", []):
-                explain_blocks.append(str(bl.get("text", "")))
-    if explain_blocks:
-        for idx, text in enumerate(explain_blocks):
-            matched = find_palace_by_explain_text(text, palaces) or (palaces[idx] if idx < len(palaces) else None)
-            vol4.append(enrich_palace_explain_text(text, matched))
-    elif palaces:
-        for p in palaces[:6]:
-            vol4.append(build_palace_volume_text(p))
-
-    vol5: list[str] = []
-    for sec in bex.get("sections", []):
-        if sec.get("section_id") == "domains":
-            for bl in sec.get("blocks", []):
-                vol5.append(str(bl.get("text", "")))
-    if not vol5:
-        for key, mod_key in [
-            ("personality", "personality"),
-            ("career", "career"),
-            ("wealth", "wealth"),
-            ("marriage", "marriage_analysis"),
-            ("health", "health"),
-            ("relationship", "relationship"),
-        ]:
-            m = bazi.get(mod_key) or bazi.get(key)
-            if isinstance(m, dict):
-                vol5.append(str(m.get("interpretation_text") or m.get("development_advice") or m.get("strategy") or "")[:80])
-
-    volumes = {
-        "preface": [enrich_preface_reading_text()],
-        "vol1": vol1,
-        "vol2": vol2,
-        "vol3": vol3,
-        "vol4": vol4,
-        "vol5": vol5,
-        "vol6": ["卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。"],
-        "colophon": ["校勘摘要：排盘字段齐备时可核对 missing/iztro/wenmo；详见 expandable 校勘脚注。"],
-    }
+    if not colo:
+        colo = ["校勘摘要：排盘字段齐备时可核对 missing/iztro/wenmo；详见 expandable 校勘脚注。"]
+    volumes["colophon"] = [t for t in colo if str(t).strip()]
 
     report = {vid: summarize([audit_block(x) for x in texts]) for vid, texts in volumes.items()}
 
+    geju = bazi.get("geju") or {}
     ui_strings = [
         geju.get("classic_ref") or "暂无典籍句式。",
         geju.get("geju_detail") or geju.get("interpretation_text") or "暂无引擎说明。",
@@ -503,6 +434,7 @@ def main() -> None:
 
     out = {
         "profile": "1990-01-15 08:30 male Beijing",
+        "source": "build_life_volumes_from_charts",
         "volumes": report,
         "rollup": compute_rollup(report),
         "volume_samples": {
@@ -521,8 +453,8 @@ def main() -> None:
             ),
         },
         "bazi_ui_sample_fallback_pct": round(100 * ui_fb / len(ui_strings), 1),
-        "geju_has_classic_ref": bool(geju.get("classic_ref", "").strip()),
-        "geju_has_detail": bool((geju.get("geju_detail") or geju.get("interpretation_text") or "").strip()),
+        "geju_has_classic_ref": bool(str(geju.get("classic_ref") or "").strip()),
+        "geju_has_detail": bool(str(geju.get("geju_detail") or geju.get("interpretation_text") or "").strip()),
     }
 
     dest = Path(__file__).resolve().parent.parent / "docs" / "reports" / "content-hollowness-audit-latest.json"

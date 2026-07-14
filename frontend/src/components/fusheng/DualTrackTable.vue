@@ -23,26 +23,31 @@ withDefaults(defineProps<{
     <p v-if="variant === 'reference'" class="dual-track-table__caption">
       以下为典籍与引擎对照样例，非当前命盘 live 计算。
     </p>
-    <table class="dual-track-table__grid">
-      <thead>
-        <tr>
-          <th>编号</th>
-          <th v-if="variant === 'reference'">主题</th>
-          <th>古籍/对照</th>
-          <th>引擎</th>
-          <th>说明</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="row in rows" :key="row.id">
-          <td>{{ row.id }}</td>
-          <td v-if="variant === 'reference'">{{ row.topic || '—' }}</td>
-          <td>{{ row.recorded }}</td>
-          <td>{{ row.engine }}</td>
-          <td>{{ row.note || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <p class="dual-track-table__scroll-hint" data-testid="dual-track-scroll-hint">
+      窄屏可左右滑动查看对照表。
+    </p>
+    <div class="dual-track-table__scroll" tabindex="0" role="region" aria-label="双轨对照表">
+      <table class="dual-track-table__grid">
+        <thead>
+          <tr>
+            <th>编号</th>
+            <th v-if="variant === 'reference'">主题</th>
+            <th>古籍/对照</th>
+            <th>引擎</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in rows" :key="row.id">
+            <td>{{ row.id }}</td>
+            <td v-if="variant === 'reference'">{{ row.topic || '—' }}</td>
+            <td>{{ row.recorded }}</td>
+            <td>{{ row.engine }}</td>
+            <td>{{ row.note || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <p v-if="!rows.length" class="dual-track-table__empty">暂无双轨登记项。</p>
   </div>
 </template>
@@ -61,10 +66,30 @@ withDefaults(defineProps<{
   line-height: 1.5;
 }
 
+.dual-track-table__scroll-hint {
+  display: none;
+  margin: 0 0 8px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.dual-track-table__scroll {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .dual-track-table__grid {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .dual-track-table__scroll-hint {
+    display: block;
+  }
 }
 
 .dual-track-table__grid th,

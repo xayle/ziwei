@@ -51,6 +51,8 @@ describe('feBeAdapter', () => {
   })
 
   it('shouldTryLifeVolumesRemote respects env and auth', () => {
+    // TEST-01 @debt：envFlag=true 时未登录也可试拉 volumes（联调/GTM 开关）；
+    // 产品若改为「仅登录」，请改断言并同步 shouldTryLifeVolumesRemote。
     expect(shouldTryLifeVolumesRemote({ envFlag: true, isLoggedIn: false })).toBe(true)
     expect(shouldTryLifeVolumesRemote({ envFlag: false, isLoggedIn: true, remoteCaseId: 'x' })).toBe(true)
     expect(shouldTryLifeVolumesRemote({ envFlag: false, isLoggedIn: false })).toBe(false)

@@ -79,15 +79,23 @@ watch(cities, () => applyCity(props.initialCity))
 </script>
 
 <template>
-  <label>出生省份</label>
-  <select v-model="selectedProvince" :disabled="citiesLoading" @change="onProvinceChange">
+  <label id="city-picker-province-label" for="city-picker-province">出生省份</label>
+  <select
+    id="city-picker-province"
+    v-model="selectedProvince"
+    :disabled="citiesLoading"
+    data-testid="city-picker-province"
+    @change="onProvinceChange"
+  >
     <option value="">{{ optional ? '不填' : '-- 请选 --' }}</option>
     <option v-for="p in provinces" :key="p" :value="p">{{ p }}</option>
   </select>
-  <label class="inner-lbl">城市</label>
+  <label class="inner-lbl" id="city-picker-city-label" for="city-picker-city">城市</label>
   <select
+    id="city-picker-city"
     v-model="selectedCity"
     :disabled="!selectedProvince || citiesLoading"
+    data-testid="city-picker-city"
     @change="onCityChange"
   >
     <option value="">{{ selectedProvince ? '-- 请选 --' : '先选省份' }}</option>
@@ -97,7 +105,9 @@ watch(cities, () => applyCity(props.initialCity))
   </select>
   <span v-if="citiesLoading" class="hint">正在加载城市…（需后端 API，若久未响应请确认已启动 uvicorn :8000）</span>
   <span v-else-if="citiesError" class="hint hint--warn">{{ citiesError }}</span>
-  <span v-else-if="modelValue !== undefined" class="hint">经度 {{ modelValue.toFixed(2) }}°E</span>
+  <span v-else-if="modelValue !== undefined" class="hint" title="完整经度用于排盘">
+    经度 {{ Number(modelValue).toFixed(4) }}°E（排盘用完整值）
+  </span>
   <span v-else-if="optional" class="hint">选填，用于真太阳时修正</span>
 </template>
 
@@ -115,8 +125,12 @@ select:disabled {
   cursor: not-allowed;
 }
 select:focus {
-  outline: none;
+  outline: 2px solid transparent;
   border-color: var(--accent);
+}
+select:focus-visible {
+  outline: 2px solid var(--accent, #8b6914);
+  outline-offset: 2px;
 }
 .inner-lbl {
   width: auto !important;

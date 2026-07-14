@@ -103,6 +103,7 @@ export-openapi:
 	python scripts/export_openapi.py
 
 sync-frontend-types: export-openapi
+	@echo "X-03: regenerating frontend/src/api/schema.d.ts from OpenAPI (schema only grows via export)"
 	cd frontend && npm run gen:types
 
 import-classics:

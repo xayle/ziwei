@@ -111,8 +111,20 @@ const degradedBannerMessage = computed(() => {
   if (ziwei.value?.trust_level === 'degraded') {
     return '紫微排盘可信度已降级，请结合下方校勘与双轨对照阅读。'
   }
+  if (ziwei.value?.trust_level === 'advisory') {
+    return '紫微排盘为顾问级（advisory）：部分字段或月系星可能不完整，请结合校勘阅读。'
+  }
+  if (ziwei.value?.trust_level === 'reference') {
+    return '紫微排盘为参考级（reference）：请勿单独作为完整定论。'
+  }
   return null
 })
+
+const degradedBannerStatus = computed<'degraded' | 'warn'>(() => (
+  ziwei.value?.trust_level === 'advisory' || ziwei.value?.trust_level === 'reference'
+    ? 'warn'
+    : 'degraded'
+))
 
 const insightBlocks = computed(() => buildZiweiInsightBlocks(ziwei.value))
 
@@ -166,6 +178,7 @@ onMounted(() => {
     <VolumeHead
       volume-id="vol4"
       title="紫微命盘"
+      title-tag="p"
       :desc="pageLead"
     >
       <template #actions>
@@ -192,8 +205,39 @@ onMounted(() => {
         <TrustDegradedBanner
           v-if="degradedBannerMessage"
           :message="degradedBannerMessage"
-          status="degraded"
+          :status="degradedBannerStatus"
         />
+
+        <section
+          v-if="iztro?.showDualTrackTable"
+          class="ziwei-zw03"
+          data-testid="ziwei-zw03-dual-track"
+        >
+          <h3>紫微双轨对照（ZW03）</h3>
+          <p class="fs-hint">
+            立春前 + 晚子时等边界：引擎主盘为 canonical，不与 iztro 静默对齐。
+            完整说明见报告卷二。
+          </p>
+          <table class="ziwei-zw03__table">
+            <thead>
+              <tr><th>轨道</th><th>年界</th><th>换日</th><th>命宫</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>引擎主盘</td>
+                <td>{{ iztro.engineTrack?.yearDivide || '—' }}</td>
+                <td>{{ iztro.engineTrack?.dayDivide || '—' }}</td>
+                <td><strong>{{ iztro.engineLifePalaceGz || ziwei.life_palace_gz || '—' }}</strong></td>
+              </tr>
+              <tr v-if="iztro.dualTrack">
+                <td>{{ iztro.dualTrack.label }}</td>
+                <td>{{ iztro.dualTrack.yearDivide }}</td>
+                <td>{{ iztro.dualTrack.dayDivide }}</td>
+                <td><strong>{{ iztro.dualTrack.lifePalaceGz }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
 
         <section data-testid="ziwei-layer-summary">
           <SummaryStrip :items="summaryItems" />
@@ -274,7 +318,7 @@ onMounted(() => {
         </section>
 
         <CodexPanel v-if="depth === 'structure'">
-          <h2 class="fs-section-rule">算法口径（ZiweiAlgo）</h2>
+          <h3 class="fs-section-rule">算法口径（ZiweiAlgo）</h3>
           <ZiweiAlgoSettings
             :profile="profileData"
             :provenance="ziwei.provenance"
@@ -284,7 +328,7 @@ onMounted(() => {
         </CodexPanel>
 
         <CodexPanel v-if="depth === 'deep'" data-testid="ziwei-layer-explain">
-          <h2 class="fs-section-rule">卷四·星之命（解读）</h2>
+          <h3 class="fs-section-rule">卷四·星之命（解读）</h3>
           <div v-if="explainFailed" data-testid="ziwei-explain-banner">
             <TrustDegradedBanner
               message="典籍解读暂不可用，下方为引擎宫论与格局摘要。"
@@ -301,23 +345,23 @@ onMounted(() => {
         </CodexPanel>
 
         <CodexPanel v-if="depth === 'deep'">
-          <h2 class="fs-section-rule">飞星盘（flying）</h2>
+          <h3 class="fs-section-rule">飞星盘（flying）</h3>
           <ZiweiFlyingTab :flying="ziwei.flying" />
         </CodexPanel>
 
         <CodexPanel v-if="depth === 'deep'" data-testid="ziwei-palace-structured">
-          <h2 class="fs-section-rule">宫论</h2>
+          <h3 class="fs-section-rule">宫论</h3>
           <p class="palace-structured-lead">十二宫结构化解读（引擎 COMBO 层），与报告紫微章同源。</p>
           <PalaceAnalysisGrid :rows="palaceStructured" />
         </CodexPanel>
 
         <CodexPanel v-if="depth === 'deep'">
-          <h2 class="fs-section-rule">格局·大运分析</h2>
+          <h3 class="fs-section-rule">格局·大运分析</h3>
           <AnalysisPanel :blocks="patternBlocks" :default-open-id="patternBlocks[0]?.id" />
         </CodexPanel>
 
         <CodexPanel v-if="depth === 'deep' && insightBlocks.length" data-testid="ziwei-insight-section">
-          <h2 class="fs-section-rule">运势与生活建议</h2>
+          <h3 class="fs-section-rule">运势与生活建议</h3>
           <AnalysisPanel :blocks="insightBlocks" default-open-id="ziwei-forecast-year" />
         </CodexPanel>
       </template>
@@ -330,6 +374,34 @@ onMounted(() => {
   gap: 14px;
   min-width: 0;
   overflow-x: clip;
+}
+
+.ziwei-zw03 {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.ziwei-zw03 h3 {
+  margin: 0;
+  font-size: 14px;
+  font-family: var(--font-cn);
+  color: var(--brand-ink);
+}
+
+.ziwei-zw03__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ziwei-zw03__table th,
+.ziwei-zw03__table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
 }
 
 .fs-section-kicker {

@@ -19,7 +19,7 @@ import {
   getProfileFieldLabel,
   getTimeConfidence,
 } from '@/utils/profileMetrics'
-import { isArchiveReady, canAnalyzeName } from '@/utils/profileReadiness'
+import { isArchiveReady, canAnalyzeName, isDemoSeedProfile } from '@/utils/profileReadiness'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
@@ -370,9 +370,19 @@ const profileCoverMeta = computed(() => {
   return parts.join(' · ')
 })
 
-const canOpenChart = computed(
-  () => Boolean(form.birthDt && form.gender && form.cityName && form.lon !== undefined),
-)
+const canOpenChart = computed(() => isArchiveReady(profileSnapshot.value))
+
+const showDemoSeedWarn = computed(() => isDemoSeedProfile(profileSnapshot.value))
+
+const zw03AlgoNote = computed(() => {
+  if (form.yearDivide === 'lichun' && form.dayDivide === 'solar_next' && form.lateZishi) {
+    return '当前为引擎 canonical（立春换年 + 公历晚子进次日），与 iztro 默认可能在 ZW03 边界命宫不一致。'
+  }
+  if (form.yearDivide === 'normal' && form.dayDivide === 'forward') {
+    return '当前参数接近 iztro 对照轨（正月初一 + forward）；主产品口径仍建议用立春换年。'
+  }
+  return ''
+})
 
 const birthTimeMeta = computed(() => normalizeBirthDateTime({
   birthDt: form.birthDt || '1990-01-15T08:30',
@@ -482,6 +492,17 @@ function applyZiweiAlgoPreset(presetId: string) {
         档案已齐，继续前往
       </button>
     </p>
+    <p v-if="profile.storageLoadError" class="fs-advisory fs-advisory--cinnabar profile-alert" data-testid="profile-storage-reset">
+      {{ profile.storageLoadError }}
+    </p>
+    <p
+      v-if="showDemoSeedWarn"
+      class="fs-advisory fs-advisory--cinnabar profile-alert"
+      data-testid="profile-demo-seed-warn"
+    >
+      当前仍接近出厂演示生辰（北京 · 1990-01-15）。可继续排盘，但正式成书请改为真实档案。
+    </p>
+    <p v-if="zw03AlgoNote" class="fs-hint profile-note" data-testid="profile-zw03-algo-note">{{ zw03AlgoNote }}</p>
     <p v-if="lunarNote" class="profile-note profile-note--lunar">{{ lunarNote }}</p>
     <p v-if="syncNote" class="profile-note">{{ syncNote }}</p>
 
@@ -575,9 +596,9 @@ function applyZiweiAlgoPreset(presetId: string) {
             <label v-if="form.birthTimePrecision === 'unknown'" class="archive-field">
               <span class="archive-field__label">未知时辰兜底</span>
               <select v-model="form.unknownTimeFallback">
-                <option value="midday">正午 12:30</option>
+                <option value="midday">日中 12:30</option>
                 <option value="noon">正午 12:00</option>
-                <option value="start_of_hour">时辰起点</option>
+                <option value="start_of_hour">当日零点 00:00</option>
               </select>
             </label>
             <label class="archive-field">

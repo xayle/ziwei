@@ -61,3 +61,19 @@ export async function postSandboxPaymentWebhook(body: {
   })
   return data
 }
+
+export type H5PreviewTokenResponse = {
+  access_token: string
+  token_type: string
+  expires_in: number
+  case_id: string
+  scope: string
+}
+
+/** T095 / SHARE-02：签发落地页试读短 token（需登录，绑定 case） */
+export async function mintH5PreviewToken(caseId: string): Promise<H5PreviewTokenResponse> {
+  const { data } = await apiClient.post<H5PreviewTokenResponse>('/api/v1/auth/h5-preview-token', {
+    case_id: caseId.trim(),
+  })
+  return data
+}

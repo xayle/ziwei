@@ -292,3 +292,24 @@ def test_bazi_full_default_liunian_includes_current_calendar_year():
     assert isinstance(cur.get("hidden_stems"), list) and cur["hidden_stems"]
     assert cur.get("nayin")
     assert isinstance(cur.get("shensha"), list)
+
+
+def test_bazi_full_arch_combine_fills_combine_summary():
+    """拱合类地支关系写入 combine_summary，不因 type=干支互动假标 missing。"""
+    resp = client.post(
+        "/api/v1/bazi/full",
+        json={
+            "dt": "1990-01-15T08:30:00",
+            "lon": 116.41,
+            "tz": "Asia/Shanghai",
+            "gender": "male",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    rs = data.get("relations_summary") or {}
+    assert rs.get("combine_summary"), rs
+    assert "合" in rs["combine_summary"] or "拱合" in rs["combine_summary"]
+    missing = data.get("missing_fields") or []
+    assert "combine_summary" not in missing
+    assert "combine_summary" not in (rs.get("missing") or [])

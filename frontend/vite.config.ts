@@ -23,13 +23,9 @@ export default defineConfig(({ mode }) => {
       },
     },
 
-    // 开发时反代到 FastAPI
+    // 开发时反代到 FastAPI（Vite 原生对 SPA 回退 index.html，勿用 webpack 的 historyApiFallback）
     server: {
       port: 5173,
-      // SPA 路由：所有 /static/app/* 都回退到 index.html
-      historyApiFallback: {
-        rewrites: [{ from: /^\/static\/app\/.*$/, to: '/static/app/index.html' }],
-      },
       proxy: {
         '/api': {
           target: devApiTarget,

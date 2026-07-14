@@ -526,6 +526,8 @@ export type ClassicCitationRow = {
   id: string
   title: string
   source?: string
+  /** X-01：典籍页码（有则展示） */
+  sourcePage?: string
   verificationStatus: 'verified' | 'unverified' | 'paraphrase'
   note?: string
 }
@@ -547,13 +549,32 @@ export function buildDualTrackReferenceRows(): DualTrackReferenceRow[] {
 
 export function buildClassicCitationRows(classics?: Array<Record<string, unknown>> | null): ClassicCitationRow[] {
   if (!classics?.length) return []
-  return classics.slice(0, 12).map((item) => ({
-    id: String(item.id ?? '—'),
-    title: String(item.title ?? item.id ?? '典籍'),
-    source: typeof item.source === 'string' ? item.source : undefined,
-    verificationStatus: (item.verification_status as ClassicCitationRow['verificationStatus']) || 'unverified',
-    note: typeof item.notes === 'string' ? item.notes.slice(0, 80) : undefined,
-  }))
+  return classics.slice(0, 12).map((item) => {
+    const pageRaw = item.source_page
+    const sourcePage = typeof pageRaw === 'string' && pageRaw.trim() ? pageRaw.trim() : undefined
+    return {
+      id: String(item.id ?? '—'),
+      title: String(item.title ?? item.id ?? '典籍'),
+      source: typeof item.source === 'string' && item.source.trim() ? item.source.trim() : undefined,
+      sourcePage,
+      verificationStatus: (item.verification_status as ClassicCitationRow['verificationStatus']) || 'unverified',
+      note: typeof item.notes === 'string'
+        ? item.notes.slice(0, 80)
+        : (typeof item.note === 'string' ? item.note.slice(0, 80) : undefined),
+    }
+  })
+}
+
+/** X-01：按 classic_id 查抽检页码 */
+export function lookupClassicSourcePage(
+  classicId: string | null | undefined,
+  classics?: Array<Record<string, unknown>> | null,
+): string | undefined {
+  const id = classicId?.trim()
+  if (!id || !classics?.length) return undefined
+  const hit = classics.find((item) => String(item.id ?? '') === id)
+  const page = hit?.source_page
+  return typeof page === 'string' && page.trim() ? page.trim() : undefined
 }
 
 export function countUnverifiedClassics(classics?: Array<Record<string, unknown>> | null): number {
@@ -562,7 +583,12 @@ export function countUnverifiedClassics(classics?: Array<Record<string, unknown>
 
 export function buildClassicPendingLines(classics?: Array<Record<string, unknown>> | null): string[] {
   const pending = (classics ?? []).filter((item) => item.verification_status === 'unverified').slice(0, 5)
-  return pending.map((item) => `语料待核：${item.id ?? '—'} · ${item.title ?? ''}`.trim())
+  return pending.map((item) => {
+    const page = typeof item.source_page === 'string' && item.source_page.trim()
+      ? ` · 页 ${item.source_page.trim()}`
+      : ''
+    return `语料待核：${item.id ?? '—'} · ${item.title ?? ''}${page}`.trim()
+  })
 }
 
 export function readProvenance(payload?: { provenance?: ResponseProvenance | null } | null) {

@@ -42,7 +42,9 @@ function navigate(entry: (typeof entries)[number]) {
   <section class="fs-card fs-card--register volume-toc-grid" aria-label="六卷卷目">
     <div class="volume-toc-grid__head">
       <h2 class="volume-toc-grid__title">人生六卷</h2>
-      <p class="volume-toc-grid__lead">卷一 / 卷三 / 卷四为工作台；其余卷在报告中连续阅读。</p>
+      <p class="volume-toc-grid__lead">
+        排盘台：卷一 / 卷三 / 卷四；成书：卷二 / 卷五 / 卷六及跋在报告中连续阅读。
+      </p>
     </div>
     <ul class="volume-toc-grid__list">
       <li v-for="entry in entries" :key="entry.id">

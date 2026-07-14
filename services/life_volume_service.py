@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 from typing import Any
 
 from app.models import Case
@@ -55,18 +56,109 @@ def _clip(text: str, limit: int = 280) -> str:
     return f"{t[: limit - 1]}…"
 
 
+def _pillar_line(label: str, pillar: dict[str, Any] | None) -> str:
+    if not isinstance(pillar, dict):
+        return f"{label} —"
+    gz = (pillar.get("ganzhi") or f"{pillar.get('stem', '')}{pillar.get('branch', '')}").strip() or "—"
+    return f"{label} {gz}"
+
+
+def _dayun_block_text(item: dict[str, Any], index: int) -> str:
+    gz = f"{item.get('stem', '')}{item.get('branch', '')}".strip() or "—"
+    start_age = item.get("start_age")
+    end_age = item.get("end_age")
+    if start_age is not None and end_age is None and start_age is not None:
+        try:
+            end_age = int(float(start_age)) + 9
+        except (TypeError, ValueError):
+            end_age = None
+    age = ""
+    if start_age is not None:
+        try:
+            age = f"{int(float(start_age))}–{int(float(end_age)) if end_age is not None else '—'}岁"
+        except (TypeError, ValueError):
+            age = f"{start_age}岁起"
+    year = ""
+    if item.get("start_year") is not None:
+        try:
+            sy = int(item["start_year"])
+            year = f"{sy}–{sy + 9}年"
+        except (TypeError, ValueError):
+            year = str(item.get("start_year"))
+    ten = str(item.get("ten_god") or "").strip()
+    head = " · ".join(x for x in (f"{index + 1}. {gz}", age, year, f"十神 {ten}" if ten else "") if x)
+    narrative = str(item.get("narrative") or "").strip()
+    if narrative:
+        return f"{head}。{_clip(narrative, 360)}"
+    hints = [
+        str(item.get(k) or "").strip()
+        for k in ("geju_impact", "wealth_hint", "health_hint", "love_hint")
+        if item.get(k)
+    ]
+    if hints:
+        return f"{head}。{'；'.join(hints[:3])}"
+    return head
+
+
+def _palace_block_text(palace: dict[str, Any]) -> str:
+    stars = (
+        "、".join(
+            str(s.get("name") or "") for s in (palace.get("main_stars") or []) if isinstance(s, dict) and s.get("name")
+        )
+        or "无主星"
+    )
+    head = f"{palace.get('name')} {palace.get('stem', '')}{palace.get('branch', '')}：主星 {stars}"
+    narrative = str(
+        palace.get("conclusion")
+        or palace.get("analysis")
+        or palace.get("explanation")
+        or palace.get("suggestion")
+        or ""
+    ).strip()
+    aux = "、".join(
+        str(s.get("name") or "") for s in (palace.get("aux_stars") or [])[:4] if isinstance(s, dict) and s.get("name")
+    )
+    tags = "、".join(str(t) for t in (palace.get("analysis_tags") or [])[:3] if t)
+    extras = []
+    if aux:
+        extras.append(f"辅煞 {aux}")
+    if tags:
+        extras.append(f"要点 {tags}")
+    if len(narrative) >= 40:
+        return f"{head}。{_clip(narrative, 220)}"
+    parts = [head]
+    if extras:
+        parts.append("；".join(extras))
+    if narrative:
+        parts.append(narrative)
+    return "；".join(parts)
+
+
 def _relations_text(bazi: dict[str, Any]) -> str:
+    """对齐 FE formatRelationsSummaryText：优先 summary 字段，勿用 type/label。"""
     rs = bazi.get("relations_summary") or {}
-    items = rs.get("items") or []
-    if not items:
-        return "干支关系摘要待补全。"
-    parts = []
-    for item in items[:6]:
-        if isinstance(item, dict):
-            parts.append(item.get("label") or item.get("type") or str(item))
-        else:
-            parts.append(str(item))
-    return "；".join(p for p in parts if p) or "干支关系摘要待补全。"
+    if isinstance(rs, dict):
+        parts = [
+            str(rs.get(key) or "").strip()
+            for key in ("interaction_summary", "clash_summary", "combine_summary", "harm_summary")
+        ]
+        parts = [p for p in parts if p]
+        if parts:
+            return "；".join(parts)
+        lines: list[str] = []
+        for item in (rs.get("items") or [])[:6]:
+            if not isinstance(item, dict):
+                continue
+            summary = str(item.get("summary") or "").strip()
+            if summary:
+                lines.append(summary)
+                continue
+            legacy = str(item.get("detail") or item.get("label") or "").strip()
+            if legacy:
+                lines.append(legacy)
+        if lines:
+            return "；".join(lines)
+    return "干支关系摘要待补全。"
 
 
 def _shensha_text(bazi: dict[str, Any]) -> str:
@@ -79,6 +171,17 @@ def _shensha_text(bazi: dict[str, Any]) -> str:
     return "、".join(names[:8]) if names else "神煞摘要待补全。"
 
 
+def _enrich_vol_block(label: str, body: str, *, floor: int = 40) -> str:
+    """短 fact 块补读法衬底，避免空洞审计误杀。"""
+    trimmed = str(body or "").strip()
+    if len(trimmed) >= floor:
+        return trimmed
+    combined = f"{label}：{trimmed}。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
+    if len(combined) < floor:
+        combined = f"{combined}详见本节与相邻讲解。"
+    return combined
+
+
 def _explain_sections(explain: dict[str, Any] | None, section_id: str) -> list[AnalysisBlockModel]:
     if not explain:
         return []
@@ -89,9 +192,14 @@ def _explain_sections(explain: dict[str, Any] | None, section_id: str) -> list[A
         for raw in section.get("blocks") or []:
             if not isinstance(raw, dict):
                 continue
+            text = str(raw.get("text") or "").strip()
+            if not text:
+                continue
+            if len(text) < 40 and section_id == "geju":
+                text = _enrich_vol_block("格局讲解", text)
             blocks.append(
                 AnalysisBlockModel(
-                    text=_clip(raw.get("text", "")),
+                    text=_clip(text),
                     layer=raw.get("layer", "fact"),
                     classic_id=raw.get("classic_id"),
                 )
@@ -107,13 +215,15 @@ def _build_colophon(
     wenmo_advisory: str | None,
     engine_label: str,
 ) -> ColophonModel:
-    lines: list[str] = [f"引擎 {engine_label}"]
+    lines: list[str] = [
+        f"校勘：引擎 {engine_label}；排盘字段{'未齐见下行' if missing_fields else '齐备'}，可核对卷内 fact/cite/inference 分层。"
+    ]
     if missing_fields:
-        lines.append(f"缺失字段：{'、'.join(missing_fields[:4])}")
-    else:
-        lines.append("排盘字段齐备，可核对卷内 fact/cite/inference 分层。")
+        lines.append(f"未齐字段：{'、'.join(missing_fields[:4])}（不影响已写出块的阅读，展开脚注可核）。")
     if iztro_advisory:
         lines.append(_clip(iztro_advisory, 72))
+    if len(lines) == 1 and not missing_fields:
+        lines.append("双轨核验：可对照 iztro / wenmo advisory（若有）。")
     return ColophonModel(
         summary_lines=lines[:3],
         missing_fields=missing_fields or None,
@@ -229,41 +339,158 @@ def build_life_volumes_from_charts(
 
     day = (bazi.get("pillars_primary") or {}).get("day") or {}
     geju = bazi.get("geju") or {}
+    pillars = bazi.get("pillars_primary") or {}
 
     preface_sections: list[VolumeSectionModel] = []
     if profile_label:
-        preface_sections.append(_section("archive-label", "辑录对象", "fact", [_block(profile_label)]))
+        preface_sections.append(
+            _section(
+                "archive-label",
+                "辑录对象",
+                "fact",
+                [_block(_enrich_vol_block("辑录对象", str(profile_label)))],
+            )
+        )
     preface_sections.append(
         _section(
             "reading-guide",
             "读法导览",
             "fact",
-            [_block("卷一至卷五按 fact·cite·inference 分层；卷六问书需主动展开。", "fact")],
+            [
+                _block(
+                    "卷一至卷五按 fact（排盘推算）· cite（典籍依据）· inference（经验推断）分层阅读；"
+                    "卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷三运限。",
+                    "fact",
+                )
+            ],
         )
     )
 
-    vol1_sections = [
-        _section(
-            "pillars",
-            "四柱根气",
-            "fact",
-            [_block(f"日主 {day.get('stem', '—')}{day.get('branch', '—')}；格局 {geju.get('geju_name', '待分析')}。")],
+    # CNT：远端 vol1 对齐 FE Adapter —— 四柱 / 格局 / 用神 / 强弱 / 运势
+    pillar_text = _enrich_vol_block(
+        "卷一四柱根气",
+        "。".join(
+            [
+                _pillar_line("年柱", pillars.get("year") if isinstance(pillars.get("year"), dict) else None),
+                _pillar_line("月柱", pillars.get("month") if isinstance(pillars.get("month"), dict) else None),
+                _pillar_line("日柱", pillars.get("day") if isinstance(pillars.get("day"), dict) else None),
+                _pillar_line("时柱", pillars.get("hour") if isinstance(pillars.get("hour"), dict) else None),
+                f"日主 {day.get('stem', '—')}{day.get('branch', '—')}；格局 {geju.get('geju_name', '待分析')}",
+            ]
         ),
+    )
+    vol1_sections = [
+        _section("pillars", "四柱根气", "fact", [_block(pillar_text)]),
     ]
+    geju_bits = [
+        str(x).strip() for x in (geju.get("geju_detail"), geju.get("interpretation_text")) if str(x or "").strip()
+    ]
+    geju_uniq: list[str] = []
+    for bit in geju_bits:
+        if bit not in geju_uniq:
+            geju_uniq.append(bit)
+    geju_name = str(geju.get("geju_name") or "").strip()
+    if geju_uniq or geju_name:
+        parts = ([f"格局取「{geju_name}」"] if geju_name else []) + geju_uniq
+        body = "。".join(parts)
+        if geju.get("geju_level"):
+            body = f"{body}（等级 {geju.get('geju_level')}）"
+        vol1_sections.append(_section("geju", "格局", "fact", [_block(_enrich_vol_block("卷一格局", body))]))
+    if str(geju.get("classic_ref") or "").strip():
+        vol1_sections.append(_section("geju-cite", "典籍句式", "cite", [_block(str(geju.get("classic_ref")), "cite")]))
+    yong = bazi.get("yongshen") or {}
+    if isinstance(yong, dict) and (yong.get("favor") or yong.get("avoid")):
+        vol1_sections.append(
+            _section(
+                "yongshen",
+                "用神",
+                "fact",
+                [
+                    _block(
+                        _enrich_vol_block(
+                            "卷一用神",
+                            f"喜用 {'、'.join(yong.get('favor') or []) or '—'}；"
+                            f"忌 {'、'.join(yong.get('avoid') or []) or '—'}",
+                        )
+                    )
+                ],
+            )
+        )
+    strength = bazi.get("day_master_strength") or {}
+    if isinstance(strength, dict) and (strength.get("tier") is not None or strength.get("score") is not None):
+        factor_bits = []
+        for f in (strength.get("factors") or strength.get("strength_factors") or [])[:4]:
+            if not isinstance(f, dict):
+                continue
+            name = str(f.get("name") or "").strip()
+            reason = str(f.get("reason") or "").strip()
+            if name and reason:
+                factor_bits.append(f"{name}（{reason}）")
+            elif name:
+                factor_bits.append(name)
+        strength_text = f"日主强弱：{strength.get('tier') or '—'}（评分 {strength.get('score', '—')}）"
+        if factor_bits:
+            strength_text = f"{strength_text}。主要因子：{'；'.join(factor_bits)}"
+        vol1_sections.append(
+            _section("strength", "日主强弱", "fact", [_block(_enrich_vol_block("卷一强弱", strength_text))])
+        )
+    fortune = bazi.get("current_fortune_summary") or {}
+    if isinstance(fortune, dict):
+        bits = [
+            f"当前大运 {fortune['current_dayun']}" if fortune.get("current_dayun") else "",
+            f"流年 {fortune['current_liunian']}" if fortune.get("current_liunian") else "",
+            (
+                f"大运余 {fortune['dayun_years_remaining']} 年"
+                if fortune.get("dayun_years_remaining") is not None
+                else ""
+            ),
+        ]
+        bits = [b for b in bits if b]
+        domains = fortune.get("this_year_domains") or {}
+        if isinstance(domains, dict):
+            for label, tip in domains.items():
+                tip_s = _clip(str(tip or "").strip(), 120)
+                if tip_s:
+                    bits.append(f"{label}：{tip_s}")
+        actions = [str(a).strip() for a in (fortune.get("top3_actions") or [])[:2] if str(a).strip()]
+        if actions:
+            bits.append("宜行： " + "；".join(_clip(a, 100) for a in actions))
+        if bits:
+            vol1_sections.append(_section("current-fortune", "当下运势摘要", "fact", [_block(" · ".join(bits))]))
+    if str(bazi.get("bazi_summary") or "").strip():
+        vol1_sections.append(
+            _section(
+                "summary-inference",
+                "综合总评",
+                "inference",
+                [_block(_clip(str(bazi.get("bazi_summary")), 400), "inference")],
+                collapsed_default=True,
+            )
+        )
     geju_blocks = _explain_sections(explain_bazi, "geju")
     if geju_blocks:
         vol1_sections.append(_section("geju-explain", "格局讲解", "cite", geju_blocks))
 
     vol2_sections = [
-        _section("relations", "干支关系", "fact", [_block(_relations_text(bazi))]),
-        _section("shensha", "神煞摘要", "fact", [_block(_shensha_text(bazi))]),
+        _section(
+            "relations",
+            "干支关系",
+            "fact",
+            [_block(_enrich_vol_block("卷二干支关系摘要", _relations_text(bazi)))],
+        ),
+        _section(
+            "shensha",
+            "神煞摘要",
+            "fact",
+            [_block(_enrich_vol_block("卷二神煞摘要", _shensha_text(bazi)))],
+        ),
     ]
     rel_blocks = _explain_sections(explain_bazi, "relations")
     if rel_blocks:
         vol2_sections.append(_section("relations-explain", "关系讲解", "fact", rel_blocks))
 
     vol3_sections: list[VolumeSectionModel] = []
-    dayun_items = ((bazi.get("dayun") or {}).get("items") or [])[:5]
+    dayun_items = ((bazi.get("dayun") or {}).get("items") or (bazi.get("dayun") or {}).get("cycles") or [])[:8]
     if dayun_items:
         vol3_sections.append(
             _section(
@@ -271,31 +498,163 @@ def build_life_volumes_from_charts(
                 "大运序列",
                 "fact",
                 [
-                    _block(
-                        f"{item.get('start_age', '—')}–{item.get('end_age', '—')}岁 "
-                        f"{item.get('stem', '')}{item.get('branch', '')}".strip()
-                    )
-                    for item in dayun_items
+                    _block(_dayun_block_text(item, idx))
+                    for idx, item in enumerate(dayun_items)
                     if isinstance(item, dict)
                 ],
             )
         )
-    else:
+    ziwei_dayun = ((ziwei or {}).get("dayun") or {}).get("items") or []
+    if ziwei_dayun:
+        z_blocks: list[AnalysisBlockModel] = []
+        for idx, item in enumerate(ziwei_dayun[:8]):
+            if not isinstance(item, dict):
+                continue
+            palace = str(item.get("palace_name") or "").strip()
+            sihua = "、".join(f"{star}{trans}" for star, trans in (item.get("sihua") or {}).items())
+            line = " · ".join(
+                x
+                for x in (
+                    f"{idx + 1}. {item.get('ganzhi', '—')}",
+                    (f"{item.get('start_age')}–{item.get('end_age')}岁" if item.get("start_age") is not None else ""),
+                    f"应宫 {palace}" if palace else "",
+                    f"四化 {sihua}" if sihua else "",
+                )
+                if x
+            )
+            z_blocks.append(_block(_enrich_vol_block("紫微大运节选", line)))
+        if z_blocks:
+            vol3_sections.append(_section("ziwei-dayun", "紫微大运", "fact", z_blocks))
+    monthly = bazi.get("monthly_fortune") or []
+    if isinstance(monthly, list) and monthly:
+        vol3_sections.append(
+            _section(
+                "monthly-fortune",
+                "月运（当年）",
+                "fact",
+                [
+                    _block(
+                        _enrich_vol_block(
+                            "月运",
+                            f"{m.get('month')}月"
+                            f"{(' · ' + str(m.get('month_ganzhi') or m.get('month_dizhi') or '').strip()) if (m.get('month_ganzhi') or m.get('month_dizhi')) else ''}"
+                            f" · {m.get('luck_level', '—')} · {_clip(str(m.get('tip') or '—'), 80)}",
+                        )
+                    )
+                    for m in monthly[:12]
+                    if isinstance(m, dict)
+                ],
+            )
+        )
+    liunian_items = (bazi.get("liunian") or {}).get("items") or []
+    if isinstance(liunian_items, list) and liunian_items:
+        year_now = datetime.now().year
+        nearby = [
+            it
+            for it in liunian_items
+            if isinstance(it, dict) and isinstance(it.get("year"), int) and abs(it["year"] - year_now) <= 2
+        ][:5]
+        pick = nearby or [it for it in liunian_items if isinstance(it, dict)][:5]
+        vol3_sections.append(
+            _section(
+                "liunian",
+                "流年节选",
+                "fact",
+                [
+                    _block(
+                        _enrich_vol_block(
+                            "流年节选",
+                            " · ".join(
+                                x
+                                for x in (
+                                    str(it.get("year") or "—"),
+                                    f"{it.get('stem', '')}{it.get('branch', '')}".strip() or "—",
+                                    str(it.get("ten_god") or ""),
+                                    f"星运 {it['xingyun']}" if it.get("xingyun") else "",
+                                    _clip(str(it.get("summary") or it.get("tip") or ""), 60),
+                                )
+                                if x
+                            ),
+                        )
+                    )
+                    for it in pick
+                ],
+            )
+        )
+    if not vol3_sections:
         vol3_sections.append(_section("dayun-empty", "运限", "fact", [_block("大运序列待载入。")]))
 
     vol4_sections: list[VolumeSectionModel] = []
     if ziwei:
         vol4_sections.append(
             _section(
-                "life-palace",
-                "命宫",
+                "ziwei-meta",
+                "命盘概要",
                 "fact",
-                [_block(f"命宫 {ziwei.get('life_palace_gz', '—')} · {ziwei.get('wuxing_ju_name', '—')}")],
+                [
+                    _block(
+                        f"卷四命盘概要：五行局 {ziwei.get('wuxing_ju_name', '—')}；"
+                        f"命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}。"
+                        f"阅读时先定命身轴，再对照十二宫主星与格局条文。"
+                    )
+                ],
             )
         )
+        patterns = ziwei.get("patterns") or []
+        if isinstance(patterns, list) and patterns:
+            vol4_sections.append(
+                _section(
+                    "patterns",
+                    "格局",
+                    "fact",
+                    [
+                        _block(
+                            _enrich_vol_block(
+                                "紫微格局",
+                                f"{p.get('name', '格局')}：{_clip(str(p.get('description') or ''), 200)}",
+                            )
+                        )
+                        for p in patterns[:4]
+                        if isinstance(p, dict)
+                    ],
+                )
+            )
         palace_blocks = _explain_sections(explain_ziwei, "palaces")
+        palaces = [p for p in (ziwei.get("palaces") or []) if isinstance(p, dict)]
         if palace_blocks:
-            vol4_sections.append(_section("palaces-explain", "宫位讲解", "fact", palace_blocks))
+            enriched: list[AnalysisBlockModel] = []
+            for idx, blk in enumerate(palace_blocks):
+                matched = palaces[idx] if idx < len(palaces) else None
+                text = blk.text
+                if matched and len(text) < 40:
+                    text = _palace_block_text(matched)
+                enriched.append(_block(_clip(text, 500), blk.layer, blk.classic_id))
+            vol4_sections.append(_section("palaces-explain", "宫位讲解", "fact", enriched))
+        elif palaces:
+            vol4_sections.append(
+                _section(
+                    "palaces",
+                    "十二宫（节选）",
+                    "fact",
+                    [_block(_palace_block_text(p)) for p in palaces[:8]],
+                )
+            )
+        # 命身轴已并入 meta，避免重复短块；若尚无 meta（极端缺字段），回落单独节
+        if not any(s.id == "ziwei-meta" for s in vol4_sections):
+            vol4_sections.append(
+                _section(
+                    "palace-axis",
+                    "命身轴",
+                    "fact",
+                    [
+                        _block(
+                            f"命宫干支 {ziwei.get('life_palace_gz', '—')}；"
+                            f"身宫干支 {ziwei.get('body_palace_gz', '—')}；"
+                            f"五行局 {ziwei.get('wuxing_ju_name', '—')}"
+                        )
+                    ],
+                )
+            )
     else:
         vol4_sections.append(_section("ziwei-empty", "紫微", "fact", [_block("紫微数据待载入。")]))
 
@@ -331,7 +690,13 @@ def build_life_volumes_from_charts(
             "vol6-on-demand",
             "问书助手",
             "inference",
-            [_block("卷六叙事与 LLM 解读需用户主动展开，不在首屏自动加载。", "fact")],
+            [
+                _block(
+                    "卷六为问书助手：需用户主动展开后选择事业/婚恋等模块提问；"
+                    "打磨期不自动调用 LLM，避免首屏静默消耗。展开后即可与排盘事实对照追问。",
+                    "fact",
+                )
+            ],
             collapsed_default=True,
         )
     ]

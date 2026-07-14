@@ -43,6 +43,7 @@ const supervisorId = ref<'a' | 'b'>('a')
 const showInference = ref(false)
 const showExplain = ref(false)
 const loading = ref(false)
+const explainFailed = ref(false)
 const exportingPdf = ref(false)
 const exportingPng = ref(false)
 const exportingMultiPdf = ref(false)
@@ -86,6 +87,8 @@ function toIsoLocal(dtLocal: string): string {
 function partnerLongitude(): number {
   return Number.isFinite(partnerLon.value) ? partnerLon.value! : (profile.lon ?? 116.41)
 }
+
+const partnerLonUsingFallback = computed(() => !Number.isFinite(partnerLon.value))
 
 function buildRelationRequest(): RelationFullRequest {
   const lonB = partnerLongitude()
@@ -174,6 +177,7 @@ async function runRelation() {
 
   loading.value = true
   error.value = ''
+  explainFailed.value = false
   rawResult.value = null
   lastRequest.value = null
   multiResult.value = null
@@ -183,17 +187,20 @@ async function runRelation() {
   const multiBody = buildMultiCompatRequest()
 
   try {
-    const [full, multi, explain] = await Promise.all([
+    const [full, multi, explainResult] = await Promise.all([
       relationFull(body),
       multiBody && multiBody.person_list.length >= 3
         ? ziweiMultiCompat(multiBody)
         : Promise.resolve(null),
-      relationExplainBatch({ ...body, sections: ['relation_reading'] }).catch(() => null),
+      relationExplainBatch({ ...body, sections: ['relation_reading'] })
+        .then((data) => ({ ok: true as const, data }))
+        .catch(() => ({ ok: false as const, data: null })),
     ])
     rawResult.value = full
     lastRequest.value = body
     multiResult.value = multi
-    explainBatch.value = explain
+    explainBatch.value = explainResult.data
+    explainFailed.value = !explainResult.ok
   } catch {
     error.value = '关系合盘分析失败，请检查输入后重试。'
   } finally {
@@ -348,6 +355,9 @@ async function downloadMultiMatrixPdf() {
           />
         </label>
       </div>
+      <p v-if="partnerLonUsingFallback" class="hint" data-testid="relation-partner-lon-fallback">
+        对方经度未填，将暂用甲方经度 {{ profile.lon ?? 116.41 }}；出生地不同请务必改写。
+      </p>
 
       <div class="third-toggle">
         <label class="checkbox-row">
@@ -458,7 +468,13 @@ async function downloadMultiMatrixPdf() {
         </table>
       </section>
 
-      <section v-if="explainBlocks.length" class="fs-card inference-section">
+      <ResultStateCard
+        v-if="explainFailed"
+        title="关系解读暂不可用"
+        message="合盘结果已出，但解读批次加载失败。可稍后重试「开始合盘」。"
+        data-testid="relation-explain-failed"
+      />
+      <section v-else-if="explainBlocks.length" class="fs-card inference-section">
         <button class="fs-btn fs-btn--ghost" data-testid="relation-explain-toggle" @click="showExplain = !showExplain">
           {{ showExplain ? '收起' : '展开' }}关系解读（cite / inference）
         </button>

@@ -2,11 +2,20 @@
 import { computed, ref } from 'vue'
 import type { AnalysisBlock, VolumeSection } from '@/types/life-volume'
 import { CONTENT_LAYER_LABELS } from '@/types/life-volume'
+import { lookupClassicSourcePage } from '@/utils/buildEngineTrustDisplay'
+import classicsSpotcheck from '@/assets/classics-spotcheck.json'
 
 function blockLayerLabel(block: AnalysisBlock): string {
   if (block.layer === 'cite' && block.classic_id) return CONTENT_LAYER_LABELS.cite
   if (block.layer === 'cite') return '待校勘'
   return CONTENT_LAYER_LABELS[block.layer]
+}
+
+/** X-01：cite 块展示 classic_id + 页码 */
+function citeMeta(block: AnalysisBlock): string {
+  if (block.layer !== 'cite' || !block.classic_id) return ''
+  const page = lookupClassicSourcePage(block.classic_id, classicsSpotcheck as Array<Record<string, unknown>>)
+  return page ? `${block.classic_id} · ${page}` : block.classic_id
 }
 
 const props = defineProps<{
@@ -62,6 +71,11 @@ const isLockTeaser = computed(() => props.section.id === 'locked' || props.volum
         :data-layer="blk.layer"
       >
         <span class="volume-section__block-label" :data-layer="blk.layer">{{ blockLayerLabel(blk) }}</span>
+        <span
+          v-if="citeMeta(blk)"
+          class="volume-section__cite-meta"
+          data-testid="volume-cite-meta"
+        >{{ citeMeta(blk) }}</span>
         {{ blk.text }}
       </p>
     </div>
@@ -130,6 +144,15 @@ const isLockTeaser = computed(() => props.section.id === 'locked' || props.volum
 
 .volume-section__block-label[data-layer='cite'] {
   color: var(--brand-gold-dark);
+}
+
+.volume-section__cite-meta {
+  display: inline-block;
+  margin: 0 8px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--brand-gold-dark);
+  font-family: var(--font-ui, sans-serif);
 }
 
 .volume-section--inference .volume-section__block {

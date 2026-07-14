@@ -29,6 +29,11 @@ const router = createRouter({
       component: () => import('@/views/new/NewHomeView.vue'),
       meta: { title: '首页' },
     },
+    // ROUTE-01：后端/书签旧路径 → 现行 Vue 路由
+    { path: '/cases', redirect: '/' },
+    { path: '/bazi', redirect: '/new/bazi' },
+    { path: '/ziwei', redirect: '/new/ziwei' },
+    { path: '/admin', redirect: '/extensions' },
     {
       path: '/profile',
       name: 'profile',

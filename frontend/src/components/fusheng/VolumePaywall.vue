@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { LifeVolumeId } from '@/types/life-volume'
 import { paywallCopyFor } from '@/constants/volumePaywall'
 import { track } from '@/utils/analytics'
 import { useAuthStore } from '@/stores/auth'
 import { useEntitlementStore } from '@/stores/entitlement'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 const props = defineProps<{
   volumeId: LifeVolumeId | string
@@ -20,6 +21,14 @@ const auth = useAuthStore()
 const entitlement = useEntitlementStore()
 const copy = computed(() => paywallCopyFor(props.volumeId))
 const busy = computed(() => entitlement.loading)
+const rootRef = ref<HTMLElement | null>(null)
+
+useFocusTrap(rootRef, {
+  active: true,
+  onEscape: () => {
+    rootRef.value?.querySelector<HTMLElement>('[data-testid="volume-paywall-mock-unlock"]')?.focus()
+  },
+})
 
 async function onMockUnlock() {
   track({
@@ -27,10 +36,12 @@ async function onMockUnlock() {
     volume_id: String(props.volumeId),
     properties: { action: 'mock_unlock', sandbox: true },
   })
+  // ENT-01：已登录必须 sandbox 成功才解锁；未登录仍允许本地演示 mock
   if (auth.isLoggedIn) {
     const plan =
       props.volumeId === 'vol5' || props.volumeId === 'vol6' ? 'full_book' : 'volume_pass'
-    await entitlement.sandboxPurchase(plan)
+    const ok = await entitlement.sandboxPurchase(plan)
+    if (!ok) return
   }
   emit('mockUnlock')
 }
@@ -38,18 +49,20 @@ async function onMockUnlock() {
 
 <template>
   <aside
+    ref="rootRef"
     class="volume-paywall"
     data-testid="volume-paywall"
     :data-volume-id="volumeId"
-    role="region"
-    :aria-label="`${volumeId} 未解锁`"
+    role="dialog"
+    aria-modal="true"
+    :aria-label="`锁卷：${copy.need}`"
   >
     <div class="volume-paywall__seal" aria-hidden="true">锁</div>
     <div class="volume-paywall__body">
       <p class="volume-paywall__need">需{{ copy.need }}</p>
       <p class="volume-paywall__blurb">{{ detail?.trim() || copy.blurb }}</p>
       <p class="volume-paywall__hint">
-        {{ auth.isLoggedIn ? '将调用沙箱支付写入权益（T093/T094）。' : '未登录：仅本会话模拟解锁。' }}
+        试读锁定。可用 Tab 在本区内切换；Esc 将焦点回到解锁按钮。
       </p>
       <button
         type="button"
@@ -58,7 +71,7 @@ async function onMockUnlock() {
         :disabled="busy"
         @click="onMockUnlock"
       >
-        {{ busy ? '处理中…' : copy.cta }}
+        {{ busy ? '开通中…' : copy.cta }}
       </button>
     </div>
   </aside>
@@ -70,60 +83,55 @@ async function onMockUnlock() {
   grid-template-columns: auto 1fr;
   gap: 14px;
   align-items: start;
-  margin: 12px 0 8px;
-  padding: 16px 14px;
+  padding: 16px 18px;
   border: 1px solid var(--border-md, #d4c4a8);
-  border-left: 3px solid var(--brand-cinnabar, #8b3a2a);
-  background: var(--surface, #fffaf5);
-  max-width: 100%;
-  box-sizing: border-box;
+  background: rgba(255, 250, 245, 0.72);
 }
 
 .volume-paywall__seal {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border: 1px solid var(--brand-cinnabar, #8b3a2a);
   color: var(--brand-cinnabar, #8b3a2a);
-  font-family: var(--font-display, "LXGW Neo ZhiSong", serif);
-  font-size: 0.95rem;
+  font-family: var(--font-display, serif);
+  font-size: 15px;
   letter-spacing: 0.12em;
-  flex-shrink: 0;
 }
 
 .volume-paywall__need {
-  margin: 0;
-  font-size: 0.95rem;
+  margin: 0 0 6px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.08em;
   color: var(--brand-ink, #1a1410);
 }
 
 .volume-paywall__blurb {
-  margin: 0.45rem 0 0;
-  font-size: 0.9rem;
+  margin: 0 0 8px;
+  font-size: 13px;
   line-height: 1.65;
-  color: var(--brand-mist, #6b5d4f);
+  color: var(--text-2);
 }
 
 .volume-paywall__hint {
-  margin: 0.55rem 0 0;
-  font-size: 0.72rem;
-  line-height: 1.5;
-  color: var(--text-3, #9a8b7a);
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-3);
 }
 
 .volume-paywall__cta {
-  margin-top: 0.85rem;
-  padding: 0.55rem 0.9rem;
+  padding: 8px 14px;
   border: 1px solid var(--brand-gold-dark, #8b5e34);
   background: transparent;
   color: var(--brand-gold-dark, #8b5e34);
   font: inherit;
-  font-size: 0.88rem;
-  letter-spacing: 0.06em;
   cursor: pointer;
+}
+
+.volume-paywall__cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .volume-paywall__cta:focus-visible {

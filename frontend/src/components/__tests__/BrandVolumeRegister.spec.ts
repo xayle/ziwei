@@ -21,5 +21,8 @@ describe('BrandVolumeRegister', () => {
     expect(rows).toHaveLength(BRAND_HOME_VOLUMES.length)
     expect(wrapper.find('.brand-codex__panel').exists()).toBe(true)
     expect(wrapper.find('[data-testid="brand-codex"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="brand-lane-note"]').text()).toContain('排盘台')
+    expect(wrapper.get('[data-volume-id="vol1"]').attributes('data-lane')).toBe('desk')
+    expect(wrapper.get('[data-volume-id="vol2"]').attributes('data-lane')).toBe('book')
   })
 })

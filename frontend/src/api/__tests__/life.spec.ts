@@ -53,6 +53,7 @@ describe('useLifeVolumesApiEnabled', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.resetModules()
+    vi.unstubAllEnvs()
   })
 
   it('reads localStorage override for E2E / 联调', async () => {
@@ -61,7 +62,13 @@ describe('useLifeVolumesApiEnabled', () => {
     expect(useLifeVolumesApiEnabled()).toBe(true)
   })
 
-  it('defaults false when storage empty', async () => {
+  it('defaults true for GTM (REP-04)', async () => {
+    const { useLifeVolumesApiEnabled } = await import('@/api/life')
+    expect(useLifeVolumesApiEnabled()).toBe(true)
+  })
+
+  it('localStorage 0 forces off', async () => {
+    localStorage.setItem('fusheng-use-life-volumes-api', '0')
     const { useLifeVolumesApiEnabled } = await import('@/api/life')
     expect(useLifeVolumesApiEnabled()).toBe(false)
   })

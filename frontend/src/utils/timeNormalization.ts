@@ -107,7 +107,7 @@ function describeTimeRisk(precision: BirthTimePrecision, fallback: UnknownTimeFa
   if (precision === 'unknown') {
     return {
       label: '未知时辰',
-      hint: `已启用兜底策略：${fallback === 'midday' ? '按正午' : fallback === 'noon' ? '按午时' : '按整点'}。`,
+      hint: `已启用兜底策略：${fallback === 'midday' ? '按日中 12:30' : fallback === 'noon' ? '按正午 12:00' : '按当日零点'}。`,
     }
   }
   if (precision === 'hour') {

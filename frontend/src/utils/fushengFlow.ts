@@ -18,7 +18,7 @@ export const FUSHENG_FLOW_STEPS: FlowStep[] = [
 
 export function resolveFlowStepId(path: string): FlowStepId {
   if (path === '/' || path === '/home' || path === '/new') return 'home'
-  if (path.startsWith('/extensions')) return 'extensions'
+  if (path.startsWith('/extensions') || path.startsWith('/relation')) return 'extensions'
   if (path.startsWith('/new/ziwei')) return 'ziwei'
   const matched = FUSHENG_FLOW_STEPS.find((step) => step.path === path)
   return matched?.id ?? 'home'

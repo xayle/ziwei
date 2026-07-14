@@ -62,7 +62,7 @@ describe('buildChartRequests', () => {
     expect(req.day).toBe(15)
     expect(req.gender).toBe('男')
     expect(req.liunian_year).toBe(2026)
-    expect(req.longitude).toBeUndefined()
+    expect(req.longitude).toBe(116.41)
     expect(req.youbi_method).toBe('month')
     expect(req.liunian_sihua_method).toBe('year_stem')
     expect(req.kuiyue_method).toBe('standard')
@@ -97,6 +97,23 @@ describe('buildChartRequests', () => {
     expect(buildBaziRequest(profile).birth_time_precision).toBe('exact')
     const req = buildBaziRequest({ ...profile, birthTimePrecision: 'unknown' })
     expect(req.birth_time_precision).toBe('unknown')
+  })
+
+  it('TIME-01: unknown noon→12:00 and midday→12:30', () => {
+    const noon = buildBaziRequest({
+      ...profile,
+      birthDt: '1990-01-15T08:00:00',
+      birthTimePrecision: 'unknown',
+      unknownTimeFallback: 'noon',
+    })
+    expect(noon.dt).toContain('T12:00:00')
+    const midday = buildBaziRequest({
+      ...profile,
+      birthDt: '1990-01-15T08:00:00',
+      birthTimePrecision: 'unknown',
+      unknownTimeFallback: 'midday',
+    })
+    expect(midday.dt).toContain('T12:30:00')
   })
 
   it('builds pdf request aligned with chart requests', () => {
