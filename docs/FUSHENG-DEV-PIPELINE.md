@@ -2,11 +2,11 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | pipeline-4.13 |
+| **版本** | pipeline-4.14 |
 | **日期** | 2026-07-14 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
-| **当前阶段** | **Phase F GTM** · T086–T098 ☑ → **下一项 T099**（创作者统计 API） |
+| **当前阶段** | **Phase F GTM** · T086–T099 ☑ → **下一项 T100**（创作者 Dashboard FE） |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
 | **W102 进度** | **24/24**（Phase B）· **W102-P3 ☑**（Phase D） |
 
@@ -131,7 +131,7 @@ pre-commit run --all-files   # 首次或大改后
 > **规则**：严格编号；标 `∥` 可与上一条并行；做完改 `☐→☑` 并 `dev_cycle --commit`。
 
 **已完成：** W102-00a～**22** 全 ☑ · **Phase B closeout 2026-07-13**  
-**下一项：** **T099** 创作者统计 API（BE-GTM-08）— POST-W14 块 K
+**下一项：** **T100** 创作者 Dashboard（FE-GTM-05）— POST-W14 块 K
 
 ### 块 0 · 基线入库（Day 0，先于 Week1）
 
@@ -269,7 +269,7 @@ Phase B  W102-00–22    ☑ 产品重建（R102）closeout 24/24
 Phase C  W15–W16       ☑ life/volumes 权威化并入 Phase E / T085
 Phase D  W102-P3       ☑ 合盘 BE+CI+FE 全链路（export · multi · explain）
 Phase E  W15–W16 U5    ☑ T085
-Phase F  W17+ GTM      ← **进行中** · T086–T098 ☑ · 下一项 T099
+Phase F  W17+ GTM      ← **进行中** · T086–T099 ☑ · 下一项 T100
 ```
 
 **纪律：**
@@ -313,6 +313,7 @@ Phase F  W17+ GTM      ← **进行中** · T086–T098 ☑ · 下一项 T099
 | pipeline-2.8 | 2026-07-13 | **W102-22 ☑ · 24/24** · R102 closeout · Phase B 完成 |
 | pipeline-3.0 | 2026-07-14 | **Phase D ☑** · W102-P3 FE 全链路 · autopilot **30/30+20/20** |
 | pipeline-3.1 | 2026-07-14 | **文档消噪收口** · P2-2/P3-17 · FE-DEV §12.3 static 约定 |
+| pipeline-4.14 | 2026-07-14 | **T099 ☑** · 创作者统计 API · 下一项 T100 |
 | pipeline-4.13 | 2026-07-14 | **T098 ☑** · 竖版分享预览 FE · 下一项 T099 |
 | pipeline-4.12 | 2026-07-14 | **T097 ☑** · douyin 9:16 分享卡 · 下一项 T098 |
 | pipeline-4.11 | 2026-07-14 | **T096 ☑** · 钩子句一键复制 · 下一项 T097 |
@@ -338,4 +339,4 @@ Phase F  W17+ GTM      ← **进行中** · T086–T098 ☑ · 下一项 T099
 
 ---
 
-**下一步：** **T099** · 创作者统计 API（BE-GTM-08）
+**下一步：** **T100** · 创作者 Dashboard（FE-GTM-05）

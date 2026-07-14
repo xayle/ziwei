@@ -10449,6 +10449,69 @@
         }
       }
     },
+    "/api/v1/creator/stats": {
+      "get": {
+        "tags": [
+          "创作者统计"
+        ],
+        "summary": "创作者统计：topic→注册 cohort + 漏斗",
+        "description": "按 utm_source / utm_campaign / content_id 聚合注册与付费转化；仅管理员。",
+        "operationId": "get_creator_stats_api_v1_creator_stats_get",
+        "parameters": [
+          {
+            "name": "window_days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 365,
+              "minimum": 1,
+              "description": "统计窗口（天）",
+              "default": 30,
+              "title": "Window Days"
+            },
+            "description": "统计窗口（天）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatorStatsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/api/v1/users/me/anonymize": {
       "post": {
         "tags": [
@@ -16452,6 +16515,168 @@
           "definition"
         ],
         "title": "ConceptModel"
+      },
+      "CreatorFunnelStep": {
+        "properties": {
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "step"
+        ],
+        "title": "CreatorFunnelStep"
+      },
+      "CreatorStatsResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "creator-stats@0.1",
+            "title": "Schema Version",
+            "default": "creator-stats@0.1"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          },
+          "window_days": {
+            "type": "integer",
+            "title": "Window Days"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/CreatorStatsTotals"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/CreatorTopicCohort"
+            },
+            "type": "array",
+            "title": "Topics"
+          },
+          "funnel": {
+            "items": {
+              "$ref": "#/components/schemas/CreatorFunnelStep"
+            },
+            "type": "array",
+            "title": "Funnel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generated_at",
+          "window_days",
+          "totals"
+        ],
+        "title": "CreatorStatsResponse"
+      },
+      "CreatorStatsTotals": {
+        "properties": {
+          "users": {
+            "type": "integer",
+            "title": "Users",
+            "default": 0
+          },
+          "attributed_users": {
+            "type": "integer",
+            "title": "Attributed Users",
+            "default": 0
+          },
+          "paid_users": {
+            "type": "integer",
+            "title": "Paid Users",
+            "default": 0
+          },
+          "landing_cta_clicks": {
+            "type": "integer",
+            "title": "Landing Cta Clicks",
+            "default": 0
+          },
+          "share_card_exports": {
+            "type": "integer",
+            "title": "Share Card Exports",
+            "default": 0
+          },
+          "volume_views": {
+            "type": "integer",
+            "title": "Volume Views",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "CreatorStatsTotals"
+      },
+      "CreatorTopicCohort": {
+        "properties": {
+          "topic_key": {
+            "type": "string",
+            "title": "Topic Key",
+            "description": "utm_source|utm_campaign|content_id"
+          },
+          "utm_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Source"
+          },
+          "utm_campaign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utm Campaign"
+          },
+          "content_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Id"
+          },
+          "registrations": {
+            "type": "integer",
+            "title": "Registrations",
+            "default": 0
+          },
+          "paid_conversions": {
+            "type": "integer",
+            "title": "Paid Conversions",
+            "default": 0
+          },
+          "conversion_rate": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Conversion Rate",
+            "default": 0.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "topic_key"
+        ],
+        "title": "CreatorTopicCohort",
+        "description": "topic（content_id / campaign）→ 注册 → 付费转化。"
       },
       "CurrentFortuneSummaryModel": {
         "properties": {

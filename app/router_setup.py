@@ -11,6 +11,7 @@ from routers import bazi as bazi_router
 from routers import cases as cases_router
 from routers import compat as compat_router
 from routers import compute as compute_router
+from routers import creator_stats as creator_stats_router
 from routers import delegation as delegation_router
 from routers import event_prediction as event_prediction_router
 from routers import events as events_router
@@ -83,6 +84,7 @@ def _include_workflow_routers(app: FastAPI) -> None:
     app.include_router(rules_admin_router.router)
     app.include_router(analytics_router.router)
     app.include_router(analytics_events_router.router)
+    app.include_router(creator_stats_router.router)
     app.include_router(privacy_router.router)
 
 

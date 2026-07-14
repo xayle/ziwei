@@ -2939,6 +2939,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/creator/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 创作者统计：topic→注册 cohort + 漏斗
+         * @description 按 utm_source / utm_campaign / content_id 聚合注册与付费转化；仅管理员。
+         */
+        get: operations["get_creator_stats_api_v1_creator_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/anonymize": {
         parameters: {
             query?: never;
@@ -5366,6 +5386,102 @@ export interface components {
              * @default []
              */
             related: string[];
+        };
+        /** CreatorFunnelStep */
+        CreatorFunnelStep: {
+            /** Step */
+            step: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+        };
+        /** CreatorStatsResponse */
+        CreatorStatsResponse: {
+            /**
+             * Schema Version
+             * @default creator-stats@0.1
+             * @constant
+             */
+            schema_version: "creator-stats@0.1";
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Window Days */
+            window_days: number;
+            totals: components["schemas"]["CreatorStatsTotals"];
+            /** Topics */
+            topics?: components["schemas"]["CreatorTopicCohort"][];
+            /** Funnel */
+            funnel?: components["schemas"]["CreatorFunnelStep"][];
+        };
+        /** CreatorStatsTotals */
+        CreatorStatsTotals: {
+            /**
+             * Users
+             * @default 0
+             */
+            users: number;
+            /**
+             * Attributed Users
+             * @default 0
+             */
+            attributed_users: number;
+            /**
+             * Paid Users
+             * @default 0
+             */
+            paid_users: number;
+            /**
+             * Landing Cta Clicks
+             * @default 0
+             */
+            landing_cta_clicks: number;
+            /**
+             * Share Card Exports
+             * @default 0
+             */
+            share_card_exports: number;
+            /**
+             * Volume Views
+             * @default 0
+             */
+            volume_views: number;
+        };
+        /**
+         * CreatorTopicCohort
+         * @description topic（content_id / campaign）→ 注册 → 付费转化。
+         */
+        CreatorTopicCohort: {
+            /**
+             * Topic Key
+             * @description utm_source|utm_campaign|content_id
+             */
+            topic_key: string;
+            /** Utm Source */
+            utm_source?: string | null;
+            /** Utm Campaign */
+            utm_campaign?: string | null;
+            /** Content Id */
+            content_id?: string | null;
+            /**
+             * Registrations
+             * @default 0
+             */
+            registrations: number;
+            /**
+             * Paid Conversions
+             * @default 0
+             */
+            paid_conversions: number;
+            /**
+             * Conversion Rate
+             * @default 0
+             */
+            conversion_rate: number;
         };
         /**
          * CurrentFortuneSummaryModel
@@ -18861,6 +18977,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnalyticsEventsBatchResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["UnauthorizedError"];
+            403: components["responses"]["ForbiddenError"];
+            404: components["responses"]["NotFoundError"];
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    get_creator_stats_api_v1_creator_stats_get: {
+        parameters: {
+            query?: {
+                /** @description 统计窗口（天） */
+                window_days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatorStatsResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];
