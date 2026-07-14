@@ -14,10 +14,10 @@ WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci --legacy-peer-deps
 
-# 复制前端源码并构建
+# 复制前端源码并构建（vite outDir=../static/app → /static/app）
 COPY frontend/ ./
 RUN npm run build
-# 构建产物输出到 /frontend/dist/
+# 构建产物输出到 /static/app/
 
 # ──── 阶段 2: Python 依赖安装 ─────────────────────────────────────────────
 FROM python:3.11-slim AS builder
@@ -61,7 +61,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=appuser:appuser . .
 
 # 覆盖静态 SPA 产物：用构建阶段的最新产物替换可能滞后的快照
-COPY --from=frontend-builder --chown=appuser:appuser /frontend/dist/ ./static/app/
+COPY --from=frontend-builder --chown=appuser:appuser /static/app/ ./static/app/
 
 # 创建数据目录
 RUN mkdir -p /app/data && chown -R appuser:appuser /app/data
