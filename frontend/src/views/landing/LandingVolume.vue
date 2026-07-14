@@ -107,9 +107,12 @@ function goArchive() {
   box-sizing: border-box;
   padding: 1.75rem 1.25rem 2.5rem;
   color: var(--brand-ink, #1a1410);
-  background:
-    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(184, 137, 77, 0.12), transparent 55%),
-    linear-gradient(180deg, #f7f1e8 0%, var(--brand-paper, #f5f0e6) 42%, #efe6d6 100%);
+  background-color: var(--brand-paper, #f5f0e6);
+  background-image: radial-gradient(
+    ellipse 120% 80% at 50% -10%,
+    rgba(184, 137, 77, 0.12),
+    transparent 55%
+  );
   font-family: "LXGW Neo ZhiSong", "Noto Serif SC", "Songti SC", serif;
 }
 
