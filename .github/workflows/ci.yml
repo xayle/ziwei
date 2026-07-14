@@ -206,7 +206,8 @@ jobs:
           )
 
       - name: Run tests (excluding legacy)
-        run: make test-fast
+        # CI 勿用 -n auto：共享 SQLite 会在 xdist worker 下锁库导致 exit 2；autopilot A23 已串行覆盖
+        run: python -m pytest -q --ignore=tests/e2e --ignore=tests/legacy
 
       - name: Dev cycle quick (W102-20 · content advisory)
         run: python scripts/dev_cycle.py --quick
@@ -279,7 +280,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: "postgresql://bazi:bazi_ci@localhost:5432/bazi_test"
+      DATABASE_URL: "postgresql+psycopg2://bazi:bazi_ci@127.0.0.1:5432/bazi_test"
     steps:
       - uses: actions/checkout@v4
 
@@ -294,21 +295,13 @@ jobs:
           python -m pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Alembic upgrade head (PostgreSQL)
-        run: |
-          set -euo pipefail
-          echo "Using DATABASE_URL host: ${DATABASE_URL##*@}"
-          alembic upgrade head || {
-            echo "::error::alembic upgrade head failed"
-            alembic history -v | tail -n 40 || true
-            alembic current || true
-            exit 1
-          }
+        run: python scripts/ci_pg_migrate.py
 
       - name: Quality gate backend checks
         run: make quality-gate-backend
 
       - name: Run tests against PostgreSQL
-        run: make test-fast
+        run: python -m pytest -q --ignore=tests/e2e --ignore=tests/legacy
 
   docker-build:
     runs-on: ubuntu-latest

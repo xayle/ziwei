@@ -17,7 +17,11 @@ config = context.config
 
 # Set up logger
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except Exception:
+        # CI / minimal logging.ini：忽略 fileConfig 失败，不影响 upgrade
+        pass
 
 # Set target_metadata (for autogenerate support)
 # Use SQLModel metadata
