@@ -17,6 +17,7 @@ import {
 import { captureUtmFromQuery, utmAsQuery } from '@/utils/utmCapture'
 import { flushAnalytics, track, trackLandingCta, trackVolumeView } from '@/utils/analytics'
 import SnippetHooksPanel from '@/components/fusheng/SnippetHooksPanel.vue'
+import DouyinShareCard from '@/components/fusheng/DouyinShareCard.vue'
 import '@/assets/variables.css'
 
 const route = useRoute()
@@ -75,6 +76,13 @@ function goArchive() {
       <SnippetHooksPanel
         :hooks="LANDING_HOOK_SNIPPETS"
         :vertical-title="LANDING_HOOKS_TITLE"
+        :disclaimer="LANDING_HOOKS_DISCLAIMER"
+        source="landing"
+      />
+
+      <DouyinShareCard
+        :volume-title="LANDING_HOOKS_TITLE"
+        :fact-lines="LANDING_HOOK_SNIPPETS.map((h) => h.text)"
         :disclaimer="LANDING_HOOKS_DISCLAIMER"
         source="landing"
       />

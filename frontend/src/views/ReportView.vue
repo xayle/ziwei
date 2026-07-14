@@ -37,6 +37,7 @@ import ReportChapterNav from '@/components/fusheng/ReportChapterNav.vue'
 import VolumeSection from '@/components/fusheng/VolumeSection.vue'
 import VolumePaywall from '@/components/fusheng/VolumePaywall.vue'
 import SnippetHooksPanel from '@/components/fusheng/SnippetHooksPanel.vue'
+import DouyinShareCard from '@/components/fusheng/DouyinShareCard.vue'
 import ColophonFootnote from '@/components/fusheng/ColophonFootnote.vue'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
@@ -217,6 +218,31 @@ const lifeVolumeResolved = computed(() => resolveLifeVolumeDoc({
 }))
 const lifeVolumeDoc = computed(() => lifeVolumeResolved.value.doc)
 const lifeVolumeSource = computed(() => lifeVolumeResolved.value.source)
+
+const shareFactLines = computed(() => {
+  const fromSnippets = lifeSnippets.value?.hooks?.map((h) => h.text).filter(Boolean) ?? []
+  if (fromSnippets.length) return fromSnippets.slice(0, 4)
+  const vol1 = lifeVolumeDoc.value.volumes?.find((v) => v.id === 'vol1')
+  const blocks = vol1?.sections?.flatMap((s) => s.blocks?.map((b) => b.text) ?? []) ?? []
+  return blocks.filter(Boolean).slice(0, 3)
+})
+
+const shareVolumeTitle = computed(
+  () => lifeSnippets.value?.vertical_title || LIFE_VOLUME_LABELS.vol1 || '卷一·命之根',
+)
+
+const shareDisclaimer = computed(
+  () =>
+    lifeSnippets.value?.disclaimer
+    || lifeVolumeDoc.value.disclaimer_block?.text
+    || '传统文化与自我认知参考，非命运断言。',
+)
+
+const shareCaseId = computed(
+  () => profile.activeProfile?.remoteCaseId || (auth.isLoggedIn ? profile.activeProfileId : null),
+)
+
+const showDouyinShare = computed(() => shareFactLines.value.length > 0 || Boolean(lifeSnippets.value))
 
 /** T092：沙箱模拟解锁的卷 id（不经支付） */
 const mockUnlockedVolumeIds = ref<Set<string>>(new Set())
@@ -666,6 +692,15 @@ watch(
           :case-id="lifeSnippets.case_id"
           :vertical-title="lifeSnippets.vertical_title"
           :disclaimer="lifeSnippets.disclaimer"
+          source="report"
+        />
+        <DouyinShareCard
+          v-if="showDouyinShare"
+          class="no-print"
+          :volume-title="shareVolumeTitle"
+          :fact-lines="shareFactLines"
+          :disclaimer="shareDisclaimer"
+          :case-id="shareCaseId"
           source="report"
         />
         <TrustDegradedBanner

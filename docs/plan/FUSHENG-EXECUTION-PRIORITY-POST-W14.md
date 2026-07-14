@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-2.11 |
+| **版本** | post-w14-2.12 |
 | **日期** | 2026-07-14 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase F GTM** — T086–T097 ☑ → **下一项 T098**（竖版分享预览 FE） |
+| **当前优先级** | ▶ **Phase F GTM** — T086–T098 ☑ → **下一项 T099**（创作者统计 API） |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -19,7 +19,7 @@
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE+FE T072–T084 ☑
 U5    T085 ☑（2026-07-14）
-GTM   T086–T097 ☑ → 下一项 **T098**（竖版分享预览 FE）
+GTM   T086–T098 ☑ → 下一项 **T099**（创作者统计 API）
 ```
 
 | 里程碑 | 做完到 | 含义 |
@@ -135,7 +135,7 @@ make scorecard
 | ☑ | **T095** | BE | **BE-GTM-07** H5 短 token 读卷一摘要（可选） | [T095 报告](../reports/T095-h5-preview-token-2026-07-14.md) · `auth` · `life/preview` | 落地页免登录试读 |
 | ☑ | **T096** | FE | **FE-GTM-04** 钩子句复制（接 T076 snippets） | [T096 报告](../reports/T096-snippet-copy-2026-07-14.md) · SnippetHooksPanel | 一键复制拍视频 |
 | ☑ | **T097** | BE | **BE-GTM-11** `export/card?layout=douyin` 9:16 | [T097 报告](../reports/T097-douyin-share-card-2026-07-14.md) · `pdf_exporter` | PNG 输出 |
-| ☐ | **T098** | FE | **FE-GTM-07** 竖版分享预览 + 导出 | 分享组件 | 纸纹+卷名+事实句 |
+| ☑ | **T098** | FE | **FE-GTM-07** 竖版分享预览 + 导出 | [T098 报告](../reports/T098-douyin-share-preview-2026-07-14.md) · DouyinShareCard | 纸纹+卷名+事实句 |
 | ☐ | **T099** | BE | **BE-GTM-08** 创作者统计 API（topic→注册 cohort） | `routers/creator_stats.py` | 仅管理员 RBAC |
 | ☐ | **T100** | FE | **FE-GTM-05** 创作者 Dashboard（仅你） | `views/creator/` | 转化表可读 |
 | ☐ | **T101** | BE | **BE-GTM-10** 私域留资 stub（可选手机号） | `routers/leads.py` | CSV 导出 |
@@ -307,6 +307,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-2.12 | 2026-07-14 | **T098 ☑** · 竖版分享预览+导出 FE · 下一项 T099 |
 | post-w14-2.11 | 2026-07-14 | **T097 ☑** · douyin 9:16 分享卡 PNG · 下一项 T098 |
 | post-w14-2.10 | 2026-07-14 | **T096 ☑** · 钩子句一键复制 · 下一项 T097 |
 | post-w14-2.9 | 2026-07-14 | **T095 ☑** · H5 短 token 卷一试读 · 下一项 T096 |
