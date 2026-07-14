@@ -1,7 +1,7 @@
 """initial migration
 
 Revision ID: 92775bb6552e
-Revises: 
+Revises:
 Create Date: 2026-02-27 21:49:07.090890
 
 """
@@ -179,7 +179,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.CheckConstraint('L_level >= 0 AND L_level <= 3', name='ck_event_l_level'),
+    sa.CheckConstraint('"L_level" >= 0 AND "L_level" <= 3', name='ck_event_l_level'),
     sa.CheckConstraint('confidence_score >= 0.0 AND confidence_score <= 1.0', name='ck_event_confidence_score'),
     sa.ForeignKeyConstraint(['member_id'], ['members.id'], ),
     sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),

@@ -13,19 +13,34 @@ ROOT = Path(__file__).resolve().parents[1]
 FRONTEND = ROOT / "frontend"
 
 
+def _playwright_chromium_installed() -> bool:
+    roots = [
+        Path.home() / ".cache" / "ms-playwright",
+        FRONTEND / "node_modules" / "playwright-core" / ".local-browsers",
+    ]
+    alt = os.environ.get("PLAYWRIGHT_BROWSERS_PATH", "").strip()
+    if alt:
+        roots.append(Path(alt))
+    for root in roots:
+        if root.is_dir() and any(root.glob("chromium*")):
+            return True
+    return False
+
+
 def _frontend_e2e_ready() -> bool:
     if os.environ.get("W14_SKIP_E2E", "").strip() in {"1", "true", "TRUE", "yes"}:
         return False
     if not (FRONTEND / "node_modules").is_dir():
         return False
-    npm = shutil.which("npm") or shutil.which("npm.cmd")
-    return bool(npm)
+    if not (shutil.which("npm") or shutil.which("npm.cmd")):
+        return False
+    # test job 常有 npm ci 但未 npx playwright install
+    return _playwright_chromium_installed()
 
 
 def main() -> int:
     if not _frontend_e2e_ready():
-        # test job 等环境未装前端依赖；autopilot / 本地有 node_modules 时仍跑 E2E
-        print("SKIP: R060 trial-read E2E (frontend node_modules/npm unavailable)")
+        print("SKIP: R060 trial-read E2E (npm/browsers unavailable or W14_SKIP_E2E)")
         return 0
 
     npm = "npm.cmd" if platform.system() == "Windows" else "npm"

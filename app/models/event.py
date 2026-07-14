@@ -20,7 +20,7 @@ class Event(SQLModel, table=True):
         Index("idx_events_owner_member", "owner_id", "member_id"),
         Index("idx_events_owner_created", "owner_id", "created_at"),
         Index("idx_events_member_created", "member_id", "created_at"),
-        CheckConstraint("L_level >= 0 AND L_level <= 3", name="ck_event_l_level"),
+        CheckConstraint('"L_level" >= 0 AND "L_level" <= 3', name="ck_event_l_level"),
         CheckConstraint("confidence_score >= 0.0 AND confidence_score <= 1.0", name="ck_event_confidence_score"),
     )
 
