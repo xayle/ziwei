@@ -179,16 +179,12 @@ async function onExport() {
   flex-direction: column;
   color: var(--brand-ink, #1a1410);
   border: 1px solid var(--border-md, #d4c4a8);
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(184, 137, 77, 0.14), transparent 55%),
-    linear-gradient(180deg, #f7f1e8 0%, var(--brand-paper, #f5f0e6) 45%, #efe6d6 100%),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(26, 20, 16, 0.015) 3px,
-      rgba(26, 20, 16, 0.015) 4px
-    );
+  background-color: var(--brand-paper, #f5f0e6);
+  background-image: radial-gradient(
+    ellipse 90% 55% at 50% -5%,
+    rgba(184, 137, 77, 0.14),
+    transparent 55%
+  );
   font-family: var(--font-display, "LXGW Neo ZhiSong", serif);
   overflow: hidden;
 }
