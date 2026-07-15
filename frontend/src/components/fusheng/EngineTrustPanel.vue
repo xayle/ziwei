@@ -316,7 +316,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
       </section>
 
       <section v-if="dualTracks?.length" class="engine-trust__section" data-testid="report-bazi-dual-track">
-        <h3>双轨口径（recorded vs engine）</h3>
+        <h3>双轨口径（古籍 vs 引擎）</h3>
         <table class="engine-trust__table">
           <thead><tr><th>用例</th><th>古籍/录入</th><th>引擎</th><th>说明</th></tr></thead>
           <tbody>

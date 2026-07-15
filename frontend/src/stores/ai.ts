@@ -41,10 +41,10 @@ export const useAiStore = defineStore('ai', () => {
     try {
       const cfg = await getLlmConfig()
       configAvailable.value = cfg.available
-      configNote.value = cfg.note || `${cfg.provider} / ${cfg.model}`
+      configNote.value = cfg.note || `提供商 ${cfg.provider} · 模型 ${cfg.model}`
     } catch {
       configAvailable.value = false
-      configNote.value = 'LLM 配置不可用'
+      configNote.value = '问书大模型配置不可用'
     }
   }
 
@@ -95,7 +95,9 @@ export const useAiStore = defineStore('ai', () => {
       return draft
     } catch (e: unknown) {
       const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      error.value = typeof detail === 'string' ? detail : 'AI 解读生成失败，请稍后重试。'
+      error.value = typeof detail === 'string'
+        ? detail.replace(/\bLLM\b/g, '问书')
+        : '问书解读生成失败，请稍后重试。'
       return null
     } finally {
       loading.value = false
@@ -135,7 +137,9 @@ export const useAiStore = defineStore('ai', () => {
       return res.interpretation
     } catch (e: unknown) {
       const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      moduleError.value = typeof detail === 'string' ? detail : '分模块解读生成失败，请稍后重试。'
+      moduleError.value = typeof detail === 'string'
+        ? detail.replace(/\bLLM\b/g, '问书')
+        : '分模块解读生成失败，请稍后重试。'
       return null
     } finally {
       moduleLoading.value = false

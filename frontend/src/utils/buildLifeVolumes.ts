@@ -456,7 +456,7 @@ function buildVol5Sections(input: BuildLifeVolumesInput): VolumeSection[] {
 function buildVol6Sections(_input: BuildLifeVolumesInput): VolumeSection[] {
   return [
     section('vol6-qa', '问书助手', 'inference', [
-      block('卷六为问书助手，需主动展开后提问；打磨期不自动调用 LLM，展开后再选择事业/婚恋等模块。', 'inference'),
+      block('卷六为问书助手，需主动展开后提问；打磨期不自动调用问书，展开后再选择事业/婚恋等模块。', 'inference'),
     ], true),
   ]
 }
