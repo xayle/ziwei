@@ -2,21 +2,21 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.12 |
+| **版本** | inv-1.13 |
 | **日期** | 2026-07-15 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：维护态；advisory missing FE/BE 文案对齐，Trust 徽章跟 tone。
+> **一句话**：维护态；FE Adapter 跋与 BE _build_colophon 对齐（人读字段注记）。
 
-### 本轮修复进度（inv-1.12）
+### 本轮修复进度（inv-1.13）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.11 及前 | ✅ | 见上 |
-| 维护 | ✅ 本批 | ADV-miss BE 跋标签注记 · Trust 面板 tone 徽章 |
+| inv-1.12 及前 | ✅ | 见上 |
+| 维护 | ✅ 本批 | COLO-01 FE Adapter 跋：缺失字段：raw → 字段注记：中文·对照非故障 |
 | 仍开 | — | AUTH-01 · NAV-03 · **GTM 未开（R109 A）** |
 
 ---

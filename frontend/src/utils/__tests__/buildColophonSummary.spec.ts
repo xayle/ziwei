@@ -13,6 +13,19 @@ describe('buildColophonSummary', () => {
     expect(col.expandable).toBe(true)
   })
 
+  it('humanizes missing fields instead of raw keys', () => {
+    const col = buildColophonSummary({
+      engineLabel: 'bazi+ziwei',
+      missingFields: ['palace_ten_gods', 'combine_summary'],
+    })
+    const note = col.summary_lines.find((l) => l.startsWith('字段注记：'))
+    expect(note).toBeTruthy()
+    expect(note).toContain('宫位十神')
+    expect(note).toContain('合化摘要')
+    expect(note).not.toContain('palace_ten_gods')
+    expect(note).toContain('对照项非故障')
+  })
+
   it('passes wenmo_advisory through to colophon', () => {
     const col = buildColophonSummary({
       wenmoAdvisory: '文墨天机为 advisory 对照轨',
