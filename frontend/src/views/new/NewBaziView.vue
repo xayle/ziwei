@@ -688,7 +688,7 @@ onMounted(() => {
 
         <section v-if="depth === 'deep'" class="bazi-dayun-block" data-testid="bazi-dayun-block">
           <h2 class="bazi-dayun-block__eyebrow">大运叙事</h2>
-          <p class="bazi-dayun-block__lead">按需加载 LLM 大运叙事；不自动请求。</p>
+          <p class="bazi-dayun-block__lead">按需加载大运叙事；不自动请求。</p>
           <button
             v-if="!dayunLoaded && !loadingDayun"
             type="button"

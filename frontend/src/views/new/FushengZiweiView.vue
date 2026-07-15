@@ -318,7 +318,7 @@ onMounted(() => {
         </section>
 
         <CodexPanel v-if="depth === 'structure'">
-          <h3 class="fs-section-rule">算法口径（ZiweiAlgo）</h3>
+          <h3 class="fs-section-rule">紫微算法口径</h3>
           <ZiweiAlgoSettings
             :profile="profileData"
             :provenance="ziwei.provenance"

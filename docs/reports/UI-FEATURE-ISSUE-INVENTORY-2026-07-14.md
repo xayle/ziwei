@@ -2,21 +2,21 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.23 |
+| **版本** | inv-1.24 |
 | **日期** | 2026-07-15 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：维护态；卷层读法与合盘文案去 fact/cite/heuristic 机读词。
+> **一句话**：维护态；PDF 对照轨与关系解读/降级提示去 iztro·Adapter·cite。
 
-### 本轮修复进度（inv-1.23）
+### 本轮修复进度（inv-1.24）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.22 及前 | ✅ | 见上 |
-| 维护 | ✅ 本批 | LAYER-01 卷层/合盘/Trust：事实·典籍·推断 替代 fact/cite/heuristic |
+| inv-1.23 及前 | ✅ | 见上 |
+| 维护 | ✅ 本批 | REL-PDF-01 PDF 对照轨状态中文 · 关系解读层标签 · 降级提示去 Adapter |
 | 仍开 | — | AUTH-01 · NAV-03 · **GTM 未开（R109 A）** |
 
 ---

@@ -18,6 +18,7 @@ import {
 import type { MultiCompatResponse } from '@/api/ziwei'
 import { ziweiMultiCompat, ziweiMultiCompatExportPdf } from '@/api/ziwei'
 import type { ExplainBatchResponse } from '@/api/explain'
+import { CONTENT_LAYER_LABELS, type ContentLayer } from '@/types/life-volume'
 import { buildRelationCompat, cardToneClass, dimensionPct } from '@/utils/buildRelationCompat'
 import { birthDatetimeToZiweiRequest, buildZiweiRequest } from '@/utils/buildChartRequests'
 import '@/assets/fusheng-page.css'
@@ -69,6 +70,11 @@ const multiLabels = computed(() => {
 const explainBlocks = computed(() =>
   explainBatch.value?.sections?.flatMap((s) => s.blocks ?? []) ?? [],
 )
+
+function contentLayerLabel(layer?: string | null): string {
+  if (!layer) return '—'
+  return CONTENT_LAYER_LABELS[layer as ContentLayer] ?? layer
+}
 
 watch(
   () => route.query.type,
@@ -476,11 +482,11 @@ async function downloadMultiMatrixPdf() {
       />
       <section v-else-if="explainBlocks.length" class="fs-card inference-section">
         <button class="fs-btn fs-btn--ghost" data-testid="relation-explain-toggle" @click="showExplain = !showExplain">
-          {{ showExplain ? '收起' : '展开' }}关系解读（cite / inference）
+          {{ showExplain ? '收起' : '展开' }}关系解读（典籍 / 推断）
         </button>
         <ul v-if="showExplain" class="action-list">
           <li v-for="(block, idx) in explainBlocks" :key="idx" class="explain-line">
-            <span class="layer-tag">{{ block.layer }}</span>
+            <span class="layer-tag">{{ contentLayerLabel(block.layer) }}</span>
             {{ block.text }}
           </li>
         </ul>

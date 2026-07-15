@@ -76,6 +76,21 @@ def confidence_level_label(level: str) -> str:
     return CONFIDENCE_LEVEL_LABELS.get(key, key or "—")
 
 
+CROSSCHECK_STATUS_LABELS: dict[str, str] = {
+    "ok": "一致",
+    "degraded": "降级",
+    "life_palace_mismatch": "命宫不一致",
+    "unknown": "未核验",
+}
+
+
+def format_crosscheck_status_label(status: Any) -> str:
+    key = str(status or "").strip()
+    if not key:
+        return "未核验"
+    return CROSSCHECK_STATUS_LABELS.get(key, key)
+
+
 def format_missing_fields_markdown(fields: list[str] | None) -> list[str]:
     """Markdown bullet lines for human export; empty if no fields."""
     cleaned = [f.strip() for f in (fields or []) if isinstance(f, str) and f.strip()]

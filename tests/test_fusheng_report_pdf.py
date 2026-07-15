@@ -72,7 +72,9 @@ def test_render_fusheng_report_html_contains_core_sections():
     assert "forecast" not in html
     assert "八字·格局=典籍" in html
     assert "置信度" in html and "中等" in html
-    assert "iztro 交叉核验" in html
+    assert "对照轨交叉核验" in html
+    assert "iztro 交叉核验" not in html
+    assert "一致" in html or "降级" in html or "命宫" in html or "未核验" in html
     assert "双轨对照附录" in html
     assert "ZIP09" in html
     assert "从官杀格" in html

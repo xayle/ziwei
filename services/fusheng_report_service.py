@@ -16,6 +16,7 @@ from services.bazi_full_service import bazi_full
 from services.explain_service import explain_bazi_batch, explain_ziwei_batch
 from services.missing_field_labels import (
     confidence_level_label,
+    format_crosscheck_status_label,
     is_advisory_missing_field,
     missing_field_label,
     provenance_domain_label,
@@ -317,8 +318,9 @@ def _render_trust_section(bazi: dict[str, Any], ziwei: dict[str, Any]) -> str:
 
     cc = ziwei.get("iztro_crosscheck") or {}
     if cc:
+        status_label = format_crosscheck_status_label(cc.get("status"))
         parts.append(
-            f"<p><strong>iztro 交叉核验</strong>：{_esc(cc.get('status', ''))} · "
+            f"<p><strong>对照轨交叉核验</strong>：{_esc(status_label)} · "
             f"主星 {cc.get('main_match', '—')}/{cc.get('main_total', '—')}</p>"
         )
         if cc.get("advisory"):

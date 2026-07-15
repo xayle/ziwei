@@ -182,7 +182,7 @@ async function loadLifeVolumesRemote() {
   if (!remoteCaseId) return
   const doc = await fetchLifeVolumes(remoteCaseId)
   if (!doc) {
-    lifeVolumesDegradedNotice.value = '六卷远端不可用，已使用本地拼装（Adapter）。'
+    lifeVolumesDegradedNotice.value = '六卷远端不可用，已改用本地拼装摘要。'
     return
   }
   lifeVolumeRemote.value = doc
@@ -1096,7 +1096,7 @@ watch(
 
                   <div class="ai-panel__modules">
                     <h4>分模块解读</h4>
-                    <p v-if="!aiStore.configAvailable" class="hint">LLM 未配置或不可用。</p>
+                    <p v-if="!aiStore.configAvailable" class="hint">问书大模型未配置或不可用。</p>
                     <div v-else class="ai-panel__module-row">
                       <select v-model="selectedLlmModule" class="ai-panel__select" data-testid="report-llm-module">
                         <option v-for="mod in LLM_MODULES" :key="mod.id" :value="mod.id">{{ mod.label }}</option>
