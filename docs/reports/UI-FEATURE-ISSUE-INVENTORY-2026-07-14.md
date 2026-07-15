@@ -2,21 +2,21 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.14 |
+| **版本** | inv-1.15 |
 | **日期** | 2026-07-15 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：维护态；结构关系 missing 亦走 formatMissingFieldLine（非 raw key）。
+> **一句话**：维护态；结构化导出 markdown 字段注记与跋共用标签表。
 
-### 本轮修复进度（inv-1.14）
+### 本轮修复进度（inv-1.15）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.13 及前 | ✅ | 见上 |
-| 维护 | ✅ 本批 | STRUCT-01 BaziStructuralRelations：人读字段注记 · 对照不误报「引擎未覆盖」 |
+| inv-1.14 及前 | ✅ | 见上 |
+| 维护 | ✅ 本批 | EXP-01 structured export：缺失字段 raw → 人读字段注记（JSON 仍留 key） |
 | 仍开 | — | AUTH-01 · NAV-03 · **GTM 未开（R109 A）** |
 
 ---

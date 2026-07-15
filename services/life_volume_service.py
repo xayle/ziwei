@@ -23,6 +23,7 @@ from app.schemas.ziwei import ZiweiRequest, ZiweiResponse
 from services.chart_snapshot_service import build_bazi_snapshot
 from services.content_policy import content_versions_meta, default_disclaimer_block
 from services.explain_service import explain_bazi_batch, explain_ziwei_batch
+from services.missing_field_labels import missing_field_label
 from services.quota_service import is_volume_unlocked
 from services.ziwei_engine import ziwei_full
 from services.ziwei_trust import apply_trust_level
@@ -209,20 +210,7 @@ def _explain_sections(explain: dict[str, Any] | None, section_id: str) -> list[A
 
 
 def _missing_field_label(field: str) -> str:
-    labels = {
-        "clash_summary": "刑冲摘要",
-        "combine_summary": "合化摘要",
-        "harm_summary": "害破摘要",
-        "palace_ten_gods": "宫位十神（对照）",
-        "youbi_month_vs_iztro_hour": "右弼 month/hour 口径差（对照）",
-        "palace_stems_partial": "宫干部分（对照）",
-        "geju_detail": "格局细目",
-        "hour_pillar": "时柱",
-        "flow_score": "流日联动分",
-        "forecast": "运限预测",
-    }
-    key = (field or "").strip()
-    return labels.get(key, key.replace("_", " ") or "—")
+    return missing_field_label(field)
 
 
 def _build_colophon(

@@ -42,11 +42,17 @@ def test_structured_export_markdown():
         "geju": {"geju_name": "正官格", "geju_level": "正格"},
         "yongshen": {"favor": ["水"], "avoid": ["火"]},
         "shensha_summary": {"items": [{"name": "天乙贵人"}]},
+        "missing_fields": ["combine_summary", "palace_ten_gods"],
     }
     out = build_bazi_structured_export(payload)
     assert out["format"] == "bazi_structured@1.0"
     assert "正官格" in out["markdown"]
     assert out["json"]["geju"]["geju_name"] == "正官格"
+    assert "字段注记" in out["markdown"]
+    assert "合化摘要" in out["markdown"]
+    assert "宫位十神" in out["markdown"]
+    assert "combine_summary" not in out["markdown"]
+    assert out["json"]["missing_fields"] == ["combine_summary", "palace_ten_gods"]
 
 
 def test_liunian_task_db_persistence(db_session, test_case, test_user):

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from services.missing_field_labels import format_missing_fields_markdown
+
 
 def build_bazi_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
     pillars = payload.get("pillars_primary") or {}
@@ -54,8 +56,7 @@ def build_bazi_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
             md_lines.append(f"- [{ref.get('layer', 'classical')}] {ref.get('title') or ref.get('id', '')}")
 
     missing = payload.get("missing_fields") or []
-    if missing:
-        md_lines.extend(["", "## 缺失字段", ", ".join(missing)])
+    md_lines.extend(format_missing_fields_markdown(missing if isinstance(missing, list) else []))
 
     return {
         "format": "bazi_structured@1.0",
@@ -93,6 +94,8 @@ def build_ziwei_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
 
     provenance = payload.get("provenance") or {}
     md_lines.extend(["", "## provenance", str(provenance)])
+    missing = payload.get("missing_fields") or []
+    md_lines.extend(format_missing_fields_markdown(missing if isinstance(missing, list) else []))
 
     return {
         "format": "ziwei_structured@1.0",
@@ -104,7 +107,7 @@ def build_ziwei_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
             "patterns": patterns,
             "palaces": payload.get("palaces"),
             "provenance": provenance,
-            "missing_fields": payload.get("missing_fields") or [],
+            "missing_fields": missing if isinstance(missing, list) else [],
             "summary": payload.get("summary", ""),
         },
     }
