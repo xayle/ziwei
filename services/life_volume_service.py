@@ -173,11 +173,11 @@ def _shensha_text(bazi: dict[str, Any]) -> str:
 
 
 def _enrich_vol_block(label: str, body: str, *, floor: int = 40) -> str:
-    """短 fact 块补读法衬底，避免空洞审计误杀。"""
+    """短事实块补读法衬底，避免空洞审计误杀。"""
     trimmed = str(body or "").strip()
     if len(trimmed) >= floor:
         return trimmed
-    combined = f"{label}：{trimmed}。以排盘 fact 为准，配合卷内 cite/inference 分层阅读。"
+    combined = f"{label}：{trimmed}。以排盘事实为准，配合卷内典籍 / 推断分层阅读。"
     if len(combined) < floor:
         combined = f"{combined}详见本节与相邻讲解。"
     return combined
@@ -221,7 +221,7 @@ def _build_colophon(
     engine_label: str,
 ) -> ColophonModel:
     lines: list[str] = [
-        f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内 fact/cite/inference 分层。"
+        f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内事实 / 典籍 / 推断分层。"
     ]
     if missing_fields:
         labels = [_missing_field_label(f) for f in missing_fields[:4]]
@@ -364,7 +364,7 @@ def build_life_volumes_from_charts(
             "fact",
             [
                 _block(
-                    "卷一至卷五按 fact（排盘推算）· cite（典籍依据）· inference（经验推断）分层阅读；"
+                    "卷一至卷五按事实（排盘推算）· 典籍（典籍依据）· 推断（经验推断）分层阅读；"
                     "卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷三运限。",
                     "fact",
                 )

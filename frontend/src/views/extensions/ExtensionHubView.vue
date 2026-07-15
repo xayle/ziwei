@@ -16,7 +16,7 @@ const modules = [
   {
     id: 'ziwei-compat',
     title: '紫微合盘',
-    desc: '命宫/五行/夫妻宫等维度双人合盘（heuristic，仅供参考）。复杂关系建议改用「关系合盘」。',
+    desc: '命宫/五行/夫妻宫等维度双人合盘（启发式，仅供参考）。复杂关系建议改用「关系合盘」。',
     path: '/extensions/ziwei-compat',
     badge: '专项',
   },

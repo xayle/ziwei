@@ -339,15 +339,15 @@ def enrich_vol2_block_text(label: str, body: str) -> str:
     if len(trimmed) >= 40:
         return trimmed
     prefix = f"卷二{label}：" if trimmed.startswith("暂无") else f"卷二{label}摘要："
-    combined = f"{prefix}{trimmed}；卷二以 fact 层排盘关系为准，配合 cite/inference 分层阅读。"
+    combined = f"{prefix}{trimmed}；卷二以事实层排盘关系为准，配合典籍 / 推断分层阅读。"
     if len(combined) < 40:
-        combined = f"{combined} 详见排盘与 explain 关系讲解。"
+        combined = f"{combined} 详见排盘与关系讲解。"
     return combined
 
 
 def enrich_preface_reading_text() -> str:
     return (
-        "卷一至卷五按 fact（排盘推算）· cite（典籍依据）· inference（经验推断）分层阅读；"
+        "卷一至卷五按事实（排盘推算）· 典籍（典籍依据）· 推断（经验推断）分层阅读；"
         "卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷三运限。"
     )
 

@@ -230,7 +230,7 @@ def _build_html(compat: dict, enrich: dict) -> str:
 
   <div class="disclaimer">
     <strong>免责声明</strong><br/>
-    本报告基于规则化 heuristic 模型与文墨天机资料整合，反映命盘结构模式，非宿命论。
+    本报告基于规则化启发式模型与文墨天机资料整合，反映命盘结构模式，非宿命论。
     重大决策请结合现实、法律、医学与心理咨询，勿单凭命理。
     <span class="badge badge-heur">layer: heuristic</span>
   </div>

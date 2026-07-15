@@ -12,7 +12,7 @@ from services.relation_engine.registry import get_type_config
 RELATION_SECTIONS = frozenset({"relation_reading"})
 
 _READING_FACT: dict[str, str] = {
-    "couple": "情侣合盘：先读 fact 层维度分（日支、十神、夫妻/财帛宫），cite 典籍默认折叠，余论不构成决策依据。",
+    "couple": "情侣合盘：先读事实层维度分（日支、十神、夫妻/财帛宫），典籍默认折叠，余论不构成决策依据。",
     "friend": "友人合盘：先看交友宫与迁移互动，再对照喜忌互补；推断层仅供观览。",
     "parent_child": "亲子合盘：子女宫与父母宫对照为主，代际差异宜规则清晰、耐心沟通。",
     "colleague": "同事合盘：官禄与协作维度优先，宜分工明确、减少内耗。",
@@ -84,7 +84,7 @@ def build_relation_section(result: dict[str, Any], section_id: str) -> ExplainSe
     if section_id == "relation_reading":
         blocks.append(_block(_READING_FACT.get(relation_type, _READING_FACT["couple"]), "fact"))
         if combined is not None:
-            blocks.append(_block(f"当前综合 {combined} 分（{grade}），分维见 fact 层表格。", "fact"))
+            blocks.append(_block(f"当前综合 {combined} 分（{grade}），分维见事实层表格。", "fact"))
 
         query = f"{rel_label} 合参"
         tags = _CLASSIC_TAGS.get(relation_type, ["relationship"])

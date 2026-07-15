@@ -114,7 +114,7 @@ class CompatibilityResult:
     conflict_points: list[str] = field(default_factory=list)
     complement_points: list[str] = field(default_factory=list)
     palace_compare: list[dict] = field(default_factory=list)
-    disclaimer: str = "合盘分析基于规则化 heuristic 模型，仅供参考，不构成决策依据。"
+    disclaimer: str = "合盘分析基于规则化启发式模型，仅供参考，不构成决策依据。"
     layer: str = "heuristic"
 
 
@@ -295,7 +295,7 @@ def calc_compatibility(chart_a, chart_b) -> CompatibilityResult:
         conflict_points=_collect_conflicts(chart_a, chart_b),
         complement_points=_collect_complements(chart_a, chart_b),
         palace_compare=_build_palace_compare(chart_a, chart_b),
-        disclaimer="合盘分析基于规则化 heuristic 模型，仅供参考，不构成决策依据。",
+        disclaimer="合盘分析基于规则化启发式模型，仅供参考，不构成决策依据。",
         layer="heuristic",
     )
 

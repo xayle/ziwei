@@ -19,7 +19,7 @@ export function buildColophonSummary(input: ColophonInput): Colophon {
     ? `引擎 ${input.engineLabel}${input.generatedAt ? ` · ${input.generatedAt.slice(0, 10)}` : ''}`
     : '引擎 —'
   const lines: string[] = [
-    `校勘：${engineBit}；排盘字段${missing.length ? '有注记见下行' : '齐备'}，可核对卷内 fact/cite/inference 分层。`,
+    `校勘：${engineBit}；排盘字段${missing.length ? '有注记见下行' : '齐备'}，可核对卷内事实 / 典籍 / 推断分层。`,
   ]
   if (missing.length) {
     const labels = missing.slice(0, 4).map(formatMissingFieldLabel)

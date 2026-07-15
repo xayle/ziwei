@@ -197,12 +197,12 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
         if parts:
             body = "；".join(parts)
             if len(body) < 40:
-                body = f"卷二干支关系摘要：{body}；合冲刑害以排盘 fact 为准，下接神煞与 cite 讲解。"
+                body = f"卷二干支关系摘要：{body}；合冲刑害以排盘事实为准，下接神煞与典籍讲解。"
             blocks.append(_block(body, "fact"))
         else:
             blocks.append(
                 _block(
-                    "卷二干支关系：暂无结构化摘要；请核对排盘 fact 层地支关系与天干冲合，再读 infer 层讲解。",
+                    "卷二干支关系：暂无结构化摘要；请核对排盘事实层地支关系与天干冲合，再读推断层讲解。",
                     "fact",
                 )
             )
@@ -218,7 +218,7 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
             for item in ln.items[:4]:
                 blocks.append(_block(f"{item.year}年 {item.ganzhi or ''}".strip(), "fact"))
         else:
-            blocks.append(_block("流年窗口见卷三 fact 层。", "fact"))
+            blocks.append(_block("流年窗口见卷三事实层。", "fact"))
 
     elif section_id == "domains":
         for _key, attr, label in DOMAIN_KEYS:

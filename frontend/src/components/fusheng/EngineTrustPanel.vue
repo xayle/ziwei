@@ -331,7 +331,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
       </section>
 
       <section v-if="provenanceRows?.length" class="engine-trust__section" data-testid="provenance-section">
-        <h3>可信度分层（provenance）</h3>
+        <h3>可信度分层</h3>
         <table class="engine-trust__table">
           <thead><tr><th>域</th><th>层级</th><th>置信度</th><th>备注</th></tr></thead>
           <tbody>

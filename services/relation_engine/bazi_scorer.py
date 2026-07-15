@@ -231,7 +231,7 @@ def score_ten_god_cross(max_score: int = 20) -> dict[str, Any]:
         "label": "十神交叉",
         "score": round(max_score * 0.6, 1),
         "max_score": max_score,
-        "description": "十神层级互补（heuristic）",
+        "description": "十神层级互补（启发式）",
         "layer": "inference",
         "engine": "bazi",
     }
@@ -243,7 +243,7 @@ def score_wealth_cross(max_score: int = 25) -> dict[str, Any]:
         "label": "财层交叉",
         "score": round(max_score * 0.55, 1),
         "max_score": max_score,
-        "description": "财星与合伙资源互补（heuristic）",
+        "description": "财星与合伙资源互补（启发式）",
         "layer": "inference",
         "engine": "bazi",
     }
@@ -255,7 +255,7 @@ def score_official_kill_cross(max_score: int = 25) -> dict[str, Any]:
         "label": "官杀交叉",
         "score": round(max_score * 0.58, 1),
         "max_score": max_score,
-        "description": "上下级权责气场（heuristic）",
+        "description": "上下级权责气场（启发式）",
         "layer": "inference",
         "engine": "bazi",
     }

@@ -2,21 +2,21 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.22 |
+| **版本** | inv-1.23 |
 | **日期** | 2026-07-15 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：维护态；BE 跋/文墨/右弼警告与 FE 标签对齐人读口径。
+> **一句话**：维护态；卷层读法与合盘文案去 fact/cite/heuristic 机读词。
 
-### 本轮修复进度（inv-1.22）
+### 本轮修复进度（inv-1.23）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.21 及前 | ✅ | 见上 |
-| 维护 | ✅ 本批 | BE-COPY-01 跋/文墨/右弼警告去 youbi_method·iztro·canonical |
+| inv-1.22 及前 | ✅ | 见上 |
+| 维护 | ✅ 本批 | LAYER-01 卷层/合盘/Trust：事实·典籍·推断 替代 fact/cite/heuristic |
 | 仍开 | — | AUTH-01 · NAV-03 · **GTM 未开（R109 A）** |
 
 ---

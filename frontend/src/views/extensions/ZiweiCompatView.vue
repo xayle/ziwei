@@ -102,7 +102,7 @@ const dimensionRows = computed(() => {
 
 <template>
   <main class="fs-page ziwei-compat-page">
-    <p class="fs-page-lead">以当前档案为甲方，输入对方出生信息进行命宫/五行/夫妻宫等维度合盘（heuristic 层，仅供参考）。</p>
+    <p class="fs-page-lead">以当前档案为甲方，输入对方出生信息进行命宫/五行/夫妻宫等维度合盘（启发式层，仅供参考）。</p>
     <div class="fs-page-actions">
       <button class="fs-btn fs-btn--ghost" @click="router.push('/extensions')">返回工具箱</button>
       <button class="fs-btn fs-btn--ghost" @click="router.push('/extensions/compat')">八字合婚</button>
@@ -167,7 +167,7 @@ const dimensionRows = computed(() => {
         <h3>互补点</h3>
         <ul><li v-for="(item, idx) in result.complement_points" :key="`p-${idx}`">{{ item }}</li></ul>
       </div>
-      <p class="hint">合盘为规则化 heuristic 模型，不构成婚恋或执业决策依据。</p>
+      <p class="hint">合盘为规则化启发式模型，不构成婚恋或执业决策依据。</p>
     </section>
   </main>
 </template>
