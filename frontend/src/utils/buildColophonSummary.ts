@@ -29,7 +29,7 @@ export function buildColophonSummary(input: ColophonInput): Colophon {
     lines.push(truncateColophonLine(input.iztroAdvisory))
   }
   if (lines.length === 1 && !missing.length) {
-    lines.push('双轨核验：可对照 iztro / wenmo advisory（若有）。')
+    lines.push('双轨核验：可对照开源排盘 / 文墨对照（若有）。')
   }
   return {
     summary_lines: lines.slice(0, 3),

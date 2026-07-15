@@ -848,8 +848,8 @@ watch(
               class="report-iztro-dual-track"
               data-testid="report-iztro-dual-track"
             >
-              <h3>紫微双轨对照（引擎主盘 vs iztro）</h3>
-              <p class="hint">典型边界：立春前一日 + 晚子时（ZW03）。以引擎主盘为准，不静默覆盖。</p>
+              <h3>紫微双轨对照（引擎主盘 vs 对照轨）</h3>
+              <p class="hint">典型边界：立春前一日 + 晚子时。以引擎主盘为准，不静默覆盖。</p>
               <table class="report-table report-iztro-dual-track__table">
                 <thead>
                   <tr>
@@ -876,7 +876,7 @@ watch(
                     <td>{{ iztro.dualTrack.mainMatch }}</td>
                   </tr>
                   <tr v-else data-track="iztro-default">
-                    <td>iztro 库对照</td>
+                    <td>开源对照库</td>
                     <td>正月初一换年</td>
                     <td>库默认</td>
                     <td><strong>{{ iztro.iztroLifePalaceGz || '—' }}</strong></td>
@@ -892,11 +892,11 @@ watch(
               data-testid="report-youbi-drift-hint"
             >
               <p>
-                右弼默认 <code>month</code> 口径与 iztro 生时安星可能差一宫（辅煞 ±1），不表示主星错误。
-                可切换 <code>hour</code> 对齐 iztro 辅煞。
+                右弼默认按月口径与对照轨生时安星可能差一宫（辅煞 ±1），不表示主星错误。
+                可切换为按时以对齐对照轨辅煞。
               </p>
               <button type="button" class="fs-btn fs-btn--ghost" data-testid="report-youbi-hour-btn" @click="applyYoubiHour">
-                切换右弼为 hour 并重算
+                切换右弼为按时并重算
               </button>
             </div>
             <div data-testid="report-dual-track-reference">

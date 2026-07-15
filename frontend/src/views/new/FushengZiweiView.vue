@@ -213,7 +213,7 @@ onMounted(() => {
           class="ziwei-zw03"
           data-testid="ziwei-zw03-dual-track"
         >
-          <h3>紫微双轨对照（ZW03）</h3>
+          <h3>紫微双轨对照（立春前晚子）</h3>
           <p class="fs-hint">
             立春前 + 晚子时等边界：以引擎主盘为准，不与对照轨静默对齐。
             完整说明见报告卷二。

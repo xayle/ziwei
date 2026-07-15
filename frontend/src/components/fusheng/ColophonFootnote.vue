@@ -36,7 +36,7 @@ const missingLines = computed(() =>
         <strong>文墨对照：</strong>{{ colophon.wenmo_advisory }}
       </p>
       <p v-if="colophon.iztro_advisory" class="colophon-footnote__iztro">
-        <strong>iztro 对照：</strong>{{ colophon.iztro_advisory }}
+        <strong>对照轨：</strong>{{ colophon.iztro_advisory }}
       </p>
       <p v-if="colophon.dual_track_note">{{ colophon.dual_track_note }}</p>
       <ul v-if="missingLines.length" class="colophon-footnote__missing">

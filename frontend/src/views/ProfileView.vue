@@ -73,12 +73,12 @@ const profileTabs = [
 const ziweiAlgoPresets = [
   {
     id: 'iztro-youbi-hour',
-    label: '对齐 iztro（hour 右弼）',
-    hint: '辅煞与 iztro 生时安星对齐；不表示主星错误。',
+    label: '对齐对照轨（右弼按时）',
+    hint: '辅煞与开源对照轨生时安星对齐；不表示主星错误。',
   },
   {
     id: 'product-youbi-month',
-    label: '产品默认（month 右弼）',
+    label: '产品默认（右弼按月）',
     hint: '恢复全书默认右弼口径。',
   },
 ]
@@ -86,7 +86,7 @@ const ziweiAlgoPresets = [
 const ziweiFieldTips: Record<string, string> = {
   calendarMode: '公历/农历录入方式；农历模式需配合闰月标记，影响紫微闰月口径。',
   isLeapMonth: '闰月标记：视同本月，或按月中分界（默认）。',
-  yearDivide: '立春换年与八字节气年一致；正月初一换年对齐对照轨（ZW03 边界用例）。',
+  yearDivide: '立春换年与八字节气年一致；正月初一换年对齐对照轨（立春前晚子边界）。',
   dayDivide: '换日口径影响晚子时排盘；「农历日+1」对齐对照轨换日。',
   lateZishi: '23:00–00:00 是否视为次日（与换日口径联动）。',
   solarTime: '启用真太阳时后按出生地经度修正时刻，影响紫微安星。',
@@ -376,7 +376,7 @@ const showDemoSeedWarn = computed(() => isDemoSeedProfile(profileSnapshot.value)
 
 const zw03AlgoNote = computed(() => {
   if (form.yearDivide === 'lichun' && form.dayDivide === 'solar_next' && form.lateZishi) {
-    return '当前为引擎主盘口径（立春换年 + 公历晚子进次日），与对照轨默认可能在 ZW03 边界命宫不一致。'
+    return '当前为引擎主盘口径（立春换年 + 公历晚子进次日），与对照轨默认可能在立春前晚子边界命宫不一致。'
   }
   if (form.yearDivide === 'normal' && form.dayDivide === 'forward') {
     return '当前参数接近对照轨（正月初一 + 农历日+1）；主产品口径仍建议用立春换年。'
@@ -474,8 +474,8 @@ function applyZiweiAlgoPreset(presetId: string) {
   persistFormToStore()
   useFushengReportStore().invalidate()
   syncNote.value = presetId === 'iztro-youbi-hour'
-    ? '已切换右弼为 hour，排盘缓存已失效。'
-    : '已恢复右弼 month 默认口径，排盘缓存已失效。'
+    ? '已切换右弼为按时，排盘缓存已失效。'
+    : '已恢复右弼按月默认口径，排盘缓存已失效。'
 }
 </script>
 
@@ -644,7 +644,7 @@ function applyZiweiAlgoPreset(presetId: string) {
             <div v-show="editorTab === 'ziwei'" class="archive-section" data-testid="profile-ziwei-tab">
               <h2 class="archive-section__title">紫微口径</h2>
               <p class="archive-field__hint archive-field--wide">
-                以下 8 项直接影响紫微排盘与 iztro 互证；修改后报告缓存会自动失效。
+                以下 8 项直接影响紫微排盘与对照轨互证；修改后报告缓存会自动失效。
               </p>
               <div class="archive-field-grid">
             <label class="archive-field" :title="ziweiFieldTips.calendarMode">
@@ -672,7 +672,7 @@ function applyZiweiAlgoPreset(presetId: string) {
               <span class="archive-field__label">换日（紫微） <abbr class="field-tip" :title="ziweiFieldTips.dayDivide">?</abbr></span>
               <select v-model="form.dayDivide" data-testid="profile-day-divide">
                 <option value="solar_next">公历次日换日</option>
-                <option value="forward">子时换日（iztro）</option>
+                <option value="forward">农历日+1安星</option>
                 <option value="current">当日子时</option>
               </select>
             </label>
@@ -686,59 +686,59 @@ function applyZiweiAlgoPreset(presetId: string) {
             <label class="archive-field" :title="ziweiFieldTips.ziweiBrightnessMethod">
               <span class="archive-field__label">亮度口径 <abbr class="field-tip" :title="ziweiFieldTips.ziweiBrightnessMethod">?</abbr></span>
               <select v-model="form.ziweiBrightnessMethod" data-testid="profile-ziwei-brightness">
-                <option value="standard">standard</option>
-                <option value="zhongzhou">zhongzhou</option>
-                <option value="mod1">mod1</option>
-                <option value="mod2">mod2</option>
+                <option value="standard">全书标准</option>
+                <option value="zhongzhou">中州</option>
+                <option value="mod1">变体 1</option>
+                <option value="mod2">变体 2</option>
               </select>
             </label>
             <label class="archive-field" :title="ziweiFieldTips.ziweiYoubiMethod">
               <span class="archive-field__label">右弼口径 <abbr class="field-tip" :title="ziweiFieldTips.ziweiYoubiMethod">?</abbr></span>
               <select v-model="form.ziweiYoubiMethod" data-testid="profile-ziwei-youbi">
-                <option value="month">month（默认）</option>
-                <option value="hour">hour（对齐 iztro 可选）</option>
+                <option value="month">按月（默认）</option>
+                <option value="hour">按时（对照轨可选）</option>
               </select>
             </label>
             <label class="archive-field" :title="ziweiFieldTips.sihuaMethod">
               <span class="archive-field__label">四化口径 <abbr class="field-tip" :title="ziweiFieldTips.sihuaMethod">?</abbr></span>
               <select v-model="form.sihuaMethod" data-testid="profile-sihua-method">
-                <option value="quanshu">quanshu（全书）</option>
-                <option value="zhongzhou">zhongzhou</option>
+                <option value="quanshu">全书</option>
+                <option value="zhongzhou">中州</option>
               </select>
             </label>
             <label class="archive-field" :title="ziweiFieldTips.liunianSihuaMethod">
               <span class="archive-field__label">流年四化 <abbr class="field-tip" :title="ziweiFieldTips.liunianSihuaMethod">?</abbr></span>
               <select v-model="form.liunianSihuaMethod" data-testid="profile-liunian-sihua-method">
-                <option value="year_stem">year_stem</option>
-                <option value="life_palace_stem">life_palace_stem</option>
+                <option value="year_stem">流年天干</option>
+                <option value="life_palace_stem">流年命宫宫干</option>
               </select>
             </label>
             <label class="archive-field" :title="ziweiFieldTips.kuiyueMethod">
               <span class="archive-field__label">魁钺安法 <abbr class="field-tip" :title="ziweiFieldTips.kuiyueMethod">?</abbr></span>
               <select v-model="form.kuiyueMethod" data-testid="profile-kuiyue-method">
-                <option value="standard">standard</option>
-                <option value="gengxin_mahu">gengxin_mahu</option>
-                <option value="gengxin_huima">gengxin_huima</option>
-                <option value="liuxin_mahu">liuxin_mahu</option>
+                <option value="standard">全书标准</option>
+                <option value="gengxin_mahu">庚辛 · 马虎</option>
+                <option value="gengxin_huima">庚辛 · 虎马</option>
+                <option value="liuxin_mahu">六辛 · 马虎</option>
               </select>
             </label>
             <label class="archive-field" :title="ziweiFieldTips.tianmaMethod">
               <span class="archive-field__label">天马安法 <abbr class="field-tip" :title="ziweiFieldTips.tianmaMethod">?</abbr></span>
               <select v-model="form.tianmaMethod" data-testid="profile-tianma-method">
-                <option value="year">year</option>
-                <option value="month">month</option>
+                <option value="year">按年支</option>
+                <option value="month">按月支</option>
               </select>
             </label>
             <label class="archive-field" :title="ziweiFieldTips.templateVersion">
               <span class="archive-field__label">模板版本 <abbr class="field-tip" :title="ziweiFieldTips.templateVersion">?</abbr></span>
               <select v-model="form.templateVersion" data-testid="profile-template-version">
-                <option value="standard">standard</option>
-                <option value="pro">pro</option>
-                <option value="simple">simple</option>
+                <option value="standard">标准</option>
+                <option value="pro">专业</option>
+                <option value="simple">简洁</option>
               </select>
             </label>
             <p class="archive-field__hint archive-field--wide">
-              右弼 <code>month</code> 为产品默认；<code>hour</code> 仅在与 iztro 辅煞对齐时使用，不表示主星错误。
+              右弼按月为产品默认；按时仅在与对照轨辅煞对齐时使用，不表示主星错误。
             </p>
             <AlgoPresetBar :presets="ziweiAlgoPresets" @apply="applyZiweiAlgoPreset" />
               </div>
@@ -936,7 +936,7 @@ function applyZiweiAlgoPreset(presetId: string) {
                   <div><dt>换日</dt><dd>{{ form.dayDivide === 'forward' ? '子时换日' : form.dayDivide === 'current' ? '当日子时' : '公历次日' }}</dd></div>
                   <div><dt>子时规则</dt><dd>{{ form.ziDayRule === 'early_zi_prev_day' ? '早子算前一日' : form.ziDayRule === 'early_zi_same_day' ? '早子仍算当日' : '库默认' }}</dd></div>
                   <div><dt>亮度</dt><dd>{{ form.ziweiBrightnessMethod }}</dd></div>
-                  <div><dt>右弼</dt><dd>{{ form.ziweiYoubiMethod === 'hour' ? 'hour（iztro）' : 'month（默认）' }}</dd></div>
+                  <div><dt>右弼</dt><dd>{{ form.ziweiYoubiMethod === 'hour' ? '按时（对照）' : '按月（默认）' }}</dd></div>
                   <div><dt>四化</dt><dd>{{ form.sihuaMethod }}</dd></div>
                   <div><dt>流年四化</dt><dd>{{ form.liunianSihuaMethod }}</dd></div>
                   <div><dt>模板</dt><dd>{{ form.templateVersion }}</dd></div>

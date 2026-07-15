@@ -98,7 +98,7 @@ describe('ColophonFootnote', () => {
     expect(toggle.attributes('aria-expanded')).toBe('false')
     await toggle.trigger('click')
     expect(toggle.attributes('aria-expanded')).toBe('true')
-    expect(wrapper.text()).toContain('iztro 对照')
+    expect(wrapper.text()).toContain('对照轨')
   })
 
   it('omits toggle when colophon is not expandable', () => {

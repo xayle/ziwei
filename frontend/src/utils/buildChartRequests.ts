@@ -43,10 +43,10 @@ export function buildChartRequestMeta(data: ProfileData): ChartRequestMeta {
   })
 
   const dayDivideNote = data.dayDivide === 'forward'
-    ? '换日：子时换日（forward，对齐 iztro）。'
+    ? '换日：农历日+1安星（对齐对照轨）。'
     : data.dayDivide === 'current'
-      ? '换日：当日子时（current）。'
-      : '换日：公历次日换日（solar_next，默认）。'
+      ? '换日：当日不换日。'
+      : '换日：公历次日换日（默认）。'
 
   const calendarNote = data.calendarMode === 'lunar'
     ? `农历模式：录入农历后保存自动转公历排盘；${data.isLeapMonth ? '已标记闰月。' : '未标记闰月。'}`

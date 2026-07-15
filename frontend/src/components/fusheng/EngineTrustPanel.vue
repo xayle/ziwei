@@ -77,7 +77,7 @@ const detailSections = computed(() => {
   if (props.relations?.length) sections.push({ id: 'relations', title: '刑冲合害', open: false })
   if (props.baziStructural?.length) sections.push({ id: 'structural', title: '结构摘要', open: false })
   if (props.liuri) sections.push({ id: 'liuri', title: '流日 / 流时', open: false })
-  if (props.iztro) sections.push({ id: 'iztro', title: 'iztro 交叉核验', open: false })
+  if (props.iztro) sections.push({ id: 'iztro', title: '对照轨交叉核验', open: false })
   return sections
 })
 
@@ -251,7 +251,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
       </details>
 
       <details v-if="iztro && !compact" class="trust-register" data-testid="iztro-crosscheck">
-        <summary class="trust-register__summary">iztro 交叉核验</summary>
+        <summary class="trust-register__summary">对照轨交叉核验</summary>
         <div class="trust-register__body">
           <p class="engine-trust__lead">状态 {{ iztro.statusLabel || iztro.status }} · 主星 {{ iztro.mainMatch }}<span v-if="iztro.lifePalace"> · {{ iztro.lifePalace }}</span></p>
           <p>{{ iztro.message }}</p>
@@ -293,7 +293,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
       </section>
 
       <section v-if="iztro" class="engine-trust__section" data-testid="iztro-crosscheck">
-        <h3>iztro 交叉核验</h3>
+        <h3>对照轨交叉核验</h3>
         <p class="engine-trust__lead">状态 {{ iztro.statusLabel || iztro.status }} · 主星 {{ iztro.mainMatch }}<span v-if="iztro.lifePalace"> · {{ iztro.lifePalace }}</span></p>
         <p>{{ iztro.message }}</p>
         <table v-if="iztro.showDualTrackTable" class="engine-trust__table">

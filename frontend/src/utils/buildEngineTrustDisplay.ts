@@ -552,7 +552,7 @@ export function buildIztroDisplay(
     engineTrack: { yearDivide: yearLabel, dayDivide: dayLabel },
     dualTrack: dual
       ? {
-          label: dual.label || 'iztro 对照轨',
+          label: dual.label || '开源对照轨',
           yearDivide: formatYearDivideLabel(dual.year_divide),
           dayDivide: formatDayDivideLabel(dual.day_divide),
           lifePalaceGz: dual.life_palace_gz || '—',
