@@ -46,13 +46,15 @@ test.describe('报告与新功能', () => {
     await expect(page.getByTestId('report-cross-iztro')).toContainText('ZW03')
   })
 
-  test('报告互证章展示 ZIP09 八字双轨表', async ({ page }) => {
+  test('报告互证章展示八字双轨表（人读标签）', async ({ page }) => {
     await fillMinimalProfile(page)
     await gotoApp(page, 'report')
     const dualTrack = page.locator('#report-volume-vol2').getByTestId('report-bazi-dual-track')
     await expect(dualTrack).toBeVisible({ timeout: 15_000 })
     await expect(dualTrack.locator('tbody tr')).toHaveCount(1)
-    await expect(dualTrack).toContainText('ZIP09')
+    // ZIP09 等机读码不进界面；展示格局双轨人读名
+    await expect(dualTrack).toContainText('格局双轨')
+    await expect(dualTrack).not.toContainText('ZIP09')
   })
 
   test('报告互证章展示 ZW03 iztro 双轨表', async ({ page }) => {
