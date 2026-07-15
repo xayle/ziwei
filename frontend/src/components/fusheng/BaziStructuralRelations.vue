@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PillarDetailRow } from '@/utils/buildEngineTrustDisplay'
+import { formatMissingFieldLine } from '@/utils/buildEngineTrustDisplay'
 
 const props = withDefaults(defineProps<{
   relations?: string[]
@@ -21,6 +22,19 @@ const displayRelations = computed(() => {
   return lines
 })
 
+const missingFieldRows = computed(() =>
+  (props.missingFields ?? []).map((field) => ({
+    field,
+    ...formatMissingFieldLine(field),
+  })),
+)
+
+const missingAlertTitle = computed(() => {
+  const rows = missingFieldRows.value
+  if (!rows.length) return ''
+  return rows.every((r) => r.tone === 'drift') ? '对照注记' : '字段注记'
+})
+
 const hasRelations = computed(() => displayRelations.value.length > 0)
 const hasPillarDetails = computed(() => (props.pillarDetails?.length ?? 0) > 0)
 const isSummary = computed(() => props.mode === 'summary')
@@ -35,9 +49,18 @@ const isSummary = computed(() => props.mode === 'summary')
       </p>
     </header>
 
-    <div v-if="missingFields?.length && !isSummary" class="bazi-structural__alert" data-testid="bazi-structural-missing">
-      <strong>引擎未覆盖</strong>
-      <p>{{ missingFields.join('、') }}</p>
+    <div
+      v-if="missingFieldRows.length && !isSummary"
+      class="bazi-structural__alert"
+      data-testid="bazi-structural-missing"
+    >
+      <strong>{{ missingAlertTitle }}</strong>
+      <ul class="bazi-structural__missing-list">
+        <li v-for="row in missingFieldRows" :key="row.field">
+          {{ row.main }}
+          <span v-if="row.note" class="bazi-structural__missing-note">{{ row.note }}</span>
+        </li>
+      </ul>
     </div>
 
     <section class="bazi-structural__section">
@@ -102,8 +125,17 @@ const isSummary = computed(() => props.mode === 'summary')
   font-size: 13px;
 }
 
-.bazi-structural__alert p {
+.bazi-structural__missing-list {
   margin: 6px 0 0;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+
+.bazi-structural__missing-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: 12px;
 }
 
 .bazi-structural__section h3 {

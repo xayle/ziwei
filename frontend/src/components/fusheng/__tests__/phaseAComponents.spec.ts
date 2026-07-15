@@ -4,6 +4,7 @@ import PatternTierBadge from '@/components/fusheng/PatternTierBadge.vue'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import VolumeSection from '@/components/fusheng/VolumeSection.vue'
 import ColophonFootnote from '@/components/fusheng/ColophonFootnote.vue'
+import BaziStructuralRelations from '@/components/fusheng/BaziStructuralRelations.vue'
 import type { VolumeSection as VolumeSectionType } from '@/types/life-volume'
 import type { Colophon } from '@/types/life-volume'
 
@@ -118,5 +119,32 @@ describe('ColophonFootnote', () => {
     })
     await wrapper.get('button.colophon-footnote__toggle').trigger('click')
     expect(wrapper.text()).toContain('文墨对照')
+  })
+})
+
+describe('BaziStructuralRelations', () => {
+  it('humanizes missing fields and avoids raw keys', () => {
+    const wrapper = mount(BaziStructuralRelations, {
+      props: {
+        missingFields: ['combine_summary', 'palace_ten_gods'],
+        relations: [],
+      },
+    })
+    const alert = wrapper.get('[data-testid="bazi-structural-missing"]')
+    expect(alert.text()).toContain('合化摘要')
+    expect(alert.text()).toContain('宫位十神')
+    expect(alert.text()).not.toContain('combine_summary')
+    expect(alert.text()).not.toContain('引擎未覆盖')
+    expect(alert.text()).toContain('字段注记')
+  })
+
+  it('labels advisory-only gaps as 对照注记', () => {
+    const wrapper = mount(BaziStructuralRelations, {
+      props: {
+        missingFields: ['palace_ten_gods'],
+        relations: [],
+      },
+    })
+    expect(wrapper.get('[data-testid="bazi-structural-missing"]').text()).toContain('对照注记')
   })
 })
