@@ -113,7 +113,7 @@ describe('ColophonFootnote', () => {
       props: {
         colophon: {
           ...baseColophon,
-          wenmo_advisory: '文墨天机为 advisory 对照轨',
+          wenmo_advisory: '文墨天机为对照轨',
         },
       },
     })

@@ -41,7 +41,7 @@ const MISSING_FIELD_LABELS: Record<string, string> = {
   flow_score: '流日联动分',
   palace_stems_partial: '宫干部分缺失',
   palace_ten_gods: '宫位十神',
-  youbi_month_vs_iztro_hour: '右弼 month/hour 口径差',
+  youbi_month_vs_iztro_hour: '右弼按月/按时口径差',
   forecast: '运限预测',
 }
 

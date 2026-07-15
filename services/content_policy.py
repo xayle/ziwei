@@ -81,7 +81,7 @@ def content_versions_meta() -> dict:
     return versions
 
 
-WENMO_ADVISORY_TEXT = "文墨天机为 advisory 对照轨，仅用于交叉核对；不参与 canonical 排盘与典籍 cite 层。"
+WENMO_ADVISORY_TEXT = "文墨天机为对照轨，仅用于交叉核对；不参与主盘排盘与典籍引用层。"
 
 
 def default_wenmo_advisory() -> str:

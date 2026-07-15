@@ -734,9 +734,7 @@ def ziwei_full(
         _missing.append("true_solar_time")
         _engine_warnings.append("真太阳时修正失败，已回退至钟表时间")
     if youbi_method == "month":
-        _engine_warnings.append(
-            "右弼依生月安星（youbi_method=month）；与 iztro 默认口径可能差一宫，属流派差异，非引擎错误。"
-        )
+        _engine_warnings.append("右弼依生月安星（按月）；与开源对照轨默认口径可能差一宫，属流派差异，非引擎错误。")
         _missing.append("youbi_month_vs_iztro_hour")
     _missing.append("palace_ten_gods")
     chart.missing_fields = _missing

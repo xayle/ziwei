@@ -28,7 +28,7 @@ describe('buildColophonSummary', () => {
 
   it('passes wenmo_advisory through to colophon', () => {
     const col = buildColophonSummary({
-      wenmoAdvisory: '文墨天机为 advisory 对照轨',
+      wenmoAdvisory: '文墨天机为对照轨',
     })
     expect(col.wenmo_advisory).toContain('文墨')
   })

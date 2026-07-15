@@ -9,7 +9,7 @@ MISSING_FIELD_LABELS: dict[str, str] = {
     "combine_summary": "合化摘要",
     "harm_summary": "害破摘要",
     "palace_ten_gods": "宫位十神（对照）",
-    "youbi_month_vs_iztro_hour": "右弼 month/hour 口径差（对照）",
+    "youbi_month_vs_iztro_hour": "右弼按月/按时口径差（对照）",
     "palace_stems_partial": "宫干部分（对照）",
     "geju_detail": "格局细目",
     "hour_pillar": "时柱",

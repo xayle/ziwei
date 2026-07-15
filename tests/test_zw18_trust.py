@@ -43,7 +43,7 @@ def test_trust_level_advisory_on_youbi_month_warning():
     """R038: default month youbi drift → advisory, not degraded."""
     level = compute_ziwei_trust_level(
         missing_fields=["youbi_month_vs_iztro_hour"],
-        engine_warnings=["右弼依生月安星（youbi_method=month）；与 iztro 默认口径可能差一宫，属流派差异，非引擎错误。"],
+        engine_warnings=["右弼依生月安星（按月）；与开源对照轨默认口径可能差一宫，属流派差异，非引擎错误。"],
         iztro_crosscheck=None,
     )
     assert level == "advisory"

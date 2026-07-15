@@ -229,7 +229,7 @@ def _build_colophon(
     if iztro_advisory:
         lines.append(_clip(iztro_advisory, 72))
     if len(lines) == 1 and not missing_fields:
-        lines.append("双轨核验：可对照 iztro / wenmo advisory（若有）。")
+        lines.append("双轨核验：可对照开源排盘 / 文墨对照（若有）。")
     return ColophonModel(
         summary_lines=lines[:3],
         missing_fields=missing_fields or None,

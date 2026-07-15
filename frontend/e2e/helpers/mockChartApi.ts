@@ -314,7 +314,7 @@ export const mockZiweiPayload = {
     name: '稳中求进',
     actions: ['专注主业'],
   }],
-  engine_warnings: ['右弼安星默认 month 口径，与 iztro hour 辅煞可能对齐差一宫'],
+  engine_warnings: ['右弼安星默认按月口径，与对照轨按时辅煞可能对齐差一宫'],
   missing_fields: ['palace_stems_partial'],
   provenance: {
     palaces: { layer: 'engine', confidence: 0.88 },
