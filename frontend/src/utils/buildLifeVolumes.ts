@@ -176,9 +176,12 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
       block(enrichVolumeBlockText('卷一格局', body), 'fact'),
     ]))
   }
+  // E-01：软模板不得以 cite/典籍依据入库；走 inference
   const classic = geju?.classic_ref?.trim()
   if (classic) {
-    sections.push(section('geju-cite', '典籍句式', 'cite', [block(classic, 'cite')]))
+    sections.push(
+      section('geju-heuristic', '格局启发式', 'inference', [block(classic, 'inference')]),
+    )
   }
   const y = b.yongshen
   if (y?.favor?.length || y?.avoid?.length) {

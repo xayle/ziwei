@@ -37,6 +37,23 @@ describe('buildLifeVolumes', () => {
     expect(doc.colophon.summary_lines.length).toBeLessThanOrEqual(3)
   })
 
+  it('E-01: soft classic_ref is inference, not cite', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-1',
+      chartHash: 'hash-1',
+      bazi: {
+        ...minimalBazi,
+        geju: { geju_name: '正官格', classic_ref: '官清印顺，贵气有序。' },
+      } as BaziResponse,
+      ziwei: null,
+    })
+    const vol1 = doc.volumes.find((v) => v.id === 'vol1')
+    const heuristic = vol1?.sections.find((s) => s.id === 'geju-heuristic')
+    expect(heuristic?.layer).toBe('inference')
+    expect(heuristic?.blocks[0]?.layer).toBe('inference')
+    expect(vol1?.sections.some((s) => s.id === 'geju-cite')).toBe(false)
+  })
+
   it('colophon summary_lines capped at three', () => {
     const doc = buildLifeVolumes({
       caseId: 'case-1',

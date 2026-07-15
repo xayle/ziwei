@@ -15,7 +15,7 @@ vi.mock('@/utils/analytics', () => ({
 
 const hooks = [
   { tag: '事实', text: '日主戊土，正官格透干。', layer: 'engine' as const },
-  { tag: '典籍', text: '官格喜印护身。', layer: 'classical' as const },
+  { tag: '启发', text: '官格喜印护身。', layer: 'heuristic' as const },
 ]
 
 describe('SnippetHooksPanel (T096)', () => {

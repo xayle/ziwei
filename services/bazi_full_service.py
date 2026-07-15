@@ -1514,14 +1514,15 @@ def bazi_full(
         missing_fields=payload.get("missing_fields"),
     ).model_dump()
     try:
-        from services.bazi_engine.classical_narrative import geju_classic_sentence, shun_ni
+        from services.bazi_engine.classical_narrative import geju_heuristic_sentence, shun_ni
 
         geju_name = (payload.get("geju") or {}).get("geju_name") or ""
         if geju_name:
             derived = (payload.get("geju") or {}).get("derived_geju")
+            # E-01：软句写入 classic_ref 字段（历史字段名），语义为启发式非典籍
             payload.setdefault("geju", {})["classic_ref"] = payload.get("geju", {}).get(
                 "classic_ref"
-            ) or geju_classic_sentence(geju_name, derived)
+            ) or geju_heuristic_sentence(geju_name, derived)
         bss = payload.get("bazi_structural_summary") or {}
         if isinstance(bss, dict):
             dm = (payload.get("day_master_strength") or {}).get("tier") or ""
@@ -1556,27 +1557,30 @@ def bazi_full(
                 _seen_classic.add(rid)
                 _classic_refs.append(ref)
     if geju_block.get("derived_geju"):
-        from services.bazi_engine.classical_narrative import geju_classic_sentence
+        from services.bazi_engine.classical_narrative import geju_heuristic_sentence
 
-        derived_line = geju_classic_sentence(geju_block.get("geju_name", ""), geju_block.get("derived_geju"))
+        derived_line = geju_heuristic_sentence(geju_block.get("geju_name", ""), geju_block.get("derived_geju"))
         if derived_line:
             _classic_refs.append(
                 {
                     "id": f"derived_{geju_block.get('derived_geju')}",
-                    "source": "衍生格局句式",
+                    "source": "衍生格局启发式",
                     "text": derived_line,
                     "category": "格局",
                     "hint_type": "derived",
                 }
             )
     if geju_block.get("classic_ref"):
+        from services.bazi_engine.classical_narrative import is_soft_geju_narrative
+
+        _soft = is_soft_geju_narrative(geju_block.get("classic_ref"))
         _classic_refs.append(
             {
                 "id": "geju_narrative",
-                "source": "典籍句式",
+                "source": "格局启发式句式" if _soft else "引擎摘录",
                 "text": geju_block.get("classic_ref"),
                 "category": "格局",
-                "hint_type": "narrative",
+                "hint_type": "heuristic" if _soft else "engine_quote",
             }
         )
     payload["classic_refs"] = _classic_refs[:12]

@@ -220,15 +220,17 @@ def _build_colophon(
     wenmo_advisory: str | None,
     engine_label: str,
 ) -> ColophonModel:
+    # E-02：收书期必显「语料核验中」；summary 上限 3 行，引擎+语料优先
     lines: list[str] = [
-        f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内事实 / 典籍 / 推断分层。"
+        f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内事实 / 典籍 / 推断分层。",
+        "典籍语料：五书核验进行中；无 verified 条目处不标「典籍依据」。",
     ]
     if missing_fields:
         labels = [_missing_field_label(f) for f in missing_fields[:4]]
         lines.append(f"字段注记：{'、'.join(labels)}（不影响已写出块；对照项非故障，展开脚注可核）。")
-    if iztro_advisory:
+    elif iztro_advisory:
         lines.append(_clip(iztro_advisory, 72))
-    if len(lines) == 1 and not missing_fields:
+    else:
         lines.append("双轨核验：可对照开源排盘 / 文墨对照（若有）。")
     return ColophonModel(
         summary_lines=lines[:3],

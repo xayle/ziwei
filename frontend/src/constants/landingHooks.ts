@@ -3,12 +3,13 @@
 export type LandingHookSnippet = {
   tag: string
   text: string
-  layer: 'engine' | 'classical'
+  layer: 'engine' | 'classical' | 'heuristic'
 }
 
 export const LANDING_HOOK_SNIPPETS: LandingHookSnippet[] = [
   { tag: '事实', text: '日主戊土，正官格透干。', layer: 'engine' },
-  { tag: '典籍', text: '官格喜印护身，忌财破印。', layer: 'classical' },
+  // E-01：示意句为启发式，不打「典籍」标签
+  { tag: '启发', text: '官格喜印护身，忌财破印。', layer: 'heuristic' },
   { tag: '推算', text: '流年冲日支，宜守成减负。', layer: 'engine' },
 ]
 

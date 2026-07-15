@@ -5651,8 +5651,8 @@
       "用神"
     ],
     "passage": "八字以格局定贵贱，以用神分吉凶，以大运断时机，三者参合，命理之精华毕备。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "verified"
+    "notes": "services/bazi_engine/classic_refs.py [E-01/QT-04] 引擎复述误标 verified，已降级待底本 spotcheck",
+    "verification_status": "unverified"
   },
   {
     "id": "engine_ref.geju_e08",

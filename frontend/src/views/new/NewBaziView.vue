@@ -253,7 +253,7 @@ const highlightCards = computed(() => {
 const detailBlocks = computed<DetailBlock[]>(() => {
   const geju = result.value?.geju
   const gejuName = geju?.geju_name || '待计算'
-  const gejuBody = geju?.classic_ref?.trim() || geju?.geju_detail || '暂无典籍句式。'
+  const gejuBody = geju?.classic_ref?.trim() || geju?.geju_detail || '暂无格局启发式说明。'
   const strength = result.value?.day_master_strength?.tier || '待计算'
   const balanceScore = scoreOrMissing(result.value?.wuxing_balance_score)
   const wuxing = result.value?.wuxing_score

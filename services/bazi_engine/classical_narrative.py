@@ -1,13 +1,14 @@
 """
-services/bazi_engine/classical_narrative.py — 格局典籍句式与顺逆气机（B-09）
+services/bazi_engine/classical_narrative.py — 格局启发式句式与顺逆气机（B-09 / E-01）
 
-将格局名称映射为子平/滴天经典表述；提供大运顺逆气机 helper。
+软模板：子平口诀式归纳，**不是** verified 典籍原文，禁止当「典籍依据」展示。
+产品层须标 heuristic / inference；有 book+classic_id 的 cite 走 content_policy。
 """
 
 from __future__ import annotations
 
-# 八正格 + 从化/外格 → 典籍句式（soft narrative，非硬覆盖引擎结论）
-_GEJU_CLASSIC_SENTENCE: dict[str, str] = {
+# 八正格 + 从化/外格 → 启发式句式（soft narrative，非典籍 verified 摘录）
+_GEJU_HEURISTIC_SENTENCE: dict[str, str] = {
     "正官格": "官清印顺，贵气有序；宜守正道，忌伤官破官。",
     "七杀格": "杀旺有制则威权；食神制杀、印星化杀，皆为救应。",
     "正印格": "印旺生身，学业才德之基；忌财星坏印。",
@@ -50,12 +51,30 @@ _DERIVED_GEJU_SENTENCE: dict[str, str] = {
     "羊刃驾杀格": "羊刃驾杀，威权显赫；宜制不宜冲。",
 }
 
+# 兼容旧名：仍指向同一字典（勿当作典籍引用表）
+_GEJU_CLASSIC_SENTENCE = _GEJU_HEURISTIC_SENTENCE
 
-def geju_classic_sentence(geju_name: str, derived_geju: str | None = None) -> str:
-    """返回格局对应的典籍句式；未知格局返回通用说明。"""
+
+def geju_heuristic_sentence(geju_name: str, derived_geju: str | None = None) -> str:
+    """返回格局对应的启发式句式；未知格局返回通用说明。非 verified 典籍摘录。"""
     if derived_geju and derived_geju in _DERIVED_GEJU_SENTENCE:
         return _DERIVED_GEJU_SENTENCE[derived_geju]
-    return _GEJU_CLASSIC_SENTENCE.get(geju_name, f"{geju_name or '普通格'}：以用神喜忌与大运流年参论。")
+    return _GEJU_HEURISTIC_SENTENCE.get(geju_name, f"{geju_name or '普通格'}：以用神喜忌与大运流年参论。")
+
+
+def geju_classic_sentence(geju_name: str, derived_geju: str | None = None) -> str:
+    """已弃用别名：请用 geju_heuristic_sentence。保留以免破坏调用方。"""
+    return geju_heuristic_sentence(geju_name, derived_geju)
+
+
+def is_soft_geju_narrative(text: str | None) -> bool:
+    """判别 classic_ref 是否为软模板（无【书名】前缀的引擎句）。"""
+    if not text or not str(text).strip():
+        return False
+    s = str(text).strip()
+    if s.startswith("【") and "】" in s[:40]:
+        return False
+    return True
 
 
 def shun_ni(

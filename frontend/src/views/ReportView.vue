@@ -432,7 +432,8 @@ const baziBlocks = computed(() => {
   if (!r) return []
   const g = r.geju
   const engineLead = g?.engine_geju || g?.geju_name || '待分析'
-  const classicBody = g?.classic_ref?.trim() || '暂无典籍句式。'
+  // E-01：classic_ref 多为软模板，禁止 classical「典籍依据」样式
+  const heuristicBody = g?.classic_ref?.trim() || '暂无格局启发式说明。'
   const bullets: string[] = [
     `引擎格：${engineLead}${g?.is_broken ? '（破格）' : ''}`,
     `用神：${formatCnElementsJoin(r.yongshen?.favor)}`,
@@ -457,11 +458,11 @@ const baziBlocks = computed(() => {
       layer: 'engine',
     },
     {
-      id: 'bazi-classical',
-      title: '典籍句式',
-      lead: classicBody.slice(0, 40) + (classicBody.length > 40 ? '…' : ''),
-      body: classicBody,
-      layer: 'classical',
+      id: 'bazi-heuristic-geju',
+      title: '格局启发式',
+      lead: heuristicBody.slice(0, 40) + (heuristicBody.length > 40 ? '…' : ''),
+      body: heuristicBody,
+      layer: 'heuristic',
     },
   ]
   if (g?.dual_track_note) {

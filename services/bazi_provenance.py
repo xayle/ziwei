@@ -145,6 +145,10 @@ def build_bazi_provenance(
     bazi_summary = getattr(verify_response, "bazi_summary", None) or ""
     narrative_conf = 0.72 if classic_ref or interpretation or bazi_summary else 0.5
     narrative_note = classic_ref or (interpretation[:80] if interpretation else None)
+    from services.bazi_engine.classical_narrative import is_soft_geju_narrative
+
+    # E-01：软模板不得抬成 classical；仅带【书名】前缀的引擎摘录可标 classical
+    narrative_layer = "heuristic" if not classic_ref or is_soft_geju_narrative(classic_ref) else "classical"
 
     analysis_missing = missing & _ANALYSIS_FIELD_NAMES
     analysis_conf = 0.52
@@ -183,7 +187,7 @@ def build_bazi_provenance(
             note=f"性别：{_gender_label(body.gender)}",
         ),
         narrative=ProvenanceLayer(
-            layer="classical" if classic_ref else "heuristic",
+            layer=narrative_layer,
             confidence=narrative_conf,
             method_registry_id="B-P4-narrative",
             note=narrative_note,
