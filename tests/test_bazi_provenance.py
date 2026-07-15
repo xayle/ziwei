@@ -38,7 +38,9 @@ def test_build_bazi_provenance_includes_zi_day_rule():
     )
     prov = build_bazi_provenance(_Resp(), req, missing_fields=["forecast"])
     assert prov.pillars.layer == "engine"
-    assert prov.geju.note and "early_zi_prev_day" in prov.geju.note
+    # 人读口径：机读码 early_zi_prev_day →「早子算前一日」
+    assert prov.geju.note and "早子算前一日" in prov.geju.note
+    assert "early_zi_prev_day" not in (prov.geju.note or "")
     assert prov.geju.note and "双轨说明" in prov.geju.note
     assert prov.analysis.note and "forecast" in prov.analysis.note
 
