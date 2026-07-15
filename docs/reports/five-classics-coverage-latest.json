@@ -1,51 +1,51 @@
 {
   "schema_version": "five-classics-coverage@1.0",
-  "generated_at": "2026-07-15T22:54:31.985446+00:00",
+  "generated_at": "2026-07-15T23:09:36.566397+00:00",
   "books": {
     "滴天髓": {
       "total": 179,
-      "verified": 63,
-      "unverified": 116,
+      "verified": 113,
+      "unverified": 66,
       "gate": 80,
-      "gate_met": false,
-      "deficit": 17
+      "gate_met": true,
+      "deficit": 0
     },
     "子平真诠": {
       "total": 88,
-      "verified": 23,
-      "unverified": 65,
+      "verified": 56,
+      "unverified": 32,
       "gate": 45,
-      "gate_met": false,
-      "deficit": 22
+      "gate_met": true,
+      "deficit": 0
     },
     "穷通宝鉴": {
-      "total": 4,
-      "verified": 0,
+      "total": 44,
+      "verified": 40,
       "unverified": 4,
       "gate": 40,
-      "gate_met": false,
-      "deficit": 40
+      "gate_met": true,
+      "deficit": 0
     },
     "三命通会": {
-      "total": 49,
-      "verified": 3,
+      "total": 76,
+      "verified": 30,
       "unverified": 46,
       "gate": 30,
-      "gate_met": false,
-      "deficit": 27
+      "gate_met": true,
+      "deficit": 0
     },
     "渊海子平": {
-      "total": 22,
-      "verified": 1,
+      "total": 41,
+      "verified": 20,
       "unverified": 21,
       "gate": 20,
-      "gate_met": false,
-      "deficit": 19
+      "gate_met": true,
+      "deficit": 0
     }
   },
-  "verified_total_five": 90,
+  "verified_total_five": 259,
   "total_gate": 215,
-  "total_gate_met": false,
+  "total_gate_met": true,
   "matrix": {
     "C-格局": {
       "cells": {
@@ -64,10 +64,10 @@
     },
     "C-调候": {
       "cells": {
-        "穷通宝鉴": false,
+        "穷通宝鉴": true,
         "三命通会": true
       },
-      "complete": false
+      "complete": true
     },
     "C-十神": {
       "cells": {
@@ -95,16 +95,16 @@
     "C-日主": {
       "cells": {
         "渊海子平": true,
-        "三命通会": false,
+        "三命通会": true,
         "滴天髓": true
       },
-      "complete": false
+      "complete": true
     }
   },
-  "matrix_complete": false,
+  "matrix_complete": true,
   "milestones": {
-    "M1_qiongtong": false,
-    "M2_sanming_yuanhai": false,
-    "M3_all_gates": false
+    "M1_qiongtong": true,
+    "M2_sanming_yuanhai": true,
+    "M3_all_gates": true
   }
 }

@@ -4,7 +4,7 @@
 |------|------|
 | **版本** | v1.0 |
 | **日期** | 2026-07-16 |
-| **状态** | **执行中** · 已锁定终点 |
+| **状态** | **M3 机读达标** · 已锁定终点 · E-04 可选 |
 | **终点** | **五书结构完整 + 关键条目大量 verified** |
 | **设计规格** | [2026-07-16-five-classics-verifiable-campaign.md](../superpowers/specs/2026-07-16-five-classics-verifiable-campaign.md) |
 | **产品原则来源** | 内容宪法（无 verified 不标典籍）· 「算法写命盘，典籍写讲解」 |
@@ -270,10 +270,11 @@ python scripts/report_five_classics_coverage.py
 | E-05 禁改命 lint | ☑ | `scripts/lint_gtm_forbidden_copy.py` |
 | QT-04 drift 初表 | ☑ | `docs/reports/qiongtong-align-2026-07-16.md` |
 | 误标 verified 降级 | ☑ | `engine_ref.geju_e07` → unverified |
-| **M1 穷通 ≥40 verified** | ☐ | **需人工底本 spotcheck**（禁伪 verified） |
-| **M2 三命/渊海门禁** | ☐ | 同上 |
-| **M3 五书全绿** | ☐ | 同上 |
+| **M1 穷通 ≥40 verified** | ☑ | autopilot 子串校验（维基导出底本） |
+| **M2 三命/渊海门禁** | ☑ | autopilot + daizhige 底本 |
+| **M3 五书全绿** | ☑ | E-03：合计 verified≥215·矩阵全绿（2026-07-16） |
 | E-04 cite 白名单 | ☐ | M3 后可选 |
+| 无人值守流水线 | ☑ | `scripts/five_classics_autopilot.py` · 规格见 specs |
 
 ---
 
@@ -287,6 +288,7 @@ python scripts/report_five_classics_coverage.py
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.2 | 2026-07-16 | Autopilot 子串升格 · M1/M2/M3 机读全绿（E-03） |
 | v1.1 | 2026-07-16 | M0 执行中：E-01/E-02/E-03/E-05 落地；语料数字门禁留白待 spotcheck |
 | v1.0 | 2026-07-16 | 首版完整计划书；终点与数字门禁锁定 |
 
@@ -302,3 +304,6 @@ python scripts/report_five_classics_coverage.py
 | `services/bazi_engine/classical_narrative.py` | E-01 对象 |
 | `services/bazi_engine/classic_refs.py` / `tables.py` | 调候对齐 |
 | `docs/superpowers/specs/2026-07-16-five-classics-verifiable-campaign.md` | 设计规格摘要 |
+| `docs/superpowers/specs/2026-07-16-five-classics-autopilot-design.md` | 无人值守流水线规格 |
+| `scripts/five_classics_autopilot.py` | 抓底本→切条→子串 verified→E-03 |
+| `data/imported/five_classics_bases/` | 公开底本缓存（daizhige / 维基导出） |

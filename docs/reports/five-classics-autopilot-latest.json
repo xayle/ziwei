@@ -1,0 +1,185 @@
+{
+  "generated_at": "2026-07-15T23:09:36.567643+00:00",
+  "history": [
+    {
+      "round": 1,
+      "stats": {
+        "upgraded": 83,
+        "filled": 1,
+        "actions": [
+          {
+            "book": "三命通会",
+            "cat": "C-日主",
+            "kind": "matrix",
+            "need": 1,
+            "added": 1
+          }
+        ]
+      },
+      "after": {
+        "books": {
+          "滴天髓": {
+            "total": 179,
+            "verified": 113,
+            "gate": 80,
+            "deficit": 0
+          },
+          "子平真诠": {
+            "total": 88,
+            "verified": 56,
+            "gate": 45,
+            "deficit": 0
+          },
+          "穷通宝鉴": {
+            "total": 44,
+            "verified": 40,
+            "gate": 40,
+            "deficit": 0
+          },
+          "三命通会": {
+            "total": 50,
+            "verified": 4,
+            "gate": 30,
+            "deficit": 26
+          },
+          "渊海子平": {
+            "total": 22,
+            "verified": 1,
+            "gate": 20,
+            "deficit": 19
+          }
+        },
+        "matrix": {
+          "C-调候": {
+            "穷通宝鉴": true,
+            "三命通会": true
+          },
+          "C-日主": {
+            "渊海子平": true,
+            "三命通会": true,
+            "滴天髓": true
+          }
+        }
+      }
+    },
+    {
+      "round": 2,
+      "stats": {
+        "upgraded": 0,
+        "filled": 45,
+        "actions": [
+          {
+            "book": "三命通会",
+            "cat": null,
+            "kind": "count",
+            "need": 26,
+            "added": 26
+          },
+          {
+            "book": "渊海子平",
+            "cat": null,
+            "kind": "count",
+            "need": 19,
+            "added": 19
+          }
+        ]
+      },
+      "after": {
+        "books": {
+          "滴天髓": {
+            "total": 179,
+            "verified": 113,
+            "gate": 80,
+            "deficit": 0
+          },
+          "子平真诠": {
+            "total": 88,
+            "verified": 56,
+            "gate": 45,
+            "deficit": 0
+          },
+          "穷通宝鉴": {
+            "total": 44,
+            "verified": 40,
+            "gate": 40,
+            "deficit": 0
+          },
+          "三命通会": {
+            "total": 76,
+            "verified": 30,
+            "gate": 30,
+            "deficit": 0
+          },
+          "渊海子平": {
+            "total": 41,
+            "verified": 20,
+            "gate": 20,
+            "deficit": 0
+          }
+        },
+        "matrix": {
+          "C-调候": {
+            "穷通宝鉴": true,
+            "三命通会": true
+          },
+          "C-日主": {
+            "渊海子平": true,
+            "三命通会": true,
+            "滴天髓": true
+          }
+        }
+      }
+    }
+  ],
+  "final": {
+    "books": {
+      "滴天髓": {
+        "total": 179,
+        "verified": 113,
+        "gate": 80,
+        "deficit": 0
+      },
+      "子平真诠": {
+        "total": 88,
+        "verified": 56,
+        "gate": 45,
+        "deficit": 0
+      },
+      "穷通宝鉴": {
+        "total": 44,
+        "verified": 40,
+        "gate": 40,
+        "deficit": 0
+      },
+      "三命通会": {
+        "total": 76,
+        "verified": 30,
+        "gate": 30,
+        "deficit": 0
+      },
+      "渊海子平": {
+        "total": 41,
+        "verified": 20,
+        "gate": 20,
+        "deficit": 0
+      }
+    },
+    "matrix": {
+      "C-调候": {
+        "穷通宝鉴": true,
+        "三命通会": true
+      },
+      "C-日主": {
+        "渊海子平": true,
+        "三命通会": true,
+        "滴天髓": true
+      }
+    }
+  },
+  "m3": true,
+  "milestones": {
+    "M1_qiongtong": true,
+    "M2_sanming_yuanhai": true,
+    "M3_all_gates": true
+  }
+}

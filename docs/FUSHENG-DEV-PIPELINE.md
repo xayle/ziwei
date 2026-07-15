@@ -6,8 +6,8 @@
 | **日期** | 2026-07-16 |
 | **定位** | **唯一执行流水线** — 把「全自动验收 + 自检 + 按序开发 + 自动提交」合成一条可重复的日常循环 |
 | **上位** | [FUSHENG-DEV-AUTOPILOT](FUSHENG-DEV-AUTOPILOT.md)（规矩与 A 表）· [DEV-AUDIT-2026-07-13](DEV-AUDIT-2026-07-13.md)（问题清单） |
-| **当前战役** | **五书可验（M1）** · [计划书](plan/FUSHENG-FIVE-CLASSICS-VERIFIABLE-PLAN-2026-07-16.md) |
-| **当前阶段** | Phase F GTM T086–T099 ☑ · **T100+ 暂停至五书 M2** |
+| **当前战役** | **五书可验 M3 机读达标** · [计划书](plan/FUSHENG-FIVE-CLASSICS-VERIFIABLE-PLAN-2026-07-16.md) |
+| **当前阶段** | Phase F GTM T086–T099 ☑ · **T100 可重排**（五书 M2+ 已满足） |
 | **机读进度** | `docs/reports/dev-cycle-latest.json`（`python scripts/dev_cycle.py`） |
 | **W102 进度** | **24/24**（Phase B）· **W102-P3 ☑**（Phase D） |
 
@@ -343,4 +343,4 @@ Phase F  W17+ GTM      ← T086–T099 ☑ · **T100 暂停至五书 M2**
 
 ---
 
-**下一步：** **五书 M1** · 穷通底本 spotcheck → verified≥40（计划书 §5.1）· GTM T100 暂停至 M2
+**下一步：** **T100** · 创作者 Dashboard（五书 M2+ 已开闸）· 可选 E-04 cite 近五书
