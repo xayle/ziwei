@@ -20,12 +20,14 @@ export function buildDayunReportFromBazi(bazi: BaziResponse | null): DayunReport
 
   const reportItems: DayunReportItem[] = items.map((item, index) => {
     const ganzhi = `${item.stem || ''}${item.branch || ''}`.trim()
+    const sections = (item as { narrative_sections?: DayunReportItem['narrative_sections'] }).narrative_sections
     return {
       ganzhi,
       start_age: item.start_age ?? undefined,
       end_age: dayunEndAge(items, index),
       ten_god: item.ten_god ?? undefined,
       narrative: item.narrative || '',
+      narrative_sections: sections ?? undefined,
     }
   })
 

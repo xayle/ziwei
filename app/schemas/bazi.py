@@ -328,6 +328,24 @@ class YongShenModel(BaseModel):
     dual_track_id: str | None = Field(None, description="双轨用例 ID，如 ZIP01")
 
 
+class DayunNarrativeClassicModel(BaseModel):
+    source: str
+    text: str
+
+
+class DayunNarrativeSectionsModel(BaseModel):
+    """大运叙事结构化域（方案 B / SF-05）。"""
+
+    core: str = ""
+    career: str = ""
+    wealth: str = ""
+    love: str = ""
+    health: str = ""
+    trend_note: str | None = None
+    classics: list[DayunNarrativeClassicModel] = Field(default_factory=list)
+    disclaimer: str = ""
+
+
 class DaYunItemModel(BaseModel):
     start_age: float | None = None
     start_year: int | None = None
@@ -353,7 +371,8 @@ class DaYunItemModel(BaseModel):
     love_hint: str | None = None
     child_hint: str | None = None
     refs: list[dict] | None = None
-    narrative: str | None = None  # M3.02: 大运叙事400-600字
+    narrative: str | None = None  # M3.02: 大运叙事400-600字（兼容拼装）
+    narrative_sections: DayunNarrativeSectionsModel | None = None
 
 
 class DaYunModel(BaseModel):

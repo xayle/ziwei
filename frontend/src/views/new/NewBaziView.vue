@@ -7,6 +7,7 @@ import BaziLiuriTodayCard from '@/components/fusheng/BaziLiuriTodayCard.vue'
 import ResultStateCard from '@/components/new/ResultStateCard.vue'
 import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import AnalysisPanel, { type AnalysisBlock } from '@/components/fusheng/AnalysisPanel.vue'
+import DayunNarrativeCard from '@/components/fusheng/DayunNarrativeCard.vue'
 import { useFushengReport } from '@/composables/useFushengReport'
 import { useBaziPageExplain } from '@/composables/useBaziPageExplain'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
@@ -17,12 +18,13 @@ import {
   formatDayBoundaryRuleLabel,
   formatZiDayRuleLabel,
 } from '@/utils/buildEngineTrustDisplay'
+import { buildBaziStructureInsight } from '@/utils/buildBaziStructureInsight'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import { useProfileStore } from '@/stores/profile'
 import { buildBaziColumns, formatKongwangDisplay } from '@/utils/buildBaziColumns'
-import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
+import { buildDayunDisplayRow, formatDayunAgeRange } from '@/utils/dayunDisplay'
 import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
 import { formatCnElementsJoin } from '@/utils/yongshenElements'
 import { truncateText } from '@/utils/truncateText'
@@ -378,6 +380,11 @@ const trustOverviewLines = computed(() => {
 
 const showTrustOverview = computed(() => depth.value === 'overview' && trustOverviewCount.value > 0)
 
+const structureInsight = computed(() => buildBaziStructureInsight(result.value, {
+  missingFields: missingFields.value,
+  validationLines: validationLines.value,
+}))
+
 const summaryItems = computed(() => highlightCards.value.map((card) => ({ label: card.label, value: card.value })))
 
 const analysisBlocks = computed<AnalysisBlock[]>(() => {
@@ -399,41 +406,12 @@ const analysisBlocks = computed<AnalysisBlock[]>(() => {
   }))
 })
 
-const dayunAnalysisBlocks = computed<AnalysisBlock[]>(() =>
-  dayunNarrativeRows.value.map((row, idx) => ({
-    id: `dayun-narrative-${idx}`,
-    title: `${row.ganzhi} · 大运叙事`,
-    lead: row.start_age != null && row.end_age != null ? `${row.start_age}–${row.end_age}岁` : '大运周期',
-    body: row.narrative || '缺失',
-    layer: 'heuristic' as const,
-  })),
-)
-
-const dayunEngineBlocks = computed<AnalysisBlock[]>(() =>
-  dayunEngineRows.value.map((row, idx) => ({
-    id: `dayun-engine-${idx}`,
-    title: `${row.ganzhi} · ${row.range}`,
-    lead: row.tenGod || '大运',
-    body: [row.gejuImpact, row.yongshenShiftLabel].filter(Boolean).join(' ') || '暂无引擎提示。',
-    bullets: row.wealthHint ? [`财运（启发式）：${row.wealthHint}`] : undefined,
-    layer: 'engine' as const,
-  })),
-)
-
 const mainExplainBlocks = computed(() => [
   ...explainAnalysisBlocks.value,
   ...analysisBlocks.value,
 ])
 
 const dayunLoaded = computed(() => Boolean(dayunReport.value?.items?.length))
-
-const dayunExplainBlocks = computed(() => {
-  if (!dayunLoaded.value) return []
-  return [
-    ...dayunEngineBlocks.value,
-    ...dayunAnalysisBlocks.value,
-  ]
-})
 
 const explainPanelKey = computed(() => (
   explainAnalysisBlocks.value.map((block) => block.id).join('|') || 'engine-only'
@@ -478,6 +456,39 @@ function setDepth(level: 'overview' | 'structure' | 'deep') {
     /* ignore */
   }
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const dayunCards = computed(() => {
+  const reportItems = dayunNarrativeRows.value
+  const engineByGanzhi = new Map(
+    dayunEngineRows.value.map((row) => [row.ganzhi, row]),
+  )
+  return reportItems.map((row) => {
+    const engine = engineByGanzhi.get(row.ganzhi)
+    const range = row.start_age != null && row.end_age != null
+      ? formatDayunAgeRange(row.start_age, row.end_age)
+      : (engine?.range || '大运周期')
+    const sections = (row as { narrative_sections?: import('@/utils/parseDayunNarrativeSections').DayunNarrativeSections | null })
+      .narrative_sections ?? null
+    return {
+      ganzhi: row.ganzhi,
+      range,
+      tenGod: row.ten_god || engine?.tenGod || '',
+      gejuImpact: engine?.gejuImpact || '',
+      yongshenShiftLabel: engine?.yongshenShiftLabel || '',
+      narrative: row.narrative || '',
+      sections,
+    }
+  })
+})
+
+function goStructureFromInsight() {
+  setDepth('structure')
+}
+
+function goDeepDayunFromInsight() {
+  setDepth('deep')
+  void loadDayunOnDemand()
 }
 
 watch(() => result.value, () => {
@@ -570,6 +581,20 @@ onMounted(() => {
             深读
           </button>
         </nav>
+
+        <aside
+          v-if="structureInsight"
+          class="bazi-structure-insight"
+          data-testid="bazi-structure-insight"
+        >
+          <p class="bazi-structure-insight__hero">{{ structureInsight.hero }}</p>
+          <p class="bazi-structure-insight__line">{{ structureInsight.insight }}</p>
+          <p v-if="structureInsight.trustTip" class="bazi-structure-insight__trust">{{ structureInsight.trustTip }}</p>
+          <div class="bazi-structure-insight__actions">
+            <button type="button" class="fs-btn fs-btn--ghost" @click="goStructureFromInsight">看结构校勘</button>
+            <button type="button" class="fs-btn fs-btn--ghost" @click="goDeepDayunFromInsight">按需加载大运</button>
+          </div>
+        </aside>
 
         <section class="bazi-spread" id="bazi-layer-structure" data-testid="bazi-layer-structure">
           <div v-if="depth !== 'overview'" class="bazi-spread__kpi" data-testid="bazi-layer-summary">
@@ -701,12 +726,19 @@ onMounted(() => {
           </button>
           <p v-if="loadingDayun" class="fs-hint fs-hint--cache">正在加载大运叙事…</p>
           <p v-else-if="dayunError" class="fs-hint fs-hint--warn">{{ dayunError }}</p>
-          <AnalysisPanel
-            v-if="dayunExplainBlocks.length"
-            :blocks="dayunExplainBlocks"
-            :default-expand-all="true"
-            :collapse-heuristic="false"
-          />
+          <div v-if="dayunCards.length" class="bazi-dayun-cards">
+            <DayunNarrativeCard
+              v-for="(card, idx) in dayunCards"
+              :key="`${card.ganzhi}-${idx}`"
+              :ganzhi="card.ganzhi"
+              :range="card.range"
+              :ten-god="card.tenGod"
+              :geju-impact="card.gejuImpact"
+              :yongshen-shift-label="card.yongshenShiftLabel"
+              :narrative="card.narrative"
+              :sections="card.sections"
+            />
+          </div>
         </section>
         </div>
       </template>

@@ -351,6 +351,102 @@ _STEM_DAYUN_FLAVOR: dict[str, str] = {
 }
 
 
+_DISCLAIMER = "（仅供学术研究参考，不构成任何形式的预测或建议）"
+
+
+def build_dayun_narrative_sections(
+    stem: str,
+    branch: str,
+    ganzhi: str,
+    ten_god: str,
+    start_age: int,
+    end_age: int,
+    yongshen_favor: list[str],
+    geju_name: str,
+    strength_tier: str,
+    wealth_tier: str,
+    is_favorable: bool = True,
+    day_stem: str = "",
+) -> dict:
+    """结构化大运叙事真源（供 API narrative_sections + 兼容拼装）。"""
+    stem_img = _STEM_IMAGE.get(stem, f"{stem}干之气")
+    branch_img = _BRANCH_IMAGE.get(branch, f"{branch}支之象")
+    favor_cn = "、".join(
+        {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(e, e) for e in yongshen_favor
+    )
+    _TIER_CN_N = {
+        "extremely_strong": "极旺",
+        "strong": "偏旺",
+        "balanced": "中和",
+        "neutral": "中和",
+        "weak": "偏弱",
+        "extremely_weak": "极弱",
+    }
+    _strength_cn = _TIER_CN_N.get(strength_tier, strength_tier)
+
+    _stem_flavor = _STEM_DAYUN_FLAVOR.get(day_stem, "")
+    _flavor_clause = f"{_stem_flavor}，" if _stem_flavor else ""
+    core = (
+        f"【{start_age}岁—{end_age}岁·{ganzhi}大运】"
+        f"天干{stem}：{stem_img}；地支{branch}：{branch_img}。"
+        f"命局格局{geju_name}，日主{_strength_cn}，{_flavor_clause}"
+        f"{'用神得力，气运相顺，诸事较为顺遂' if is_favorable else '用神受制，气运偏逆，诸事宜守'}。"
+    )
+
+    shishen_info = _SHISHEN_MAP.get(ten_god, {})
+    career_text = shishen_info.get("career", _DEFAULT_CAREER)
+    wealth_text = shishen_info.get("wealth", _DEFAULT_WEALTH)
+    love_text = shishen_info.get("love", _DEFAULT_LOVE)
+    health_text = shishen_info.get("health", _DEFAULT_HEALTH)
+
+    if wealth_tier == "高格":
+        wealth_est = "（财富积累上限估算：本阶段高格命局综合指数较优，详见财富估算模型）"
+    elif wealth_tier == "中格":
+        wealth_est = "（财富积累上限估算：本阶段中格命局综合指数居中，详见财富估算模型）"
+    else:
+        wealth_est = "（财富积累上限估算：本阶段宜守成，以稳为主，详见财富估算模型）"
+
+    _flavor_note = f"{_stem_flavor}，" if _stem_flavor else ""
+    if is_favorable:
+        trend_note = f"此运用神{favor_cn}气场顺旺，{_flavor_note}宜主动出击、把握机遇，努力可收事半功倍之效。"
+    else:
+        trend_note = f"此运忌神当道，用神{favor_cn}受制，{_flavor_note}宜低调守成，积蓄实力，以待旺运。"
+
+    _hash_val = int(hashlib.md5(ganzhi.encode("utf-8"), usedforsecurity=False).hexdigest(), 16)
+    _idx0 = _hash_val % len(_DAYUN_CLASSICS)
+    chosen = [
+        dict(_DAYUN_CLASSICS[_idx0]),
+        dict(_DAYUN_CLASSICS[(_idx0 + 1) % len(_DAYUN_CLASSICS)]),
+    ]
+
+    return {
+        "core": core,
+        "career": career_text,
+        "wealth": f"{wealth_text}{wealth_est}",
+        "love": love_text,
+        "health": health_text,
+        "trend_note": trend_note,
+        "classics": chosen,
+        "disclaimer": _DISCLAIMER,
+    }
+
+
+def format_dayun_narrative(sections: dict) -> str:
+    """将结构化 sections 拼回兼容长文（含【事业】等标签）。"""
+    classics = sections.get("classics") or []
+    classics_text = "\n".join(f"  ——{ref['source']}：「{ref['text']}」" for ref in classics)
+    return (
+        f"{sections.get('core', '')}\n\n"
+        f"【事业】{sections.get('career', '')}\n\n"
+        f"【财运】{sections.get('wealth', '')}\n\n"
+        f"【情感】{sections.get('love', '')}\n\n"
+        f"【健康】{sections.get('health', '')}\n\n"
+        f"{sections.get('trend_note', '')}\n\n"
+        f"【古籍佐证】\n{classics_text}\n\n"
+        f"{sections.get('disclaimer', _DISCLAIMER)}"
+    )
+
+
 def generate_dayun_narrative(
     stem: str,
     branch: str,
@@ -368,90 +464,23 @@ def generate_dayun_narrative(
     """
     M3 任务3.02 — 大运叙事生成器
 
-    返回 400-600 字的段落式叙述。
-
-    参数:
-        stem:           大运天干（甲乙丙丁...）
-        branch:         大运地支（子丑寅卯...）
-        ganzhi:         干支组合（如"甲子"）
-        ten_god:        对应十神（正官/七杀/...）
-        start_age:      大运起运年龄
-        end_age:        大运结束年龄
-        yongshen_favor: 命局用神列表（英文五行）
-        geju_name:      格局名称
-        strength_tier:  日主强弱层次
-        wealth_tier:    财富等级（高格/中格/低格）
-        is_favorable:   是否顺用神之运
+    返回 400-600 字的段落式叙述（由 sections 拼装，保持旧契约）。
     """
-    stem_img = _STEM_IMAGE.get(stem, f"{stem}干之气")
-    branch_img = _BRANCH_IMAGE.get(branch, f"{branch}支之象")
-    favor_cn = "、".join(
-        {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}.get(e, e) for e in yongshen_favor
+    sections = build_dayun_narrative_sections(
+        stem=stem,
+        branch=branch,
+        ganzhi=ganzhi,
+        ten_god=ten_god,
+        start_age=start_age,
+        end_age=end_age,
+        yongshen_favor=yongshen_favor,
+        geju_name=geju_name,
+        strength_tier=strength_tier,
+        wealth_tier=wealth_tier,
+        is_favorable=is_favorable,
+        day_stem=day_stem,
     )
-    _TIER_CN_N = {
-        "extremely_strong": "极旺",
-        "strong": "偏旺",
-        "balanced": "中和",
-        "neutral": "中和",
-        "weak": "偏弱",
-        "extremely_weak": "极弱",
-    }
-    _strength_cn = _TIER_CN_N.get(strength_tier, strength_tier)
-
-    # 核心意象（~40字）
-    _stem_flavor = _STEM_DAYUN_FLAVOR.get(day_stem, "")
-    _flavor_clause = f"{_stem_flavor}，" if _stem_flavor else ""
-    core_image = (
-        f"【{start_age}岁—{end_age}岁·{ganzhi}大运】"
-        f"天干{stem}：{stem_img}；地支{branch}：{branch_img}。"
-        f"命局格局{geju_name}，日主{_strength_cn}，{_flavor_clause}"
-        f"{'用神得力，气运相顺，诸事较为顺遂' if is_favorable else '用神受制，气运偏逆，诸事宜守'}。"
-    )
-
-    # 十神对应文段
-    shishen_info = _SHISHEN_MAP.get(ten_god, {})
-    career_text = shishen_info.get("career", _DEFAULT_CAREER)
-    wealth_text = shishen_info.get("wealth", _DEFAULT_WEALTH)
-    love_text = shishen_info.get("love", _DEFAULT_LOVE)
-    health_text = shishen_info.get("health", _DEFAULT_HEALTH)
-
-    # 财富估算区间说明
-    if wealth_tier == "高格":
-        wealth_est = "（财富积累上限估算：本阶段高格命局综合指数较优，详见财富估算模型）"
-    elif wealth_tier == "中格":
-        wealth_est = "（财富积累上限估算：本阶段中格命局综合指数居中，详见财富估算模型）"
-    else:
-        wealth_est = "（财富积累上限估算：本阶段宜守成，以稳为主，详见财富估算模型）"
-
-    # 顺逆注记
-    _flavor_note = f"{_stem_flavor}，" if _stem_flavor else ""
-    if is_favorable:
-        trend_note = f"此运用神{favor_cn}气场顺旺，{_flavor_note}宜主动出击、把握机遇，努力可收事半功倍之效。"
-    else:
-        trend_note = f"此运忌神当道，用神{favor_cn}受制，{_flavor_note}宜低调守成，积蓄实力，以待旺运。"
-
-    # 古籍佐证（1-2条，按干支哈希确定性选取，同一干支每次输出相同）
-    # usedforsecurity=False: MD5 仅用于确定性索引，不作密码学用途（N7.05 bandit B324）
-    _hash_val = int(hashlib.md5(ganzhi.encode("utf-8"), usedforsecurity=False).hexdigest(), 16)
-    _idx0 = _hash_val % len(_DAYUN_CLASSICS)
-    chosen = [
-        _DAYUN_CLASSICS[_idx0],
-        _DAYUN_CLASSICS[(_idx0 + 1) % len(_DAYUN_CLASSICS)],
-    ]
-    classics_text = "\n".join(f"  ——{ref['source']}：「{ref['text']}」" for ref in chosen)
-
-    narrative = (
-        f"{core_image}\n\n"
-        f"【事业】{career_text}\n\n"
-        f"【财运】{wealth_text}{wealth_est}\n\n"
-        f"【情感】{love_text}\n\n"
-        f"【健康】{health_text}\n\n"
-        f"{trend_note}\n\n"
-        f"【古籍佐证】\n{classics_text}\n\n"
-        f"（仅供学术研究参考，不构成任何形式的预测或建议）"
-    )
-
-    return narrative
+    return format_dayun_narrative(sections)
 
 
 def narrative_char_count(text: str) -> int:

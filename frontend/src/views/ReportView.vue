@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
 import AnalysisPanel, { type AnalysisBlock } from '@/components/fusheng/AnalysisPanel.vue'
+import DayunNarrativeCard from '@/components/fusheng/DayunNarrativeCard.vue'
 import BaziReferenceTable from '@/components/new/BaziReferenceTable.vue'
 import BaziStructuralRelations from '@/components/fusheng/BaziStructuralRelations.vue'
 import BaziLiuriTodayCard from '@/components/fusheng/BaziLiuriTodayCard.vue'
@@ -52,6 +53,7 @@ import {
 import { useEntitlementStore } from '@/stores/entitlement'
 import { useYoubiHourAlign } from '@/composables/useYoubiHourAlign'
 import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
+import { buildBaziStructureInsight } from '@/utils/buildBaziStructureInsight'
 import { validateBaziZiweiConsistency } from '@/utils/crossValidation'
 import { trackFlowEvent } from '@/utils/flowAnalytics'
 import {
@@ -344,13 +346,22 @@ const dayunRows = computed(() => {
         ? `${narrativeItem.start_age}–${narrativeItem.end_age}岁`
         : '—'
     )
-    return buildDayunDisplayRow(item, {
+    const row = buildDayunDisplayRow(item, {
       range,
       tenGod: narrativeItem?.ten_god,
       narrative: narrativeItem?.narrative || item.narrative || '',
     })
+    const sections = (narrativeItem as { narrative_sections?: unknown } | undefined)?.narrative_sections
+      ?? (item as { narrative_sections?: unknown }).narrative_sections
+      ?? null
+    return { ...row, sections }
   })
 })
+
+const reportStructureInsight = computed(() => buildBaziStructureInsight(bazi.value, {
+  missingFields: missingFields.value,
+  validationLines: validationLines.value,
+}))
 
 /** BZ-Month：报告卷三月运表 */
 const monthlyFortuneRows = computed(() => {
@@ -818,6 +829,17 @@ watch(
 
           <template v-else-if="volume.id === 'vol1'">
             <p class="report-vol1-lead">卷一·命之根 — 四柱格局摘要；盘面可核对，深读见下方解读。</p>
+            <aside
+              v-if="reportStructureInsight"
+              class="report-structure-insight"
+              data-testid="report-structure-insight"
+            >
+              <p class="report-structure-insight__hero">{{ reportStructureInsight.hero }}</p>
+              <p class="report-structure-insight__line">{{ reportStructureInsight.insight }}</p>
+              <p v-if="reportStructureInsight.trustTip" class="report-structure-insight__trust">
+                {{ reportStructureInsight.trustTip }}
+              </p>
+            </aside>
             <SummaryStrip :items="baziSummary" />
             <div class="report-embed report-embed--compact" data-testid="report-vol1-compact-chart">
               <BaziReferenceTable :columns="baziColumns" active-key="day" :show-detail-rows="false" />
@@ -975,13 +997,18 @@ watch(
                 </tr>
               </tbody>
             </table>
-            <div v-for="(row, idx) in dayunRows" :key="`detail-${idx}`" class="dayun-detail">
-              <h3>{{ row.ganzhi }} · {{ row.range }} · {{ row.tenGod }}</h3>
-              <p v-if="row.gejuImpact" class="dayun-detail__engine">{{ row.gejuImpact }}</p>
-              <p v-if="row.wealthHint" class="dayun-hint dayun-hint--heuristic">财运：{{ row.wealthHint }}</p>
-              <p v-if="row.healthHint" class="dayun-hint dayun-hint--heuristic">健康：{{ row.healthHint }}</p>
-              <p v-if="row.loveHint" class="dayun-hint dayun-hint--heuristic">感情：{{ row.loveHint }}</p>
-              <p v-if="row.narrative" class="dayun-detail__narrative">{{ row.narrative }}</p>
+            <div class="report-dayun-cards">
+              <DayunNarrativeCard
+                v-for="(row, idx) in dayunRows"
+                :key="`detail-${idx}`"
+                :ganzhi="row.ganzhi"
+                :range="row.range"
+                :ten-god="row.tenGod"
+                :geju-impact="row.gejuImpact"
+                :yongshen-shift-label="row.yongshenShiftLabel"
+                :narrative="row.narrative"
+                :sections="(row as { sections?: import('@/utils/parseDayunNarrativeSections').DayunNarrativeSections | null }).sections"
+              />
             </div>
             <section
               v-if="monthlyFortuneRows.length"
@@ -1072,20 +1099,27 @@ watch(
             <p class="hint">批注按档案自动保存至本地，切换档案后内容独立。</p>
 
             <details class="ai-panel">
-              <summary class="ai-panel__summary">AI 解读（需主动展开）</summary>
+              <summary class="ai-panel__summary">问书解读（需主动展开）</summary>
               <div class="ai-panel__content">
                 <p v-if="aiStore.configNote" class="ai-panel__meta">{{ aiStore.configNote }}</p>
+                <p
+                  v-if="auth.isLoggedIn && !aiStore.configAvailable"
+                  class="hint"
+                  data-testid="report-ai-unavailable"
+                >
+                  问书大模型未配置：不会自动生成解读，下方也不会展示示例稿冒充真文。
+                </p>
                 <p v-if="!auth.isLoggedIn" class="hint">
-                  <router-link to="/login">登录</router-link> 后可生成 AI 命盘解读草稿。
+                  <router-link to="/login">登录</router-link> 后可生成问书命盘解读草稿。
                 </p>
                 <template v-else>
                   <button
                     class="fs-btn fs-btn--ghost"
-                    :disabled="aiStore.loading || loading || !bazi || !ziwei"
+                    :disabled="aiStore.loading || loading || !bazi || !ziwei || !aiStore.configAvailable"
                     data-testid="report-ai-generate"
                     @click="generateAiInterpretation"
                   >
-                    {{ aiStore.loading ? '生成中…' : '生成 AI 解读' }}
+                    {{ aiStore.loading ? '生成中…' : '生成问书解读' }}
                   </button>
                   <p v-if="aiStore.error" class="ai-panel__error">{{ aiStore.error }}</p>
                   <div v-if="aiStore.messages.length" class="ai-panel__body">
@@ -1541,6 +1575,39 @@ watch(
 .report-embed {
   margin-top: 16px;
   overflow-x: auto;
+}
+
+.report-structure-insight {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand-gold);
+  background: var(--surface);
+  display: grid;
+  gap: 6px;
+}
+
+.report-structure-insight__hero {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+}
+
+.report-structure-insight__line,
+.report-structure-insight__trust {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.report-structure-insight__trust {
+  color: var(--muted, #5c5346);
+}
+
+.report-dayun-cards {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .report-vol1-lead {

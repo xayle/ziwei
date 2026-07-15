@@ -1564,7 +1564,7 @@ def _enrich_v2_analysis(
         if hasattr(verify_response, "dayun") and verify_response.dayun:
             _nar_items = list(verify_response.dayun.items or [])
             for _i, _it in enumerate(_nar_items):
-                if _it.narrative:
+                if _it.narrative and getattr(_it, "narrative_sections", None):
                     continue
                 _dy_ganzhi = (_it.stem or "?") + (_it.branch or "?")
                 _end_age = (
@@ -1574,7 +1574,13 @@ def _enrich_v2_analysis(
                 )
                 _is_fav = (_it.flow_wuxing or "") in favor
                 try:
-                    _it.narrative = generate_dayun_narrative(
+                    from app.schemas.bazi import DayunNarrativeSectionsModel
+                    from services.bazi_engine.analysis.dayun_narrative import (
+                        build_dayun_narrative_sections,
+                        format_dayun_narrative,
+                    )
+
+                    _sections = build_dayun_narrative_sections(
                         stem=_it.stem or "",
                         branch=_it.branch or "",
                         ganzhi=_dy_ganzhi,
@@ -1588,8 +1594,29 @@ def _enrich_v2_analysis(
                         is_favorable=_is_fav,
                         day_stem=ds_st,
                     )
+                    _it.narrative_sections = DayunNarrativeSectionsModel.model_validate(_sections)
+                    if not _it.narrative:
+                        _it.narrative = format_dayun_narrative(_sections)
                 except Exception as _ne:
                     logger.debug("[M3.02 narrative step %d] %s", _i, _ne)
+                    if not _it.narrative:
+                        try:
+                            _it.narrative = generate_dayun_narrative(
+                                stem=_it.stem or "",
+                                branch=_it.branch or "",
+                                ganzhi=_dy_ganzhi,
+                                ten_god=_it.ten_god or "",
+                                start_age=int(_it.start_age or 0),
+                                end_age=_end_age,
+                                yongshen_favor=favor,
+                                geju_name=_geju_for_nar,
+                                strength_tier=strength_tier,
+                                wealth_tier=_wealth_tier_for_narrative,
+                                is_favorable=_is_fav,
+                                day_stem=ds_st,
+                            )
+                        except Exception:
+                            pass
     except Exception as exc:
         logger.debug("[M3.02 dayun_narrative] %s", exc)
 

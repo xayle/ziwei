@@ -5557,6 +5557,8 @@ export interface components {
             }[] | null;
             /** Narrative */
             narrative?: string | null;
+            /** Narrative Sections */
+            narrative_sections?: components["schemas"]["DayunNarrativeSections"] | null;
         };
         /** DaYunModel */
         DaYunModel: {
@@ -5707,6 +5709,22 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** DayunNarrativeClassic */
+        DayunNarrativeClassic: {
+            source: string;
+            text: string;
+        };
+        /** DayunNarrativeSections */
+        DayunNarrativeSections: {
+            core?: string;
+            career?: string;
+            wealth?: string;
+            love?: string;
+            health?: string;
+            trend_note?: string | null;
+            classics?: components["schemas"]["DayunNarrativeClassic"][];
+            disclaimer?: string;
+        };
         /** DayunReportItem */
         DayunReportItem: {
             /** Ganzhi */
@@ -5719,6 +5737,8 @@ export interface components {
             ten_god?: string | null;
             /** Narrative */
             narrative: string;
+            /** Narrative Sections */
+            narrative_sections?: components["schemas"]["DayunNarrativeSections"] | null;
         };
         /** DayunReportRequest */
         DayunReportRequest: {

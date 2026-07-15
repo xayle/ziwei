@@ -163,7 +163,8 @@ make scorecard
 | ☐ | **T114** | DS | Extension 页视觉对齐 T014 targets（纸墨，无新 hex） | — | R-01~05 复查 |
 | ☐ | **T115** | ALL | **Ext-Ready 签字** | — | Extension 可对外 |
 
-**L-明确不做（本阶段）：** 六爻大全科 · 奇门 · 姓名商业化主流程 · 术数超市
+**L-明确不做（本阶段）：** 六爻大全科 · 姓名商业化主流程 · 术数超市  
+**L′ 修订（2026-07-16）：** 奇门/河洛可作为大运卡「互证参考轨」分期研发（见 `docs/superpowers/specs/2026-07-16-dayun-multi-track-roadmap.md`），**仍不做**奇门全科产品化主流程；无引擎前仅 `not_implemented` 占位。
 
 ---
 
@@ -203,7 +204,7 @@ make scorecard
 | ☐ | **T134** | BE | **E1-06** Benchmark 基线 GT01 full + explain/batch | pytest-benchmark | 报告归档 |
 | ☐ | **T135** | ALL | **E1-Gate**：registry 与直连 **2 周双轨** 一致；Scorecard 24/24 | — | 平台签字 |
 
-**N-明确不做：** Workflow DAG · Mutation Test · 奇门注册（除非产品新开需求）
+**N-明确不做：** Workflow DAG · Mutation Test · 奇门全科引擎注册进主菜单（参考轨分期见多轨规划，不视为本阶段 N 阻断）
 
 ---
 

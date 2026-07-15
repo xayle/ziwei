@@ -16,6 +16,16 @@ test.describe('八字紫微页面打磨', () => {
     await expect(page.getByTestId('bazi-layer-trust')).toHaveCount(0)
   })
 
+  test('八字速览可见结构洞察条且无规则长文主露', async ({ page }) => {
+    await fillMinimalProfile(page)
+    await page.getByTestId('profile-bazi').click()
+    const strip = page.getByTestId('bazi-structure-insight')
+    await expect(strip).toBeVisible({ timeout: 15_000 })
+    await expect(strip).toContainText(/用神|格局|·/)
+    await expect(page.getByTestId('bazi-layer-explain')).toHaveCount(0)
+    await expect(page.getByText('规则与提示')).toHaveCount(0)
+  })
+
   test('375px 八字页无页级横滚', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 })
     await fillMinimalProfile(page)

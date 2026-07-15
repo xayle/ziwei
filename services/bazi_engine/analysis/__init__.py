@@ -16,7 +16,11 @@
 """
 
 from services.bazi_engine.analysis.career import compute_career
-from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
+from services.bazi_engine.analysis.dayun_narrative import (
+    build_dayun_narrative_sections,
+    format_dayun_narrative,
+    generate_dayun_narrative,
+)
 from services.bazi_engine.analysis.health import compute_health
 from services.bazi_engine.analysis.liunian_domain import compute_liunian_domain_forecasts
 from services.bazi_engine.analysis.marriage import compute_marriage
@@ -36,5 +40,7 @@ __all__ = [
     "compute_relationship",
     "compute_wealth",
     "estimate_wealth",
+    "build_dayun_narrative_sections",
+    "format_dayun_narrative",
     "generate_dayun_narrative",
 ]

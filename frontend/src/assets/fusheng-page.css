@@ -587,6 +587,46 @@
   background: var(--surface);
 }
 
+.bazi-structure-insight {
+  margin: 0 0 var(--sp-4);
+  padding: 14px 16px;
+  border: 1px solid var(--border-md);
+  border-left: 3px solid var(--brand-gold);
+  background: var(--surface);
+  display: grid;
+  gap: 8px;
+}
+
+.bazi-structure-insight__hero {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--brand-ink);
+}
+
+.bazi-structure-insight__line {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.bazi-structure-insight__trust {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted, #5c5346);
+}
+
+.bazi-structure-insight__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bazi-dayun-cards {
+  display: grid;
+  gap: 12px;
+}
+
 .bazi-layer-explain,
 .bazi-dayun-block {
   display: grid;

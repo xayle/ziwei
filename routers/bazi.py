@@ -241,17 +241,54 @@ class DayunReportRequest(BaseModel):
     case_id: str
 
 
+class DayunReportClassic(BaseModel):
+    source: str
+    text: str
+
+
+class DayunReportSections(BaseModel):
+    core: str = ""
+    career: str = ""
+    wealth: str = ""
+    love: str = ""
+    health: str = ""
+    trend_note: str | None = None
+    classics: list[DayunReportClassic] = Field(default_factory=list)
+    disclaimer: str = ""
+
+
 class DayunReportItem(BaseModel):
     ganzhi: str
     start_age: int | None = None
     end_age: int | None = None
     ten_god: str | None = None
     narrative: str
+    narrative_sections: DayunReportSections | None = None
 
 
 class DayunReportResponse(BaseModel):
     items: list[DayunReportItem]
     narrative_total_chars: int
+
+
+def _sections_from_dict(raw: dict | None) -> DayunReportSections | None:
+    if not raw:
+        return None
+    classics = [
+        DayunReportClassic(source=str(c.get("source", "")), text=str(c.get("text", "")))
+        for c in (raw.get("classics") or [])
+        if isinstance(c, dict)
+    ]
+    return DayunReportSections(
+        core=str(raw.get("core") or ""),
+        career=str(raw.get("career") or ""),
+        wealth=str(raw.get("wealth") or ""),
+        love=str(raw.get("love") or ""),
+        health=str(raw.get("health") or ""),
+        trend_note=raw.get("trend_note"),
+        classics=classics,
+        disclaimer=str(raw.get("disclaimer") or ""),
+    )
 
 
 def _build_dayun_report_items(vr) -> list[DayunReportItem]:
@@ -269,14 +306,19 @@ def _build_dayun_report_items(vr) -> list[DayunReportItem]:
             end_age = int(it.start_age or 0) + 9
 
         narrative = it.narrative or ""
-        if not narrative:
+        sections_model = getattr(it, "narrative_sections", None)
+        sections_dict = sections_model.model_dump() if sections_model is not None else None
+        if not narrative or not sections_dict:
             try:
                 favor: list[str] = list(vr.yongshen.favor) if vr.yongshen and vr.yongshen.favor else []
                 geju_name = vr.geju.geju_name if vr.geju and vr.geju.geju_name else "普通格"
                 strength_tier = (vr.day_master_strength.tier if vr.day_master_strength else "中和") or "中和"
-                from services.bazi_engine.analysis.dayun_narrative import generate_dayun_narrative
+                from services.bazi_engine.analysis.dayun_narrative import (
+                    build_dayun_narrative_sections,
+                    format_dayun_narrative,
+                )
 
-                narrative = generate_dayun_narrative(
+                sections_dict = build_dayun_narrative_sections(
                     stem=it.stem or "",
                     branch=it.branch or "",
                     ganzhi=ganzhi,
@@ -290,8 +332,11 @@ def _build_dayun_report_items(vr) -> list[DayunReportItem]:
                     is_favorable=(it.flow_wuxing or "") in favor,
                     day_stem=vr.pillars_primary.day.stem if vr.pillars_primary else "",
                 )
+                if not narrative:
+                    narrative = format_dayun_narrative(sections_dict)
             except Exception:
-                narrative = f"{ganzhi}大运（{it.start_age}–{end_age}岁）"
+                narrative = narrative or f"{ganzhi}大运（{it.start_age}–{end_age}岁）"
+                sections_dict = None
 
         items.append(
             DayunReportItem(
@@ -300,6 +345,7 @@ def _build_dayun_report_items(vr) -> list[DayunReportItem]:
                 end_age=end_age,
                 ten_god=it.ten_god,
                 narrative=narrative,
+                narrative_sections=_sections_from_dict(sections_dict),
             )
         )
     return items
