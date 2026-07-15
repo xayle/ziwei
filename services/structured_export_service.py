@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from services.missing_field_labels import format_missing_fields_markdown
+from services.missing_field_labels import (
+    format_missing_fields_markdown,
+    format_provenance_markdown,
+    provenance_layer_label,
+)
 
 
 def build_bazi_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
@@ -88,12 +92,13 @@ def build_ziwei_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
     patterns = payload.get("patterns") or []
     for p in patterns[:8]:
         if isinstance(p, dict):
-            md_lines.append(f"- {p.get('name', '—')} [{p.get('tier', '—')}] layer={p.get('layer', 'engine')}")
+            layer = provenance_layer_label(str(p.get("layer") or "engine"))
+            md_lines.append(f"- {p.get('name', '—')} [{p.get('tier', '—')}] · {layer}")
     if not patterns:
         md_lines.append("- （无格局或未计算）")
 
     provenance = payload.get("provenance") or {}
-    md_lines.extend(["", "## provenance", str(provenance)])
+    md_lines.extend(format_provenance_markdown(provenance))
     missing = payload.get("missing_fields") or []
     md_lines.extend(format_missing_fields_markdown(missing if isinstance(missing, list) else []))
 

@@ -65,7 +65,13 @@ def test_render_fusheng_report_html_contains_core_sections():
     assert "换运节点 2028" in html
     assert "木" in html
     assert "引擎可信度" in html
-    assert "geju_detail" in html
+    assert "格局细目" in html
+    assert "运限预测" in html
+    assert "字段注记" in html
+    assert "geju_detail" not in html
+    assert "forecast" not in html
+    assert "八字·格局=典籍" in html
+    assert "置信度" in html and "中等" in html
     assert "iztro 交叉核验" in html
     assert "双轨对照附录" in html
     assert "ZIP09" in html
@@ -95,7 +101,7 @@ def test_render_fusheng_report_html_contains_algo_meta_labels():
     assert "early_zi_prev_day" in html
     assert "晚子不换日" in html
     assert "时辰未详" in html
-    assert "默认午时" in html
+    assert "日中 12:30" in html
     assert "引擎提示" in html
     assert "右弼安星" in html
 

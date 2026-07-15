@@ -14,6 +14,13 @@ from app.schemas.ziwei import ZiweiRequest
 from routers.ziwei import _chart_to_response, _ziwei_full_args
 from services.bazi_full_service import bazi_full
 from services.explain_service import explain_bazi_batch, explain_ziwei_batch
+from services.missing_field_labels import (
+    confidence_level_label,
+    is_advisory_missing_field,
+    missing_field_label,
+    provenance_domain_label,
+    provenance_layer_label,
+)
 from services.name_engine.engine import analyze_name
 from services.ziwei_engine import ziwei_full
 
@@ -233,9 +240,15 @@ def _render_explain_section(
 
 def _render_trust_section(bazi: dict[str, Any], ziwei: dict[str, Any]) -> str:
     parts: list[str] = []
-    missing = list(dict.fromkeys((bazi.get("missing_fields") or []) + (ziwei.get("missing_fields") or [])))
+    missing = [
+        f
+        for f in dict.fromkeys((bazi.get("missing_fields") or []) + (ziwei.get("missing_fields") or []))
+        if isinstance(f, str) and f.strip()
+    ]
     if missing:
-        parts.append(f"<p><strong>未覆盖字段</strong>：{_esc('、'.join(missing))}</p>")
+        labels = [missing_field_label(f) for f in missing]
+        title = "对照注记" if all(is_advisory_missing_field(f) for f in missing) else "字段注记"
+        parts.append(f"<p><strong>{title}</strong>：{_esc('、'.join(labels))}</p>")
 
     geju = bazi.get("geju") or {}
     if geju.get("recorded_geju") or geju.get("engine_geju"):
@@ -256,14 +269,17 @@ def _render_trust_section(bazi: dict[str, Any], ziwei: dict[str, Any]) -> str:
                 continue
             conf = layer.get("confidence")
             conf_txt = f" {int(conf * 100)}%" if isinstance(conf, int | float) else ""
-            prov_bits.append(f"{source}·{key}={layer.get('layer')}{conf_txt}")
+            domain = provenance_domain_label(str(key))
+            layer_label = provenance_layer_label(str(layer.get("layer")))
+            prov_bits.append(f"{source}·{domain}={layer_label}{conf_txt}")
     if prov_bits:
         parts.append(f"<p><strong>可信度分层</strong>：{_esc(' · '.join(prov_bits[:8]))}</p>")
 
     if bazi.get("confidence_level"):
         score = bazi.get("confidence_score")
         score_txt = f"（{score}）" if score is not None else ""
-        parts.append(f"<p><strong>置信度</strong>：{_esc(bazi.get('confidence_level'))}{score_txt}</p>")
+        level = confidence_level_label(str(bazi.get("confidence_level")))
+        parts.append(f"<p><strong>置信度</strong>：{_esc(level)}{score_txt}</p>")
 
     bazi_classics = bazi.get("classic_refs") or []
     if bazi_classics:
