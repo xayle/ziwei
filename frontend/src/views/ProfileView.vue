@@ -34,6 +34,7 @@ const restoringSnapshotId = ref<string | null>(null)
 const snapshotRestoreNote = ref('')
 const engineSummary = ref<ProfileSummaryResponse | null>(null)
 const engineSummaryLoading = ref(false)
+const engineSummaryError = ref('')
 const editorTab = ref<ProfileTabId>('basic')
 const coverCompact = ref(false)
 const archiveSpreadBody = ref<HTMLElement | null>(null)
@@ -103,13 +104,16 @@ async function loadEngineSummary() {
   const caseId = profile.activeProfile?.remoteCaseId
   if (!auth.isLoggedIn || !caseId) {
     engineSummary.value = null
+    engineSummaryError.value = ''
     return
   }
   engineSummaryLoading.value = true
+  engineSummaryError.value = ''
   try {
     engineSummary.value = await profileSummary(caseId)
   } catch {
     engineSummary.value = null
+    engineSummaryError.value = '引擎摘要暂不可用，封面未附日柱/格局快照。'
   } finally {
     engineSummaryLoading.value = false
   }
@@ -513,6 +517,16 @@ function applyZiweiAlgoPreset(presetId: string) {
             <p class="archive-cover__eyebrow">档案 · 命书封面</p>
             <h1 class="archive-cover__title">{{ profileCoverTitle }}</h1>
             <p class="archive-cover__meta" data-testid="profile-cover-meta">{{ profileCoverMeta }}</p>
+            <p
+              v-if="engineSummaryLoading"
+              class="profile-note"
+              data-testid="profile-engine-summary-loading"
+            >正在载入引擎摘要…</p>
+            <p
+              v-if="engineSummaryError"
+              class="profile-note"
+              data-testid="profile-engine-summary-error"
+            >{{ engineSummaryError }}</p>
           </div>
           <div class="archive-cover__actions">
             <button

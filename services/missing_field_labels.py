@@ -80,6 +80,7 @@ CROSSCHECK_STATUS_LABELS: dict[str, str] = {
     "ok": "一致",
     "degraded": "降级",
     "life_palace_mismatch": "命宫不一致",
+    "life_palace_only": "仅命宫可对照",
     "unknown": "未核验",
 }
 

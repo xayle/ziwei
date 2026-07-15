@@ -11,6 +11,7 @@ import {
   buildProvenanceRows,
   buildValidationLines,
   collectMissingFields,
+  formatIztroStatusLabel,
   formatMissingFieldLabel,
   formatMissingFieldLine,
   formatRelationLines,
@@ -173,6 +174,7 @@ describe('buildEngineTrustDisplay', () => {
     } as ZiweiResponse, { yearDivide: 'lichun', dayDivide: 'solar_next' })
     expect(iztro?.status).toBe('life_palace_mismatch')
     expect(iztro?.statusLabel).toBe('命宫不一致')
+    expect(formatIztroStatusLabel('life_palace_only')).toBe('仅命宫可对照')
     expect(iztro?.showDualTrackTable).toBe(true)
     expect(iztro?.dualTrack?.lifePalaceGz).toBe('癸丑')
     expect(iztro?.engineLifePalaceGz).toBe('乙丑')

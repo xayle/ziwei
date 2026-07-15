@@ -569,6 +569,7 @@ export function formatIztroStatusLabel(status?: string | null): string {
   if (key === 'ok') return '一致'
   if (key === 'degraded') return '降级'
   if (key === 'life_palace_mismatch') return '命宫不一致'
+  if (key === 'life_palace_only') return '仅命宫可对照'
   if (key === 'unknown' || !key) return '未核验'
   return key
 }

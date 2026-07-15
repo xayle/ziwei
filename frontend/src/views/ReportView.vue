@@ -913,7 +913,7 @@ watch(
               <h3>典籍引用（含页码）</h3>
               <table class="report-table">
                 <thead>
-                  <tr><th>ID</th><th>书名</th><th>页/章</th><th>状态</th></tr>
+                  <tr><th>编号</th><th>书名</th><th>页/章</th><th>状态</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="row in classicCitationRows" :key="row.id">
