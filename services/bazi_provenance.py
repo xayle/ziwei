@@ -36,6 +36,61 @@ _ANALYSIS_FIELD_NAMES = frozenset(
 )
 
 
+_ZI_DAY_RULE_LABELS = {
+    "sxtwl": "库默认（寿星天文历）",
+    "early_zi_prev_day": "早子算前一日",
+    "early_zi_same_day": "早子仍算当日",
+}
+
+_MODE_LABELS = {
+    "dual": "双轨",
+    "single": "单轨",
+}
+
+_GENDER_LABELS = {
+    "male": "男",
+    "female": "女",
+    "m": "男",
+    "f": "女",
+    "男": "男",
+    "女": "女",
+}
+
+_MISSING_FIELD_LABELS = {
+    "clash_summary": "刑冲摘要",
+    "combine_summary": "合化摘要",
+    "harm_summary": "害破摘要",
+    "hour_pillar": "时柱",
+    "geju_detail": "格局细目",
+    "flow_score": "流日联动分",
+    "geju": "格局",
+    "yongshen": "用神",
+    "dayun": "大运",
+}
+
+
+def _zi_day_rule_label(rule: str | None) -> str:
+    key = (rule or "").strip()
+    return _ZI_DAY_RULE_LABELS.get(key, "子时换日规则")
+
+
+def _mode_label(mode: str | None) -> str:
+    key = (mode or "").strip().lower()
+    return _MODE_LABELS.get(key, "未标明模式")
+
+
+def _gender_label(gender: str | None) -> str:
+    if gender is None or str(gender).strip() in ("", "—"):
+        return "未填"
+    key = str(gender).strip().lower()
+    return _GENDER_LABELS.get(key) or _GENDER_LABELS.get(str(gender).strip()) or "未标明"
+
+
+def _missing_field_label(field: str) -> str:
+    key = field.strip()
+    return _MISSING_FIELD_LABELS.get(key, "未标注字段" if "_" in key else key)
+
+
 def day_boundary_crossed(zi_day_rule: str, hour: int) -> bool:
     """Whether the effective birth hour triggers a zi-hour day-boundary notice."""
     if hour not in (23, 0):
@@ -58,12 +113,12 @@ def build_bazi_provenance(
     missing = set(missing_fields or [])
     geju = getattr(verify_response, "geju", None)
 
-    geju_bits: list[str] = [f"子时规则={body.zi_day_rule}"]
+    geju_bits: list[str] = [f"子时规则：{_zi_day_rule_label(body.zi_day_rule)}"]
     if geju:
         if getattr(geju, "recorded_geju", None) and geju.recorded_geju != geju.geju_name:
-            geju_bits.append(f"古籍={geju.recorded_geju}")
+            geju_bits.append(f"古籍：{geju.recorded_geju}")
         if getattr(geju, "engine_geju", None) and geju.engine_geju != geju.geju_name:
-            geju_bits.append(f"引擎={geju.engine_geju}")
+            geju_bits.append(f"引擎：{geju.engine_geju}")
         if getattr(geju, "dual_track_note", None):
             geju_bits.append(geju.dual_track_note)
 
@@ -97,17 +152,18 @@ def build_bazi_provenance(
         analysis_conf = max(0.32, 0.52 - 0.04 * min(len(analysis_missing), 5))
     analysis_note = None
     if missing:
-        analysis_note = f"未计算：{'、'.join(sorted(missing)[:4])}"
+        analysis_note = f"未计算：{'、'.join(_missing_field_label(f) for f in sorted(missing)[:4])}"
 
     yearly = getattr(verify_response, "yearly_fortune", None)
     scoring_conf = 0.42 if yearly else 0.38
+    solar_label = "已启用" if body.solar_time_enabled else "未启用"
 
     return ResponseProvenance(
         pillars=ProvenanceLayer(
             layer="engine",
             confidence=pillars_conf,
             method_registry_id="B-P0-pillars",
-            note=f"mode={body.mode} · solar={body.solar_time_enabled}",
+            note=f"校验模式：{_mode_label(body.mode)} · 真太阳时：{solar_label}",
         ),
         geju=ProvenanceLayer(
             layer="engine",
@@ -124,7 +180,7 @@ def build_bazi_provenance(
             layer="engine",
             confidence=dayun_conf,
             method_registry_id="B-P2-dayun",
-            note=f"gender={body.gender or '—'}",
+            note=f"性别：{_gender_label(body.gender)}",
         ),
         narrative=ProvenanceLayer(
             layer="classical" if classic_ref else "heuristic",

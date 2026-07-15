@@ -6,6 +6,27 @@ from app.schemas.provenance import ProvenanceLayer, ResponseProvenance
 from app.schemas.ziwei import ZiweiRequest
 from services.ziwei_engine import ZiweiChart
 
+_YEAR_DIVIDE_LABELS = {
+    "lichun": "立春换年",
+    "normal": "正月初一换年",
+}
+
+_DAY_DIVIDE_LABELS = {
+    "forward": "农历日+1安星",
+    "current": "当日子时",
+    "solar_next": "公历次日换日",
+}
+
+
+def _year_divide_label(value: str | None) -> str:
+    key = (value or "").strip()
+    return _YEAR_DIVIDE_LABELS.get(key, "年界规则")
+
+
+def _day_divide_label(value: str | None) -> str:
+    key = (value or "").strip()
+    return _DAY_DIVIDE_LABELS.get(key, "日界规则")
+
 
 def build_ziwei_provenance(chart: ZiweiChart, req: ZiweiRequest) -> ResponseProvenance:
     """Attach method-aware provenance notes for frontend trust panel."""
@@ -32,13 +53,13 @@ def build_ziwei_provenance(chart: ZiweiChart, req: ZiweiRequest) -> ResponseProv
             layer="engine",
             confidence=patterns_conf,
             method_registry_id="Z-P2-patterns",
-            note=f"年界={req.year_divide} · 晚子换日={req.day_divide}",
+            note=(f"年界：{_year_divide_label(req.year_divide)}" f" · 晚子换日：{_day_divide_label(req.day_divide)}"),
         ),
         narrative=ProvenanceLayer(
             layer="classical",
             confidence=0.68 if chart.patterns else 0.55,
             method_registry_id="Z-P4-classic-refs",
-            note="classic_refs 软提示，非硬覆盖格局判定",
+            note="典籍软提示，非硬覆盖格局判定",
         ),
         forecast=ProvenanceLayer(
             layer="heuristic",
@@ -50,6 +71,6 @@ def build_ziwei_provenance(chart: ZiweiChart, req: ZiweiRequest) -> ResponseProv
             layer="heuristic",
             confidence=0.5,
             method_registry_id="Z-heuristic-analysis",
-            note="宫位断语含 COMBO_TABLE 与单星 fallback",
+            note="宫位断语含组合表与单星回退",
         ),
     )

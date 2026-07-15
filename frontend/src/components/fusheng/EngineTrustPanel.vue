@@ -7,7 +7,11 @@ import type {
   PillarDetailRow,
   ProvenanceRow,
 } from '@/utils/buildEngineTrustDisplay'
-import { formatMissingFieldLine, formatTrustValidationLine } from '@/utils/buildEngineTrustDisplay'
+import {
+  formatDualTrackCaseLabel,
+  formatMissingFieldLine,
+  formatTrustValidationLine,
+} from '@/utils/buildEngineTrustDisplay'
 
 const props = defineProps<{
   missingFields?: string[]
@@ -186,7 +190,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
             <thead><tr><th>用例</th><th>古籍/录入</th><th>引擎</th><th>说明</th></tr></thead>
             <tbody>
               <tr v-for="row in dualTracks" :key="row.id">
-                <td>{{ row.id }}</td>
+                <td>{{ row.label || formatDualTrackCaseLabel(row.id) }}</td>
                 <td>{{ row.recorded }}</td>
                 <td>{{ row.engine }}</td>
                 <td>{{ row.note || '—' }}</td>
@@ -321,7 +325,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
           <thead><tr><th>用例</th><th>古籍/录入</th><th>引擎</th><th>说明</th></tr></thead>
           <tbody>
             <tr v-for="row in dualTracks" :key="row.id">
-              <td>{{ row.id }}</td>
+              <td>{{ row.label || formatDualTrackCaseLabel(row.id) }}</td>
               <td>{{ row.recorded }}</td>
               <td>{{ row.engine }}</td>
               <td>{{ row.note || '—' }}</td>
@@ -369,7 +373,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
       </section>
 
       <section v-if="strengthFactorLines?.length" class="engine-trust__section">
-        <h3>旺衰因子（B-02）</h3>
+        <h3>旺衰因子</h3>
         <ul class="engine-trust__list">
           <li v-for="(line, idx) in strengthFactorLines" :key="idx">{{ line }}</li>
         </ul>

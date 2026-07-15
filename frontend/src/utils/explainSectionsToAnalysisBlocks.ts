@@ -29,7 +29,7 @@ export function explainSectionToAnalysisBlock(section: ExplainSectionResult): An
     body: texts.join('\n\n'),
     bullets: section.blocks
       .filter((b) => b.classic_id)
-      .map((b) => `出处：${b.classic_id}`),
+      .map(() => '出处：典籍依据'),
     layer: toAnalysisLayer(primaryLayer),
   }
 }

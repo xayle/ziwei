@@ -24,7 +24,7 @@ describe('explainSectionsToAnalysisBlocks', () => {
       title: '格局解读',
       layer: 'classical',
     })
-    expect(blocks[0].bullets).toEqual(['出处：CL001'])
+    expect(blocks[0].bullets).toEqual(['出处：典籍依据'])
     expect(blocks[1].title).toBe('干支关系解读')
     expect(blocks[2].title).toBe('读法导引')
   })

@@ -12,6 +12,8 @@ export type ProvenanceRow = {
 
 export type DualTrackRow = {
   id: string
+  /** 人读用例名（表格展示）；id 可保留机读码 */
+  label?: string
   recorded: string
   engine: string
   note?: string
@@ -55,7 +57,10 @@ const ADVISORY_MISSING_FIELDS = new Set([
 export function formatMissingFieldLabel(field: string): string {
   const trimmed = field.trim()
   if (!trimmed) return field
-  return MISSING_FIELD_LABELS[trimmed] ?? trimmed.replace(/_/g, ' ')
+  if (MISSING_FIELD_LABELS[trimmed]) return MISSING_FIELD_LABELS[trimmed]
+  // 未知 key：避免把 snake_case 英文直接摊给用户
+  if (/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/.test(trimmed)) return '未标注字段'
+  return trimmed
 }
 
 export function isAdvisoryMissingField(field: string): boolean {
@@ -97,6 +102,19 @@ const VALIDATION_MODE_LABELS: Record<string, string> = {
   single: '单轨',
 }
 
+const VALIDATION_LEVEL_LABELS: Record<string, string> = {
+  L0: '较低',
+  L1: '基础',
+  L2: '标准',
+  L3: '严格',
+}
+
+export function formatValidationLevelLabel(level?: string | null): string {
+  const key = (level || '').trim()
+  if (!key) return '未分级'
+  return VALIDATION_LEVEL_LABELS[key] ?? '未分级'
+}
+
 const VALIDATION_REASON_LABELS: Record<string, string> = {
   near_shichen_boundary: '接近时辰交界',
   near_jieqi_boundary: '接近节气交界',
@@ -111,58 +129,78 @@ const VALIDATION_REASON_LABELS: Record<string, string> = {
 function humanizeValidationToken(token: string): string {
   const trimmed = token.trim()
   if (!trimmed) return token
-  return VALIDATION_REASON_LABELS[trimmed] ?? trimmed.replace(/_/g, ' ')
+  if (VALIDATION_REASON_LABELS[trimmed]) return VALIDATION_REASON_LABELS[trimmed]
+  // 未知 snake_case 不把英文摊给用户
+  if (/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/i.test(trimmed)) return '未标注校验项'
+  return trimmed
 }
 
 export function formatConfidenceLevel(level?: string | null): string {
   if (!level) return '—'
-  return CONFIDENCE_LEVEL_LABELS[level] ?? level
+  return CONFIDENCE_LEVEL_LABELS[level] ?? '未分级'
 }
+
+/** 人读主文后不再附带含英文机读码的 note */
 
 export function formatTrustValidationLine(line: string): TrustDisplayLine {
   const trimmed = line.trim()
+  if (/near_shichen_boundary/i.test(trimmed) && !/近时辰|分钟/.test(trimmed)) {
+    return { kind: 'validation', main: '接近时辰交界', tone: 'drift' }
+  }
+  if (/near_jieqi_boundary/i.test(trimmed) && !/近节气/.test(trimmed)) {
+    return { kind: 'validation', main: '接近节气交界', tone: 'drift' }
+  }
   if (/near_shichen|近时辰边界/i.test(trimmed)) {
     const minutes = trimmed.match(/（(\d+)\s*分钟）/)?.[1]
     const suffix = minutes ? `（±${minutes} 分）` : '（±15 分）'
-    return { kind: 'validation', main: `出生时刻接近时辰交界${suffix}`, note: trimmed, tone: 'drift' }
+    return { kind: 'validation', main: `出生时刻接近时辰交界${suffix}`, tone: 'drift' }
   }
   if (/near_jieqi|近节气边界/i.test(trimmed)) {
-    return { kind: 'validation', main: '出生时刻接近节气交界', note: trimmed, tone: 'drift' }
+    return { kind: 'validation', main: '出生时刻接近节气交界', tone: 'drift' }
   }
   if (/置信度.*medium|置信度：\s*medium/i.test(trimmed)) {
-    return { kind: 'validation', main: '整体置信度：中等', note: trimmed, tone: 'ok' }
+    return { kind: 'validation', main: '整体置信度：中等', tone: 'ok' }
   }
   if (/置信度.*中等|置信度：\s*中等/.test(trimmed)) {
     return { kind: 'validation', main: '整体置信度：中等', tone: 'ok' }
   }
   if (/置信度.*high|置信度：\s*high/i.test(trimmed)) {
-    return { kind: 'validation', main: '整体置信度：高', note: trimmed, tone: 'ok' }
+    return { kind: 'validation', main: '整体置信度：高', tone: 'ok' }
   }
   if (/置信度.*low|置信度：\s*low/i.test(trimmed)) {
-    return { kind: 'validation', main: '整体置信度：低', note: trimmed, tone: 'drift' }
+    return { kind: 'validation', main: '整体置信度：低', tone: 'drift' }
   }
   if (/模式\s*dual|模式 dual/i.test(trimmed)) {
-    return { kind: 'validation', main: '校验模式：双轨', note: trimmed, tone: 'ok' }
-  }
-  if (/near_shichen_boundary/i.test(trimmed)) {
-    return { kind: 'validation', main: '接近时辰交界', tone: 'drift' }
-  }
-  if (/near_jieqi_boundary/i.test(trimmed)) {
-    return { kind: 'validation', main: '接近节气交界', tone: 'drift' }
+    return { kind: 'validation', main: '校验模式：双轨', tone: 'ok' }
   }
   if (/^near_boundary$/i.test(trimmed)) {
     return { kind: 'validation', main: '接近历法边界', tone: 'drift' }
   }
   if (/双轨差异|diff_fields/i.test(trimmed)) {
-    return { kind: 'validation', main: '存在双轨口径差异', note: trimmed, tone: 'drift' }
+    return { kind: 'validation', main: '存在双轨口径差异', tone: 'drift' }
   }
   if (/边界风险|boundary_risk/i.test(trimmed)) {
-    return { kind: 'validation', main: '时辰或节气边界存在解读风险', note: trimmed, tone: 'drift' }
+    return { kind: 'validation', main: '时辰或节气边界存在解读风险', tone: 'drift' }
   }
-  if (/^L0\b|校验层级\s*L0/i.test(trimmed)) {
-    return { kind: 'validation', main: '引擎校验层级较低', note: trimmed, tone: 'drift' }
+  if (/^L0\b|校验层级\s*L0|校验[：:]\s*较低/i.test(trimmed)) {
+    return { kind: 'validation', main: '引擎校验层级较低', tone: 'drift' }
   }
-  return { kind: 'validation', main: trimmed, tone: trustLineTone(trimmed) }
+  if (/校验层级\s*L[0-3]|校验[：:]\s*(较低|基础|标准|严格)/i.test(trimmed)) {
+    const m = trimmed.match(/校验层级\s*(L[0-3])|校验[：:]\s*(较低|基础|标准|严格)/i)
+    const levelLabel = m?.[2] || formatValidationLevelLabel(m?.[1])
+    const mode = /双轨/.test(trimmed) ? '双轨' : /单轨/.test(trimmed) ? '单轨' : ''
+    const allow = /解读允许/.test(trimmed) ? '解读允许' : /解读受限/.test(trimmed) ? '解读受限' : ''
+    const parts = [`校验：${levelLabel}`, mode, allow].filter(Boolean)
+    return {
+      kind: 'validation',
+      main: parts.join(' · '),
+      tone: levelLabel === '较低' ? 'drift' : 'ok',
+    }
+  }
+  const main = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/i.test(trimmed)
+    ? humanizeValidationToken(trimmed)
+    : trimmed
+  return { kind: 'validation', main, tone: trustLineTone(trimmed) }
 }
 
 export function buildTrustOverviewLines(
@@ -208,6 +246,66 @@ const PROVENANCE_DOMAIN_LABELS: Record<string, string> = {
   stars: '安星',
 }
 
+/**
+ * 将可信度分层备注中的机读片段（mode=/gender=/sxtwl 等）转为中文。
+ * 后端应已中文化；此处作展示兜底，避免漏出 snake_case / True/False。
+ */
+export function formatProvenanceNote(note?: string | null): string | undefined {
+  const raw = note?.trim()
+  if (!raw) return undefined
+  let text = raw
+
+  text = text.replace(/\bmode\s*[=:：]\s*(dual|single)\b/gi, (_m, mode: string) =>
+    `校验模式：${mode.toLowerCase() === 'dual' ? '双轨' : '单轨'}`,
+  )
+  text = text.replace(/\bsolar\s*[=:：]\s*(True|False|true|false)\b/g, (_m, v: string) =>
+    (/true/i.test(v) ? '真太阳时：已启用' : '真太阳时：未启用'),
+  )
+  text = text.replace(
+    /\bgender\s*[=:：]\s*(male|female|男|女|[MmFf]|—|-)\b/g,
+    (_m, g: string) => {
+      const key = String(g).trim().toLowerCase()
+      const label =
+        key === 'male' || key === 'm' || g === '男'
+          ? '男'
+          : key === 'female' || key === 'f' || g === '女'
+            ? '女'
+            : '未填'
+      return `性别：${label}`
+    },
+  )
+  text = text.replace(
+    /子时规则\s*[=:：]\s*(sxtwl|early_zi_prev_day|early_zi_same_day)/gi,
+    (_m, rule: string) => `子时规则：${formatZiDayRuleLabel(rule)}`,
+  )
+  text = text.replace(
+    /年界\s*[=:：]\s*(lichun|normal)/gi,
+    (_m, v: string) => `年界：${formatYearDivideLabel(v)}`,
+  )
+  text = text.replace(
+    /晚子换日\s*[=:：]\s*(forward|current|solar_next)/gi,
+    (_m, v: string) => `晚子换日：${formatDayDivideLabel(v)}`,
+  )
+  text = text.replace(/\bTrue\b/g, '是').replace(/\bFalse\b/g, '否')
+  text = text.replace(/\bclassic_refs\b/gi, '典籍软提示')
+  text = text.replace(/\bCOMBO_TABLE\b/g, '组合表')
+  text = text.replace(/\bfallback\b/gi, '回退')
+  text = text.replace(/\bZIP\d+[A-Z_]*/gi, '双轨样例')
+  text = text.replace(/\bZW\d+\b/gi, '紫微边界样例')
+  text = text.replace(/\bCL\d+\b/gi, '典籍条目')
+
+  // 残留纯 snake_case token 不原样展示
+  text = text.replace(/\b([a-z][a-z0-9]*(?:_[a-z0-9]+)+)\b/gi, (token) => {
+    if (VALIDATION_REASON_LABELS[token]) return VALIDATION_REASON_LABELS[token]
+    if (MISSING_FIELD_LABELS[token]) return MISSING_FIELD_LABELS[token]
+    if (/^(sxtwl|early_zi_prev_day|early_zi_same_day)$/i.test(token)) {
+      return formatZiDayRuleLabel(token)
+    }
+    return '未标注项'
+  })
+
+  return text.trim() || undefined
+}
 
 function provenanceLayerLabel(layer?: string | null): string {
   return mapProvenanceLayerToTrustLabel(layer)
@@ -242,10 +340,10 @@ export function buildProvenanceRows(
     for (const [key, layer] of Object.entries(provenance)) {
       if (!layer?.layer) continue
       rows.push({
-        domain: `${source}·${PROVENANCE_DOMAIN_LABELS[key] ?? key}`,
+        domain: `${source}·${PROVENANCE_DOMAIN_LABELS[key] ?? ( /^[a-z][a-z0-9_]+$/i.test(key) ? '未标注域' : key)}`,
         layer: provenanceLayerLabel(layer.layer),
         confidence: layer.confidence,
-        note: layer.note ?? layer.method_registry_id ?? undefined,
+        note: formatProvenanceNote(layer.note),
       })
     }
   }
@@ -256,6 +354,7 @@ export function buildProvenanceRows(
 
 export type YongshenDualTrackRow = {
   id: string
+  label?: string
   recorded: string
   engine: string
   note?: string
@@ -265,15 +364,35 @@ const WX_LABEL: Record<string, string> = {
   wood: '木', fire: '火', earth: '土', metal: '金', water: '水',
 }
 
-function formatWxList(values?: string[]) {
-  return (values ?? []).map((v) => WX_LABEL[v] ?? v).join('、') || '—'
+export function formatWxList(values?: string[]) {
+  return (values ?? []).map((v) => {
+    const key = String(v || '').trim().toLowerCase()
+    return WX_LABEL[key] ?? WX_LABEL[v ?? ''] ?? v
+  }).join('、') || '—'
+}
+
+/** 双轨用例 ID（ZIP09 等）→ 人读名 */
+export function formatDualTrackCaseLabel(
+  id?: string | null,
+  fallback = '双轨对照',
+): string {
+  const key = (id || '').trim()
+  if (!key) return fallback
+  const known: Record<string, string> = {
+    ZIP09: '格局双轨',
+    ZIP09_YONGSHEN: '用神双轨',
+  }
+  if (known[key]) return known[key]
+  if (/^ZIP\d+/i.test(key) || /^[A-Z]{2,}\d+$/.test(key)) return fallback
+  return key
 }
 
 export function buildYongshenDualTrackRows(bazi?: BaziResponse | null): YongshenDualTrackRow[] {
   const y = bazi?.yongshen
   if (!y?.dual_track_id && !(y?.recorded_favor?.length)) return []
   return [{
-    id: y.dual_track_id || '用神双轨',
+    id: y.dual_track_id || 'yongshen-dual',
+    label: formatDualTrackCaseLabel(y.dual_track_id, '用神双轨'),
     recorded: formatWxList(y.recorded_favor),
     engine: formatWxList(y.engine_favor?.length ? y.engine_favor : y.favor),
     note: y.dual_track_note || undefined,
@@ -284,7 +403,8 @@ export function buildDualTrackRows(bazi?: BaziResponse | null): DualTrackRow[] {
   const g = bazi?.geju
   if (!g?.recorded_geju && !g?.dual_track_id) return []
   return [{
-    id: g.dual_track_id || '双轨',
+    id: g.dual_track_id || 'geju-dual',
+    label: formatDualTrackCaseLabel(g.dual_track_id, '格局双轨'),
     recorded: g.recorded_geju || '—',
     engine: g.engine_geju || g.geju_name || '—',
     note: g.dual_track_note || undefined,
@@ -398,11 +518,43 @@ const STRUCTURAL_FIELD_LABELS: Record<string, string> = {
   year: '年柱',
   month: '月柱',
   day: '日柱',
+  pillars: '四柱',
+  stem: '天干',
+  branch: '地支',
+  ganzhi: '干支',
+  kongwang: '空亡',
+  kongwang_hit: '空亡命中',
+  relation_items: '关系条目',
+  source: '来源',
+  missing: '缺失项',
+  climate_reason: '调候说明',
+  confidence_score_reason: '置信说明',
 }
+
+/** 结构摘要展平时跳过内部来源路径等非人读字段 */
+const STRUCTURAL_SKIP_KEYS = new Set([
+  'kongwang_source',
+  'source',
+  'method_registry_id',
+  'dual_track_id',
+  'missing',
+])
 
 function structuralFieldLabel(key: string): string {
   const trimmed = key.trim()
-  return STRUCTURAL_FIELD_LABELS[trimmed] ?? trimmed.replace(/_/g, ' ')
+  if (STRUCTURAL_FIELD_LABELS[trimmed]) return STRUCTURAL_FIELD_LABELS[trimmed]
+  // 未知 snake_case 不把英文摊给用户
+  if (/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/i.test(trimmed)) return '未标注字段'
+  return trimmed
+}
+
+function formatStructuralItem(item: Record<string, unknown>): string {
+  const type = String(item.type ?? item.name ?? '').trim()
+  const summary = String(item.summary ?? item.note ?? item.text ?? '').trim()
+  const branches = Array.isArray(item.branches)
+    ? item.branches.map(String).filter(Boolean).join('、')
+    : String(item.branch ?? item.pair ?? item.stems ?? '').trim()
+  return [type, branches, summary].filter(Boolean).join(' · ')
 }
 
 function flattenObjectLines(obj: Record<string, unknown> | undefined, prefix = ''): string[] {
@@ -410,15 +562,27 @@ function flattenObjectLines(obj: Record<string, unknown> | undefined, prefix = '
   const lines: string[] = []
   for (const [key, value] of Object.entries(obj)) {
     if (value == null || value === '') continue
+    if (STRUCTURAL_SKIP_KEYS.has(key) || key.endsWith('_source')) continue
     const field = structuralFieldLabel(key)
     const label = prefix ? `${prefix}·${field}` : field
     if (typeof value === 'object' && !Array.isArray(value)) {
       lines.push(...flattenObjectLines(value as Record<string, unknown>, label))
     } else if (Array.isArray(value)) {
-      const text = value.map(String).join('、')
-      if (text) lines.push(`${label}：${text}`)
+      if (value.every((v) => v != null && typeof v === 'object' && !Array.isArray(v))) {
+        const texts = value
+          .map((v) => formatStructuralItem(v as Record<string, unknown>))
+          .filter(Boolean)
+          .slice(0, 4)
+        if (texts.length) lines.push(`${label}：${texts.join('；')}`)
+      } else {
+        const text = value.map(String).join('、')
+        if (text && !text.includes('[object Object]')) lines.push(`${label}：${text}`)
+      }
     } else {
-      lines.push(`${label}：${String(value)}`)
+      const text = String(value)
+      // 跳过 Python 模块路径等内部标识
+      if (/^services\.|^app\.|^[a-z]+(\.[a-z_]+)+$/.test(text)) continue
+      lines.push(`${label}：${text}`)
     }
   }
   return lines.slice(0, 8)
@@ -500,8 +664,9 @@ export function buildValidationLines(bazi?: BaziResponse | null): string[] {
     lines.push(`置信度：${formatConfidenceLevel(bazi.confidence_level)}${score}`)
   }
   if (v?.level) {
-    const modeLabel = VALIDATION_MODE_LABELS[v.mode ?? ''] ?? v.mode ?? '—'
-    lines.push(`校验层级 ${v.level} · 模式 ${modeLabel} · 解读${v.interpretation_enabled ? '允许' : '受限'}`)
+    const levelLabel = formatValidationLevelLabel(v.level)
+    const modeLabel = VALIDATION_MODE_LABELS[v.mode ?? ''] ?? '未标明'
+    lines.push(`校验：${levelLabel} · ${modeLabel} · 解读${v.interpretation_enabled ? '允许' : '受限'}`)
   }
   if (v?.reasons?.length) {
     lines.push(`原因：${v.reasons.map(humanizeValidationToken).join('、')}`)
@@ -566,12 +731,11 @@ export function buildIztroDisplay(
 
 export function formatIztroStatusLabel(status?: string | null): string {
   const key = (status || '').trim()
-  if (key === 'ok') return '一致'
+  if (key === 'ok' || key === 'main_match') return '主星一致'
   if (key === 'degraded') return '降级'
   if (key === 'life_palace_mismatch') return '命宫不一致'
   if (key === 'life_palace_only') return '仅命宫可对照'
-  if (key === 'unknown' || !key) return '未核验'
-  return key
+  return '未核验'
 }
 
 export function formatVerificationStatusLabel(
@@ -585,14 +749,30 @@ export function formatVerificationStatusLabel(
 export function formatYearDivideLabel(value?: string | null): string {
   if (value === 'normal') return '正月初一换年'
   if (!value || value === 'lichun') return '立春换年'
-  return value
+  return '年界规则'
 }
 
 export function formatDayDivideLabel(value?: string | null): string {
   if (value === 'forward') return '农历日+1安星'
-  if (value === 'current') return '当日不换日'
+  if (value === 'current') return '当日子时'
   if (!value || value === 'solar_next') return '公历次日换日'
-  return value
+  return '日界规则'
+}
+
+/** 八字子时换日口径（档案 / 八字页统一） */
+export function formatZiDayRuleLabel(rule?: string | null): string {
+  if (rule === 'early_zi_prev_day') return '早子算前一日'
+  if (rule === 'early_zi_same_day') return '早子仍算当日'
+  return '库默认（寿星天文历）'
+}
+
+/** 后端 day_boundary_rule_used → 人读 */
+export function formatDayBoundaryRuleLabel(rule?: string | null): string {
+  const key = (rule || '').trim()
+  if (key === 'zi_initial' || key === 'sxtwl') return '子初换日'
+  if (key === 'early_zi_prev_day') return '早子算前一日'
+  if (key === 'early_zi_same_day') return '早子仍算当日'
+  return '日界规则'
 }
 
 export type DualTrackReferenceRow = {
@@ -665,10 +845,11 @@ export function countUnverifiedClassics(classics?: Array<Record<string, unknown>
 export function buildClassicPendingLines(classics?: Array<Record<string, unknown>> | null): string[] {
   const pending = (classics ?? []).filter((item) => item.verification_status === 'unverified').slice(0, 5)
   return pending.map((item) => {
+    const title = String(item.title ?? '').trim() || '典籍条目'
     const page = typeof item.source_page === 'string' && item.source_page.trim()
       ? ` · 页 ${item.source_page.trim()}`
       : ''
-    return `语料待核：${item.id ?? '—'} · ${item.title ?? ''}${page}`.trim()
+    return `语料待核：${title}${page}`.trim()
   })
 }
 

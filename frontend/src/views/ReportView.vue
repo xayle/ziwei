@@ -11,7 +11,7 @@ import FushengZiweiPlate from '@/components/fusheng/FushengZiweiPlate.vue'
 import brandMark from '@/assets/brand/fusheng-mark.svg'
 import { useFushengReport } from '@/composables/useFushengReport'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
-import { formatVerificationStatusLabel } from '@/utils/buildEngineTrustDisplay'
+import { formatDualTrackCaseLabel, formatVerificationStatusLabel } from '@/utils/buildEngineTrustDisplay'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import { exportReportElementToPdf } from '@/composables/useReportPdfExport'
@@ -434,7 +434,7 @@ const baziBlocks = computed(() => {
     bullets.push(`破格：${g.po_geju.reason || '是'}${g.po_geju.po_jiu?.saved ? `；救应：${g.po_geju.po_jiu.method}` : ''}`)
   }
   if (g?.recorded_geju && g.recorded_geju !== g.geju_name) {
-    bullets.push(`古籍口径：${g.recorded_geju}（${g.dual_track_id || '双轨'}）`)
+    bullets.push(`古籍口径：${g.recorded_geju}（${formatDualTrackCaseLabel(g.dual_track_id, '双轨')}）`)
   }
   const blocks: AnalysisBlock[] = [
     {
@@ -469,7 +469,7 @@ const baziBlocks = computed(() => {
     blocks.push({
       id: 'bazi-yongshen-dual',
       title: '用神双轨说明',
-      lead: `${y.dual_track_id || '双轨'}：古籍 ${fmt(y.recorded_favor)} · 引擎 ${fmt(y.engine_favor ?? y.favor)}`,
+      lead: `${formatDualTrackCaseLabel(y.dual_track_id, '用神双轨')}：古籍 ${fmt(y.recorded_favor)} · 引擎 ${fmt(y.engine_favor ?? y.favor)}`,
       body: y.dual_track_note,
       layer: 'classical',
     })
@@ -694,7 +694,7 @@ watch(
     </header>
 
     <p v-if="loading" class="report-status">正在生成报告…</p>
-    <p v-if="error" class="report-error">{{ error }}</p>
+    <p v-if="error" class="report-error" role="alert" aria-live="assertive">{{ error }}</p>
     <p v-if="lifeVolumesDegradedNotice" class="report-degraded-notice" data-testid="report-volumes-degraded">{{ lifeVolumesDegradedNotice }}</p>
     <p v-if="explainFailedNotice" class="report-degraded-notice" data-testid="report-explain-failed">{{ explainFailedNotice }}</p>
     <p v-if="pdfFallbackNotice" class="report-degraded-notice" data-testid="report-pdf-fallback">{{ pdfFallbackNotice }}</p>
@@ -913,12 +913,12 @@ watch(
               <h3>典籍引用（含页码）</h3>
               <table class="report-table">
                 <thead>
-                  <tr><th>编号</th><th>书名</th><th>页/章</th><th>状态</th></tr>
+                  <tr><th>书名</th><th>出处</th><th>页/章</th><th>状态</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="row in classicCitationRows" :key="row.id">
-                    <td>{{ row.id }}</td>
                     <td>{{ row.title }}</td>
+                    <td>{{ row.source || '典籍抽检' }}</td>
                     <td>{{ row.sourcePage || '—' }}</td>
                     <td>{{ formatVerificationStatusLabel(row.verificationStatus) }}</td>
                   </tr>

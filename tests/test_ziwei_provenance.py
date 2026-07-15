@@ -20,5 +20,7 @@ def test_build_ziwei_provenance_includes_method_notes():
     chart = ziwei_full(*_ziwei_full_args(req))
     prov = build_ziwei_provenance(chart, req)
     assert prov.stars.layer == "engine"
-    assert prov.patterns.note and "forward" in prov.patterns.note
+    assert prov.patterns.note and "农历日+1安星" in prov.patterns.note
+    assert "forward" not in (prov.patterns.note or "")
+    assert "classic_refs" not in (prov.narrative.note or "")
     assert prov.forecast.layer == "heuristic"

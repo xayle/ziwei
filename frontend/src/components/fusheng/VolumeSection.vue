@@ -11,11 +11,11 @@ function blockLayerLabel(block: AnalysisBlock): string {
   return CONTENT_LAYER_LABELS[block.layer]
 }
 
-/** X-01：cite 块展示 classic_id + 页码 */
+/** X-01：cite 块展示页码；不把 CL00x 机读编号摊给用户 */
 function citeMeta(block: AnalysisBlock): string {
   if (block.layer !== 'cite' || !block.classic_id) return ''
   const page = lookupClassicSourcePage(block.classic_id, classicsSpotcheck as Array<Record<string, unknown>>)
-  return page ? `${block.classic_id} · ${page}` : block.classic_id
+  return page ? `典籍抽检 · ${page}` : '典籍抽检'
 }
 
 const props = defineProps<{

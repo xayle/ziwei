@@ -17,5 +17,9 @@ def test_bazi_full_echoes_zi_day_rule_and_provenance():
     assert resp.methods.zi_day_rule == "early_zi_prev_day"
     assert resp.raw.day_boundary_rule_used == "early_zi_prev_day"
     assert resp.provenance is not None
-    assert resp.provenance.geju.note and "early_zi_prev_day" in resp.provenance.geju.note
+    assert resp.provenance.geju.note and "早子算前一日" in resp.provenance.geju.note
+    assert resp.provenance.pillars.note and "双轨" in (resp.provenance.pillars.note or "")
+    assert "mode=" not in (resp.provenance.pillars.note or "")
+    assert "gender=" not in (resp.provenance.dayun.note or "")
+    assert resp.provenance.dayun.note and "男" in resp.provenance.dayun.note
     assert resp.provenance.pillars.confidence >= 0.5

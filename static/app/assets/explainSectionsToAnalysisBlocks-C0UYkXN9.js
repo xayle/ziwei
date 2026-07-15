@@ -1,3 +1,0 @@
-const r={geju:"格局解读",relations:"干支关系解读",reading:"读法导引",domains:"生活域推断",summary:"综合摘要",palaces:"宫图与星曜要点",fortune:"运限要点"};function a(e){return e==="cite"?"classical":e==="inference"?"heuristic":"engine"}function s(e){var l;const n=e.blocks.map(i=>i.text.trim()).filter(Boolean);if(!n.length)return null;const t=((l=e.blocks[0])==null?void 0:l.layer)??"cite";return{id:`explain-${e.section_id}`,title:r[e.section_id]??e.section_id,lead:e.verified?"典籍校勘":"解读",body:n.join(`
-
-`),bullets:e.blocks.filter(i=>i.classic_id).map(i=>`出处：${i.classic_id}`),layer:a(t)}}function c(e){return e.map(s).filter(n=>n!=null)}export{c as e};

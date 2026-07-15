@@ -14,6 +14,8 @@ import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
 import {
   buildTrustOverviewLines,
   countTrustOverviewItems,
+  formatDayBoundaryRuleLabel,
+  formatZiDayRuleLabel,
 } from '@/utils/buildEngineTrustDisplay'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
@@ -24,6 +26,7 @@ import { buildDayunDisplayRow } from '@/utils/dayunDisplay'
 import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
 import { formatCnElementsJoin } from '@/utils/yongshenElements'
 import { truncateText } from '@/utils/truncateText'
+import { formatBaziRuleMatchLine } from '@/constants/baziRuleFlags'
 import type { BaziResponse } from '@/api/bazi'
 import '@/assets/fusheng-page.css'
 
@@ -137,13 +140,7 @@ const caliberBanner = computed(() => {
   const parts: string[] = []
   if (meta?.precisionLabel) parts.push(meta.precisionLabel)
   parts.push(profile.solarTime ? '真太阳时：已启用' : '真太阳时：未启用')
-  const ziRule = profile.ziDayRule ?? 'sxtwl'
-  const ziLabels: Record<string, string> = {
-    sxtwl: '子时日界：寿星天文历',
-    early_zi_prev_day: '子时日界：早子归前日',
-    early_zi_same_day: '子时日界：早子归当日',
-  }
-  parts.push(ziLabels[ziRule] ?? `子时日界：${ziRule}`)
+  parts.push(`子时日界：${formatZiDayRuleLabel(profile.ziDayRule)}`)
   if (meta?.calendarNote) parts.push(meta.calendarNote.split('。')[0])
   return parts.join(' · ')
 })
@@ -154,7 +151,7 @@ const timeWarnings = computed(() => {
   if (meta?.timeRiskHint) warnings.push(meta.timeRiskHint)
   const raw = result.value?.raw as { day_boundary_crossed?: boolean; day_boundary_rule_used?: string } | undefined
   if (raw?.day_boundary_crossed) {
-    warnings.push(`日界跨越：${raw.day_boundary_rule_used || 'zi_initial'} 规则已触发换日。`)
+    warnings.push(`日界跨越：${formatDayBoundaryRuleLabel(raw.day_boundary_rule_used)}已触发换日。`)
   }
   for (const item of result.value?.warnings ?? []) {
     if (item.message) warnings.push(item.message)
@@ -262,7 +259,11 @@ const detailBlocks = computed<DetailBlock[]>(() => {
   const palace = result.value?.palace
   const fortune = result.value?.current_fortune_summary
   const warnings = (result.value?.warnings ?? []).map((item) => item.message).filter(Boolean)
-  const ruleMatches = (result.value?.rule_matches ?? []).slice(0, 4).map((item) => `${item.name}${item.flags?.length ? `：${item.flags.join('、')}` : ''}`)
+  // flags 为引擎内部 snake_case 标签，经 formatBaziRuleMatchLine 转为中文后再展示
+  const ruleMatches = (result.value?.rule_matches ?? [])
+    .slice(0, 4)
+    .map((item) => formatBaziRuleMatchLine(item))
+    .filter(Boolean)
 
   return [
     {

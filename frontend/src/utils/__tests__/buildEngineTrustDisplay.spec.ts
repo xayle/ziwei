@@ -11,11 +11,15 @@ import {
   buildProvenanceRows,
   buildValidationLines,
   collectMissingFields,
+  formatDayBoundaryRuleLabel,
+  formatDayDivideLabel,
   formatIztroStatusLabel,
   formatMissingFieldLabel,
   formatMissingFieldLine,
+  formatProvenanceNote,
   formatRelationLines,
   formatTrustValidationLine,
+  formatZiDayRuleLabel,
   buildTrustOverviewLines,
   trustLineTone,
 } from '@/utils/buildEngineTrustDisplay'
@@ -44,6 +48,30 @@ describe('buildEngineTrustDisplay', () => {
     expect(rows[1].domain).toBe('紫微·安星')
   })
 
+  it('humanizes provenance notes with engine config tokens', () => {
+    expect(formatProvenanceNote('mode=dual · solar=False')).toBe(
+      '校验模式：双轨 · 真太阳时：未启用',
+    )
+    expect(formatProvenanceNote('子时规则=sxtwl')).toBe(
+      '子时规则：库默认（寿星天文历）',
+    )
+    expect(formatProvenanceNote('gender=male')).toBe('性别：男')
+    expect(formatProvenanceNote('年界=lichun · 晚子换日=forward')).toBe(
+      '年界：立春换年 · 晚子换日：农历日+1安星',
+    )
+    expect(formatProvenanceNote('ZIP09')).toBe('双轨样例')
+    expect(formatProvenanceNote('CL001')).toBe('典籍条目')
+
+    const rows = buildProvenanceRows({
+      pillars: { layer: 'engine', confidence: 0.92, note: 'mode=dual · solar=False' },
+      dayun: { layer: 'engine', confidence: 0.86, note: 'gender=male' },
+    })
+    expect(rows.find((r) => r.domain === '八字·四柱')?.note).toBe(
+      '校验模式：双轨 · 真太阳时：未启用',
+    )
+    expect(rows.find((r) => r.domain === '八字·大运')?.note).toBe('性别：男')
+  })
+
   it('builds dual-track rows when geju has recorded vs engine', () => {
     const rows = buildDualTrackRows({
       geju: {
@@ -56,6 +84,7 @@ describe('buildEngineTrustDisplay', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({
       id: 'ZIP09',
+      label: '格局双轨',
       recorded: '正官格',
       engine: '七杀格',
       note: '典籍与引擎口径不同',
@@ -126,12 +155,18 @@ describe('buildEngineTrustDisplay', () => {
   it('flattens bazi structural summary', () => {
     const lines = buildBaziStructuralLines({
       bazi_structural_summary: {
-        core_snapshot: { day_master: '甲' },
-        relation_summary: { clashes: 1 },
+        core_snapshot: { day_master: '甲', pillars: { year: { stem: '甲', branch: '子' } } },
+        relation_summary: {
+          clashes: 1,
+          relation_items: [{ type: '冲', branches: ['子午'], summary: '子午相冲' }],
+        },
       },
     } as BaziResponse)
     expect(lines.some((line) => line.includes('日主'))).toBe(true)
     expect(lines.some((line) => line.includes('day_master'))).toBe(false)
+    expect(lines.some((line) => line.includes('四柱') || line.includes('天干'))).toBe(true)
+    expect(lines.some((line) => line.includes('子午相冲'))).toBe(true)
+    expect(lines.some((line) => line.includes('[object Object]'))).toBe(false)
   })
 
   it('builds validation and iztro display rows', () => {
@@ -150,7 +185,8 @@ describe('buildEngineTrustDisplay', () => {
     expect(validation.some((line) => line.includes('中等'))).toBe(true)
     expect(validation.some((line) => line.includes('双轨'))).toBe(true)
     expect(validation.some((line) => line.includes('接近时辰交界'))).toBe(true)
-    expect(validation.some((line) => line.includes('L2'))).toBe(true)
+    expect(validation.some((line) => line.includes('标准'))).toBe(true)
+    expect(validation.every((line) => !/\bL2\b/.test(line))).toBe(true)
 
     const iztro = buildIztroDisplay({
       iztro_crosscheck: {
@@ -175,12 +211,21 @@ describe('buildEngineTrustDisplay', () => {
     expect(iztro?.status).toBe('life_palace_mismatch')
     expect(iztro?.statusLabel).toBe('命宫不一致')
     expect(formatIztroStatusLabel('life_palace_only')).toBe('仅命宫可对照')
+    expect(formatIztroStatusLabel('main_match')).toBe('主星一致')
+    expect(formatIztroStatusLabel('ok')).toBe('主星一致')
     expect(iztro?.showDualTrackTable).toBe(true)
     expect(iztro?.dualTrack?.lifePalaceGz).toBe('癸丑')
     expect(iztro?.engineLifePalaceGz).toBe('乙丑')
     expect(iztro?.dualTrack?.yearDivide).toBe('正月初一换年')
     expect(iztro?.dualTrack?.dayDivide).toBe('农历日+1安星')
     expect(iztro?.engineTrack?.dayDivide).toBe('公历次日换日')
+    expect(iztro?.dualTrack?.dayDivide).toBe('农历日+1安星')
+  })
+
+  it('labels day divide current as 当日子时', () => {
+    expect(formatDayDivideLabel('current')).toBe('当日子时')
+    expect(formatZiDayRuleLabel('sxtwl')).toBe('库默认（寿星天文历）')
+    expect(formatDayBoundaryRuleLabel('zi_initial')).toBe('子初换日')
   })
 
   it('formats missing field labels for register rows', () => {
@@ -204,9 +249,13 @@ describe('buildEngineTrustDisplay', () => {
     expect(advisory.tone).toBe('drift')
     expect(advisory.note).toBeTruthy()
     expect(formatMissingFieldLabel('palace_ten_gods')).toBe('宫位十神')
+    expect(formatMissingFieldLabel('brand_new_snake_field')).toBe('未标注字段')
     expect(formatTrustValidationLine('近时辰边界（15 分钟）').main).toContain('时辰交界')
+    expect(formatTrustValidationLine('近时辰边界（15 分钟）').note).toBeUndefined()
     expect(formatTrustValidationLine('置信度：medium').main).toBe('整体置信度：中等')
     expect(formatTrustValidationLine('置信度：中等').main).toBe('整体置信度：中等')
+    expect(formatTrustValidationLine('near_shichen_boundary').main).toBe('接近时辰交界')
+    expect(formatTrustValidationLine('weird_snake_token').main).toBe('未标注校验项')
   })
 
   it('builds overview preview with max two lines', () => {
