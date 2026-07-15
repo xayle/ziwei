@@ -19,9 +19,9 @@ const yearDivideLabel = computed(() =>
 )
 
 const dayDivideLabel = computed(() => {
-  if (props.profile.dayDivide === 'forward') return '子时换日（forward / iztro）'
-  if (props.profile.dayDivide === 'current') return '当日子时（current）'
-  return '公历次日换日（solar_next）'
+  if (props.profile.dayDivide === 'forward') return '农历日+1安星'
+  if (props.profile.dayDivide === 'current') return '当日不换日'
+  return '公历次日换日'
 })
 
 const lateZishiLabel = computed(() =>
@@ -32,7 +32,7 @@ const ziDayRuleLabel = computed(() => {
   const rule = props.profile.ziDayRule ?? 'sxtwl'
   if (rule === 'early_zi_prev_day') return '早子算前一日'
   if (rule === 'early_zi_same_day') return '早子仍算当日'
-  return '库默认（sxtwl）'
+  return '库默认'
 })
 
 /** 引擎默认 brightness_method / sihua 口径（与后端 ZiweiRequest 默认一致） */
@@ -45,19 +45,57 @@ const youbiMethod = computed({
   set: (v: ProfileData['ziweiYoubiMethod']) => emit('update:youbiMethod', v),
 })
 
+const METHOD_KEY_LABELS: Record<string, string> = {
+  brightness_method: '亮度口径',
+  youbi_method: '右弼口径',
+  sihua_method: '生年四化',
+  kuiyue_method: '天魁天钺',
+  tianma_method: '天马',
+  leap_month_method: '闰月',
+  year_divide: '年界',
+  day_divide: '换日',
+}
+
+const METHOD_VALUE_LABELS: Record<string, string> = {
+  standard: '全书标准',
+  zhongzhou: '中州',
+  mod1: '变体 1',
+  mod2: '变体 2',
+  month: '按月',
+  hour: '按时',
+  mid: '月中分界',
+  same: '视同本月',
+  quanshu: '全书',
+  year: '年支',
+  lichun: '立春换年',
+  normal: '正月初一换年',
+  forward: '农历日+1安星',
+  solar_next: '公历次日换日',
+  current: '当日不换日',
+}
+
 const ZiweiAlgoDefaults = {
   sihua_stem_indices: '按生年天干十干四化表',
-  kuiyue_method: 'standard',
-  leap_month_method: 'mid',
+  kuiyue_method: '全书标准',
+  leap_month_method: '月中分界',
 } as const
 
 const provenanceMethods = computed(() => props.provenance?.methods ?? {})
+
+function methodKeyLabel(key: string): string {
+  return METHOD_KEY_LABELS[key] ?? key.replace(/_/g, ' ')
+}
+
+function methodValueLabel(val: unknown): string {
+  const text = String(val)
+  return METHOD_VALUE_LABELS[text] ?? text
+}
 </script>
 
 <template>
   <div class="ziwei-algo-settings" data-testid="ziwei-algo-settings">
     <p class="ziwei-algo-settings__lead">
-      <strong>ZiweiAlgo</strong> 口径来自个人档案；亮度/右弼可在本页调整并写入档案。
+      紫微算法口径来自个人档案；亮度与右弼可在本页调整并写入档案。
     </p>
 
     <dl class="ziwei-algo-settings__grid">
@@ -66,33 +104,33 @@ const provenanceMethods = computed(() => props.provenance?.methods ?? {})
       <div><dt>晚子时</dt><dd>{{ lateZishiLabel }}</dd></div>
       <div><dt>八字子时</dt><dd>{{ ziDayRuleLabel }}</dd></div>
       <div><dt>真太阳时</dt><dd>{{ profile.solarTime ? '开启（经度修正）' : '关闭' }}</dd></div>
-      <div><dt>brightness_method</dt>
+      <div><dt>亮度口径</dt>
         <dd>
           <select v-model="brightnessMethod" data-testid="ziwei-brightness-method">
-            <option value="standard">standard</option>
-            <option value="zhongzhou">zhongzhou</option>
-            <option value="mod1">mod1</option>
-            <option value="mod2">mod2</option>
+            <option value="standard">全书标准</option>
+            <option value="zhongzhou">中州</option>
+            <option value="mod1">变体 1</option>
+            <option value="mod2">变体 2</option>
           </select>
         </dd>
       </div>
-      <div><dt>youbi_method</dt>
+      <div><dt>右弼口径</dt>
         <dd>
           <select v-model="youbiMethod" data-testid="ziwei-youbi-method">
-            <option value="month">month（默认）</option>
-            <option value="hour">hour（对齐 iztro 可选）</option>
+            <option value="month">按月（默认）</option>
+            <option value="hour">按时（对照轨可选）</option>
           </select>
         </dd>
       </div>
-      <div><dt>sihua</dt><dd>{{ ZiweiAlgoDefaults.sihua_stem_indices }}</dd></div>
-      <div><dt>闰月</dt><dd>{{ profile.isLeapMonth ? '闰月（same）' : ZiweiAlgoDefaults.leap_month_method }}</dd></div>
+      <div><dt>四化</dt><dd>{{ ZiweiAlgoDefaults.sihua_stem_indices }}</dd></div>
+      <div><dt>闰月</dt><dd>{{ profile.isLeapMonth ? '闰月（视同本月）' : ZiweiAlgoDefaults.leap_month_method }}</dd></div>
     </dl>
 
     <div v-if="Object.keys(provenanceMethods).length" class="ziwei-algo-settings__prov">
-      <h3>引擎回显（provenance.methods）</h3>
+      <h3>引擎回显口径</h3>
       <ul>
         <li v-for="(val, key) in provenanceMethods" :key="key">
-          <code>{{ key }}</code>：{{ String(val) }}
+          {{ methodKeyLabel(String(key)) }}：{{ methodValueLabel(val) }}
         </li>
       </ul>
     </div>

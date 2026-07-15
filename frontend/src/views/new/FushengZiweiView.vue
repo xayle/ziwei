@@ -345,7 +345,7 @@ onMounted(() => {
         </CodexPanel>
 
         <CodexPanel v-if="depth === 'deep'">
-          <h3 class="fs-section-rule">飞星盘（flying）</h3>
+          <h3 class="fs-section-rule">飞星盘</h3>
           <ZiweiFlyingTab :flying="ziwei.flying" />
         </CodexPanel>
 

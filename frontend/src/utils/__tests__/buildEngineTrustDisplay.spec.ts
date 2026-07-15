@@ -129,7 +129,8 @@ describe('buildEngineTrustDisplay', () => {
         relation_summary: { clashes: 1 },
       },
     } as BaziResponse)
-    expect(lines.some((line) => line.includes('day_master'))).toBe(true)
+    expect(lines.some((line) => line.includes('日主'))).toBe(true)
+    expect(lines.some((line) => line.includes('day_master'))).toBe(false)
   })
 
   it('builds validation and iztro display rows', () => {

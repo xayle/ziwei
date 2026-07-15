@@ -29,7 +29,7 @@ const selfTransforms = computed(() => props.flying?.self_transforms ?? [])
       飞星以各宫宫干带出<strong>化禄 / 化权 / 化科 / 化忌</strong>，观落宫与自化、冲宫。
     </p>
 
-    <p v-if="!flying" class="ziwei-flying-tab__empty">当前模板未返回飞星盘（请使用 standard 模板）。</p>
+    <p v-if="!flying" class="ziwei-flying-tab__empty">当前模板未返回飞星盘（请使用标准模板）。</p>
 
     <template v-else>
       <div class="ziwei-flying-tab__table-wrap">

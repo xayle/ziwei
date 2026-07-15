@@ -381,12 +381,37 @@ export function formatRelationLines(bazi?: BaziResponse | null): string[] {
   return lines
 }
 
+const STRUCTURAL_FIELD_LABELS: Record<string, string> = {
+  day_master: '日主',
+  day_master_element: '日主五行',
+  strength: '强弱',
+  clashes: '冲',
+  combines: '合',
+  harms: '害',
+  interactions: '互动',
+  clash_summary: '刑冲摘要',
+  combine_summary: '合化摘要',
+  harm_summary: '害破摘要',
+  interaction_summary: '互动摘要',
+  headline: '提要',
+  hour: '时柱',
+  year: '年柱',
+  month: '月柱',
+  day: '日柱',
+}
+
+function structuralFieldLabel(key: string): string {
+  const trimmed = key.trim()
+  return STRUCTURAL_FIELD_LABELS[trimmed] ?? trimmed.replace(/_/g, ' ')
+}
+
 function flattenObjectLines(obj: Record<string, unknown> | undefined, prefix = ''): string[] {
   if (!obj) return []
   const lines: string[] = []
   for (const [key, value] of Object.entries(obj)) {
     if (value == null || value === '') continue
-    const label = prefix ? `${prefix}.${key}` : key
+    const field = structuralFieldLabel(key)
+    const label = prefix ? `${prefix}·${field}` : field
     if (typeof value === 'object' && !Array.isArray(value)) {
       lines.push(...flattenObjectLines(value as Record<string, unknown>, label))
     } else if (Array.isArray(value)) {
@@ -481,7 +506,9 @@ export function buildValidationLines(bazi?: BaziResponse | null): string[] {
   if (v?.reasons?.length) {
     lines.push(`原因：${v.reasons.map(humanizeValidationToken).join('、')}`)
   }
-  if (v?.diff_fields?.length) lines.push(`双轨差异柱：${v.diff_fields.join('、')}`)
+  if (v?.diff_fields?.length) {
+    lines.push(`双轨差异柱：${v.diff_fields.map(structuralFieldLabel).join('、')}`)
+  }
   if (rf?.near_shichen_boundary) {
     lines.push(`近时辰边界${rf.minutes_to_shichen_boundary != null ? `（${rf.minutes_to_shichen_boundary} 分钟）` : ''}`)
   }
@@ -589,11 +616,11 @@ const DUAL_TRACK_REFERENCE_ROWS: DualTrackReferenceRow[] = [
   { id: 'ZIP09', topic: '从官杀 vs 七杀', recorded: '从官杀格', engine: '七杀格', note: '时干乙木比肩助身，阻断从杀' },
   { id: 'ZIP21', topic: '食神制杀 vs 七杀', recorded: '食神制杀格', engine: '七杀格', note: '衍生格局口径' },
   { id: 'ZIP22', topic: '伤官佩印 vs 伤官', recorded: '伤官佩印格', engine: '伤官格', note: '衍生格局口径' },
-  { id: 'ZIP01', topic: '外格回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 pillar_direct' },
-  { id: 'ZIP04', topic: '月刃回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 pillar_direct' },
-  { id: 'ZIP05', topic: '杂格回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 pillar_direct' },
+  { id: 'ZIP01', topic: '外格回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 · 正格直取' },
+  { id: 'ZIP04', topic: '月刃回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 · 正格直取' },
+  { id: 'ZIP05', topic: '杂格回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 · 正格直取' },
   { id: 'ZW03', topic: '立春前晚子', recorded: '开源排盘轨 癸丑', engine: '乙丑', note: '换年/换日口径双轨样例' },
-  { id: 'youbi', topic: '右弼口径', recorded: 'month（默认）', engine: 'hour（可选）', note: '辅煞 ±1 不表示主星错误' },
+  { id: 'youbi', topic: '右弼口径', recorded: '按月（默认）', engine: '按时（可选）', note: '辅煞 ±1 不表示主星错误' },
 ]
 
 export function buildDualTrackReferenceRows(): DualTrackReferenceRow[] {
