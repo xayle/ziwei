@@ -989,7 +989,7 @@ watch(
               data-testid="report-monthly-fortune"
             >
               <h3>月运（当年）</h3>
-              <p class="hint">来自排盘 `monthly_fortune`；仅供文化研究参考。</p>
+              <p class="hint">来自排盘月运数据；仅供文化研究参考。</p>
               <table class="report-table">
                 <thead><tr><th>月</th><th>干支</th><th>吉凶</th><th>提示</th></tr></thead>
                 <tbody>

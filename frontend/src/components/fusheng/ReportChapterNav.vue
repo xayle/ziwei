@@ -19,6 +19,7 @@ const emit = defineEmits<{
       type="button"
       class="report-chapter-nav__btn"
       :class="{ 'is-active': activeId === chapter.id }"
+      :aria-current="activeId === chapter.id ? 'location' : undefined"
       :data-testid="`report-volume-${chapter.id}`"
       @click="emit('navigate', chapter.id)"
     >

@@ -20,6 +20,10 @@ import {
   getTimeConfidence,
 } from '@/utils/profileMetrics'
 import { isArchiveReady, canAnalyzeName, isDemoSeedProfile } from '@/utils/profileReadiness'
+import {
+  formatDayDivideLabel,
+  formatYearDivideLabel,
+} from '@/utils/buildEngineTrustDisplay'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
@@ -387,6 +391,34 @@ const zw03AlgoNote = computed(() => {
   }
   return ''
 })
+
+const PROFILE_METHOD_VALUE_LABELS: Record<string, string> = {
+  standard: '全书标准',
+  zhongzhou: '中州',
+  mod1: '变体 1',
+  mod2: '变体 2',
+  quanshu: '全书',
+  year_stem: '流年天干',
+  life_palace_stem: '流年命宫宫干',
+  pro: '专业',
+  simple: '简洁',
+  gengxin_mahu: '庚辛 · 马虎',
+  gengxin_huima: '庚辛 · 虎马',
+  liuxin_mahu: '六辛 · 马虎',
+  year: '按年支',
+  month: '按月支',
+}
+
+function profileMethodValueLabel(value?: string | null): string {
+  const key = (value || '').trim()
+  return PROFILE_METHOD_VALUE_LABELS[key] ?? (key || '—')
+}
+
+function ziDayRuleLabel(rule?: string | null): string {
+  if (rule === 'early_zi_prev_day') return '早子算前一日'
+  if (rule === 'early_zi_same_day') return '早子仍算当日'
+  return '库默认'
+}
 
 const birthTimeMeta = computed(() => normalizeBirthDateTime({
   birthDt: form.birthDt || '1990-01-15T08:30',
@@ -946,14 +978,14 @@ function applyZiweiAlgoPreset(presetId: string) {
                   <div v-if="form.cityTier"><dt>城市层级</dt><dd>{{ form.cityTier }}</dd></div>
                   <div v-if="form.industry"><dt>行业</dt><dd>{{ form.industry }}</dd></div>
                   <div><dt>夏令时</dt><dd>{{ birthTimeMeta.dstLabel }}</dd></div>
-                  <div><dt>年界</dt><dd>{{ form.yearDivide === 'normal' ? '正月初一' : '立春' }}</dd></div>
-                  <div><dt>换日</dt><dd>{{ form.dayDivide === 'forward' ? '子时换日' : form.dayDivide === 'current' ? '当日子时' : '公历次日' }}</dd></div>
-                  <div><dt>子时规则</dt><dd>{{ form.ziDayRule === 'early_zi_prev_day' ? '早子算前一日' : form.ziDayRule === 'early_zi_same_day' ? '早子仍算当日' : '库默认' }}</dd></div>
-                  <div><dt>亮度</dt><dd>{{ form.ziweiBrightnessMethod }}</dd></div>
+                  <div><dt>年界</dt><dd>{{ formatYearDivideLabel(form.yearDivide) }}</dd></div>
+                  <div><dt>换日</dt><dd>{{ formatDayDivideLabel(form.dayDivide) }}</dd></div>
+                  <div><dt>子时规则</dt><dd>{{ ziDayRuleLabel(form.ziDayRule) }}</dd></div>
+                  <div><dt>亮度</dt><dd>{{ profileMethodValueLabel(form.ziweiBrightnessMethod) }}</dd></div>
                   <div><dt>右弼</dt><dd>{{ form.ziweiYoubiMethod === 'hour' ? '按时（对照）' : '按月（默认）' }}</dd></div>
-                  <div><dt>四化</dt><dd>{{ form.sihuaMethod }}</dd></div>
-                  <div><dt>流年四化</dt><dd>{{ form.liunianSihuaMethod }}</dd></div>
-                  <div><dt>模板</dt><dd>{{ form.templateVersion }}</dd></div>
+                  <div><dt>四化</dt><dd>{{ profileMethodValueLabel(form.sihuaMethod) }}</dd></div>
+                  <div><dt>流年四化</dt><dd>{{ profileMethodValueLabel(form.liunianSihuaMethod) }}</dd></div>
+                  <div><dt>模板</dt><dd>{{ profileMethodValueLabel(form.templateVersion) }}</dd></div>
                 </dl>
               </details>
             </div>

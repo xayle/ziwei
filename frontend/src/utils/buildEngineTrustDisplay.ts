@@ -582,13 +582,13 @@ export function formatVerificationStatusLabel(
   return '待核'
 }
 
-function formatYearDivideLabel(value?: string | null): string {
+export function formatYearDivideLabel(value?: string | null): string {
   if (value === 'normal') return '正月初一换年'
   if (!value || value === 'lichun') return '立春换年'
   return value
 }
 
-function formatDayDivideLabel(value?: string | null): string {
+export function formatDayDivideLabel(value?: string | null): string {
   if (value === 'forward') return '农历日+1安星'
   if (value === 'current') return '当日不换日'
   if (!value || value === 'solar_next') return '公历次日换日'
