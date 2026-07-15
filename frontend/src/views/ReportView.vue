@@ -11,6 +11,7 @@ import FushengZiweiPlate from '@/components/fusheng/FushengZiweiPlate.vue'
 import brandMark from '@/assets/brand/fusheng-mark.svg'
 import { useFushengReport } from '@/composables/useFushengReport'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
+import { formatVerificationStatusLabel } from '@/utils/buildEngineTrustDisplay'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import { exportReportElementToPdf } from '@/composables/useReportPdfExport'
@@ -919,7 +920,7 @@ watch(
                     <td>{{ row.id }}</td>
                     <td>{{ row.title }}</td>
                     <td>{{ row.sourcePage || '—' }}</td>
-                    <td>{{ row.verificationStatus }}</td>
+                    <td>{{ formatVerificationStatusLabel(row.verificationStatus) }}</td>
                   </tr>
                 </tbody>
               </table>

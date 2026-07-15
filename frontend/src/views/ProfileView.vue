@@ -626,7 +626,7 @@ function applyZiweiAlgoPreset(presetId: string) {
                 <label class="archive-field">
                   <span class="archive-field__label">子时换日（八字）</span>
                   <select v-model="form.ziDayRule" data-testid="profile-zi-day-rule">
-                    <option value="sxtwl">库默认（sxtwl）</option>
+                    <option value="sxtwl">库默认</option>
                     <option value="early_zi_prev_day">早子算前一日</option>
                     <option value="early_zi_same_day">早子仍算当日</option>
                   </select>

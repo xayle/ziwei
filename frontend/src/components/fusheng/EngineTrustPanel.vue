@@ -253,7 +253,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
       <details v-if="iztro && !compact" class="trust-register" data-testid="iztro-crosscheck">
         <summary class="trust-register__summary">iztro 交叉核验</summary>
         <div class="trust-register__body">
-          <p class="engine-trust__lead">状态 {{ iztro.status }} · 主星 {{ iztro.mainMatch }}<span v-if="iztro.lifePalace"> · {{ iztro.lifePalace }}</span></p>
+          <p class="engine-trust__lead">状态 {{ iztro.statusLabel || iztro.status }} · 主星 {{ iztro.mainMatch }}<span v-if="iztro.lifePalace"> · {{ iztro.lifePalace }}</span></p>
           <p>{{ iztro.message }}</p>
         </div>
       </details>
@@ -294,7 +294,7 @@ function crossTone(status: string): 'ok' | 'drift' | 'missing' {
 
       <section v-if="iztro" class="engine-trust__section" data-testid="iztro-crosscheck">
         <h3>iztro 交叉核验</h3>
-        <p class="engine-trust__lead">状态 {{ iztro.status }} · 主星 {{ iztro.mainMatch }}<span v-if="iztro.lifePalace"> · {{ iztro.lifePalace }}</span></p>
+        <p class="engine-trust__lead">状态 {{ iztro.statusLabel || iztro.status }} · 主星 {{ iztro.mainMatch }}<span v-if="iztro.lifePalace"> · {{ iztro.lifePalace }}</span></p>
         <p>{{ iztro.message }}</p>
         <table v-if="iztro.showDualTrackTable" class="engine-trust__table">
           <thead>

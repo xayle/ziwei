@@ -171,6 +171,7 @@ describe('buildEngineTrustDisplay', () => {
       },
     } as ZiweiResponse, { yearDivide: 'lichun', dayDivide: 'solar_next' })
     expect(iztro?.status).toBe('life_palace_mismatch')
+    expect(iztro?.statusLabel).toBe('命宫不一致')
     expect(iztro?.showDualTrackTable).toBe(true)
     expect(iztro?.dualTrack?.lifePalaceGz).toBe('癸丑')
     expect(iztro?.engineLifePalaceGz).toBe('乙丑')

@@ -452,7 +452,10 @@ export type IztroDualTrackDisplay = {
 }
 
 export type IztroDisplay = {
+  /** 机读状态，供条件判断 */
   status: string
+  /** 人读状态标签 */
+  statusLabel: string
   mainMatch: string
   lifePalace?: string
   message: string
@@ -507,13 +510,16 @@ export function buildIztroDisplay(
     || Boolean(dual)
     || (cc.life_palace_match === false && cc.engine_life_palace_gz && cc.iztro_life_palace_gz)
 
+  const status = cc.status || 'unknown'
+  const statusLabel = formatIztroStatusLabel(status)
   return {
-    status: cc.status || 'unknown',
+    status,
+    statusLabel,
     mainMatch: `${cc.main_match ?? '—'}/${cc.main_total ?? '—'}`,
     lifePalace: cc.life_palace_match != null
       ? (cc.life_palace_match ? '命宫一致' : '命宫不一致')
       : undefined,
-    message: cc.advisory || `交叉核验状态：${cc.status || '已完成'}`,
+    message: cc.advisory || `交叉核验状态：${statusLabel}`,
     engineLifePalaceGz: cc.engine_life_palace_gz ?? ziwei?.life_palace_gz ?? undefined,
     iztroLifePalaceGz: cc.iztro_life_palace_gz ?? undefined,
     engineTrack: { yearDivide: yearLabel, dayDivide: dayLabel },
@@ -529,6 +535,23 @@ export function buildIztroDisplay(
       : null,
     showDualTrackTable,
   }
+}
+
+export function formatIztroStatusLabel(status?: string | null): string {
+  const key = (status || '').trim()
+  if (key === 'ok') return '一致'
+  if (key === 'degraded') return '降级'
+  if (key === 'life_palace_mismatch') return '命宫不一致'
+  if (key === 'unknown' || !key) return '未核验'
+  return key
+}
+
+export function formatVerificationStatusLabel(
+  status?: 'verified' | 'unverified' | 'paraphrase' | string | null,
+): string {
+  if (status === 'verified') return '已核'
+  if (status === 'paraphrase') return '意译'
+  return '待核'
 }
 
 function formatYearDivideLabel(value?: string | null): string {

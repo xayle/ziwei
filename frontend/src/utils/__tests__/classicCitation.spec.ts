@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildClassicCitationRows,
+  formatVerificationStatusLabel,
   lookupClassicSourcePage,
 } from '@/utils/buildEngineTrustDisplay'
 
@@ -29,5 +30,11 @@ describe('classic citation X-01', () => {
   it('looks up page by classic_id', () => {
     expect(lookupClassicSourcePage('chapter_agg.三命通会', sample)).toBe('三命通会')
     expect(lookupClassicSourcePage('missing', sample)).toBeUndefined()
+  })
+
+  it('humanizes verification status for report table', () => {
+    expect(formatVerificationStatusLabel('verified')).toBe('已核')
+    expect(formatVerificationStatusLabel('unverified')).toBe('待核')
+    expect(formatVerificationStatusLabel('paraphrase')).toBe('意译')
   })
 })

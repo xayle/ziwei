@@ -112,10 +112,10 @@ const degradedBannerMessage = computed(() => {
     return '紫微排盘可信度已降级，请结合下方校勘与双轨对照阅读。'
   }
   if (ziwei.value?.trust_level === 'advisory') {
-    return '紫微排盘为顾问级（advisory）：部分字段或月系星可能不完整，请结合校勘阅读。'
+    return '紫微排盘为顾问级：部分字段或月系星可能不完整，请结合校勘阅读。'
   }
   if (ziwei.value?.trust_level === 'reference') {
-    return '紫微排盘为参考级（reference）：请勿单独作为完整定论。'
+    return '紫微排盘为参考级：请勿单独作为完整定论。'
   }
   return null
 })
