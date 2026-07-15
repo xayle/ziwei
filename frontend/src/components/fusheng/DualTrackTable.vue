@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDualTrackCaseLabel } from '@/utils/buildEngineTrustDisplay'
+
 export type DualTrackReferenceRow = {
   id: string
   topic?: string
@@ -15,6 +17,10 @@ withDefaults(defineProps<{
   title: '执业双轨对照表',
   variant: 'reference',
 })
+
+function caseLabel(row: DualTrackReferenceRow): string {
+  return row.topic || formatDualTrackCaseLabel(row.id)
+}
 </script>
 
 <template>
@@ -30,17 +36,15 @@ withDefaults(defineProps<{
       <table class="dual-track-table__grid">
         <thead>
           <tr>
-            <th>编号</th>
-            <th v-if="variant === 'reference'">主题</th>
+            <th>用例</th>
             <th>古籍/对照</th>
             <th>引擎</th>
             <th>说明</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in rows" :key="row.id">
-            <td>{{ row.id }}</td>
-            <td v-if="variant === 'reference'">{{ row.topic || '—' }}</td>
+          <tr v-for="row in rows" :key="row.id" :data-case-id="row.id">
+            <td>{{ caseLabel(row) }}</td>
             <td>{{ row.recorded }}</td>
             <td>{{ row.engine }}</td>
             <td>{{ row.note || '—' }}</td>

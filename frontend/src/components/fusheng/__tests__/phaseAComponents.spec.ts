@@ -28,7 +28,8 @@ describe('DualTrackTable', () => {
         rows: [{ id: 'ZIP09', topic: '格局', recorded: '从官杀', engine: '七杀', note: '双轨' }],
       },
     })
-    expect(wrapper.text()).toContain('ZIP09')
+    expect(wrapper.text()).toContain('格局')
+    expect(wrapper.text()).not.toContain('ZIP09')
     expect(wrapper.text()).toContain('七杀')
   })
 })

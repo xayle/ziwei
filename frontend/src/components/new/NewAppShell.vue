@@ -78,7 +78,7 @@ onUnmounted(() => {
     }"
   >
     <p v-if="backendDown" class="backend-banner">
-      后端服务暂不可用，排盘与报告可能失败。请确认已启动 uvicorn（开发建议加 <code>--reload</code>）后刷新页面。
+      排盘服务暂时不可用，排盘与报告可能失败。请稍后刷新页面重试。
       <button type="button" class="backend-banner__dismiss" @click="backendDown = false">知道了</button>
     </p>
     <header class="bar">
@@ -100,6 +100,7 @@ onUnmounted(() => {
             'is-locked': !item.ready,
           }"
           :to="navTarget(item)"
+          :aria-label="!item.ready && item.requiresBirth ? `${item.label}（需补全档案）` : undefined"
         >
           {{ item.label }}
         </RouterLink>
@@ -132,9 +133,26 @@ onUnmounted(() => {
           'is-locked': !item.ready,
         }"
         :to="navTarget(item)"
+        :aria-label="!item.ready && item.requiresBirth ? `${item.label}（需补全档案）` : undefined"
       >
         <span class="bottom-nav__label">{{ item.label }}</span>
       </RouterLink>
+      <RouterLink
+        v-if="!auth.isLoggedIn"
+        class="bottom-nav__btn bottom-nav__btn--auth"
+        :class="{ 'is-active': route.path === '/login' }"
+        to="/login"
+      >
+        <span class="bottom-nav__label">登录</span>
+      </RouterLink>
+      <button
+        v-else
+        type="button"
+        class="bottom-nav__btn bottom-nav__btn--auth"
+        @click="handleLogout"
+      >
+        <span class="bottom-nav__label">登出</span>
+      </button>
     </nav>
   </div>
 </template>
@@ -370,6 +388,15 @@ onUnmounted(() => {
 .nav-btn.is-locked,
 .bottom-nav__btn.is-locked {
   opacity: 0.55;
+}
+
+.bottom-nav__btn--auth {
+  font: inherit;
+}
+
+button.bottom-nav__btn {
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .content {

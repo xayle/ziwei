@@ -25,4 +25,13 @@ describe('useReadingProgress', () => {
       expect(lastVolumeId.value).toBe('vol5')
     })
   })
+
+  it('uses Chinese volume title in resume label', () => {
+    localStorage.setItem('fusheng-reading-progress', JSON.stringify({ default: 'colophon' }))
+    const scope = effectScope()
+    scope.run(() => {
+      const { resumeLabel } = useReadingProgress(() => 'default')
+      expect(resumeLabel.value).toBe('继续阅读「跋·校勘」')
+    })
+  })
 })

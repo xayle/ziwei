@@ -2,22 +2,22 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.27 |
-| **日期** | 2026-07-15 |
+| **版本** | inv-1.32 |
+| **日期** | 2026-07-16 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：维护态；档案高级口径摘要中文对齐 · 月运去 API 字段名 · 卷导航 aria-current。
+> **一句话**：维护态：合盘引擎列中文化、Trust 校验去英文 note、相似案例人读标签、Landing 空试读、ResultState/Report a11y。
 
-### 本轮修复进度（inv-1.27）
+### 本轮修复进度（inv-1.32）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.26 及前 | ✅ | 见上 |
-| 维护 | ✅ 本批 | META-02 档案高级摘要中文 · REP monthly_fortune 文案 · 卷导航 aria-current |
-| 仍开 | — | AUTH-01 · NAV-03 · **GTM 未开（R109 A）** |
+| inv-1.31 及前 | ✅ | 见上 |
+| 维护 | ✅ 本批 | 八字「规则与提示」flags 中文化 · Trust provenance mode/solar/gender/子时 · L2/ZIP/CL 机读编号去露 · Report 典籍表不直出 CL id |
+| 仍开 | — | **GTM 未开（R109 A）** |
 
 ---
 
@@ -37,7 +37,7 @@
 | `/extensions/ziwei-compat` | 紫微合盘 | 可用↑ | ✅ ZW-03 · ✅ GENDER-01 |
 | `/extensions/similarity` | 相似盘 | 可用↑ | ✅ EXT-04 |
 | `/extensions/zeri` | 择日 | 可用 | — |
-| `/login` | 登录 | 可用↑ | AUTH-01 · ✅ AUTH-05 · ✅ SHARE-03 |
+| `/login` | 登录 | 可用↑ | ✅ AUTH-01 · ✅ AUTH-05 · ✅ SHARE-03 |
 | `/landing` | 抖音落地 | 可用↑ | ✅ CLIP-01 · ✅ SHARE-02 |
 | `/payment/callback` | 支付回调 | 可用↑ | ✅ AUTH-02 |
 | `*` | 404 | 可用 | ✅ ROUTE-01（入口已改 `/static/app/` + 旧路径 redirect） |
@@ -92,14 +92,14 @@
 |----|-----|------|----------|------|
 | **NAV-01** | P1 | Shell 锁链无 redirect | `navTarget` 带 `reason/redirect` | ✅ |
 | **NAV-02** | P2 | 首页六卷 ≠ 报告六卷 | 文案区分「排盘台/成书」+ lane 标记 | ✅ |
-| **NAV-03** | P2 | 三入口同页 | canonical 标明为 `/`（`/home` `/new` 同页） | ☑ 文档 |
+| **NAV-03** | P2 | 三入口同页 | `/home` `/new` → redirect `/` | ✅ |
 | **NAV-04** | P2 | 主壳无合盘入口 | Q18：合盘走「工具」→ 关系合盘；`/relation` 高亮工具 | ✅ |
 
 ### 4.2 Auth / 支付 / 存储
 
 | ID | Sev | 现象 | 解决方案 | 状态 |
 |----|-----|------|----------|------|
-| **AUTH-01** | P2 | DEV 预填账号 | 保持 DEV only | ☑ 保持 |
+| **AUTH-01** | P2 | DEV 预填账号 | DEV only + 页面明示；生产空 | ✅ 保持策略 |
 | **AUTH-02** | P2 | 支付成功硬跳报告被踢 | 未齐档案 → profile+redirect | ✅ |
 | **AUTH-04** | P1 | 并发 401 无单飞 | `refreshInFlight` Promise | ✅ |
 | **AUTH-05** | P1 | 422 → `[object Object]` | `formatApiDetail` | ✅ |
@@ -118,7 +118,7 @@
 | **ZW-02** | P2 | 大限高亮年可能错 | `dayunEndYear` + 年区间 | ✅ |
 | **ZW03-eng** | P2 | 晚子时 vs iztro | 紫微页双轨表 + 档案口径提示 | ✅ |
 | **GENDER-01** | P2 | UI 显示 male | 显示 男/女；缺性别拒跑 | ✅ |
-| **OPS-01** | P2 | 后端未 reload | Shell banner 提示 `--reload` | ✅ |
+| **OPS-01** | P2 | 后端不可用提示 | Shell banner 产品文案（无 uvicorn） | ✅ |
 | **Z-09-SC** | P2 | scorecard「太阳时未统一」 | `buildChartRequests` 恢复 `solarTime↔longitude` 耦合注释 | ✅ |
 | **MOBILE-01** | P2 | 参考表窄屏难用 | DualTrack 横向滚动 + &lt;640 hint | ✅ |
 

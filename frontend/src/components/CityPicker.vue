@@ -103,7 +103,7 @@ watch(cities, () => applyCity(props.initialCity))
       {{ c.name }}
     </option>
   </select>
-  <span v-if="citiesLoading" class="hint">正在加载城市…（需后端 API，若久未响应请确认已启动 uvicorn :8000）</span>
+  <span v-if="citiesLoading" class="hint">正在加载城市列表…若久未响应，请稍后刷新重试。</span>
   <span v-else-if="citiesError" class="hint hint--warn">{{ citiesError }}</span>
   <span v-else-if="modelValue !== undefined" class="hint" title="完整经度用于排盘">
     经度 {{ Number(modelValue).toFixed(4) }}°E（排盘用完整值）

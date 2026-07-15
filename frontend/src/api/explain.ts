@@ -8,6 +8,7 @@ import {
   REPORT_BAZI_EXPLAIN_SECTIONS,
   REPORT_ZIWEI_EXPLAIN_SECTIONS,
 } from '@/constants/feBeContract'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 
 // ── 嵌套模型（OpenAPI 真源 · P3-3）──────────────────────────
 export type ExplainBlock = ExplainBlockModel
@@ -48,11 +49,10 @@ export async function fetchBaziExplainBatchWithMeta(
     })
     return { ok: true, data }
   } catch (e: unknown) {
-    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
     return {
       ok: false,
       data: { sections: [] },
-      error: typeof detail === 'string' ? detail : 'explain batch failed',
+      error: formatAxiosError(e, '解读批次加载失败'),
     }
   }
 }
@@ -76,11 +76,10 @@ export async function fetchZiweiExplainBatchWithMeta(
     })
     return { ok: true, data }
   } catch (e: unknown) {
-    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
     return {
       ok: false,
       data: { sections: [] },
-      error: typeof detail === 'string' ? detail : 'explain batch failed',
+      error: formatAxiosError(e, '解读批次加载失败'),
     }
   }
 }

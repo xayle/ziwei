@@ -29,9 +29,24 @@ export function formatApiDetail(detail: unknown, fallback = '请求失败，请�
   return fallback
 }
 
+function isOpaqueNetworkMessage(message: string): boolean {
+  const m = message.trim().toLowerCase()
+  return (
+    m === 'network error'
+    || m === 'failed to fetch'
+    || m === 'load failed'
+    || m.startsWith('timeout of ')
+    || m.includes('err_network')
+    || m.includes('econnrefused')
+  )
+}
+
 export function formatAxiosError(error: unknown, fallback = '请求失败，请稍后重试。'): string {
   const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
   if (detail !== undefined) return formatApiDetail(detail, fallback)
-  if (error instanceof Error && error.message.trim()) return error.message
+  if (error instanceof Error && error.message.trim()) {
+    if (isOpaqueNetworkMessage(error.message)) return fallback
+    return error.message
+  }
   return fallback
 }

@@ -45,7 +45,7 @@ export function buildChartRequestMeta(data: ProfileData): ChartRequestMeta {
   const dayDivideNote = data.dayDivide === 'forward'
     ? '换日：农历日+1安星（对齐对照轨）。'
     : data.dayDivide === 'current'
-      ? '换日：当日不换日。'
+      ? '换日：当日子时。'
       : '换日：公历次日换日（默认）。'
 
   const calendarNote = data.calendarMode === 'lunar'
@@ -55,10 +55,13 @@ export function buildChartRequestMeta(data: ProfileData): ChartRequestMeta {
     ? '紫微年界：正月初一换年。'
     : '紫微年界：立春换年（默认）。'
 
+  const fallbackLabel = data.unknownTimeFallback === 'noon' ? '正午 12:00'
+    : data.unknownTimeFallback === 'start_of_hour' ? '当日零点'
+      : '日中 12:30'
   const precisionLabel = precision === 'exact' ? '精确到分'
     : precision === 'hour' ? '只知时辰'
       : precision === 'approximate' ? '大致时间'
-        : `未知时辰（兜底：${data.unknownTimeFallback || 'midday'}）`
+        : `未知时辰（兜底：${fallbackLabel}）`
 
   return {
     normalizedBirthDt: normalized.normalizedBirthDt,

@@ -73,7 +73,7 @@ const explainBlocks = computed(() =>
 
 function contentLayerLabel(layer?: string | null): string {
   if (!layer) return '—'
-  return CONTENT_LAYER_LABELS[layer as ContentLayer] ?? layer
+  return CONTENT_LAYER_LABELS[layer as ContentLayer] ?? '未分层'
 }
 
 watch(
@@ -96,8 +96,22 @@ function partnerLongitude(): number {
 
 const partnerLonUsingFallback = computed(() => !Number.isFinite(partnerLon.value))
 
+function formatRelationEngineLabel(engine?: string | null): string {
+  const key = (engine || '').trim().toLowerCase()
+  if (key === 'bazi') return '八字'
+  if (key === 'ziwei') return '紫微'
+  if (key === 'fusion' || key === 'combined') return '综合'
+  return engine?.trim() || '—'
+}
+
+function resolveSelfGender(): 'male' | 'female' | null {
+  if (profile.gender === 'male' || profile.gender === 'female') return profile.gender
+  return null
+}
+
 function buildRelationRequest(): RelationFullRequest {
   const lonB = partnerLongitude()
+  const selfGender = resolveSelfGender()
   return {
     relation_type: relationType.value,
     supervisor_id: relationType.value === 'supervisor_subordinate' ? supervisorId.value : undefined,
@@ -105,7 +119,7 @@ function buildRelationRequest(): RelationFullRequest {
       birth_datetime: toIsoLocal(profile.birthDt),
       tz: profile.tz || 'Asia/Shanghai',
       longitude: profile.lon,
-      gender: profile.gender || 'male',
+      gender: selfGender!,
       label: profile.activeProfile?.label || '我',
     },
     person_b: {
@@ -178,6 +192,10 @@ async function runRelation() {
   }
   if (!partnerBirthDt.value.trim()) {
     error.value = '请填写对方出生时间。'
+    return
+  }
+  if (!resolveSelfGender()) {
+    error.value = '请先在档案中指定本人性别后再合盘。'
     return
   }
 
@@ -446,7 +464,7 @@ async function downloadMultiMatrixPdf() {
             <tr v-for="d in display.dimensions" :key="d.id">
               <td>{{ d.label }}</td>
               <td>{{ d.score }}/{{ d.max_score }} ({{ dimensionPct(d) }}%)</td>
-              <td>{{ d.engine || '—' }}</td>
+              <td>{{ formatRelationEngineLabel(d.engine) }}</td>
               <td>{{ d.description }}</td>
             </tr>
           </tbody>

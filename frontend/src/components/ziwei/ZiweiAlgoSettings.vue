@@ -2,6 +2,10 @@
 import { computed } from 'vue'
 import type { ProfileData } from '@/stores/profile'
 import type { ResponseProvenance } from '@/api/bazi'
+import {
+  formatDayDivideLabel,
+  formatZiDayRuleLabel,
+} from '@/utils/buildEngineTrustDisplay'
 
 /** 紫微算法口径展示（ZiweiAlgo profile，与档案 / Case 同步） */
 const props = defineProps<{
@@ -18,22 +22,13 @@ const yearDivideLabel = computed(() =>
   props.profile.yearDivide === 'normal' ? '正月初一换年' : '立春换年',
 )
 
-const dayDivideLabel = computed(() => {
-  if (props.profile.dayDivide === 'forward') return '农历日+1安星'
-  if (props.profile.dayDivide === 'current') return '当日不换日'
-  return '公历次日换日'
-})
+const dayDivideLabel = computed(() => formatDayDivideLabel(props.profile.dayDivide))
 
 const lateZishiLabel = computed(() =>
   props.profile.lateZishi ? '23:00–00:00 视为次日' : '仍算当日',
 )
 
-const ziDayRuleLabel = computed(() => {
-  const rule = props.profile.ziDayRule ?? 'sxtwl'
-  if (rule === 'early_zi_prev_day') return '早子算前一日'
-  if (rule === 'early_zi_same_day') return '早子仍算当日'
-  return '库默认'
-})
+const ziDayRuleLabel = computed(() => formatZiDayRuleLabel(props.profile.ziDayRule))
 
 /** 引擎默认 brightness_method / sihua 口径（与后端 ZiweiRequest 默认一致） */
 const brightnessMethod = computed({
@@ -71,7 +66,7 @@ const METHOD_VALUE_LABELS: Record<string, string> = {
   normal: '正月初一换年',
   forward: '农历日+1安星',
   solar_next: '公历次日换日',
-  current: '当日不换日',
+  current: '当日子时',
 }
 
 const ZiweiAlgoDefaults = {

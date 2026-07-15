@@ -20,6 +20,7 @@ import { saveReportSnapshot } from '@/utils/saveReportSnapshot'
 import type { FushengSnapshotOutput } from '@/utils/parseFushengSnapshot'
 import { canAnalyzeName, isArchiveReady } from '@/utils/profileReadiness'
 import { toCnElements } from '@/utils/yongshenElements'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 
 export const useFushengReportStore = defineStore('fushengReport', () => {
   const loading = ref(false)
@@ -129,8 +130,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
       nameAnalysis.value = res
       return res
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      error.value = typeof detail === 'string' ? detail : '姓名分析失败，请稍后重试。'
+      error.value = formatAxiosError(e, '姓名分析失败，请稍后重试。')
       nameAnalysis.value = null
       return null
     } finally {
@@ -165,8 +165,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
       updateEngineLabel(baziRes, ziwei.value)
       return baziRes
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      error.value = typeof detail === 'string' ? detail : '八字计算失败，请稍后重试。'
+      error.value = formatAxiosError(e, '八字计算失败，请稍后重试。')
       bazi.value = null
       return null
     } finally {
@@ -201,8 +200,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
       updateEngineLabel(bazi.value, ziweiRes)
       return ziweiRes
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      error.value = typeof detail === 'string' ? detail : '紫微计算失败，请稍后重试。'
+      error.value = formatAxiosError(e, '紫微计算失败，请稍后重试。')
       ziwei.value = null
       return null
     } finally {
@@ -295,11 +293,10 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
         ziwei: bundle.ziwei ?? null,
       }
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       return {
         bazi: null,
         ziwei: null,
-        error: typeof detail === 'string' ? detail : '档案快照加载失败',
+        error: formatAxiosError(e, '档案快照加载失败'),
       }
     }
   }
@@ -320,8 +317,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
         else ziweiRes = result.value
         return
       }
-      const detail = (result.reason as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      const message = typeof detail === 'string' ? detail : '加载失败'
+      const message = formatAxiosError(result.reason, '加载失败')
       failures.push(idx === 0 ? `八字：${message}` : `紫微：${message}`)
     })
 
@@ -419,8 +415,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
           try {
             bazi.value = await computeBazi(buildBaziRequest(data))
           } catch (e: unknown) {
-            const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-            failures.push(`八字：${typeof detail === 'string' ? detail : '流年数据过期，重新计算失败'}`)
+            failures.push(`八字：${formatAxiosError(e, '流年数据过期，重新计算失败')}`)
           }
         }
       } else {
@@ -437,9 +432,8 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
             given_name: data.givenName.trim(),
           })
         } catch (e: unknown) {
-          const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
           nameAnalysis.value = null
-          failures.push(`姓名：${typeof detail === 'string' ? detail : '加载失败'}`)
+          failures.push(`姓名：${formatAxiosError(e, '加载失败')}`)
         }
       }
 
@@ -461,8 +455,7 @@ export const useFushengReportStore = defineStore('fushengReport', () => {
       dayunReport.value = cachedDayun
       await persistReportSnapshot(signature)
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      error.value = typeof detail === 'string' ? detail : '报告生成失败，请稍后重试。'
+      error.value = formatAxiosError(e, '报告生成失败，请稍后重试。')
       bazi.value = null
       ziwei.value = null
       nameAnalysis.value = null

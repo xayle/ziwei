@@ -11,8 +11,10 @@ const route  = useRoute()
 const auth   = useAuthStore()
 const profile = useProfileStore()
 
-const username = ref(import.meta.env.DEV ? 'admin' : '')
-const password = ref(import.meta.env.DEV ? 'cad123qwe' : '')
+/** AUTH-01：仅 DEV 预填；生产构建为空 */
+const isDevPrefill = import.meta.env.DEV
+const username = ref(isDevPrefill ? 'admin' : '')
+const password = ref(isDevPrefill ? 'cad123qwe' : '')
 const loading  = ref(false)
 const error    = ref('')
 
@@ -42,29 +44,36 @@ async function doLogin() {
         <span class="logo-icon">☯</span>
         <h1 class="logo-title">浮生</h1>
         <p class="logo-sub">登录以使用完整功能</p>
+        <p v-if="isDevPrefill" class="logo-dev-hint">开发模式已预填演示账号（生产构建不会预填）</p>
       </div>
 
       <!-- 表单 -->
       <div class="form-body">
-        <p v-if="error" class="error-msg">{{ error }}</p>
+        <p v-if="error" class="error-msg" role="alert" aria-live="assertive">{{ error }}</p>
 
         <div class="field">
-          <label class="field-label">用户名</label>
+          <label class="field-label" for="login-username">用户名</label>
           <input
+            id="login-username"
             v-model="username"
             class="field-input"
             type="text"
+            name="username"
+            autocomplete="username"
             placeholder="请输入用户名"
             @keyup.enter="doLogin"
           />
         </div>
 
         <div class="field">
-          <label class="field-label">密码</label>
+          <label class="field-label" for="login-password">密码</label>
           <input
+            id="login-password"
             v-model="password"
             class="field-input"
             type="password"
+            name="password"
+            autocomplete="current-password"
             placeholder="请输入密码"
             @keyup.enter="doLogin"
           />
@@ -72,6 +81,7 @@ async function doLogin() {
 
         <button
           class="btn-login"
+          type="button"
           :disabled="loading"
           @click="doLogin"
         >

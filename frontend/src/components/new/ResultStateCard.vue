@@ -1,11 +1,15 @@
 <script setup lang="ts">
-defineProps<{
+withDefaults(defineProps<{
   title: string
   message: string
   actionLabel?: string
   tone?: 'light' | 'dark'
   compact?: boolean
-}>()
+  /** error → alert；默认 status */
+  severity?: 'status' | 'error'
+}>(), {
+  severity: 'status',
+})
 
 defineEmits<{
   action: []
@@ -13,10 +17,15 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="result-state" :class="[`result-state--${tone || 'light'}`, { 'result-state--compact': compact }]">
+  <div
+    class="result-state"
+    :class="[`result-state--${tone || 'light'}`, { 'result-state--compact': compact }]"
+    :role="severity === 'error' ? 'alert' : 'status'"
+    :aria-live="severity === 'error' ? 'assertive' : 'polite'"
+  >
     <strong class="result-state__title">{{ title }}</strong>
     <span class="result-state__message">{{ message }}</span>
-    <button v-if="actionLabel" class="result-state__action" @click="$emit('action')">
+    <button v-if="actionLabel" type="button" class="result-state__action" @click="$emit('action')">
       {{ actionLabel }}
     </button>
   </div>

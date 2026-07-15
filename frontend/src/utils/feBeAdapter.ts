@@ -34,7 +34,7 @@ export function mapProvenanceLayerToContent(layer?: string | null): ContentLayer
 /** 信任面板：provenance 层短标签 */
 export function mapProvenanceLayerToTrustLabel(layer?: string | null): string {
   if (!layer) return '—'
-  return PROVENANCE_LAYER_TRUST_LABELS[layer] ?? layer
+  return PROVENANCE_LAYER_TRUST_LABELS[layer] ?? '未分层'
 }
 
 /** 六卷块：ContentLayer → 用户可见文案 */

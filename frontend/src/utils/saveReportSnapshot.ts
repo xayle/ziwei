@@ -1,6 +1,7 @@
 import type { BaziResponse } from '@/api/bazi'
 import type { ZiweiResponse } from '@/api/ziwei'
 import { createSnapshot } from '@/api/snapshots'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 
 export async function saveReportSnapshot(params: {
   caseId: string
@@ -27,10 +28,9 @@ export async function saveReportSnapshot(params: {
     })
     return { ok: true, snapshotId: snap.id }
   } catch (e: unknown) {
-    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
     return {
       ok: false,
-      error: typeof detail === 'string' ? detail : '快照保存失败。',
+      error: formatAxiosError(e, '快照保存失败。'),
     }
   }
 }

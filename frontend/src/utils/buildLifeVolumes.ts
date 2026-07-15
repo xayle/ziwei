@@ -20,6 +20,7 @@ import {
   formatDayunAgeRange,
 } from '@/utils/dayunDisplay'
 import { DEMO_LOCKED_VOLUME_IDS, demoVolumeLocksEnabled } from '@/constants/volumePaywall'
+import { formatWxList } from '@/utils/buildEngineTrustDisplay'
 
 export interface BuildLifeVolumesInput {
   caseId: string
@@ -185,7 +186,7 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
       block(
         enrichVolumeBlockText(
           '卷一用神',
-          `喜用 ${(y.favor ?? []).join('、') || '—'}；忌 ${(y.avoid ?? []).join('、') || '—'}`,
+          `喜用 ${formatWxList(y.favor)}；忌 ${formatWxList(y.avoid)}`,
         ),
         'fact',
       ),

@@ -17,18 +17,9 @@ const router = createRouter({
       component: () => import('@/views/new/NewHomeView.vue'),
       meta: { title: '首页' },
     },
-    {
-      path: '/home',
-      name: 'home-legacy',
-      component: () => import('@/views/new/NewHomeView.vue'),
-      meta: { title: '首页' },
-    },
-    {
-      path: '/new',
-      name: 'new-home',
-      component: () => import('@/views/new/NewHomeView.vue'),
-      meta: { title: '首页' },
-    },
+    // NAV-03：首页仅以 `/` 为 canonical；旧入口收敛
+    { path: '/home', redirect: '/' },
+    { path: '/new', redirect: '/' },
     // ROUTE-01：后端/书签旧路径 → 现行 Vue 路由
     { path: '/cases', redirect: '/' },
     { path: '/bazi', redirect: '/new/bazi' },

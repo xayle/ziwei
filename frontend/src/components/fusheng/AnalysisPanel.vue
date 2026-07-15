@@ -89,7 +89,14 @@ watch(
           <h3>{{ block.title }} <PatternTierBadge layer="heuristic" /></h3>
           <p class="analysis-panel__lead analysis-panel__lead--heuristic">启发式 · 非典籍</p>
         </div>
-        <button type="button" class="analysis-panel__toggle" @click="toggleHeuristic(block.id)">展开</button>
+        <button
+          type="button"
+          class="analysis-panel__toggle"
+          :aria-expanded="false"
+          @click="toggleHeuristic(block.id)"
+        >
+          展开
+        </button>
       </header>
       <template v-else-if="isVisible(block)">
       <header class="analysis-panel__head">

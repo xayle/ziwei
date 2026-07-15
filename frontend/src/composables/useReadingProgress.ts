@@ -1,5 +1,5 @@
 import { computed, onMounted, ref, watch } from 'vue'
-import type { LifeVolumeId } from '@/types/life-volume'
+import { LIFE_VOLUME_LABELS, type LifeVolumeId } from '@/types/life-volume'
 import { READING_PROGRESS_STORAGE_KEY } from '@/constants/feBeContract'
 
 const ACTIVE_PROFILE_KEY = 'profile_active_id_v1'
@@ -55,7 +55,12 @@ export function useReadingProgress(caseId: () => string) {
   watch(() => caseId(), () => load(), { immediate: true })
   onMounted(() => load())
 
-  const resumeLabel = computed(() => (lastVolumeId.value ? `继续阅读 ${lastVolumeId.value}` : null))
+  const resumeLabel = computed(() => {
+    const id = lastVolumeId.value
+    if (!id) return null
+    const title = LIFE_VOLUME_LABELS[id as LifeVolumeId] ?? id
+    return `继续阅读「${title}」`
+  })
 
   return { lastVolumeId, resumeLabel, save, load }
 }

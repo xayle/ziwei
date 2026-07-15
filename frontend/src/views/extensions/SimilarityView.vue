@@ -19,6 +19,16 @@ const error = ref('')
 const indexNotice = ref('')
 const items = ref<SimilarResult[]>([])
 
+function similarCaseLabel(item: SimilarResult, index: number): string {
+  const label = item.case.source_label?.trim()
+  if (label && label !== 'fusheng') return label
+  const pattern = item.case.pattern_summary?.trim()
+  if (pattern) return pattern.split(/[;；,，]/)[0]?.trim() || pattern
+  const palace = item.case.life_palace_gz?.trim()
+  if (palace) return `案例${index + 1} · ${palace}`
+  return `相似案例 ${index + 1}`
+}
+
 async function runSearch() {
   loading.value = true
   error.value = ''
@@ -82,7 +92,7 @@ onMounted(() => {
     <ResultStateCard v-if="loading" compact title="检索中" message="正在比对命盘哈希…" />
     <template v-else>
       <p v-if="indexNotice" class="fs-hint" data-testid="similarity-index-notice">{{ indexNotice }}</p>
-      <ResultStateCard v-if="error" title="检索结果" :message="error" />
+      <ResultStateCard v-if="error" severity="error" title="检索结果" :message="error" />
     </template>
 
     <section v-if="items.length" class="fs-card">
@@ -92,8 +102,8 @@ onMounted(() => {
           <tr><th>案例</th><th>相似度</th><th>五行局</th><th>命宫</th></tr>
         </thead>
         <tbody>
-          <tr v-for="item in items" :key="item.case.id">
-            <td>{{ item.case.chart_hash.slice(0, 8) }}…</td>
+          <tr v-for="(item, index) in items" :key="item.case.id">
+            <td :title="item.case.chart_hash">{{ similarCaseLabel(item, index) }}</td>
             <td>{{ Math.round(item.similarity * 100) }}%</td>
             <td>{{ item.case.wuxing_ju_name || ziwei?.wuxing_ju_name || '—' }}</td>
             <td>{{ item.case.life_palace_gz || ziwei?.life_palace_gz || '—' }}</td>

@@ -137,6 +137,13 @@ function goArchive() {
             {{ previewDoc.disclaimer_block.text }}
           </p>
         </template>
+        <p
+          v-else
+          class="landing-volume__para"
+          data-testid="landing-h5-preview-empty"
+        >
+          试读摘要暂无正文，可先前往档案完成建档后生成报告。
+        </p>
       </section>
 
       <section class="landing-volume__preface" aria-label="卷首摘要">

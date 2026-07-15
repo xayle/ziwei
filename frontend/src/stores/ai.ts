@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useProfileStore } from '@/stores/profile'
 import { buildChartHash } from '@/utils/chartHash'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 
 export interface AiMessage {
   role: 'user' | 'ai'
@@ -94,10 +95,7 @@ export const useAiStore = defineStore('ai', () => {
       messages.value = [{ role: 'ai', text: draft.draft_text }]
       return draft
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      error.value = typeof detail === 'string'
-        ? detail.replace(/\bLLM\b/g, '问书')
-        : '问书解读生成失败，请稍后重试。'
+      error.value = formatAxiosError(e, '问书解读生成失败，请稍后重试。').replace(/\bLLM\b/g, '问书')
       return null
     } finally {
       loading.value = false
@@ -136,10 +134,7 @@ export const useAiStore = defineStore('ai', () => {
       moduleInterpretation.value = res.interpretation
       return res.interpretation
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      moduleError.value = typeof detail === 'string'
-        ? detail.replace(/\bLLM\b/g, '问书')
-        : '分模块解读生成失败，请稍后重试。'
+      moduleError.value = formatAxiosError(e, '分模块解读生成失败，请稍后重试。').replace(/\bLLM\b/g, '问书')
       return null
     } finally {
       moduleLoading.value = false

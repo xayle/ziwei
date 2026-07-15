@@ -23,6 +23,7 @@ import { isArchiveReady, canAnalyzeName, isDemoSeedProfile } from '@/utils/profi
 import {
   formatDayDivideLabel,
   formatYearDivideLabel,
+  formatZiDayRuleLabel,
 } from '@/utils/buildEngineTrustDisplay'
 import '@/assets/fusheng-page.css'
 
@@ -415,9 +416,14 @@ function profileMethodValueLabel(value?: string | null): string {
 }
 
 function ziDayRuleLabel(rule?: string | null): string {
-  if (rule === 'early_zi_prev_day') return '早子算前一日'
-  if (rule === 'early_zi_same_day') return '早子仍算当日'
-  return '库默认'
+  return formatZiDayRuleLabel(rule)
+}
+
+function snapshotKindLabel(kind?: string | null): string {
+  if (kind === 'fusheng_report') return '浮生报告快照'
+  if (!kind) return '云端快照'
+  if (/^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/.test(kind)) return '云端快照'
+  return kind
 }
 
 const birthTimeMeta = computed(() => normalizeBirthDateTime({
@@ -672,7 +678,7 @@ function applyZiweiAlgoPreset(presetId: string) {
                 <label class="archive-field">
                   <span class="archive-field__label">子时换日（八字）</span>
                   <select v-model="form.ziDayRule" data-testid="profile-zi-day-rule">
-                    <option value="sxtwl">库默认</option>
+                    <option value="sxtwl">库默认（寿星天文历）</option>
                     <option value="early_zi_prev_day">早子算前一日</option>
                     <option value="early_zi_same_day">早子仍算当日</option>
                   </select>
@@ -856,7 +862,7 @@ function applyZiweiAlgoPreset(presetId: string) {
                   <li v-for="snap in profile.remoteSnapshots.slice(0, 8)" :key="snap.id">
                     <div class="archive-register__row">
                       <div class="archive-register__label">
-                        <strong>{{ snap.kind === 'fusheng_report' ? '浮生报告快照' : (snap.kind || '云端快照') }}</strong>
+                        <strong>{{ snapshotKindLabel(snap.kind) }}</strong>
                         <span>{{ snap.created_at.replace('T', ' ').slice(0, 16) }}</span>
                       </div>
                       <div class="archive-register__actions">

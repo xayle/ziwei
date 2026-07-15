@@ -15,6 +15,7 @@ import {
   profileToCasePayload,
 } from '@/utils/profileCaseSync'
 import { isArchiveReady } from '@/utils/profileReadiness'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 
 export interface ProfileData {
   birthDt:   string                      // 引擎用公历 'YYYY-MM-DDTHH:mm'
@@ -350,8 +351,7 @@ export const useProfileStore = defineStore('profile', () => {
       remoteCases.value = res.items
       return { ok: true }
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      remoteCasesError.value = typeof detail === 'string' ? detail : '云端档案列表拉取失败。'
+      remoteCasesError.value = formatAxiosError(e, '云端档案列表拉取失败。')
       return { ok: false, error: remoteCasesError.value }
     } finally {
       loadingRemoteCases.value = false
@@ -399,8 +399,7 @@ export const useProfileStore = defineStore('profile', () => {
       remoteSnapshots.value = await listSnapshots(caseId)
       return { ok: true }
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      remoteSnapshotsError.value = typeof detail === 'string' ? detail : '快照列表拉取失败。'
+      remoteSnapshotsError.value = formatAxiosError(e, '快照列表拉取失败。')
       return { ok: false, error: remoteSnapshotsError.value }
     } finally {
       loadingRemoteSnapshots.value = false
@@ -436,10 +435,9 @@ export const useProfileStore = defineStore('profile', () => {
       void pullRemoteSnapshots()
       return { ok: true, caseId: created.id }
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       return {
         ok: false,
-        error: typeof detail === 'string' ? detail : '云端档案同步失败。',
+        error: formatAxiosError(e, '云端档案同步失败。'),
       }
     }
   }

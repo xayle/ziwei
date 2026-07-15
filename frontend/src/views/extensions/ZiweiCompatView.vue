@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import ResultStateCard from '@/components/new/ResultStateCard.vue'
 import { useProfileStore } from '@/stores/profile'
 import { ziweiCompatibility, type ZiweiCompatibilityResponse } from '@/api/ziwei'
+import { formatAxiosError } from '@/utils/formatApiDetail'
 import '@/assets/fusheng-page.css'
 
 const router = useRouter()
@@ -78,8 +79,7 @@ async function runCompat() {
       },
     })
   } catch (e: unknown) {
-    const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-    error.value = typeof detail === 'string' ? detail : '紫微合盘分析失败，请稍后重试。'
+    error.value = formatAxiosError(e, '紫微合盘分析失败，请稍后重试。')
   } finally {
     loading.value = false
   }

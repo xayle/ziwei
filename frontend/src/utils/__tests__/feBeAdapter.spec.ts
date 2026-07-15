@@ -30,7 +30,7 @@ describe('feBeAdapter', () => {
 
   it('maps provenance layers to trust panel labels', () => {
     expect(mapProvenanceLayerToTrustLabel('classical')).toBe('典籍')
-    expect(mapProvenanceLayerToTrustLabel('unknown')).toBe('unknown')
+    expect(mapProvenanceLayerToTrustLabel('unknown')).toBe('未分层')
   })
 
   it('getContentLayerLabel handles cite without classic_id', () => {

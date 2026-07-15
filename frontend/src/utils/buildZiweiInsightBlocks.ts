@@ -24,9 +24,9 @@ export function buildPatternAnalysisBlocks(
     return {
       id: `ziwei-pattern-${idx}`,
       title: pattern.name,
-      lead: ruleId ? `${ruleId} · ${pattern.level || '格局'}` : (pattern.level || '格局'),
+      lead: pattern.level || '格局',
       body: pattern.description || '暂无格局说明。',
-      chips: [ruleId, pattern.name].filter((chip): chip is string => Boolean(chip)),
+      chips: [pattern.name, pattern.level].filter((chip): chip is string => Boolean(chip)),
       layer: patternLayerForRule(ruleId),
     }
   })

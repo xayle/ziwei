@@ -44,6 +44,12 @@
   margin: 0;
 }
 
+.logo-dev-hint {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
 /* 字段 */
 .form-body {
   display: flex;

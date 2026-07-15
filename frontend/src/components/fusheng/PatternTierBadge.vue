@@ -34,7 +34,8 @@ const text = computed(() => {
     class="pattern-tier-badge"
     :class="`pattern-tier-badge--${resolvedLayer}`"
     :data-layer="resolvedLayer"
-    :title="ruleId ? `rule: ${ruleId}` : undefined"
+    :data-rule-id="ruleId || undefined"
+    :title="ruleId ? `规则编号 ${ruleId}` : undefined"
   >
     {{ text }}
   </span>

@@ -34,7 +34,7 @@ export async function loadCityOptions(): Promise<CityOption[]> {
     .then((records) => {
       if (records.length < MIN_CITIES) {
         throw new CitiesLoadError(
-          `城市数据不完整（${records.length} 条，需 ≥${MIN_CITIES}）。请确认后端已启动：python -m uvicorn app.main:app --port 8000`,
+          `城市数据不完整（${records.length} 条）。请确认服务已启动后刷新页面。`,
         )
       }
       cached = records.map(mapCity)
@@ -44,7 +44,7 @@ export async function loadCityOptions(): Promise<CityOption[]> {
       cached = null
       if (err instanceof CitiesLoadError) throw err
       throw new CitiesLoadError(
-        '城市列表加载失败。请确认后端 API 已启动（http://127.0.0.1:8000），勿使用离线 4 城兜底。',
+        '城市列表暂时无法加载，请确认服务已启动后刷新页面。',
       )
     })
     .finally(() => {

@@ -31,7 +31,9 @@ describe('buildZiweiInsightBlocks', () => {
     expect(patternLayerForRule('ZRULE_099')).toBe('heuristic')
     const blocks = buildPatternAnalysisBlocks(sampleZiwei.patterns as never)
     expect(blocks[0].layer).toBe('classical')
-    expect(blocks[0].chips).toContain('ZRULE_005')
+    expect(blocks[0].lead).toBe('吉')
+    expect(blocks[0].chips).not.toContain('ZRULE_005')
+    expect(blocks[0].chips).toContain('紫府同宫')
     expect(blocks[1].layer).toBe('heuristic')
   })
 
