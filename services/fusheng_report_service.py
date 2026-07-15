@@ -360,8 +360,8 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     year_divide_label = "正月初一换年" if meta.get("year_divide") == "normal" else "立春换年"
     day_divide_label = {
         "forward": "农历日+1安星",
-        "current": "不换日",
-    }.get(meta.get("day_divide") or "solar_next", "公历换日")
+        "current": "当日不换日",
+    }.get(meta.get("day_divide") or "solar_next", "公历次日换日")
     late_zishi_label = "晚子时换日" if meta.get("late_zishi", True) else "晚子不换日"
     precision_labels = {
         "exact": "精确到分",
@@ -377,6 +377,15 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     }
     fallback = meta.get("unknown_time_fallback")
     fallback_label = fallback_labels.get(fallback) if fallback else None
+    zi_day_rule_labels = {
+        "sxtwl": "库默认",
+        "early_zi_prev_day": "早子算前一日",
+        "early_zi_same_day": "早子仍算当日",
+    }
+    zi_day_rule_label = zi_day_rule_labels.get(
+        str(meta.get("zi_day_rule") or "sxtwl"),
+        str(meta.get("zi_day_rule") or "库默认"),
+    )
 
     dayun_rows = "".join(
         f"<tr><td>{_esc(item.get('start_year', '—'))}</td>"
@@ -460,9 +469,9 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
 
   <section class="page">
     <h2>基础档案</h2>
-    <p>历法：{_esc(meta.get('calendar_mode'))} · 关注：{_esc(meta.get('focus_topic') or '未填写')}</p>
+    <p>历法：{_esc({'gregorian': '公历', 'lunar': '农历'}.get(str(meta.get('calendar_mode') or ''), str(meta.get('calendar_mode') or '—')))} · 关注：{_esc(meta.get('focus_topic') or '未填写')}</p>
     <p>紫微年界：{_esc(year_divide_label)} · 晚子换日：{_esc(day_divide_label)} · 晚子时：{_esc(late_zishi_label)}</p>
-    <p>子时规则：{_esc(meta.get('zi_day_rule') or 'sxtwl')} · 时辰精度：{_esc(precision_label)}{f' · 未知默认：{_esc(fallback_label)}' if fallback_label else ''}</p>
+    <p>子时规则：{_esc(zi_day_rule_label)} · 时辰精度：{_esc(precision_label)}{f' · 未知默认：{_esc(fallback_label)}' if fallback_label else ''}</p>
     <p>用神：{favor_cn} · 忌神：{avoid_cn}</p>
     <p>{_esc(bazi.get('bazi_summary') or (bazi.get('geju') or {}).get('interpretation_text') or '')}</p>
   </section>

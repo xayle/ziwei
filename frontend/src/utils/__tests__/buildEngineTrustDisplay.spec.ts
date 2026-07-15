@@ -174,6 +174,9 @@ describe('buildEngineTrustDisplay', () => {
     expect(iztro?.showDualTrackTable).toBe(true)
     expect(iztro?.dualTrack?.lifePalaceGz).toBe('癸丑')
     expect(iztro?.engineLifePalaceGz).toBe('乙丑')
+    expect(iztro?.dualTrack?.yearDivide).toBe('正月初一换年')
+    expect(iztro?.dualTrack?.dayDivide).toBe('农历日+1安星')
+    expect(iztro?.engineTrack?.dayDivide).toBe('公历次日换日')
   })
 
   it('formats missing field labels for register rows', () => {

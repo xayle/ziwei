@@ -54,10 +54,11 @@ def build_bazi_structured_export(payload: dict[str, Any]) -> dict[str, Any]:
     if not items:
         md_lines.append("- （无神煞或未计算）")
 
-    md_lines.extend(["", "## 典籍脚注（provenance）"])
+    md_lines.extend(["", "## 典籍脚注"])
     for ref in classic_refs[:8]:
         if isinstance(ref, dict):
-            md_lines.append(f"- [{ref.get('layer', 'classical')}] {ref.get('title') or ref.get('id', '')}")
+            layer = provenance_layer_label(str(ref.get("layer") or "classical"))
+            md_lines.append(f"- [{layer}] {ref.get('title') or ref.get('id', '')}")
 
     missing = payload.get("missing_fields") or []
     md_lines.extend(format_missing_fields_markdown(missing if isinstance(missing, list) else []))

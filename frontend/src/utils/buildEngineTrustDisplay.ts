@@ -499,12 +499,8 @@ export function buildIztroDisplay(
 
   const yearDivide = profile?.yearDivide ?? 'lichun'
   const dayDivide = profile?.dayDivide ?? 'solar_next'
-  const yearLabel = yearDivide === 'normal' ? '正月初一换年' : '立春换年'
-  const dayLabel = dayDivide === 'forward'
-    ? '子时换日（forward）'
-    : dayDivide === 'current'
-      ? '当日子时'
-      : '公历次日换日'
+  const yearLabel = formatYearDivideLabel(yearDivide)
+  const dayLabel = formatDayDivideLabel(dayDivide)
 
   const dual = cc.dual_track
   const showDualTrackTable = cc.status === 'life_palace_mismatch'
@@ -524,8 +520,8 @@ export function buildIztroDisplay(
     dualTrack: dual
       ? {
           label: dual.label || 'iztro 对照轨',
-          yearDivide: dual.year_divide === 'normal' ? '正月初一换年' : dual.year_divide || '—',
-          dayDivide: dual.day_divide === 'forward' ? '子时换日（forward）' : dual.day_divide || '—',
+          yearDivide: formatYearDivideLabel(dual.year_divide),
+          dayDivide: formatDayDivideLabel(dual.day_divide),
           lifePalaceGz: dual.life_palace_gz || '—',
           mainMatch: `${dual.main_match ?? '—'}/${dual.main_total ?? '—'}`,
           note: dual.note ?? undefined,
@@ -533,6 +529,19 @@ export function buildIztroDisplay(
       : null,
     showDualTrackTable,
   }
+}
+
+function formatYearDivideLabel(value?: string | null): string {
+  if (value === 'normal') return '正月初一换年'
+  if (!value || value === 'lichun') return '立春换年'
+  return value
+}
+
+function formatDayDivideLabel(value?: string | null): string {
+  if (value === 'forward') return '农历日+1安星'
+  if (value === 'current') return '当日不换日'
+  if (!value || value === 'solar_next') return '公历次日换日'
+  return value
 }
 
 export type DualTrackReferenceRow = {
@@ -560,7 +569,7 @@ const DUAL_TRACK_REFERENCE_ROWS: DualTrackReferenceRow[] = [
   { id: 'ZIP01', topic: '外格回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 pillar_direct' },
   { id: 'ZIP04', topic: '月刃回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 pillar_direct' },
   { id: 'ZIP05', topic: '杂格回归', recorded: '—', engine: '引擎主盘', note: '千里命稿 pillar_direct' },
-  { id: 'ZW03', topic: '立春前晚子', recorded: '开源排盘轨 癸丑', engine: '乙丑', note: 'year_divide + day_divide 双轨样例' },
+  { id: 'ZW03', topic: '立春前晚子', recorded: '开源排盘轨 癸丑', engine: '乙丑', note: '换年/换日口径双轨样例' },
   { id: 'youbi', topic: '右弼口径', recorded: 'month（默认）', engine: 'hour（可选）', note: '辅煞 ±1 不表示主星错误' },
 ]
 

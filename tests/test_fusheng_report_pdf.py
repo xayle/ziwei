@@ -98,10 +98,13 @@ def test_render_fusheng_report_html_contains_algo_meta_labels():
     html = render_fusheng_report_html(payload)
     assert "正月初一换年" in html
     assert "农历日+1安星" in html
-    assert "early_zi_prev_day" in html
+    assert "早子算前一日" in html
+    assert "early_zi_prev_day" not in html
     assert "晚子不换日" in html
     assert "时辰未详" in html
     assert "日中 12:30" in html
+    assert "公历" in html
+    assert "gregorian" not in html
     assert "引擎提示" in html
     assert "右弼安星" in html
 
