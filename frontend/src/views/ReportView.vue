@@ -849,7 +849,7 @@ watch(
               data-testid="report-iztro-dual-track"
             >
               <h3>紫微双轨对照（引擎主盘 vs iztro）</h3>
-              <p class="hint">典型边界：立春前一日 + 晚子时（ZW03）。引擎主盘为产品 canonical，不静默覆盖。</p>
+              <p class="hint">典型边界：立春前一日 + 晚子时（ZW03）。以引擎主盘为准，不静默覆盖。</p>
               <table class="report-table report-iztro-dual-track__table">
                 <thead>
                   <tr>

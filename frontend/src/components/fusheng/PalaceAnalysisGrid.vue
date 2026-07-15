@@ -7,7 +7,7 @@ withDefaults(defineProps<{
   /** 命宫/财帛/官禄等优先展示 */
   priorityNames?: string[]
 }>(), {
-  emptyMessage: '暂无结构化宫论，请确认引擎返回 analysis_structured。',
+  emptyMessage: '暂无结构化宫论，请确认引擎已返回宫位解读。',
   priorityNames: () => ['命宫', '财帛', '官禄', '夫妻', '迁移', '福德'],
 })
 

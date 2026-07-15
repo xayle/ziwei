@@ -215,7 +215,7 @@ onMounted(() => {
         >
           <h3>紫微双轨对照（ZW03）</h3>
           <p class="fs-hint">
-            立春前 + 晚子时等边界：引擎主盘为 canonical，不与 iztro 静默对齐。
+            立春前 + 晚子时等边界：以引擎主盘为准，不与对照轨静默对齐。
             完整说明见报告卷二。
           </p>
           <table class="ziwei-zw03__table">

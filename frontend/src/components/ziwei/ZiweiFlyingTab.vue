@@ -58,7 +58,7 @@ const selfTransforms = computed(() => props.flying?.self_transforms ?? [])
       </div>
 
       <div v-if="receivedEntries.length" class="ziwei-flying-tab__block">
-        <h3>入宫汇总（received）</h3>
+        <h3>入宫汇总</h3>
         <ul>
           <li v-for="[palace, items] in receivedEntries" :key="palace">
             <strong>{{ palace }}</strong>：{{ items.join('；') }}
@@ -67,7 +67,7 @@ const selfTransforms = computed(() => props.flying?.self_transforms ?? [])
       </div>
 
       <div v-if="chongedEntries.length" class="ziwei-flying-tab__block">
-        <h3>飞化冲宫（chonged）</h3>
+        <h3>飞化冲宫</h3>
         <ul>
           <li v-for="[palace, items] in chongedEntries" :key="palace">
             <strong>{{ palace }}</strong>：{{ items.join('；') }}

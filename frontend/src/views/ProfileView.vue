@@ -84,19 +84,19 @@ const ziweiAlgoPresets = [
 ]
 
 const ziweiFieldTips: Record<string, string> = {
-  calendarMode: '公历/农历录入方式；农历模式需配合闰月标记，影响紫微 leap_month_method。',
-  isLeapMonth: '闰月标记：same=视为本月，mid=月中分界（默认）。',
-  yearDivide: '立春换年与八字节气年一致；正月初一换年对齐 iztro（ZW03 边界用例）。',
-  dayDivide: '换日口径影响晚子时排盘；「农历日+1」对齐 iztro 换日。',
+  calendarMode: '公历/农历录入方式；农历模式需配合闰月标记，影响紫微闰月口径。',
+  isLeapMonth: '闰月标记：视同本月，或按月中分界（默认）。',
+  yearDivide: '立春换年与八字节气年一致；正月初一换年对齐对照轨（ZW03 边界用例）。',
+  dayDivide: '换日口径影响晚子时排盘；「农历日+1」对齐对照轨换日。',
   lateZishi: '23:00–00:00 是否视为次日（与换日口径联动）。',
   solarTime: '启用真太阳时后按出生地经度修正时刻，影响紫微安星。',
-  ziweiBrightnessMethod: '星曜亮度表：standard（斗数全书）/ zhongzhou / mod1 / mod2。',
-  ziweiYoubiMethod: '右弼默认 month（戌起正月逆数）；hour 可切至时辰口径对齐 iztro 辅煞（见 PRODUCT.md）。',
-  sihuaMethod: '生年四化表：quanshu（全书默认）/ zhongzhou（中州变体）。',
-  liunianSihuaMethod: '流年四化来源：year_stem（流年天干）/ life_palace_stem（流年命宫宫干）。',
-  kuiyueMethod: '天魁天钺安法；standard 为六辛逢虎马默认。',
-  tianmaMethod: '天马安法：year（年支）/ month（月支）。',
-  templateVersion: '紫微 API 响应模板：standard / pro / simple。',
+  ziweiBrightnessMethod: '星曜亮度表：全书标准 / 中州 / 变体 1 / 变体 2。',
+  ziweiYoubiMethod: '右弼默认按月（戌起正月逆数）；可切至按时以对齐对照轨辅煞。',
+  sihuaMethod: '生年四化表：全书默认 / 中州变体。',
+  liunianSihuaMethod: '流年四化来源：流年天干 / 流年命宫宫干。',
+  kuiyueMethod: '天魁天钺安法；全书标准为六辛逢虎马默认。',
+  tianmaMethod: '天马安法：按年支 / 按月支。',
+  templateVersion: '紫微响应模板：标准 / 专业 / 简洁。',
 }
 
 async function loadEngineSummary() {
@@ -376,10 +376,10 @@ const showDemoSeedWarn = computed(() => isDemoSeedProfile(profileSnapshot.value)
 
 const zw03AlgoNote = computed(() => {
   if (form.yearDivide === 'lichun' && form.dayDivide === 'solar_next' && form.lateZishi) {
-    return '当前为引擎 canonical（立春换年 + 公历晚子进次日），与 iztro 默认可能在 ZW03 边界命宫不一致。'
+    return '当前为引擎主盘口径（立春换年 + 公历晚子进次日），与对照轨默认可能在 ZW03 边界命宫不一致。'
   }
   if (form.yearDivide === 'normal' && form.dayDivide === 'forward') {
-    return '当前参数接近 iztro 对照轨（正月初一 + forward）；主产品口径仍建议用立春换年。'
+    return '当前参数接近对照轨（正月初一 + 农历日+1）；主产品口径仍建议用立春换年。'
   }
   return ''
 })
@@ -810,7 +810,7 @@ function applyZiweiAlgoPreset(presetId: string) {
                   <li v-for="snap in profile.remoteSnapshots.slice(0, 8)" :key="snap.id">
                     <div class="archive-register__row">
                       <div class="archive-register__label">
-                        <strong>{{ snap.kind || 'snapshot' }}</strong>
+                        <strong>{{ snap.kind === 'fusheng_report' ? '浮生报告快照' : (snap.kind || '云端快照') }}</strong>
                         <span>{{ snap.created_at.replace('T', ' ').slice(0, 16) }}</span>
                       </div>
                       <div class="archive-register__actions">

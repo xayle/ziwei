@@ -21,7 +21,7 @@ withDefaults(defineProps<{
   <div class="dual-track-table" data-testid="dual-track-table">
     <h3 v-if="title">{{ title }}</h3>
     <p v-if="variant === 'reference'" class="dual-track-table__caption">
-      以下为典籍与引擎对照样例，非当前命盘 live 计算。
+      以下为典籍与引擎对照样例，非当前命盘即时计算。
     </p>
     <p class="dual-track-table__scroll-hint" data-testid="dual-track-scroll-hint">
       窄屏可左右滑动查看对照表。

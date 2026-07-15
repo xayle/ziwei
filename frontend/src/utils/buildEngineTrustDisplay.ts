@@ -75,7 +75,7 @@ export function formatMissingFieldLine(field: string): TrustDisplayLine {
     return {
       kind: 'missing',
       main: `${label}（对照口径 · 非故障）`,
-      note: '产品主盘为 canonical；此项仅提示与对照轨可能不一致或未宣称。',
+      note: '产品主盘为准；此项仅提示与对照轨可能不一致或未宣称。',
       tone: 'drift',
     }
   }
