@@ -110,6 +110,12 @@ const router = createRouter({
       meta: { title: '支付结果', public: true },
     },
     {
+      path: '/creator',
+      name: 'creator-dashboard',
+      component: () => import('@/views/creator/CreatorDashboardView.vue'),
+      meta: { title: '创作者看板' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),

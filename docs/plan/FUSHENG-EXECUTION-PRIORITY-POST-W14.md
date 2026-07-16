@@ -2,10 +2,10 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | post-w14-2.14 |
+| **版本** | post-w14-2.15 |
 | **日期** | 2026-07-16 |
 | **定位** | **T070 完成后**按编号依次做；无需每次对话 |
-| **当前优先级** | ▶ **Phase F GTM** — 五书 M3 机读达标 · **下一项 T100** |
+| **当前优先级** | ▶ **Phase F GTM** — T086–T100 ☑ → **下一项 T101** |
 | **前置** | [**EXECUTION-PRIORITY**](FUSHENG-EXECUTION-PRIORITY.md) **T001–T070 全部 ☑** |
 | **上级** | [INTEGRATED §十二](FUSHENG-INTEGRATED-DEV-PLAN-2026-07-12.md#十二增长期与平台演进w15) · [BOOK-GTM](FUSHENG-BOOK-GTM-DEV-PLAN-2026-07-12.md) · [PLATFORM-EVOLUTION](PLATFORM-EVOLUTION-ROADMAP.md) |
 | **入口** | [DEVELOPMENT.md](../DEVELOPMENT.md) · [PIPELINE](../FUSHENG-DEV-PIPELINE.md) |
@@ -19,7 +19,7 @@
 门禁  T071 / T071-BE / T071-FE ☑（2026-07-14）
 BE+FE T072–T084 ☑
 U5    T085 ☑（2026-07-14）
-GTM   T086–T099 ☑ → 下一项 **T100**
+GTM   T086–T100 ☑ → 下一项 **T101**
 五书  M0–M3 机读 ☑ · E-04 可选
 ```
 
@@ -138,7 +138,7 @@ make scorecard
 | ☑ | **T097** | BE | **BE-GTM-11** `export/card?layout=douyin` 9:16 | [T097 报告](../reports/T097-douyin-share-card-2026-07-14.md) · `pdf_exporter` | PNG 输出 |
 | ☑ | **T098** | FE | **FE-GTM-07** 竖版分享预览 + 导出 | [T098 报告](../reports/T098-douyin-share-preview-2026-07-14.md) · DouyinShareCard | 纸纹+卷名+事实句 |
 | ☑ | **T099** | BE | **BE-GTM-08** 创作者统计 API（topic→注册 cohort） | [T099 报告](../reports/T099-creator-stats-2026-07-14.md) · `creator_stats` | 仅管理员 RBAC |
-| ☐ | **T100** | FE | **FE-GTM-05** 创作者 Dashboard（仅你） | `views/creator/` | 转化表可读 |
+| ☑ | **T100** | FE | **FE-GTM-05** 创作者 Dashboard（仅你） | [T100 报告](../reports/T100-creator-dashboard-2026-07-16.md) · `/creator` | 转化表可读 |
 | ☐ | **T101** | BE | **BE-GTM-10** 私域留资 stub（可选手机号） | `routers/leads.py` | CSV 导出 |
 | ☐ | **T102** | ALL | GTM 合规：落地页+报告 disclaimer 双显；禁「改命」文案扫描 | 文案 lint | 无违规词 |
 | ☐ | **T103** | ALL | 试投演练：模拟 utm 注册→读卷一二→锁卷三 | 手工 | 漏斗可走通 |
@@ -309,6 +309,7 @@ make scorecard
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| post-w14-2.15 | 2026-07-16 | **T100 ☑** · 创作者 Dashboard `/creator` · 下一项 T101 |
 | post-w14-2.14 | 2026-07-16 | **五书可验 M1** · T100 暂停至 M2 · E-01/E-03 机读轨 ☑ |
 | post-w14-2.13 | 2026-07-14 | **T099 ☑** · 创作者统计 API · 下一项 T100 |
 | post-w14-2.12 | 2026-07-14 | **T098 ☑** · 竖版分享预览+导出 FE · 下一项 T099 |

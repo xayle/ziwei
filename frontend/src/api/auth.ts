@@ -10,6 +10,8 @@ export type AuthMeResponse = {
   username: string
   email?: string
   role?: string
+  /** T100：创作者看板门禁 */
+  is_admin?: boolean
   entitlement?: EntitlementTier
   entitlement_info?: {
     tier: EntitlementTier
