@@ -33,6 +33,23 @@ def _block(text: str, layer: str = "fact", classic_id: str | None = None) -> Ana
     return AnalysisBlockModel(text=text.strip() or "—", layer=layer, classic_id=classic_id)
 
 
+def _verified_cite_blocks_from_refs(refs: list[dict[str, Any]], *, limit: int = 2) -> list[AnalysisBlockModel]:
+    """candidates 中 hint_type=verified 的条目 → cite 块（E-01）。"""
+    out: list[AnalysisBlockModel] = []
+    for ref in refs:
+        if ref.get("hint_type") != "verified":
+            continue
+        src = str(ref.get("source") or "").strip()
+        quote = str(ref.get("text") or "").strip()
+        if not quote:
+            continue
+        body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+        out.append(_block(_clip(body, 220), "cite", str(ref.get("id") or "") or None))
+        if len(out) >= limit:
+            break
+    return out
+
+
 def _section(
     sid: str,
     heading: str,
@@ -51,10 +68,23 @@ def _section(
 
 
 def _clip(text: str, limit: int = 280) -> str:
+    """截断时优先落在句号/分号等边界，避免格局/用神类长句拦腰切断。"""
     t = (text or "").strip()
     if len(t) <= limit:
         return t
-    return f"{t[: limit - 1]}…"
+    window = t[:limit]
+    min_keep = max(40, int(limit * 0.55))
+    best = -1
+    for sep in ("。", "！", "？", "；", "\n"):
+        idx = window.rfind(sep)
+        if idx >= min_keep and idx > best:
+            best = idx
+    if best >= 0:
+        return window[: best + 1]
+    trimmed = window.rstrip("，、；：,.; ")
+    if len(trimmed) < max(20, int(limit * 0.4)):
+        trimmed = window[: limit - 1]
+    return f"{trimmed}…"
 
 
 def _pillar_line(label: str, pillar: dict[str, Any] | None) -> str:
@@ -162,24 +192,191 @@ def _relations_text(bazi: dict[str, Any]) -> str:
     return "干支关系摘要待补全。"
 
 
+def _relations_impact_text(bazi: dict[str, Any]) -> str:
+    """卷二关系读法：何意 / 对本命影响（约 110–180 字）。"""
+    rs = bazi.get("relations_summary") if isinstance(bazi.get("relations_summary"), dict) else {}
+    base = _relations_text(bazi)
+    bits: list[str] = []
+    clash = str((rs or {}).get("clash_summary") or "").strip()
+    combine = str((rs or {}).get("combine_summary") or "").strip()
+    harm = str((rs or {}).get("harm_summary") or "").strip()
+    interaction = str((rs or {}).get("interaction_summary") or "").strip()
+    if clash:
+        bits.append(
+            f"冲克见「{clash[:48]}」，对本命常表现为节奏冲突与立场拉扯："
+            "行事宜避硬碰硬，先稳后进，重大表态前多留一步缓冲；"
+            "冲突年份尤忌临时起意的重大签约。"
+        )
+    if combine or "合" in base or "拱" in base:
+        bits.append(
+            "会合或拱合提示人际与资源有牵绊：宜借合力成事，"
+            "也忌纠缠不清、把人情债当成唯一路径；合多之时更要分清谁在借力、谁在消耗。"
+        )
+    if harm:
+        bits.append(
+            f"害破信号「{harm[:36]}」，协作、契约与口头承诺宜留余地，" "避免一次把话说满，也避免把误会拖成长期对立。"
+        )
+    if not bits and interaction:
+        bits.append(
+            f"干支互动要点：{interaction[:80]}。"
+            "阅读时先认清主线，再对照神煞与卷三运限起伏，把关键词落到可观察的行事节奏。"
+        )
+    if not bits:
+        bits.append(
+            f"命局干支关系为「{base[:72]}」。" "阅读时先分清冲合主线，再对照神煞与运限起伏，勿以单次关系论断终身。"
+        )
+    text = "".join(bits)
+    if len(text) < 120:
+        text = f"{text}本节是排盘事实之上的读法提示，用来帮助串联卷一格局与卷三运限，" "不作绝对断语。"
+    return _clip(text, 280)
+
+
+def _iter_shensha_items(bazi: dict[str, Any]) -> list[dict[str, Any]]:
+    ss = bazi.get("shensha_summary") or {}
+    items = ss.get("items") if isinstance(ss, dict) else None
+    if not items:
+        items = bazi.get("shensha") or []
+    return [i for i in items if isinstance(i, dict) and i.get("name")]
+
+
+def _shensha_is_beneficial(item: dict[str, Any]) -> bool | None:
+    if "is_beneficial" in item:
+        return bool(item.get("is_beneficial"))
+    pol = str(item.get("polarity") or "").strip().lower()
+    if pol in {"+", "auspicious", "good", "吉", "beneficial"}:
+        return True
+    if pol in {"-", "inauspicious", "bad", "凶", "慎"}:
+        return False
+    return None
+
+
 def _shensha_text(bazi: dict[str, Any]) -> str:
     ss = bazi.get("shensha_summary") or {}
     highlights = ss.get("highlights") or []
     if highlights:
         return "、".join(str(h) for h in highlights[:8])
-    items = ss.get("items") or bazi.get("shensha") or []
-    names = [str(i.get("name")) for i in items if isinstance(i, dict) and i.get("name")]
+    names = [str(i.get("name")) for i in _iter_shensha_items(bazi)]
     return "、".join(names[:8]) if names else "神煞摘要待补全。"
 
 
+def _relations_classic_quote_blocks(bazi: dict[str, Any]) -> list[AnalysisBlockModel]:
+    """挂载地支冲合刑害软提示（引擎 classic_refs）。"""
+    from services.bazi_engine.classic_refs import relations_candidates
+
+    rs = bazi.get("relations_summary") if isinstance(bazi.get("relations_summary"), dict) else {}
+    blocks: list[AnalysisBlockModel] = []
+    for ref in relations_candidates(rs, limit=3):
+        src = str(ref.get("source") or "").strip()
+        quote = str(ref.get("text") or "").strip()
+        rid = str(ref.get("id") or "").strip()
+        if not quote:
+            continue
+        src_bit = f"（{src}）" if src else ""
+        body = f"关系典籍软提示{src_bit}：{quote}（软提示，待校勘升格前不作「典籍依据」。）"
+        blocks.append(_block(_clip(body, 220), "inference", rid or None))
+    return blocks
+
+
+def _shensha_classic_quote_blocks(bazi: dict[str, Any]) -> list[AnalysisBlockModel]:
+    """挂载神煞 classic_refs 正文；soft→inference，verified→cite（E-01）。"""
+    blocks: list[AnalysisBlockModel] = []
+    seen_ids: set[str] = set()
+    for item in _iter_shensha_items(bazi)[:12]:
+        name = str(item.get("name") or "").strip()
+        picked: dict[str, Any] | None = None
+        for ref in item.get("classic_refs") or []:
+            if not isinstance(ref, dict):
+                continue
+            quote = str(ref.get("text") or "").strip()
+            if not quote:
+                continue
+            rid = str(ref.get("id") or "").strip()
+            if rid and rid in seen_ids:
+                continue
+            picked = ref
+            break
+        if not picked:
+            continue
+        rid = str(picked.get("id") or "").strip()
+        if rid:
+            seen_ids.add(rid)
+        src = str(picked.get("source") or item.get("classic_source") or "").strip()
+        quote = str(picked.get("text") or "").strip()
+        hint = str(picked.get("hint_type") or "soft").strip().lower()
+        layer = "cite" if hint in {"verified", "hard", "cite"} else "inference"
+        src_bit = ""
+        if src:
+            src_bit = f"（{src}）" if src.startswith("《") else f"（《{src}》）"
+        body = f"{name or '神煞'}{src_bit}：{quote}"
+        if layer == "inference":
+            body = f"{body}（软提示，待校勘升格前不作「典籍依据」。）"
+        blocks.append(_block(_clip(body, 220), layer, rid or None))
+        if len(blocks) >= 3:
+            break
+    return blocks
+
+
+def _shensha_polarity_texts(bazi: dict[str, Any]) -> tuple[str, str]:
+    """返回（吉神段, 慎神段）。"""
+    good: list[str] = []
+    caution: list[str] = []
+    unknown: list[str] = []
+    for item in _iter_shensha_items(bazi)[:16]:
+        name = str(item.get("name") or "").strip()
+        if not name:
+            continue
+        flag = _shensha_is_beneficial(item)
+        if flag is True:
+            good.append(name)
+        elif flag is False:
+            caution.append(name)
+        else:
+            unknown.append(name)
+    if not good and not caution and unknown:
+        joined = "、".join(unknown[:8])
+        return (
+            f"神煞见{joined}。吉凶未在摘要中分列，宜结合格局、用神与刑冲综合看，"
+            "把神煞当作旁证而非结论；贵人类信号可主动借力，灾煞类信号则宜留余地。",
+            "慎神分列待补：当前引擎未给出明确极性，阅读时以格局与刑冲为主、神煞为辅，" "勿因名单长短夸大吉凶。",
+        )
+    if not good and not caution:
+        base = _shensha_text(bazi)
+        return (
+            f"神煞要点：{base}。宜视为格局旁证：有吉神不代表万事顺遂，" "仍须回到日主强弱与用神是否得力。",
+            "暂无单独慎神分列；若后文出现灾煞、劫煞等，重大决策宜缓、契约宜细看，" "并把风险对照到卷三流年节点。",
+        )
+    ji = (
+        f"吉神见{'、'.join(good[:8])}。提示贵人、文书、名望或护持机会："
+        "宜主动借力、守信用，把贵人线索落到具体合作、引荐与学习场景，"
+        "并与卷一用神对照；有吉神不等于万事顺遂，仍须看是否得令、是否被冲破。"
+        if good
+        else "本盘摘要未突出吉神；仍可从正印、贵人类格局与日主喜用中寻找护持线索，"
+        "不必因名单偏短而气馁，也勿另造吉神叙事。"
+    )
+    shen = (
+        f"慎神见{'、'.join(caution[:8])}。提示口舌、波动、损耗或刚愎风险："
+        "重大决策宜缓、契约宜细看，情绪上头时少做不可逆承诺；"
+        "把风险落到具体事项与卷三流年节点，比空谈凶神更有用；"
+        "若与刑冲同现，优先处理关系张力再谈扩张。"
+        if caution
+        else "摘要未单列慎神；仍须对照刑冲、害破与流年再判风险，"
+        "把谨慎落在具体月份与事项上，避免把名单长短当成命运判决。"
+    )
+    if unknown:
+        ji = f"{ji}另有未分极性者：{'、'.join(unknown[:4])}，宜回看其落柱与十神再判。"
+    return _clip(ji, 260), _clip(shen, 260)
+
+
 def _enrich_vol_block(label: str, body: str, *, floor: int = 40) -> str:
-    """短事实块补读法衬底，避免空洞审计误杀。"""
+    """短事实块补读法衬底；已够长则不再套话（V2-04）。"""
     trimmed = str(body or "").strip()
     if len(trimmed) >= floor:
         return trimmed
-    combined = f"{label}：{trimmed}。以排盘事实为准，配合卷内典籍 / 推断分层阅读。"
-    if len(combined) < floor:
-        combined = f"{combined}详见本节与相邻讲解。"
+    combined = f"{label}：{trimmed}。详见本节与相邻讲解；以排盘事实为准，勿单句外推。"
+    pad = "宜对照卷内相邻章节一并阅读。"
+    while len(combined) < floor:
+        combined = f"{combined}{pad}"
+        pad = "。"
     return combined
 
 
@@ -198,9 +395,11 @@ def _explain_sections(explain: dict[str, Any] | None, section_id: str) -> list[A
                 continue
             if len(text) < 40 and section_id == "geju":
                 text = _enrich_vol_block("格局讲解", text)
+            # 格局讲解优先保完整句；其它 explain 节仍用默认上限
+            limit = 500 if section_id == "geju" else 280
             blocks.append(
                 AnalysisBlockModel(
-                    text=_clip(text),
+                    text=_clip(text, limit),
                     layer=raw.get("layer", "fact"),
                     classic_id=raw.get("classic_id"),
                 )
@@ -220,18 +419,24 @@ def _build_colophon(
     wenmo_advisory: str | None,
     engine_label: str,
 ) -> ColophonModel:
-    # E-02：收书期必显「语料核验中」；summary 上限 3 行，引擎+语料优先
+    # E-02：summary 上限 3 行；语料行反映 verified 进度（非「核验中」空话）
+    from services.content_policy import verified_engine_ref_count
+
+    n_engine = verified_engine_ref_count()
     lines: list[str] = [
         f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内事实 / 典籍 / 推断分层。",
-        "典籍语料：五书核验进行中；无 verified 条目处不标「典籍依据」。",
+        (
+            f"典籍语料：已核验引擎条 {n_engine} 条；仅 layer=cite 且 verified 标「典籍依据」，"
+            "软提示见卷二；六冲/六合/三合专条仍待外底本校勘，不作真 cite。"
+        ),
     ]
     if missing_fields:
         labels = [_missing_field_label(f) for f in missing_fields[:4]]
         lines.append(f"字段注记：{'、'.join(labels)}（不影响已写出块；对照项非故障，展开脚注可核）。")
     elif iztro_advisory:
-        lines.append(_clip(iztro_advisory, 72))
+        lines.append(_clip(iztro_advisory, 100))
     else:
-        lines.append("双轨核验：可对照开源排盘 / 文墨对照（若有）。")
+        lines.append("双轨核验：可对照开源排盘与文墨对照盘（若有）；对照差异见脚注，不改写主卷事实。")
     return ColophonModel(
         summary_lines=lines[:3],
         missing_fields=missing_fields or None,
@@ -366,10 +571,17 @@ def build_life_volumes_from_charts(
             "fact",
             [
                 _block(
-                    "卷一至卷五按事实（排盘推算）· 典籍（典籍依据）· 推断（经验推断）分层阅读；"
-                    "卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷三运限。",
+                    "全书按三层阅读：排盘推算（干支、宫星、运限等引擎事实）、"
+                    "典籍依据（有出处的句式与校勘）、经验推断（可读建议，默认不代替事实）。"
+                    "界面只用上述中文标签，不夹写英文层名。",
                     "fact",
-                )
+                ),
+                _block(
+                    "建议顺序：卷一格局与用神 → 卷二关系与神煞 → 卷三大运流年 → "
+                    "卷四命身轴与十二宫 → 卷五事理（默认折叠）→ 卷六问书（需主动展开）。"
+                    "先立事实与读法，再追问具体事项；卷六不自动发起问书。",
+                    "fact",
+                ),
             ],
         )
     )
@@ -404,26 +616,61 @@ def build_life_volumes_from_charts(
         if geju.get("geju_level"):
             body = f"{body}（等级 {geju.get('geju_level')}）"
         vol1_sections.append(_section("geju", "格局", "fact", [_block(_enrich_vol_block("卷一格局", body))]))
-    if str(geju.get("classic_ref") or "").strip():
-        vol1_sections.append(_section("geju-cite", "典籍句式", "cite", [_block(str(geju.get("classic_ref")), "cite")]))
+    # 格局典籍：仅 verified 进 cite；裸 classic_ref 字符串不得冒充 cite（E-01）
+    from services.bazi_engine.classic_refs import geju_candidates
+
+    geju_verified = [r for r in geju_candidates(geju_name, limit=2) if r.get("hint_type") == "verified"]
+    if geju_verified:
+        cite_blocks = []
+        for ref in geju_verified:
+            src = str(ref.get("source") or "").strip()
+            quote = str(ref.get("text") or "").strip()
+            if not quote:
+                continue
+            body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+            cite_blocks.append(_block(_clip(body, 220), "cite", str(ref.get("id") or "") or None))
+        if cite_blocks:
+            vol1_sections.append(_section("geju-cite", "典籍句式", "cite", cite_blocks))
+    elif str(geju.get("classic_ref") or "").strip():
+        vol1_sections.append(
+            _section(
+                "geju-classic-soft",
+                "格局典籍软提示",
+                "inference",
+                [_block(_clip(str(geju.get("classic_ref")), 500), "inference")],
+            )
+        )
     yong = bazi.get("yongshen") or {}
     if isinstance(yong, dict) and (yong.get("favor") or yong.get("avoid")):
+        favor = "、".join(str(x) for x in (yong.get("favor") or []) if str(x).strip()) or "—"
+        avoid = "、".join(str(x) for x in (yong.get("avoid") or []) if str(x).strip()) or "—"
+        yong_body = (
+            f"喜用 {favor}；忌 {avoid}。"
+            "用神须与格局、日主强弱同参：得令得助则宜顺用神拓展，"
+            "失令受克则先避忌神、再谈进取。"
+        )
         vol1_sections.append(
             _section(
                 "yongshen",
                 "用神",
                 "fact",
-                [
-                    _block(
-                        _enrich_vol_block(
-                            "卷一用神",
-                            f"喜用 {'、'.join(yong.get('favor') or []) or '—'}；"
-                            f"忌 {'、'.join(yong.get('avoid') or []) or '—'}",
-                        )
-                    )
-                ],
+                [_block(_enrich_vol_block("卷一用神", yong_body))],
             )
         )
+        from services.bazi_engine.classic_refs import yongshen_candidates
+
+        yong_cite = []
+        for ref in yongshen_candidates(limit=2):
+            if ref.get("hint_type") != "verified":
+                continue
+            src = str(ref.get("source") or "").strip()
+            quote = str(ref.get("text") or "").strip()
+            if not quote:
+                continue
+            body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+            yong_cite.append(_block(_clip(body, 220), "cite", str(ref.get("id") or "") or None))
+        if yong_cite:
+            vol1_sections.append(_section("yongshen-cite", "典籍句式", "cite", yong_cite))
     strength = bazi.get("day_master_strength") or {}
     if isinstance(strength, dict) and (strength.get("tier") is not None or strength.get("score") is not None):
         factor_bits = []
@@ -442,6 +689,19 @@ def build_life_volumes_from_charts(
         vol1_sections.append(
             _section("strength", "日主强弱", "fact", [_block(_enrich_vol_block("卷一强弱", strength_text))])
         )
+        from services.bazi_engine.classic_refs import daymaster_candidates
+
+        dm_cite = _verified_cite_blocks_from_refs(daymaster_candidates(limit=2))
+        if dm_cite:
+            vol1_sections.append(_section("daymaster-cite", "典籍句式", "cite", dm_cite))
+    from services.bazi_engine.classic_refs import shishen_candidates, wuxing_candidates
+
+    wuxing_cite = _verified_cite_blocks_from_refs(wuxing_candidates(limit=2))
+    if wuxing_cite:
+        vol1_sections.append(_section("wuxing-cite", "五行典籍句式", "cite", wuxing_cite))
+    shishen_cite = _verified_cite_blocks_from_refs(shishen_candidates(limit=2))
+    if shishen_cite:
+        vol1_sections.append(_section("shishen-cite", "十神典籍句式", "cite", shishen_cite))
     fortune = bazi.get("current_fortune_summary") or {}
     if isinstance(fortune, dict):
         bits = [
@@ -456,48 +716,128 @@ def build_life_volumes_from_charts(
         bits = [b for b in bits if b]
         domains = fortune.get("this_year_domains") or {}
         if isinstance(domains, dict):
-            for label, tip in domains.items():
-                tip_s = _clip(str(tip or "").strip(), 120)
+            # 控 vol1 trunc：域摘要节选，把篇幅留给格局/用神完整句
+            for label, tip in list(domains.items())[:2]:
+                tip_s = _clip(str(tip or "").strip(), 72)
                 if tip_s:
                     bits.append(f"{label}：{tip_s}")
         actions = [str(a).strip() for a in (fortune.get("top3_actions") or [])[:2] if str(a).strip()]
         if actions:
-            bits.append("宜行： " + "；".join(_clip(a, 100) for a in actions))
+            bits.append("宜行： " + "；".join(_clip(a, 72) for a in actions))
         if bits:
-            vol1_sections.append(_section("current-fortune", "当下运势摘要", "fact", [_block(" · ".join(bits))]))
+            fortune_text = _clip(" · ".join(bits), 360)
+            vol1_sections.append(_section("current-fortune", "当下运势摘要", "fact", [_block(fortune_text)]))
     if str(bazi.get("bazi_summary") or "").strip():
         vol1_sections.append(
             _section(
                 "summary-inference",
                 "综合总评",
                 "inference",
-                [_block(_clip(str(bazi.get("bazi_summary")), 400), "inference")],
+                [_block(_clip(str(bazi.get("bazi_summary")), 360), "inference")],
                 collapsed_default=True,
             )
         )
     geju_blocks = _explain_sections(explain_bazi, "geju")
-    if geju_blocks:
-        vol1_sections.append(_section("geju-explain", "格局讲解", "cite", geju_blocks))
+    geju_explain_fact = [b for b in geju_blocks if b.layer == "fact"]
+    geju_explain_cite = [b for b in geju_blocks if b.layer == "cite"]
+    geju_explain_soft = [b for b in geju_blocks if b.layer == "inference"]
+    # 讲解正文（fact + explain cite 长文）进 geju-explain；verified 短句另见 geju-cite
+    geju_guide = geju_explain_fact + geju_explain_cite
+    if geju_guide:
+        vol1_sections.append(_section("geju-explain", "格局讲解", "fact", geju_guide))
+    if geju_explain_soft and not geju_verified:
+        vol1_sections.append(_section("geju-classic-soft", "格局典籍软提示", "inference", geju_explain_soft[:2]))
 
+    ji_text, shen_text = _shensha_polarity_texts(bazi)
+    relations_fact = (
+        f"干支关系摘要：{_relations_text(bazi)}。"
+        "以上为排盘事实层要点（合冲刑害等），细读见下一节「关系读法」；"
+        "勿将关键词名单直接等同于终身性格结论，也勿跳过格局与用神单独解读关系。"
+        "有 explain 关系讲解时，以讲解与本摘要互参。"
+    )
     vol2_sections = [
         _section(
             "relations",
             "干支关系",
             "fact",
-            [_block(_enrich_vol_block("卷二干支关系摘要", _relations_text(bazi)))],
+            [_block(_enrich_vol_block("干支关系", relations_fact))],
         ),
         _section(
-            "shensha",
-            "神煞摘要",
+            "relations-reading",
+            "关系读法",
+            "inference",
+            [_block(_relations_impact_text(bazi), "inference")],
+        ),
+        _section(
+            "shensha-auspicious",
+            "吉神",
             "fact",
-            [_block(_enrich_vol_block("卷二神煞摘要", _shensha_text(bazi)))],
+            [_block(_enrich_vol_block("吉神", ji_text))],
+        ),
+        _section(
+            "shensha-caution",
+            "慎神",
+            "fact",
+            [_block(_enrich_vol_block("慎神", shen_text))],
         ),
     ]
     rel_blocks = _explain_sections(explain_bazi, "relations")
-    if rel_blocks:
-        vol2_sections.append(_section("relations-explain", "关系讲解", "fact", rel_blocks))
+    # 仅 layer=cite 进典籍句式；带 classic_id 的 soft/inference 不得冒充 cite（E-01）
+    cite_from_explain = [b for b in rel_blocks if b.layer == "cite"]
+    explain_soft = [b for b in rel_blocks if b.layer == "inference"]
+    explain_fact = [b for b in rel_blocks if b.layer not in {"cite", "inference"}]
+    if explain_fact:
+        vol2_sections.append(_section("relations-explain", "关系讲解", "fact", explain_fact))
+    relations_cite_ok = bool(cite_from_explain)
+    if cite_from_explain:
+        vol2_sections.append(_section("relations-cite", "典籍句式", "cite", cite_from_explain[:3]))
+    else:
+        # explain 未给出 verified cite 时，按冲合信号挂已核验篇章摘句
+        from services.relations_classic_cite import pick_relations_verified_cites
+
+        rs = bazi.get("relations_summary") if isinstance(bazi.get("relations_summary"), dict) else {}
+        verified_cites = []
+        for cite in pick_relations_verified_cites(rs, limit=2):
+            body = f"典籍依据（{cite['title']}）：{cite['passage']}"
+            if len(body) < 40:
+                body = f"{body}宜与干支关系事实互参，不作单句断语。"
+            verified_cites.append(_block(_clip(body, 220), "cite", cite["id"]))
+        if verified_cites:
+            relations_cite_ok = True
+            vol2_sections.append(_section("relations-cite", "典籍句式", "cite", verified_cites))
+    # 关系软提示：优先 explain inference；否则引擎地支候选
+    rel_soft = explain_soft or _relations_classic_quote_blocks(bazi)
+    if rel_soft:
+        vol2_sections.append(_section("relations-classic-soft", "关系典籍软提示", "inference", rel_soft[:3]))
+    quote_blocks = _shensha_classic_quote_blocks(bazi)
+    if quote_blocks:
+        cite_q = [b for b in quote_blocks if b.layer == "cite"]
+        soft_q = [b for b in quote_blocks if b.layer != "cite"]
+        if cite_q:
+            vol2_sections.append(_section("shensha-cite", "典籍句式", "cite", cite_q))
+        if soft_q:
+            vol2_sections.append(_section("shensha-classic-soft", "神煞典籍软提示", "inference", soft_q))
+    if not relations_cite_ok and not quote_blocks and not rel_soft:
+        vol2_sections.append(
+            _section(
+                "vol2-cite-pending",
+                "典籍句式",
+                "cite",
+                [
+                    _block(
+                        "卷二典籍句式待校勘：关系与神煞的古籍正文尚未挂载。"
+                        "阅读时以排盘事实、关系读法与吉神/慎神分列为准，把神煞当旁证；"
+                        "典籍句式补齐后再对照引用。在此之前，不作断语，也不用口语替代典籍。"
+                        "校勘进度见卷末跋；若 explain 已挂 cite，本注会被典籍句式节替换。",
+                        "cite",
+                    )
+                ],
+            )
+        )
 
     vol3_sections: list[VolumeSectionModel] = []
+    from services.bazi_engine.classic_refs import dayun_candidates, liunian_candidates
+
     dayun_items = ((bazi.get("dayun") or {}).get("items") or (bazi.get("dayun") or {}).get("cycles") or [])[:8]
     if dayun_items:
         vol3_sections.append(
@@ -512,6 +852,9 @@ def build_life_volumes_from_charts(
                 ],
             )
         )
+        dayun_cite = _verified_cite_blocks_from_refs(dayun_candidates(limit=2))
+        if dayun_cite:
+            vol3_sections.append(_section("dayun-cite", "典籍句式", "cite", dayun_cite))
     ziwei_dayun = ((ziwei or {}).get("dayun") or {}).get("items") or []
     if ziwei_dayun:
         z_blocks: list[AnalysisBlockModel] = []
@@ -589,6 +932,9 @@ def build_life_volumes_from_charts(
                 ],
             )
         )
+        liunian_cite = _verified_cite_blocks_from_refs(liunian_candidates(limit=2))
+        if liunian_cite:
+            vol3_sections.append(_section("liunian-cite", "典籍句式", "cite", liunian_cite))
     if not vol3_sections:
         vol3_sections.append(_section("dayun-empty", "运限", "fact", [_block("大运序列待载入。")]))
 
@@ -603,7 +949,25 @@ def build_life_volumes_from_charts(
                     _block(
                         f"卷四命盘概要：五行局 {ziwei.get('wuxing_ju_name', '—')}；"
                         f"命宫 {ziwei.get('life_palace_gz', '—')}；身宫 {ziwei.get('body_palace_gz', '—')}。"
-                        f"阅读时先定命身轴，再对照十二宫主星与格局条文。"
+                        "以下宫图与格局均围绕命身轴展开，勿先扫十二宫再回头找主轴。"
+                    )
+                ],
+            )
+        )
+        vol4_sections.append(
+            _section(
+                "ziwei-reading",
+                "宫图读法",
+                "inference",
+                [
+                    _block(
+                        "先看命身轴：命宫看主星气质与一生底色，身宫看行运着力与身心投注处；"
+                        "两宫同参，才谈得上格局高低。"
+                        "再看三方四正（命、财帛、官禄与对宫），把握事业、财帛与压力来源，"
+                        "比逐宫平铺更易抓住主线。"
+                        "然后才扫各宫主星、辅星与四化；格局条文用来印证命身轴，"
+                        "不代替「先轴后方」的阅读顺序。",
+                        "inference",
                     )
                 ],
             )
@@ -667,6 +1031,8 @@ def build_life_volumes_from_charts(
         vol4_sections.append(_section("ziwei-empty", "紫微", "fact", [_block("紫微数据待载入。")]))
 
     vol5_sections: list[VolumeSectionModel] = []
+    from services.bazi_engine.classic_refs import health_candidates, marriage_candidates
+
     domain_blocks = _explain_sections(explain_bazi, "domains")
     if domain_blocks:
         vol5_sections.append(
@@ -688,11 +1054,18 @@ def build_life_volumes_from_charts(
                     collapsed_default=True,
                 )
             )
+    marriage_cite = _verified_cite_blocks_from_refs(marriage_candidates(limit=2))
+    if marriage_cite:
+        vol5_sections.append(_section("marriage-cite", "婚恋典籍句式", "cite", marriage_cite, collapsed_default=True))
+    health_cite = _verified_cite_blocks_from_refs(health_candidates(limit=2))
+    if health_cite:
+        vol5_sections.append(_section("health-cite", "健康典籍句式", "cite", health_cite, collapsed_default=True))
     if not vol5_sections:
         vol5_sections.append(
             _section("vol5-empty", "事之理", "inference", [_block("域分析待 explain 接入。")], collapsed_default=True)
         )
 
+    _vol6_modules = "大运叙述、流年建议、事业详解、婚恋详解、财富详解、风水建议"
     vol6_sections = [
         _section(
             "vol6-on-demand",
@@ -700,13 +1073,70 @@ def build_life_volumes_from_charts(
             "inference",
             [
                 _block(
-                    "卷六为问书助手：需用户主动展开后选择事业/婚恋等模块提问；"
-                    "打磨期不自动调用问书，避免首屏静默消耗。展开后即可与排盘事实对照追问。",
+                    "卷六为问书助手：需主动展开后选择模块提问。"
+                    "打磨期不自动调用问书，避免首屏静默消耗额度或打断阅读节奏；"
+                    "展开后即可把排盘事实、卷二神煞读法与卷三运限对照追问，"
+                    "把「怎么问」当作阅读延伸，而非另开玄学聊天。提问前请先确认已读卷一与卷三要点。",
                     "fact",
                 )
             ],
             collapsed_default=True,
-        )
+        ),
+        _section(
+            "vol6-how-to-ask",
+            "怎么问",
+            "inference",
+            [
+                _block(
+                    "示例一（事业）：结合卷一格局与当前大运，今年事业宜进取还是守成？"
+                    "若要换赛道或谈晋升，有哪些方向更贴用神、哪些宜暂缓？"
+                    "请用可执行建议回答，并标明依据来自格局还是运限。",
+                    "inference",
+                ),
+                _block(
+                    "示例二（婚恋）：对照卷二神煞与配偶宫线索，近两年感情节奏如何把握？"
+                    "沟通、承诺与边界上各要注意什么？"
+                    "请避免把刑冲直接当成情绪标签，改成可观察的相处节奏。",
+                    "inference",
+                ),
+                _block(
+                    "示例三（流年）：根据卷三流年节选，明年关键节点在哪几个月？"
+                    "宜推动什么、宜暂缓什么，如何与当前大运叙事对齐？"
+                    "若只能抓两三个月份，请按优先级说明。",
+                    "inference",
+                ),
+            ],
+            collapsed_default=True,
+        ),
+        _section(
+            "vol6-bridge",
+            "与前卷衔接",
+            "inference",
+            [
+                _block(
+                    "建议先读完卷一格局与用神、卷二关系/神煞读法、卷三当前大运与流年节选，"
+                    "再打开问书；带着具体年份、生活域或一件待决之事提问，回答更贴盘，"
+                    "也更少空泛套话。若前卷尚未读完，可先记下问题，读完再展开本卷。",
+                    "inference",
+                )
+            ],
+            collapsed_default=True,
+        ),
+        _section(
+            "vol6-access",
+            "使用说明",
+            "fact",
+            [
+                _block(
+                    f"未登录时可先完成排盘与前五卷阅读，建立事实底稿；"
+                    f"登录后展开本卷，可选择：{_vol6_modules}。"
+                    f"各模块需主动发起，不会在首屏自动请求；"
+                    f"未登录时也可先浏览示例问法，登录后再正式提问。",
+                    "fact",
+                )
+            ],
+            collapsed_default=True,
+        ),
     ]
 
     colophon_vol_sections = [

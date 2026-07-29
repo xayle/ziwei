@@ -51,6 +51,17 @@
 | engine_ref.pattern_002 | — | spotcheck-batch | services/bazi_engine/classic_refs.py | verified |
 | engine_ref.pattern_003 | — | spotcheck-batch | services/bazi_engine/classic_refs.py | verified |
 | engine_ref.pattern_004 | — | spotcheck-batch | services/bazi_engine/classic_refs.py | verified |
+| engine_ref.dizhi_ext04 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.dizhi_ext05 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.dizhi_ext06 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.shensha_002 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.shensha_003 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.shensha_004 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.shensha_005 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.shensha_006 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.shensha_008 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.dayun_012 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.general_006 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
 | qianli.case.千里命稿例18 | — | spotcheck-batch | GitHub: bazi-skills supreme_audit.json (例18) | verified |
 | qianli.case.千里命稿例75 | — | spotcheck-batch | GitHub: bazi-skills supreme_audit.json (例75) | verified |
 | qianli.case.孙传芳 | — | spotcheck-batch | GitHub: bazi-skills supreme_audit.json (例101) | verified |
@@ -223,3 +234,45 @@
 | auto.渊海子平.伤官若论财-见祸不轻来-.795191261d | — | autopilot-substr | daizhige:易藏/术数/渊海子平.txt | verified |
 | auto.渊海子平.-论-食-神-.34bad5bab6 | — | autopilot-substr | daizhige:易藏/术数/渊海子平.txt | verified |
 | auto.渊海子平.-论-正-财-.f653fe5e64 | — | autopilot-substr | daizhige:易藏/术数/渊海子平.txt | verified |
+| engine_ref.dayun_001 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论大运（已 verified） | verified |
+| engine_ref.dayun_006 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论大运（已 verified） | verified |
+| engine_ref.dayun_007 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.dayun_009 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.geju_002 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论格局（已 verified） | verified |
+| engine_ref.geju_008 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.yongshen_001 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论用神（已 verified） | verified |
+| engine_ref.yongshen_005 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.yongshen_007 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.yongshen_008 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.general_003 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.general_004 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.daymaster_001 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论日主（已 verified） | verified |
+| engine_ref.daymaster_002 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.daymaster_003 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.daymaster_004 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.daymaster_005 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.daymaster_006 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.daymaster_007 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.wuxing_004 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.wuxing_006 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.wuxing_008 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.shishen_004 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.shishen_006 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.shishen_007 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.marriage_003 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.marriage_005 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.health_002 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.health_003 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.health_005 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.health_006 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.dayun_014 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.general_005 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.geju_e01 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论格局（已 verified） | verified |
+| engine_ref.rizhu_002 | — | transitive-subset | passage ⊆ chapter_agg.子平真诠-论日主（已 verified） | verified |
+| engine_ref.rizhu_003 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
+| engine_ref.rizhu_004 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.marriage_ext03 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.marriage_ext04 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.general_ext03 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
+| engine_ref.liunian_e02 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |
+| engine_ref.liunian_e04 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |

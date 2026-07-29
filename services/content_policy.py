@@ -27,10 +27,20 @@ def _verified_ids() -> frozenset[str]:
     )
 
 
+def clear_verified_ids_cache() -> None:
+    """测试 / 升格脚本写入 classics.json 后刷新。"""
+    _verified_ids.cache_clear()
+
+
 def is_verified_classic(classic_id: str | None) -> bool:
     if not classic_id or not classic_id.strip():
         return False
     return classic_id.strip() in _verified_ids()
+
+
+def verified_engine_ref_count() -> int:
+    """已 verified 的 engine_ref.* 条数（跋 / 校勘摘要用）。"""
+    return sum(1 for cid in _verified_ids() if cid.startswith("engine_ref."))
 
 
 def assert_cite_allowed(*, layer: str, classic_id: str | None) -> None:

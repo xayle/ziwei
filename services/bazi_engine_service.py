@@ -1050,11 +1050,13 @@ def _enrich_v2_analysis(
         po_geju = geju_raw.get("po_geju") or {}
         is_broken = bool(po_geju.get("broken"))
 
-        from services.bazi_engine.classic_refs import get_refs_by_tag as _geju_get_refs
+        from services.bazi_engine.classic_refs import geju_candidates as _geju_candidates
         from services.bazi_engine.geju_payload import build_geju_model
 
+        # 优先挂 verified 引擎条；未升格则仍给软提示正文（explain/vol1 再按 E-01 分层）
+        _geju_refs = _geju_candidates(geju_name, limit=2)
         _geju_refs_text = "\n".join(
-            f"【{r.get('source', '')}】{r.get('text', '')}" for r in _geju_get_refs("格局")[:2] if r.get("text")
+            f"【{r.get('source', '')}】{r.get('text', '')}" for r in _geju_refs if r.get("text")
         )
         verify_response.geju = build_geju_model(
             geju_raw,

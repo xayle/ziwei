@@ -1,10 +1,14 @@
 import type { ExplainBatchResponse } from '@/api/explain'
 import type { LifeVolumeResponse } from '@/types/life-volume'
 
-/** 静态兜底（explain / volumes 均未提供读法时） */
+/** 静态兜底（explain / volumes 均未提供读法时）；与 BE preface reading-guide 同源语义 */
 export const DEFAULT_READING_GUIDE_PARAGRAPHS = [
-  '六卷辑录按分层阅读；卷五推断默认折叠，卷六问书需主动展开。',
+  '全书按三层阅读：排盘推算（干支、宫星、运限等引擎事实）、典籍依据（有出处的句式与校勘）、经验推断（可读建议，默认不代替事实）。界面只用上述中文标签，不夹写英文层名。',
+  '建议顺序：卷一格局与用神 → 卷二关系与神煞 → 卷三大运流年 → 卷四命身轴与十二宫 → 卷五事理（默认折叠）→ 卷六问书（需主动展开）。先立事实与读法，再追问具体事项；卷六不自动发起问书。',
 ] as const
+
+/** Adapter / 单测复用的卷首读法块（与 BE `reading-guide` 对齐） */
+export const PREFACE_READING_GUIDE_BLOCKS = [...DEFAULT_READING_GUIDE_PARAGRAPHS] as const
 
 /** 从 explain batch 提取全部 reading section 段落（支持八字/紫微分轨各一节） */
 export function extractAllReadingGuideParagraphs(

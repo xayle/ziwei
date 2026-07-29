@@ -87,7 +87,7 @@ describe('buildLifeVolumes', () => {
     expect(doc.colophon.expandable).toBe(true)
   })
 
-  it('marks vol5 sections as inference and collapsed', () => {
+  it('marks vol5 domain sections as inference/collapsed; cite sections allowed', () => {
     const doc = buildLifeVolumes({
       caseId: 'case-1',
       chartHash: 'hash-1',
@@ -96,7 +96,10 @@ describe('buildLifeVolumes', () => {
     })
     const vol5 = doc.volumes.find((v) => v.id === 'vol5')
     expect(vol5?.sections.length).toBeGreaterThan(0)
-    expect(vol5?.sections.every((s) => s.layer === 'inference')).toBe(true)
+    const domains = vol5?.sections.filter((s) => !s.id.endsWith('-cite')) ?? []
+    const cites = vol5?.sections.filter((s) => s.id.endsWith('-cite')) ?? []
+    expect(domains.every((s) => s.layer === 'inference')).toBe(true)
+    expect(cites.every((s) => s.layer === 'cite')).toBe(true)
     expect(vol5?.sections.every((s) => s.collapsed_default)).toBe(true)
   })
 
@@ -245,6 +248,308 @@ describe('buildLifeVolumes', () => {
     expect(monthly?.blocks[0]?.text).toContain('3月')
     expect(monthly?.blocks[0]?.text).toContain('吉')
     expect(monthly?.blocks[0]?.text).toContain('乙卯')
+  })
+
+  it('thickens preface reading-guide with Chinese layer labels', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-preface',
+      chartHash: 'hash-preface',
+      bazi: minimalBazi,
+      ziwei: null,
+    })
+    const preface = doc.volumes.find((v) => v.id === 'preface')
+    const guide = preface?.sections.find((s) => s.id === 'reading-guide')
+    const joined = (guide?.blocks ?? []).map((b) => b.text).join('')
+    expect(guide?.blocks.length).toBeGreaterThanOrEqual(2)
+    expect(joined).toContain('排盘推算')
+    expect(joined).toContain('典籍依据')
+    expect(joined).toContain('经验推断')
+    expect(joined.toLowerCase()).not.toContain('cite')
+    expect(joined.toLowerCase()).not.toContain('inference')
+  })
+
+  it('thickens vol4 with mingshen / sanfang reading guide', () => {
+    const ziwei = {
+      wuxing_ju_name: '水二局',
+      life_palace_gz: '甲子',
+      body_palace_gz: '丙寅',
+      patterns: [],
+      palaces: [],
+    } as unknown as ZiweiResponse
+    const doc = buildLifeVolumes({
+      caseId: 'case-vol4',
+      chartHash: 'hash-vol4',
+      bazi: minimalBazi,
+      ziwei,
+    })
+    const vol4 = doc.volumes.find((v) => v.id === 'vol4')
+    const ids = vol4?.sections.map((s) => s.id) ?? []
+    expect(ids).toContain('ziwei-meta')
+    expect(ids).toContain('ziwei-reading')
+    const reading = vol4?.sections.find((s) => s.id === 'ziwei-reading')?.blocks[0]?.text ?? ''
+    expect(reading).toContain('命身轴')
+    expect(reading).toContain('三方')
+    expect(reading.length).toBeGreaterThanOrEqual(90)
+  })
+
+  it('falls back to verified relations cite when explain has no cite', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-rel-verified',
+      chartHash: 'hash-rel-verified',
+      bazi: {
+        ...minimalBazi,
+        relations_summary: {
+          clash_summary: '冲：子午',
+          combine_summary: '',
+          items: [],
+        },
+      } as BaziResponse,
+      ziwei: null,
+      unlock: { unlocked_volumes: ['vol1', 'vol2', 'vol3', 'vol4', 'vol5', 'vol6'] },
+    })
+    const vol2 = doc.volumes.find((v) => v.id === 'vol2')
+    const cite = vol2?.sections.find((s) => s.id === 'relations-cite')
+    expect(cite?.blocks?.[0]?.layer).toBe('cite')
+    expect(cite?.blocks?.[0]?.classic_id).toBeTruthy()
+    expect(cite?.blocks?.[0]?.text).toContain('典籍依据')
+    expect(vol2?.sections.some((s) => s.id === 'vol2-cite-pending')).toBe(false)
+  })
+
+  it('mounts daymaster cite and vol5 marriage/health cites', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-dm-domain',
+      chartHash: 'hash-dm-domain',
+      bazi: {
+        ...minimalBazi,
+        day_master_strength: { tier: '中和', score: 50 },
+      } as BaziResponse,
+      ziwei: null,
+      unlock: { unlocked_volumes: ['vol1', 'vol2', 'vol3', 'vol4', 'vol5', 'vol6'] },
+    })
+    const vol1 = doc.volumes.find((v) => v.id === 'vol1')
+    const vol5 = doc.volumes.find((v) => v.id === 'vol5')
+    expect(vol1?.sections.find((s) => s.id === 'daymaster-cite')?.blocks?.[0]?.classic_id)
+      .toMatch(/^engine_ref\.daymaster_/)
+    expect(vol5?.sections.find((s) => s.id === 'marriage-cite')?.blocks?.[0]?.classic_id)
+      .toMatch(/^engine_ref\.marriage_/)
+    expect(vol5?.sections.find((s) => s.id === 'health-cite')?.blocks?.[0]?.classic_id)
+      .toMatch(/^engine_ref\.health_/)
+  })
+
+  it('mounts dayun/liunian verified cites into vol3', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-vol3-cite',
+      chartHash: 'hash-vol3-cite',
+      bazi: {
+        ...minimalBazi,
+        dayun: {
+          items: [
+            { ganzhi: '甲子', start_age: 8, end_age: 17 },
+            { ganzhi: '乙丑', start_age: 18, end_age: 27 },
+          ],
+        },
+        liunian: {
+          items: [
+            { year: 2025, stem: '乙', branch: '巳' },
+            { year: 2026, stem: '丙', branch: '午' },
+          ],
+        },
+      } as BaziResponse,
+      ziwei: null,
+      unlock: { unlocked_volumes: ['vol1', 'vol2', 'vol3', 'vol4', 'vol5', 'vol6'] },
+    })
+    const vol3 = doc.volumes.find((v) => v.id === 'vol3')
+    const dayunCite = vol3?.sections.find((s) => s.id === 'dayun-cite')
+    const liunianCite = vol3?.sections.find((s) => s.id === 'liunian-cite')
+    expect(dayunCite?.blocks?.[0]?.classic_id).toMatch(/^engine_ref\.dayun_/)
+    expect(liunianCite?.blocks?.[0]?.classic_id).toMatch(/^engine_ref\.liunian_/)
+    expect(dayunCite?.blocks?.[0]?.text).toContain('典籍依据')
+  })
+
+  it('mounts yongshen verified cites into vol1', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-yong-cite',
+      chartHash: 'hash-yong-cite',
+      bazi: {
+        ...minimalBazi,
+        yongshen: { favor: ['fire'], avoid: ['wood'] },
+      } as BaziResponse,
+      ziwei: null,
+      unlock: { unlocked_volumes: ['vol1', 'vol2', 'vol3', 'vol4', 'vol5', 'vol6'] },
+    })
+    const vol1 = doc.volumes.find((v) => v.id === 'vol1')
+    const cite = vol1?.sections.find((s) => s.id === 'yongshen-cite')
+    expect(cite?.blocks?.[0]?.layer).toBe('cite')
+    expect(cite?.blocks?.[0]?.classic_id).toMatch(/^engine_ref\.yongshen_/)
+    expect(cite?.blocks?.[0]?.text).toContain('典籍依据')
+  })
+
+  it('mounts verified shensha classic_refs into shensha-cite (E-01)', () => {
+    const bazi = {
+      ...minimalBazi,
+      shensha_summary: {
+        items: [{
+          name: '驿马',
+          is_beneficial: true,
+          dizhi: '寅',
+          pillar: 'day',
+          meaning: '',
+          classic_source: '三命通会',
+          classic_refs: [{
+            id: 'engine_ref.shensha_003',
+            source: '《三命通会》',
+            text: '驿马：申子辰马在寅，巳酉丑马在亥，寅午戌马在申，亥卯未马在巳。驿马主奔波远行。',
+            hint_type: 'verified',
+          }],
+        }],
+      },
+    } as BaziResponse
+    const doc = buildLifeVolumes({
+      caseId: 'case-shensha-verified',
+      chartHash: 'hash-shensha-verified',
+      bazi,
+      ziwei: null,
+      unlock: { unlocked_volumes: ['vol1', 'vol2', 'vol3', 'vol4', 'vol5', 'vol6'] },
+    })
+    const vol2 = doc.volumes.find((v) => v.id === 'vol2')
+    const cite = vol2?.sections.find((s) => s.id === 'shensha-cite')
+    expect(cite?.blocks?.[0]?.layer).toBe('cite')
+    expect(cite?.blocks?.[0]?.classic_id).toBe('engine_ref.shensha_003')
+    expect(cite?.blocks?.[0]?.text).toContain('驿马')
+  })
+
+  it('mounts shensha classic_refs soft quotes into vol2 (E-01)', () => {
+    const bazi = {
+      ...minimalBazi,
+      shensha_summary: {
+        items: [{
+          name: '天乙贵人',
+          is_beneficial: true,
+          dizhi: '子',
+          pillar: 'day',
+          meaning: '',
+          classic_source: '三命通会',
+          classic_refs: [{
+            id: 'shensha_001',
+            source: '三命通会·论神煞',
+            text: '天乙贵人，命中有之，遇事有贵人扶助。',
+            hint_type: 'soft',
+          }],
+        }],
+      },
+    } as BaziResponse
+    const doc = buildLifeVolumes({
+      caseId: 'case-shensha-cite',
+      chartHash: 'hash-shensha-cite',
+      bazi,
+      ziwei: null,
+    })
+    const vol2 = doc.volumes.find((v) => v.id === 'vol2')
+    const soft = vol2?.sections.find((s) => s.id === 'shensha-classic-soft')
+    expect(soft?.layer).toBe('inference')
+    expect(soft?.blocks[0]?.layer).toBe('inference')
+    expect(soft?.blocks[0]?.text).toContain('贵人扶助')
+    expect(soft?.blocks[0]?.classic_id).toBe('shensha_001')
+    expect(vol2?.sections.some((s) => s.id === 'vol2-cite-pending')).toBe(false)
+  })
+
+  it('thickens vol2 with reading / polarity / cite pending (D2)', () => {
+    const bazi = {
+      ...minimalBazi,
+      relations_summary: {
+        interaction_summary: '拱合；丁[火]克庚[金]',
+        clash_summary: '冲：子午',
+        items: [],
+      },
+      shensha_summary: {
+        items: [
+          { name: '天乙', is_beneficial: true, dizhi: '子', pillar: 'day', meaning: '', classic_source: '' },
+          { name: '羊刃', is_beneficial: false, dizhi: '卯', pillar: 'year', meaning: '', classic_source: '' },
+        ],
+      },
+    } as BaziResponse
+    const doc = buildLifeVolumes({
+      caseId: 'case-vol2',
+      chartHash: 'hash-vol2',
+      bazi,
+      ziwei: null,
+    })
+    const vol2 = doc.volumes.find((v) => v.id === 'vol2')
+    const ids = vol2?.sections.map((s) => s.id) ?? []
+    expect(ids).toContain('relations-reading')
+    expect(ids).toContain('shensha-auspicious')
+    expect(ids).toContain('shensha-caution')
+    expect(ids).toContain('relations-classic-soft')
+    expect(ids).not.toContain('vol2-cite-pending')
+    const blocks = vol2?.sections.flatMap((s) => s.blocks) ?? []
+    expect(blocks.length).toBeGreaterThanOrEqual(5)
+    const avg = blocks.reduce((n, b) => n + b.text.length, 0) / blocks.length
+    expect(avg).toBeGreaterThanOrEqual(90)
+    expect(vol2?.sections.find((s) => s.id === 'relations-classic-soft')?.blocks[0]?.text).toContain('软提示')
+    expect(vol2?.sections.find((s) => s.id === 'shensha-auspicious')?.blocks[0]?.text).toContain('天乙')
+    expect(vol2?.sections.find((s) => s.id === 'shensha-caution')?.blocks[0]?.text).toContain('羊刃')
+  })
+
+  it('thickens vol6 with howto / bridge / access and no LLM leak (D3)', () => {
+    const doc = buildLifeVolumes({
+      caseId: 'case-vol6',
+      chartHash: 'hash-vol6',
+      bazi: minimalBazi,
+      ziwei: null,
+    })
+    const vol6 = doc.volumes.find((v) => v.id === 'vol6')
+    const ids = vol6?.sections.map((s) => s.id) ?? []
+    expect(ids).toContain('vol6-how-to-ask')
+    expect(ids).toContain('vol6-bridge')
+    expect(ids).toContain('vol6-access')
+    const blocks = vol6?.sections.flatMap((s) => s.blocks) ?? []
+    expect(blocks.length).toBeGreaterThanOrEqual(3)
+    const joined = blocks.map((b) => b.text).join('')
+    expect(joined).not.toContain('LLM')
+    expect(joined).toContain('事业')
+    const avg = blocks.reduce((n, b) => n + b.text.length, 0) / blocks.length
+    expect(avg).toBeGreaterThanOrEqual(90)
+  })
+
+  it('caps vol1 current-fortune and keeps geju/yongshen intact', () => {
+    const longTip = '宜拓展收入渠道并注意合作边界，'.repeat(12)
+    const bazi = {
+      ...minimalBazi,
+      geju: {
+        geju_name: '正印格',
+        geju_detail: '印旺生身，宜学业与文书。此句应完整保留不被运势摘要挤掉。',
+      },
+      yongshen: { favor: ['fire'], avoid: ['wood'] },
+      current_fortune_summary: {
+        current_dayun: '癸酉',
+        current_liunian: '丙午',
+        this_year_domains: { 财运: longTip, 事业: longTip, 健康: longTip },
+        top3_actions: [longTip, longTip],
+      },
+    } as BaziResponse
+    const doc = buildLifeVolumes({
+      caseId: 'case-vol1-trunc',
+      chartHash: 'hash-vol1-trunc',
+      bazi,
+      ziwei: null,
+      explain: {
+        chart_hash: 'hash-vol1-trunc',
+        sections: [{
+          section_id: 'geju',
+          blocks: [{ text: `${'格局讲解长句其一。'.repeat(40)}尾`, layer: 'cite', classic_id: 'CL1' }],
+        }],
+      },
+    })
+    const vol1 = doc.volumes.find((v) => v.id === 'vol1')
+    const geju = vol1?.sections.find((s) => s.id === 'geju')?.blocks[0]?.text ?? ''
+    const yong = vol1?.sections.find((s) => s.id === 'yongshen')?.blocks[0]?.text ?? ''
+    const fortune = vol1?.sections.find((s) => s.id === 'current-fortune')?.blocks[0]?.text ?? ''
+    const explain = vol1?.sections.find((s) => s.id === 'geju-explain')?.blocks[0]?.text ?? ''
+    expect(geju).toContain('此句应完整保留')
+    expect(yong).toContain('用神须与格局')
+    expect(fortune.length).toBeLessThanOrEqual(360)
+    expect(explain.length).toBeLessThanOrEqual(500)
+    expect(explain).toContain('格局讲解长句其一。')
   })
 
   it('thickens vol1 pillars / strength (CNT-01)', () => {

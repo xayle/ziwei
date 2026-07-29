@@ -32,4 +32,13 @@ describe('buildColophonSummary', () => {
     })
     expect(col.wenmo_advisory).toContain('文墨')
   })
+
+  it('corpus line reflects verified progress not stale 五书核验中', () => {
+    const col = buildColophonSummary({ engineLabel: 'bazi+ziwei' })
+    const corpus = col.summary_lines.find((l) => l.startsWith('典籍语料：'))
+    expect(corpus).toBeTruthy()
+    expect(corpus).not.toContain('五书核验进行中')
+    expect(corpus).toContain('verified')
+    expect(corpus).toContain('六冲')
+  })
 })

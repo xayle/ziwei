@@ -347,8 +347,8 @@ def enrich_vol2_block_text(label: str, body: str) -> str:
 
 def enrich_preface_reading_text() -> str:
     return (
-        "卷一至卷五按事实（排盘推算）· 典籍（典籍依据）· 推断（经验推断）分层阅读；"
-        "卷六为问书助手，需主动展开。先读卷一格局，再读卷二关系与卷三运限。"
+        "全书按三层阅读：排盘推算、典籍依据、经验推断；"
+        "建议顺序卷一至卷六，卷六需主动展开。"
     )
 
 

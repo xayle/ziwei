@@ -12,9 +12,28 @@ import {
 } from '@/types/life-volume'
 import { buildBaziModuleCards } from '@/utils/buildBaziModuleCards'
 import { buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
+import { DAYMASTER_CLASSIC_REFS } from '@/constants/daymasterClassicRefs'
+import { DAYUN_CLASSIC_REFS } from '@/constants/dayunClassicRefs'
+import { HEALTH_CLASSIC_REFS } from '@/constants/healthClassicRefs'
+import { LIUNIAN_CLASSIC_REFS } from '@/constants/liunianClassicRefs'
+import { MARRIAGE_CLASSIC_REFS } from '@/constants/marriageClassicRefs'
+import { SHISHEN_CLASSIC_REFS } from '@/constants/shishenClassicRefs'
+import { WUXING_CLASSIC_REFS } from '@/constants/wuxingClassicRefs'
+import { YONGSHEN_CLASSIC_REFS } from '@/constants/yongshenClassicRefs'
 import { buildColophonSummary, defaultDisclaimerBlock } from '@/utils/buildColophonSummary'
 import { truncateText } from '@/utils/truncateText'
-import { formatRelationsSummaryText, formatShenshaSummaryText, enrichVol2BlockText, enrichVolumeBlockText } from '@/utils/formatVol2Summary'
+import {
+  formatRelationsFactText,
+  formatRelationsImpactText,
+  formatShenshaPolarityTexts,
+  buildShenshaClassicQuoteBlocks,
+  buildRelationsClassicQuoteBlocks,
+  pickRelationsVerifiedCites,
+  enrichVol2BlockText,
+  enrichVolumeBlockText,
+} from '@/utils/formatVol2Summary'
+import { LLM_MODULES } from '@/api/llm'
+import { PREFACE_READING_GUIDE_BLOCKS } from '@/utils/extractReadingGuideParagraphs'
 import {
   buildDayunVolumeText,
   formatDayunAgeRange,
@@ -108,9 +127,11 @@ function section(
 }
 
 function buildPrefaceSections(input: BuildLifeVolumesInput): VolumeSection[] {
-  // 读法由 ReadingGuide（explain / remote volumes / DEFAULT）负责；
-  // Adapter 不再植入壳段落，否则 explain 失败时无法展示 fallback（W102-11）。
-  const sections: VolumeSection[] = []
+  // 与 BE preface 同源：reading-guide 始终写入，供 volumes 回退与 ReadingGuide 抽取。
+  // explain 的 reading 仍优先（resolveReadingGuideParagraphs），不挡动态读法。
+  const sections: VolumeSection[] = [
+    section('reading-guide', '读法导览', 'fact', PREFACE_READING_GUIDE_BLOCKS.map((text) => block(text, 'fact'))),
+  ]
   const explainReading = input.explain?.sections.find((s) => s.section_id === 'reading')
   if (explainReading?.blocks.length) {
     sections.push(section('bazi-reading', '八字读法', 'cite', explainReading.blocks.map((b) => ({
@@ -185,15 +206,19 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   }
   const y = b.yongshen
   if (y?.favor?.length || y?.avoid?.length) {
+    const yongBody = (
+      `喜用 ${formatWxList(y.favor)}；忌 ${formatWxList(y.avoid)}。` +
+      '用神须与格局、日主强弱同参：得令得助则宜顺用神拓展，失令受克则先避忌神、再谈进取。'
+    )
     sections.push(section('yongshen', '用神', 'fact', [
-      block(
-        enrichVolumeBlockText(
-          '卷一用神',
-          `喜用 ${formatWxList(y.favor)}；忌 ${formatWxList(y.avoid)}`,
-        ),
-        'fact',
-      ),
+      block(enrichVolumeBlockText('卷一用神', yongBody), 'fact'),
     ]))
+    const yongCite = YONGSHEN_CLASSIC_REFS.slice(0, 2).map((ref) =>
+      block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+    )
+    if (yongCite.length) {
+      sections.push(section('yongshen-cite', '典籍句式', 'cite', yongCite))
+    }
   }
   const strength = b.day_master_strength
   if (strength && (strength.tier || strength.score != null)) {
@@ -211,36 +236,61 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
     sections.push(section('strength', '日主强弱', 'fact', [
       block(enrichVolumeBlockText('卷一强弱', strengthText), 'fact'),
     ]))
+    sections.push(section(
+      'daymaster-cite',
+      '典籍句式',
+      'cite',
+      DAYMASTER_CLASSIC_REFS.slice(0, 2).map((ref) =>
+        block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+      ),
+    ))
   }
+  sections.push(section(
+    'wuxing-cite',
+    '五行典籍句式',
+    'cite',
+    WUXING_CLASSIC_REFS.slice(0, 2).map((ref) =>
+      block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+    ),
+  ))
+  sections.push(section(
+    'shishen-cite',
+    '十神典籍句式',
+    'cite',
+    SHISHEN_CLASSIC_REFS.slice(0, 2).map((ref) =>
+      block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+    ),
+  ))
   const fortune = b.current_fortune_summary
   if (fortune) {
+    // 控 vol1 trunc：域摘要节选，把篇幅留给格局/用神完整句
     const domainBits = Object.entries(fortune.this_year_domains ?? {})
-      .slice(0, 3)
-      .map(([k, v]) => `${k}：${String(v).slice(0, 80)}`)
+      .slice(0, 2)
+      .map(([k, v]) => `${k}：${truncateText(String(v), 72)}`)
     const bits = [
       fortune.current_dayun ? `当前大运 ${fortune.current_dayun}` : '',
       fortune.current_liunian ? `流年 ${fortune.current_liunian}` : '',
       fortune.dayun_years_remaining != null ? `大运余 ${fortune.dayun_years_remaining} 年` : '',
       ...domainBits,
       (fortune.top3_actions ?? []).length
-        ? `宜行： ${(fortune.top3_actions ?? []).slice(0, 2).map((a) => String(a).slice(0, 100)).join('；')}`
+        ? `宜行： ${(fortune.top3_actions ?? []).slice(0, 2).map((a) => truncateText(String(a), 72)).join('；')}`
         : '',
     ].filter(Boolean)
     if (bits.length) {
       sections.push(section('current-fortune', '当下运势摘要', 'fact', [
-        block(bits.join(' · '), 'fact'),
+        block(truncateText(bits.join(' · '), 360), 'fact'),
       ]))
     }
   }
   if (b.bazi_summary?.trim()) {
     sections.push(section('summary-inference', '综合总评', 'inference', [
-      block(b.bazi_summary, 'inference'),
+      block(truncateText(b.bazi_summary, 360), 'inference'),
     ], true))
   }
   const explainGeju = input.explain?.sections.find((s) => s.section_id === 'geju')
   if (explainGeju?.blocks.length) {
     sections.push(section('geju-explain', '格局讲解', 'cite', explainGeju.blocks.map((blk) => ({
-      text: truncateText(blk.text),
+      text: truncateText(blk.text, 500),
       layer: blk.layer,
       classic_id: blk.classic_id,
     }))))
@@ -250,19 +300,87 @@ function buildVol1Sections(input: BuildLifeVolumesInput): VolumeSection[] {
 
 function buildVol2Sections(input: BuildLifeVolumesInput): VolumeSection[] {
   const b = input.bazi
-  const relationText = formatRelationsSummaryText(b)
-  const shenshaText = formatShenshaSummaryText(b)
+  const relationText = formatRelationsFactText(b)
+  const impactText = formatRelationsImpactText(b)
+  const { auspicious, caution } = formatShenshaPolarityTexts(b)
   const sections: VolumeSection[] = [
     section('relations', '干支关系', 'fact', [block(enrichVol2BlockText('干支关系', relationText), 'fact')]),
-    section('shensha', '神煞摘要', 'fact', [block(enrichVol2BlockText('神煞', shenshaText), 'fact')]),
+    section('relations-reading', '关系读法', 'inference', [block(impactText, 'inference')]),
+    section('shensha-auspicious', '吉神', 'fact', [block(enrichVol2BlockText('吉神', auspicious), 'fact')]),
+    section('shensha-caution', '慎神', 'fact', [block(enrichVol2BlockText('慎神', caution), 'fact')]),
   ]
   const explainRelations = input.explain?.sections.find((s) => s.section_id === 'relations')
-  if (explainRelations?.blocks.length) {
-    sections.push(section('relations-explain', '关系讲解', 'fact', explainRelations.blocks.map((b) => ({
-      text: truncateText(b.text),
-      layer: b.layer,
-      classic_id: b.classic_id,
+  const explainBlocks = explainRelations?.blocks ?? []
+  // 仅 layer=cite 进典籍句式；带 classic_id 的 soft 不得冒充 cite（E-01）
+  const citeFromExplain = explainBlocks.filter((blk) => blk.layer === 'cite')
+  const explainSoft = explainBlocks.filter((blk) => blk.layer === 'inference')
+  const explainFact = explainBlocks.filter((blk) => blk.layer !== 'cite' && blk.layer !== 'inference')
+  if (explainFact.length) {
+    sections.push(section('relations-explain', '关系讲解', 'fact', explainFact.map((blk) => ({
+      text: truncateText(blk.text, 500),
+      layer: blk.layer,
+      classic_id: blk.classic_id,
     }))))
+  }
+  if (citeFromExplain.length) {
+    sections.push(section('relations-cite', '典籍句式', 'cite', citeFromExplain.slice(0, 3).map((blk) => ({
+      text: truncateText(blk.text, 500),
+      layer: 'cite' as ContentLayer,
+      classic_id: blk.classic_id,
+    }))))
+  } else {
+    const verified = pickRelationsVerifiedCites(b, 2)
+    if (verified.length) {
+      sections.push(section('relations-cite', '典籍句式', 'cite', verified.map((q) => ({
+        text: q.text,
+        layer: 'cite' as ContentLayer,
+        classic_id: q.classic_id,
+      }))))
+    }
+  }
+  const relSoft = explainSoft.length
+    ? explainSoft.slice(0, 3).map((blk) => ({
+        text: truncateText(blk.text, 500),
+        layer: 'inference' as ContentLayer,
+        classic_id: blk.classic_id,
+      }))
+    : buildRelationsClassicQuoteBlocks(b).map((q) => ({
+        text: q.text,
+        layer: 'inference' as ContentLayer,
+        classic_id: q.classic_id,
+      }))
+  if (relSoft.length) {
+    sections.push(section('relations-classic-soft', '关系典籍软提示', 'inference', relSoft))
+  }
+  const quotes = buildShenshaClassicQuoteBlocks(b)
+  if (quotes.length) {
+    const citeQ = quotes.filter((q) => q.layer === 'cite')
+    const softQ = quotes.filter((q) => q.layer !== 'cite')
+    if (citeQ.length) {
+      sections.push(section('shensha-cite', '典籍句式', 'cite', citeQ.map((q) => ({
+        text: q.text,
+        layer: 'cite' as ContentLayer,
+        classic_id: q.classic_id,
+      }))))
+    }
+    if (softQ.length) {
+      sections.push(section('shensha-classic-soft', '神煞典籍软提示', 'inference', softQ.map((q) => ({
+        text: q.text,
+        layer: 'inference' as ContentLayer,
+        classic_id: q.classic_id,
+      }))))
+    }
+  }
+  if (!citeFromExplain.length && !quotes.length && !relSoft.length) {
+    const hasRelationsCite = sections.some((s) => s.id === 'relations-cite')
+    if (!hasRelationsCite) {
+      sections.push(section('vol2-cite-pending', '典籍句式', 'cite', [
+        block(
+          '卷二典籍句式待校勘：关系与神煞的古籍正文尚未挂载。阅读时以排盘事实、关系读法与吉神/慎神分列为准，把神煞当旁证；典籍句式补齐后再对照引用。在此之前，不作断语，也不用口语替代典籍。校勘进度见卷末跋；若 explain 已挂 cite，本注会被典籍句式节替换。',
+          'cite',
+        ),
+      ]))
+    }
   }
   return sections
 }
@@ -281,6 +399,14 @@ function buildVol3Sections(input: BuildLifeVolumesInput): VolumeSection[] {
         buildDayunVolumeText(item, idx, dayunItems),
         item.narrative?.trim() ? 'inference' : 'fact',
       )),
+    ))
+    sections.push(section(
+      'dayun-cite',
+      '典籍句式',
+      'cite',
+      DAYUN_CLASSIC_REFS.slice(0, 2).map((ref) =>
+        block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+      ),
     ))
   }
   const ziweiDayun = z?.dayun?.items ?? []
@@ -346,6 +472,14 @@ function buildVol3Sections(input: BuildLifeVolumesInput): VolumeSection[] {
         )
       }),
     ))
+    sections.push(section(
+      'liunian-cite',
+      '典籍句式',
+      'cite',
+      LIUNIAN_CLASSIC_REFS.slice(0, 2).map((ref) =>
+        block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+      ),
+    ))
   }
   if (!sections.length) {
     sections.push(section('vol3-empty', '运波', 'fact', [block('运限数据待载入。', 'fact')]))
@@ -405,8 +539,16 @@ function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
     section('ziwei-meta', '命盘概要', 'fact', [
       block(
         `卷四命盘概要：五行局 ${z.wuxing_ju_name ?? '—'}；命宫 ${z.life_palace_gz ?? '—'}；身宫 ${z.body_palace_gz ?? '—'}。`
-        + '阅读时先定命身轴，再对照十二宫主星与格局条文。',
+        + '以下宫图与格局均围绕命身轴展开，勿先扫十二宫再回头找主轴。',
         'fact',
+      ),
+    ]),
+    section('ziwei-reading', '宫图读法', 'inference', [
+      block(
+        '先看命身轴：命宫看主星气质与一生底色，身宫看行运着力与身心投注处；两宫同参，才谈得上格局高低。'
+        + '再看三方四正（命、财帛、官禄与对宫），把握事业、财帛与压力来源，比逐宫平铺更易抓住主线。'
+        + '然后才扫各宫主星、辅星与四化；格局条文用来印证命身轴，不代替「先轴后方」的阅读顺序。',
+        'inference',
       ),
     ]),
   ]
@@ -434,6 +576,26 @@ function buildVol4Sections(input: BuildLifeVolumesInput): VolumeSection[] {
 }
 
 function buildVol5Sections(input: BuildLifeVolumesInput): VolumeSection[] {
+  const citeTail: VolumeSection[] = [
+    section(
+      'marriage-cite',
+      '婚恋典籍句式',
+      'cite',
+      MARRIAGE_CLASSIC_REFS.slice(0, 2).map((ref) =>
+        block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+      ),
+      true,
+    ),
+    section(
+      'health-cite',
+      '健康典籍句式',
+      'cite',
+      HEALTH_CLASSIC_REFS.slice(0, 2).map((ref) =>
+        block(`典籍依据（${ref.source}）：${ref.text}`, 'cite', { classic_id: ref.id }),
+      ),
+      true,
+    ),
+  ]
   const explainDomains = input.explain?.sections.find((s) => s.section_id === 'domains')
   if (explainDomains?.blocks.length) {
     return [
@@ -442,25 +604,62 @@ function buildVol5Sections(input: BuildLifeVolumesInput): VolumeSection[] {
         layer: b.layer,
         classic_id: b.classic_id,
       })), true),
+      ...citeTail,
     ]
   }
   const cards = buildBaziModuleCards(input.bazi).filter((c) => c.title !== '开运' && c.title !== '月运')
   if (!cards.length) {
-    return [section('vol5-empty', '事理', 'inference', [block('域分析待载入。', 'inference')], true)]
+    return [
+      section('vol5-empty', '事理', 'inference', [block('域分析待载入。', 'inference')], true),
+      ...citeTail,
+    ]
   }
-  return cards.map((card, idx) => section(
-    `domain-${idx}`,
-    card.title,
-    'inference',
-    [block(`${card.lead}。${truncateText(card.body, 80)}`, 'inference', { score: undefined })],
-    true,
-  ))
+  return [
+    ...cards.map((card, idx) => section(
+      `domain-${idx}`,
+      card.title,
+      'inference',
+      [block(`${card.lead}。${truncateText(card.body, 80)}`, 'inference', { score: undefined })],
+      true,
+    )),
+    ...citeTail,
+  ]
 }
 
 function buildVol6Sections(_input: BuildLifeVolumesInput): VolumeSection[] {
+  const modules = LLM_MODULES.map((m) => m.label).join('、')
   return [
-    section('vol6-qa', '问书助手', 'inference', [
-      block('卷六为问书助手，需主动展开后提问；打磨期不自动调用问书，展开后再选择事业/婚恋等模块。', 'inference'),
+    section('vol6-on-demand', '问书助手', 'inference', [
+      block(
+        '卷六为问书助手：需主动展开后选择模块提问。打磨期不自动调用问书，避免首屏静默消耗额度或打断阅读节奏；展开后即可把排盘事实、卷二神煞读法与卷三运限对照追问，把「怎么问」当作阅读延伸，而非另开玄学聊天。提问前请先确认已读卷一与卷三要点。',
+        'fact',
+      ),
+    ], true),
+    section('vol6-how-to-ask', '怎么问', 'inference', [
+      block(
+        '示例一（事业）：结合卷一格局与当前大运，今年事业宜进取还是守成？若要换赛道或谈晋升，有哪些方向更贴用神、哪些宜暂缓？请用可执行建议回答，并标明依据来自格局还是运限。',
+        'inference',
+      ),
+      block(
+        '示例二（婚恋）：对照卷二神煞与配偶宫线索，近两年感情节奏如何把握？沟通、承诺与边界上各要注意什么？请避免把刑冲直接当成情绪标签，改成可观察的相处节奏。',
+        'inference',
+      ),
+      block(
+        '示例三（流年）：根据卷三流年节选，明年关键节点在哪几个月？宜推动什么、宜暂缓什么，如何与当前大运叙事对齐？若只能抓两三个月份，请按优先级说明。',
+        'inference',
+      ),
+    ], true),
+    section('vol6-bridge', '与前卷衔接', 'inference', [
+      block(
+        '建议先读完卷一格局与用神、卷二关系/神煞读法、卷三当前大运与流年节选，再打开问书；带着具体年份、生活域或一件待决之事提问，回答更贴盘，也更少空泛套话。若前卷尚未读完，可先记下问题，读完再展开本卷。',
+        'inference',
+      ),
+    ], true),
+    section('vol6-access', '使用说明', 'fact', [
+      block(
+        `未登录时可先完成排盘与前五卷阅读，建立事实底稿；登录后展开本卷，可选择：${modules}。各模块需主动发起，不会在首屏自动请求；未登录时也可先浏览示例问法，登录后再正式提问。`,
+        'fact',
+      ),
     ], true),
   ]
 }

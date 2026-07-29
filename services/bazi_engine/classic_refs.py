@@ -1575,6 +1575,23 @@ def get_refs_by_tag(tag: str) -> list[dict]:
     return [r for r in CLASSIC_REFS if tag in r.get("tags", [])]
 
 
+def _engine_classic_id(ref_id: str | None) -> str:
+    rid = (ref_id or "").strip()
+    if not rid:
+        return ""
+    return rid if rid.startswith("engine_ref.") else f"engine_ref.{rid}"
+
+
+def _with_verification_hint(ref: dict) -> dict:
+    """classics.json 已 verified 的引擎条 → hint_type=verified，id 用 engine_ref.*。"""
+    from services.content_policy import is_verified_classic
+
+    eid = _engine_classic_id(str(ref.get("id") or ""))
+    if eid and is_verified_classic(eid):
+        return {**ref, "id": eid, "hint_type": "verified"}
+    return {**ref, "hint_type": "soft"}
+
+
 def geju_candidates(geju_name: str, *, limit: int = 3) -> list[dict]:
     """
     格局名 → 古籍语料软提示（非硬覆盖引擎结论）。
@@ -1595,14 +1612,71 @@ def geju_candidates(geju_name: str, *, limit: int = 3) -> list[dict]:
         if rid in seen:
             continue
         seen.add(rid)
-        out.append({**ref, "hint_type": "soft"})
+        out.append(_with_verification_hint(ref))
         if len(out) >= limit:
             break
     return out
 
 
+def _category_candidates(category: str, *, limit: int = 2) -> list[dict]:
+    """按 category 取语料；verified 优先。"""
+    decorated = [_with_verification_hint(r) for r in get_refs_by_category(category)]
+    decorated.sort(key=lambda r: 0 if r.get("hint_type") == "verified" else 1)
+    seen: set[str] = set()
+    out: list[dict] = []
+    for ref in decorated:
+        rid = str(ref.get("id") or "")
+        if not rid or rid in seen:
+            continue
+        seen.add(rid)
+        out.append(ref)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def yongshen_candidates(*, limit: int = 2) -> list[dict]:
+    """用神通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("用神", limit=limit)
+
+
+def dayun_candidates(*, limit: int = 2) -> list[dict]:
+    """大运通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("大运", limit=limit)
+
+
+def liunian_candidates(*, limit: int = 2) -> list[dict]:
+    """流年通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("流年", limit=limit)
+
+
+def daymaster_candidates(*, limit: int = 2) -> list[dict]:
+    """日主通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("日主", limit=limit)
+
+
+def marriage_candidates(*, limit: int = 2) -> list[dict]:
+    """婚姻通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("婚姻", limit=limit)
+
+
+def health_candidates(*, limit: int = 2) -> list[dict]:
+    """健康通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("健康", limit=limit)
+
+
+def wuxing_candidates(*, limit: int = 2) -> list[dict]:
+    """五行通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("五行", limit=limit)
+
+
+def shishen_candidates(*, limit: int = 2) -> list[dict]:
+    """十神通论语料；已 verified 引擎条优先。"""
+    return _category_candidates("十神", limit=limit)
+
+
 def shensha_candidates(shensha_name: str, *, limit: int = 2) -> list[dict]:
-    """神煞名 → 古籍语料软提示。"""
+    """神煞名 → 古籍语料；已 verified 引擎条升为 hint_type=verified。"""
     if not shensha_name:
         return []
     hits = [
@@ -1622,7 +1696,60 @@ def shensha_candidates(shensha_name: str, *, limit: int = 2) -> list[dict]:
         if rid in seen:
             continue
         seen.add(rid)
-        out.append({**ref, "hint_type": "soft"})
+        out.append(_with_verification_hint(ref))
+        if len(out) >= limit:
+            break
+    return out
+
+
+def relations_signal_tags(relations_summary: dict | None) -> list[str]:
+    """从 relations_summary 抽出地支关系标签（六冲/六合/三合/刑/害）。"""
+    rs = relations_summary if isinstance(relations_summary, dict) else {}
+    parts = [str(rs.get(k) or "") for k in ("clash_summary", "combine_summary", "harm_summary", "interaction_summary")]
+    for item in (rs.get("items") or [])[:8]:
+        if isinstance(item, dict):
+            parts.append(str(item.get("summary") or item.get("detail") or item.get("type") or ""))
+    blob = "；".join(p for p in parts if p.strip())
+    tags: list[str] = []
+    if "冲" in blob or str(rs.get("clash_summary") or "").strip():
+        tags.append("六冲")
+    if "三合" in blob:
+        tags.append("三合")
+    if "合" in blob or "拱" in blob or str(rs.get("combine_summary") or "").strip():
+        tags.append("六合")
+    if "刑" in blob:
+        tags.append("刑")
+    if "害" in blob or str(rs.get("harm_summary") or "").strip():
+        tags.append("害")
+    # 去重保序
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for t in tags:
+        if t not in seen:
+            seen.add(t)
+            ordered.append(t)
+    return ordered
+
+
+def relations_candidates(relations_summary: dict | None = None, *, limit: int = 3) -> list[dict]:
+    """干支关系 → 地支冲合刑害古籍软提示（仅 category=地支，避免「害」误匹配疾病条）。"""
+    tags = relations_signal_tags(relations_summary)
+    if not tags:
+        return []
+    dizhi_pool = [r for r in CLASSIC_REFS if r.get("category") == "地支"]
+    hits: list[dict] = []
+    for tag in tags:
+        hits.extend(r for r in dizhi_pool if tag in (r.get("tags") or []))
+    if not hits:
+        hits = list(dizhi_pool)
+    seen: set[str] = set()
+    out: list[dict] = []
+    for ref in hits:
+        rid = str(ref.get("id") or "")
+        if not rid or rid in seen:
+            continue
+        seen.add(rid)
+        out.append(_with_verification_hint(ref))
         if len(out) >= limit:
             break
     return out

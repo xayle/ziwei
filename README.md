@@ -1,59 +1,60 @@
-# BaZi Service
+# 浮生 · BaZi / Ziwei 引擎与产品壳
 
-项目版本: **v8.0.10**
-状态: 🚀 生产就绪 (Production Ready)
-发布日期: 2026-03-09
-贡献者: GitHub Copilot
-测试覆盖: **910 tests passed** · Docker: `bazi:v8.0`
+| 字段 | 内容 |
+|------|------|
+| **产品** | **浮生** — 档案 → 八字 / 紫微 → 六卷报告（主入口 `/static/app/`） |
+| **引擎** | 八字 + 紫微 API（FastAPI）；`ENGINE_V2=true` 时四柱走 `services/bazi_engine/` |
+| **状态** | **打磨 / 软可用**（主路径可真用）· **GTM 未开**（[R109 选项 A](docs/reports/R109-post-w14-decision-2026-07-12.md)） |
+| **当前主题** | A 维护 + B 内容深化（life/volumes、大运呈现、典籍 verified）· 少开新面 |
+| **问题清单** | [UI-FEATURE-ISSUE-INVENTORY](docs/reports/UI-FEATURE-ISSUE-INVENTORY-2026-07-14.md)（inv-1.33） |
+| **人工签字包** | [HUMAN-SIGNOFF-PACKET](docs/reports/HUMAN-SIGNOFF-PACKET-2026-07-15.md) |
+
+> 勿将本仓库理解为「已全面 Production Ready / 已授权投放」。机读门禁（scorecard / W14）绿 ≠ 对外 GTM。
+
+### 本地入口
+
+```bash
+# 后端
+./start-local.ps1 -Port 8000
+# 或: uvicorn run:app --host 127.0.0.1 --port 8000 --reload
+
+# 前端开发
+cd frontend && npm run dev
+
+# 对齐生产静态壳（改前端后务必执行）
+cd frontend && npm run build   # 输出到 ../static/app/
+```
+
+- SPA：`http://127.0.0.1:8000/static/app/`
+- API 文档：`http://127.0.0.1:8000/docs`
+- 开发统一入口：[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+### 引擎与质量（机读）
+
+| 文档 / 信号 | 说明 |
+|-------------|------|
+| [底层修复计划](docs/plan/ENGINE-CORE-FIX-PLAN-2026-07-11.md) | Phase 0–4 |
+| [八字 / 紫微 Gap](docs/design/bazi/bazi-gap-audit.md) · [紫微](docs/design/ziwei/ziwei-gap-audit.md) | 缺口清单 |
+| `docs/reports/scorecard-latest.json` | 目标 10.0 / 24 项 |
+| `docs/reports/w14-auto-verify-latest.json` | W14 bundle |
+| [A+B D1 薄卷加厚缺口](docs/reports/A-B-D1-VOLUME-THICKEN-GAPS-2026-07-19.md) | vol2 / vol6 等下一刀 |
+
+`ENGINE_V2=true` 时 `calculate()` 走 `_calculate_v2`，四柱经 **`services/bazi_engine/pillars.py`**（sxtwl/cnlunar + `solar_time_v2`）。OpenAPI：`make export-openapi` 或 `python scripts/export_openapi.py`。
 
 ---
 
-## ✅ v8.0 里程碑汇总 (N0–N7 全部完成)
+## 历史：v8.0 / Week 3 里程碑（归档摘要）
 
-### 功能特性矩阵
+以下为早期 BaZi Service 阶段交付记录，**不代表当前浮生产品对外状态**。
+
+### v8.0 功能矩阵（N0–N7，历史）
 
 | 里程碑 | 内容 | 关键交付物 |
 |--------|------|-----------|
-| N0 | 开发前自检 | pyright 0 errors, alembic 迁移, .env.example |
-| N1 | 命理引擎强化 | geju confidence 评分, 5 专旺格, 4 从格, shensha priority |
-| N2 | API 基础设施 | Prometheus 指标, P95 基线测试, ThreadPoolExecutor |
-| N3 | 大运与月运 | 大运叙事 400-600字, 月运 month_ganzhi, 城市/行业财富乘数 |
-| N4 | 数据持久化 | PostgreSQL 支持, soft-delete, Alembic 版本管理 |
-| N5 | UX 增强 | 历史 FIFO-5, 分享卡片 PNG, 批量 CSV, 五行环图, 大运展开, 移动端响应式, 暗黑模式 |
-| N6 | API v2 | `/api/v2` 路由, v2 Schema, v1 弃用 header, SDK 示例, Locust 压测 |
-| N7 | 测试与发布 | 910 tests, E2E Playwright, bandit 0 HIGH, Docker `v8.0`,  git tag |
-| 紫微斗数 | 第三方占星引擎 | 完整命宫/主星/四化/流月引擎，当前由 SPA 主入口与兼容 legacy 页共同承载 |
+| N0–N7 | 引擎、API、持久化、UX、测试与发布 | 见仓库 git 与 CHANGELOG |
+| 紫微斗数 | 安星 / 四化 / 运限 | SPA 主入口 + 兼容页 |
 
-### 测试指标
-
-| 指标 | 数值 |
-|------|------|
-| 总测试数 | **910 passed** |
-| 引擎测试基线 (N2) | 379 |
-| bandit MEDIUM/HIGH | **0 / 0** |
-| 核心引擎覆盖率 | **99%** |
-| `/api/v1/verify` P95 | **< 200ms** (concurrency=1) |
-
-### 引擎核心（2026-07-11）
-
-| 文档 | 说明 |
-|------|------|
-| [底层修复计划](docs/plan/ENGINE-CORE-FIX-PLAN-2026-07-11.md) | Phase 0–4 路线图 |
-| [基线报告](docs/reports/ENGINE-CORE-BASELINE-2026-07-11.md) | 回归与修复记录 |
-| [八字 Gap Audit](docs/design/bazi/bazi-gap-audit.md) | 八字缺口清单 |
-| [紫微 Gap Audit](docs/design/ziwei/ziwei-gap-audit.md) | 紫微缺口清单 |
-
-#### ENGINE_V2 说明
-
-环境变量 `ENGINE_V2=true` 时，`calculate()` 走 `_calculate_v2`，四柱经 **`services/bazi_engine/pillars.py`** 权威层（sxtwl/cnlunar + `solar_time_v2`）。
-
-- **已实现**：v2 四柱层 + 分析层统一使用 `services/bazi_engine/`。
-- **v1 兼容**：`app/core/verify.verify_full` shim 委托同一 pillars 实现，四柱输出应与 v2 一致。
-- OpenAPI 快照更新：`make export-openapi` 或 `python scripts/export_openapi.py`。详见 [八字方法注册表 B-04](docs/design/bazi/ENGINE-METHOD-REGISTRY.md#b-04-engine_v2)。
-
----
-
-## ✅ Week 3 开发完成汇总 (2026年2月25日)
+### Week 3 开发完成汇总（2026-02，历史）
 
 ### 📊 本周成果
 

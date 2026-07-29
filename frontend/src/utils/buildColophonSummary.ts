@@ -20,16 +20,15 @@ export function buildColophonSummary(input: ColophonInput): Colophon {
     : '引擎 —'
   const lines: string[] = [
     `校勘：${engineBit}；排盘字段${missing.length ? '有注记见下行' : '齐备'}，可核对卷内事实 / 典籍 / 推断分层。`,
+    '典籍语料：已挂 verified 引擎条处可标「典籍依据」；其余为软提示见卷二；六冲/六合/三合专条仍待外底本校勘，不作真 cite。',
   ]
   if (missing.length) {
     const labels = missing.slice(0, 4).map(formatMissingFieldLabel)
     lines.push(`字段注记：${labels.join('、')}（不影响已写出块；对照项非故障，展开脚注可核）。`)
-  }
-  if (input.iztroAdvisory?.trim()) {
-    lines.push(truncateColophonLine(input.iztroAdvisory))
-  }
-  if (lines.length === 1 && !missing.length) {
-    lines.push('双轨核验：可对照开源排盘 / 文墨对照（若有）。')
+  } else if (input.iztroAdvisory?.trim()) {
+    lines.push(truncateColophonLine(input.iztroAdvisory, 100))
+  } else {
+    lines.push('双轨核验：可对照开源排盘与文墨对照盘（若有）；对照差异见脚注，不改写主卷事实。')
   }
   return {
     summary_lines: lines.slice(0, 3),

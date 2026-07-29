@@ -159,13 +159,25 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
             detail = geju.geju_detail or geju.interpretation_text or ""
             if detail:
                 blocks.append(_block(detail, "fact"))
-            classic_ref = (geju.classic_ref or "").strip()
-            if classic_ref:
-                cid, passage = _verified_classic_for_query(name, tags=["foundation", "overall"])
-                if cid and passage:
-                    blocks.append(_block(passage, "cite", classic_id=cid))
-                elif classic_ref:
-                    blocks.append(_block(classic_ref, "inference"))
+            from services.bazi_engine.classic_refs import geju_candidates
+
+            verified_geju = [r for r in geju_candidates(name, limit=2) if r.get("hint_type") == "verified"]
+            if verified_geju:
+                for ref in verified_geju:
+                    src = str(ref.get("source") or "").strip()
+                    quote = str(ref.get("text") or "").strip()
+                    if not quote:
+                        continue
+                    body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+                    blocks.append(_block(_clip(body, 220), "cite", classic_id=str(ref.get("id") or "") or None))
+            else:
+                classic_ref = (geju.classic_ref or "").strip()
+                if classic_ref:
+                    cid, passage = _verified_classic_for_query(name, tags=["foundation", "overall", "格局"])
+                    if cid and passage:
+                        blocks.append(_block(passage, "cite", classic_id=cid))
+                    else:
+                        blocks.append(_block(classic_ref, "inference"))
 
     elif section_id == "yongshen":
         y = resp.yongshen
@@ -176,11 +188,26 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
                     "fact",
                 )
             )
+            from services.bazi_engine.classic_refs import yongshen_candidates
+
+            for ref in yongshen_candidates(limit=2):
+                if ref.get("hint_type") != "verified":
+                    continue
+                src = str(ref.get("source") or "").strip()
+                quote = str(ref.get("text") or "").strip()
+                if not quote:
+                    continue
+                body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+                blocks.append(_block(_clip(body, 220), "cite", classic_id=str(ref.get("id") or "") or None))
 
     elif section_id == "relations":
+        from services.bazi_engine.classic_refs import relations_candidates
+
         rs = resp.relations_summary
         parts: list[str] = []
+        rs_dict: dict[str, object] = {}
         if rs:
+            rs_dict = rs.model_dump() if hasattr(rs, "model_dump") else dict(rs)
             for field in (rs.clash_summary, rs.combine_summary, rs.harm_summary, rs.interaction_summary):
                 text = str(field or "").strip()
                 if text:
@@ -206,11 +233,45 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
                     "fact",
                 )
             )
+        # verified 真 cite：优先刑冲会合已核验宿主 / 子集升格条
+        from services.relations_classic_cite import pick_relations_verified_cites
+
+        for cite in pick_relations_verified_cites(rs_dict, limit=2):
+            cite_body = f"典籍依据（{cite['title']}）：{_clip(cite['passage'], 200)}"
+            if len(cite_body) < 40:
+                cite_body = f"{cite_body}宜与卷二干支关系事实互参，不作单句断语。"
+            if len(cite_body) >= 40:
+                blocks.append(_block(cite_body, "cite", classic_id=cite["id"]))
+        for ref in relations_candidates(rs_dict, limit=2):
+            src = str(ref.get("source") or "").strip()
+            quote = str(ref.get("text") or "").strip()
+            rid = str(ref.get("id") or "").strip() or None
+            if not quote:
+                continue
+            src_bit = f"（{src}）" if src else ""
+            blocks.append(
+                _block(
+                    f"关系典籍软提示{src_bit}：{quote}（软提示，待校勘升格前不作「典籍依据」。）",
+                    "inference",
+                    classic_id=rid,
+                )
+            )
 
     elif section_id == "dayun":
         items = (resp.dayun.items if resp.dayun else None) or (resp.dayun.cycles if resp.dayun else None) or []
         for index, item in enumerate(items[:6]):
             blocks.append(_block(_bazi_dayun_explain_text(item, index, items), "fact"))
+        from services.bazi_engine.classic_refs import dayun_candidates
+
+        for ref in dayun_candidates(limit=2):
+            if ref.get("hint_type") != "verified":
+                continue
+            src = str(ref.get("source") or "").strip()
+            quote = str(ref.get("text") or "").strip()
+            if not quote:
+                continue
+            body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+            blocks.append(_block(_clip(body, 220), "cite", classic_id=str(ref.get("id") or "") or None))
 
     elif section_id == "fortune":
         ln = resp.liunian
@@ -219,6 +280,17 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
                 blocks.append(_block(f"{item.year}年 {item.ganzhi or ''}".strip(), "fact"))
         else:
             blocks.append(_block("流年窗口见卷三事实层。", "fact"))
+        from services.bazi_engine.classic_refs import liunian_candidates
+
+        for ref in liunian_candidates(limit=2):
+            if ref.get("hint_type") != "verified":
+                continue
+            src = str(ref.get("source") or "").strip()
+            quote = str(ref.get("text") or "").strip()
+            if not quote:
+                continue
+            body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
+            blocks.append(_block(_clip(body, 220), "cite", classic_id=str(ref.get("id") or "") or None))
 
     elif section_id == "domains":
         for _key, attr, label in DOMAIN_KEYS:

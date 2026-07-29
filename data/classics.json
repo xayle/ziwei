@@ -4464,8 +4464,9 @@
       "进退"
     ],
     "passage": "大运者，主一时之运，论其得失进退，须看大运天干地支与日主之生克制化。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论大运 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dayun_002",
@@ -4538,8 +4539,9 @@
       "用神"
     ],
     "passage": "用神在大运中得旺相，虽命局有瑕，亦能转危为安；用神入墓绝，则运行不济。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论大运 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dayun_007",
@@ -4552,8 +4554,9 @@
       "流年"
     ],
     "passage": "岁运并临，即流年大运天干地支同时与命局发生生克，力量加倍，善恶皆烈。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dayun_008",
@@ -4581,8 +4584,9 @@
       "波折"
     ],
     "passage": "运途坎坷，非命之过，实运之过也。换运之际，常多波折，此消彼长，动静之间自有天机。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dayun_010",
@@ -4624,8 +4628,9 @@
       "正官格"
     ],
     "passage": "正官格：月令透正官，官清印顺为上格；官杀混杂则格局降低，须以食伤制杀为美。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论格局 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.geju_003",
@@ -4714,8 +4719,9 @@
       "财官"
     ],
     "passage": "财官双全，日主中和，为人生得意之命局；然须命运配合，方能始终如一。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.geju_009",
@@ -4773,8 +4779,9 @@
       "神煞"
     ],
     "passage": "文昌贵人：甲乙巳午，丙戊申，丁己酉，庚亥，辛子，壬寅，癸卯。文昌主聪明才学。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shensha_003",
@@ -4788,8 +4795,9 @@
       "驿马"
     ],
     "passage": "驿马：申子辰马在寅，巳酉丑马在亥，寅午戌马在申，亥卯未马在巳。驿马主奔波远行。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shensha_004",
@@ -4803,8 +4811,9 @@
       "神煞"
     ],
     "passage": "桃花（咸池）：寅午戌见卯，亥卯未见子，申子辰见酉，巳酉丑见午。桃花主感情缘分。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shensha_005",
@@ -4818,8 +4827,9 @@
       "神煞"
     ],
     "passage": "劫煞：主劫夺破财，口舌是非。逢之宜谨慎财务，防小人作乱，尤忌年流引动。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shensha_006",
@@ -4833,8 +4843,9 @@
       "阴德"
     ],
     "passage": "亡神：主暗耗、内心困顿、无端失散。亡神多见，宜修心养性，广积阴德以化解。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shensha_007",
@@ -4863,8 +4874,9 @@
       "领导"
     ],
     "passage": "将星：申子辰命见子，寅午戌命见午，亥卯未命见卯，巳酉丑命见酉。将星主权威领导。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.yongshen_001",
@@ -4876,8 +4888,9 @@
       "用神"
     ],
     "passage": "用神者，命中最需之物也。命局缺之必用，有之必护，逢生则旺，逢克则衰。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论用神 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.yongshen_002",
@@ -4934,8 +4947,9 @@
       "顺势"
     ],
     "passage": "从格用神：从强者顺势，从弱者随流。一旦从格成立，逆之必有大凶，顺之则一路通达。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.yongshen_006",
@@ -4963,8 +4977,9 @@
       "用神"
     ],
     "passage": "扶抑法：日主强则抑之，弱则扶之。扶即取印比，抑即取食财官。此最常用之命理法则。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.yongshen_008",
@@ -4977,8 +4992,9 @@
       "用神"
     ],
     "passage": "月令为命局之根基，用神从月令取，方为正道。月令旺相，则用神得令有力，命局安稳。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.general_001",
@@ -5022,8 +5038,9 @@
       "通论"
     ],
     "passage": "子平术以日干为主，月令为提纲，配合四柱天干地支之生克冲合，断人一生之命运格局。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.general_004",
@@ -5037,8 +5054,9 @@
       "通论"
     ],
     "passage": "命理仅供参考，仁者见仁，智者见智。趋吉避凶之道，在于知命、知运、知时，积善积德。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_001",
@@ -5051,8 +5069,9 @@
       "月令"
     ],
     "passage": "日主为命之主宰，强弱须以月令旺相休囚死论，得令则旺，失令则弱，余柱参论。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论日主 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_002",
@@ -5065,8 +5084,9 @@
       "旺弱"
     ],
     "passage": "日主旺则能承财官，弱则宜印比相助。命局之美丑，皆以日主能否承受为首要判断。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_003",
@@ -5079,8 +5099,9 @@
       "甲乙"
     ],
     "passage": "甲乙木日主，仁厚好学，宜春月生，得水涵养则茁壮；忌金强克制，宜火泄秀则显才。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_004",
@@ -5093,8 +5114,9 @@
       "火"
     ],
     "passage": "丙丁火日主，热情主动，宜夏月旺；火过旺须济以水，方免焦燥之弊。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_005",
@@ -5107,8 +5129,9 @@
       "日主"
     ],
     "passage": "戊己土日主，稳重包容，居中调和；土旺须木疏，方免壅滞，得金泄秀则财运顺畅。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_006",
@@ -5121,8 +5144,9 @@
       "金"
     ],
     "passage": "庚辛金日主，执行力强，利刃之象；金旺须火煅以成器，得水泄秀则聪慧流芳。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_007",
@@ -5135,8 +5159,9 @@
       "水"
     ],
     "passage": "壬癸水日主，智慧灵动，善变通；水旺须土堤防方有所归，得木泄秀则才华卓著。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.daymaster_008",
@@ -5205,8 +5230,9 @@
       "调候"
     ],
     "passage": "五行过旺，须其所克之行制之；五行过衰，须其所生之行扶之。调候之法，在于平衡中和。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.wuxing_005",
@@ -5233,8 +5259,9 @@
       "脏腑"
     ],
     "passage": "五行配脏腑：木肝胆，火心小肠，土脾胃，金肺大肠，水肾膀胱。旺则健，衰则病。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.wuxing_007",
@@ -5261,8 +5288,9 @@
       "流通"
     ],
     "passage": "五行流通则命局活跃，五行淤滞则命局凝固。循环有情，一气流通，为命局有力之象。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shishen_001",
@@ -5319,8 +5347,9 @@
       "见官"
     ],
     "passage": "伤官见官为祸百端；若官星入墓或力弱，伤官有时反主高尚清贵之命格。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shishen_005",
@@ -5349,8 +5378,9 @@
       "财运"
     ],
     "passage": "正财为妻财之象，务实稳健；偏财为父亲与意外之财之象，财来财往，善缘广结。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shishen_007",
@@ -5364,8 +5394,9 @@
       "竞争"
     ],
     "passage": "比肩主自立、竞争、兄弟；劫财则主劫夺、争强、意气用事。二者皆为日主同类，但劫财性更烈。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.shishen_008",
@@ -5421,8 +5452,9 @@
       "日支"
     ],
     "passage": "婚姻宫（日支）安稳，则夫妻关系和谐；日支受冲，婚姻稳定性弱，需双方加强沟通经营。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.marriage_004",
@@ -5450,8 +5482,9 @@
       "晚婚"
     ],
     "passage": "孤辰寡宿入命，多主孤独，婚缘偏迟或晚婚；然孤辰寡宿有时反利于专业成就，非一概而论。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.marriage_006",
@@ -5492,8 +5525,9 @@
       "脏腑"
     ],
     "passage": "火旺者，心血管与血压需要关注；水旺者，肾与泌尿系统需保养；金旺者，肺部呼吸道注意防护。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.health_003",
@@ -5506,8 +5540,9 @@
       "煞气"
     ],
     "passage": "七杀无制，血光、手术之象；冲刑命局，易有意外或慢性病。宜修心养性以转化煞气。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.health_004",
@@ -5534,8 +5569,9 @@
       "神经"
     ],
     "passage": "印星旺则智慧高而体质偏弱，宜注重精神压力管理，防止过度用脑导致神经衰弱。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.health_006",
@@ -5548,8 +5584,9 @@
       "阴阳"
     ],
     "passage": "命局水火均衡，阴阳调和，则精神与体力两旺；偏枯偏盛，则易有亢裂之象，此养生之道也。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dayun_011",
@@ -5576,8 +5613,9 @@
       "大运"
     ],
     "passage": "大运地支冲命局地支，为动荡变化之年；冲吉则冲出机遇，冲凶则动中带险，须细辨本质。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dayun_013",
@@ -5604,8 +5642,9 @@
       "运势"
     ],
     "passage": "凡命好运好，则一生顺遂；命好运差，则事难成；命差运好，则中途有起色；命运俱差，则一生蹭蹬。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.general_005",
@@ -5619,8 +5658,9 @@
       "通论"
     ],
     "passage": "命理之学，非为定论人生，乃为知势应变。知命者，以天道应万变，方能趋吉而避凶。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.general_006",
@@ -5634,8 +5674,9 @@
       "阴阳"
     ],
     "passage": "天干明透在外，地支暗藏于内。表与里，动与静，皆在四柱之中，精微处自有玄机。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.40 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.geju_e01",
@@ -5649,8 +5690,9 @@
       "透干"
     ],
     "passage": "格局者，月令所藏之神透出天干而为用者也。透出则清，不透则浑，清者贵，浑者杂。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论格局 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.geju_e02",
@@ -5778,8 +5820,9 @@
       "身强弱"
     ],
     "passage": "身强喜财官食伤，以泄旺气；身弱喜印比，以扶弱补身。此扶抑之道，用神之根本。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.子平真诠-论日主 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.rizhu_003",
@@ -5792,8 +5835,9 @@
       "日主"
     ],
     "passage": "日干甲乙木主仁；丙丁火主礼；戊己土主信；庚辛金主义；壬癸水主智。五常之德，各从本性。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.rizhu_004",
@@ -5807,8 +5851,9 @@
       "过旺"
     ],
     "passage": "日主过旺则刚愎，过弱则软弱；中和之命，日主有根有助，亦不过旺，乃为上等格局。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.rizhu_005",
@@ -5887,13 +5932,16 @@
     "author": "任铁樵（注）",
     "dynasty": "清",
     "tags": [
+      "classic_refs",
+      "interactions",
       "刑",
       "地支",
       "损伤"
     ],
     "passage": "刑者，三刑寅巳申、丑戌未、子卯自刑辰午酉亥；刑主损伤，刑中亦有生机，须辨喜忌而论。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.39 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dizhi_ext05",
@@ -5901,13 +5949,16 @@
     "author": "万民英",
     "dynasty": "明",
     "tags": [
+      "classic_refs",
+      "interactions",
       "地支",
       "害",
       "阻碍"
     ],
     "passage": "害者，子未害、丑午害、寅巳害、卯辰害、申亥害、酉戌害；害则阻碍，逢害宜防人际摩擦。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.三命通会 已核验篇章子集，inv-1.39 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dizhi_ext06",
@@ -5915,6 +5966,8 @@
     "author": "徐子平（传）",
     "dynasty": "宋",
     "tags": [
+      "classic_refs",
+      "interactions",
       "地支",
       "日支",
       "时支",
@@ -5922,8 +5975,9 @@
       "藏干"
     ],
     "passage": "地支藏干者，月令藏干为用神之本；日支藏干为配偶宫之象；时支藏干为子女晚年之信息。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.39 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.marriage_ext01",
@@ -5966,8 +6020,9 @@
       "配偶宫"
     ],
     "passage": "日支为配偶宫，日支三刑六冲，配偶宫不稳；日支三合六合，配偶宫和谐有助力。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.marriage_ext04",
@@ -5980,8 +6035,9 @@
       "桃花"
     ],
     "passage": "咸池桃花居年支，祖上遗留之情缘象；居月支，社会交际中情缘旺；居日时，近身情感最真切。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.general_ext01",
@@ -6025,8 +6081,9 @@
       "通论"
     ],
     "passage": "五行无过与不及，中和为贵。过旺者损之，不足者益之，损益之道，命理之核心也。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.general_ext04",
@@ -6098,8 +6155,9 @@
       "流年"
     ],
     "passage": "值太岁者，岁君临命，宜守不宜动；冲太岁者，岁冲命，宜防意外变故与人际纠纷。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.渊海子平 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.liunian_e03",
@@ -6126,8 +6184,9 @@
       "相激"
     ],
     "passage": "大运流年相互激荡，流年之凶须大运配合而发，大运之吉亦借流年之助而更旺。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "notes": "services/bazi_engine/classic_refs.py；passage 为 chapter_agg.滴天髓 已核验篇章子集，inv-1.41 升格",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.liunian_e05",
