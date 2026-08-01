@@ -16,12 +16,10 @@ def compute_ziwei_trust_level(
     iztro_crosscheck: IztroCrosscheckResponse | None,
 ) -> TrustLevel:
     missing = list(missing_fields or [])
-    warnings = list(engine_warnings or [])
+    _ = engine_warnings  # 右弼等校勘脚注不再参与分档，参数保留供调用方一致传入
     if iztro_crosscheck is not None and not iztro_crosscheck.life_palace_match:
         return "degraded"
-    if any("右弼" in w for w in warnings):
-        return "advisory"
-    if any(f in ("palace_ten_gods", "youbi_month_vs_iztro_hour") or "宫干" in f or "十神" in f for f in missing):
+    if any(f == "palace_ten_gods" or "宫干" in f or "十神" in f for f in missing):
         return "advisory"
     if missing:
         return "degraded"

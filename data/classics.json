@@ -5886,35 +5886,37 @@
   },
   {
     "id": "engine_ref.dizhi_ext01",
-    "title": "《三命通会·论冲》",
-    "author": "万民英",
-    "dynasty": "明",
+    "title": "《子平真诠评注》·论刑冲会合解法",
+    "author": "沈孝瞻",
+    "dynasty": "清",
     "tags": [
       "六冲",
       "动变",
       "地支"
     ],
-    "passage": "六冲者，子午冲、丑未冲、寅申冲、卯酉冲、辰戌冲、巳亥冲；冲则动，动则变，变有吉凶之分。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "passage": "冲者，六冲也，子午卯酉之类是也。",
+    "notes": "passage ⊆ daizhige.ziping.论刑冲会合解法（已 verified）；替换原引擎复述",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dizhi_ext02",
-    "title": "《渊海子平·论合》",
-    "author": "徐子平（传）",
-    "dynasty": "宋",
+    "title": "《子平真诠评注》·论刑冲会合解法",
+    "author": "沈孝瞻",
+    "dynasty": "清",
     "tags": [
       "六合",
       "化气",
       "地支"
     ],
-    "passage": "六合者，子丑合、寅亥合、卯戌合、辰酉合、巳申合、午未合；合则化，化则转变五行，意义深远。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "passage": "合者，六合也，子与丑合之类是也。",
+    "notes": "passage ⊆ daizhige.ziping.论刑冲会合解法（已 verified）；替换原引擎复述",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dizhi_ext03",
-    "title": "《子平真诠》",
+    "title": "《子平真诠评注》·论刑冲会合解法",
     "author": "沈孝瞻",
     "dynasty": "清",
     "tags": [
@@ -5922,9 +5924,10 @@
       "五行",
       "地支"
     ],
-    "passage": "三合局者，寅午戌合火、巳酉丑合金、申子辰合水、亥卯未合木；会三局则五行力量大增。",
-    "notes": "services/bazi_engine/classic_refs.py",
-    "verification_status": "unverified"
+    "passage": "会者，三会也，申子辰之类是也。",
+    "notes": "passage ⊆ daizhige.ziping.论刑冲会合解法（已 verified）；替换原引擎复述",
+    "verification_status": "verified",
+    "verified_by": "transitive-subset"
   },
   {
     "id": "engine_ref.dizhi_ext04",

@@ -39,6 +39,6 @@ describe('buildColophonSummary', () => {
     expect(corpus).toBeTruthy()
     expect(corpus).not.toContain('五书核验进行中')
     expect(corpus).toContain('verified')
-    expect(corpus).toContain('六冲')
+    expect(corpus).toContain('冲合会')
   })
 })

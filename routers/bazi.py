@@ -1321,7 +1321,7 @@ def api_bazi_explain_batch(
     """一次请求最多 4 个 explain section，供报告/八字页填充 cite/fact 层。"""
     from services.explain_service import explain_bazi_batch
 
-    enforce_quota(request, "bazi_explain_batch")
+    enforce_quota(request, "batch")
     warnings: list[WarningModel] = []
     request_id = _sanitize_request_id(x_request_id, warnings)
     return explain_bazi_batch(payload, request_id=request_id)

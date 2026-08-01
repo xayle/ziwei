@@ -236,11 +236,13 @@ export function buildRelationsClassicQuoteBlocks(
   const pool = hits.length ? hits : DIZHI_CLASSIC_REFS.filter((r) => r.tags.includes('地支'))
   return pool.slice(0, limit).map((ref) => {
     const srcBit = ref.source ? `（${ref.source}）` : ''
-    const body =
-      `关系典籍软提示${srcBit}：${ref.text}（软提示，待校勘升格前不作「典籍依据」。）`
+    const verified = ref.hint_type === 'verified'
+    const body = verified
+      ? `典籍依据${srcBit}：${ref.text}`
+      : `关系典籍软提示${srcBit}：${ref.text}（软提示，待校勘升格前不作「典籍依据」。）`
     return {
       text: clipText(body, 220),
-      layer: 'inference' as const,
+      layer: (verified ? 'cite' : 'inference') as 'cite' | 'inference',
       classic_id: ref.id,
     }
   })

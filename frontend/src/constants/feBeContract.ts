@@ -14,8 +14,8 @@ export type LifeVolumeLoadPhase = 'w8_adapter' | 'w16_authority'
 export const LIFE_VOLUME_LOAD_PHASE: LifeVolumeLoadPhase = 'w8_adapter'
 
 /**
- * 报告页 explain/batch 节 ID（≤4 请求 · FE-BE Q9 · explain-section-map report_page）
- * 八字 4 + 紫微 2 合并为 2 次 batch POST（各 ≤4 sections）
+ * 报告页 explain/batch 节 ID（FE-BE Q9 · explain-section-map report_page）
+ * 八字 / 紫微各 1 次 batch POST；BE `sections` 上限 8。
  */
 export const REPORT_BAZI_EXPLAIN_SECTIONS = [
   'geju',

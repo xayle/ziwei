@@ -28,15 +28,16 @@ class ExplainSectionResultModel(BaseModel):
 
 
 class ExplainBatchRequest(BaziFullRequest):
-    sections: list[str] = Field(..., min_length=1, max_length=4)
+    # 报告页八字可一次拉 geju/relations/domains/summary/reading（5 节）；留余量防扩节
+    sections: list[str] = Field(..., min_length=1, max_length=8)
 
 
 class ZiweiExplainBatchRequest(ZiweiRequest):
-    sections: list[str] = Field(..., min_length=1, max_length=4)
+    sections: list[str] = Field(..., min_length=1, max_length=8)
 
 
 class RelationExplainBatchRequest(RelationFullRequest):
-    sections: list[str] = Field(..., min_length=1, max_length=4)
+    sections: list[str] = Field(..., min_length=1, max_length=8)
 
 
 class ExplainBatchResponse(BaseModel):

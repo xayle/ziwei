@@ -28,3 +28,14 @@ export function formatCnElementsJoin(
   const cn = toCnElements(values ?? undefined)
   return cn.length ? cn.join('、') : fallback
 }
+
+/** 文案兜底：把夹在中文里的 wood/fire/… 换成五行汉字（如「water阴」→「水阴」）。 */
+export function localizeElementWords(text: string): string {
+  if (!text) return text
+  return text
+    .replace(/\bwood\b/gi, '木')
+    .replace(/\bfire\b/gi, '火')
+    .replace(/\bearth\b/gi, '土')
+    .replace(/\bmetal\b/gi, '金')
+    .replace(/\bwater\b/gi, '水')
+}

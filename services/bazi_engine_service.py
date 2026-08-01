@@ -649,8 +649,12 @@ def _build_shishen_summary(
         liuqin_summary.append("比劫主自我、协作与边界")
     if shishen_scores.get("食神", 0) or shishen_scores.get("伤官", 0):
         liuqin_summary.append("食伤主表达、输出与创造")
+    from services.bazi_engine.wuxing import ELEMENTS_CN
+
+    day_element_cn = ELEMENTS_CN.get(day_element or "", day_element or "未知")
+    day_yy_cn = "阳" if day_yinyang == "yang" else "阴" if day_yinyang == "yin" else ""
     summary_text = (
-        f"日主{ds_st}（{day_element or '未知'}{('阳' if day_yinyang == 'yang' else '阴' if day_yinyang == 'yin' else '')}）"
+        f"日主{ds_st}（{day_element_cn}{day_yy_cn}）"
         f"的十神结构以{('、'.join(dominant[:2]) if dominant else '均衡')}为核心，"
         f"盘面主轴偏向{('、'.join(liuqin_summary[:2]) if liuqin_summary else '平衡分布')}。"
     )

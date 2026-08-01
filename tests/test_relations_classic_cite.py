@@ -24,9 +24,10 @@ def test_dizhi_ext_subset_promoted_verified():
     assert is_verified_classic("engine_ref.dizhi_ext04")
     assert is_verified_classic("engine_ref.dizhi_ext05")
     assert is_verified_classic("engine_ref.dizhi_ext06")
-    # 冲合专条仍须底本 spotcheck，不得误升
-    assert not is_verified_classic("engine_ref.dizhi_ext01")
-    assert not is_verified_classic("engine_ref.dizhi_ext02")
+    # 冲合专条已改为宿主真子集
+    assert is_verified_classic("engine_ref.dizhi_ext01")
+    assert is_verified_classic("engine_ref.dizhi_ext02")
+    assert is_verified_classic("engine_ref.dizhi_ext03")
 
 
 def test_pick_relations_verified_cites_prefers_host_for_clash():

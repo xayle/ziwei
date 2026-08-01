@@ -2,24 +2,24 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | inv-1.45 |
-| **日期** | 2026-07-28 |
+| **版本** | inv-1.46 |
+| **日期** | 2026-08-01 |
 | **定位** | 全路由界面 / 主功能错误清单 · 根因 · 解决方案 · 修复优先级 |
 | **依据** | 路由通读 · FE 代码核对 · 实机 API 探针 · 二次深挖（auth/经度/权益/入口） |
 | **关联** | [`DEV-AUDIT-2026-07-13.md`](../DEV-AUDIT-2026-07-13.md) · [`FE-BE-DECISIONS.md`](../plan/FE-BE-DECISIONS.md) · [`R102-product-rebuild-plan-2026-07-13.md`](R102-product-rebuild-plan-2026-07-13.md) · [`HUMAN-SIGNOFF-PACKET-2026-07-15.md`](HUMAN-SIGNOFF-PACKET-2026-07-15.md) · [`A-B-D1-VOLUME-THICKEN-GAPS`](A-B-D1-VOLUME-THICKEN-GAPS-2026-07-19.md) |
 | **机读对照** | autopilot 常绿 ≠ 无产品 bug；本清单补「静默降级 / 经度 / 入口 / 权益」层 |
 
-> **一句话**：A 维护 — FE 关系 verified cite 回退 + vol1 五行/十神 cite；冲合专条仍阻塞。
+> **一句话**：实质性抬高信任 — 紫微宫位十神落地、默认路径 `trust_level=full`；冲合专条改宿主真子集 verified。
 
-### 本轮修复进度（inv-1.45）
+### 本轮修复进度（inv-1.46）
 
 | 批次 | 状态 | 已勾 ID |
 |------|------|---------|
-| inv-1.44 及前 | ✅ | 见上 |
-| FE 关系 cite 回退 | ✅ 本批 | `pickRelationsVerifiedCites` 对齐 BE 宿主摘句 |
-| 五行/十神 cite | ✅ 本批 | `wuxing-cite` · `shishen-cite` BE+FE |
-| 冲合专条 | ⛔ 阻塞 | `dizhi_ext01/02/03` 须外底本 spotcheck |
-| 仍开 | — | **GTM 未开（R109 A）** · 冲合专条底本 |
+| inv-1.45 及前 | ✅ | 见上 |
+| 紫微宫位十神 | ✅ 本批 | `PalaceInfo.ten_god` · API · 盘面展示 |
+| 右弼按月校勘化 | ✅ 本批 | 仅 `engine_warnings`，不再压 advisory |
+| 冲合专条 | ✅ 本批 | `dizhi_ext01/02/03` ⊆ `论刑冲会合解法` |
+| 仍开 | — | **GTM 未开（R109 A）** |
 
 ---
 

@@ -51,6 +51,9 @@
 | engine_ref.pattern_002 | — | spotcheck-batch | services/bazi_engine/classic_refs.py | verified |
 | engine_ref.pattern_003 | — | spotcheck-batch | services/bazi_engine/classic_refs.py | verified |
 | engine_ref.pattern_004 | — | spotcheck-batch | services/bazi_engine/classic_refs.py | verified |
+| engine_ref.dizhi_ext01 | — | transitive-subset | passage ⊆ daizhige.ziping.论刑冲会合解法（已 verified；替原引擎复述） | verified |
+| engine_ref.dizhi_ext02 | — | transitive-subset | passage ⊆ daizhige.ziping.论刑冲会合解法（已 verified；替原引擎复述） | verified |
+| engine_ref.dizhi_ext03 | — | transitive-subset | passage ⊆ daizhige.ziping.论刑冲会合解法（已 verified；替原引擎复述） | verified |
 | engine_ref.dizhi_ext04 | — | transitive-subset | passage ⊆ chapter_agg.滴天髓（已 verified） | verified |
 | engine_ref.dizhi_ext05 | — | transitive-subset | passage ⊆ chapter_agg.三命通会（已 verified） | verified |
 | engine_ref.dizhi_ext06 | — | transitive-subset | passage ⊆ chapter_agg.渊海子平（已 verified） | verified |

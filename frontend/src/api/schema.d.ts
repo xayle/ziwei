@@ -8616,6 +8616,12 @@ export interface components {
             branch: string;
             /** Stem */
             stem: string;
+            /**
+             * Ten God
+             * @description 日主相对宫干的十神（子平口径）
+             * @default 
+             */
+            ten_god?: string;
             /** Main Stars */
             main_stars: components["schemas"]["StarInfo"][];
             /** Aux Stars */

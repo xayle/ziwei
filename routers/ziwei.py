@@ -255,6 +255,7 @@ def _chart_to_response(
             name=p.name,
             branch=p.branch,
             stem=p.stem,
+            ten_god=getattr(p, "ten_god", "") or "",
             main_stars=[
                 StarInfo(
                     name=s["name"],
@@ -1198,5 +1199,5 @@ async def api_ziwei_explain_batch(request: Request, payload: ZiweiExplainBatchRe
     """一次请求最多 4 个 explain section，供报告/紫微页填充 cite/fact 层。"""
     from services.explain_service import explain_ziwei_batch
 
-    enforce_quota(request, "ziwei_explain_batch")
+    enforce_quota(request, "batch")
     return explain_ziwei_batch(payload)

@@ -409,6 +409,7 @@ class PalaceResponse(BaseModel):
     name: str
     branch: str
     stem: str
+    ten_god: str = Field(default="", description="日主相对宫干的十神（子平口径）")
     main_stars: list[StarInfo]
     aux_stars: list[StarInfo]
     flying_out: dict[str, str] = {}

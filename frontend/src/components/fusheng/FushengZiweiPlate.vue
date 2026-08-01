@@ -200,7 +200,10 @@ function displayStars(palace: PalaceResponse): StarInfo[] {
               {{ cell.palace.name.replace('宫', '') }}
               <span v-if="isBodyPalace(cell.palace)" class="fz-badge fz-badge--body">身宫</span>
             </span>
-            <span class="fz-cell__gz">{{ cell.palace.stem }}{{ cell.palace.branch }}</span>
+            <span class="fz-cell__gz">
+              {{ cell.palace.stem }}{{ cell.palace.branch }}
+              <span v-if="cell.palace.ten_god" class="fz-cell__tg">{{ cell.palace.ten_god }}</span>
+            </span>
           </div>
           <p v-if="cellBadges(cell.palace).length" class="fz-cell__overlay">
             <span v-for="(tag, tIdx) in cellBadges(cell.palace)" :key="tIdx" class="fz-overlay-tag">{{ tag }}</span>
@@ -381,6 +384,17 @@ function displayStars(palace: PalaceResponse): StarInfo[] {
   font-size: 11px;
   font-weight: 700;
   color: #44403c;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+
+.fz-cell__tg {
+  font-size: 10px;
+  font-weight: 600;
+  color: #78716c;
 }
 
 .fz-cell__stars {

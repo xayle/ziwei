@@ -1,33 +1,33 @@
-/** 地支冲合刑害软提示（对齐 BE `classic_refs.py` dizhi_ext01~06，供 Adapter 同源）。 */
+/** 地支冲合刑害提示（对齐 BE `classic_refs.py` dizhi_ext01~06，供 Adapter 同源）。 */
 export type DizhiClassicRef = {
   id: string
   source: string
   text: string
   tags: string[]
-  hint_type: 'soft'
+  hint_type: 'soft' | 'verified'
 }
 
 export const DIZHI_CLASSIC_REFS: readonly DizhiClassicRef[] = [
   {
     id: 'dizhi_ext01',
-    source: '《三命通会·论冲》',
-    text: '六冲者，子午冲、丑未冲、寅申冲、卯酉冲、辰戌冲、巳亥冲；冲则动，动则变，变有吉凶之分。',
+    source: '《子平真诠评注》·论刑冲会合解法',
+    text: '冲者，六冲也，子午卯酉之类是也。',
     tags: ['六冲', '地支', '动变'],
-    hint_type: 'soft',
+    hint_type: 'verified',
   },
   {
     id: 'dizhi_ext02',
-    source: '《渊海子平·论合》',
-    text: '六合者，子丑合、寅亥合、卯戌合、辰酉合、巳申合、午未合；合则化，化则转变五行，意义深远。',
+    source: '《子平真诠评注》·论刑冲会合解法',
+    text: '合者，六合也，子与丑合之类是也。',
     tags: ['六合', '地支', '化气'],
-    hint_type: 'soft',
+    hint_type: 'verified',
   },
   {
     id: 'dizhi_ext03',
-    source: '《子平真诠》',
-    text: '三合局者，寅午戌合火、巳酉丑合金、申子辰合水、亥卯未合木；会三局则五行力量大增。',
+    source: '《子平真诠评注》·论刑冲会合解法',
+    text: '会者，三会也，申子辰之类是也。',
     tags: ['三合', '地支', '五行'],
-    hint_type: 'soft',
+    hint_type: 'verified',
   },
   {
     id: 'dizhi_ext04',

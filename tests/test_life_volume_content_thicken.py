@@ -63,7 +63,7 @@ def test_vol2_thicker_with_reading_polarity_and_cite_pending():
     assert "relations-reading" in ids
     assert "shensha-auspicious" in ids
     assert "shensha-caution" in ids
-    assert "relations-classic-soft" in ids
+    assert "relations-cite" in ids
     assert "vol2-cite-pending" not in ids
     blocks = [b for s in vol2.sections for b in s.blocks]
     assert len(blocks) >= 5
@@ -73,9 +73,9 @@ def test_vol2_thicker_with_reading_polarity_and_cite_pending():
     assert "天乙" in ji.blocks[0].text
     shen = next(s for s in vol2.sections if s.id == "shensha-caution")
     assert "羊刃" in shen.blocks[0].text
-    soft = next(s for s in vol2.sections if s.id == "relations-classic-soft")
-    assert soft.layer == "inference"
-    assert "软提示" in soft.blocks[0].text
+    cite = next(s for s in vol2.sections if s.id == "relations-cite")
+    assert cite.layer == "cite"
+    assert "典籍依据" in cite.blocks[0].text
 
 
 def test_relations_candidates_match_clash_and_combine():
@@ -86,7 +86,8 @@ def test_relations_candidates_match_clash_and_combine():
     assert "六合" in relations_signal_tags(rs)
     cands = relations_candidates(rs, limit=3)
     assert cands
-    assert any(r.get("id") == "dizhi_ext01" for r in cands)
+    assert any(r.get("id") in {"dizhi_ext01", "engine_ref.dizhi_ext01"} for r in cands)
+    assert any(r.get("hint_type") == "verified" for r in cands)
 
 
 def test_vol2_mounts_shensha_classic_refs_as_soft_inference():
@@ -291,7 +292,7 @@ def test_colophon_labels_advisory_missing_fields():
     assert "非故障" in joined
     assert "五书核验进行中" not in joined
     assert "已核验引擎条" in joined
-    assert "六冲" in joined
+    assert "冲合会" in joined
 
 
 def test_vol1_yongshen_cite_from_verified_engine_ref():

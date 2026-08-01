@@ -28,10 +28,10 @@ def setup_function() -> None:
 def test_shensha_subset_promoted_and_blocked_pairs():
     for cid in PROMOTED:
         assert is_verified_classic(cid)
-    # 冲合专条仍非宿主子集，不得误升
-    assert not is_verified_classic("engine_ref.dizhi_ext01")
-    assert not is_verified_classic("engine_ref.dizhi_ext02")
-    assert not is_verified_classic("engine_ref.dizhi_ext03")
+    # 冲合专条已改为宿主真子集
+    assert is_verified_classic("engine_ref.dizhi_ext01")
+    assert is_verified_classic("engine_ref.dizhi_ext02")
+    assert is_verified_classic("engine_ref.dizhi_ext03")
     assert not is_verified_classic("engine_ref.shensha_001")
     assert not is_verified_classic("engine_ref.shensha_007")
 

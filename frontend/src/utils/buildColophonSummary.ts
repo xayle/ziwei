@@ -20,7 +20,7 @@ export function buildColophonSummary(input: ColophonInput): Colophon {
     : '引擎 —'
   const lines: string[] = [
     `校勘：${engineBit}；排盘字段${missing.length ? '有注记见下行' : '齐备'}，可核对卷内事实 / 典籍 / 推断分层。`,
-    '典籍语料：已挂 verified 引擎条处可标「典籍依据」；其余为软提示见卷二；六冲/六合/三合专条仍待外底本校勘，不作真 cite。',
+    '典籍语料：已挂 verified 引擎条处可标「典籍依据」；其余为软提示见卷二；冲合会专条已挂宿主真子集。',
   ]
   if (missing.length) {
     const labels = missing.slice(0, 4).map(formatMissingFieldLabel)

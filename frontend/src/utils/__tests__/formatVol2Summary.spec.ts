@@ -111,8 +111,9 @@ describe('formatVol2Summary', () => {
     expect(relationsSignalTags(bazi)).toEqual(expect.arrayContaining(['六冲', '六合']))
     const quotes = buildRelationsClassicQuoteBlocks(bazi)
     expect(quotes.length).toBeGreaterThan(0)
-    expect(quotes[0].layer).toBe('inference')
+    expect(quotes[0].layer).toBe('cite')
     expect(quotes.some((q) => q.classic_id === 'dizhi_ext01')).toBe(true)
+    expect(quotes[0].text).toContain('典籍依据')
   })
 
   it('buildShenshaClassicQuoteBlocks mounts soft refs as inference', () => {

@@ -26,7 +26,7 @@ import { useProfileStore } from '@/stores/profile'
 import { buildBaziColumns, formatKongwangDisplay } from '@/utils/buildBaziColumns'
 import { buildDayunDisplayRow, formatDayunAgeRange } from '@/utils/dayunDisplay'
 import { formatRelationsSummaryText, formatShenshaSummaryText } from '@/utils/formatVol2Summary'
-import { formatCnElementsJoin } from '@/utils/yongshenElements'
+import { formatCnElementsJoin, localizeElementWords } from '@/utils/yongshenElements'
 import { truncateText } from '@/utils/truncateText'
 import { formatBaziRuleMatchLine } from '@/constants/baziRuleFlags'
 import type { BaziResponse } from '@/api/bazi'
@@ -299,7 +299,7 @@ const detailBlocks = computed<DetailBlock[]>(() => {
     },
     {
       title: '十神结构',
-      lead: shishen?.summary_text || '待计算',
+      lead: localizeElementWords(shishen?.summary_text || '待计算'),
       body: shishen?.day_stem ? `日主 ${shishen.day_stem}，总分 ${scoreOrMissing(shishen.score_total)}` : '暂无十神摘要。',
       bullets: [
         `主导：${listOrMissing(shishen?.dominant)}`,

@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
+from services.bazi_engine.tables import get_ten_god
+
 from .analysis import (
     generate_full_analysis,
     generate_palace_analysis,
@@ -50,6 +52,7 @@ class PalaceInfo:
     stem: str  # 宫干天干文字
     main_stars: list[dict]  # [{name, brightness, brightness_val, transforms}]
     aux_stars: list[str]  # 辅星/杂曜名称列表
+    ten_god: str = ""  # 日主相对宫干的十神（子平口径）
     flying_out: dict[str, str] = field(default_factory=dict)
     analysis: str = ""
     analysis_tags: list[str] = field(default_factory=list)
@@ -523,13 +526,17 @@ def ziwei_full(
         )
         fly_out = {star: f"化{hua.replace('化', '')}" for star, hua in pal_sihua.items()}
 
+        day_stem = STEMS[lunar.day_stem_idx]
+        palace_stem = STEMS[s]
+        tg = get_ten_god(day_stem, palace_stem)
         pa = PalaceInfo(
             index=i,
             name=PALACE_NAMES[i],
             branch_idx=b,
             branch=BRANCHES[b],
             stem_idx=s,
-            stem=STEMS[s],
+            stem=palace_stem,
+            ten_god="" if tg == "未知" else tg,
             main_stars=ms_list,
             aux_stars=ax_list,
             flying_out=fly_out,
@@ -734,9 +741,10 @@ def ziwei_full(
         _missing.append("true_solar_time")
         _engine_warnings.append("真太阳时修正失败，已回退至钟表时间")
     if youbi_method == "month":
+        # 流派对照脚注：保留 warning，不计入 missing / 不压低 trust_level（R038 修订）
         _engine_warnings.append("右弼依生月安星（按月）；与开源对照轨默认口径可能差一宫，属流派差异，非引擎错误。")
-        _missing.append("youbi_month_vs_iztro_hour")
-    _missing.append("palace_ten_gods")
+    if any(not (p.ten_god or "").strip() for p in palaces_info):
+        _missing.append("palace_ten_gods")
     chart.missing_fields = _missing
     chart.engine_warnings = _engine_warnings
     # O4: 写入缓存

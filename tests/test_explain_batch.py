@@ -31,17 +31,32 @@ def test_bazi_explain_batch_geju_relations_summary():
                 assert block.classic_id
 
 
-def test_bazi_explain_batch_max_four_sections():
+def test_bazi_explain_batch_accepts_report_five_sections():
+    """报告页 REPORT_BAZI_EXPLAIN_SECTIONS 为 5 节，schema 上限 8。"""
     reset_snapshot_cache_for_tests()
     req = ExplainBatchRequest(
         dt=datetime(1985, 3, 3, 8, 0, tzinfo=ZoneInfo("Asia/Shanghai")),
         lon=121.5,
         mode="single",
         gender="female",
-        sections=["geju", "relations", "dayun", "summary"],
+        sections=["geju", "relations", "domains", "summary", "reading"],
     )
     out = explain_bazi_batch(req)
-    assert len(out.sections) == 4
+    assert len(out.sections) == 5
+
+
+def test_bazi_explain_batch_rejects_more_than_eight_sections():
+    import pytest
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        ExplainBatchRequest(
+            dt=datetime(1985, 3, 3, 8, 0, tzinfo=ZoneInfo("Asia/Shanghai")),
+            lon=121.5,
+            mode="single",
+            gender="female",
+            sections=[f"s{i}" for i in range(9)],
+        )
 
 
 def test_ziwei_explain_palaces_blocks_at_least_forty_chars():

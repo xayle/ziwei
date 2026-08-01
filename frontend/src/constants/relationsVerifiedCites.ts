@@ -1,6 +1,6 @@
 /**
  * 关系卷 verified cite 摘句（对齐 BE `relations_classic_cite`）。
- * 仅收录已 verified 宿主/子集；dizhi_ext01/02/03 不进本表。
+ * 仅收录已 verified 宿主/子集。
  */
 export type RelationsVerifiedCite = {
   id: string
@@ -16,6 +16,24 @@ export const RELATIONS_VERIFIED_CITES: readonly RelationsVerifiedCite[] = [
     passage:
       '冲者，六冲也，子午卯酉之类是也。会者，三会也，申子辰之类是也。合者，六合也，子与丑合之类是也。此皆以地支宫分而言，系对射之意也。',
     tags: ['六冲', '六合', '三合', '刑'],
+  },
+  {
+    id: 'engine_ref.dizhi_ext01',
+    title: '《子平真诠评注》·论刑冲会合解法',
+    passage: '冲者，六冲也，子午卯酉之类是也。',
+    tags: ['六冲'],
+  },
+  {
+    id: 'engine_ref.dizhi_ext02',
+    title: '《子平真诠评注》·论刑冲会合解法',
+    passage: '合者，六合也，子与丑合之类是也。',
+    tags: ['六合'],
+  },
+  {
+    id: 'engine_ref.dizhi_ext03',
+    title: '《子平真诠评注》·论刑冲会合解法',
+    passage: '会者，三会也，申子辰之类是也。',
+    tags: ['三合'],
   },
   {
     id: 'engine_ref.dizhi_ext04',

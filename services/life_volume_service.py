@@ -260,7 +260,7 @@ def _shensha_text(bazi: dict[str, Any]) -> str:
 
 
 def _relations_classic_quote_blocks(bazi: dict[str, Any]) -> list[AnalysisBlockModel]:
-    """挂载地支冲合刑害软提示（引擎 classic_refs）。"""
+    """挂载地支冲合刑害典籍；verified→cite，soft→inference（E-01）。"""
     from services.bazi_engine.classic_refs import relations_candidates
 
     rs = bazi.get("relations_summary") if isinstance(bazi.get("relations_summary"), dict) else {}
@@ -272,8 +272,14 @@ def _relations_classic_quote_blocks(bazi: dict[str, Any]) -> list[AnalysisBlockM
         if not quote:
             continue
         src_bit = f"（{src}）" if src else ""
-        body = f"关系典籍软提示{src_bit}：{quote}（软提示，待校勘升格前不作「典籍依据」。）"
-        blocks.append(_block(_clip(body, 220), "inference", rid or None))
+        hint = str(ref.get("hint_type") or "soft").strip().lower()
+        verified = hint in {"verified", "hard", "cite"}
+        if verified:
+            body = f"典籍依据{src_bit}：{quote}"
+            blocks.append(_block(_clip(body, 220), "cite", rid or None))
+        else:
+            body = f"关系典籍软提示{src_bit}：{quote}（软提示，待校勘升格前不作「典籍依据」。）"
+            blocks.append(_block(_clip(body, 220), "inference", rid or None))
     return blocks
 
 
@@ -427,7 +433,7 @@ def _build_colophon(
         f"校勘：引擎 {engine_label}；排盘字段{'有注记见下行' if missing_fields else '齐备'}，可核对卷内事实 / 典籍 / 推断分层。",
         (
             f"典籍语料：已核验引擎条 {n_engine} 条；仅 layer=cite 且 verified 标「典籍依据」，"
-            "软提示见卷二；六冲/六合/三合专条仍待外底本校勘，不作真 cite。"
+            "软提示见卷二；冲合会专条已挂宿主真子集。"
         ),
     ]
     if missing_fields:
@@ -789,6 +795,9 @@ def build_life_volumes_from_charts(
     if explain_fact:
         vol2_sections.append(_section("relations-explain", "关系讲解", "fact", explain_fact))
     relations_cite_ok = bool(cite_from_explain)
+    engine_rel_quotes = [] if explain_soft else _relations_classic_quote_blocks(bazi)
+    engine_rel_cite = [b for b in engine_rel_quotes if b.layer == "cite"]
+    engine_rel_soft = [b for b in engine_rel_quotes if b.layer != "cite"]
     if cite_from_explain:
         vol2_sections.append(_section("relations-cite", "典籍句式", "cite", cite_from_explain[:3]))
     else:
@@ -805,8 +814,11 @@ def build_life_volumes_from_charts(
         if verified_cites:
             relations_cite_ok = True
             vol2_sections.append(_section("relations-cite", "典籍句式", "cite", verified_cites))
-    # 关系软提示：优先 explain inference；否则引擎地支候选
-    rel_soft = explain_soft or _relations_classic_quote_blocks(bazi)
+        elif engine_rel_cite:
+            relations_cite_ok = True
+            vol2_sections.append(_section("relations-cite", "典籍句式", "cite", engine_rel_cite[:3]))
+    # 关系软提示：优先 explain inference；否则仅未 verified 的地支候选
+    rel_soft = explain_soft or engine_rel_soft
     if rel_soft:
         vol2_sections.append(_section("relations-classic-soft", "关系典籍软提示", "inference", rel_soft[:3]))
     quote_blocks = _shensha_classic_quote_blocks(bazi)

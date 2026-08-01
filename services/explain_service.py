@@ -22,7 +22,7 @@ from services.explain_ziwei import ZIWEI_SECTIONS, build_ziwei_section
 from services.relation_engine.case_resolver import resolve_person_input
 from services.relation_engine.composer import compute_relation_full
 
-MAX_SECTIONS = 4
+MAX_SECTIONS = 8
 
 
 def _validate_sections(section_ids: list[str], allowed: frozenset[str]) -> list[str]:

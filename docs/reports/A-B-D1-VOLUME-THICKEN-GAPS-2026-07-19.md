@@ -95,12 +95,13 @@
 4. **不做**：河洛/奇门真引擎 · GTM 默认开
 5. ~~真源典籍挂载（神煞 classic_refs → vol2 软提示）~~ ✅ inv-1.37
 6. ~~关系 explain / vol2 典籍真挂~~ ✅ inv-1.38（verified `interactions` cite + 地支软提示；E-01 过滤修正）
-7. ~~地支引擎条 verified 升格~~ ✅ inv-1.39（`dizhi_ext04/05/06` transitive-subset；宿主 `论刑冲会合解法`；`dizhi_ext01/02/03` 仍 unverified）
+7. ~~地支引擎条 verified 升格~~ ✅ inv-1.39（`dizhi_ext04/05/06`）；~~`dizhi_ext01/02/03`~~ ✅ inv-1.46（改写为 `论刑冲会合解法` 真子集）
 8. ~~神煞引擎条 verified 升格~~ ✅ inv-1.40（`shensha_002/003/004/005/006/008` + `dayun_012`/`general_006`；candidates 读 classics verified → cite）
 9. ~~剩余 engine_ref transitive 批量升格~~ ✅ inv-1.41（42 条；格局 cite E-01：verified→`geju-cite`，裸串→soft）
-10. **阻塞**：`dizhi_ext01/02/03` 为引擎复述，非任何 verified 篇章子集 → 不可 transitive 升格
+10. ~~阻塞冲合专条~~ ✅ inv-1.46（改写为 `论刑冲会合解法` 真子集后 transitive verified）
 11. ~~跋文 / 用神 cite 维护~~ ✅ inv-1.42（跋反映 verified 进度；`yongshen-cite` BE+FE）
 12. ~~vol3 大运/流年 cite~~ ✅ inv-1.43（`dayun-cite` / `liunian-cite` BE+FE+explain）
 13. ~~日主 / 婚恋 / 健康 cite~~ ✅ inv-1.44（vol1 `daymaster-cite`；vol5 `marriage-cite`/`health-cite`）
 14. ~~FE 关系 verified 回退 + 五行/十神 cite~~ ✅ inv-1.45（Adapter `pickRelationsVerifiedCites`；`wuxing-cite`/`shishen-cite`）
-15. 后续：**GTM 仍不开**；冲合专条外底本 spotcheck；其它零星维护
+15. ~~紫微信任实质抬升~~ ✅ inv-1.46（宫位十神 + 右弼按月仅脚注 → 默认 `trust_level=full`）
+16. 后续：**GTM 仍不开**；其它零星维护

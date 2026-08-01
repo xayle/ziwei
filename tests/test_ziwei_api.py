@@ -47,14 +47,16 @@ class TestZiweiFullEndpoint:
         assert data["life_palace_gz"] == "丁未"
         assert len(data["palaces"]) == 12
 
-    def test_default_youbi_month_trust_advisory(self, client):
-        """R038: default month youbi → advisory trust + explicit missing_fields."""
+    def test_default_youbi_month_trust_full_with_colophon(self, client):
+        """默认按月右弼：trust=full；右弼差异仅 warning；十二宫带十神。"""
         r = client.post("/api/v1/ziwei/full", json=GOLDEN)
         assert r.status_code == 200
         data = r.json()
-        assert data.get("trust_level") == "advisory"
-        assert "youbi_month_vs_iztro_hour" in (data.get("missing_fields") or [])
+        assert data.get("trust_level") == "full"
+        assert "youbi_month_vs_iztro_hour" not in (data.get("missing_fields") or [])
+        assert "palace_ten_gods" not in (data.get("missing_fields") or [])
         assert any("右弼" in w for w in (data.get("engine_warnings") or []))
+        assert all((p.get("ten_god") or "").strip() for p in data["palaces"])
 
     def test_youbi_hour_request_accepted(self, client):
         """R044: API accepts youbi_method=hour."""
