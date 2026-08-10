@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import SummaryStrip from '@/components/fusheng/SummaryStrip.vue'
@@ -13,6 +13,8 @@ import brandMark from '@/assets/brand/fusheng-mark.svg'
 import { useFushengReport } from '@/composables/useFushengReport'
 import { useEngineTrustDisplay } from '@/composables/useEngineTrustDisplay'
 import { formatDualTrackCaseLabel, formatVerificationStatusLabel } from '@/utils/buildEngineTrustDisplay'
+import { formatTimezoneLabel } from '@/utils/timezoneDisplay'
+import { formatGejuKindCallout } from '@/utils/gejuKindDisplay'
 import DualTrackTable from '@/components/fusheng/DualTrackTable.vue'
 import EngineTrustPanel from '@/components/fusheng/EngineTrustPanel.vue'
 import { exportReportElementToPdf } from '@/composables/useReportPdfExport'
@@ -20,7 +22,7 @@ import { downloadFushengReportPdf, saveBlobAsFile } from '@/api/fushengReport'
 import { useReportNotesStore } from '@/stores/reportNotes'
 import { useAiStore } from '@/stores/ai'
 import { useAuthStore } from '@/stores/auth'
-import { LLM_MODULES, type LlmModuleId } from '@/api/llm'
+import { type LlmModuleId } from '@/api/llm'
 import { buildProfileSignature } from '@/utils/buildChartRequests'
 import { getProfileCompleteness, getTimeConfidence } from '@/utils/profileMetrics'
 import { buildFushengReportPdfRequest } from '@/utils/buildChartRequests'
@@ -30,19 +32,24 @@ import { buildBaziModuleCards, baziModuleCardsToAnalysisBlocks } from '@/utils/b
 import { buildZiweiInsightBlocks, buildPatternAnalysisBlocks } from '@/utils/buildZiweiInsightBlocks'
 import { buildLifeVolumes } from '@/utils/buildLifeVolumes'
 import { buildChartHash } from '@/utils/chartHash'
-import { fetchLifeVolumes, fetchLifeSnippets, useLifeVolumesApiEnabled } from '@/api/life'
-import type { LifeSnippetsResponseModel } from '@/api/openapiTypes'
+import { fetchLifeVolumes, fetchRelationAppendix, useLifeVolumesApiEnabled } from '@/api/life'
+import type { RelationAppendixResponse } from '@/api/openapiTypes'
 import { fetchReportExplainBatchesWithMeta, type ExplainBatchResponse } from '@/api/explain'
 import type { LifeVolumeResponse, LifeVolume } from '@/types/life-volume'
 import { buildBaziRequest, buildZiweiRequest } from '@/utils/buildChartRequests'
+import { resolveRelationAppendixMount } from '@/utils/relationAppendixMount'
 import ReportChapterNav from '@/components/fusheng/ReportChapterNav.vue'
+import ConclusionShareCard from '@/components/fusheng/ConclusionShareCard.vue'
+import { READING_MODE_STORAGE_KEY } from '@/constants/feBeContract'
 import VolumeSection from '@/components/fusheng/VolumeSection.vue'
 import VolumePaywall from '@/components/fusheng/VolumePaywall.vue'
-import SnippetHooksPanel from '@/components/fusheng/SnippetHooksPanel.vue'
-import DouyinShareCard from '@/components/fusheng/DouyinShareCard.vue'
 import ColophonFootnote from '@/components/fusheng/ColophonFootnote.vue'
 import ReadingGuide from '@/components/fusheng/ReadingGuide.vue'
 import TrustDegradedBanner from '@/components/fusheng/TrustDegradedBanner.vue'
+import ExtensionEntryStrip from '@/components/fusheng/ExtensionEntryStrip.vue'
+import RelationAppendixPanel from '@/components/fusheng/RelationAppendixPanel.vue'
+import AskBookPanel from '@/components/fusheng/AskBookPanel.vue'
+import { buildAskBookContextLines } from '@/utils/buildAskBookContext'
 import { useReadingProgress } from '@/composables/useReadingProgress'
 import { useReportReadingGuide } from '@/composables/useReportReadingGuide'
 import { LIFE_VOLUME_LABELS, type LifeVolumeId } from '@/types/life-volume'
@@ -132,10 +139,59 @@ const { showYoubiDriftHint, applyYoubiHour: alignYoubiHour } = useYoubiHourAlign
 const activeChapter = ref<LifeVolumeId>('preface')
 const continuousRead = ref(true)
 const selectedLlmModule = ref<LlmModuleId>('career_detail')
+
+/** NW-09：白话书 / 专业表；渠道 ?reading_mode=pro 或 localStorage */
+function resolveInitialReadingMode(): 'consumer' | 'pro' {
+  const q = String(route.query.reading_mode || '').toLowerCase()
+  if (q === 'pro' || q === 'consumer') return q
+  try {
+    const ls = localStorage.getItem(READING_MODE_STORAGE_KEY)
+    if (ls === 'pro' || ls === 'consumer') return ls
+  } catch {
+    /* ignore */
+  }
+  return 'consumer'
+}
+const readingMode = ref<'consumer' | 'pro'>(resolveInitialReadingMode())
+const scrollProgressPercent = ref(0)
+
+function persistReadingMode(mode: 'consumer' | 'pro') {
+  readingMode.value = mode
+  try {
+    localStorage.setItem(READING_MODE_STORAGE_KEY, mode)
+  } catch {
+    /* ignore */
+  }
+}
+
+async function toggleReadingMode() {
+  persistReadingMode(readingMode.value === 'pro' ? 'consumer' : 'pro')
+  lifeVolumeRemote.value = null
+  await loadLifeVolumesRemote()
+}
+
+function updateScrollProgress() {
+  const el = reportBodyRef.value
+  if (!el) {
+    scrollProgressPercent.value = 0
+    return
+  }
+  const rect = el.getBoundingClientRect()
+  const total = el.scrollHeight - window.innerHeight
+  if (total <= 0) {
+    scrollProgressPercent.value = 100
+    return
+  }
+  const scrolled = Math.min(total, Math.max(0, -rect.top))
+  scrollProgressPercent.value = Math.round((scrolled / total) * 100)
+}
+
+const askBookContextLines = computed(() => buildAskBookContextLines(bazi.value, ziwei.value))
 const chartHashRef = ref('pending')
 const explainBatch = ref<ExplainBatchResponse | null>(null)
 const lifeVolumeRemote = ref<LifeVolumeResponse | null>(null)
-const lifeSnippets = ref<LifeSnippetsResponseModel | null>(null)
+/** T113：volumes 回退本地时的独立附录 */
+const relationAppendixStandalone = ref<RelationAppendixResponse | null>(null)
 
 const reportPageClass = computed(() => ({
   'report-page--continuous': continuousRead.value,
@@ -172,6 +228,7 @@ async function loadExplainBatches() {
 
 async function loadLifeVolumesRemote() {
   lifeVolumeRemote.value = null
+  relationAppendixStandalone.value = null
   lifeVolumesDegradedNotice.value = ''
   const remoteCaseId = profile.activeProfile?.remoteCaseId
   const tryRemote = shouldTryLifeVolumesRemote({
@@ -182,23 +239,39 @@ async function loadLifeVolumesRemote() {
   if (!tryRemote) return
   // SHARE-01：仅真实云端 caseId，避免本地 UUID 误打 volumes
   if (!remoteCaseId) return
-  const doc = await fetchLifeVolumes(remoteCaseId)
+
+  const mount = resolveRelationAppendixMount(route.query as Record<string, unknown>)
+  const doc = await fetchLifeVolumes(remoteCaseId, {
+    partnerCaseId: mount.partnerCaseId,
+    relationType: mount.relationType,
+    supervisorId: mount.supervisorId,
+    readingMode: readingMode.value,
+  })
   if (!doc) {
     lifeVolumesDegradedNotice.value = '六卷远端不可用，已改用本地拼装摘要。'
+    if (mount.partnerCaseId) {
+      relationAppendixStandalone.value = await fetchRelationAppendix({
+        caseId: remoteCaseId,
+        partnerCaseId: mount.partnerCaseId,
+        relationType: mount.relationType,
+        supervisorId: mount.supervisorId ?? undefined,
+      })
+    }
     return
   }
   lifeVolumeRemote.value = doc
   if (doc.chart_hash) {
     chartHashRef.value = doc.chart_hash
   }
-}
-
-async function loadLifeSnippets() {
-  lifeSnippets.value = null
-  if (!auth.isLoggedIn) return
-  const caseId = profile.activeProfile?.remoteCaseId
-  if (!caseId) return
-  lifeSnippets.value = await fetchLifeSnippets(caseId)
+  // volumes 未带附录但有对方 case：补拉独立端点
+  if (!doc.relation_appendix && mount.partnerCaseId) {
+    relationAppendixStandalone.value = await fetchRelationAppendix({
+      caseId: remoteCaseId,
+      partnerCaseId: mount.partnerCaseId,
+      relationType: mount.relationType,
+      supervisorId: mount.supervisorId ?? undefined,
+    })
+  }
 }
 
 const lifeVolumeLocal = computed(() => {
@@ -230,30 +303,17 @@ const lifeVolumeResolved = computed(() => resolveLifeVolumeDoc({
 const lifeVolumeDoc = computed(() => lifeVolumeResolved.value.doc)
 const lifeVolumeSource = computed(() => lifeVolumeResolved.value.source)
 
-const shareFactLines = computed(() => {
-  const fromSnippets = lifeSnippets.value?.hooks?.map((h) => h.text).filter(Boolean) ?? []
-  if (fromSnippets.length) return fromSnippets.slice(0, 4)
-  const vol1 = lifeVolumeDoc.value.volumes?.find((v) => v.id === 'vol1')
-  const blocks = vol1?.sections?.flatMap((s) => s.blocks?.map((b) => b.text) ?? []) ?? []
-  return blocks.filter(Boolean).slice(0, 3)
-})
-
-const shareVolumeTitle = computed(
-  () => lifeSnippets.value?.vertical_title || LIFE_VOLUME_LABELS.vol1 || '卷一·命之根',
+/** T113：合盘附录（不进 TOC）；优先 volumes 字段，其次独立端点 */
+const relationAppendix = computed(
+  () => lifeVolumeDoc.value.relation_appendix ?? relationAppendixStandalone.value ?? null,
 )
 
-const shareDisclaimer = computed(
+/** T102：报告顶（ReadingGuide）+ 底（footer）双显同一免责文案 */
+const reportDisclaimerText = computed(
   () =>
-    lifeSnippets.value?.disclaimer
-    || lifeVolumeDoc.value.disclaimer_block?.text
+    lifeVolumeDoc.value.disclaimer_block?.text
     || '传统文化与自我认知参考，非命运断言。',
 )
-
-const shareCaseId = computed(
-  () => profile.activeProfile?.remoteCaseId ?? null,
-)
-
-const showDouyinShare = computed(() => shareFactLines.value.length > 0 || Boolean(lifeSnippets.value))
 
 /** T092：沙箱模拟解锁的卷 id（不经支付） */
 const mockUnlockedVolumeIds = ref<Set<string>>(new Set())
@@ -292,7 +352,6 @@ const hideVol5ArchivePanels = computed(() => remoteVolumeHasSection('vol5', ['do
 const {
   readingParagraphs: reportReadingParagraphs,
   usingDynamicReading: reportUsingDynamicReading,
-  readingFailed: reportReadingFailed,
 } = useReportReadingGuide(explainBatch, lifeVolumeDoc)
 
 const readingGuideReady = computed(() => (
@@ -305,6 +364,38 @@ const { resumeLabel, lastVolumeId, save: saveReadingProgress, load: reloadReadin
 
 const resumeVolumeIdProp = computed((): LifeVolumeId | null => lastVolumeId.value)
 const resumeLabelProp = computed((): string | null => resumeLabel.value)
+
+/** NW-02：结论卡 — 优先一页摘要 / 人像节 */
+const conclusionPortraitLines = computed(() => {
+  const vols = lifeVolumeDoc.value?.volumes || []
+  for (const vid of ['preface', 'vol1'] as const) {
+    const vol = vols.find((v) => v.id === vid)
+    const summary = vol?.sections?.find((s) => s.id === 'one-page-summary')
+    if (summary?.blocks?.length) {
+      return summary.blocks.map((b) => b.text).filter(Boolean).slice(0, 3)
+    }
+    const portrait = vol?.sections?.find((s) => s.id === 'portrait')
+    if (portrait?.blocks?.length) {
+      return portrait.blocks.map((b) => b.text).filter(Boolean).slice(0, 3)
+    }
+  }
+  const r = bazi.value
+  if (!r) return []
+  const geju = r.geju?.geju_name || '格局待定'
+  const tier = r.day_master_strength?.tier || '强弱未标注'
+  const favor = formatCnElementsJoin(r.yongshen?.favor, '用神待定')
+  return [
+    `气质：${geju}，日主${tier}。`,
+    `行事宜顺用神（${favor}），忌硬逆格局。`,
+    '今年宜忌：先对用神与流年，顺则小步、逆则守成。',
+  ]
+})
+
+const conclusionYongshenLine = computed(() => {
+  const r = bazi.value
+  if (!r) return '用神：—｜忌神：—'
+  return `用神：${formatCnElementsJoin(r.yongshen?.favor)}｜忌神：${formatCnElementsJoin(r.yongshen?.avoid)}`
+})
 
 function resumeReading() {
   if (!lastVolumeId.value) return
@@ -465,6 +556,16 @@ const baziBlocks = computed(() => {
       layer: 'heuristic',
     },
   ]
+  const kindLine = formatGejuKindCallout(g ?? {})
+  if (kindLine) {
+    blocks.push({
+      id: 'bazi-geju-kind',
+      title: '格局类别',
+      lead: g?.geju_name || '外格',
+      body: kindLine,
+      layer: 'engine',
+    })
+  }
   if (g?.dual_track_note) {
     blocks.push({
       id: 'bazi-dual-track',
@@ -613,7 +714,6 @@ async function finalizeReportLoad() {
   }
   // T079/T082：先拉 life/volumes；remote 已含 BE explain 则跳过 explain/batch（无双重 cite）
   await loadLifeVolumesRemote()
-  void loadLifeSnippets()
   const volumesHasExplain = Boolean(lifeVolumeRemote.value)
   if (!volumesHasExplain) {
     await loadExplainBatches()
@@ -630,7 +730,7 @@ async function finalizeReportLoad() {
 
 async function reloadFullReport() {
   lifeVolumeRemote.value = null
-  lifeSnippets.value = null
+  relationAppendixStandalone.value = null
   await loadReport()
   await finalizeReportLoad()
 }
@@ -638,7 +738,7 @@ async function reloadFullReport() {
 watch(() => profile.activeProfileId, (id, prev) => {
   reportNotes.value = notesStore.getNotes(id)
   lifeVolumeRemote.value = null
-  lifeSnippets.value = null
+  relationAppendixStandalone.value = null
   lifeVolumesDegradedNotice.value = ''
   explainFailedNotice.value = ''
   // RACE-01：切换档案后自动重生（首屏由 onMounted 负责）
@@ -649,6 +749,9 @@ watch(() => profile.activeProfileId, (id, prev) => {
 
 onMounted(() => {
   reloadReadingProgress()
+  window.addEventListener('scroll', updateScrollProgress, { passive: true })
+  window.addEventListener('resize', updateScrollProgress, { passive: true })
+  updateScrollProgress()
   void aiStore.loadConfig()
   if (auth.isLoggedIn) {
     void entitlementStore.refreshFromServer()
@@ -680,6 +783,26 @@ watch(
     mockUnlockedVolumeIds.value = new Set()
   },
 )
+
+/** T113：切换对方 case 时重拉附录 */
+watch(
+  () => [
+    route.query.partner_case_id,
+    route.query.relation_type,
+    route.query.supervisor_id,
+  ],
+  async () => {
+    if (!profile.activeProfile?.remoteCaseId) return
+    lifeVolumeRemote.value = null
+    relationAppendixStandalone.value = null
+    await loadLifeVolumesRemote()
+  },
+)
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateScrollProgress)
+  window.removeEventListener('resize', updateScrollProgress)
+})
 </script>
 
 <template>
@@ -699,11 +822,23 @@ watch(
       >
         {{ continuousRead ? '连续阅读' : '单章阅读' }}
       </button>
+      <button
+        class="fs-btn fs-btn--ghost"
+        :class="{ 'is-active': readingMode === 'pro' }"
+        data-testid="report-reading-mode-toggle"
+        :title="readingMode === 'pro' ? '当前：专业表' : '当前：白话书'"
+        @click="toggleReadingMode"
+      >
+        {{ readingMode === 'pro' ? '专业表' : '白话书' }}
+      </button>
       <button class="fs-btn fs-btn--ghost" @click="printReport">打印</button>
       <button class="fs-btn fs-btn--primary" :disabled="exportingPdf || exportingServerPdf || loading" data-testid="report-pdf" @click="downloadPdf">
         {{ exportingServerPdf ? '服务端导出中…' : exportingPdf ? '客户端导出中…' : '下载 PDF' }}
       </button>
     </header>
+    <p class="report-pdf-blurb no-print" data-testid="report-pdf-blurb">
+      下载 PDF 含：满盘定格与本年 · 大运叙事 · 紫微议题（桃花/田宅/慎点）· 校勘与综合总结；非仅排盘表导出。
+    </p>
 
     <p v-if="loading" class="report-status">正在生成报告…</p>
     <p v-if="error" class="report-error" role="alert" aria-live="assertive">{{ error }}</p>
@@ -712,6 +847,14 @@ watch(
     <p v-if="pdfFallbackNotice" class="report-degraded-notice" data-testid="report-pdf-fallback">{{ pdfFallbackNotice }}</p>
     <p v-if="snapshotNote" class="report-snapshot-note" data-testid="report-snapshot-note">{{ snapshotNote }}</p>
     <p v-if="snapshotError" class="report-snapshot-error">{{ snapshotError }}</p>
+    <p
+      v-if="entitlementStore.renewalHint"
+      class="report-degraded-notice"
+      data-testid="report-pass-renewal-hint"
+      role="status"
+    >
+      {{ entitlementStore.renewalHint }}
+    </p>
 
     <section
       v-if="nameAnalysis"
@@ -739,6 +882,7 @@ watch(
         class="report-layout__nav"
         :chapters="volumeChapters"
         :active-id="activeChapter"
+        :progress-percent="scrollProgressPercent"
         @navigate="navigateToChapter"
       />
 
@@ -755,24 +899,6 @@ watch(
           :reading-failed="Boolean(explainFailedNotice) && !reportUsingDynamicReading"
           :using-dynamic-reading="reportUsingDynamicReading"
           @resume="resumeReading"
-        />
-        <SnippetHooksPanel
-          v-if="lifeSnippets?.hooks?.length"
-          class="no-print"
-          :hooks="lifeSnippets.hooks"
-          :case-id="lifeSnippets.case_id"
-          :vertical-title="lifeSnippets.vertical_title"
-          :disclaimer="lifeSnippets.disclaimer"
-          source="report"
-        />
-        <DouyinShareCard
-          v-if="showDouyinShare"
-          class="no-print"
-          :volume-title="shareVolumeTitle"
-          :fact-lines="shareFactLines"
-          :disclaimer="shareDisclaimer"
-          :case-id="shareCaseId"
-          source="report"
         />
         <TrustDegradedBanner
           v-if="iztro?.status === 'degraded'"
@@ -811,19 +937,24 @@ watch(
               <p class="report-cover__meta">{{ profile.birthDt?.replace('T', ' ') || '出生时间未填写' }}</p>
               <p class="report-cover__version">浮生报告 v2.4 · {{ generatedAt ? generatedAt.slice(0, 10) : '—' }}</p>
             </div>
+            <ConclusionShareCard
+              :portrait-lines="conclusionPortraitLines"
+              :yongshen-line="conclusionYongshenLine"
+              :profile-label="profile.activeProfile?.label || undefined"
+            />
             <details class="report-preface-meta" data-testid="report-preface-meta">
               <summary>建档口径与摘要</summary>
               <SummaryStrip :items="metaSummary" />
               <div class="report-text">
                 <p>{{ requestMeta?.timeRiskLabel }} — {{ requestMeta?.timeRiskHint }}</p>
                 <p>{{ requestMeta?.dstLabel }}</p>
-                <p>真太阳时：{{ profile.solarTime ? '已启用' : '未启用' }} · 时区 {{ profile.tz }}</p>
+                <p>真太阳时：{{ profile.solarTime ? '已启用' : '未启用' }} · 时区 {{ formatTimezoneLabel(profile.tz) }}</p>
               </div>
               <SummaryStrip :items="archiveSummary" />
               <div class="report-text">
                 <p>关注重点：{{ profile.focusTopic || '未填写' }}</p>
                 <p>现居地：{{ profile.currentCityName || '未填写' }}</p>
-                <p>经度 / 时区：{{ profile.lon ?? '缺失' }} / {{ profile.tz }}</p>
+                <p>经度 / 时区：{{ profile.lon ?? '缺失' }} / {{ formatTimezoneLabel(profile.tz) }}</p>
               </div>
             </details>
           </template>
@@ -871,7 +1002,7 @@ watch(
               class="report-iztro-dual-track"
               data-testid="report-iztro-dual-track"
             >
-              <h3>紫微双轨对照（引擎主盘 vs 对照轨）</h3>
+              <h3>紫微双轨对照（引擎主盘与对照轨）</h3>
               <p class="hint">典型边界：立春前一日 + 晚子时。以引擎主盘为准，不静默覆盖。</p>
               <table class="report-table report-iztro-dual-track__table">
                 <thead>
@@ -1087,71 +1218,25 @@ watch(
           </template>
 
           <template v-else-if="volume.id === 'vol6'">
-            <p class="hint" data-testid="vol6-ondemand-note">
-              卷六·问书为按需展开区：下方批注本地保存；AI 解读需主动展开后生成，不会自动调用。
-            </p>
-            <textarea
-              v-model="reportNotes"
-              class="report-notes"
-              rows="8"
-              placeholder="记录换运节点、重点流年、客户反馈与复核结论…"
-              data-testid="report-notes"
+            <AskBookPanel
+              v-model:notes="reportNotes"
+              v-model:selected-module="selectedLlmModule"
+              :context-lines="askBookContextLines"
+              :is-logged-in="auth.isLoggedIn"
+              :config-available="aiStore.configAvailable"
+              :config-note="aiStore.configNote"
+              :chart-ready="!!(bazi && ziwei)"
+              :loading="loading"
+              :generating="aiStore.loading"
+              :generate-error="aiStore.error"
+              :messages="aiStore.messages"
+              :module-loading="aiStore.moduleLoading"
+              :module-error="aiStore.moduleError"
+              :module-interpretation="aiStore.moduleInterpretation"
+              :has-remote-case="!!profile.activeProfile?.remoteCaseId"
+              @generate="generateAiInterpretation"
+              @generate-module="generateModuleInterpretation"
             />
-            <p class="hint">批注按档案自动保存至本地，切换档案后内容独立。</p>
-
-            <details class="ai-panel">
-              <summary class="ai-panel__summary">问书解读（需主动展开）</summary>
-              <div class="ai-panel__content">
-                <p v-if="aiStore.configNote" class="ai-panel__meta">{{ aiStore.configNote }}</p>
-                <p
-                  v-if="auth.isLoggedIn && !aiStore.configAvailable"
-                  class="hint"
-                  data-testid="report-ai-unavailable"
-                >
-                  问书大模型未配置：不会自动生成解读，下方也不会展示示例稿冒充真文。
-                </p>
-                <p v-if="!auth.isLoggedIn" class="hint">
-                  <router-link to="/login">登录</router-link> 后可生成问书命盘解读草稿。
-                </p>
-                <template v-else>
-                  <button
-                    class="fs-btn fs-btn--ghost"
-                    :disabled="aiStore.loading || loading || !bazi || !ziwei || !aiStore.configAvailable"
-                    data-testid="report-ai-generate"
-                    @click="generateAiInterpretation"
-                  >
-                    {{ aiStore.loading ? '生成中…' : '生成问书解读' }}
-                  </button>
-                  <p v-if="aiStore.error" class="ai-panel__error">{{ aiStore.error }}</p>
-                  <div v-if="aiStore.messages.length" class="ai-panel__body">
-                    <p v-for="(msg, idx) in aiStore.messages" :key="idx" :class="`ai-msg ai-msg--${msg.role}`">
-                      {{ msg.text }}
-                    </p>
-                  </div>
-
-                  <div class="ai-panel__modules">
-                    <h4>分模块解读</h4>
-                    <p v-if="!aiStore.configAvailable" class="hint">问书大模型未配置或不可用。</p>
-                    <div v-else class="ai-panel__module-row">
-                      <select v-model="selectedLlmModule" class="ai-panel__select" data-testid="report-llm-module">
-                        <option v-for="mod in LLM_MODULES" :key="mod.id" :value="mod.id">{{ mod.label }}</option>
-                      </select>
-                      <button
-                        class="fs-btn fs-btn--ghost"
-                        :disabled="aiStore.moduleLoading || !profile.activeProfile?.remoteCaseId"
-                        data-testid="report-llm-module-generate"
-                        @click="generateModuleInterpretation"
-                      >
-                        {{ aiStore.moduleLoading ? '生成中…' : '生成分模块解读' }}
-                      </button>
-                    </div>
-                    <p v-if="!profile.activeProfile?.remoteCaseId" class="hint">需将档案同步至云端后方可使用分模块解读。</p>
-                    <p v-if="aiStore.moduleError" class="ai-panel__error">{{ aiStore.moduleError }}</p>
-                    <p v-if="aiStore.moduleInterpretation" class="ai-msg ai-msg--ai">{{ aiStore.moduleInterpretation }}</p>
-                  </div>
-                </template>
-              </div>
-            </details>
           </template>
 
           <template v-else-if="volume.id === 'colophon'">
@@ -1179,6 +1264,23 @@ watch(
           />
           </template>
         </section>
+
+        <!-- T113：合盘附录（非主卷；不进章节 TOC；默认折叠） -->
+        <RelationAppendixPanel
+          v-if="relationAppendix"
+          :appendix="relationAppendix"
+        />
+
+        <!-- T110：六卷与跋之后、免责声明前；不写入卷章导航 -->
+        <ExtensionEntryStrip variant="report" />
+
+        <footer
+          class="report-disclaimer-footer"
+          data-testid="report-disclaimer-footer"
+          aria-label="免责声明"
+        >
+          <p>{{ reportDisclaimerText }}</p>
+        </footer>
       </article>
     </div>
   </main>
@@ -1624,24 +1726,31 @@ watch(
   overflow-x: visible;
 }
 
+.report-disclaimer-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--fs-ink, #2c241c) 12%, transparent);
+}
+
+.report-disclaimer-footer p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--fs-ink, #2c241c) 62%, transparent);
+}
+
 .disclaimer {
   margin-top: 24px;
   font-size: 12px;
   color: var(--text-3);
 }
 
-.report-notes {
-  width: 100%;
-  margin-top: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.7;
-  resize: vertical;
-  background: var(--surface);
-  color: var(--text);
+.report-pdf-blurb {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--brand-mist, #6b5d4f);
+  line-height: 1.5;
 }
 
 .report-snapshot-note,
@@ -1664,95 +1773,6 @@ watch(
   border: 1px solid var(--border);
   border-left: 3px solid var(--brand-cinnabar);
   color: var(--brand-ink);
-}
-
-.ai-panel {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.ai-panel__summary {
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--brand-ink);
-  list-style: none;
-}
-
-.ai-panel__summary::-webkit-details-marker {
-  display: none;
-}
-
-.ai-panel__content {
-  margin-top: 12px;
-  display: grid;
-  gap: 10px;
-}
-
-.ai-panel__meta {
-  font-size: 12px;
-  color: var(--text-2);
-}
-
-.ai-panel__error {
-  margin: 0;
-  font-size: 13px;
-  color: var(--brand-cinnabar);
-}
-
-.ai-panel__body {
-  display: grid;
-  gap: 10px;
-}
-
-.ai-msg {
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.75;
-  white-space: pre-wrap;
-}
-
-.ai-msg--ai {
-  background: var(--inset-tint);
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-
-.ai-msg--user {
-  background: var(--brand-gold-lt);
-  color: var(--brand-gold-dark);
-}
-
-.ai-panel__modules {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
-  display: grid;
-  gap: 8px;
-}
-
-.ai-panel__modules h4 {
-  margin: 0;
-  font-size: 14px;
-}
-
-.ai-panel__module-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.ai-panel__select {
-  min-width: 140px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  font-size: 13px;
 }
 
 .dayun-narrative {

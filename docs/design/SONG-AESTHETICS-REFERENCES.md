@@ -2,7 +2,7 @@
 
 | 字段 | 内容 |
 |------|------|
-| **版本** | refs-1.1 |
+| **版本** | refs-1.2 |
 | **关联** | [`SONG-AESTHETICS-MOOD-AND-POETRY.md`](./SONG-AESTHETICS-MOOD-AND-POETRY.md) ← 意境语汇与文献长句 |
 | **日期** | 2026-07-12 |
 | **用途** | 决定如何修改视觉方案前，先读 [`FUSHENG-ART-FOUNDATION.md`](./FUSHENG-ART-FOUNDATION.md) |
@@ -198,9 +198,30 @@
 
 ---
 
-## 10. 变更记录
+## 10. PDF 册页落地清单（v2.7 · 对齐付费方案 I0A）
+
+> 真源色勿另起：纸 `#f5f0e6` · 表面 `#fffaf5` · 墨 `#1a1410` · 雾 `#6b5d4f` · 铜金 `#b8894d` · 朱砂 `#8b3a2a`（极少）  
+> 实现：`services/fusheng_report_service.py` + `services/fusheng_report_paid_bridges.py`
+
+| # | 规格 | 状态 |
+|---|------|------|
+| S1 | 每页 **版框**（双线感：外金线 + 内纸边） | ✅ |
+| S2 | **版心**页脚：`浮生 · 命理个人档案` · 页码 · 姓名缩略 | ✅ |
+| S3 | 章名下 **细金线**（非粗 hr）；宋体显示栈 | ✅ |
+| S4 | 封面：印鉴「浮」+ 题签姓名/生辰 + 命局栏记 + 微目录 | ✅ |
+| S5 | 满盘 **界画直线表**；日柱浅底；表外读盘图例双行小注 | ✅ |
+| S6 | 议题卡素面细边、无多层阴影/KPI 墙 | ✅ |
+| S7 | 禁：圆角大卡片墙、紫霓虹、拟物云纹、重投影 | ✅ |
+| S8 | 与 `pdf-template-preview.html` 同属纸墨册页气质 | ✅（导出 HTML/PDF 对齐） |
+
+**验收自检（已过脚本门禁）**：刘博样例 `scripts/verify_fusheng_report_pdf_sample.py` pass；样张 `output/pdf/regression-liubo.html`。
+
+---
+
+## 11. 变更记录
 
 | 日期 | 说明 |
 |------|------|
+| 2026-08-10 | refs-1.2：增补 §10 PDF 册页落地清单（I0A 打勾） |
 | 2026-07-12 | refs-1.1：链至意境文献 doc |
 | 2026-07-12 | refs-1.0：宋式美学参考清单，供方案修改决策 |

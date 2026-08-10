@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-08-10T00:05:27.279200+00:00",
+  "sample": "刘博 · 1990-07-17 12:25 徐州",
+  "html_path": "output/pdf/regression-liubo.html",
+  "checks": {
+    "no_unknown_default": true,
+    "human_birth_time": true,
+    "no_forbidden_tokens": true,
+    "no_empty_notes_page": true,
+    "dual_track_no_orphan_page": true,
+    "pillars_full_chart": true,
+    "cover_has_frame": true,
+    "archive_no_zonghe_shoushu": true,
+    "no_xiongsha_tianyi": true,
+    "closing_not_copy": true,
+    "chart_legend": true,
+    "geju_or_tension": true,
+    "liunian_bridge": true,
+    "dayun_bridge": true,
+    "ziwei_topics": true,
+    "flying_plain": true,
+    "closing_focus_index": true,
+    "how_to_read": true,
+    "trust_no_pct_wall": true,
+    "sheet_min_content": true,
+    "song_sheet_frame": true
+  },
+  "forbidden_hits": [],
+  "lcs_ratio_summary_vs_closing": 0.0214,
+  "pct_in_trust_summary": 0,
+  "sheet_text_lens": [
+    595,
+    952,
+    434,
+    721,
+    194
+  ],
+  "min_sheet_text_len": 194,
+  "pass": true
+}

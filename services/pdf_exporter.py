@@ -1,5 +1,7 @@
+import asyncio
 import logging
-from typing import TYPE_CHECKING
+import os
+from typing import TYPE_CHECKING, Any, Literal
 import urllib.parse
 
 from markupsafe import escape as _html_escape
@@ -9,6 +11,20 @@ if TYPE_CHECKING:
     from app.schemas.fusheng_report import FushengReportPdfRequest
 
 logger = logging.getLogger(__name__)
+
+CasePdfLayout = Literal["dossier", "book"]
+CASE_PDF_LAYOUT_ENV = "FUSHENG_CASE_PDF_LAYOUT"
+
+
+def resolve_case_pdf_layout(override: str | None = None) -> CasePdfLayout:
+    """dossier（默认档案式）| book（六卷+校勘附录）。
+
+    优先级：显式 override → 环境变量 ``FUSHENG_CASE_PDF_LAYOUT`` → dossier。
+    """
+    raw = (override or os.environ.get(CASE_PDF_LAYOUT_ENV) or "dossier").strip().lower()
+    if raw in {"book", "life_volumes", "volumes"}:
+        return "book"
+    return "dossier"
 
 
 def _sanitize_params(params: dict) -> dict:
@@ -85,25 +101,52 @@ async def render_html_to_png(html: str, *, width: int = 400, height: int = 280) 
             await browser.close()
 
 
-async def render_html_to_pdf(html: str) -> bytes:
-    """将静态 HTML 渲染为 A4 PDF（浮生报告等服务端导出）。"""
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context(device_scale_factor=2)
-        page = await context.new_page()
+def _render_html_to_pdf_sync(html: str) -> bytes:
+    """同步 Playwright 渲染（Windows 上 asyncio 子进程不可用时的回退）。"""
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(device_scale_factor=2)
+        page = context.new_page()
         try:
-            await page.set_content(html, wait_until="load", timeout=20000)
-            await page.wait_for_timeout(500)
-            return await page.pdf(
+            page.set_content(html, wait_until="load", timeout=20000)
+            page.wait_for_timeout(500)
+            return page.pdf(
                 format="A4",
                 print_background=True,
                 margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
             )
         except Exception as e:
-            logger.error(f"HTML PDF 渲染失败: {e}")
+            logger.error(f"HTML PDF 同步渲染失败: {e}")
             raise
         finally:
-            await browser.close()
+            browser.close()
+
+
+async def render_html_to_pdf(html: str) -> bytes:
+    """将静态 HTML 渲染为 A4 PDF（浮生报告等服务端导出）。"""
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context(device_scale_factor=2)
+            page = await context.new_page()
+            try:
+                await page.set_content(html, wait_until="load", timeout=20000)
+                await page.wait_for_timeout(500)
+                return await page.pdf(
+                    format="A4",
+                    print_background=True,
+                    margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
+                )
+            except Exception as e:
+                logger.error(f"HTML PDF 渲染失败: {e}")
+                raise
+            finally:
+                await browser.close()
+    except NotImplementedError:
+        logger.warning("async Playwright 不可用，回退到同步渲染")
+        return await asyncio.to_thread(_render_html_to_pdf_sync, html)
 
 
 def _case_to_fusheng_request(case) -> "FushengReportPdfRequest":
@@ -133,8 +176,28 @@ def _case_to_fusheng_request(case) -> "FushengReportPdfRequest":
     )
 
 
-async def generate_case_pdf(case, snapshot=None) -> bytes:
-    """从 Case 记录生成 PDF（浮生报告管线，不依赖前端 URL）。"""
+async def generate_case_pdf(
+    case: Any,
+    snapshot: Any = None,
+    *,
+    layout: str | None = None,
+    entitlement: str = "full_book",
+) -> bytes:
+    """从 Case 记录生成 PDF（不依赖前端 URL）。
+
+    - ``dossier``：浮生报告档案式（默认）
+    - ``book``：六卷 + 校勘附录（``fusheng_book_pdf`` · T123）
+    """
+    _ = snapshot  # 保留签名兼容 export 路由；书式/档案式均按 case 现算
+    chosen = resolve_case_pdf_layout(layout)
+    if chosen == "book":
+        from services.fusheng_book_pdf import render_life_volumes_book_html
+        from services.life_volume_service import build_life_volumes_for_case
+
+        doc = await build_life_volumes_for_case(case, entitlement=entitlement)  # type: ignore[arg-type]
+        html = render_life_volumes_book_html(doc)
+        return await render_html_to_pdf(html)
+
     from services.fusheng_report_service import build_fusheng_report_payload, render_fusheng_report_html
 
     req = _case_to_fusheng_request(case)
@@ -304,8 +367,8 @@ async def generate_share_card(
     h1{{font-size:18px;margin:0 0 8px}}p{{margin:4px 0;font-size:13px}}.meta{{color:#7a5c3a}}</style></head>
     <body><h1>{_html_escape(label)} · 命理档案卡</h1>
     <p>八字格局：{_html_escape(geju_line)}</p>
-    <p>紫微：{_html_escape(ziwei.get('life_palace_gz') or '—')} · {_html_escape(ziwei.get('wuxing_ju_name') or '—')}</p>
-    <p class="meta">{_html_escape((bazi.get('bazi_summary') or ziwei.get('summary') or '命理档案已生成')[:120])}</p>
+    <p>紫微：{_html_escape(ziwei.get("life_palace_gz") or "—")} · {_html_escape(ziwei.get("wuxing_ju_name") or "—")}</p>
+    <p class="meta">{_html_escape((bazi.get("bazi_summary") or ziwei.get("summary") or "命理档案已生成")[:120])}</p>
     </body></html>"""
     return await render_html_to_png(html, width=400, height=280)
 

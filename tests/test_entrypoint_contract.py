@@ -32,12 +32,29 @@ def test_run_app_exposes_key_operational_routes():
     assert schema["info"]["version"] == API_VERSION
 
 
+def _collect_route_map(routes) -> dict[str, set[str]]:
+    """兼容 Starlette 1.3+ 的 `_IncludedRouter` 嵌套挂载。"""
+    route_map: dict[str, set[str]] = {}
+
+    def walk(items) -> None:
+        for route in items:
+            methods = getattr(route, "methods", None)
+            path = getattr(route, "path", None)
+            if methods and path:
+                route_map.setdefault(path, set()).update(methods)
+            original = getattr(route, "original_router", None)
+            if original is not None:
+                walk(original.routes)
+            nested = getattr(route, "routes", None)
+            if nested is not None and original is None:
+                walk(nested)
+
+    walk(routes)
+    return route_map
+
+
 def test_run_app_routes_include_core_entrypoints():
-    route_map = {}
-    for route in app.routes:
-        methods = getattr(route, "methods", None)
-        if methods:
-            route_map.setdefault(route.path, set()).update(methods)
+    route_map = _collect_route_map(app.routes)
 
     assert "GET" in route_map["/health"]
     assert "GET" in route_map["/ready"]

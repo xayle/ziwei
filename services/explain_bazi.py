@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 from app.schemas.explain import ExplainBlockModel, ExplainSectionResultModel
 from services.chart_snapshot_service import BaziChartSnapshot
 from services.classics_search import tfidf_score
 from services.content_policy import is_verified_classic, sanitize_explain_block
+from services.knowledge_store import get_knowledge_store
+from services.wuxing_labels import format_wuxing_list
 
-ROOT = Path(__file__).resolve().parent.parent
 MAX_SECTION_TEXT = 320
 
 BAZI_SECTIONS = frozenset(
@@ -50,22 +48,42 @@ def _block(text: str, layer: str = "fact", classic_id: str | None = None) -> Exp
 
 
 def _verified_classic_for_query(query: str, tags: list[str] | None = None) -> tuple[str | None, str | None]:
-    path = ROOT / "data" / "classics.json"
-    if not path.exists():
-        return None, None
-    raw_items = json.loads(path.read_text(encoding="utf-8"))
-    verified_raw = [item for item in raw_items if item.get("verification_status") == "verified"]
+    """从 KnowledgeStore 取 verified 典籍（T131），再 TF-IDF 选条；优先挂载索引（T197）。"""
+    # T197：格局/用神/调候优先高价值挂载短窗
+    from services.mount_priority_cite import pick_mount_priority_cites
+
+    topic = None
+    tag_blob = " ".join(tags or [])
+    q = query or ""
+    if "格局" in tag_blob or "格局" in q:
+        topic = "格局"
+    elif "用神" in tag_blob or "用神" in q or "调候" in tag_blob or "调候" in q:
+        topic = "用神" if ("用神" in tag_blob or "用神" in q) else "调候"
+    if topic:
+        for cite in pick_mount_priority_cites(topic, query=q, limit=1):
+            return cite["id"], cite["passage"]
+
+    verified_raw = get_knowledge_store().classics_verified()
     if not verified_raw:
         return None, None
     if tags:
         tagged = [item for item in verified_raw if any(t in (item.get("tags") or []) for t in tags)]
+        # 挂载标签优先
+        mount_tags = [t for t in (tags or []) if str(t).startswith("挂载-")]
+        if mount_tags:
+            mount_pool = [item for item in verified_raw if any(t in (item.get("tags") or []) for t in mount_tags)]
+            if mount_pool:
+                tagged = mount_pool
         pool = tagged or verified_raw
     else:
         pool = verified_raw
-    docs = [(f"{item.get('title', '')} {item.get('passage', '')}", item) for item in pool[:120]]
+    # 挂载标签条优先进入评分池
+    preferred = [item for item in pool if any(str(t).startswith("挂载-") for t in (item.get("tags") or []))]
+    ranked_pool = (preferred + [i for i in pool if i not in preferred])[:200]
+    docs = [(f"{item.get('title', '')} {item.get('passage', '')}", item) for item in ranked_pool]
     scored = tfidf_score(query, docs)
     if not scored or scored[0][0] <= 0:
-        item = pool[0]
+        item = ranked_pool[0]
         cid = item["id"]
         return (cid, item["passage"]) if is_verified_classic(cid) else (None, None)
     best = scored[0][1]
@@ -171,25 +189,36 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
                     body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
                     blocks.append(_block(_clip(body, 220), "cite", classic_id=str(ref.get("id") or "") or None))
             else:
-                classic_ref = (geju.classic_ref or "").strip()
-                if classic_ref:
-                    cid, passage = _verified_classic_for_query(name, tags=["foundation", "overall", "格局"])
-                    if cid and passage:
-                        blocks.append(_block(passage, "cite", classic_id=cid))
-                    else:
-                        blocks.append(_block(classic_ref, "inference"))
+                from services.mount_priority_cite import pick_mount_priority_cites
+
+                mount = pick_mount_priority_cites("格局", query=name, limit=2)
+                if mount:
+                    for cite in mount:
+                        body = f"典籍依据（《{cite['title']}》）：{_clip(cite['passage'], 180)}"
+                        blocks.append(_block(_clip(body, 220), "cite", classic_id=cite["id"]))
+                else:
+                    classic_ref = (geju.classic_ref or "").strip()
+                    if classic_ref:
+                        cid, passage = _verified_classic_for_query(
+                            name, tags=["foundation", "overall", "格局", "挂载-格局"]
+                        )
+                        if cid and passage:
+                            blocks.append(_block(passage, "cite", classic_id=cid))
+                        else:
+                            blocks.append(_block(classic_ref, "inference"))
 
     elif section_id == "yongshen":
         y = resp.yongshen
         if y:
             blocks.append(
                 _block(
-                    f"喜用：{'、'.join(y.favor or []) or '—'}；忌：{'、'.join(y.avoid or []) or '—'}",
+                    f"喜用：{format_wuxing_list(y.favor)}；忌：{format_wuxing_list(y.avoid)}",
                     "fact",
                 )
             )
             from services.bazi_engine.classic_refs import yongshen_candidates
 
+            mounted = False
             for ref in yongshen_candidates(limit=2):
                 if ref.get("hint_type") != "verified":
                     continue
@@ -199,32 +228,59 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
                     continue
                 body = f"典籍依据（{src}）：{quote}" if src else f"典籍依据：{quote}"
                 blocks.append(_block(_clip(body, 220), "cite", classic_id=str(ref.get("id") or "") or None))
+                mounted = True
+            if not mounted:
+                from services.mount_priority_cite import pick_mount_priority_cites
+
+                for topic in ("用神", "调候"):
+                    for cite in pick_mount_priority_cites(topic, query="用神", limit=1):
+                        body = f"典籍依据（《{cite['title']}》）：{_clip(cite['passage'], 180)}"
+                        blocks.append(_block(_clip(body, 220), "cite", classic_id=cite["id"]))
+                        mounted = True
+                    if mounted:
+                        break
 
     elif section_id == "relations":
         from services.bazi_engine.classic_refs import relations_candidates
 
         rs = resp.relations_summary
-        parts: list[str] = []
+        lines: list[str] = []
         rs_dict: dict[str, object] = {}
         if rs:
             rs_dict = rs.model_dump() if hasattr(rs, "model_dump") else dict(rs)
-            for field in (rs.clash_summary, rs.combine_summary, rs.harm_summary, rs.interaction_summary):
-                text = str(field or "").strip()
-                if text:
-                    parts.append(text)
             if rs.items:
-                for item in rs.items[:6]:
+                for item in rs.items[:8]:
+                    rel_type = str(getattr(item, "type", "") or "").strip() or "互动"
                     summary = str(getattr(item, "summary", "") or "").strip()
-                    if summary:
-                        parts.append(summary)
+                    detail = str(getattr(item, "detail", "") or "").strip()
+                    subject = str(getattr(item, "subject", "") or "").strip()
+                    target = str(getattr(item, "target", "") or "").strip()
+                    tip = summary or detail or rel_type
+                    if subject and target:
+                        lines.append(f"{rel_type}：{subject}与{target}（{tip}）")
+                    elif subject:
+                        lines.append(f"{rel_type}：{subject}（{tip}）")
                     else:
-                        detail = str(getattr(item, "detail", "") or "").strip()
-                        if detail:
-                            parts.append(detail)
-        if parts:
-            body = "；".join(parts)
-            if len(body) < 40:
-                body = f"卷二干支关系摘要：{body}；合冲刑害以排盘事实为准，下接神煞与典籍讲解。"
+                        lines.append(f"{rel_type}：{tip}")
+            else:
+                for field in (rs.clash_summary, rs.combine_summary, rs.harm_summary, rs.interaction_summary):
+                    text = str(field or "").strip()
+                    if text:
+                        for part in text.split("；"):
+                            part = part.strip()
+                            if part:
+                                lines.append(part)
+        # 去重保序
+        seen_rel: set[str] = set()
+        uniq_lines: list[str] = []
+        for line in lines:
+            if line in seen_rel:
+                continue
+            seen_rel.add(line)
+            uniq_lines.append(line)
+        if uniq_lines:
+            body = "卷二干支关系（排盘事实）：\n" + "\n".join(f"· {ln}" for ln in uniq_lines[:8])
+            body += "\n合冲刑害以排盘为准，下接神煞与典籍讲解。"
             blocks.append(_block(body, "fact"))
         else:
             blocks.append(
@@ -314,7 +370,7 @@ def build_bazi_section(snapshot: BaziChartSnapshot, section_id: str) -> ExplainS
             blocks.append(_block(f"综合：{resp.geju.geju_name}。", "inference"))
 
     elif section_id == "reading":
-        blocks.append(_block("先读卷一 fact（四柱格局），再读卷二关系，卷五推断默认折叠。", "fact"))
+        blocks.append(_block("先读卷一排盘事实（四柱格局），再读卷二关系，卷五推断默认折叠。", "fact"))
         cid, passage = _verified_classic_for_query("看命入式", tags=["foundation"])
         if cid and passage:
             blocks.append(_block(passage, "cite", classic_id=cid))

@@ -274,7 +274,7 @@ _GENERAL_TMPL = {
         "宜顺势而为，各方面稳步推进，不必刻意强化某一五行。"
     ),
     "weak_day_master": (
-        "日主{stem_trait}，日主偏弱，需重视自身积累与资源保护，在行旺运时积极出击，"
+        "日主{stem_trait}，日主{strength_tier}，需重视自身积累与资源保护，在行旺运时积极出击，"
         "在行衰运时学会守成，不要轻易消耗精力于无益之事。"
     ),
     "strong_day_master": (
@@ -481,7 +481,10 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     if inp.strength_tier in ("极旺", "偏旺"):
         result.general_text = _GENERAL_TMPL["strong_day_master"].format(stem_trait=_gen_stem_trait)
     elif inp.strength_tier in ("极弱", "偏弱"):
-        result.general_text = _GENERAL_TMPL["weak_day_master"].format(stem_trait=_gen_stem_trait)
+        result.general_text = _GENERAL_TMPL["weak_day_master"].format(
+            stem_trait=_gen_stem_trait,
+            strength_tier=inp.strength_tier or "偏弱",
+        )
     else:
         result.general_text = _GENERAL_TMPL["balanced"].format(stem_trait=_gen_stem_trait)
 
@@ -520,6 +523,12 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     # ── §9-B 格局分析 ──────────────────────────────────────────────────────
     _geju_brief = _first_sentence(result.geju_text)
     _sec2 = f"【格局分析】{_geju_brief}"
+    if inp.strength_tier in ("极弱", "偏弱") and any(k in (inp.geju_name or "") for k in ("七杀", "杀", "官杀")):
+        _sec2 = (
+            f"{_sec2.rstrip('。')}。"
+            f"日主{inp.strength_tier}与杀格并存时，取用重在制化与顺势，"
+            f"勿以身强杀战硬拼；具体以用神「{favor_cn or '—'}」为准。"
+        )
 
     # ── §9-C 五行特点 ──────────────────────────────────────────────────────
     _missing_parts: list[str] = []
@@ -551,18 +560,48 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
     else:
         _sec3 = "【五行特点】五行分布较为均匀，气场协调，整体外部环境适应力较强。"
 
-    # ── §9-D 神煞加持 ──────────────────────────────────────────────────────
-    _bene_shensha = [s for s in inp.shensha_items if s.get("is_beneficial")]
-    _harm_shensha = [s for s in inp.shensha_items if not s.get("is_beneficial")]
-    if _bene_shensha or _harm_shensha:
-        _b_names = "、".join(s.get("name", "") for s in _bene_shensha[:2])
-        _h_names = "、".join(s.get("name", "") for s in _harm_shensha[:2])
+    # ── §9-D 神煞加持（按极性分列；缺 is_beneficial 时回退 polarity / SHENSHA_META）──
+    def _shensha_flag(item: dict) -> bool | None:
+        if "is_beneficial" in item and item.get("is_beneficial") is not None:
+            return bool(item.get("is_beneficial"))
+        pol = str(item.get("polarity") or "").strip().lower()
+        if pol in {"+", "auspicious", "good", "吉", "beneficial"}:
+            return True
+        if pol in {"-", "inauspicious", "bad", "凶", "慎"}:
+            return False
+        try:
+            from services.bazi_engine.shensha import SHENSHA_META
+
+            meta = SHENSHA_META.get(str(item.get("name") or "").strip()) or {}
+            mpol = str(meta.get("polarity") or "").strip()
+            if mpol == "+":
+                return True
+            if mpol == "-":
+                return False
+        except Exception:
+            pass
+        return None
+
+    _good_names: list[str] = []
+    _caution_names: list[str] = []
+    _seen_ss: set[str] = set()
+    for s in inp.shensha_items:
+        name = str(s.get("name") or "").strip()
+        if not name or name in _seen_ss:
+            continue
+        _seen_ss.add(name)
+        flag = _shensha_flag(s)
+        if flag is True:
+            _good_names.append(name)
+        elif flag is False:
+            _caution_names.append(name)
+    if _good_names or _caution_names:
         _sec4_parts: list[str] = []
-        if _b_names:
-            _sec4_parts.append(f"命局吉神有{_b_names}，可增强运势与人际贵人缘")
-        if _h_names:
-            _sec4_parts.append(f"命中凶煞有{_h_names}，需注意化解相关领域的潜在风险")
-        _sec4 = "【神煞加持】" + "，".join(_sec4_parts) + "。"
+        if _good_names:
+            _sec4_parts.append(f"命中吉神有{'、'.join(_good_names[:3])}，可作旁证，不作必然好运断言")
+        if _caution_names:
+            _sec4_parts.append(f"慎神有{'、'.join(_caution_names[:3])}，宜对照宫位与大运，不作必然凶断")
+        _sec4 = "【神煞加持】" + "；".join(_sec4_parts) + "。"
     else:
         _sec4 = "【神煞加持】命局神煞分布均衡，无突出的吉凶神煞干扰，整体运势以自身实力为主导。"
 
@@ -573,18 +612,14 @@ def interpret_bazi(inp: InterpretInput) -> InterpretResult:
         "平稳": "当前大运运势平稳，宜稳中求进",
     }
     _dayun_hint = _dayun_desc.get(inp.dayun_trend, "大运平稳")
+    # 用神/忌神已在总评出现，主线不再复读
     _sec5 = (
-        f"【人生主线建议】用神为{favor_cn}，忌神为{avoid_cn}。"
-        f"{_dayun_hint}，在用神五行旺盛的流年把握关键决策时机。"
-        f"事业择业与投资方向优先顺应用神属性，居家方位与色彩也宜偏向用神五行以助运。"
+        f"【人生主线建议】{_dayun_hint}，在用神五行旺盛的流年把握关键决策时机；"
+        f"事业与居家宜顺用神属性，重大抉择回扣格局与流年，勿单凭神煞断吉凶。"
     )
 
-    # ── §9-F 综合总结 ─────────────────────────────────────────────────────
-    _general_brief = _first_sentence(result.general_text)
-    _sec6 = f"【综合总结】{_general_brief}"
-
-    # 拼合六段，控制总字数在400-600之间
-    full_summary_raw = "".join([_sec1, _sec2, _sec3, _sec4, _sec5, _sec6])
+    # 不再追加【综合收束】——与总评/主线复读；边界声明见文末
+    full_summary_raw = "".join([_sec1, _sec2, _sec3, _sec4, _sec5])
     result.full_summary = full_summary_raw + "（仅供学术研究参考，不构成任何形式的预测或建议）"
 
     return result
