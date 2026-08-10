@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10T00:05:27.279200+00:00",
+  "generated_at": "2026-08-10T00:22:36.200399+00:00",
   "sample": "刘博 · 1990-07-17 12:25 徐州",
   "html_path": "output/pdf/regression-liubo.html",
   "checks": {
@@ -23,16 +23,18 @@
     "how_to_read": true,
     "trust_no_pct_wall": true,
     "sheet_min_content": true,
+    "no_half_sentence_ellipsis_wall": true,
+    "palace_table_complete": true,
     "song_sheet_frame": true
   },
   "forbidden_hits": [],
   "lcs_ratio_summary_vs_closing": 0.0214,
   "pct_in_trust_summary": 0,
   "sheet_text_lens": [
-    595,
-    952,
-    434,
-    721,
+    592,
+    730,
+    707,
+    608,
     194
   ],
   "min_sheet_text_len": 194,

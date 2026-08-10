@@ -327,8 +327,8 @@ def _format_kongwang(kongwang: Any) -> str:
     return "、".join(dict.fromkeys(items)) if items else "—"
 
 
-def _format_shensha_active(items: list[Any] | None) -> str:
-    """只印亮起的神煞，不做灰名单占版。"""
+def _format_shensha_active(items: list[Any] | None, *, limit: int = 4) -> str:
+    """只印亮起的神煞；单列最多 limit 项，防神煞行撑破整页。"""
     seen: set[str] = set()
     bits: list[str] = []
     for item in items or []:
@@ -341,7 +341,13 @@ def _format_shensha_active(items: list[Any] | None) -> str:
         pol = str(item.get("polarity") or "").strip()
         cls = "ss-good" if pol == "+" else "ss-warn" if pol == "-" else "ss-neutral"
         bits.append(f"<span class='ss {cls}'>{_esc(name)}</span>")
-    return "<br/>".join(bits) if bits else "—"
+    if not bits:
+        return "—"
+    extra = len(bits) - limit
+    shown = bits[:limit]
+    if extra > 0:
+        shown.append(f"<span class='ss ss-neutral'>等{extra}项</span>")
+    return "<br/>".join(shown)
 
 
 def _glyph(ch: str, *, kind: str = "stem") -> str:
@@ -794,13 +800,17 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     closing_section = _render_closing_section(bazi, ziwei, meta)
     geju_block = geju_tension_block(bazi, payload.get("explain_bazi"))
     liunian_block = liunian_bridge_html(bazi, current_year)
-    dayun_block = dayun_bridge_html(bazi, current_year)
+    dayun_block_full = dayun_bridge_html(bazi, current_year, compact=False)
+    dayun_block_compact = dayun_bridge_html(bazi, current_year, compact=True)
     topic_block = ziwei_topic_cards_html(ziwei, bazi)
     flying_block = flying_star_plain_html()
     how_to_read = how_to_read_book_html()
     relations_block = relations_short_list_html(bazi)
     lifestyle_line = yongshen_lifestyle_line(bazi)
-    short_name = _esc((meta.get("label") or "档案")[:12])
+    # 页脚只用姓名，避免「刘博 · 1990/07」被硬截断显示不全
+    _label = str(meta.get("label") or "档案").strip()
+    _name_only = _label.split("·")[0].strip() or _label
+    short_name = _esc(_name_only[:16])
 
     birth_human = _format_birth_human(
         str(meta.get("birth_dt") or ""),
@@ -875,24 +885,37 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     .sheet {{
       border: 1px solid var(--gold);
       box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--border);
-      padding: 14px 16px 16px; background: linear-gradient(180deg, #faf6ef 0%, var(--paper) 100%);
-      min-height: 240mm;
+      padding: 12px 14px 14px; background: linear-gradient(180deg, #faf6ef 0%, var(--paper) 100%);
+      /* 禁止固定 min-height：会制造大片空框与表格残页 */
+      min-height: 0;
+      overflow: visible;
     }}
+    .sheet-tight {{ padding-bottom: 10px; }}
+    .topic-card p {{ margin: 4px 0; }}
+    .topic-grid {{ margin-bottom: 6px; }}
     .meta, .accent {{ color: var(--mist); }}
     .eyebrow {{ font-size: 10px; letter-spacing: 0.22em; color: var(--gold); }}
     table, table.ruled {{
       width: 100%; border-collapse: collapse; margin-top: 8px; background: var(--surface);
+      page-break-inside: auto;
     }}
+    thead {{ display: table-header-group; }}
+    tr {{ page-break-inside: avoid; break-inside: avoid; }}
     th, td {{ border: 1px solid var(--border); padding: 5px 6px; text-align: left; vertical-align: top; }}
     th {{ background: #f3ebe0; color: #5c3d2e; font-weight: 600; }}
     tr.is-current td {{ background: #f7efe2; font-weight: 600; }}
+    .bridge-card, .topic-card, .legend-box, .identity, .caliber {{
+      break-inside: avoid; page-break-inside: avoid;
+    }}
+    .dayun-full {{ break-inside: auto; page-break-inside: auto; }}
     .notes {{ white-space: pre-wrap; background: var(--surface); padding: 12px; border: 1px solid var(--border); }}
     ol.closing, ol.tight, ul.tight {{ margin: 8px 0 10px 1.2em; padding: 0; }}
     ol.closing li, ol.tight li, ul.tight li {{ margin: 5px 0; }}
     .cover-page {{ padding: 0; }}
     .cover {{
-      text-align: center; padding: 22mm 14mm 18mm;
-      min-height: 250mm;
+      text-align: center; padding: 20mm 14mm 18mm;
+      /* 封面单页可撑满版心，内文 sheet 禁止固定高度 */
+      min-height: 248mm;
       background: linear-gradient(180deg, #f8f2e8 0%, var(--paper) 48%, #efe6d6 100%);
       border: 1px solid var(--gold);
       box-shadow: inset 0 0 0 5px var(--surface), inset 0 0 0 6px var(--border);
@@ -917,10 +940,10 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
       font-size: 12px; color: #5c3d2e; letter-spacing: 0.04em;
     }}
     .cover .toc {{
-      margin: 22px auto 0; max-width: 70%; text-align: left; font-size: 11.5px; color: var(--mist);
+      margin: 22px auto 0; max-width: 78%; text-align: center; font-size: 11.5px; color: var(--mist);
       line-height: 1.9;
     }}
-    .cover .toc .toc-k {{ color: #5c3d2e; letter-spacing: 0.12em; }}
+    .cover .toc .toc-k {{ color: #5c3d2e; letter-spacing: 0.12em; margin-bottom: 4px; }}
     .cover .foot {{ margin-top: 20px; font-size: 11px; }}
     .identity {{
       display: flex; gap: 0; margin: 10px 0 12px; border: 1px solid var(--border); background: var(--surface);
@@ -952,6 +975,8 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
       border: 1px solid var(--border); border-left: 2px solid var(--gold);
       background: var(--surface); padding: 8px 10px; margin: 8px 0; font-size: 11px;
     }}
+    .palace-table {{ font-size: 10.5px; margin-top: 10px; }}
+    .palace-table th, .palace-table td {{ padding: 3px 5px; }}
     .bazi-chart {{ font-size: 10.5px; }}
     .bazi-chart th, .bazi-chart td {{ text-align: center; padding: 4px 3px; border-color: #cfc3a8; }}
     .bazi-chart .row-label, .bazi-chart th.row-label {{
@@ -1028,15 +1053,15 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     <div class="bridge-stack">
       {geju_block}
       {liunian_block}
-      {dayun_block}
+      {dayun_block_compact}
     </div>
     <p class="page-foot">当前大运参考：{_esc(current_dayun_gz or "—")} · 流年对齐导出年 {_esc(current_year)}</p>
   </section>
 
   <section class="page sheet">
     <h2>运势时间轴（大运）</h2>
-    <p class="meta">「大运起始年」为每步约十年之起点；标「当前步」者为导出时步入之大运。</p>
-    {dayun_block}
+    <p class="meta">「大运起始年」为每步约十年之起点；标「当前步」者为导出时步入之大运。下列叙事完整展示，不截半句。</p>
+    {dayun_block_full}
     <table class="ruled"><thead><tr><th>大运起始年</th><th>干支</th><th>十神</th><th>标记</th></tr></thead>
     <tbody>{dayun_rows or '<tr><td colspan="4">暂无</td></tr>'}</tbody></table>
   </section>
@@ -1047,7 +1072,12 @@ def render_fusheng_report_html(payload: dict[str, Any]) -> str:
     <p>五行局：{_esc(ziwei.get("wuxing_ju_name", "—"))} · 命宫：{_esc(ziwei.get("life_palace_gz", "—"))}</p>
     {topic_block}
     {flying_block}
-    <table class="ruled"><thead><tr><th>宫位</th><th>宫干</th><th>主星</th></tr></thead>
+  </section>
+
+  <section class="page sheet sheet-tight">
+    <h2>紫微十二宫</h2>
+    <p class="meta">十二宫主星一览（与上页议题卡互参）。本表单独成页，保证十二宫完整显示。</p>
+    <table class="ruled palace-table"><thead><tr><th>宫位</th><th>宫干</th><th>主星</th></tr></thead>
     <tbody>{palace_rows or '<tr><td colspan="3">暂无</td></tr>'}</tbody></table>
   </section>
 

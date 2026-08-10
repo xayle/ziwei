@@ -122,10 +122,12 @@ async def main() -> int:
         "closing_focus_index": ("本年焦点" in closing) or ("回看" in closing),
         "how_to_read": "本册怎么读" in html,
         "trust_no_pct_wall": pct_in_summary <= 3,
-        # 姓名等短页可薄；主册至少 4 页正文充实
+        # 主册充实；十二宫/姓名等专页可短，但禁止残页级空白
         "sheet_min_content": (
-            sum(1 for n in sheet_lens if n >= 280) >= 4 and min_sheet >= 160
+            sum(1 for n in sheet_lens if n >= 400) >= 3 and min_sheet >= 120
         ),
+        "no_half_sentence_ellipsis_wall": html.count("…") < 12,
+        "palace_table_complete": html.count("宫</td>") >= 12 or "紫微十二宫" in html,
         "song_sheet_frame": 'class="page sheet"' in html and "v2.7" in html,
     }
     forbidden_hits = FORBIDDEN.findall(html)

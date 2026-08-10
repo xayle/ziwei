@@ -12,10 +12,16 @@ def _esc(value: Any) -> str:
 
 
 def _clip(text: str, n: int = 120) -> str:
+    """优先在句号处截断，避免半句加省略号。"""
     t = " ".join(str(text or "").split())
     if len(t) <= n:
         return t
-    return t[: n - 1].rstrip("，。；、 ") + "…"
+    window = t[:n]
+    for sep in ("。", "！", "？", "；"):
+        pos = window.rfind(sep)
+        if pos >= max(40, n // 3):
+            return t[: pos + 1]
+    return window.rstrip("，。；、 ") + "…"
 
 
 def _to_cn_elements(values: list[str] | None) -> list[str]:
@@ -84,7 +90,7 @@ def geju_tension_block(bazi: dict[str, Any], explain_bazi: dict[str, Any] | None
         for block in section.get("blocks") or []:
             text = str(block.get("text") or "")
             if "取格" in text or "→" in text or "定格" in text:
-                path = _clip(text, 140)
+                path = _clip(text, 280)
                 break
     if not path:
         path = f"本盘取格为「{name}」，以月令与透干关系定格；细节以排盘事实为准。"
@@ -119,29 +125,40 @@ def liunian_bridge_html(bazi: dict[str, Any], year: int | None = None) -> str:
     return f"<div class='bridge-card'><p class='bridge-k'>本年对我</p><p>{text}</p></div>"
 
 
-def dayun_bridge_html(bazi: dict[str, Any], year: int | None = None) -> str:
+def dayun_bridge_html(
+    bazi: dict[str, Any],
+    year: int | None = None,
+    *,
+    compact: bool = False,
+) -> str:
+    """compact=True 仅一句导流，完整事业/财侧留给大运专页以免截断与残页。"""
     y = year or datetime.now().year
     dayun = find_current_dayun(bazi, y)
     gz = f"{dayun.get('stem') or ''}{dayun.get('branch') or ''}" or "—"
     tg = str(dayun.get("ten_god") or "—")
     start = dayun.get("start_year")
     ns = dayun.get("narrative_sections") if isinstance(dayun.get("narrative_sections"), dict) else {}
-    core = _clip(str(ns.get("core") or ""), 150)
+    if compact:
+        tip = f"当前大运「{gz}」·十神「{tg}」" + (f"（约自 {start} 年起）" if start else "")
+        tip += "。完整事业/财侧叙事见「运势时间轴」。"
+        return f"<div class='bridge-card'><p class='bridge-k'>当前大运 · {_esc(gz)}</p>" f"<p>{_esc(tip)}</p></div>"
+    # 完整展示：上限放宽，优先整句，避免「守住本…」半句残页
+    core = _clip(str(ns.get("core") or ""), 360)
     if not core:
         core = (
             f"当前大运「{gz}」·十神「{tg}」"
             + (f"（约自 {start} 年起）" if start else "")
             + "。宜以扶抑/制化顺势决策，并回扣用神。"
         )
-    career = _clip(str(ns.get("career") or ""), 80)
-    wealth = _clip(str(ns.get("wealth") or ""), 80)
+    career = _clip(str(ns.get("career") or ""), 420)
+    wealth = _clip(str(ns.get("wealth") or ""), 420)
     extras = ""
     if career:
         extras += f"<p><strong>事业侧</strong>：{_esc(career)}</p>"
     if wealth:
         extras += f"<p><strong>财侧</strong>：{_esc(wealth)}</p>"
     return (
-        f"<div class='bridge-card'><p class='bridge-k'>当前大运 · {_esc(gz)}</p>"
+        f"<div class='bridge-card dayun-full'><p class='bridge-k'>当前大运 · {_esc(gz)}</p>"
         f"<p>{_esc(core)}</p>{extras}"
         f"<p class='meta'>属经验推断；重大抉择请回扣命局与流年。</p></div>"
     )
@@ -261,21 +278,27 @@ def relations_short_list_html(bazi: dict[str, Any]) -> str:
     lines: list[str] = []
     items = rs.get("items") or []
     if isinstance(items, list):
-        for item in items[:6]:
+        for item in items[:8]:
             if not isinstance(item, dict):
                 continue
-            rel = str(item.get("type") or "互动")
+            rel = str(item.get("type") or "互动").strip()
             summary = str(item.get("summary") or item.get("detail") or "").strip()
             sub = str(item.get("subject") or "").strip()
             tgt = str(item.get("target") or "").strip()
-            if sub and tgt:
-                lines.append(f"{rel}：{sub}与{tgt}" + (f"（{summary}）" if summary else ""))
-            elif summary:
+            # 过滤「合：合」这类空壳
+            if summary and summary in {rel, sub, tgt}:
+                summary = ""
+            if sub and tgt and sub != rel and tgt != rel:
+                line = f"{rel}：{sub}与{tgt}"
+                if summary and summary not in line:
+                    line += f"（{summary}）"
+                lines.append(line)
+            elif summary and summary != rel:
                 lines.append(f"{rel}：{summary}")
     if not lines:
         for key in ("clash_summary", "combine_summary", "harm_summary", "interaction_summary"):
             text = str(rs.get(key) or "").strip()
-            if text:
+            if text and text not in {"合", "冲", "刑", "害"}:
                 lines.append(text)
     if not lines:
         return ""
